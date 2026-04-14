@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Check, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 
@@ -33,7 +33,8 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       layout={false}
-      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-hidden"
+      onClick={handleAdd}
+      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors"
       dir="rtl"
     >
       {/* Text content - right side */}
@@ -48,40 +49,7 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
           )}
         </div>
         <p className="text-muted-foreground text-sm mb-2 leading-relaxed line-clamp-2">{item.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-primary font-bold text-lg">₪{item.price}</span>
-          <motion.button
-            onClick={handleAdd}
-            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
-              justAdded
-                ? "bg-green-500 shadow-green-500/20 scale-110"
-                : "bg-primary shadow-primary/20 opacity-80 group-hover:opacity-100 active:scale-90"
-            }`}
-          >
-            <AnimatePresence mode="wait">
-              {justAdded ? (
-                <motion.div
-                  key="check"
-                  initial={{ scale: 0, rotate: -90 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  exit={{ scale: 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                >
-                  <Check size={18} className="text-white" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="plus"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  <Plus size={18} className="text-primary-foreground" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
+        <span className="text-primary font-bold text-lg">₪{item.price}</span>
       </div>
 
       {/* Image - left side */}
