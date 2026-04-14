@@ -56,12 +56,11 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
           <span className="text-primary font-bold text-lg">₪{item.price}</span>
           <motion.button
             ref={buttonRef}
-            whileTap={{ scale: 0.85 }}
             onClick={handleAdd}
-            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors duration-300 ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
               justAdded
-                ? "bg-green-500 shadow-green-500/20"
-                : "bg-primary shadow-primary/20 opacity-80 group-hover:opacity-100"
+                ? "bg-green-500 shadow-green-500/20 scale-110"
+                : "bg-primary shadow-primary/20 opacity-80 group-hover:opacity-100 active:scale-90"
             }`}
           >
             <AnimatePresence mode="wait">
