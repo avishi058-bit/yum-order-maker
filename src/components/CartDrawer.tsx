@@ -28,7 +28,8 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
       return sum + (t?.price || 0);
     }, 0);
     const mealCost = item.withMeal ? 23 : 0;
-    return (item.price + toppingsCost + mealCost) * item.quantity;
+    const sideCost = item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) : 0;
+    return (item.price + toppingsCost + mealCost + sideCost) * item.quantity;
   };
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
@@ -92,10 +93,16 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
 
                     {/* Show meal upgrade */}
                     {item.withMeal && (
-                      <div className="mb-2">
+                      <div className="mb-2 flex flex-wrap gap-1.5">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
                           🍟🥤 ארוחה עסקית +₪23
                         </span>
+                        {item.mealSideId && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                            {mealSideOptions.find(s => s.id === item.mealSideId)?.name}
+                            {(mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) > 0 && ` +₪${mealSideOptions.find(s => s.id === item.mealSideId)?.price}`}
+                          </span>
+                        )}
                       </div>
                     )}
 
