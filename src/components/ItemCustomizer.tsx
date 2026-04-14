@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, mealUpgrade } from "@/data/menu";
+import { MenuItem, toppings, Topping, removals, mealUpgrade, mealSideOptions } from "@/data/menu";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string) => void;
 }
 
-type Step = "customize" | "meal-upgrade";
+type Step = "customize" | "meal-upgrade" | "side-select";
 
 const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>([]);
   const [step, setStep] = useState<Step>("customize");
+  const [selectedSide, setSelectedSide] = useState<string>("side-fries");
 
   if (!item) return null;
 
@@ -49,19 +50,21 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
     }
   };
 
-  const handleFinish = (withMeal: boolean) => {
-    onConfirm(item, quantity, selectedToppings, selectedRemovals, withMeal);
+  const handleFinish = (withMeal: boolean, sideId?: string) => {
+    onConfirm(item, quantity, selectedToppings, selectedRemovals, withMeal, sideId);
+    resetState();
+  };
+
+  const resetState = () => {
     setQuantity(1);
     setSelectedToppings([]);
     setSelectedRemovals([]);
     setStep("customize");
+    setSelectedSide("side-fries");
   };
 
   const handleClose = () => {
-    setStep("customize");
-    setQuantity(1);
-    setSelectedToppings([]);
-    setSelectedRemovals([]);
+    resetState();
     onClose();
   };
 
@@ -207,7 +210,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                   <div className="w-full space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => handleFinish(true)}
+                      onClick={() => setStep("side-select")}
                       className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
                     >
                       שדרגו לי! 🍟🥤
@@ -220,6 +223,58 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                       לא תודה
                     </motion.button>
                   </div>
+                </motion.div>
+              )}
+
+              {step === "side-select" && (
+                <motion.div
+                  key="side-select"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="flex-1 px-6 py-8"
+                >
+                  <h3 className="text-xl font-black text-center mb-6">בחר סוג צ׳יפס לעסקית:</h3>
+                  <div className="space-y-0">
+                    {mealSideOptions.map((side) => {
+                      const active = selectedSide === side.id;
+                      return (
+                        <button
+                          key={side.id}
+                          onClick={() => setSelectedSide(side.id)}
+                          className="w-full flex items-center justify-between py-4 border-b border-border/50 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              }`}
+                            >
+                              {active && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                />
+                              )}
+                            </div>
+                            {side.price > 0 && (
+                              <span className="text-sm text-muted-foreground">+₪{side.price}</span>
+                            )}
+                          </div>
+                          <span className="font-medium text-base">{side.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleFinish(true, selectedSide)}
+                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-8"
+                  >
+                    הוספה להזמנה 🍔
+                  </motion.button>
                 </motion.div>
               )}
             </AnimatePresence>
