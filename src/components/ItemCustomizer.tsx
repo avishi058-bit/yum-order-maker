@@ -32,9 +32,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   };
 
   const toggleRemoval = (id: string) => {
-    setSelectedRemovals((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
-    );
+    if (id === "no-changes") {
+      setSelectedRemovals((prev) => prev.includes("no-changes") ? [] : ["no-changes"]);
+    } else {
+      setSelectedRemovals((prev) =>
+        prev.includes(id) ? prev.filter((r) => r !== id) : [...prev.filter((r) => r !== "no-changes"), id]
+      );
+    }
   };
 
   const toppingsCost = selectedToppings.reduce((sum, tId) => {
