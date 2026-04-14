@@ -184,6 +184,7 @@ export interface Removal {
 }
 
 export const removals: Removal[] = [
+  { id: "no-changes", name: "ללא שינויים במנה" },
   { id: "no-lettuce", name: "בלי חסה" },
   { id: "no-tomato", name: "בלי עגבנייה" },
   { id: "no-pickles", name: "בלי חמוצים" },
@@ -192,6 +193,7 @@ export const removals: Removal[] = [
 ];
 
 export const smashModifications: Removal[] = [
+  { id: "no-changes", name: "ללא שינויים במנה" },
   { id: "no-lettuce", name: "ללא חסה" },
   { id: "no-pickles", name: "ללא חמוצים" },
   { id: "no-aioli", name: "ללא איולי" },
