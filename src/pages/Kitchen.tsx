@@ -52,8 +52,10 @@ const Kitchen = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [autoPrint, setAutoPrint] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const printedOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
 
   const fetchOrders = useCallback(async () => {
@@ -87,14 +89,24 @@ const Kitchen = () => {
     };
   }, [fetchOrders]);
 
-  // Play sound on new order
+  // Play sound + auto-print on new order
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
     if (newOrders.length > prevOrderCountRef.current && soundEnabled) {
       playAlert();
     }
+    // Auto-print new orders that haven't been printed yet
+    if (autoPrint) {
+      newOrders.forEach((order) => {
+        if (!printedOrdersRef.current.has(order.id)) {
+          printedOrdersRef.current.add(order.id);
+          // Small delay to ensure DOM is ready
+          setTimeout(() => printOrder(order), 500);
+        }
+      });
+    }
     prevOrderCountRef.current = newOrders.length;
-  }, [orders, soundEnabled]);
+  }, [orders, soundEnabled, autoPrint]);
 
   const playAlert = () => {
     try {
@@ -255,6 +267,15 @@ const Kitchen = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setAutoPrint(!autoPrint)}
+            className={`p-2 rounded-lg transition-colors ${
+              autoPrint ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+            }`}
+            title={autoPrint ? "כבה הדפסה אוטומטית" : "הפעל הדפסה אוטומטית"}
+          >
+            <Printer size={20} />
+          </button>
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`p-2 rounded-lg transition-colors ${
