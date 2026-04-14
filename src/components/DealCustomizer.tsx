@@ -26,7 +26,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
     { removals: ["no-changes"] },
     { removals: ["no-changes"] },
   ]);
-  const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["deal-cola", "deal-cola", "deal-cola"]);
+  const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
   const currentBurgerIndex = step === "burger-1" ? 0 : step === "burger-2" ? 1 : 2;
 
@@ -37,7 +37,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
       { removals: ["no-changes"] },
       { removals: ["no-changes"] },
     ]);
-    setSelectedDrinks(["deal-cola", "deal-cola", "deal-cola"]);
+    setSelectedDrinks(["", "", ""]);
   };
 
   const handleClose = () => {
@@ -81,6 +81,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
     else if (step === "burger-2") setStep("burger-3");
     else if (step === "burger-3") setStep("drinks");
     else {
+      if (selectedDrinks.some((d) => d === "")) return;
       const drinks: DealDrinkChoice[] = selectedDrinks.map((dId) => {
         const drink = dealDrinkOptions.find((d) => d.id === dId)!;
         return { id: drink.id, name: drink.name, extraCost: drink.price };
@@ -274,10 +275,17 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
             </AnimatePresence>
 
             <div className="px-5 py-4 border-t border-border bg-card safe-bottom">
+              {step === "drinks" && selectedDrinks.some((d) => d === "") && (
+                <p className="text-sm text-destructive text-center mb-2">יש לבחור שתייה לכל אחד</p>
+              )}
               <motion.button
-                whileTap={{ scale: 0.97 }}
+                whileTap={step === "drinks" && selectedDrinks.some((d) => d === "") ? {} : { scale: 0.97 }}
                 onClick={handleNext}
-                className="w-full bg-primary text-primary-foreground font-bold py-3.5 rounded-xl text-base shadow-lg shadow-primary/20"
+                className={`w-full font-bold py-3.5 rounded-xl text-base shadow-lg ${
+                  step === "drinks" && selectedDrinks.some((d) => d === "")
+                    ? "bg-muted text-muted-foreground shadow-none cursor-not-allowed"
+                    : "bg-primary text-primary-foreground shadow-primary/20"
+                }`}
               >
                 {step === "drinks" ? "הוספה להזמנה 🍔" : "המשך"}
               </motion.button>
