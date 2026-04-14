@@ -256,6 +256,41 @@ export const mealDrinkOptions: DrinkOption[] = [
   { id: "drink-guinness", name: "גינס", price: 12, category: "beer" },
 ];
 
+// Sub-options for standalone drink menu items
+export interface DrinkSubOption {
+  id: string;
+  name: string;
+}
+
+export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
+  can: [
+    { id: "can-cola", name: "קולה" },
+    { id: "can-zero", name: "זירו" },
+    { id: "can-fanta", name: "פאנטה" },
+    { id: "can-sprite", name: "ספרייט" },
+    { id: "can-blu", name: "בלו" },
+    { id: "can-wave", name: "הגל" },
+    { id: "can-mojito", name: "מוחיטו" },
+    { id: "can-watermelon", name: "אבטיח" },
+    { id: "can-day", name: "ד׳י" },
+  ],
+  bottle: [
+    { id: "bottle-grapes", name: "ענבים" },
+    { id: "bottle-apples", name: "תפוחים" },
+  ],
+  "beer-regular": [
+    { id: "beer-carlsberg", name: "קלסטברג" },
+    { id: "beer-goldstar", name: "גולדסטאר" },
+    { id: "beer-heineken", name: "הייניקן" },
+    { id: "beer-corona", name: "קורונה" },
+  ],
+  "beer-premium": [
+    { id: "beer-hoegaarden", name: "הוגרדן" },
+    { id: "beer-laffe", name: "לאף" },
+    { id: "beer-unfiltered", name: "גולדסטאר אנפילטר" },
+  ],
+};
+
 export const dealDrinkOptions: DrinkOption[] = [
   { id: "deal-cola", name: "קולה", price: 0, category: "soft" },
   { id: "deal-zero", name: "זירו", price: 0, category: "soft" },

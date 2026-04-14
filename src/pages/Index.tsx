@@ -7,7 +7,8 @@ import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/compo
 import CheckoutForm from "@/components/CheckoutForm";
 import ItemCustomizer from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
-import { MenuItem, toppings, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import DrinkSelector from "@/components/DrinkSelector";
+import { MenuItem, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 
 const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -15,12 +16,15 @@ const Index = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
   const [dealOpen, setDealOpen] = useState(false);
+  const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
     } else if (item.category === "burger") {
       setCustomizerItem(item);
+    } else if (item.category === "drink" && drinkSubOptions[item.id]) {
+      setDrinkItem(item);
     } else {
       setCart((prev) => {
         const existing = prev.find((c) => c.id === item.id);
@@ -78,6 +82,27 @@ const Index = () => {
     []
   );
 
+  const handleDrinkConfirm = useCallback(
+    (item: MenuItem, selectedDrink: string) => {
+      const cartItemId = `${item.id}-${selectedDrink}-${Date.now()}`;
+      setCart((prev) => [
+        ...prev,
+        {
+          id: cartItemId,
+          name: `${item.name} — ${selectedDrink}`,
+          price: item.price,
+          quantity: 1,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+        },
+      ]);
+      setDrinkItem(null);
+      setCartOpen(true);
+    },
+    []
+  );
+
   const updateQuantity = useCallback((id: string, delta: number) => {
     setCart((prev) =>
       prev
@@ -129,6 +154,12 @@ const Index = () => {
         item={customizerItem}
         onClose={() => setCustomizerItem(null)}
         onConfirm={handleCustomizerConfirm}
+      />
+
+      <DrinkSelector
+        item={drinkItem}
+        onClose={() => setDrinkItem(null)}
+        onConfirm={handleDrinkConfirm}
       />
 
       <DealCustomizer
