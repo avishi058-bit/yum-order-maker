@@ -14,7 +14,7 @@ type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
-  const [selectedRemovals, setSelectedRemovals] = useState<string[]>([]);
+  const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
