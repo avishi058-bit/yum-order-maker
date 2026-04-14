@@ -3,8 +3,9 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
-  image: string;
-  category: "burger" | "side" | "drink";
+  weight?: string;
+  category: "burger" | "side" | "drink" | "deal";
+  badge?: string;
 }
 
 export interface Topping {
@@ -13,78 +14,194 @@ export interface Topping {
   price: number;
 }
 
+export interface Upgrade {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export const menuItems: MenuItem[] = [
+  // המבורגרים
   {
     id: "classic",
     name: "קלאסי",
-    description: "200 גרם בקר טרי, חסה, עגבנייה, בצל ומלפפון חמוץ",
+    description: "בצל, עגבנייה, חסה, חמוצים ואיולי הבית",
     price: 52,
-    image: "🍔",
+    weight: "220 גרם",
     category: "burger",
   },
   {
-    id: "cheese",
-    name: "צ'יזבורגר",
-    description: "200 גרם בקר, צ'דר מותך, חסה, עגבנייה ורוטב מיוחד",
+    id: "smash-moshavnikim",
+    name: "סמאש של מושבניקים",
+    description: "חמוצים, חסה, איולי הבית, שתי קציצות של 110 גרם מעוכות מרוסלות וקריספיות",
     price: 58,
-    image: "🧀",
+    weight: "220 גרם",
+    category: "burger",
+  },
+  {
+    id: "avishai",
+    name: "אבישי שחוט לי פרה!",
+    description: "חסה, עגבנייה, בצל, חמוצים, קציצת בקר, רצועות רוסטביף מעושן, ביצת עין ואיולי הבית",
+    price: 78,
+    weight: "220 גרם",
     category: "burger",
   },
   {
     id: "double",
-    name: "דאבל סמאש",
-    description: "2 קציצות סמאש 150 גרם, גבינה אמריקאית, בצל מטוגן",
-    price: 68,
-    image: "🔥",
+    name: "כפולה",
+    description: "שתי קציצות של 220, בצל, עגבנייה, חסה, חמוצים ואיולי הבית",
+    price: 76,
+    weight: "440 גרם",
     category: "burger",
   },
   {
-    id: "bbq",
-    name: "BBQ ספיישל",
-    description: "200 גרם בקר, בייקון, טבעות בצל, רוטב BBQ מעושן",
-    price: 65,
-    image: "🥓",
+    id: "crazy-smash",
+    name: "קרייזי סמאש",
+    description: "שתי קציצות סמאש, איולי, ריבת פלפלים חריפים, חמוצים ומייפל",
+    price: 64,
+    weight: "220 גרם",
+    category: "burger",
+    badge: "🌶️",
+  },
+  {
+    id: "smash-double-cheese",
+    name: "סמאש דאבל צ׳יז",
+    description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני (הולך טוב עם ריבת בצל או חמאת בוטנים)",
+    price: 66,
+    weight: "220 גרם",
+    category: "burger",
+    badge: "🧀",
+  },
+  {
+    id: "special-hadegel",
+    name: "ספיישל הדגל",
+    description: "קציצת בקר, כל הירקות, איולי הבית, שתי טבעות בצל ביתיות, ריבת בצל ביין וקונפי שום",
+    price: 73,
+    weight: "220 גרם",
     category: "burger",
   },
+  {
+    id: "haf-mifsha",
+    name: "חף מפשע",
+    description: "המבורגר צמחוני - חסה, עגבנייה, בצל, חמוצים ואיולי (מבושל באיזור בשרי, אין הפרדה מוחלטת)",
+    price: 55,
+    weight: "",
+    category: "burger",
+    badge: "🌱",
+  },
+  // צ׳יפס
   {
     id: "fries",
-    name: "צ'יפס",
-    description: "צ'יפס פריך עם תיבול מיוחד",
-    price: 18,
-    image: "🍟",
+    name: "צ׳יפס",
+    description: "צ׳יפס פריך",
+    price: 20,
+    category: "side",
+  },
+  {
+    id: "waffle-fries",
+    name: "וופל צ׳יפס",
+    description: "צ׳יפס וופל פריך",
+    price: 25,
     category: "side",
   },
   {
     id: "onion-rings",
     name: "טבעות בצל",
-    description: "טבעות בצל פריכות בציפוי זהוב",
-    price: 22,
-    image: "🧅",
+    description: "טבעות בצל מטוגנות",
+    price: 24,
     category: "side",
   },
   {
-    id: "cola",
-    name: "קולה",
-    description: "330 מ\"ל",
-    price: 12,
-    image: "🥤",
+    id: "tempura-onion",
+    name: "טבעות בצל ביתיות בטמפורה",
+    description: "טבעות בצל ביתיות בציפוי טמפורה",
+    price: 32,
+    category: "side",
+  },
+  // שתייה
+  {
+    id: "can",
+    name: "פחית",
+    description: "קולה, זירו, פאנטה, ספרייט, בלו, הגל, מוחיטו, אבטיח, ד״י",
+    price: 10,
     category: "drink",
   },
   {
-    id: "lemonade",
-    name: "לימונדה",
-    description: "לימונדה טרייה בהכנה ביתית",
-    price: 16,
-    image: "🍋",
+    id: "bottle",
+    name: "בקבוק",
+    description: "ענבים / תפוחים",
+    price: 12,
     category: "drink",
+  },
+  {
+    id: "beer-regular",
+    name: "בירה",
+    description: "קלסטברג, גולדסטאר, הייניקן, קורונה",
+    price: 18,
+    category: "drink",
+  },
+  {
+    id: "beer-premium",
+    name: "בירה פרימיום",
+    description: "הוגרדן, לאף, גולסטאר אנפילטר",
+    price: 23,
+    category: "drink",
+  },
+  {
+    id: "beer-weiss",
+    name: "ויינשטפאן (חצי)",
+    description: "בירת חיטה גרמנית",
+    price: 25,
+    category: "drink",
+  },
+  // דילים
+  {
+    id: "family-deal",
+    name: "דיל משפחתי",
+    description: "5 מנות קלאסיות (220), צ׳יפס ענק",
+    price: 300,
+    category: "deal",
+  },
+  {
+    id: "friends-deal",
+    name: "דיל חברים",
+    description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה",
+    price: 216,
+    category: "deal",
+  },
+  {
+    id: "friends-mix",
+    name: "מיקס חברים",
+    description: "ערימת צ׳יפסים: רגיל, טבעות בצל, וופל צ׳יפס",
+    price: 59,
+    category: "deal",
   },
 ];
 
 export const toppings: Topping[] = [
-  { id: "extra-cheese", name: "גבינה נוספת", price: 5 },
-  { id: "jalapeno", name: "חלפיניו", price: 4 },
-  { id: "mushrooms", name: "פטריות", price: 5 },
-  { id: "egg", name: "ביצת עין", price: 6 },
-  { id: "avocado", name: "אבוקדו", price: 7 },
-  { id: "caramelized-onion", name: "בצל מקורמל", price: 4 },
+  { id: "fried-onion", name: "בצל מטוגן", price: 7 },
+  { id: "garlic-confit", name: "קונפי שום", price: 7 },
+  { id: "egg", name: "ביצת עין", price: 8 },
+  { id: "vegan-cheddar", name: "צ׳דר טבעוני", price: 7 },
+  { id: "onion-jam", name: "ריבת בצל של סבתא דינה", price: 9 },
+  { id: "roastbeef", name: "רצועות רוסטביף", price: 20 },
+  { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25 },
+  { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים", price: 9 },
+  { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8 },
+  { id: "maple", name: "מייפל", price: 5 },
+  { id: "peanut-butter", name: "חמאת בוטנים", price: 8 },
+];
+
+export const mealUpgrade = {
+  name: "שדרוג לארוחה עסקית (המבורגר+צ׳יפס+שתייה)",
+  price: 23,
+};
+
+export const sideUpgrades: Upgrade[] = [
+  { id: "up-onion-rings", name: "טבעות בצל", price: 4 },
+  { id: "up-waffle", name: "וופל צ׳יפס", price: 5 },
+  { id: "up-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 12 },
+  { id: "up-beer", name: "בירה", price: 8 },
+  { id: "up-unfiltered", name: "אנפילטר/לאף", price: 13 },
+  { id: "up-weiss", name: "בירה ויינשטפאן", price: 15 },
 ];

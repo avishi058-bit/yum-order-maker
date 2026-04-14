@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Phone } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import CartDrawer, { CartItem } from "@/components/CartDrawer";
@@ -64,7 +64,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Floating cart button */}
       {totalItems > 0 && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}
@@ -106,8 +105,16 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      <footer className="py-8 text-center text-muted-foreground text-sm border-t border-border">
-        © 2026 בורגר מושלם. כל הזכויות שמורות.
+      <footer className="py-8 text-center border-t border-border space-y-2">
+        <p className="text-foreground font-bold">הַבַּקְּתָה — המבורגר של מושבניקים 🐄</p>
+        <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
+        <a
+          href="tel:058-4633-555"
+          className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
+        >
+          <Phone size={14} />
+          058-4633-555
+        </a>
       </footer>
     </div>
   );
