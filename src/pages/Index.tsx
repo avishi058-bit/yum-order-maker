@@ -18,7 +18,7 @@ const Index = () => {
       if (existing) {
         return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [] }];
+      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [] }];
     });
     setCartOpen(true);
   }, []);
@@ -40,6 +40,21 @@ const Index = () => {
               toppings: c.toppings.includes(toppingId)
                 ? c.toppings.filter((t) => t !== toppingId)
                 : [...c.toppings, toppingId],
+            }
+          : c
+      )
+    );
+  }, []);
+
+  const toggleRemoval = useCallback((itemId: string, removalId: string) => {
+    setCart((prev) =>
+      prev.map((c) =>
+        c.id === itemId
+          ? {
+              ...c,
+              removals: c.removals.includes(removalId)
+                ? c.removals.filter((r) => r !== removalId)
+                : [...c.removals, removalId],
             }
           : c
       )
@@ -85,6 +100,7 @@ const Index = () => {
         items={cart}
         onUpdateQuantity={updateQuantity}
         onToggleTopping={toggleTopping}
+        onToggleRemoval={toggleRemoval}
         onCheckout={() => {
           setCartOpen(false);
           setCheckoutOpen(true);
