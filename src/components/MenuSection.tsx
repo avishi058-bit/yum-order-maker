@@ -17,17 +17,12 @@ const needsCustomization = (item: MenuItem) =>
 const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
   const image = menuImages[item.id];
   const [justAdded, setJustAdded] = useState(false);
-  const [flyingItem, setFlyingItem] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleAdd = () => {
     onAdd(item);
     if (!needsCustomization(item)) {
-      setFlyingItem(true);
       setJustAdded(true);
-
-      setTimeout(() => setFlyingItem(false), 600);
-      setTimeout(() => setJustAdded(false), 1400);
+      setTimeout(() => setJustAdded(false), 1200);
     }
   };
 
