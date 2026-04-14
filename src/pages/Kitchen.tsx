@@ -32,6 +32,8 @@ interface Order {
 
 type ViewMode = "active" | "history";
 
+const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
+
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   new: { label: "חדשה", color: "bg-red-500", icon: <Bell size={18} /> },
   preparing: { label: "בהכנה", color: "bg-yellow-500", icon: <ChefHat size={18} /> },
