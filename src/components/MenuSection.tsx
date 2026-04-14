@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Check, ShoppingBag } from "lucide-react";
 import { menuItems, MenuItem } from "@/data/menu";
@@ -17,12 +17,17 @@ const needsCustomization = (item: MenuItem) =>
 const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
   const image = menuImages[item.id];
   const [justAdded, setJustAdded] = useState(false);
+  const [flyingItem, setFlyingItem] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleAdd = () => {
     onAdd(item);
     if (!needsCustomization(item)) {
+      setFlyingItem(true);
       setJustAdded(true);
-      setTimeout(() => setJustAdded(false), 1200);
+
+      setTimeout(() => setFlyingItem(false), 600);
+      setTimeout(() => setJustAdded(false), 1400);
     }
   };
 
@@ -31,7 +36,7 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative"
+      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-visible"
       dir="rtl"
     >
       {/* Text content - right side */}
@@ -49,6 +54,7 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         <div className="flex items-center justify-between">
           <span className="text-primary font-bold text-lg">₪{item.price}</span>
           <motion.button
+            ref={buttonRef}
             whileTap={{ scale: 0.85 }}
             onClick={handleAdd}
             className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors duration-300 ${
@@ -95,9 +101,31 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         </div>
       )}
 
+      {/* Flying item animation */}
+      <AnimatePresence>
+        {flyingItem && (
+          <motion.div
+            initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            animate={{
+              opacity: 0,
+              scale: 0.2,
+              x: -120,
+              y: 200,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.32, 0, 0.67, 0] }}
+            className="absolute left-8 top-1/2 -translate-y-1/2 z-20 pointer-events-none"
+          >
+            <div className="bg-primary text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center shadow-xl">
+              <ShoppingBag size={20} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Toast notification */}
       <AnimatePresence>
-        {justAdded && (
+        {justAdded && !flyingItem && (
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
