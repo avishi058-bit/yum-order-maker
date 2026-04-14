@@ -86,6 +86,29 @@ const Index = () => {
     []
   );
 
+  const handleFamilyDealConfirm = useCallback(
+    (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
+      const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
+      setCart((prev) => [
+        ...prev,
+        {
+          id: `family-deal-${Date.now()}`,
+          name: "דיל משפחתי",
+          price: 300 + drinksExtra,
+          quantity: 1,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+          dealBurgers: burgers,
+          dealDrinks: drinks.length > 0 ? drinks : undefined,
+        },
+      ]);
+      setFamilyDealOpen(false);
+      setCartOpen(true);
+    },
+    []
+  );
+
   const handleDrinkConfirm = useCallback(
     (item: MenuItem, selectedDrink: string) => {
       const cartItemId = `${item.id}-${selectedDrink}-${Date.now()}`;
