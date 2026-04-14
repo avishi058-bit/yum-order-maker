@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
-import { toppings, Topping, removals, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { toppings, Topping, removals, smashModifications, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 export interface CartItem {
   id: string;
@@ -40,7 +40,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
     ids.map((id) => toppings.find((t) => t.id === id)?.name).filter(Boolean);
 
   const getRemovalNames = (ids: string[]) =>
-    ids.map((id) => removals.find((r) => r.id === id)?.name).filter(Boolean);
+    ids.map((id) => removals.find((r) => r.id === id)?.name || smashModifications.find((r) => r.id === id)?.name).filter(Boolean);
 
   return (
     <AnimatePresence>

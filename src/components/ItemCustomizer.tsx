@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, mealUpgrade, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
@@ -22,6 +22,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   if (!item) return null;
 
   const isBurger = item.category === "burger";
+  const isSmash = smashBurgerIds.includes(item.id);
+  const removalsList = isSmash ? smashModifications : removals;
 
   const toggleTopping = (id: string) => {
     setSelectedToppings((prev) =>
@@ -118,10 +120,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                   {isBurger && (
                     <>
                       <div className="px-5 py-4 border-b border-border">
-                        <h3 className="text-lg font-bold text-right mb-1">שינויים אפשריים</h3>
-                        <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-5 פריטים</p>
+                        <h3 className="text-lg font-bold text-right mb-1">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                        <p className="text-sm text-muted-foreground text-right mb-4">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                         <div className="space-y-0">
-                          {removals.map((r) => {
+                          {removalsList.map((r) => {
                             const active = selectedRemovals.includes(r.id);
                             return (
                               <button

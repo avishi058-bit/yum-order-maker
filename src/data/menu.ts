@@ -191,6 +191,16 @@ export const removals: Removal[] = [
   { id: "dry", name: "יבש ללא ירקות ורטבים" },
 ];
 
+export const smashModifications: Removal[] = [
+  { id: "no-lettuce", name: "ללא חסה" },
+  { id: "no-pickles", name: "ללא חמוצים" },
+  { id: "no-aioli", name: "ללא איולי" },
+  { id: "add-tomato", name: "להוסיף עגבנייה" },
+  { id: "add-onion", name: "להוסיף בצל" },
+];
+
+export const smashBurgerIds = ["smash-moshavnikim", "smash-double-cheese", "crazy-smash"];
+
 export const toppings: Topping[] = [
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
   { id: "garlic-confit", name: "קונפי שום", price: 7 },
