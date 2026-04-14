@@ -127,8 +127,13 @@ const Kitchen = () => {
     } catch {}
   };
 
-  const updateStatus = async (orderId: string, newStatus: string) => {
-    await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+  const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
+    const updateData: any = { status: newStatus };
+    if (newStatus === "preparing" && prepMinutes) {
+      updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
+    }
+    await supabase.from("orders").update(updateData).eq("id", orderId);
+    setShowTimePicker(null);
     fetchOrders();
   };
 
