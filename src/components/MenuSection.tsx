@@ -36,7 +36,8 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-visible"
+      layout={false}
+      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-hidden"
       dir="rtl"
     >
       {/* Text content - right side */}
