@@ -6,13 +6,14 @@ import { menuImages } from "@/data/menuImages";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
+  { key: "meal" as const, label: "🍽️ ארוחות עסקיות" },
   { key: "side" as const, label: "🍟 צ׳יפס אחי!" },
   { key: "drink" as const, label: "🍺 מה את שותה?" },
   { key: "deal" as const, label: "🤝 עשינו עסק" },
 ];
 
 const needsCustomization = (item: MenuItem) =>
-  item.category === "burger" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
+  item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
 const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
   const image = menuImages[item.id];

@@ -21,8 +21,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
 
   if (!item) return null;
 
-  const isBurger = item.category === "burger";
-  const isSmash = smashBurgerIds.includes(item.id);
+  const isBurger = item.category === "burger" || item.category === "meal";
+  const isMeal = item.category === "meal";
+  const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
   const removalsList = isSmash ? smashModifications : removals;
 
   const toggleTopping = (id: string) => {
@@ -54,7 +55,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const totalPrice = unitPrice * quantity;
 
   const handleNext = () => {
-    if (isBurger && step === "customize") {
+    if (isMeal && step === "customize") {
+      // Meals skip the meal-upgrade question, go straight to side selection
+      setStep("side-select");
+    } else if (isBurger && step === "customize") {
       setStep("meal-upgrade");
     } else {
       handleFinish(false);
