@@ -210,11 +210,9 @@ export const mealUpgrade = {
   price: 23,
 };
 
-export const sideUpgrades: Upgrade[] = [
-  { id: "up-onion-rings", name: "טבעות בצל", price: 4 },
-  { id: "up-waffle", name: "וופל צ׳יפס", price: 5 },
-  { id: "up-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 12 },
-  { id: "up-beer", name: "בירה", price: 8 },
-  { id: "up-unfiltered", name: "אנפילטר/לאף", price: 13 },
-  { id: "up-weiss", name: "בירה ויינשטפאן", price: 15 },
+export const mealSideOptions: Upgrade[] = [
+  { id: "side-fries", name: "צ׳יפס רגיל", price: 0 },
+  { id: "side-waffle", name: "וופל צ׳יפס", price: 5 },
+  { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
+  { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
 ];
