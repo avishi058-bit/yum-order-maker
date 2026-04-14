@@ -268,6 +268,15 @@ const Kitchen = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setAutoPrint(!autoPrint)}
+            className={`p-2 rounded-lg transition-colors ${
+              autoPrint ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+            }`}
+            title={autoPrint ? "כבה הדפסה אוטומטית" : "הפעל הדפסה אוטומטית"}
+          >
+            <Printer size={20} />
+          </button>
+          <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`p-2 rounded-lg transition-colors ${
               soundEnabled ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"
