@@ -52,8 +52,10 @@ const Kitchen = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [autoPrint, setAutoPrint] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const printedOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
 
   const fetchOrders = useCallback(async () => {
