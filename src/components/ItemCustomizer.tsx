@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, mealUpgrade, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
@@ -22,6 +22,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   if (!item) return null;
 
   const isBurger = item.category === "burger";
+  const isSmash = smashBurgerIds.includes(item.id);
+  const removalsList = isSmash ? smashModifications : removals;
 
   const toggleTopping = (id: string) => {
     setSelectedToppings((prev) =>
