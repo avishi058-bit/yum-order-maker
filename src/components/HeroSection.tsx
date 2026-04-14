@@ -20,12 +20,12 @@ const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
           initial={{ opacity: 0, scale: 0.7 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, type: "spring", stiffness: 200 }}
-          className="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden drop-shadow-2xl"
+          className="w-36 h-36 mx-auto mb-6 rounded-full overflow-hidden ring-[3px] ring-primary shadow-xl shadow-black/40"
         >
           <img
             src={logo}
             alt="הבקתה - לוגו"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover scale-[1.15]"
           />
         </motion.div>
         <motion.h1
