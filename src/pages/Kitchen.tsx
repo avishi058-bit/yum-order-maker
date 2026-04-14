@@ -32,6 +32,8 @@ interface Order {
 
 type ViewMode = "active" | "history";
 
+const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
+
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   new: { label: "חדשה", color: "bg-red-500", icon: <Bell size={18} /> },
   preparing: { label: "בהכנה", color: "bg-yellow-500", icon: <ChefHat size={18} /> },
@@ -50,6 +52,7 @@ const Kitchen = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevOrderCountRef = useRef(0);
 
@@ -124,8 +127,13 @@ const Kitchen = () => {
     } catch {}
   };
 
-  const updateStatus = async (orderId: string, newStatus: string) => {
-    await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+  const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
+    const updateData: any = { status: newStatus };
+    if (newStatus === "preparing" && prepMinutes) {
+      updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
+    }
+    await supabase.from("orders").update(updateData).eq("id", orderId);
+    setShowTimePicker(null);
     fetchOrders();
   };
 
@@ -354,6 +362,30 @@ const Kitchen = () => {
                 ))}
               </div>
 
+              {/* Time picker overlay */}
+              {showTimePicker === order.id && (
+                <div className="px-4 py-3 border-t border-border bg-secondary/50">
+                  <p className="text-sm font-bold text-foreground mb-2">כמה זמן הכנה? ⏱️</p>
+                  <div className="flex flex-wrap gap-2">
+                    {PREP_TIMES.map((min) => (
+                      <button
+                        key={min}
+                        onClick={() => updateStatus(order.id, "preparing", min)}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity"
+                      >
+                        {min} דק׳
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setShowTimePicker(null)}
+                    className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              )}
+
               {/* Footer */}
               <div className="px-4 py-3 border-t border-border flex items-center justify-between">
                 <span className="font-bold text-lg text-primary">₪{order.total}</span>
@@ -367,15 +399,33 @@ const Kitchen = () => {
                     </button>
                   )}
                   {next && (
-                    <button
-                      onClick={() => updateStatus(order.id, next)}
-                      className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
-                    >
-                      {next === "preparing" ? "התחל הכנה 👨‍🍳" : next === "ready" ? "מוכנה ✅" : "הושלמה"}
-                    </button>
+                    next === "preparing" ? (
+                      <button
+                        onClick={() => setShowTimePicker(order.id)}
+                        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                      >
+                        התחל הכנה 👨‍🍳
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => updateStatus(order.id, next)}
+                        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                      >
+                        {next === "ready" ? "מוכנה ✅" : "הושלמה"}
+                      </button>
+                    )
                   )}
                 </div>
               </div>
+
+              {/* Tracking link */}
+              {order.status === "preparing" && (
+                <div className="px-4 py-2 border-t border-border bg-secondary/20 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
+                  </p>
+                </div>
+              )}
             </div>
           );
         })}

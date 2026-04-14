@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN estimated_ready_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;

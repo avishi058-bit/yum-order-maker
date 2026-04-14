@@ -37,7 +37,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
           total,
           status: "new",
         })
-        .select("id")
+        .select("id, order_number")
         .single();
 
       if (orderError) throw orderError;
@@ -69,7 +69,12 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      toast({ title: "ההזמנה נשלחה בהצלחה! 🎉" });
+      toast({ 
+        title: "ההזמנה נשלחה בהצלחה! 🎉", 
+        description: `מספר הזמנה: #${order.order_number} — עקוב אחרי ההזמנה בקישור /track?order=${order.order_number}`,
+      });
+      // Open tracking page
+      window.open(`/track?order=${order.order_number}`, "_blank");
       onSuccess();
     } catch (error) {
       console.error("Order error:", error);
