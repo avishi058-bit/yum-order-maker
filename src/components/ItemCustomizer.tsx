@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, mealUpgrade, sideUpgrades } from "@/data/menu";
+import { X, Minus, Plus, Utensils } from "lucide-react";
+import { MenuItem, toppings, Topping, removals, mealUpgrade } from "@/data/menu";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[]) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean) => void;
 }
+
+type Step = "customize" | "meal-upgrade";
 
 const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>([]);
+  const [step, setStep] = useState<Step>("customize");
 
   if (!item) return null;
 
@@ -38,11 +41,28 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const unitPrice = item.price + toppingsCost;
   const totalPrice = unitPrice * quantity;
 
-  const handleConfirm = () => {
-    onConfirm(item, quantity, selectedToppings, selectedRemovals);
+  const handleNext = () => {
+    if (isBurger && step === "customize") {
+      setStep("meal-upgrade");
+    } else {
+      handleFinish(false);
+    }
+  };
+
+  const handleFinish = (withMeal: boolean) => {
+    onConfirm(item, quantity, selectedToppings, selectedRemovals, withMeal);
     setQuantity(1);
     setSelectedToppings([]);
     setSelectedRemovals([]);
+    setStep("customize");
+  };
+
+  const handleClose = () => {
+    setStep("customize");
+    setQuantity(1);
+    setSelectedToppings([]);
+    setSelectedRemovals([]);
+    onClose();
   };
 
   return (
@@ -53,7 +73,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed inset-0 bg-black z-50"
           />
           <motion.div
@@ -71,125 +91,166 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 pb-4 border-b border-border">
-              <button onClick={onClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+              <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
                 <X size={18} />
               </button>
               <h2 className="text-lg font-bold flex-1 text-center">{item.name}</h2>
               <div className="w-9" />
             </div>
 
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto">
-              {isBurger && (
-                <>
-                  {/* Removals section */}
-                  <div className="px-5 py-4 border-b border-border">
-                    <h3 className="text-lg font-bold text-right mb-1">שינויים אפשריים</h3>
-                    <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-5 פריטים</p>
-                    <div className="space-y-0">
-                      {removals.map((r) => {
-                        const active = selectedRemovals.includes(r.id);
-                        return (
-                          <button
-                            key={r.id}
-                            onClick={() => toggleRemoval(r.id)}
-                            className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
-                          >
-                            <div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                active
-                                  ? "border-primary bg-primary"
-                                  : "border-muted-foreground/40"
-                              }`}
-                            >
-                              {active && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
-                                />
-                              )}
-                            </div>
-                            <span className="font-medium text-base">{r.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Toppings section */}
-                  <div className="px-5 py-4">
-                    <h3 className="text-lg font-bold text-right mb-1">תוספות בתשלום</h3>
-                    <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
-                    <div className="space-y-0">
-                      {toppings.map((t: Topping) => {
-                        const active = selectedToppings.includes(t.id);
-                        return (
-                          <button
-                            key={t.id}
-                            onClick={() => toggleTopping(t.id)}
-                            className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  active
-                                    ? "border-primary bg-primary"
-                                    : "border-muted-foreground/40"
-                                }`}
+            <AnimatePresence mode="wait">
+              {step === "customize" && (
+                <motion.div
+                  key="customize"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="flex-1 overflow-y-auto"
+                >
+                  {isBurger && (
+                    <>
+                      {/* Removals section */}
+                      <div className="px-5 py-4 border-b border-border">
+                        <h3 className="text-lg font-bold text-right mb-1">שינויים אפשריים</h3>
+                        <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-5 פריטים</p>
+                        <div className="space-y-0">
+                          {removals.map((r) => {
+                            const active = selectedRemovals.includes(r.id);
+                            return (
+                              <button
+                                key={r.id}
+                                onClick={() => toggleRemoval(r.id)}
+                                className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
                               >
-                                {active && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
-                                  />
-                                )}
-                              </div>
-                              <span className="text-sm text-muted-foreground">+ ₪{t.price}</span>
-                            </div>
-                            <span className="font-medium text-base">{t.name}</span>
-                          </button>
-                        );
-                      })}
+                                <div
+                                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  }`}
+                                >
+                                  {active && (
+                                    <motion.div
+                                      initial={{ scale: 0 }}
+                                      animate={{ scale: 1 }}
+                                      className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                    />
+                                  )}
+                                </div>
+                                <span className="font-medium text-base">{r.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Toppings section */}
+                      <div className="px-5 py-4">
+                        <h3 className="text-lg font-bold text-right mb-1">תוספות בתשלום</h3>
+                        <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
+                        <div className="space-y-0">
+                          {toppings.map((t: Topping) => {
+                            const active = selectedToppings.includes(t.id);
+                            return (
+                              <button
+                                key={t.id}
+                                onClick={() => toggleTopping(t.id)}
+                                className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                      active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                    }`}
+                                  >
+                                    {active && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                      />
+                                    )}
+                                  </div>
+                                  <span className="text-sm text-muted-foreground">+ ₪{t.price}</span>
+                                </div>
+                                <span className="font-medium text-base">{t.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {!isBurger && (
+                    <div className="px-5 py-8 text-center text-muted-foreground">
+                      <p className="text-base">{item.description}</p>
+                      <p className="text-2xl font-bold text-primary mt-3">₪{item.price}</p>
                     </div>
+                  )}
+                </motion.div>
+              )}
+
+              {step === "meal-upgrade" && (
+                <motion.div
+                  key="meal-upgrade"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center"
+                >
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                    <Utensils size={36} className="text-primary" />
                   </div>
-                </>
-              )}
+                  <h3 className="text-2xl font-black mb-2">לשדרג לארוחה עסקית?</h3>
+                  <p className="text-primary font-bold text-xl mb-1">+₪{mealUpgrade.price}</p>
+                  <p className="text-muted-foreground text-sm mb-8">המבורגר + צ׳יפס + שתייה</p>
 
-              {!isBurger && (
-                <div className="px-5 py-8 text-center text-muted-foreground">
-                  <p className="text-base">{item.description}</p>
-                  <p className="text-2xl font-bold text-primary mt-3">₪{item.price}</p>
+                  <div className="w-full space-y-3">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleFinish(true)}
+                      className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
+                    >
+                      שדרגו לי! 🍟🥤
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleFinish(false)}
+                      className="w-full bg-muted text-muted-foreground font-medium py-4 rounded-xl text-base"
+                    >
+                      לא תודה
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Bottom bar - only on customize step */}
+            {step === "customize" && (
+              <div className="px-5 py-4 border-t border-border flex items-center gap-3 bg-card safe-bottom">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleNext}
+                  className="flex-1 bg-primary text-primary-foreground font-bold py-3.5 rounded-xl text-base shadow-lg shadow-primary/20"
+                >
+                  {isBurger ? "המשך" : `הוספה להזמנה · ₪${totalPrice}`}
+                </motion.button>
+                <div className="flex items-center gap-2 bg-muted rounded-xl px-2 py-1.5">
+                  <button
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-border transition-colors"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="font-bold text-lg w-6 text-center">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-border transition-colors"
+                  >
+                    <Plus size={16} />
+                  </button>
                 </div>
-              )}
-            </div>
-
-            {/* Bottom bar */}
-            <div className="px-5 py-4 border-t border-border flex items-center gap-3 bg-card safe-bottom">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={handleConfirm}
-                className="flex-1 bg-primary text-primary-foreground font-bold py-3.5 rounded-xl text-base shadow-lg shadow-primary/20"
-              >
-                הוספה להזמנה · ₪{totalPrice}
-              </motion.button>
-              <div className="flex items-center gap-2 bg-muted rounded-xl px-2 py-1.5">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-border transition-colors"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="font-bold text-lg w-6 text-center">{quantity}</span>
-                <button
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-border transition-colors"
-                >
-                  <Plus size={16} />
-                </button>
               </div>
-            </div>
+            )}
           </motion.div>
         </>
       )}

@@ -30,6 +30,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
           .map((rId) => removals.find((r) => r.id === rId)?.name)
           .filter(Boolean);
         let line = `${item.name} x${item.quantity}`;
+        if (item.withMeal) line += ` (ארוחה עסקית)`;
         if (removalNames.length) line += ` (${removalNames.join(", ")})`;
         if (toppingNames.length) line += ` + ${toppingNames.join(", ")}`;
         return line;
