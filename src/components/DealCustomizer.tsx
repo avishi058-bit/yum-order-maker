@@ -26,7 +26,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
     { removals: ["no-changes"] },
     { removals: ["no-changes"] },
   ]);
-  const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["deal-cola", "deal-cola", "deal-cola"]);
+  const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
   const currentBurgerIndex = step === "burger-1" ? 0 : step === "burger-2" ? 1 : 2;
 
@@ -37,7 +37,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
       { removals: ["no-changes"] },
       { removals: ["no-changes"] },
     ]);
-    setSelectedDrinks(["deal-cola", "deal-cola", "deal-cola"]);
+    setSelectedDrinks(["", "", ""]);
   };
 
   const handleClose = () => {
@@ -81,6 +81,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
     else if (step === "burger-2") setStep("burger-3");
     else if (step === "burger-3") setStep("drinks");
     else {
+      if (selectedDrinks.some((d) => d === "")) return;
       const drinks: DealDrinkChoice[] = selectedDrinks.map((dId) => {
         const drink = dealDrinkOptions.find((d) => d.id === dId)!;
         return { id: drink.id, name: drink.name, extraCost: drink.price };
