@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removals, smashModifications, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CheckoutFormProps {
   items: CartItem[];
@@ -13,55 +14,69 @@ interface CheckoutFormProps {
 
 const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) => {
   const [form, setForm] = useState({ name: "", phone: "", address: "", notes: "" });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.address) {
       toast({ title: "אנא מלא את כל השדות", variant: "destructive" });
       return;
     }
 
-    const orderText = items
-      .map((item) => {
-        if (item.dealBurgers) {
-          let line = `דיל חברים x${item.quantity}`;
-          item.dealBurgers.forEach((burger, i) => {
-            const rNames = burger.removals
-              .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
-              .filter(Boolean);
-            line += `\n  המבורגר ${i + 1}${rNames.length ? ` (${rNames.join(", ")})` : ""}`;
-          });
-          line += `\n  צ׳יפס ענק`;
-          item.dealDrinks?.forEach((drink, i) => {
-            line += `\n  שתייה ${i + 1}: ${drink.name}${drink.extraCost > 0 ? ` (+₪${drink.extraCost})` : ""}`;
-          });
-          return line;
-        }
+    setSubmitting(true);
+
+    try {
+      // Create the order
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: form.name,
+          customer_phone: form.phone,
+          customer_address: form.address,
+          notes: form.notes || null,
+          total,
+          status: "new",
+        })
+        .select("id")
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map((item) => {
         const toppingNames = item.toppings
           .map((tId) => toppings.find((t) => t.id === tId)?.name)
-          .filter(Boolean);
+          .filter(Boolean) as string[];
         const removalNames = item.removals
           .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
-          .filter(Boolean);
-        let line = `${item.name} x${item.quantity}`;
-        if (item.withMeal) {
-          const sideName = item.mealSideId ? mealSideOptions.find(s => s.id === item.mealSideId)?.name : "צ׳יפס רגיל";
-          const drinkName = item.mealDrinkId ? mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name : "קולה";
-          line += ` (ארוחה עסקית - ${sideName}, ${drinkName})`;
-        }
-        if (removalNames.length) line += ` (${removalNames.join(", ")})`;
-        if (toppingNames.length) line += ` + ${toppingNames.join(", ")}`;
-        return line;
-      })
-      .join("\n");
+          .filter(Boolean) as string[];
 
-    const message = `🍔 הזמנה חדשה מהבקתה!\n\nשם: ${form.name}\nטלפון: ${form.phone}\nכתובת: ${form.address}\n${form.notes ? `הערות: ${form.notes}\n` : ""}\nפריטים:\n${orderText}\n\nסה״כ: ₪${total}`;
+        return {
+          order_id: order.id,
+          item_name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          toppings: toppingNames,
+          removals: removalNames,
+          with_meal: item.withMeal,
+          meal_side: item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.name || null) : null,
+          meal_drink: item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name || null) : null,
+          deal_burgers: item.dealBurgers ? JSON.parse(JSON.stringify(item.dealBurgers)) : null,
+          deal_drinks: item.dealDrinks ? JSON.parse(JSON.stringify(item.dealDrinks)) : null,
+        };
+      });
 
-    const whatsappUrl = `https://wa.me/9720584633555?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      if (itemsError) throw itemsError;
 
-    toast({ title: "ההזמנה נשלחת בוואטסאפ! 🎉" });
-    onSuccess();
+      toast({ title: "ההזמנה נשלחה בהצלחה! 🎉" });
+      onSuccess();
+    } catch (error) {
+      console.error("Order error:", error);
+      toast({ title: "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -144,17 +159,15 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
               placeholder="ללא בצל, תודה"
             />
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            📱 ההזמנה תישלח בוואטסאפ למספר 058-4633-555
-          </p>
           <div className="flex gap-3 pt-2">
             <motion.button
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
+              disabled={submitting}
+              className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
             >
-              שלח הזמנה בוואטסאפ
+              {submitting ? "שולח..." : "שלח הזמנה 🍔"}
             </motion.button>
             <button
               type="button"
