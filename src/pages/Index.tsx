@@ -238,6 +238,8 @@ const Index = () => {
           058-4633-555
         </a>
       </footer>
+
+      <AccessibilityWidget />
     </div>
   );
 };
