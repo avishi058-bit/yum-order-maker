@@ -139,7 +139,7 @@ const AccessibilityWidget = () => {
       <button
         onClick={() => setOpen(true)}
         aria-label="פתח תפריט נגישות"
-        className="fixed bottom-6 right-6 z-[60] w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+        className="fixed bottom-6 right-6 z-[60] w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
       >
         <Accessibility size={22} />
       </button>
