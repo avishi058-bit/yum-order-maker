@@ -22,9 +22,9 @@ const stepLabels: Record<Step, string> = {
 const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
   const [step, setStep] = useState<Step>("burger-1");
   const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>([
-    { removals: ["no-changes"] },
-    { removals: ["no-changes"] },
-    { removals: ["no-changes"] },
+    { removals: ["no-changes"], name: "" },
+    { removals: ["no-changes"], name: "" },
+    { removals: ["no-changes"], name: "" },
   ]);
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
@@ -33,9 +33,9 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
   const resetState = () => {
     setStep("burger-1");
     setBurgerConfigs([
-      { removals: ["no-changes"] },
-      { removals: ["no-changes"] },
-      { removals: ["no-changes"] },
+      { removals: ["no-changes"], name: "" },
+      { removals: ["no-changes"], name: "" },
+      { removals: ["no-changes"], name: "" },
     ]);
     setSelectedDrinks(["", "", ""]);
   };
@@ -88,6 +88,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
       });
       const cleanBurgers = burgerConfigs.map((b) => ({
         removals: b.removals.filter((r) => r !== "no-changes"),
+        name: b.name?.trim() || undefined,
       }));
       onConfirm(cleanBurgers, drinks);
       resetState();
@@ -163,6 +164,22 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
                   <div className="px-5 py-4">
                     <h3 className="text-lg font-bold text-right mb-1">קלאסי (220 גרם)</h3>
                     <p className="text-sm text-muted-foreground text-right mb-4">בצל, עגבנייה, חסה, חמוצים ואיולי הבית</p>
+                    <div className="mb-4">
+                      <input
+                        type="text"
+                        placeholder="שם (לא חובה)"
+                        value={burgerConfigs[currentBurgerIndex].name || ""}
+                        onChange={(e) => {
+                          const idx = currentBurgerIndex;
+                          setBurgerConfigs((prev) => {
+                            const updated = [...prev];
+                            updated[idx] = { ...updated[idx], name: e.target.value };
+                            return updated;
+                          });
+                        }}
+                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
                     <div className="space-y-0">
                       {removals.map((r) => {
                         const active = currentRemovals.includes(r.id);

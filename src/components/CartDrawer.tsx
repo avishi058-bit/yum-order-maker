@@ -4,6 +4,7 @@ import { toppings, Topping, removals, smashModifications, menuItems, mealSideOpt
 
 export interface DealBurgerConfig {
   removals: string[];
+  name?: string;
 }
 
 export interface DealDrinkChoice {
@@ -132,9 +133,10 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
                         {item.dealBurgers.map((burger, i) => (
                           <div key={i} className="text-xs text-muted-foreground">
                             🍔 המבורגר {i + 1}
+                            {burger.name && <span className="font-bold text-foreground mr-1">({burger.name})</span>}
                             {burger.removals.length > 0 && (
                               <span className="mr-1">
-                                ({getRemovalNames(burger.removals).join(", ")})
+                                — {getRemovalNames(burger.removals).join(", ")}
                               </span>
                             )}
                           </div>
