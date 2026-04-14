@@ -60,3 +60,52 @@
     direction: rtl;
   }
 }
+
+/* Accessibility styles */
+.accessibility-high-contrast {
+  filter: contrast(1.5) !important;
+}
+
+.accessibility-invert {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+.accessibility-invert img,
+.accessibility-invert video {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+.accessibility-highlight-links a {
+  outline: 3px solid hsl(32, 95%, 52%) !important;
+  outline-offset: 2px !important;
+  text-decoration: underline !important;
+}
+
+.accessibility-big-cursor,
+.accessibility-big-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath fill='black' stroke='white' stroke-width='1' d='M5 3l14 8-6 2 4 8-3 1-4-8-5 4z'/%3E%3C/svg%3E"), auto !important;
+}
+
+.accessibility-stop-animations,
+.accessibility-stop-animations * {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+.accessibility-readable-font,
+.accessibility-readable-font * {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.accessibility-line-height,
+.accessibility-line-height * {
+  line-height: 2 !important;
+}
+
+.accessibility-text-spacing,
+.accessibility-text-spacing * {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}

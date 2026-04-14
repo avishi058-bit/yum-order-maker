@@ -9,6 +9,7 @@ import ItemCustomizer from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
+import AccessibilityWidget from "@/components/AccessibilityWidget";
 import { MenuItem, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 
 const Index = () => {
@@ -237,6 +238,8 @@ const Index = () => {
           058-4633-555
         </a>
       </footer>
+
+      <AccessibilityWidget />
     </div>
   );
 };
