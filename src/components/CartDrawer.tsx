@@ -105,6 +105,12 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
                             {(mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) > 0 && ` +₪${mealSideOptions.find(s => s.id === item.mealSideId)?.price}`}
                           </span>
                         )}
+                        {item.mealDrinkId && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                            {mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name}
+                            {(mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) > 0 && ` +₪${mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price}`}
+                          </span>
+                        )}
                       </div>
                     )}
 
