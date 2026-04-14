@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Check, ShoppingBag } from "lucide-react";
-import { menuItems, MenuItem } from "@/data/menu";
+import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 
 const categories = [
@@ -12,7 +12,7 @@ const categories = [
 ];
 
 const needsCustomization = (item: MenuItem) =>
-  item.category === "burger" || item.id === "friends-deal";
+  item.category === "burger" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
 const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
   const image = menuImages[item.id];
