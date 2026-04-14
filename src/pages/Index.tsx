@@ -21,7 +21,7 @@ const Index = () => {
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
-    } else if (item.category === "burger") {
+    } else if (item.category === "burger" || item.category === "meal") {
       setCustomizerItem(item);
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
       setDrinkItem(item);
