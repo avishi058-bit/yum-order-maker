@@ -58,7 +58,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   };
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
-    onConfirm(item, quantity, selectedToppings, selectedRemovals, withMeal, sideId, drinkId);
+    onConfirm(item, quantity, selectedToppings, selectedRemovals.filter(r => r !== "no-changes"), withMeal, sideId, drinkId);
     resetState();
   };
 
