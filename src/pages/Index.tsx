@@ -7,6 +7,7 @@ import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/compo
 import CheckoutForm from "@/components/CheckoutForm";
 import ItemCustomizer from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
+import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import { MenuItem, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 
@@ -16,11 +17,14 @@ const Index = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
   const [dealOpen, setDealOpen] = useState(false);
+  const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
+    } else if (item.id === "family-deal") {
+      setFamilyDealOpen(true);
     } else if (item.category === "burger" || item.category === "meal") {
       setCustomizerItem(item);
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
@@ -77,6 +81,29 @@ const Index = () => {
         },
       ]);
       setDealOpen(false);
+      setCartOpen(true);
+    },
+    []
+  );
+
+  const handleFamilyDealConfirm = useCallback(
+    (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
+      const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
+      setCart((prev) => [
+        ...prev,
+        {
+          id: `family-deal-${Date.now()}`,
+          name: "דיל משפחתי",
+          price: 300 + drinksExtra,
+          quantity: 1,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+          dealBurgers: burgers,
+          dealDrinks: drinks.length > 0 ? drinks : undefined,
+        },
+      ]);
+      setFamilyDealOpen(false);
       setCartOpen(true);
     },
     []
@@ -166,6 +193,12 @@ const Index = () => {
         open={dealOpen}
         onClose={() => setDealOpen(false)}
         onConfirm={handleDealConfirm}
+      />
+
+      <FamilyDealCustomizer
+        open={familyDealOpen}
+        onClose={() => setFamilyDealOpen(false)}
+        onConfirm={handleFamilyDealConfirm}
       />
 
       <CartDrawer
