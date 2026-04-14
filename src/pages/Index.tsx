@@ -29,7 +29,6 @@ const Index = () => {
         }
         return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
       });
-      setCartOpen(true);
     }
   }, []);
 
