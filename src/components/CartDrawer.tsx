@@ -2,6 +2,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 import { toppings, Topping, removals, smashModifications, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
+export interface DealBurgerConfig {
+  removals: string[];
+}
+
+export interface DealDrinkChoice {
+  id: string;
+  name: string;
+  extraCost: number;
+}
+
 export interface CartItem {
   id: string;
   name: string;
@@ -12,6 +22,8 @@ export interface CartItem {
   withMeal: boolean;
   mealSideId?: string;
   mealDrinkId?: string;
+  dealBurgers?: DealBurgerConfig[];
+  dealDrinks?: DealDrinkChoice[];
 }
 
 interface CartDrawerProps {
@@ -111,6 +123,29 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
                             {(mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) > 0 && ` +₪${mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price}`}
                           </span>
                         )}
+                      </div>
+                    )}
+
+                    {/* Show deal details */}
+                    {item.dealBurgers && (
+                      <div className="mb-2 space-y-1">
+                        {item.dealBurgers.map((burger, i) => (
+                          <div key={i} className="text-xs text-muted-foreground">
+                            🍔 המבורגר {i + 1}
+                            {burger.removals.length > 0 && (
+                              <span className="mr-1">
+                                ({getRemovalNames(burger.removals).join(", ")})
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        <div className="text-xs text-muted-foreground">🍟 צ׳יפס ענק</div>
+                        {item.dealDrinks?.map((drink, i) => (
+                          <div key={i} className="text-xs text-muted-foreground">
+                            🥤 {drink.name}
+                            {drink.extraCost > 0 && ` (+₪${drink.extraCost})`}
+                          </div>
+                        ))}
                       </div>
                     )}
 

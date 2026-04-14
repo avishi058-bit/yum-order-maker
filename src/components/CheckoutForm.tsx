@@ -23,6 +23,20 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
 
     const orderText = items
       .map((item) => {
+        if (item.dealBurgers) {
+          let line = `דיל חברים x${item.quantity}`;
+          item.dealBurgers.forEach((burger, i) => {
+            const rNames = burger.removals
+              .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
+              .filter(Boolean);
+            line += `\n  המבורגר ${i + 1}${rNames.length ? ` (${rNames.join(", ")})` : ""}`;
+          });
+          line += `\n  צ׳יפס ענק`;
+          item.dealDrinks?.forEach((drink, i) => {
+            line += `\n  שתייה ${i + 1}: ${drink.name}${drink.extraCost > 0 ? ` (+₪${drink.extraCost})` : ""}`;
+          });
+          return line;
+        }
         const toppingNames = item.toppings
           .map((tId) => toppings.find((t) => t.id === tId)?.name)
           .filter(Boolean);
