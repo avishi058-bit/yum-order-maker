@@ -34,9 +34,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const toggleRemoval = (id: string) => {
     if (id === "no-changes") {
       setSelectedRemovals((prev) => prev.includes("no-changes") ? [] : ["no-changes"]);
+    } else if (id === "dry") {
+      setSelectedRemovals((prev) => prev.includes("dry") ? ["no-changes"] : ["dry"]);
     } else {
       setSelectedRemovals((prev) =>
-        prev.includes(id) ? prev.filter((r) => r !== id) : [...prev.filter((r) => r !== "no-changes"), id]
+        prev.includes(id)
+          ? prev.filter((r) => r !== id).length === 0 ? ["no-changes"] : prev.filter((r) => r !== id)
+          : [...prev.filter((r) => r !== "no-changes" && r !== "dry"), id]
       );
     }
   };
