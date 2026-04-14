@@ -4,6 +4,7 @@ import { toppings, Topping, removals, smashModifications, menuItems, mealSideOpt
 
 export interface DealBurgerConfig {
   removals: string[];
+  name?: string;
 }
 
 export interface DealDrinkChoice {
