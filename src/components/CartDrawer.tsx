@@ -9,6 +9,7 @@ export interface CartItem {
   quantity: number;
   toppings: string[];
   removals: string[];
+  withMeal: boolean;
 }
 
 interface CartDrawerProps {
@@ -25,7 +26,8 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
       const t = toppings.find((tp) => tp.id === tId);
       return sum + (t?.price || 0);
     }, 0);
-    return (item.price + toppingsCost) * item.quantity;
+    const mealCost = item.withMeal ? 23 : 0;
+    return (item.price + toppingsCost + mealCost) * item.quantity;
   };
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
