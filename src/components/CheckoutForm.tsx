@@ -1,0 +1,130 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { CartItem } from "@/components/CartDrawer";
+import { toppings } from "@/data/menu";
+import { toast } from "@/hooks/use-toast";
+
+interface CheckoutFormProps {
+  items: CartItem[];
+  total: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) => {
+  const [form, setForm] = useState({ name: "", phone: "", address: "", notes: "" });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.phone || !form.address) {
+      toast({ title: "אנא מלא את כל השדות", variant: "destructive" });
+      return;
+    }
+    toast({ title: "ההזמנה התקבלה! 🎉", description: "ההמבורגר בדרך אליך" });
+    onSuccess();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="relative bg-card rounded-2xl p-6 w-full max-w-lg border border-border max-h-[90vh] overflow-y-auto"
+        dir="rtl"
+      >
+        <h2 className="text-2xl font-black mb-6">סיום הזמנה</h2>
+
+        <div className="mb-6 bg-secondary/50 rounded-lg p-4 space-y-1">
+          {items.map((item) => {
+            const toppingNames = item.toppings
+              .map((tId) => toppings.find((t) => t.id === tId)?.name)
+              .filter(Boolean);
+            return (
+              <div key={item.id} className="flex justify-between text-sm">
+                <span>
+                  {item.name} x{item.quantity}
+                  {toppingNames.length > 0 && (
+                    <span className="text-muted-foreground"> ({toppingNames.join(", ")})</span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+          <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
+            <span>סה״כ</span>
+            <span className="text-primary">₪{total}</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">שם מלא</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="ישראל ישראלי"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">טלפון</label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="050-1234567"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">כתובת למשלוח</label>
+            <input
+              type="text"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="הרצל 10, תל אביב"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">הערות</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              rows={2}
+              placeholder="ללא בצל, תודה"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <motion.button
+              type="submit"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
+            >
+              שלח הזמנה
+            </motion.button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ביטול
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default CheckoutForm;
