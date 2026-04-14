@@ -89,7 +89,15 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
                       </div>
                     )}
 
-                    {/* Show selected toppings */}
+                    {/* Show meal upgrade */}
+                    {item.withMeal && (
+                      <div className="mb-2">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                          🍟🥤 ארוחה עסקית +₪23
+                        </span>
+                      </div>
+                    )}
+
                     {item.toppings.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {getToppingNames(item.toppings).map((name) => (

@@ -23,14 +23,14 @@ const Index = () => {
         if (existing) {
           return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
         }
-        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [] }];
+        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
       });
       setCartOpen(true);
     }
   }, []);
 
   const handleCustomizerConfirm = useCallback(
-    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[]) => {
+    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean) => {
       const cartItemId = `${item.id}-${Date.now()}`;
       setCart((prev) => [
         ...prev,
@@ -41,6 +41,7 @@ const Index = () => {
           quantity,
           toppings: selectedToppings,
           removals: selectedRemovals,
+          withMeal,
         },
       ]);
       setCustomizerItem(null);
@@ -65,7 +66,8 @@ const Index = () => {
         const t = toppings.find((tp) => tp.id === tId);
         return s + (t?.price || 0);
       }, 0);
-      return sum + (item.price + toppingsCost) * item.quantity;
+      const mealCost = item.withMeal ? 23 : 0;
+      return sum + (item.price + toppingsCost + mealCost) * item.quantity;
     }, 0);
   };
 
