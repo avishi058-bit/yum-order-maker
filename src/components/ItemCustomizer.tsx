@@ -65,7 +65,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const resetState = () => {
     setQuantity(1);
     setSelectedToppings([]);
-    setSelectedRemovals([]);
+    setSelectedRemovals(["no-changes"]);
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
