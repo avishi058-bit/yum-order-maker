@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Check, ShoppingBag } from "lucide-react";
 import { menuItems, MenuItem } from "@/data/menu";
@@ -17,17 +17,12 @@ const needsCustomization = (item: MenuItem) =>
 const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
   const image = menuImages[item.id];
   const [justAdded, setJustAdded] = useState(false);
-  const [flyingItem, setFlyingItem] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleAdd = () => {
     onAdd(item);
     if (!needsCustomization(item)) {
-      setFlyingItem(true);
       setJustAdded(true);
-
-      setTimeout(() => setFlyingItem(false), 600);
-      setTimeout(() => setJustAdded(false), 1400);
+      setTimeout(() => setJustAdded(false), 1200);
     }
   };
 
@@ -36,7 +31,8 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-visible"
+      layout={false}
+      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-hidden"
       dir="rtl"
     >
       {/* Text content - right side */}
@@ -54,13 +50,11 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         <div className="flex items-center justify-between">
           <span className="text-primary font-bold text-lg">₪{item.price}</span>
           <motion.button
-            ref={buttonRef}
-            whileTap={{ scale: 0.85 }}
             onClick={handleAdd}
-            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors duration-300 ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
               justAdded
-                ? "bg-green-500 shadow-green-500/20"
-                : "bg-primary shadow-primary/20 opacity-80 group-hover:opacity-100"
+                ? "bg-green-500 shadow-green-500/20 scale-110"
+                : "bg-primary shadow-primary/20 opacity-80 group-hover:opacity-100 active:scale-90"
             }`}
           >
             <AnimatePresence mode="wait">
@@ -101,37 +95,15 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         </div>
       )}
 
-      {/* Flying item animation */}
-      <AnimatePresence>
-        {flyingItem && (
-          <motion.div
-            initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-            animate={{
-              opacity: 0,
-              scale: 0.2,
-              x: -120,
-              y: 200,
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.32, 0, 0.67, 0] }}
-            className="absolute left-8 top-1/2 -translate-y-1/2 z-20 pointer-events-none"
-          >
-            <div className="bg-primary text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center shadow-xl">
-              <ShoppingBag size={20} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Toast notification */}
       <AnimatePresence>
-        {justAdded && !flyingItem && (
+        {justAdded && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="absolute left-2 top-2 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-10"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-2 top-2 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-10 pointer-events-none"
           >
             <ShoppingBag size={12} />
             נוסף לסל!
