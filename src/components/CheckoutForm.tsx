@@ -125,13 +125,13 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">שם מלא</label>
+            <label className="block text-sm font-medium mb-1">שם מלא <span className="text-destructive">*</span></label>
             <input
               type="text"
+              required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="ישראל ישראלי"
             />
           </div>
           <div>
