@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
-import { toppings, Topping } from "@/data/menu";
+import { toppings, Topping, menuItems } from "@/data/menu";
 
 export interface CartItem {
   id: string;
@@ -20,6 +20,11 @@ interface CartDrawerProps {
 }
 
 const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onToggleTopping, onCheckout }: CartDrawerProps) => {
+  const isBurger = (itemId: string) => {
+    const item = menuItems.find((m) => m.id === itemId);
+    return item?.category === "burger";
+  };
+
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);
@@ -84,7 +89,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onToggleTopping, o
                         <Plus size={14} />
                       </button>
                     </div>
-                    {item.name !== "צ'יפס" && item.name !== "טבעות בצל" && item.name !== "קולה" && item.name !== "לימונדה" && (
+                    {isBurger(item.id) && (
                       <div className="flex flex-wrap gap-2">
                         {toppings.map((t: Topping) => {
                           const active = item.toppings.includes(t.id);

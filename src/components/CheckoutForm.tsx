@@ -20,7 +20,22 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
       toast({ title: "אנא מלא את כל השדות", variant: "destructive" });
       return;
     }
-    toast({ title: "ההזמנה התקבלה! 🎉", description: "ההמבורגר בדרך אליך" });
+
+    const orderText = items
+      .map((item) => {
+        const toppingNames = item.toppings
+          .map((tId) => toppings.find((t) => t.id === tId)?.name)
+          .filter(Boolean);
+        return `${item.name} x${item.quantity}${toppingNames.length ? ` (${toppingNames.join(", ")})` : ""}`;
+      })
+      .join("\n");
+
+    const message = `🍔 הזמנה חדשה מהבקתה!\n\nשם: ${form.name}\nטלפון: ${form.phone}\nכתובת: ${form.address}\n${form.notes ? `הערות: ${form.notes}\n` : ""}\nפריטים:\n${orderText}\n\nסה״כ: ₪${total}`;
+
+    const whatsappUrl = `https://wa.me/9720584633555?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+
+    toast({ title: "ההזמנה נשלחת בוואטסאפ! 🎉" });
     onSuccess();
   };
 
@@ -91,7 +106,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
               className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="הרצל 10, תל אביב"
+              placeholder="הכתובת שלך"
             />
           </div>
           <div>
@@ -104,6 +119,9 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
               placeholder="ללא בצל, תודה"
             />
           </div>
+          <p className="text-xs text-muted-foreground text-center">
+            📱 ההזמנה תישלח בוואטסאפ למספר 058-4633-555
+          </p>
           <div className="flex gap-3 pt-2">
             <motion.button
               type="submit"
@@ -111,7 +129,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
               whileTap={{ scale: 0.98 }}
               className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
             >
-              שלח הזמנה
+              שלח הזמנה בוואטסאפ
             </motion.button>
             <button
               type="button"
