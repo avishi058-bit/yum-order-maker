@@ -20,4 +20,11 @@ export const menuImages: Record<string, string> = {
   "waffle-fries": waffleFries,
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
+  // Meals - using burger images temporarily
+  "meal-classic": classicImg,
+  "meal-smash-moshavnikim": smashMoshavnikim,
+  "meal-smash-double-cheese": smashDoubleCheese,
+  "meal-avishai": avishai,
+  "meal-crazy-smash": crazySmash,
+  "meal-special-hadegel": specialHadegel,
 };
