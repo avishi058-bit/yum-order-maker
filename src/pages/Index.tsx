@@ -3,19 +3,23 @@ import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
-import CartDrawer, { CartItem } from "@/components/CartDrawer";
+import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
 import ItemCustomizer from "@/components/ItemCustomizer";
-import { MenuItem, toppings } from "@/data/menu";
+import DealCustomizer from "@/components/DealCustomizer";
+import { MenuItem, toppings, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
+  const [dealOpen, setDealOpen] = useState(false);
 
   const handleAddItem = useCallback((item: MenuItem) => {
-    if (item.category === "burger") {
+    if (item.id === "friends-deal") {
+      setDealOpen(true);
+    } else if (item.category === "burger") {
       setCustomizerItem(item);
     } else {
       setCart((prev) => {
@@ -52,6 +56,29 @@ const Index = () => {
     []
   );
 
+  const handleDealConfirm = useCallback(
+    (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
+      const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
+      setCart((prev) => [
+        ...prev,
+        {
+          id: `friends-deal-${Date.now()}`,
+          name: "דיל חברים",
+          price: 216 + drinksExtra,
+          quantity: 1,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+          dealBurgers: burgers,
+          dealDrinks: drinks,
+        },
+      ]);
+      setDealOpen(false);
+      setCartOpen(true);
+    },
+    []
+  );
+
   const updateQuantity = useCallback((id: string, delta: number) => {
     setCart((prev) =>
       prev
@@ -64,12 +91,17 @@ const Index = () => {
 
   const getTotal = () => {
     return cart.reduce((sum, item) => {
+      if (item.dealBurgers) {
+        return sum + item.price * item.quantity;
+      }
       const toppingsCost = item.toppings.reduce((s, tId) => {
         const t = toppings.find((tp) => tp.id === tId);
         return s + (t?.price || 0);
       }, 0);
       const mealCost = item.withMeal ? 23 : 0;
-      return sum + (item.price + toppingsCost + mealCost) * item.quantity;
+      const sideCost = item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) : 0;
+      const drinkCost = item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) : 0;
+      return sum + (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
     }, 0);
   };
 
@@ -98,6 +130,12 @@ const Index = () => {
         item={customizerItem}
         onClose={() => setCustomizerItem(null)}
         onConfirm={handleCustomizerConfirm}
+      />
+
+      <DealCustomizer
+        open={dealOpen}
+        onClose={() => setDealOpen(false)}
+        onConfirm={handleDealConfirm}
       />
 
       <CartDrawer
