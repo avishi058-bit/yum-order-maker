@@ -30,7 +30,8 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
     }, 0);
     const mealCost = item.withMeal ? 23 : 0;
     const sideCost = item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) : 0;
-    return (item.price + toppingsCost + mealCost + sideCost) * item.quantity;
+    const drinkCost = item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) : 0;
+    return (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
   };
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
