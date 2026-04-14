@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
-import { toppings, Topping, removals, menuItems, mealSideOptions } from "@/data/menu";
+import { toppings, Topping, removals, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 export interface CartItem {
   id: string;
@@ -11,6 +11,7 @@ export interface CartItem {
   removals: string[];
   withMeal: boolean;
   mealSideId?: string;
+  mealDrinkId?: string;
 }
 
 interface CartDrawerProps {
