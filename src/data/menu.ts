@@ -216,3 +216,30 @@ export const mealSideOptions: Upgrade[] = [
   { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
   { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
 ];
+
+export interface DrinkOption {
+  id: string;
+  name: string;
+  price: number;
+  category: "soft" | "beer";
+}
+
+export const mealDrinkOptions: DrinkOption[] = [
+  { id: "drink-cola", name: "קולה", price: 0, category: "soft" },
+  { id: "drink-zero", name: "זירו", price: 0, category: "soft" },
+  { id: "drink-fanta", name: "פאנטה", price: 0, category: "soft" },
+  { id: "drink-fanta-grape", name: "פאנטה ענבים", price: 0, category: "soft" },
+  { id: "drink-fanta-exotic", name: "פאנטה אקזוטי", price: 0, category: "soft" },
+  { id: "drink-sprite", name: "ספרייט", price: 0, category: "soft" },
+  { id: "drink-sprite-zero", name: "ספרייט זירו", price: 0, category: "soft" },
+  { id: "drink-blu", name: "בלו", price: 0, category: "soft" },
+  { id: "drink-blu-mojito", name: "בלו מוחיטו", price: 0, category: "soft" },
+  { id: "drink-blu-day", name: "בלו דיי", price: 0, category: "soft" },
+  { id: "drink-goldstar", name: "גולדסטאר", price: 8, category: "beer" },
+  { id: "drink-heineken", name: "הייניקן", price: 8, category: "beer" },
+  { id: "drink-corona", name: "קורונה", price: 8, category: "beer" },
+  { id: "drink-carlsberg", name: "קאלסברג", price: 8, category: "beer" },
+  { id: "drink-laffe", name: "לאפ בראון", price: 12, category: "beer" },
+  { id: "drink-unfiltered", name: "גולדסטאר אנפילטר", price: 12, category: "beer" },
+  { id: "drink-guinness", name: "גינס", price: 12, category: "beer" },
+];

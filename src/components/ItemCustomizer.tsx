@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, mealUpgrade, mealSideOptions } from "@/data/menu";
+import { MenuItem, toppings, Topping, removals, mealUpgrade, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => void;
 }
 
-type Step = "customize" | "meal-upgrade" | "side-select";
+type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
 const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const [quantity, setQuantity] = useState(1);
@@ -17,6 +17,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>([]);
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
+  const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
 
   if (!item) return null;
 
@@ -50,8 +51,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
     }
   };
 
-  const handleFinish = (withMeal: boolean, sideId?: string) => {
-    onConfirm(item, quantity, selectedToppings, selectedRemovals, withMeal, sideId);
+  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
+    onConfirm(item, quantity, selectedToppings, selectedRemovals, withMeal, sideId, drinkId);
     resetState();
   };
 
@@ -61,12 +62,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
     setSelectedRemovals([]);
     setStep("customize");
     setSelectedSide("side-fries");
+    setSelectedDrink("drink-cola");
   };
 
   const handleClose = () => {
     resetState();
     onClose();
   };
+
+  const softDrinks = mealDrinkOptions.filter(d => d.category === "soft");
+  const beerDrinks = mealDrinkOptions.filter(d => d.category === "beer");
 
   return (
     <AnimatePresence>
@@ -112,7 +117,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                 >
                   {isBurger && (
                     <>
-                      {/* Removals section */}
                       <div className="px-5 py-4 border-b border-border">
                         <h3 className="text-lg font-bold text-right mb-1">שינויים אפשריים</h3>
                         <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-5 פריטים</p>
@@ -145,7 +149,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                         </div>
                       </div>
 
-                      {/* Toppings section */}
                       <div className="px-5 py-4">
                         <h3 className="text-lg font-bold text-right mb-1">תוספות בתשלום</h3>
                         <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
@@ -270,7 +273,89 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
 
                   <motion.button
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => handleFinish(true, selectedSide)}
+                    onClick={() => setStep("drink-select")}
+                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-8"
+                  >
+                    המשך
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {step === "drink-select" && (
+                <motion.div
+                  key="drink-select"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="flex-1 overflow-y-auto px-6 py-8"
+                >
+                  <h3 className="text-xl font-black text-center mb-6">בחר שתייה לעסקית:</h3>
+                  
+                  <div className="space-y-0">
+                    {softDrinks.map((drink) => {
+                      const active = selectedDrink === drink.id;
+                      return (
+                        <button
+                          key={drink.id}
+                          onClick={() => setSelectedDrink(drink.id)}
+                          className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              }`}
+                            >
+                              {active && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                />
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-medium text-base">{drink.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <h4 className="text-lg font-bold text-right mt-6 mb-3">בירות:</h4>
+                  <div className="space-y-0">
+                    {beerDrinks.map((drink) => {
+                      const active = selectedDrink === drink.id;
+                      return (
+                        <button
+                          key={drink.id}
+                          onClick={() => setSelectedDrink(drink.id)}
+                          className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              }`}
+                            >
+                              {active && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                />
+                              )}
+                            </div>
+                            <span className="text-sm text-muted-foreground">+₪{drink.price}</span>
+                          </div>
+                          <span className="font-medium text-base">{drink.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleFinish(true, selectedSide, selectedDrink)}
                     className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-8"
                   >
                     הוספה להזמנה 🍔

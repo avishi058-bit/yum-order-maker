@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
-import { toppings, removals, mealSideOptions } from "@/data/menu";
+import { toppings, removals, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { toast } from "@/hooks/use-toast";
 
 interface CheckoutFormProps {
@@ -32,7 +32,8 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
         let line = `${item.name} x${item.quantity}`;
         if (item.withMeal) {
           const sideName = item.mealSideId ? mealSideOptions.find(s => s.id === item.mealSideId)?.name : "צ׳יפס רגיל";
-          line += ` (ארוחה עסקית - ${sideName})`;
+          const drinkName = item.mealDrinkId ? mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name : "קולה";
+          line += ` (ארוחה עסקית - ${sideName}, ${drinkName})`;
         }
         if (removalNames.length) line += ` (${removalNames.join(", ")})`;
         if (toppingNames.length) line += ` + ${toppingNames.join(", ")}`;

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
-import { toppings, Topping, removals, menuItems, mealSideOptions } from "@/data/menu";
+import { toppings, Topping, removals, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 export interface CartItem {
   id: string;
@@ -11,6 +11,7 @@ export interface CartItem {
   removals: string[];
   withMeal: boolean;
   mealSideId?: string;
+  mealDrinkId?: string;
 }
 
 interface CartDrawerProps {
@@ -29,7 +30,8 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
     }, 0);
     const mealCost = item.withMeal ? 23 : 0;
     const sideCost = item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) : 0;
-    return (item.price + toppingsCost + mealCost + sideCost) * item.quantity;
+    const drinkCost = item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) : 0;
+    return (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
   };
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
@@ -101,6 +103,12 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
                           <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
                             {mealSideOptions.find(s => s.id === item.mealSideId)?.name}
                             {(mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) > 0 && ` +₪${mealSideOptions.find(s => s.id === item.mealSideId)?.price}`}
+                          </span>
+                        )}
+                        {item.mealDrinkId && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                            {mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name}
+                            {(mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) > 0 && ` +₪${mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price}`}
                           </span>
                         )}
                       </div>

@@ -30,7 +30,7 @@ const Index = () => {
   }, []);
 
   const handleCustomizerConfirm = useCallback(
-    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string) => {
+    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => {
       const cartItemId = `${item.id}-${Date.now()}`;
       setCart((prev) => [
         ...prev,
@@ -43,6 +43,7 @@ const Index = () => {
           removals: selectedRemovals,
           withMeal,
           mealSideId,
+          mealDrinkId,
         },
       ]);
       setCustomizerItem(null);
