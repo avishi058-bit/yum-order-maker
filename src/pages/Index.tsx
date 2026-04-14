@@ -82,6 +82,27 @@ const Index = () => {
     []
   );
 
+  const handleDrinkConfirm = useCallback(
+    (item: MenuItem, selectedDrink: string) => {
+      const cartItemId = `${item.id}-${selectedDrink}-${Date.now()}`;
+      setCart((prev) => [
+        ...prev,
+        {
+          id: cartItemId,
+          name: `${item.name} — ${selectedDrink}`,
+          price: item.price,
+          quantity: 1,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+        },
+      ]);
+      setDrinkItem(null);
+      setCartOpen(true);
+    },
+    []
+  );
+
   const updateQuantity = useCallback((id: string, delta: number) => {
     setCart((prev) =>
       prev
