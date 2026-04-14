@@ -6,6 +6,7 @@ export interface MenuItem {
   weight?: string;
   category: "burger" | "side" | "drink" | "deal" | "meal";
   badge?: string;
+  baseBurgerId?: string;
 }
 
 export interface Topping {
@@ -87,6 +88,82 @@ export const menuItems: MenuItem[] = [
     price: 55,
     weight: "",
     category: "burger",
+    badge: "🌱",
+  },
+  // ארוחות עסקיות
+  {
+    id: "meal-classic",
+    name: "ארוחת קלאסי",
+    description: "קלאסי + צ׳יפס + שתייה",
+    price: 75,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "classic",
+  },
+  {
+    id: "meal-smash-moshavnikim",
+    name: "ארוחת סמאש של מושבניקים",
+    description: "סמאש של מושבניקים + צ׳יפס + שתייה",
+    price: 81,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "smash-moshavnikim",
+  },
+  {
+    id: "meal-avishai",
+    name: "ארוחת אבישי שחוט לי פרה!",
+    description: "אבישי + צ׳יפס + שתייה",
+    price: 101,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "avishai",
+  },
+  {
+    id: "meal-double",
+    name: "ארוחת כפולה",
+    description: "כפולה + צ׳יפס + שתייה",
+    price: 99,
+    weight: "440 גרם",
+    category: "meal",
+    baseBurgerId: "double",
+  },
+  {
+    id: "meal-crazy-smash",
+    name: "ארוחת קרייזי סמאש",
+    description: "קרייזי סמאש + צ׳יפס + שתייה",
+    price: 87,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "crazy-smash",
+    badge: "🌶️",
+  },
+  {
+    id: "meal-smash-double-cheese",
+    name: "ארוחת סמאש דאבל צ׳יז",
+    description: "סמאש דאבל צ׳יז + צ׳יפס + שתייה",
+    price: 89,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "smash-double-cheese",
+    badge: "🧀",
+  },
+  {
+    id: "meal-special-hadegel",
+    name: "ארוחת ספיישל הדגל",
+    description: "ספיישל הדגל + צ׳יפס + שתייה",
+    price: 96,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "special-hadegel",
+  },
+  {
+    id: "meal-haf-mifsha",
+    name: "ארוחת חף מפשע",
+    description: "חף מפשע (צמחוני) + צ׳יפס + שתייה",
+    price: 78,
+    weight: "",
+    category: "meal",
+    baseBurgerId: "haf-mifsha",
     badge: "🌱",
   },
   // צ׳יפס
