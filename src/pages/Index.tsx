@@ -195,7 +195,12 @@ const Index = () => {
         onConfirm={handleDealConfirm}
       />
 
-      <CartDrawer
+      <FamilyDealCustomizer
+        open={familyDealOpen}
+        onClose={() => setFamilyDealOpen(false)}
+        onConfirm={handleFamilyDealConfirm}
+      />
+
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cart}
