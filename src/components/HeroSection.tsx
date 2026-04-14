@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import heroBurger from "@/assets/hero-burger.jpg";
+import logo from "@/assets/logo.png";
 
 const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
   return (
@@ -15,6 +16,14 @@ const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
       </div>
       <div className="relative z-10 text-center px-4">
+        <motion.img
+          src={logo}
+          alt="הבקתה - לוגו"
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, type: "spring", stiffness: 200 }}
+          className="w-40 h-40 mx-auto mb-6 drop-shadow-2xl"
+        />
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
