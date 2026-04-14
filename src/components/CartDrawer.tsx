@@ -16,17 +16,10 @@ interface CartDrawerProps {
   onClose: () => void;
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
-  onToggleTopping: (itemId: string, toppingId: string) => void;
-  onToggleRemoval: (itemId: string, removalId: string) => void;
   onCheckout: () => void;
 }
 
-const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onToggleTopping, onToggleRemoval, onCheckout }: CartDrawerProps) => {
-  const isBurger = (itemId: string) => {
-    const item = menuItems.find((m) => m.id === itemId);
-    return item?.category === "burger";
-  };
-
+const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: CartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);
@@ -36,6 +29,12 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onToggleTopping, o
   };
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
+
+  const getToppingNames = (ids: string[]) =>
+    ids.map((id) => toppings.find((t) => t.id === id)?.name).filter(Boolean);
+
+  const getRemovalNames = (ids: string[]) =>
+    ids.map((id) => removals.find((r) => r.id === id)?.name).filter(Boolean);
 
   return (
     <AnimatePresence>
@@ -76,7 +75,30 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onToggleTopping, o
                       <span className="font-bold">{item.name}</span>
                       <span className="text-primary font-bold">₪{getItemTotal(item)}</span>
                     </div>
-                    <div className="flex items-center gap-3 mb-3">
+
+                    {/* Show selected removals */}
+                    {item.removals.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {getRemovalNames(item.removals).map((name) => (
+                          <span key={name} className="text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive line-through">
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Show selected toppings */}
+                    {item.toppings.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {getToppingNames(item.toppings).map((name) => (
+                          <span key={name} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            +{name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => onUpdateQuantity(item.id, -1)}
                         className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
@@ -91,52 +113,6 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onToggleTopping, o
                         <Plus size={14} />
                       </button>
                     </div>
-                    {isBurger(item.id) && (
-                      <>
-                        <div className="mb-2">
-                          <span className="text-xs text-muted-foreground font-medium mb-1 block">הסרות:</span>
-                          <div className="flex flex-wrap gap-2">
-                            {removals.map((r) => {
-                              const active = item.removals.includes(r.id);
-                              return (
-                                <button
-                                  key={r.id}
-                                  onClick={() => onToggleRemoval(item.id, r.id)}
-                                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                                    active
-                                      ? "bg-destructive/20 text-destructive border-destructive/50 line-through"
-                                      : "border-border text-muted-foreground hover:border-destructive/50"
-                                  }`}
-                                >
-                                  {r.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-xs text-muted-foreground font-medium mb-1 block">תוספות:</span>
-                          <div className="flex flex-wrap gap-2">
-                            {toppings.map((t: Topping) => {
-                              const active = item.toppings.includes(t.id);
-                              return (
-                                <button
-                                  key={t.id}
-                                  onClick={() => onToggleTopping(item.id, t.id)}
-                                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                                    active
-                                      ? "bg-primary text-primary-foreground border-primary"
-                                      : "border-border text-muted-foreground hover:border-primary/50"
-                                  }`}
-                                >
-                                  {t.name} +₪{t.price}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </>
-                    )}
                   </div>
                 ))
               )}

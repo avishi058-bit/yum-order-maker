@@ -5,59 +5,55 @@ import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import CartDrawer, { CartItem } from "@/components/CartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
+import ItemCustomizer from "@/components/ItemCustomizer";
 import { MenuItem, toppings } from "@/data/menu";
 
 const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
 
-  const addItem = useCallback((item: MenuItem) => {
-    setCart((prev) => {
-      const existing = prev.find((c) => c.id === item.id);
-      if (existing) {
-        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
-      }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [] }];
-    });
-    setCartOpen(true);
+  const handleAddItem = useCallback((item: MenuItem) => {
+    if (item.category === "burger") {
+      setCustomizerItem(item);
+    } else {
+      setCart((prev) => {
+        const existing = prev.find((c) => c.id === item.id);
+        if (existing) {
+          return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
+        }
+        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [] }];
+      });
+      setCartOpen(true);
+    }
   }, []);
+
+  const handleCustomizerConfirm = useCallback(
+    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[]) => {
+      const cartItemId = `${item.id}-${Date.now()}`;
+      setCart((prev) => [
+        ...prev,
+        {
+          id: cartItemId,
+          name: item.name,
+          price: item.price,
+          quantity,
+          toppings: selectedToppings,
+          removals: selectedRemovals,
+        },
+      ]);
+      setCustomizerItem(null);
+      setCartOpen(true);
+    },
+    []
+  );
 
   const updateQuantity = useCallback((id: string, delta: number) => {
     setCart((prev) =>
       prev
         .map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c))
         .filter((c) => c.quantity > 0)
-    );
-  }, []);
-
-  const toggleTopping = useCallback((itemId: string, toppingId: string) => {
-    setCart((prev) =>
-      prev.map((c) =>
-        c.id === itemId
-          ? {
-              ...c,
-              toppings: c.toppings.includes(toppingId)
-                ? c.toppings.filter((t) => t !== toppingId)
-                : [...c.toppings, toppingId],
-            }
-          : c
-      )
-    );
-  }, []);
-
-  const toggleRemoval = useCallback((itemId: string, removalId: string) => {
-    setCart((prev) =>
-      prev.map((c) =>
-        c.id === itemId
-          ? {
-              ...c,
-              removals: c.removals.includes(removalId)
-                ? c.removals.filter((r) => r !== removalId)
-                : [...c.removals, removalId],
-            }
-          : c
-      )
     );
   }, []);
 
@@ -92,15 +88,19 @@ const Index = () => {
       )}
 
       <HeroSection onOrderClick={scrollToMenu} />
-      <MenuSection onAddItem={addItem} />
+      <MenuSection onAddItem={handleAddItem} />
+
+      <ItemCustomizer
+        item={customizerItem}
+        onClose={() => setCustomizerItem(null)}
+        onConfirm={handleCustomizerConfirm}
+      />
 
       <CartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cart}
         onUpdateQuantity={updateQuantity}
-        onToggleTopping={toggleTopping}
-        onToggleRemoval={toggleRemoval}
         onCheckout={() => {
           setCartOpen(false);
           setCheckoutOpen(true);
