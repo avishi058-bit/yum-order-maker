@@ -31,7 +31,8 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
   const currentBurgerIndex = step === "burger-1" ? 0 : step === "burger-2" ? 1 : 2;
-
+  const isDrinkStep = step === "drink-1" || step === "drink-2" || step === "drink-3";
+  const currentDrinkIndex = step === "drink-1" ? 0 : step === "drink-2" ? 1 : 2;
   const resetState = () => {
     setStep("burger-1");
     setBurgerConfigs([
@@ -81,9 +82,15 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
   const handleNext = () => {
     if (step === "burger-1") setStep("burger-2");
     else if (step === "burger-2") setStep("burger-3");
-    else if (step === "burger-3") setStep("drinks");
-    else {
-      if (selectedDrinks.some((d) => d === "")) return;
+    else if (step === "burger-3") setStep("drink-1");
+    else if (step === "drink-1") {
+      if (selectedDrinks[0] === "") return;
+      setStep("drink-2");
+    } else if (step === "drink-2") {
+      if (selectedDrinks[1] === "") return;
+      setStep("drink-3");
+    } else if (step === "drink-3") {
+      if (selectedDrinks[2] === "") return;
       const drinks: DealDrinkChoice[] = selectedDrinks.map((dId) => {
         const drink = dealDrinkOptions.find((d) => d.id === dId)!;
         return { id: drink.id, name: drink.name, extraCost: drink.price };
@@ -97,7 +104,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
     }
   };
 
-  const currentRemovals = step !== "drinks" ? burgerConfigs[currentBurgerIndex].removals : [];
+  const currentRemovals = !isDrinkStep ? burgerConfigs[currentBurgerIndex].removals : [];
 
   const softDrinks = dealDrinkOptions.filter((d) => d.category === "soft");
   const beerDrinks = dealDrinkOptions.filter((d) => d.category === "beer");
@@ -141,11 +148,11 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
             {/* Progress bar */}
             <div className="px-5 pt-3 pb-1">
               <div className="flex gap-1.5">
-                {["burger-1", "burger-2", "burger-3", "drinks"].map((s, i) => (
+                {(["burger-1", "burger-2", "burger-3", "drink-1", "drink-2", "drink-3"] as Step[]).map((s, i) => (
                   <div
                     key={s}
                     className={`h-1.5 flex-1 rounded-full transition-colors ${
-                      ["burger-1", "burger-2", "burger-3", "drinks"].indexOf(step) >= i
+                      (["burger-1", "burger-2", "burger-3", "drink-1", "drink-2", "drink-3"] as Step[]).indexOf(step) >= i
                         ? "bg-primary"
                         : "bg-muted"
                     }`}
@@ -155,7 +162,7 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
             </div>
 
             <AnimatePresence mode="wait">
-              {step !== "drinks" ? (
+              {!isDrinkStep ? (
                 <motion.div
                   key={step}
                   initial={{ opacity: 0, x: 50 }}
@@ -213,82 +220,80 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
                 </motion.div>
               ) : (
                 <motion.div
-                  key="drinks"
+                  key={step}
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -50 }}
                   className="flex-1 overflow-y-auto"
                 >
-                  {[0, 1, 2].map((drinkIndex) => (
-                    <div key={drinkIndex} className="px-5 py-4 border-b border-border last:border-b-0">
-                      <h3 className="text-base font-bold text-right mb-3">שתייה {drinkIndex + 1}:</h3>
+                  <div className="px-5 py-4">
+                    <h3 className="text-base font-bold text-right mb-3">בחר שתייה:</h3>
 
-                      <div className="space-y-0">
-                        {softDrinks.map((drink) => {
-                          const active = selectedDrinks[drinkIndex] === drink.id;
-                          return (
-                            <button
-                              key={drink.id}
-                              onClick={() => setDrink(drinkIndex, drink.id)}
-                              className="w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                  }`}
-                                >
-                                  {active && (
-                                    <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      className="w-2 h-2 rounded-full bg-primary-foreground"
-                                    />
-                                  )}
-                                </div>
-                                {drink.price > 0 && (
-                                  <span className="text-xs text-muted-foreground">+₪{drink.price}</span>
+                    <div className="space-y-0">
+                      {softDrinks.map((drink) => {
+                        const active = selectedDrinks[currentDrinkIndex] === drink.id;
+                        return (
+                          <button
+                            key={drink.id}
+                            onClick={() => setDrink(currentDrinkIndex, drink.id)}
+                            className="w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                }`}
+                              >
+                                {active && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="w-2 h-2 rounded-full bg-primary-foreground"
+                                  />
                                 )}
                               </div>
-                              <span className="font-medium text-sm">{drink.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <h4 className="text-sm font-bold text-right mt-3 mb-2 text-muted-foreground">בירות:</h4>
-                      <div className="space-y-0">
-                        {beerDrinks.map((drink) => {
-                          const active = selectedDrinks[drinkIndex] === drink.id;
-                          return (
-                            <button
-                              key={drink.id}
-                              onClick={() => setDrink(drinkIndex, drink.id)}
-                              className="w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                  }`}
-                                >
-                                  {active && (
-                                    <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      className="w-2 h-2 rounded-full bg-primary-foreground"
-                                    />
-                                  )}
-                                </div>
+                              {drink.price > 0 && (
                                 <span className="text-xs text-muted-foreground">+₪{drink.price}</span>
-                              </div>
-                              <span className="font-medium text-sm">{drink.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                              )}
+                            </div>
+                            <span className="font-medium text-sm">{drink.name}</span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  ))}
+
+                    <h4 className="text-sm font-bold text-right mt-3 mb-2 text-muted-foreground">בירות:</h4>
+                    <div className="space-y-0">
+                      {beerDrinks.map((drink) => {
+                        const active = selectedDrinks[currentDrinkIndex] === drink.id;
+                        return (
+                          <button
+                            key={drink.id}
+                            onClick={() => setDrink(currentDrinkIndex, drink.id)}
+                            className="w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                }`}
+                              >
+                                {active && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="w-2 h-2 rounded-full bg-primary-foreground"
+                                  />
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground">+₪{drink.price}</span>
+                            </div>
+                            <span className="font-medium text-sm">{drink.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
