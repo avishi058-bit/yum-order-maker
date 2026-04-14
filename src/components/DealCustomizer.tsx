@@ -10,13 +10,15 @@ interface DealCustomizerProps {
   onConfirm: (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => void;
 }
 
-type Step = "burger-1" | "burger-2" | "burger-3" | "drinks";
+type Step = "burger-1" | "burger-2" | "burger-3" | "drink-1" | "drink-2" | "drink-3";
 
 const stepLabels: Record<Step, string> = {
   "burger-1": "המבורגר 1 מתוך 3",
   "burger-2": "המבורגר 2 מתוך 3",
   "burger-3": "המבורגר 3 מתוך 3",
-  "drinks": "בחירת 3 שתיות",
+  "drink-1": "שתייה 1 מתוך 3",
+  "drink-2": "שתייה 2 מתוך 3",
+  "drink-3": "שתייה 3 מתוך 3",
 };
 
 const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
