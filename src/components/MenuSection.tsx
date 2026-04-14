@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { menuItems, MenuItem } from "@/data/menu";
+import { menuImages } from "@/data/menuImages";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -9,39 +10,55 @@ const categories = [
   { key: "deal" as const, label: "🤝 עשינו עסק" },
 ];
 
-const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    whileHover={{ y: -4 }}
-    className="bg-card rounded-xl p-5 border border-border hover:border-primary/40 transition-colors group"
-  >
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          {item.badge && <span className="text-lg">{item.badge}</span>}
-          <h3 className="text-lg font-bold">{item.name}</h3>
-          {item.weight && (
-            <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-              {item.weight}
-            </span>
-          )}
+const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
+  const image = menuImages[item.id];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -4 }}
+      className="bg-card rounded-xl border border-border hover:border-primary/40 transition-colors group overflow-hidden"
+    >
+      {image && (
+        <div className="w-full h-44 overflow-hidden">
+          <img
+            src={image}
+            alt={item.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
         </div>
-        <p className="text-muted-foreground text-sm mb-3 leading-relaxed">{item.description}</p>
-        <span className="text-primary font-bold text-lg">₪{item.price}</span>
+      )}
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              {item.badge && <span className="text-lg">{item.badge}</span>}
+              <h3 className="text-lg font-bold">{item.name}</h3>
+              {item.weight && (
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                  {item.weight}
+                </span>
+              )}
+            </div>
+            <p className="text-muted-foreground text-sm mb-3 leading-relaxed">{item.description}</p>
+            <span className="text-primary font-bold text-lg">₪{item.price}</span>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => onAdd(item)}
+            className="mt-2 bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center shadow-md shadow-primary/20 opacity-80 group-hover:opacity-100 transition-opacity flex-shrink-0"
+          >
+            <Plus size={20} />
+          </motion.button>
+        </div>
       </div>
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => onAdd(item)}
-        className="mt-2 bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center shadow-md shadow-primary/20 opacity-80 group-hover:opacity-100 transition-opacity flex-shrink-0"
-      >
-        <Plus size={20} />
-      </motion.button>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const MenuSection = ({ onAddItem }: { onAddItem: (item: MenuItem) => void }) => {
   return (
