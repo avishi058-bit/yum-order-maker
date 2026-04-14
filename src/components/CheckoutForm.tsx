@@ -37,7 +37,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
           total,
           status: "new",
         })
-        .select("id")
+        .select("id, order_number")
         .single();
 
       if (orderError) throw orderError;
