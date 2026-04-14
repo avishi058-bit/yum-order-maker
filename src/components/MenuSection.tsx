@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Check, ShoppingBag } from "lucide-react";
 import { menuItems, MenuItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 
@@ -10,15 +11,27 @@ const categories = [
   { key: "deal" as const, label: "🤝 עשינו עסק" },
 ];
 
+const needsCustomization = (item: MenuItem) =>
+  item.category === "burger" || item.id === "friends-deal";
+
 const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
   const image = menuImages[item.id];
+  const [justAdded, setJustAdded] = useState(false);
+
+  const handleAdd = () => {
+    onAdd(item);
+    if (!needsCustomization(item)) {
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 1200);
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group"
+      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative"
       dir="rtl"
     >
       {/* Text content - right side */}
@@ -36,11 +49,36 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         <div className="flex items-center justify-between">
           <span className="text-primary font-bold text-lg">₪{item.price}</span>
           <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onAdd(item)}
-            className="bg-primary text-primary-foreground w-9 h-9 rounded-full flex items-center justify-center shadow-md shadow-primary/20 opacity-80 group-hover:opacity-100 transition-opacity"
+            whileTap={{ scale: 0.85 }}
+            onClick={handleAdd}
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors duration-300 ${
+              justAdded
+                ? "bg-green-500 shadow-green-500/20"
+                : "bg-primary shadow-primary/20 opacity-80 group-hover:opacity-100"
+            }`}
           >
-            <Plus size={18} />
+            <AnimatePresence mode="wait">
+              {justAdded ? (
+                <motion.div
+                  key="check"
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                >
+                  <Check size={18} className="text-white" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="plus"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                >
+                  <Plus size={18} className="text-primary-foreground" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.button>
         </div>
       </div>
@@ -56,6 +94,22 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
           />
         </div>
       )}
+
+      {/* Toast notification */}
+      <AnimatePresence>
+        {justAdded && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="absolute left-2 top-2 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-10"
+          >
+            <ShoppingBag size={12} />
+            נוסף לסל!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
