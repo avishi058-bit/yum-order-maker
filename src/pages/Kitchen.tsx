@@ -89,14 +89,24 @@ const Kitchen = () => {
     };
   }, [fetchOrders]);
 
-  // Play sound on new order
+  // Play sound + auto-print on new order
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
     if (newOrders.length > prevOrderCountRef.current && soundEnabled) {
       playAlert();
     }
+    // Auto-print new orders that haven't been printed yet
+    if (autoPrint) {
+      newOrders.forEach((order) => {
+        if (!printedOrdersRef.current.has(order.id)) {
+          printedOrdersRef.current.add(order.id);
+          // Small delay to ensure DOM is ready
+          setTimeout(() => printOrder(order), 500);
+        }
+      });
+    }
     prevOrderCountRef.current = newOrders.length;
-  }, [orders, soundEnabled]);
+  }, [orders, soundEnabled, autoPrint]);
 
   const playAlert = () => {
     try {
