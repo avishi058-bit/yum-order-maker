@@ -14,7 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      order_items: {
+        Row: {
+          created_at: string
+          deal_burgers: Json | null
+          deal_drinks: Json | null
+          id: string
+          item_name: string
+          meal_drink: string | null
+          meal_side: string | null
+          order_id: string
+          price: number
+          quantity: number
+          removals: string[] | null
+          toppings: string[] | null
+          with_meal: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          deal_burgers?: Json | null
+          deal_drinks?: Json | null
+          id?: string
+          item_name: string
+          meal_drink?: string | null
+          meal_side?: string | null
+          order_id: string
+          price: number
+          quantity?: number
+          removals?: string[] | null
+          toppings?: string[] | null
+          with_meal?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          deal_burgers?: Json | null
+          deal_drinks?: Json | null
+          id?: string
+          item_name?: string
+          meal_drink?: string | null
+          meal_side?: string | null
+          order_id?: string
+          price?: number
+          quantity?: number
+          removals?: string[] | null
+          toppings?: string[] | null
+          with_meal?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_name: string
+          customer_phone: string
+          id: string
+          notes: string | null
+          order_number: number
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name: string
+          customer_phone: string
+          id?: string
+          notes?: string | null
+          order_number?: number
+          status?: string
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          notes?: string | null
+          order_number?: number
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
