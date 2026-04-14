@@ -135,6 +135,12 @@ const Index = () => {
         onConfirm={handleCustomizerConfirm}
       />
 
+      <DrinkSelector
+        item={drinkItem}
+        onClose={() => setDrinkItem(null)}
+        onConfirm={handleDrinkConfirm}
+      />
+
       <DealCustomizer
         open={dealOpen}
         onClose={() => setDealOpen(false)}
