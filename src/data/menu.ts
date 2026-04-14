@@ -4,7 +4,7 @@ export interface MenuItem {
   description: string;
   price: number;
   weight?: string;
-  category: "burger" | "side" | "drink" | "deal";
+  category: "burger" | "side" | "drink" | "deal" | "meal";
   badge?: string;
 }
 
