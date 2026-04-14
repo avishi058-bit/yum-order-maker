@@ -362,6 +362,30 @@ const Kitchen = () => {
                 ))}
               </div>
 
+              {/* Time picker overlay */}
+              {showTimePicker === order.id && (
+                <div className="px-4 py-3 border-t border-border bg-secondary/50">
+                  <p className="text-sm font-bold text-foreground mb-2">כמה זמן הכנה? ⏱️</p>
+                  <div className="flex flex-wrap gap-2">
+                    {PREP_TIMES.map((min) => (
+                      <button
+                        key={min}
+                        onClick={() => updateStatus(order.id, "preparing", min)}
+                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity"
+                      >
+                        {min} דק׳
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setShowTimePicker(null)}
+                    className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              )}
+
               {/* Footer */}
               <div className="px-4 py-3 border-t border-border flex items-center justify-between">
                 <span className="font-bold text-lg text-primary">₪{order.total}</span>
@@ -375,15 +399,33 @@ const Kitchen = () => {
                     </button>
                   )}
                   {next && (
-                    <button
-                      onClick={() => updateStatus(order.id, next)}
-                      className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
-                    >
-                      {next === "preparing" ? "התחל הכנה 👨‍🍳" : next === "ready" ? "מוכנה ✅" : "הושלמה"}
-                    </button>
+                    next === "preparing" ? (
+                      <button
+                        onClick={() => setShowTimePicker(order.id)}
+                        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                      >
+                        התחל הכנה 👨‍🍳
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => updateStatus(order.id, next)}
+                        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                      >
+                        {next === "ready" ? "מוכנה ✅" : "הושלמה"}
+                      </button>
+                    )
                   )}
                 </div>
               </div>
+
+              {/* Tracking link */}
+              {order.status === "preparing" && (
+                <div className="px-4 py-2 border-t border-border bg-secondary/20 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
+                  </p>
+                </div>
+              )}
             </div>
           );
         })}
