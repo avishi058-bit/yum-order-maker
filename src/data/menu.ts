@@ -178,6 +178,19 @@ export const menuItems: MenuItem[] = [
   },
 ];
 
+export interface Removal {
+  id: string;
+  name: string;
+}
+
+export const removals: Removal[] = [
+  { id: "no-lettuce", name: "בלי חסה" },
+  { id: "no-tomato", name: "בלי עגבנייה" },
+  { id: "no-pickles", name: "בלי חמוצים" },
+  { id: "no-aioli", name: "בלי איולי" },
+  { id: "dry", name: "יבש ללא ירקות ורטבים" },
+];
+
 export const toppings: Topping[] = [
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
   { id: "garlic-confit", name: "קונפי שום", price: 7 },

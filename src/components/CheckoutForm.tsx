@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
-import { toppings } from "@/data/menu";
+import { toppings, removals } from "@/data/menu";
 import { toast } from "@/hooks/use-toast";
 
 interface CheckoutFormProps {
@@ -26,7 +26,13 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
         const toppingNames = item.toppings
           .map((tId) => toppings.find((t) => t.id === tId)?.name)
           .filter(Boolean);
-        return `${item.name} x${item.quantity}${toppingNames.length ? ` (${toppingNames.join(", ")})` : ""}`;
+        const removalNames = item.removals
+          .map((rId) => removals.find((r) => r.id === rId)?.name)
+          .filter(Boolean);
+        let line = `${item.name} x${item.quantity}`;
+        if (removalNames.length) line += ` (${removalNames.join(", ")})`;
+        if (toppingNames.length) line += ` + ${toppingNames.join(", ")}`;
+        return line;
       })
       .join("\n");
 
