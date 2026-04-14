@@ -5,6 +5,7 @@ import avishai from "@/assets/menu/avishai.jpg";
 import crazySmash from "@/assets/menu/crazy-smash.jpg";
 import specialHadegel from "@/assets/menu/special-hadegel.jpg";
 import fries from "@/assets/menu/fries.jpg";
+import waffleFries from "@/assets/menu/waffle-fries.jpeg";
 import tempuraOnion from "@/assets/menu/tempura-onion.jpg";
 import friendsMix from "@/assets/menu/friends-mix.jpg";
 
@@ -16,6 +17,7 @@ export const menuImages: Record<string, string> = {
   "crazy-smash": crazySmash,
   "special-hadegel": specialHadegel,
   fries: fries,
+  "waffle-fries": waffleFries,
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
 };
