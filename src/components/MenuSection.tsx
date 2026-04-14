@@ -101,37 +101,15 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         </div>
       )}
 
-      {/* Flying item animation */}
-      <AnimatePresence>
-        {flyingItem && (
-          <motion.div
-            initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-            animate={{
-              opacity: 0,
-              scale: 0.2,
-              x: -120,
-              y: 200,
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.32, 0, 0.67, 0] }}
-            className="absolute left-8 top-1/2 -translate-y-1/2 z-20 pointer-events-none"
-          >
-            <div className="bg-primary text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center shadow-xl">
-              <ShoppingBag size={20} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Toast notification */}
       <AnimatePresence>
-        {justAdded && !flyingItem && (
+        {justAdded && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="absolute left-2 top-2 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-10"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-2 top-2 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-10 pointer-events-none"
           >
             <ShoppingBag size={12} />
             נוסף לסל!
