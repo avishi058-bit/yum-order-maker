@@ -126,6 +126,29 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: Cart
                       </div>
                     )}
 
+                    {/* Show deal details */}
+                    {item.dealBurgers && (
+                      <div className="mb-2 space-y-1">
+                        {item.dealBurgers.map((burger, i) => (
+                          <div key={i} className="text-xs text-muted-foreground">
+                            🍔 המבורגר {i + 1}
+                            {burger.removals.length > 0 && (
+                              <span className="mr-1">
+                                ({getRemovalNames(burger.removals).join(", ")})
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        <div className="text-xs text-muted-foreground">🍟 צ׳יפס ענק</div>
+                        {item.dealDrinks?.map((drink, i) => (
+                          <div key={i} className="text-xs text-muted-foreground">
+                            🥤 {drink.name}
+                            {drink.extraCost > 0 && ` (+₪${drink.extraCost})`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {item.toppings.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {getToppingNames(item.toppings).map((name) => (
