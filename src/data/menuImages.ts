@@ -1,4 +1,5 @@
 import classicImg from "@/assets/menu/classic.jpg";
+import smashMoshavnikim from "@/assets/smash-moshavnikim.jpeg";
 import smashDoubleCheese from "@/assets/menu/smash-double-cheese.jpg";
 import avishai from "@/assets/menu/avishai.jpg";
 import crazySmash from "@/assets/menu/crazy-smash.jpg";
@@ -9,6 +10,7 @@ import friendsMix from "@/assets/menu/friends-mix.jpg";
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
+  "smash-moshavnikim": smashMoshavnikim,
   "smash-double-cheese": smashDoubleCheese,
   avishai: avishai,
   "crazy-smash": crazySmash,
