@@ -50,7 +50,6 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         <div className="flex items-center justify-between">
           <span className="text-primary font-bold text-lg">₪{item.price}</span>
           <motion.button
-            ref={buttonRef}
             onClick={handleAdd}
             className={`w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
               justAdded
