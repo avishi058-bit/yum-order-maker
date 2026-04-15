@@ -219,10 +219,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={r.id}
                                 onClick={() => !isLocked && toggleRemoval(r.id)}
-                                className={`w-full flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
-                              >
+                              className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-5" : "py-3"}`}
+                            >
                                 <div
-                                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                     active ? "border-primary bg-primary" : "border-gray-300"
                                   }`}
                                 >
@@ -235,9 +235,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="font-bold text-base">{r.name}</span>
+                                  <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{r.name}</span>
                                   {isLocked && (
-                                    <span className="text-sm font-bold text-destructive">(חסר במלאי כרגע)</span>
+                                    <span className={`font-bold text-destructive ${isKiosk ? "text-[16px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
                                   )}
                                 </div>
                               </button>
@@ -246,9 +246,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         </div>
                       </div>
 
-                      <div className="px-5 py-4">
-                        <h3 className="text-lg font-black text-right mb-1">תוספות בתשלום</h3>
-                        <p className="text-sm text-gray-500 text-right mb-3">אפשר לבחור עד ל-9 פריטים</p>
+                      <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                        <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>תוספות בתשלום</h3>
+                        <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                         <div className="space-y-0">
                           {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
                             const active = selectedToppings.includes(t.id);
@@ -257,11 +257,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={t.id}
                                 onClick={() => toggleTopping(t.id)}
-                                className="w-full flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+                                className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                               >
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                       active ? "border-primary bg-primary" : "border-gray-300"
                                     }`}
                                   >
@@ -273,10 +273,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                       />
                                     )}
                                   </div>
-                                  <span className="text-sm text-gray-500 font-medium">+ ₪{t.price}</span>
+                                  <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="font-bold text-base">{t.name}</span>
+                                  <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
                                   {showRecommended && (
                                     <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
                                       🔥 הולך טוב עם המנה
