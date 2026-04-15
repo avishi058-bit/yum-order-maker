@@ -111,7 +111,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const key = entry.target.getAttribute("data-category");
-            if (key) setActiveCategory(key);
+            if (key) setActiveCategory(key as CategoryKey);
           }
         }
       },
@@ -126,7 +126,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   }, [isKiosk]);
 
   const scrollToCategory = useCallback((key: string) => {
-    setActiveCategory(key);
+    setActiveCategory(key as CategoryKey);
     const el = sectionRefs.current[key];
     if (el) {
       isScrollingToCategory.current = true;
