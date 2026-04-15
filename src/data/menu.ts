@@ -7,6 +7,7 @@ export interface MenuItem {
   category: "burger" | "side" | "drink" | "deal" | "meal";
   badge?: string;
   baseBurgerId?: string;
+  popular?: boolean;
 }
 
 export interface Topping {
@@ -46,6 +47,7 @@ export const menuItems: MenuItem[] = [
     price: 78,
     weight: "220 גרם",
     category: "burger",
+    popular: true,
   },
   {
     id: "double",
@@ -72,6 +74,7 @@ export const menuItems: MenuItem[] = [
     weight: "220 גרם",
     category: "burger",
     badge: "🧀",
+    popular: true,
   },
   {
     id: "special-hadegel",
