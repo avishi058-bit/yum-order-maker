@@ -184,12 +184,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
             {/* Header */}
             {step !== "meal-upgrade" && (
-              <div className="flex items-center justify-between px-5 pb-3 pt-2 border-b border-gray-200">
-                <button onClick={handleClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <X size={20} />
+              <div className={`flex items-center justify-between px-5 pb-3 pt-2 border-b border-gray-200 ${isKiosk ? "px-8 pb-5 pt-4" : ""}`}>
+                <button onClick={handleClose} className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`}>
+                  <X size={isKiosk ? 28 : 20} />
                 </button>
-                <h2 className="text-xl font-black flex-1 text-center">{item.name}</h2>
-                <div className="w-10" />
+                <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[28px]" : "text-xl"}`}>{item.name}</h2>
+                <div className={isKiosk ? "w-14" : "w-10"} />
               </div>
             )}
 
@@ -207,9 +207,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                 >
                   {isBurger && (
                     <>
-                      <div className="px-5 py-4 border-b border-gray-200">
-                        <h3 className="text-lg font-black text-right mb-1">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                        <p className="text-sm text-gray-500 text-right mb-3">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                     <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                        <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                        <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                         <div className="space-y-0">
                           {removalsList.map((r) => {
                             const ingredientUnavailable = getIngredientUnavailable(r.id);
@@ -219,10 +219,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={r.id}
                                 onClick={() => !isLocked && toggleRemoval(r.id)}
-                                className={`w-full flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
-                              >
+                              className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-5" : "py-3"}`}
+                            >
                                 <div
-                                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                     active ? "border-primary bg-primary" : "border-gray-300"
                                   }`}
                                 >
@@ -235,9 +235,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="font-bold text-base">{r.name}</span>
+                                  <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{r.name}</span>
                                   {isLocked && (
-                                    <span className="text-sm font-bold text-destructive">(חסר במלאי כרגע)</span>
+                                    <span className={`font-bold text-destructive ${isKiosk ? "text-[16px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
                                   )}
                                 </div>
                               </button>
@@ -246,9 +246,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         </div>
                       </div>
 
-                      <div className="px-5 py-4">
-                        <h3 className="text-lg font-black text-right mb-1">תוספות בתשלום</h3>
-                        <p className="text-sm text-gray-500 text-right mb-3">אפשר לבחור עד ל-9 פריטים</p>
+                      <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                        <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>תוספות בתשלום</h3>
+                        <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                         <div className="space-y-0">
                           {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
                             const active = selectedToppings.includes(t.id);
@@ -257,11 +257,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={t.id}
                                 onClick={() => toggleTopping(t.id)}
-                                className="w-full flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+                                className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                               >
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                       active ? "border-primary bg-primary" : "border-gray-300"
                                     }`}
                                   >
@@ -273,10 +273,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                       />
                                     )}
                                   </div>
-                                  <span className="text-sm text-gray-500 font-medium">+ ₪{t.price}</span>
+                                  <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="font-bold text-base">{t.name}</span>
+                                  <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
                                   {showRecommended && (
                                     <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
                                       🔥 הולך טוב עם המנה
@@ -312,22 +312,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                     <Utensils size={36} className="text-primary" />
                   </div>
-                   <h3 className="text-xl font-black mb-3">לשדרג לארוחה עסקית?</h3>
-                   <p className="text-primary font-black text-lg mb-1">+₪{mealUpgrade.price}</p>
-                   <p className="text-gray-500 text-sm mb-8">המבורגר + צ׳יפס + שתייה</p>
+                   <h3 className={`font-black mb-3 ${isKiosk ? "text-[26px]" : "text-xl"}`}>לשדרג לארוחה עסקית?</h3>
+                   <p className={`text-primary font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"}`}>+₪{mealUpgrade.price}</p>
+                   <p className={`text-gray-500 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
 
                   <div className="w-full space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => goToSideSelect()}
-                      className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
+                      className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
                       שדרגו לי! 🍟🥤
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleFinish(false)}
-                      className="w-full bg-gray-100 text-gray-500 font-bold py-4 rounded-xl text-base"
+                      className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl ${isKiosk ? "py-5 text-[20px]" : "py-4 text-base"}`}
                     >
                       לא תודה
                     </motion.button>
@@ -342,9 +342,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -40, scale: 0.97 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="flex-1 px-5 py-6"
+                  className={`flex-1 ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                 >
-                   <h3 className="text-lg font-black text-center mb-4">בחר סוג צ׳יפס לעסקית:</h3>
+                   <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
                   <div className="space-y-0">
                     {mealSideOptions.map((side) => {
                       const unavailable = isSideUnavailable(side.id);
@@ -354,13 +354,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={side.id}
                           onClick={() => !unavailable && setSelectedSide(side.id)}
                           disabled={unavailable}
-                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${
+                          className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${
                             unavailable ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                              className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                 active ? "border-primary bg-primary" : "border-gray-300"
                               }`}
                             >
@@ -373,13 +373,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               )}
                             </div>
                             {side.price > 0 && !unavailable && (
-                              <span className="text-base text-gray-500 font-medium">+₪{side.price}</span>
+                              <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{side.price}</span>
                             )}
                             {unavailable && (
                               <span className="text-sm font-bold text-destructive">(אזל מהמלאי כרגע)</span>
                             )}
                           </div>
-                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+                          <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
                         </button>
                       );
                     })}
@@ -394,7 +394,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                       }
                       setStep("drink-select");
                     }}
-                    className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-6"
+                    className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                   >
                     המשך
                   </motion.button>
@@ -408,9 +408,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -40, scale: 0.97 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="flex-1 overflow-y-auto px-5 py-6"
+                  className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                 >
-                   <h3 className="text-lg font-black text-center mb-4">בחר שתייה לעסקית:</h3>
+                   <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר שתייה לעסקית:</h3>
                   
                   <div className="space-y-0">
                     {softDrinks.map((drink) => {
@@ -421,13 +421,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={drink.id}
                           disabled={unavailable}
                           onClick={() => !unavailable && setSelectedDrink(drink.id)}
-                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
+                                className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                  unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
+                                }`}
                             >
                               {active && !unavailable && (
                                 <motion.div
@@ -439,13 +439,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                             </div>
                             {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
                           </div>
-                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                          <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                   <h4 className="text-base font-black text-right mt-4 mb-2">בירות:</h4>
+                   <h4 className={`font-black text-right mt-4 mb-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>בירות:</h4>
                   <div className="space-y-0">
                     {beerDrinks.map((drink) => {
                       const active = selectedDrink === drink.id;
@@ -455,13 +455,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={drink.id}
                           disabled={unavailable}
                           onClick={() => !unavailable && setSelectedDrink(drink.id)}
-                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
+                                className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                  unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
+                                }`}
                             >
                               {active && !unavailable && (
                                 <motion.div
@@ -472,9 +472,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               )}
                             </div>
                             {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
-                            {!unavailable && <span className="text-base text-gray-500 font-medium">+₪{drink.price}</span>}
+                            {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{drink.price}</span>}
                           </div>
-                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                          <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
@@ -483,7 +483,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleFinish(true, selectedSide, selectedDrink)}
-                    className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-6"
+                    className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                   >
                     הוספה להזמנה 🍔
                   </motion.button>
@@ -493,27 +493,27 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
             {/* Bottom bar - only on customize step */}
             {step === "customize" && (
-              <div className="px-5 py-4 border-t border-gray-200 flex items-center gap-3 bg-white safe-bottom">
+              <div className={`border-t border-gray-200 flex items-center gap-3 bg-white safe-bottom ${isKiosk ? "px-8 py-6" : "px-5 py-4"}`}>
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleNext}
-                  className="flex-1 bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
+                  className={`flex-1 bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                 >
                   {isBurger ? "המשך" : `הוספה להזמנה · ₪${totalPrice}`}
                 </motion.button>
-                <div className="flex items-center gap-3 bg-gray-100 rounded-xl px-4 py-3">
+                <div className={`flex items-center gap-3 bg-gray-100 rounded-xl ${isKiosk ? "px-5 py-4" : "px-4 py-3"}`}>
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    className={`rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors ${isKiosk ? "w-12 h-12" : "w-10 h-10"}`}
                   >
-                    <Minus size={18} />
+                    <Minus size={isKiosk ? 22 : 18} />
                   </button>
-                  <span className="font-black text-lg w-8 text-center">{quantity}</span>
+                  <span className={`font-black text-center ${isKiosk ? "text-[22px] w-10" : "text-lg w-8"}`}>{quantity}</span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    className={`rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors ${isKiosk ? "w-12 h-12" : "w-10 h-10"}`}
                   >
-                    <Plus size={18} />
+                    <Plus size={isKiosk ? 22 : 18} />
                   </button>
                 </div>
               </div>
