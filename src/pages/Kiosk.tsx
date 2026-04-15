@@ -11,6 +11,7 @@ import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
+import DineInSelector from "@/components/DineInSelector";
 import ItemPreview from "@/components/ItemPreview";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -35,7 +36,8 @@ const Kiosk = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
-  const [dineIn, setDineIn] = useState(true);
+  const [dineIn, setDineIn] = useState<boolean | null>(null);
+  const [dineInSelectorOpen, setDineInSelectorOpen] = useState(false);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
@@ -143,7 +145,8 @@ const Kiosk = () => {
   const resetOrder = useCallback(() => {
     setCart([]);
     setView("welcome");
-    setDineIn(true);
+    setDineIn(null);
+    setDineInSelectorOpen(false);
     setSelectedSauces([]);
     setCartOpen(false);
     setCheckoutOpen(false);
@@ -226,7 +229,16 @@ const Kiosk = () => {
         onUpdateQuantity={updateQuantity}
         onCheckout={() => {
           setCartOpen(false);
-          if (!dineIn && burgerCount > 0) {
+          setDineInSelectorOpen(true);
+        }}
+      />
+
+      <DineInSelector
+        open={dineInSelectorOpen}
+        onSelect={(val) => {
+          setDineIn(val);
+          setDineInSelectorOpen(false);
+          if (!val && burgerCount > 0) {
             setSauceSelectorOpen(true);
           } else {
             setCheckoutOpen(true);

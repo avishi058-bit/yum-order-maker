@@ -144,29 +144,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
 
   return (
     <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-5xl px-6 pt-4 pb-16' : 'max-w-2xl px-4 py-16'}`}>
-      {/* Dine-in / Takeaway toggle - only show for kiosk */}
-      {isKiosk && (
-        <div className="flex justify-center mb-6">
-          <div className="bg-secondary rounded-full p-1 flex gap-1">
-            <button
-              onClick={() => onDineInChange(true)}
-              className={`px-8 py-3 rounded-full text-lg font-bold transition-all ${
-                dineIn === true ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
-              }`}
-            >
-              🪑 לשבת
-            </button>
-            <button
-              onClick={() => onDineInChange(false)}
-              className={`px-8 py-3 rounded-full text-lg font-bold transition-all ${
-                dineIn === false ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
-              }`}
-            >
-              🥡 לקחת
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk only */}
       {isKiosk && (
