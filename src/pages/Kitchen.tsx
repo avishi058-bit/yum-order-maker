@@ -459,6 +459,42 @@ const Kitchen = () => {
 
         <div className="w-px h-6 bg-border" />
 
+        <div className="flex items-center gap-3">
+          <Banknote size={16} className={restaurantStatus.cash_enabled ? "text-green-400" : "text-destructive"} />
+          <span className="text-sm font-medium text-foreground">מזומן</span>
+          <button
+            onClick={() => toggleCash(!restaurantStatus.cash_enabled)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+              restaurantStatus.cash_enabled ? "bg-green-500" : "bg-destructive"
+            }`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: restaurantStatus.cash_enabled ? "1.5rem" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <CreditCard size={16} className={restaurantStatus.credit_enabled ? "text-green-400" : "text-destructive"} />
+          <span className="text-sm font-medium text-foreground">אשראי</span>
+          <button
+            onClick={() => toggleCredit(!restaurantStatus.credit_enabled)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+              restaurantStatus.credit_enabled ? "bg-green-500" : "bg-destructive"
+            }`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: restaurantStatus.credit_enabled ? "1.5rem" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-border" />
+
         {restaurantStatus.website_open || restaurantStatus.station_open ? (
           <button
             onClick={closeAll}
