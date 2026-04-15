@@ -174,16 +174,71 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // Build item descriptions for Z-Credit invoice
-      const zcreditItems = items.map((item) => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        description: [
-          item.toppings.length > 0 ? `תוספות: ${item.toppings.map(tId => toppings.find(t => t.id === tId)?.name).filter(Boolean).join(", ")}` : "",
-          item.withMeal ? "ארוחה" : "",
-        ].filter(Boolean).join(" | ") || item.name,
-      }));
+      // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
+      const zcreditItems = items.map((item) => {
+        let unitPrice = item.price;
+        const descParts: string[] = [];
+
+        if (item.dealBurgers) {
+          // Deals: price already includes drink extras baked in
+          descParts.push("דיל");
+        } else {
+          // Toppings cost
+          const toppingsCost = item.toppings.reduce((s, tId) => {
+            const t = toppings.find((tp) => tp.id === tId);
+            return s + (t?.price || 0);
+          }, 0);
+          if (toppingsCost > 0) {
+            const toppingNames = item.toppings
+              .map(tId => toppings.find(t => t.id === tId)?.name)
+              .filter(Boolean);
+            descParts.push(`תוספות: ${toppingNames.join(", ")}`);
+          }
+          unitPrice += toppingsCost;
+
+          // Meal upgrade cost
+          if (item.withMeal) {
+            unitPrice += 23;
+            descParts.push("ארוחה");
+          }
+
+          // Side upgrade cost
+          if (item.mealSideId) {
+            const sideOption = mealSideOptions.find(s => s.id === item.mealSideId);
+            if (sideOption && sideOption.price > 0) {
+              unitPrice += sideOption.price;
+              descParts.push(`תוספת צד: ${sideOption.name}`);
+            }
+          }
+
+          // Drink upgrade cost
+          if (item.mealDrinkId) {
+            const drinkOption = mealDrinkOptions.find(d => d.id === item.mealDrinkId);
+            if (drinkOption && drinkOption.price > 0) {
+              unitPrice += drinkOption.price;
+              descParts.push(`שתייה: ${drinkOption.name}`);
+            }
+          }
+        }
+
+        return {
+          name: item.name,
+          price: unitPrice,
+          quantity: item.quantity,
+          description: descParts.length > 0 ? descParts.join(" | ") : item.name,
+        };
+      });
+
+      // If total includes extras (like sauces) not in cart items, add a reconciliation line
+      const itemsSum = zcreditItems.reduce((s, i) => s + i.price * i.quantity, 0);
+      if (total > itemsSum) {
+        zcreditItems.push({
+          name: "תוספות נוספות",
+          price: total - itemsSum,
+          quantity: 1,
+          description: "רטבים ותוספות",
+        });
+      }
 
       const baseUrl = window.location.origin;
       const response = await fetch(
