@@ -53,12 +53,12 @@ Deno.serve(async (req) => {
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) {
-    return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'LOVABLE_API_KEY not configured' }, 500)
   }
 
   const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY')
   if (!TWILIO_API_KEY) {
-    return new Response(JSON.stringify({ error: 'TWILIO_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'TWILIO_API_KEY not configured' }, 500)
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
