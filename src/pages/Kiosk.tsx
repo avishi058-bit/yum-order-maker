@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
