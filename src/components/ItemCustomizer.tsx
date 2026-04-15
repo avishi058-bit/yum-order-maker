@@ -151,7 +151,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             className={`fixed z-50 bg-white text-black flex flex-col ${
               step === "meal-upgrade" 
                 ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl" 
-                : "bottom-0 left-0 right-0 rounded-t-3xl min-h-[50vh] max-h-[90vh]"
+                : "inset-0 rounded-none"
             }`}
             dir="rtl"
           >
