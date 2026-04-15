@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
         },
         body: new URLSearchParams({
           To: `whatsapp:${formattedPhone}`,
-          From: 'whatsapp:+14155238886',
+          From: `whatsapp:${whatsappFrom}`,
           Body: `קוד האימות שלך מהבקתה: ${code}\nאין להעביר את הקוד לאף אחד`,
         }),
       })
