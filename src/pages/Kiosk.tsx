@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import KioskWelcome from "@/components/KioskWelcome";
@@ -148,13 +149,23 @@ const Kiosk = () => {
     return base;
   };
 
-  const resetOrder = () => {
+  const resetOrder = useCallback(() => {
     setCart([]);
     setView("welcome");
     setActiveCategory("burger");
     setDineIn(true);
     setSelectedSauces([]);
-  };
+    setCartOpen(false);
+    setCheckoutOpen(false);
+    setCustomizerItem(null);
+    setDealOpen(false);
+    setFamilyDealOpen(false);
+    setDrinkItem(null);
+    setSauceSelectorOpen(false);
+    setPreviewItem(null);
+  }, []);
+
+  const { countdown } = useKioskInactivityTimer(view === "menu", resetOrder);
 
   const filteredItems = menuItems.filter((i) => i.category === activeCategory && isAvailable(i.id));
 
