@@ -24,6 +24,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const touchStartY = useRef(0);
   const [sheetTranslateY, setSheetTranslateY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const mouseDown = useRef(false);
 
   // Lock body scroll when open
   useEffect(() => {
