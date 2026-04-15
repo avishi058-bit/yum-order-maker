@@ -57,17 +57,28 @@ const HeroSection = ({ onOrderClick }: { onOrderClick?: () => void }) => {
         >
           כשר בהשגחת הרבנות המקומית-שדות נגב
         </motion.p>
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.45 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onOrderClick}
-          className="bg-primary text-primary-foreground font-bold text-lg px-10 py-4 rounded-full shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
-        >
-          לתפריט ולהזמנה 🔥
-        </motion.button>
+        {onOrderClick ? (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onOrderClick}
+            className="bg-primary text-primary-foreground font-bold text-lg px-10 py-4 rounded-full shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
+          >
+            לתפריט ולהזמנה 🔥
+          </motion.button>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="bg-destructive/20 text-destructive font-bold text-lg px-10 py-4 rounded-full"
+          >
+            סגור להזמנות כרגע
+          </motion.div>
+        )}
       </div>
     </section>
   );
