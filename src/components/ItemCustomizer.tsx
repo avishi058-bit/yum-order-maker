@@ -272,13 +272,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
               ref={scrollRef}
               className={`flex-1 overflow-y-auto overscroll-contain ${step !== "meal-upgrade" ? "rounded-t-3xl" : ""}`}
               style={{ touchAction: isDragging ? "none" : "pan-y", overflowY: isDragging ? "hidden" : "auto" }}
-
-            {/* Scrollable content area */}
-            <div 
-              ref={scrollRef}
-              className={`flex-1 overflow-y-auto overscroll-contain ${step !== "meal-upgrade" ? "rounded-t-3xl" : ""}`}
-              style={{ touchAction: "pan-y" }}
-              onTouchMove={(e) => e.stopPropagation()}
             >
               {/* Hero image with overlay close button */}
               {step !== "meal-upgrade" && hasImage && (
