@@ -144,29 +144,34 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const hasImage = !!menuImages[item.id];
 
-  // Swipe/drag to close
-  const canDragDown = () => {
-    const el = scrollRef.current;
-    return !el || el.scrollTop <= 0;
-  };
+  const [isClosing, setIsClosing] = useState(false);
 
+  // Swipe/drag to close — works from any scroll position
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const deltaY = e.touches[0].clientY - touchStartY.current;
-    if (canDragDown() && deltaY > 0) {
+    if (deltaY > 10) {
       setIsDragging(true);
-      setSheetTranslateY(deltaY * 0.6);
+      setSheetTranslateY(Math.max(0, deltaY * 0.5));
     }
   };
 
   const handleTouchEnd = () => {
-    if (sheetTranslateY > 80) {
-      handleClose();
+    if (sheetTranslateY > 60) {
+      // Animate out smoothly
+      setIsClosing(true);
+      setSheetTranslateY(window.innerHeight);
+      setTimeout(() => {
+        handleClose();
+        setIsClosing(false);
+        setSheetTranslateY(0);
+      }, 300);
+    } else {
+      setSheetTranslateY(0);
     }
-    setSheetTranslateY(0);
     setIsDragging(false);
   };
 
@@ -179,18 +184,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!mouseDown.current) return;
     const deltaY = e.clientY - touchStartY.current;
-    if (canDragDown() && deltaY > 0) {
+    if (deltaY > 10) {
       setIsDragging(true);
-      setSheetTranslateY(deltaY * 0.6);
+      setSheetTranslateY(Math.max(0, deltaY * 0.5));
     }
   };
 
   const handleMouseUp = () => {
-    if (sheetTranslateY > 80) {
-      handleClose();
+    if (sheetTranslateY > 60) {
+      setIsClosing(true);
+      setSheetTranslateY(window.innerHeight);
+      setTimeout(() => {
+        handleClose();
+        setIsClosing(false);
+        setSheetTranslateY(0);
+      }, 300);
+    } else {
+      setSheetTranslateY(0);
     }
     mouseDown.current = false;
-    setSheetTranslateY(0);
     setIsDragging(false);
   };
 
