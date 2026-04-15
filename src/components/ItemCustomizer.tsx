@@ -281,7 +281,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="w-full space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setStep("side-select")}
+                      onClick={() => goToSideSelect()}
                       className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
                     >
                       שדרגו לי! 🍟🥤
