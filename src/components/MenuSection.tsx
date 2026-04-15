@@ -41,34 +41,44 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
       }`}
       dir="rtl"
     >
-      {/* Text content - right side */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
+      {/* Image - top for kiosk, left for regular */}
+      {isKiosk && image && (
+        <div className="relative w-full h-36 mb-3">
+          <div className="w-full h-full rounded-xl overflow-hidden">
+            <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+          </div>
+          {item.popular && (
+            <span className="absolute right-2 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-md z-10">
+              <Star size={9} fill="currentColor" />
+              פופולארי
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Text content */}
+      <div className={isKiosk ? "w-full" : "flex-1 min-w-0"}>
+        <div className={`flex items-center gap-2 mb-1 flex-wrap ${isKiosk ? "justify-center" : ""}`}>
           {item.badge && <span className="text-lg">{item.badge}</span>}
-          <h3 className="text-base font-bold">{item.name}</h3>
+          <h3 className={`font-bold ${isKiosk ? "text-lg" : "text-base"}`}>{item.name}</h3>
           {item.weight && (
             <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
               {item.weight}
             </span>
           )}
         </div>
-        <p className="text-muted-foreground text-sm mb-2 leading-relaxed line-clamp-2">{item.description}</p>
-        <span className="text-primary font-bold text-lg">₪{item.price}</span>
+        {!isKiosk && <p className="text-muted-foreground text-sm mb-2 leading-relaxed line-clamp-2">{item.description}</p>}
+        <span className={`text-primary font-bold ${isKiosk ? "text-xl mt-2 block" : "text-lg"}`}>₪{item.price}</span>
       </div>
 
-      {/* Image - left side */}
-      {image && (
+      {/* Image - left side (regular mode only) */}
+      {!isKiosk && image && (
         <div className="relative w-28 h-28 flex-shrink-0">
           <div className="w-full h-full rounded-xl overflow-hidden">
-            <img
-              src={image}
-              alt={item.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+            <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
           </div>
           {item.popular && (
-            <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-md z-10">
+            <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-md z-10">
               <Star size={9} fill="currentColor" />
               פופולארי
             </span>
