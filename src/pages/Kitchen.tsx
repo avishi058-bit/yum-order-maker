@@ -31,7 +31,7 @@ interface Order {
   order_items: OrderItem[];
 }
 
-type ViewMode = "active" | "history";
+type ViewMode = "active" | "history" | "availability";
 
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
