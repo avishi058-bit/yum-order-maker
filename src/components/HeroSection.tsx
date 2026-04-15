@@ -44,7 +44,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
           transition={{ duration: 0.8 }}
           className="text-5xl md:text-7xl font-black mb-2 tracking-tight"
         >
-          הַבַּקְּתָה
+          הַבִּקְתָּה
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
