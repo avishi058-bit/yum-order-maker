@@ -217,15 +217,17 @@ const Index = () => {
       )}
 
       {!isClosed && totalItems > 0 && !cartOpen && (
-        <button
-          onClick={() => setCartOpen(true)}
-          className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
-        >
-          <ShoppingBag size={22} />
-          <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-            {totalItems}
-          </span>
-        </button>
+        <div ref={cartButtonRef}>
+          <button
+            onClick={() => setCartOpen(true)}
+            className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
+          >
+            <ShoppingBag size={22} />
+            <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+              {totalItems}
+            </span>
+          </button>
+        </div>
       )}
 
       {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
