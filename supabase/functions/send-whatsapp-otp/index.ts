@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
         formattedPhone = '+' + formattedPhone
       }
 
-      // Send via WhatsApp through Twilio gateway
+      const whatsappFrom = Deno.env.get('TWILIO_WHATSAPP_FROM') || '+14155238886'
       const twilioResponse = await fetch(`${GATEWAY_URL}/Messages.json`, {
         method: 'POST',
         headers: {
