@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface RestaurantStatus {
@@ -11,6 +11,7 @@ export interface RestaurantStatus {
 export const useRestaurantStatus = () => {
   const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true });
   const [loading, setLoading] = useState(true);
+  const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
 
   useEffect(() => {
     const fetch = async () => {
@@ -26,7 +27,7 @@ export const useRestaurantStatus = () => {
     fetch();
 
     const channel = supabase
-      .channel("restaurant-status")
+      .channel(channelId.current)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
