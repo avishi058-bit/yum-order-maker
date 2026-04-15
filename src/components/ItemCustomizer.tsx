@@ -225,7 +225,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   // Compute the sheet's Y position: manual drag overrides framer-motion
   const isNotMealUpgrade = step !== "meal-upgrade";
-  const sheetStyle: React.CSSProperties = isNotMealUpgrade ? {
+  const sheetStyle: React.CSSProperties = isNotMealUpgrade && (isDragging || isClosing || sheetTranslateY > 0) ? {
     transform: `translateY(${sheetTranslateY}px)`,
     transition: isDragging ? "none" : "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
   } : {};
