@@ -185,9 +185,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                 >
                   {isBurger && (
                     <>
-                      <div className="px-5 py-5 border-b border-gray-200">
-                        <h3 className="text-2xl font-black text-right mb-1">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                        <p className="text-base text-gray-500 text-right mb-4">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                      <div className="px-6 py-6 border-b border-gray-200">
+                        <h3 className="text-3xl font-black text-right mb-2">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                        <p className="text-lg text-gray-500 text-right mb-5">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                         <div className="space-y-0">
                           {removalsList.map((r) => {
                             const ingredientUnavailable = getIngredientUnavailable(r.id);
@@ -197,10 +197,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={r.id}
                                 onClick={() => !isLocked && toggleRemoval(r.id)}
-                                className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
+                                className={`w-full flex items-center justify-between py-5 border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
                               >
                                 <div
-                                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  className={`w-10 h-10 rounded-full border-3 flex items-center justify-center transition-colors ${
                                     active ? "border-primary bg-primary" : "border-gray-300"
                                   }`}
                                 >
@@ -208,14 +208,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                     <motion.div
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
-                                      className="w-3 h-3 rounded-full bg-white"
+                                      className="w-4 h-4 rounded-full bg-white"
                                     />
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-lg">{r.name}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="font-bold text-2xl">{r.name}</span>
                                   {isLocked && (
-                                    <span className="text-xs text-destructive font-bold">(חסר במלאי כרגע)</span>
+                                    <span className="text-sm font-bold text-destructive">(חסר במלאי כרגע)</span>
                                   )}
                                 </div>
                               </button>
