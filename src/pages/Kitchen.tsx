@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3 } from "lucide-react";
+import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 
@@ -33,7 +34,7 @@ interface Order {
   order_items: OrderItem[];
 }
 
-type ViewMode = "active" | "history" | "availability";
+type ViewMode = "active" | "history" | "availability" | "dashboard";
 
 interface AvailabilityItem {
   id: string;
@@ -404,6 +405,17 @@ const Kitchen = () => {
               <Package size={14} className="inline ml-1" />
               מלאי
             </button>
+            <button
+              onClick={() => setViewMode("dashboard")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                viewMode === "dashboard"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              <BarChart3 size={14} className="inline ml-1" />
+              דשבורד
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -572,6 +584,8 @@ const Kitchen = () => {
             </div>
           ))}
         </div>
+      ) : viewMode === "dashboard" ? (
+        <DashboardView />
       ) : (
         /* Orders Grid */
         <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
