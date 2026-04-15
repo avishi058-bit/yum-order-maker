@@ -36,7 +36,8 @@ const Kiosk = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
-  const [dineIn, setDineIn] = useState(true);
+  const [dineIn, setDineIn] = useState<boolean | null>(null);
+  const [dineInSelectorOpen, setDineInSelectorOpen] = useState(false);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
