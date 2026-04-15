@@ -59,16 +59,21 @@ const Kiosk = () => {
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
       setDrinkItem(item);
     } else {
-      setCart((prev) => {
-        const existing = prev.find((c) => c.id === item.id);
-        if (existing) {
-          return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
-        }
-        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
-      });
-      setJustAddedId(item.id);
-      setTimeout(() => setJustAddedId(null), 1200);
+      // Simple items (sides, simple drinks) → open preview
+      setPreviewItem(item);
     }
+  }, []);
+
+  const handlePreviewAdd = useCallback((item: MenuItem) => {
+    setCart((prev) => {
+      const existing = prev.find((c) => c.id === item.id);
+      if (existing) {
+        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
+      }
+      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+    });
+    setJustAddedId(item.id);
+    setTimeout(() => setJustAddedId(null), 1200);
   }, []);
 
   const handleCustomizerConfirm = useCallback(
