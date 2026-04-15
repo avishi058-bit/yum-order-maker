@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Star } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
