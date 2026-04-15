@@ -143,19 +143,28 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const hasImage = !!menuImages[item.id];
 
-  // Handle drag to dismiss - only allow when scrolled to top
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y > 100 && info.velocity.y > 0) {
-      handleClose();
+  // Touch-based swipe to close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const el = scrollRef.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    // Only allow pull-down when scrolled to top
+    if (el && el.scrollTop <= 0 && deltaY > 0) {
+      e.preventDefault();
+      setIsDragging(true);
+      setSheetTranslateY(deltaY * 0.6); // dampen
     }
   };
 
-  const handleDrag = (_: any, info: PanInfo) => {
-    // Only allow dragging down when scroll is at top
-    const el = scrollRef.current;
-    if (el && el.scrollTop > 0 && info.offset.y > 0) {
-      dragY.set(0);
+  const handleTouchEnd = () => {
+    if (sheetTranslateY > 120) {
+      handleClose();
     }
+    setSheetTranslateY(0);
+    setIsDragging(false);
   };
 
   return (
