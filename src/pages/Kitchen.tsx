@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface OrderItem {
   id: string;
@@ -30,7 +31,28 @@ interface Order {
   order_items: OrderItem[];
 }
 
-type ViewMode = "active" | "history";
+type ViewMode = "active" | "history" | "availability";
+
+interface AvailabilityItem {
+  id: string;
+  item_id: string;
+  item_name: string;
+  category: string;
+  available: boolean;
+}
+
+const availabilityCategoryLabels: Record<string, string> = {
+  burger: "🍔 המבורגרים",
+  meal: "🍽️ ארוחות עסקיות",
+  side: "🍟 צ׳יפס ותוספות",
+  drink: "🍺 שתייה",
+  deal: "🤝 דילים",
+  topping: "🧀 תוספות על ההמבורגר",
+  sauce: "🥫 רטבים",
+  ingredient: "🥬 ירקות ורטבים",
+};
+
+const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient"];
 
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
@@ -57,6 +79,15 @@ const Kitchen = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
+  const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+
+  const fetchAvailability = useCallback(async () => {
+    const { data } = await supabase
+      .from("menu_availability")
+      .select("*")
+      .order("category");
+    if (data) setAvailabilityItems(data as AvailabilityItem[]);
+  }, []);
 
   const fetchOrders = useCallback(async () => {
     const { data, error } = await supabase
@@ -71,23 +102,28 @@ const Kitchen = () => {
 
   useEffect(() => {
     fetchOrders();
+    fetchAvailability();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel("orders-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        () => {
-          fetchOrders();
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
+      .subscribe();
+
+    const availChannel = supabase
+      .channel("availability-realtime")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
+        const updated = payload.new as AvailabilityItem;
+        setAvailabilityItems((prev) =>
+          prev.map((item) => (item.item_id === updated.item_id ? { ...item, available: updated.available } : item))
+        );
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(availChannel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, fetchAvailability]);
 
   // Play sound + auto-print on new order
   useEffect(() => {
@@ -138,6 +174,29 @@ const Kitchen = () => {
       }, 300);
     } catch {}
   };
+
+  const toggleAvailability = async (itemId: string, currentValue: boolean) => {
+    setAvailabilityItems((prev) =>
+      prev.map((item) => (item.item_id === itemId ? { ...item, available: !currentValue } : item))
+    );
+    const { error } = await supabase
+      .from("menu_availability")
+      .update({ available: !currentValue, updated_at: new Date().toISOString() })
+      .eq("item_id", itemId);
+    if (error) {
+      setAvailabilityItems((prev) =>
+        prev.map((item) => (item.item_id === itemId ? { ...item, available: currentValue } : item))
+      );
+    }
+  };
+
+  const availabilityGrouped = availabilityCategoryOrder
+    .map((cat) => ({
+      category: cat,
+      label: availabilityCategoryLabels[cat] || cat,
+      items: availabilityItems.filter((i) => i.category === cat),
+    }))
+    .filter((g) => g.items.length > 0);
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
     const updateData: any = { status: newStatus };
@@ -264,6 +323,17 @@ const Kitchen = () => {
               <History size={14} className="inline ml-1" />
               היסטוריה
             </button>
+            <button
+              onClick={() => setViewMode("availability")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                viewMode === "availability"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              <Package size={14} className="inline ml-1" />
+              מלאי
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -291,166 +361,210 @@ const Kitchen = () => {
         </div>
       </div>
 
-      {/* Orders Grid */}
-      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayOrders.length === 0 && (
-          <div className="col-span-full text-center py-20 text-muted-foreground">
-            <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : "📋"}</p>
-            <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : "אין היסטוריה עדיין"}</p>
-          </div>
-        )}
-
-        {displayOrders.map((order) => {
-          const config = statusConfig[order.status];
-          const next = nextStatus[order.status];
-
-          return (
-            <div
-              key={order.id}
-              className={`bg-card border rounded-xl overflow-hidden ${
-                order.status === "new" ? "border-red-500 shadow-lg shadow-red-500/20 animate-pulse" : "border-border"
-              }`}
-            >
-              {/* Order header */}
-              <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
-                <div className="flex items-center gap-2">
-                  {config.icon}
-                  <span className="font-bold">#{order.order_number}</span>
-                  <span className="text-sm opacity-80">{config.label}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => printOrder(order)}
-                    className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                    title="הדפסת בון"
+      {/* Availability View */}
+      {viewMode === "availability" ? (
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          {availabilityGrouped.map((group) => (
+            <div key={group.category} className="mb-8">
+              <h2 className="text-xl font-bold text-primary mb-3">{group.label}</h2>
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                {group.items.map((item, i) => (
+                  <motion.div
+                    key={item.item_id}
+                    className={`flex items-center justify-between px-4 py-3.5 ${
+                      i < group.items.length - 1 ? "border-b border-border/50" : ""
+                    }`}
                   >
-                    <Printer size={16} />
-                  </button>
-                  <span className="text-xs opacity-80">
-                    <Clock size={12} className="inline ml-0.5" />
-                    {timeSince(order.created_at)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Customer info */}
-              <div className="px-4 py-3 border-b border-border bg-secondary/30">
-                <p className="font-bold text-foreground">{order.customer_name}</p>
-                <p className="text-sm text-muted-foreground">📞 {order.customer_phone}</p>
-                {order.customer_address && (
-                  <p className="text-sm text-muted-foreground">📍 {order.customer_address}</p>
-                )}
-                {order.notes && (
-                  <p className="text-sm text-primary mt-1">📝 {order.notes}</p>
-                )}
-              </div>
-
-              {/* Items */}
-              <div className="px-4 py-3 space-y-2 max-h-60 overflow-y-auto">
-                {order.order_items.map((item) => (
-                  <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
-                    <div className="flex justify-between font-medium">
-                      <span>{item.item_name} x{item.quantity}</span>
-                      <span className="text-primary">₪{item.price * item.quantity}</span>
+                    <button
+                      onClick={() => toggleAvailability(item.item_id, item.available)}
+                      className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+                        item.available ? "bg-green-500" : "bg-muted"
+                      }`}
+                    >
+                      <motion.div
+                        className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+                        animate={{ left: item.available ? "1.5rem" : "0.125rem" }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-medium ${!item.available ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                        {item.item_name}
+                      </span>
+                      {!item.available && (
+                        <span className="text-[10px] font-bold bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full">
+                          אזל
+                        </span>
+                      )}
                     </div>
-                    {item.removals && item.removals.length > 0 && (
-                      <p className="text-xs text-red-400">ללא: {item.removals.join(", ")}</p>
-                    )}
-                    {item.toppings && item.toppings.length > 0 && (
-                      <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
-                    )}
-                    {item.with_meal && (
-                      <p className="text-xs text-muted-foreground">
-                        🍟 ארוחה{item.meal_side ? ` — ${item.meal_side}` : ""}{item.meal_drink ? `, ${item.meal_drink}` : ""}
-                      </p>
-                    )}
-                    {item.deal_burgers && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {(item.deal_burgers as any[]).map((b: any, i: number) => (
-                          <p key={i}>
-                            🍔 המבורגר {i + 1}
-                            {b.name && <span className="font-bold text-foreground"> ({b.name})</span>}
-                            {b.removals?.length > 0 && ` — ${b.removals.join(", ")}`}
-                          </p>
-                        ))}
-                        <p>🍟 צ׳יפס ענק</p>
-                        {item.deal_drinks && (item.deal_drinks as any[]).map((d: any, i: number) => (
-                          <p key={i}>🥤 {d.name}{d.extraCost > 0 ? ` (+₪${d.extraCost})` : ""}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Orders Grid */
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {displayOrders.length === 0 && (
+            <div className="col-span-full text-center py-20 text-muted-foreground">
+              <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : "📋"}</p>
+              <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : "אין היסטוריה עדיין"}</p>
+            </div>
+          )}
 
-              {/* Time picker overlay */}
-              {showTimePicker === order.id && (
-                <div className="px-4 py-3 border-t border-border bg-secondary/50">
-                  <p className="text-sm font-bold text-foreground mb-2">כמה זמן הכנה? ⏱️</p>
-                  <div className="flex flex-wrap gap-2">
-                    {PREP_TIMES.map((min) => (
-                      <button
-                        key={min}
-                        onClick={() => updateStatus(order.id, "preparing", min)}
-                        className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity"
-                      >
-                        {min} דק׳
-                      </button>
-                    ))}
+          {displayOrders.map((order) => {
+            const config = statusConfig[order.status];
+            const next = nextStatus[order.status];
+
+            return (
+              <div
+                key={order.id}
+                className={`bg-card border rounded-xl overflow-hidden ${
+                  order.status === "new" ? "border-red-500 shadow-lg shadow-red-500/20 animate-pulse" : "border-border"
+                }`}
+              >
+                {/* Order header */}
+                <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
+                  <div className="flex items-center gap-2">
+                    {config.icon}
+                    <span className="font-bold">#{order.order_number}</span>
+                    <span className="text-sm opacity-80">{config.label}</span>
                   </div>
-                  <button
-                    onClick={() => setShowTimePicker(null)}
-                    className="mt-2 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    ביטול
-                  </button>
-                </div>
-              )}
-
-              {/* Footer */}
-              <div className="px-4 py-3 border-t border-border flex items-center justify-between">
-                <span className="font-bold text-lg text-primary">₪{order.total}</span>
-                <div className="flex gap-2">
-                  {order.status === "new" && (
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateStatus(order.id, "cancelled")}
-                      className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      onClick={() => printOrder(order)}
+                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                      title="הדפסת בון"
+                    >
+                      <Printer size={16} />
+                    </button>
+                    <span className="text-xs opacity-80">
+                      <Clock size={12} className="inline ml-0.5" />
+                      {timeSince(order.created_at)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Customer info */}
+                <div className="px-4 py-3 border-b border-border bg-secondary/30">
+                  <p className="font-bold text-foreground">{order.customer_name}</p>
+                  <p className="text-sm text-muted-foreground">📞 {order.customer_phone}</p>
+                  {order.customer_address && (
+                    <p className="text-sm text-muted-foreground">📍 {order.customer_address}</p>
+                  )}
+                  {order.notes && (
+                    <p className="text-sm text-primary mt-1">📝 {order.notes}</p>
+                  )}
+                </div>
+
+                {/* Items */}
+                <div className="px-4 py-3 space-y-2 max-h-60 overflow-y-auto">
+                  {order.order_items.map((item) => (
+                    <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
+                      <div className="flex justify-between font-medium">
+                        <span>{item.item_name} x{item.quantity}</span>
+                        <span className="text-primary">₪{item.price * item.quantity}</span>
+                      </div>
+                      {item.removals && item.removals.length > 0 && (
+                        <p className="text-xs text-red-400">ללא: {item.removals.join(", ")}</p>
+                      )}
+                      {item.toppings && item.toppings.length > 0 && (
+                        <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
+                      )}
+                      {item.with_meal && (
+                        <p className="text-xs text-muted-foreground">
+                          🍟 ארוחה{item.meal_side ? ` — ${item.meal_side}` : ""}{item.meal_drink ? `, ${item.meal_drink}` : ""}
+                        </p>
+                      )}
+                      {item.deal_burgers && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {(item.deal_burgers as any[]).map((b: any, i: number) => (
+                            <p key={i}>
+                              🍔 המבורגר {i + 1}
+                              {b.name && <span className="font-bold text-foreground"> ({b.name})</span>}
+                              {b.removals?.length > 0 && ` — ${b.removals.join(", ")}`}
+                            </p>
+                          ))}
+                          <p>🍟 צ׳יפס ענק</p>
+                          {item.deal_drinks && (item.deal_drinks as any[]).map((d: any, i: number) => (
+                            <p key={i}>🥤 {d.name}{d.extraCost > 0 ? ` (+₪${d.extraCost})` : ""}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Time picker overlay */}
+                {showTimePicker === order.id && (
+                  <div className="px-4 py-3 border-t border-border bg-secondary/50">
+                    <p className="text-sm font-bold text-foreground mb-2">כמה זמן הכנה? ⏱️</p>
+                    <div className="flex flex-wrap gap-2">
+                      {PREP_TIMES.map((min) => (
+                        <button
+                          key={min}
+                          onClick={() => updateStatus(order.id, "preparing", min)}
+                          className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-opacity"
+                        >
+                          {min} דק׳
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowTimePicker(null)}
+                      className="mt-2 text-xs text-muted-foreground hover:text-foreground"
                     >
                       ביטול
                     </button>
-                  )}
-                  {next && (
-                    next === "preparing" ? (
-                      <button
-                        onClick={() => setShowTimePicker(order.id)}
-                        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
-                      >
-                        התחל הכנה 👨‍🍳
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => updateStatus(order.id, next)}
-                        className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
-                      >
-                        {next === "ready" ? "מוכנה ✅" : "הושלמה"}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
+                  </div>
+                )}
 
-              {/* Tracking link */}
-              {order.status === "preparing" && (
-                <div className="px-4 py-2 border-t border-border bg-secondary/20 text-center">
-                  <p className="text-xs text-muted-foreground">
-                    קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
-                  </p>
+                {/* Footer */}
+                <div className="px-4 py-3 border-t border-border flex items-center justify-between">
+                  <span className="font-bold text-lg text-primary">₪{order.total}</span>
+                  <div className="flex gap-2">
+                    {order.status === "new" && (
+                      <button
+                        onClick={() => updateStatus(order.id, "cancelled")}
+                        className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        ביטול
+                      </button>
+                    )}
+                    {next && (
+                      next === "preparing" ? (
+                        <button
+                          onClick={() => setShowTimePicker(order.id)}
+                          className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                        >
+                          התחל הכנה 👨‍🍳
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => updateStatus(order.id, next)}
+                          className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                        >
+                          {next === "ready" ? "מוכנה ✅" : "הושלמה"}
+                        </button>
+                      )
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+
+                {/* Tracking link */}
+                {order.status === "preparing" && (
+                  <div className="px-4 py-2 border-t border-border bg-secondary/20 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
