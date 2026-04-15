@@ -52,17 +52,18 @@ const Kiosk = () => {
     const orderNum = searchParams.get("order");
     if (paid === "true" && orderNum) {
       setOrderSuccess(parseInt(orderNum));
+      setView("welcome");
+      setCart([]);
+      setCheckoutOpen(false);
       import("canvas-confetti").then(({ default: confetti }) => {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
       });
       setTimeout(() => {
         setOrderSuccess(null);
-        resetOrder();
       }, 2000);
-      // Clear query params
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams]);
+  }, []);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
