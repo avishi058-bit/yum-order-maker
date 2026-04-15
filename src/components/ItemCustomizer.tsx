@@ -153,32 +153,38 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             className="fixed inset-0 bg-black z-50"
           />
           <motion.div
-            initial={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
-            animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
-            exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
+            initial={{ y: "100%" }}
+            animate={
+              step === "meal-upgrade"
+                ? { y: 0, height: "auto", top: "auto", bottom: 0 }
+                : expanded
+                ? { y: 0, height: "100%" }
+                : { y: 0, height: "60%" }
+            }
+            exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className={`fixed z-50 bg-white text-black flex flex-col ${
-              step === "meal-upgrade" 
-                ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl" 
-                : "inset-0 rounded-none"
+            className={`fixed left-0 right-0 bottom-0 z-50 bg-white text-black flex flex-col ${
+              step === "meal-upgrade"
+                ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl"
+                : "rounded-t-3xl shadow-2xl"
             }`}
             dir="rtl"
           >
-            {/* Handle - hide on meal-upgrade centered modal */}
+            {/* Handle */}
             {step !== "meal-upgrade" && (
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1.5 rounded-full bg-muted" />
               </div>
             )}
 
-            {/* Header - hide on meal-upgrade centered modal */}
+            {/* Header */}
             {step !== "meal-upgrade" && (
-              <div className="flex items-center justify-between px-6 pb-5 pt-4 border-b border-gray-200">
-                <button onClick={handleClose} className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
-                  <X size={28} />
+              <div className="flex items-center justify-between px-5 pb-3 pt-2 border-b border-gray-200">
+                <button onClick={handleClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <X size={20} />
                 </button>
-                <h2 className="text-3xl font-black flex-1 text-center">{item.name}</h2>
-                <div className="w-14" />
+                <h2 className="text-xl font-black flex-1 text-center">{item.name}</h2>
+                <div className="w-10" />
               </div>
             )}
 
@@ -191,6 +197,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   exit={{ opacity: 0, x: -40, scale: 0.97 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                   className="flex-1 overflow-y-auto"
+                  ref={scrollRef}
+                  onScroll={handleScroll}
                 >
                   {isBurger && (
                     <>
