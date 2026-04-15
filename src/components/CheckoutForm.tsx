@@ -29,12 +29,6 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
 
     setSendingOtp(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-whatsapp-otp", {
-        body: { phone: form.phone },
-        headers: { "x-action": "send" },
-      });
-
-      // Use query param approach
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-otp?action=send`,
         {
