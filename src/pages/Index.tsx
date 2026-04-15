@@ -33,6 +33,8 @@ const Index = () => {
   const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
+  const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const cartButtonRef = useRef<HTMLDivElement>(null);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
