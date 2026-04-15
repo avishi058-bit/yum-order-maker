@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
@@ -43,6 +44,27 @@ const Kiosk = () => {
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle return from credit card payment
+  useEffect(() => {
+    const paid = searchParams.get("paid");
+    const orderNum = searchParams.get("order");
+    if (paid === "true" && orderNum) {
+      setOrderSuccess(parseInt(orderNum));
+      setView("welcome");
+      setCart([]);
+      setCheckoutOpen(false);
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+      });
+      setTimeout(() => {
+        setOrderSuccess(null);
+      }, 2000);
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
