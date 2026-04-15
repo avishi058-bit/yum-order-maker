@@ -295,6 +295,13 @@ const Index = () => {
         }}
       />
 
+      <ItemPreview
+        item={previewItem}
+        onClose={() => setPreviewItem(null)}
+        onAdd={(item) => addToCartDirect(item)}
+        cartButtonRef={cartButtonRef}
+      />
+
       <AnimatePresence>
         {checkoutOpen && (
           <CheckoutForm
