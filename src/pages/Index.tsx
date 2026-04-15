@@ -208,6 +208,7 @@ const Index = () => {
         item={customizerItem}
         onClose={() => setCustomizerItem(null)}
         onConfirm={handleCustomizerConfirm}
+        isAvailable={isAvailable}
       />
 
       <DrinkSelector

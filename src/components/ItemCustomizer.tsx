@@ -7,11 +7,12 @@ interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
   onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
 type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
-const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
+const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomizerProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
