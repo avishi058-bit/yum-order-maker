@@ -302,10 +302,14 @@ const Index = () => {
             items={cart}
             total={getTotal()}
             onClose={() => setCheckoutOpen(false)}
-            onSuccess={() => {
+            onSuccess={(orderNumber) => {
               setCheckoutOpen(false);
               setCart([]);
-              if (isStation) setShowKioskWelcome(true);
+              if (isStation) {
+                setShowKioskWelcome(true);
+              } else if (orderNumber) {
+                setTrackingOrderNumber(orderNumber);
+              }
             }}
           />
         )}
