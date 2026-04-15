@@ -283,7 +283,7 @@ const Kiosk = () => {
           onClick={() => setCartOpen(true)}
         >
           <div className="flex items-center gap-3">
-            <div className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
+            <div ref={cartButtonRef} className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
               <ShoppingBag size={24} />
             </div>
             <div>
