@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { removals, dealDrinkOptions, DrinkOption } from "@/data/menu";
+import { removals, dealDrinkOptions, DrinkOption, drinkToAvailabilityId } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 
 interface DealCustomizerProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
 type Step = "burger-1" | "burger-2" | "burger-3" | "drink-1" | "drink-2" | "drink-3";
@@ -21,7 +22,12 @@ const stepLabels: Record<Step, string> = {
   "drink-3": "שתייה 3 מתוך 3",
 };
 
-const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
+const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomizerProps) => {
+  const isDrinkUnavailable = (drinkId: string) => {
+    const availId = drinkToAvailabilityId[drinkId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
   const [step, setStep] = useState<Step>("burger-1");
   const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>([
     { removals: ["no-changes"], name: "" },
