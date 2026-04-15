@@ -33,9 +33,10 @@ interface CartDrawerProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
   onCheckout: () => void;
+  isKiosk?: boolean;
 }
 
-const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout }: CartDrawerProps) => {
+const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, isKiosk = false }: CartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);
