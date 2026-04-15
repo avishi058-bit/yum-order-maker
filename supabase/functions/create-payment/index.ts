@@ -72,11 +72,14 @@ Deno.serve(async (req) => {
 
     const result = await response.json()
 
+    console.log('Z-Credit response:', JSON.stringify(result))
+
     if (result.HasError || result.Data?.HasError) {
-      console.error('Z-Credit error:', JSON.stringify(result.Errors))
+      console.error('Z-Credit error:', JSON.stringify(result))
       return new Response(JSON.stringify({ 
-        error: result.Errors?.[0]?.MessageHe || 'שגיאה ביצירת עמוד תשלום',
-        details: result.Errors 
+        error: result.Errors?.[0]?.MessageHe || result.Data?.ReturnMessage || 'שגיאה ביצירת עמוד תשלום',
+        details: result.Errors,
+        data: result.Data,
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
