@@ -202,7 +202,7 @@ const Index = () => {
       )}
 
       <HeroSection onOrderClick={scrollToMenu} />
-      <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} />
+      <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} />
 
       <ItemCustomizer
         item={customizerItem}
