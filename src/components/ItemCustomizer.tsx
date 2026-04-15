@@ -26,7 +26,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [isDragging, setIsDragging] = useState(false);
   const mouseDown = useRef(false);
   const [isClosing, setIsClosing] = useState(false);
-
+  const dragActive = useRef(false);
   // Lock body scroll when open
   useEffect(() => {
     if (item) {
