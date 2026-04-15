@@ -180,7 +180,15 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       )}
 
       {categories.map((cat) => {
-        const items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
+        let items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
+        // Apply custom order if set
+        if (settings.menu_order && settings.menu_order.length > 0) {
+          items = [...items].sort((a, b) => {
+            const idxA = settings.menu_order.indexOf(a.id);
+            const idxB = settings.menu_order.indexOf(b.id);
+            return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+          });
+        }
         if (items.length === 0) return null;
         return (
           <div
@@ -189,10 +197,18 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             data-category={cat.key}
             className="mb-10 scroll-mt-28"
           >
-            <h3 className={`font-bold mb-4 text-primary text-right ${isKiosk ? "text-4xl" : "text-2xl"}`}>{cat.label}</h3>
+            <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 36 : 24) * fontScale}px` }}>{cat.label}</h3>
             <div className="divide-y divide-border">
               {items.map((item) => (
-                <MenuCard key={item.id} item={item} onAdd={onAddItem} isKiosk={isKiosk} />
+                <MenuCard
+                  key={item.id}
+                  item={item}
+                  onAdd={onAddItem}
+                  isKiosk={isKiosk}
+                  fontScale={fontScale}
+                  nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
+                  descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
+                />
               ))}
             </div>
           </div>
