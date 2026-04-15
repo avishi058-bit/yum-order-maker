@@ -160,6 +160,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             animate={
               step === "meal-upgrade"
                 ? { y: 0, height: "auto", top: "auto", bottom: 0 }
+                : isKiosk
+                ? { y: 0, height: "100%" }
                 : expanded
                 ? { y: 0, height: "100%" }
                 : { y: 0, height: "60%" }
