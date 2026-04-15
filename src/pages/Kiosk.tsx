@@ -28,7 +28,7 @@ const Kiosk = () => {
 
   const [view, setView] = useState<KioskView>("welcome");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
@@ -251,13 +251,17 @@ const Kiosk = () => {
             items={cart}
             total={getTotal()}
             onClose={() => setCheckoutOpen(false)}
-            onSuccess={() => {
+            onSuccess={(orderNumber) => {
               setCheckoutOpen(false);
-              setOrderSuccess(true);
+              setOrderSuccess(orderNumber ?? 0);
+              // Fire confetti
+              import("canvas-confetti").then(({ default: confetti }) => {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+              });
               setTimeout(() => {
-                setOrderSuccess(false);
+                setOrderSuccess(null);
                 resetOrder();
-              }, 1500);
+              }, 2000);
             }}
           />
         )}
