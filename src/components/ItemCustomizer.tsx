@@ -7,11 +7,12 @@ interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
   onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
 type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
-const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
+const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomizerProps) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
@@ -167,7 +168,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                         <h3 className="text-lg font-bold text-right mb-1">תוספות בתשלום</h3>
                         <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
                         <div className="space-y-0">
-                          {toppings.map((t: Topping) => {
+                          {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
                             const active = selectedToppings.includes(t.id);
                             const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
                             return (

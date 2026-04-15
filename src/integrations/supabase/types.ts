@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_availability: {
+        Row: {
+          available: boolean
+          category: string
+          id: string
+          item_id: string
+          item_name: string
+          updated_at: string
+        }
+        Insert: {
+          available?: boolean
+          category?: string
+          id?: string
+          item_id: string
+          item_name: string
+          updated_at?: string
+        }
+        Update: {
+          available?: boolean
+          category?: string
+          id?: string
+          item_id?: string
+          item_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string

@@ -12,8 +12,10 @@ import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { useAvailability } from "@/hooks/useAvailability";
 
 const Index = () => {
+  const { isAvailable } = useAvailability();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -200,12 +202,13 @@ const Index = () => {
       )}
 
       <HeroSection onOrderClick={scrollToMenu} />
-      <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} />
+      <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} />
 
       <ItemCustomizer
         item={customizerItem}
         onClose={() => setCustomizerItem(null)}
         onConfirm={handleCustomizerConfirm}
+        isAvailable={isAvailable}
       />
 
       <DrinkSelector
