@@ -18,7 +18,8 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
-  const websiteClosed = !restaurantStatus.website_open;
+  const isStation = localStorage.getItem("habakta_station") === "true";
+  const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
