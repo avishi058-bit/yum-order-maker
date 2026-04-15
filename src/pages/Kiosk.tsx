@@ -354,6 +354,47 @@ const Kiosk = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Inactivity countdown overlay */}
+      <AnimatePresence>
+        {countdown !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[9999] backdrop-blur-sm"
+            onClick={() => {/* touch resets via window listener */}}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              className="bg-card rounded-3xl p-12 text-center shadow-2xl max-w-md mx-4"
+            >
+              <p className="text-6xl mb-6">⏳</p>
+              <p className="text-3xl font-black text-foreground mb-3">עדיין כאן?</p>
+              <p className="text-xl text-muted-foreground mb-8">ההזמנה תתאפס בעוד</p>
+              <div className="relative w-32 h-32 mx-auto mb-8">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
+                  <circle
+                    cx="50" cy="50" r="45" fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 45}`}
+                    strokeDashoffset={`${2 * Math.PI * 45 * (1 - countdown / 30)}`}
+                    className="transition-all duration-1000 ease-linear"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-5xl font-black text-primary">
+                  {countdown}
+                </span>
+              </div>
+              <p className="text-lg text-muted-foreground">גע במסך כדי להמשיך</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
