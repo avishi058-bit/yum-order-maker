@@ -50,7 +50,7 @@ const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-lg text-muted-foreground mb-8 max-w-md mx-auto"
         >
-          כשר בהשגחת הרבנות · בשר שדות נגב · חלק-רבנות
+          כשר בהשגחת הרבנות המקומית-שדות נגב
         </motion.p>
         <motion.button
           initial={{ opacity: 0, scale: 0.9 }}
