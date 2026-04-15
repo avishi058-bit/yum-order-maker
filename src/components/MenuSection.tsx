@@ -105,30 +105,32 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
   );
 };
 
-const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
+const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
   return (
     <section id="menu" className={`py-16 px-4 mx-auto ${isKiosk ? 'max-w-6xl' : 'max-w-2xl'}`}>
-      {/* Dine-in / Takeaway toggle */}
-      <div className="flex justify-center mb-10">
-        <div className="bg-secondary rounded-full p-1 flex gap-1">
-          <button
-            onClick={() => onDineInChange(true)}
-            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-              dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
-            }`}
-          >
-            🪑 לשבת
-          </button>
-          <button
-            onClick={() => onDineInChange(false)}
-            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-              !dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
-            }`}
-          >
-            🥡 לקחת
-          </button>
+      {/* Dine-in / Takeaway toggle - only show for kiosk (website has it in hero) */}
+      {isKiosk && (
+        <div className="flex justify-center mb-10">
+          <div className="bg-secondary rounded-full p-1 flex gap-1">
+            <button
+              onClick={() => onDineInChange(true)}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+                dineIn === true ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
+              }`}
+            >
+              🪑 לשבת
+            </button>
+            <button
+              onClick={() => onDineInChange(false)}
+              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+                dineIn === false ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
+              }`}
+            >
+              🥡 לקחת
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       {categories.map((cat) => {
         const items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
         if (items.length === 0) return null;

@@ -29,7 +29,7 @@ const Index = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
-  const [dineIn, setDineIn] = useState(true);
+  const [dineIn, setDineIn] = useState<boolean | null>(null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
 
@@ -181,7 +181,7 @@ const Index = () => {
       return sum + (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
     }, 0);
     // Add extra sauce cost
-    if (!dineIn && selectedSauces.length > 0) {
+    if (dineIn === false && selectedSauces.length > 0) {
       const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
       const extraSauces = Math.max(0, totalSauceQty - freeSauces);
       base += extraSauces;
@@ -189,8 +189,11 @@ const Index = () => {
     return base;
   };
 
-  const scrollToMenu = () => {
-    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+  const handleDineInChoice = (val: boolean) => {
+    setDineIn(val);
+    setTimeout(() => {
+      document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   return (
@@ -218,16 +221,16 @@ const Index = () => {
         </button>
       )}
 
-      {!isStation && <HeroSection onOrderClick={isClosed ? undefined : scrollToMenu} />}
+      {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
       {isClosed ? (
         <div className="py-20 text-center text-muted-foreground">
           <p className="text-6xl mb-4">🔒</p>
           <p className="text-xl font-bold">ההזמנות סגורות כרגע</p>
           <p className="text-sm mt-2">נחזור בקרוב!</p>
         </div>
-      ) : (
+      ) : dineIn !== null ? (
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
-      )}
+      ) : null}
 
       <ItemCustomizer
         item={customizerItem}
@@ -264,7 +267,7 @@ const Index = () => {
         onUpdateQuantity={updateQuantity}
         onCheckout={() => {
           setCartOpen(false);
-          if (!dineIn && burgerCount > 0) {
+          if (dineIn === false && burgerCount > 0) {
             setSauceSelectorOpen(true);
           } else {
             setCheckoutOpen(true);

@@ -2,7 +2,12 @@ import { motion } from "framer-motion";
 import heroBurger from "@/assets/hero-burger.jpg";
 import logo from "@/assets/logo.png";
 
-const HeroSection = ({ onOrderClick }: { onOrderClick?: () => void }) => {
+interface HeroSectionProps {
+  onDineInChoice?: (dineIn: boolean) => void;
+  dineIn: boolean | null;
+}
+
+const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
@@ -57,18 +62,34 @@ const HeroSection = ({ onOrderClick }: { onOrderClick?: () => void }) => {
         >
           כשר בהשגחת הרבנות המקומית-שדות נגב
         </motion.p>
-        {onOrderClick ? (
-          <motion.button
+
+        {onDineInChoice ? (
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.45 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onOrderClick}
-            className="bg-primary text-primary-foreground font-bold text-lg px-10 py-4 rounded-full shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
+            className="flex flex-col items-center gap-4"
           >
-            לתפריט ולהזמנה 🔥
-          </motion.button>
+            <p className="text-lg font-bold text-foreground">איפה אוכלים? 🍽️</p>
+            <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
+              <button
+                onClick={() => onDineInChoice(true)}
+                className={`px-8 py-3.5 rounded-full text-base font-bold transition-all ${
+                  dineIn === true ? "bg-primary text-primary-foreground shadow-lg scale-105" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                🪑 לשבת
+              </button>
+              <button
+                onClick={() => onDineInChoice(false)}
+                className={`px-8 py-3.5 rounded-full text-base font-bold transition-all ${
+                  dineIn === false ? "bg-primary text-primary-foreground shadow-lg scale-105" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                🥡 לקחת
+              </button>
+            </div>
+          </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
