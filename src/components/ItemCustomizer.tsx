@@ -231,7 +231,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             onMouseLeave={step !== "meal-upgrade" ? handleMouseUp : undefined}
             style={{
               transform: step !== "meal-upgrade" && sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
-              transition: isDragging ? "none" : undefined,
+              transition: isDragging ? "none" : isClosing ? "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)" : undefined,
             }}
             className={`fixed z-50 flex flex-col ${
               step === "meal-upgrade" 
