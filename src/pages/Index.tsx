@@ -20,6 +20,7 @@ const Index = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
+  const [dineIn, setDineIn] = useState(true);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
@@ -176,7 +177,7 @@ const Index = () => {
       )}
 
       <HeroSection onOrderClick={scrollToMenu} />
-      <MenuSection onAddItem={handleAddItem} />
+      <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} />
 
       <ItemCustomizer
         item={customizerItem}
