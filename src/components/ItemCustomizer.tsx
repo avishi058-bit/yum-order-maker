@@ -31,6 +31,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     "no-onion": "onion",
   };
 
+  // Map meal side option IDs to availability IDs
+  const sideToAvailability: Record<string, string> = {
+    "side-fries": "fries",
+    "side-waffle": "waffle-fries",
+    "side-onion-rings": "onion-rings",
+    "side-tempura": "tempura-onion",
+  };
+
+  const isSideUnavailable = (sideId: string) => {
+    const availId = sideToAvailability[sideId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
+
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
@@ -71,10 +85,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const unitPrice = item.price + toppingsCost;
   const totalPrice = unitPrice * quantity;
 
+  const goToSideSelect = () => {
+    // Auto-select first available side if current selection is unavailable
+    if (isSideUnavailable(selectedSide)) {
+      const firstAvailable = mealSideOptions.find((s) => !isSideUnavailable(s.id));
+      if (firstAvailable) setSelectedSide(firstAvailable.id);
+    }
+    setStep("side-select");
+  };
+
   const handleNext = () => {
     if (isMeal && step === "customize") {
-      // Meals skip the meal-upgrade question, go straight to side selection
-      setStep("side-select");
+      goToSideSelect();
     } else if (isBurger && step === "customize") {
       setStep("meal-upgrade");
     } else {
@@ -259,7 +281,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="w-full space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setStep("side-select")}
+                      onClick={() => goToSideSelect()}
                       className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
                     >
                       שדרגו לי! 🍟🥤
@@ -286,12 +308,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <h3 className="text-xl font-black text-center mb-6">בחר סוג צ׳יפס לעסקית:</h3>
                   <div className="space-y-0">
                     {mealSideOptions.map((side) => {
-                      const active = selectedSide === side.id;
+                      const unavailable = isSideUnavailable(side.id);
+                      const active = selectedSide === side.id && !unavailable;
                       return (
                         <button
                           key={side.id}
-                          onClick={() => setSelectedSide(side.id)}
-                          className="w-full flex items-center justify-between py-4 border-b border-border/50 last:border-b-0"
+                          onClick={() => !unavailable && setSelectedSide(side.id)}
+                          disabled={unavailable}
+                          className={`w-full flex items-center justify-between py-4 border-b border-border/50 last:border-b-0 ${
+                            unavailable ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
@@ -307,11 +333,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                 />
                               )}
                             </div>
-                            {side.price > 0 && (
+                            {side.price > 0 && !unavailable && (
                               <span className="text-sm text-muted-foreground">+₪{side.price}</span>
                             )}
+                            {unavailable && (
+                              <span className="text-xs font-bold text-destructive">(אזל מהמלאי כרגע)</span>
+                            )}
                           </div>
-                          <span className="font-medium text-base">{side.name}</span>
+                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{side.name}</span>
                         </button>
                       );
                     })}
