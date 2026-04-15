@@ -229,7 +229,16 @@ const Kiosk = () => {
         onUpdateQuantity={updateQuantity}
         onCheckout={() => {
           setCartOpen(false);
-          if (!dineIn && burgerCount > 0) {
+          setDineInSelectorOpen(true);
+        }}
+      />
+
+      <DineInSelector
+        open={dineInSelectorOpen}
+        onSelect={(val) => {
+          setDineIn(val);
+          setDineInSelectorOpen(false);
+          if (!val && burgerCount > 0) {
             setSauceSelectorOpen(true);
           } else {
             setCheckoutOpen(true);
