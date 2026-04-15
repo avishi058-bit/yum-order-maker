@@ -91,7 +91,7 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
   );
 };
 
-const MenuSection = ({ onAddItem, dineIn, onDineInChange }: { onAddItem: (item: MenuItem) => void; dineIn: boolean; onDineInChange: (val: boolean) => void }) => {
+const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable }: { onAddItem: (item: MenuItem) => void; dineIn: boolean; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean }) => {
   return (
     <section id="menu" className="py-16 px-4 max-w-2xl mx-auto">
       {/* Dine-in / Takeaway toggle */}
@@ -116,7 +116,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange }: { onAddItem: (item: 
         </div>
       </div>
       {categories.map((cat) => {
-        const items = menuItems.filter((i) => i.category === cat.key);
+        const items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
         if (items.length === 0) return null;
         return (
           <div key={cat.key} className="mb-10">
