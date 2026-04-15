@@ -167,23 +167,23 @@ const Kiosk = () => {
   return (
     <div className="fixed inset-0 bg-background flex flex-col overflow-hidden" dir="rtl">
       {/* Top bar */}
-      <div className="flex-none flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-        <button onClick={resetOrder} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowRight size={28} />
-          <span className="text-lg font-bold">חזרה</span>
+      <div className="flex-none flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+        <button onClick={resetOrder} className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors">
+          <ArrowRight size={32} />
+          <span className="text-xl font-black">חזרה</span>
         </button>
-        <h1 className="text-2xl font-black text-primary">הבקתה 🐄</h1>
+        <h1 className="text-3xl font-black text-primary">הבקתה 🐄</h1>
         {/* Dine-in toggle */}
-        <div className="bg-secondary rounded-full p-1 flex gap-1">
+        <div className="bg-gray-100 rounded-full p-1 flex gap-1">
           <button
             onClick={() => setDineIn(true)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"}`}
+            className={`px-6 py-2.5 rounded-full text-base font-black transition-all ${dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-gray-500"}`}
           >
             🪑 לשבת
           </button>
           <button
             onClick={() => setDineIn(false)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${!dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"}`}
+            className={`px-6 py-2.5 rounded-full text-base font-black transition-all ${!dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-gray-500"}`}
           >
             🥡 לקחת
           </button>
@@ -191,7 +191,7 @@ const Kiosk = () => {
       </div>
 
       {/* Category tabs */}
-      <div className="flex-none flex gap-2 px-4 py-3 bg-card/50 border-b border-border overflow-x-auto">
+      <div className="flex-none flex gap-2 px-4 py-3 bg-white/80 border-b border-gray-200 overflow-x-auto">
         {categories.map((cat) => {
           const count = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id)).length;
           if (count === 0) return null;
@@ -199,10 +199,10 @@ const Kiosk = () => {
             <button
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
-              className={`px-6 py-3 rounded-2xl text-lg font-bold whitespace-nowrap transition-all ${
+              className={`px-7 py-3.5 rounded-2xl text-xl font-black whitespace-nowrap transition-all ${
                 activeCategory === cat.key
                   ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {cat.label}
