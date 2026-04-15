@@ -11,7 +11,7 @@ interface CheckoutFormProps {
   items: CartItem[];
   total: number;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (orderNumber?: number) => void;
 }
 
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, onClose, onSuccess }, ref) => {
@@ -338,7 +338,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         description: `מספר הזמנה: #${order.order_number}`,
       });
       window.open(`/track?order=${order.order_number}`, "_blank");
-      onSuccess();
+      onSuccess(order.order_number);
     } catch (error) {
       console.error("Order error:", error);
       toast({ title: "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
