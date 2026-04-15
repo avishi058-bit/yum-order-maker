@@ -300,12 +300,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <h3 className="text-xl font-black text-center mb-6">בחר סוג צ׳יפס לעסקית:</h3>
                   <div className="space-y-0">
                     {mealSideOptions.map((side) => {
-                      const active = selectedSide === side.id;
+                      const unavailable = isSideUnavailable(side.id);
+                      const active = selectedSide === side.id && !unavailable;
                       return (
                         <button
                           key={side.id}
-                          onClick={() => setSelectedSide(side.id)}
-                          className="w-full flex items-center justify-between py-4 border-b border-border/50 last:border-b-0"
+                          onClick={() => !unavailable && setSelectedSide(side.id)}
+                          disabled={unavailable}
+                          className={`w-full flex items-center justify-between py-4 border-b border-border/50 last:border-b-0 ${
+                            unavailable ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
@@ -321,11 +325,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                 />
                               )}
                             </div>
-                            {side.price > 0 && (
+                            {side.price > 0 && !unavailable && (
                               <span className="text-sm text-muted-foreground">+₪{side.price}</span>
                             )}
+                            {unavailable && (
+                              <span className="text-xs font-bold text-destructive">(אזל מהמלאי כרגע)</span>
+                            )}
                           </div>
-                          <span className="font-medium text-base">{side.name}</span>
+                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{side.name}</span>
                         </button>
                       );
                     })}
