@@ -144,9 +144,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             className="fixed inset-0 bg-black z-50"
           />
           <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            initial={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
+            animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
+            exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className={`fixed z-50 bg-card flex flex-col ${
               step === "meal-upgrade" 
