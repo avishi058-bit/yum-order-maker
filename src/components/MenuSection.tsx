@@ -16,8 +16,10 @@ const categories = [
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
-const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean }) => {
+const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, descOverride }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean; fontScale?: number; nameOverride?: string; descOverride?: string }) => {
   const image = menuImages[item.id];
+  const displayName = nameOverride || item.name;
+  const displayDesc = descOverride || item.description;
   const [justAdded, setJustAdded] = useState(false);
 
   const handleAdd = () => {
@@ -44,7 +46,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           {item.badge && <span className={isKiosk ? "text-3xl" : "text-lg"}>{item.badge}</span>}
-          <h3 className={`font-bold ${isKiosk ? "text-2xl" : "text-base"}`}>{item.name}</h3>
+          <h3 className="font-bold" style={{ fontSize: `${(isKiosk ? 24 : 16) * fontScale}px` }}>{displayName}</h3>
           {item.weight && (
             <span className={`text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-base" : "text-xs"}`}>
               {item.weight}
@@ -57,8 +59,8 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
             </span>
           )}
         </div>
-        <p className={`text-muted-foreground leading-relaxed line-clamp-2 ${isKiosk ? "text-lg mb-3" : "text-sm mb-2"}`}>{item.description}</p>
-        <span className={`text-primary font-bold ${isKiosk ? "text-2xl" : "text-lg"}`}>₪{item.price}</span>
+        <p className="text-muted-foreground leading-relaxed line-clamp-2" style={{ fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`, marginBottom: isKiosk ? 12 : 8 }}>{displayDesc}</p>
+        <span className="text-primary font-bold" style={{ fontSize: `${(isKiosk ? 24 : 18) * fontScale}px` }}>₪{item.price}</span>
       </div>
 
       {/* Image */}
