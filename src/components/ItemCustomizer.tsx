@@ -375,19 +375,21 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="space-y-0">
                     {softDrinks.map((drink) => {
                       const active = selectedDrink === drink.id;
+                      const unavailable = isDrinkUnavailable(drink.id);
                       return (
                         <button
                           key={drink.id}
-                          onClick={() => setSelectedDrink(drink.id)}
-                          className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                          disabled={unavailable}
+                          onClick={() => !unavailable && setSelectedDrink(drink.id)}
+                          className={`w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
                               }`}
                             >
-                              {active && (
+                              {active && !unavailable && (
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
@@ -395,8 +397,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                 />
                               )}
                             </div>
+                            {unavailable && <span className="text-xs text-destructive">(אזל מהמלאי)</span>}
                           </div>
-                          <span className="font-medium text-base">{drink.name}</span>
+                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
@@ -406,19 +409,21 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="space-y-0">
                     {beerDrinks.map((drink) => {
                       const active = selectedDrink === drink.id;
+                      const unavailable = isDrinkUnavailable(drink.id);
                       return (
                         <button
                           key={drink.id}
-                          onClick={() => setSelectedDrink(drink.id)}
-                          className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                          disabled={unavailable}
+                          onClick={() => !unavailable && setSelectedDrink(drink.id)}
+                          className={`w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
                               }`}
                             >
-                              {active && (
+                              {active && !unavailable && (
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
@@ -426,9 +431,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                 />
                               )}
                             </div>
-                            <span className="text-sm text-muted-foreground">+₪{drink.price}</span>
+                            {unavailable && <span className="text-xs text-destructive">(אזל מהמלאי)</span>}
+                            {!unavailable && <span className="text-sm text-muted-foreground">+₪{drink.price}</span>}
                           </div>
-                          <span className="font-medium text-base">{drink.name}</span>
+                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
