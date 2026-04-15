@@ -85,10 +85,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const unitPrice = item.price + toppingsCost;
   const totalPrice = unitPrice * quantity;
 
+  const goToSideSelect = () => {
+    // Auto-select first available side if current selection is unavailable
+    if (isSideUnavailable(selectedSide)) {
+      const firstAvailable = mealSideOptions.find((s) => !isSideUnavailable(s.id));
+      if (firstAvailable) setSelectedSide(firstAvailable.id);
+    }
+    setStep("side-select");
+  };
+
   const handleNext = () => {
     if (isMeal && step === "customize") {
-      // Meals skip the meal-upgrade question, go straight to side selection
-      setStep("side-select");
+      goToSideSelect();
     } else if (isBurger && step === "customize") {
       setStep("meal-upgrade");
     } else {
