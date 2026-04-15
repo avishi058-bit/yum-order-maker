@@ -256,8 +256,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             customerName: form.name,
             customerPhone: form.phone,
             orderId: order.id,
-            successUrl: `${baseUrl}/track?order=${order.order_number}&paid=true`,
-            cancelUrl: `${baseUrl}/?payment=cancelled`,
+             successUrl: isKiosk
+               ? `${baseUrl}/kiosk?paid=true&order=${order.order_number}`
+               : `${baseUrl}/track?order=${order.order_number}&paid=true`,
+             cancelUrl: isKiosk ? `${baseUrl}/kiosk?payment=cancelled` : `${baseUrl}/?payment=cancelled`,
             callbackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-callback`,
           }),
         }
