@@ -33,6 +33,27 @@ interface Order {
 
 type ViewMode = "active" | "history" | "availability";
 
+interface AvailabilityItem {
+  id: string;
+  item_id: string;
+  item_name: string;
+  category: string;
+  available: boolean;
+}
+
+const availabilityCategoryLabels: Record<string, string> = {
+  burger: "🍔 המבורגרים",
+  meal: "🍽️ ארוחות עסקיות",
+  side: "🍟 צ׳יפס ותוספות",
+  drink: "🍺 שתייה",
+  deal: "🤝 דילים",
+  topping: "🧀 תוספות על ההמבורגר",
+  sauce: "🥫 רטבים",
+  ingredient: "🥬 ירקות ורטבים",
+};
+
+const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient"];
+
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
