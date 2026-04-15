@@ -25,6 +25,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [sheetTranslateY, setSheetTranslateY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const mouseDown = useRef(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -144,29 +145,33 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const hasImage = !!menuImages[item.id];
 
-  // Swipe/drag to close
-  const canDragDown = () => {
-    const el = scrollRef.current;
-    return !el || el.scrollTop <= 0;
-  };
 
+  // Swipe/drag to close — works from any scroll position
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const deltaY = e.touches[0].clientY - touchStartY.current;
-    if (canDragDown() && deltaY > 0) {
+    if (deltaY > 10) {
       setIsDragging(true);
-      setSheetTranslateY(deltaY * 0.6);
+      setSheetTranslateY(Math.max(0, deltaY * 0.5));
     }
   };
 
   const handleTouchEnd = () => {
-    if (sheetTranslateY > 80) {
-      handleClose();
+    if (sheetTranslateY > 60) {
+      // Animate out smoothly
+      setIsClosing(true);
+      setSheetTranslateY(window.innerHeight);
+      setTimeout(() => {
+        handleClose();
+        setIsClosing(false);
+        setSheetTranslateY(0);
+      }, 300);
+    } else {
+      setSheetTranslateY(0);
     }
-    setSheetTranslateY(0);
     setIsDragging(false);
   };
 
@@ -179,18 +184,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!mouseDown.current) return;
     const deltaY = e.clientY - touchStartY.current;
-    if (canDragDown() && deltaY > 0) {
+    if (deltaY > 10) {
       setIsDragging(true);
-      setSheetTranslateY(deltaY * 0.6);
+      setSheetTranslateY(Math.max(0, deltaY * 0.5));
     }
   };
 
   const handleMouseUp = () => {
-    if (sheetTranslateY > 80) {
-      handleClose();
+    if (sheetTranslateY > 60) {
+      setIsClosing(true);
+      setSheetTranslateY(window.innerHeight);
+      setTimeout(() => {
+        handleClose();
+        setIsClosing(false);
+        setSheetTranslateY(0);
+      }, 300);
+    } else {
+      setSheetTranslateY(0);
     }
     mouseDown.current = false;
-    setSheetTranslateY(0);
     setIsDragging(false);
   };
 
@@ -219,7 +231,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             onMouseLeave={step !== "meal-upgrade" ? handleMouseUp : undefined}
             style={{
               transform: step !== "meal-upgrade" && sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
-              transition: isDragging ? "none" : undefined,
+              transition: isDragging ? "none" : isClosing ? "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)" : undefined,
             }}
             className={`fixed z-50 flex flex-col ${
               step === "meal-upgrade" 
