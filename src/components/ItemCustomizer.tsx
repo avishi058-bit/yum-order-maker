@@ -146,7 +146,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const hasImage = !!menuImages[item.id];
 
 
-  const dragActive = useRef(false);
 
   // Swipe/drag to close — activates when at scroll top or on image
   const handleTouchStart = (e: React.TouchEvent) => {
