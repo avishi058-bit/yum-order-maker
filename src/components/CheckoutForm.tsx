@@ -133,6 +133,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
       );
 
       // Create the order
+      const isStation = localStorage.getItem("habakta_station") === "true";
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -142,7 +143,8 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
           total,
           status: "new",
           payment_method: method,
-        })
+          order_source: isStation ? "station" : "website",
+        } as any)
         .select("id, order_number")
         .single();
 
