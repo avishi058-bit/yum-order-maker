@@ -14,6 +14,8 @@ interface ItemCustomizerProps {
 type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
 const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomizerProps) => {
+  const location = useLocation();
+  const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
