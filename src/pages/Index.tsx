@@ -11,6 +11,7 @@ import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
+import KioskWelcome from "@/components/KioskWelcome";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
@@ -20,6 +21,7 @@ const Index = () => {
   const { status: restaurantStatus } = useRestaurantStatus();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
+  const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -193,6 +195,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Kiosk welcome screen */}
+      {isStation && showKioskWelcome && !isClosed && (
+        <KioskWelcome onStart={() => setShowKioskWelcome(false)} />
+      )}
+
       {isClosed && (
         <div className="bg-destructive text-destructive-foreground text-center py-4 px-6 font-bold text-lg sticky top-0 z-50">
           🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!
@@ -211,7 +218,7 @@ const Index = () => {
         </button>
       )}
 
-      <HeroSection onOrderClick={isClosed ? undefined : scrollToMenu} />
+      {!isStation && <HeroSection onOrderClick={isClosed ? undefined : scrollToMenu} />}
       {isClosed ? (
         <div className="py-20 text-center text-muted-foreground">
           <p className="text-6xl mb-4">🔒</p>
@@ -219,7 +226,7 @@ const Index = () => {
           <p className="text-sm mt-2">נחזור בקרוב!</p>
         </div>
       ) : (
-        <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} />
+        <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
       )}
 
       <ItemCustomizer
@@ -285,22 +292,25 @@ const Index = () => {
             onSuccess={() => {
               setCheckoutOpen(false);
               setCart([]);
+              if (isStation) setShowKioskWelcome(true);
             }}
           />
         )}
       </AnimatePresence>
 
-      <footer className="py-8 text-center border-t border-border space-y-2">
-        <p className="text-foreground font-bold">הַבַּקְּתָה — המבורגר של מושבניקים 🐄</p>
-        <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
-        <a
-          href="tel:058-4633-555"
-          className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
-        >
-          <Phone size={14} />
-          058-4633-555
-        </a>
-      </footer>
+      {!isStation && (
+        <footer className="py-8 text-center border-t border-border space-y-2">
+          <p className="text-foreground font-bold">הַבַּקְּתָה — המבורגר של מושבניקים 🐄</p>
+          <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
+          <a
+            href="tel:058-4633-555"
+            className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
+          >
+            <Phone size={14} />
+            058-4633-555
+          </a>
+        </footer>
+      )}
 
       <AccessibilityWidget />
     </div>
