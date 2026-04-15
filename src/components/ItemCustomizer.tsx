@@ -148,10 +148,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
             exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className={`fixed z-50 bg-card flex flex-col ${
+            className={`fixed z-50 bg-white text-black flex flex-col ${
               step === "meal-upgrade" 
-                ? "inset-0 m-auto w-[90vw] max-w-md h-fit rounded-3xl shadow-2xl" 
-                : "bottom-0 left-0 right-0 rounded-t-3xl min-h-[50vh] max-h-[85vh]"
+                ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl" 
+                : "bottom-0 left-0 right-0 rounded-t-3xl min-h-[50vh] max-h-[90vh]"
             }`}
             dir="rtl"
           >
@@ -164,12 +164,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
             {/* Header - hide on meal-upgrade centered modal */}
             {step !== "meal-upgrade" && (
-              <div className="flex items-center justify-between px-5 pb-4 pt-2 border-b border-border">
-                <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                  <X size={18} />
+              <div className="flex items-center justify-between px-5 pb-4 pt-2 border-b border-gray-200">
+                <button onClick={handleClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                  <X size={20} />
                 </button>
-                <h2 className="text-lg font-bold flex-1 text-center">{item.name}</h2>
-                <div className="w-9" />
+                <h2 className="text-2xl font-black flex-1 text-center">{item.name}</h2>
+                <div className="w-10" />
               </div>
             )}
 
@@ -185,9 +185,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                 >
                   {isBurger && (
                     <>
-                      <div className="px-5 py-4 border-b border-border">
-                        <h3 className="text-lg font-bold text-right mb-1">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                        <p className="text-sm text-muted-foreground text-right mb-4">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                      <div className="px-5 py-5 border-b border-gray-200">
+                        <h3 className="text-2xl font-black text-right mb-1">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                        <p className="text-base text-gray-500 text-right mb-4">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                         <div className="space-y-0">
                           {removalsList.map((r) => {
                             const ingredientUnavailable = getIngredientUnavailable(r.id);
@@ -197,25 +197,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={r.id}
                                 onClick={() => !isLocked && toggleRemoval(r.id)}
-                                className={`w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
+                                className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
                               >
                                 <div
-                                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    active ? "border-primary bg-primary" : "border-gray-300"
                                   }`}
                                 >
                                   {active && (
                                     <motion.div
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
-                                      className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                      className="w-3 h-3 rounded-full bg-white"
                                     />
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-base">{r.name}</span>
+                                  <span className="font-bold text-lg">{r.name}</span>
                                   {isLocked && (
-                                    <span className="text-[10px] text-destructive font-bold">(חסר במלאי כרגע)</span>
+                                    <span className="text-xs text-destructive font-bold">(חסר במלאי כרגע)</span>
                                   )}
                                 </div>
                               </button>
@@ -224,9 +224,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         </div>
                       </div>
 
-                      <div className="px-5 py-4">
-                        <h3 className="text-lg font-bold text-right mb-1">תוספות בתשלום</h3>
-                        <p className="text-sm text-muted-foreground text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
+                      <div className="px-5 py-5">
+                        <h3 className="text-2xl font-black text-right mb-1">תוספות בתשלום</h3>
+                        <p className="text-base text-gray-500 text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
                         <div className="space-y-0">
                           {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
                             const active = selectedToppings.includes(t.id);
@@ -235,26 +235,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={t.id}
                                 onClick={() => toggleTopping(t.id)}
-                                className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                                className="w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0"
                               >
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                      active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                      active ? "border-primary bg-primary" : "border-gray-300"
                                     }`}
                                   >
                                     {active && (
                                       <motion.div
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                        className="w-3 h-3 rounded-full bg-white"
                                       />
                                     )}
                                   </div>
-                                  <span className="text-sm text-muted-foreground">+ ₪{t.price}</span>
+                                  <span className="text-base text-gray-500 font-medium">+ ₪{t.price}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-base">{t.name}</span>
+                                  <span className="font-bold text-lg">{t.name}</span>
                                   {showRecommended && (
                                     <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
                                       🔥 הולך טוב עם המנה
@@ -290,22 +290,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                     <Utensils size={36} className="text-primary" />
                   </div>
-                  <h3 className="text-2xl font-black mb-2">לשדרג לארוחה עסקית?</h3>
-                  <p className="text-primary font-bold text-xl mb-1">+₪{mealUpgrade.price}</p>
-                  <p className="text-muted-foreground text-sm mb-8">המבורגר + צ׳יפס + שתייה</p>
+                   <h3 className="text-3xl font-black mb-3">לשדרג לארוחה עסקית?</h3>
+                   <p className="text-primary font-black text-2xl mb-1">+₪{mealUpgrade.price}</p>
+                   <p className="text-gray-500 text-lg mb-8">המבורגר + צ׳יפס + שתייה</p>
 
                   <div className="w-full space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => goToSideSelect()}
-                      className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
+                      className="w-full bg-primary text-primary-foreground font-black py-5 rounded-xl text-xl shadow-lg shadow-primary/20"
                     >
                       שדרגו לי! 🍟🥤
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleFinish(false)}
-                      className="w-full bg-muted text-muted-foreground font-medium py-4 rounded-xl text-base"
+                      className="w-full bg-gray-100 text-gray-500 font-bold py-5 rounded-xl text-lg"
                     >
                       לא תודה
                     </motion.button>
@@ -322,7 +322,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                   className="flex-1 px-6 py-8"
                 >
-                  <h3 className="text-xl font-black text-center mb-6">בחר סוג צ׳יפס לעסקית:</h3>
+                   <h3 className="text-2xl font-black text-center mb-6">בחר סוג צ׳יפס לעסקית:</h3>
                   <div className="space-y-0">
                     {mealSideOptions.map((side) => {
                       const unavailable = isSideUnavailable(side.id);
@@ -332,32 +332,32 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={side.id}
                           onClick={() => !unavailable && setSelectedSide(side.id)}
                           disabled={unavailable}
-                          className={`w-full flex items-center justify-between py-4 border-b border-border/50 last:border-b-0 ${
+                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${
                             unavailable ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                active ? "border-primary bg-primary" : "border-gray-300"
                               }`}
                             >
                               {active && (
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                  className="w-3 h-3 rounded-full bg-white"
                                 />
                               )}
                             </div>
                             {side.price > 0 && !unavailable && (
-                              <span className="text-sm text-muted-foreground">+₪{side.price}</span>
+                              <span className="text-base text-gray-500 font-medium">+₪{side.price}</span>
                             )}
                             {unavailable && (
-                              <span className="text-xs font-bold text-destructive">(אזל מהמלאי כרגע)</span>
+                              <span className="text-sm font-bold text-destructive">(אזל מהמלאי כרגע)</span>
                             )}
                           </div>
-                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{side.name}</span>
+                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
                         </button>
                       );
                     })}
@@ -372,7 +372,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                       }
                       setStep("drink-select");
                     }}
-                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-8"
+                    className="w-full bg-primary text-primary-foreground font-black py-5 rounded-xl text-xl shadow-lg shadow-primary/20 mt-8"
                   >
                     המשך
                   </motion.button>
@@ -388,7 +388,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                   className="flex-1 overflow-y-auto px-6 py-8"
                 >
-                  <h3 className="text-xl font-black text-center mb-6">בחר שתייה לעסקית:</h3>
+                   <h3 className="text-2xl font-black text-center mb-6">בחר שתייה לעסקית:</h3>
                   
                   <div className="space-y-0">
                     {softDrinks.map((drink) => {
@@ -399,31 +399,31 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={drink.id}
                           disabled={unavailable}
                           onClick={() => !unavailable && setSelectedDrink(drink.id)}
-                          className={`w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
                               }`}
                             >
                               {active && !unavailable && (
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                  className="w-3 h-3 rounded-full bg-white"
                                 />
                               )}
                             </div>
-                            {unavailable && <span className="text-xs text-destructive">(אזל מהמלאי)</span>}
+                            {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
                           </div>
-                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
+                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                  <h4 className="text-lg font-bold text-right mt-6 mb-3">בירות:</h4>
+                   <h4 className="text-xl font-black text-right mt-6 mb-3">בירות:</h4>
                   <div className="space-y-0">
                     {beerDrinks.map((drink) => {
                       const active = selectedDrink === drink.id;
@@ -433,26 +433,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={drink.id}
                           disabled={unavailable}
                           onClick={() => !unavailable && setSelectedDrink(drink.id)}
-                          className={`w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
                               }`}
                             >
                               {active && !unavailable && (
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
+                                  className="w-3 h-3 rounded-full bg-white"
                                 />
                               )}
                             </div>
-                            {unavailable && <span className="text-xs text-destructive">(אזל מהמלאי)</span>}
-                            {!unavailable && <span className="text-sm text-muted-foreground">+₪{drink.price}</span>}
+                            {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
+                            {!unavailable && <span className="text-base text-gray-500 font-medium">+₪{drink.price}</span>}
                           </div>
-                          <span className={`font-medium text-base ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
+                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
@@ -461,7 +461,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleFinish(true, selectedSide, selectedDrink)}
-                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-8"
+                    className="w-full bg-primary text-primary-foreground font-black py-5 rounded-xl text-xl shadow-lg shadow-primary/20 mt-8"
                   >
                     הוספה להזמנה 🍔
                   </motion.button>
@@ -471,27 +471,27 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
             {/* Bottom bar - only on customize step */}
             {step === "customize" && (
-              <div className="px-5 py-4 border-t border-border flex items-center gap-3 bg-card safe-bottom">
+              <div className="px-5 py-5 border-t border-gray-200 flex items-center gap-3 bg-white safe-bottom">
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleNext}
-                  className="flex-1 bg-primary text-primary-foreground font-bold py-3.5 rounded-xl text-base shadow-lg shadow-primary/20"
+                  className="flex-1 bg-primary text-primary-foreground font-black py-4 rounded-xl text-xl shadow-lg shadow-primary/20"
                 >
                   {isBurger ? "המשך" : `הוספה להזמנה · ₪${totalPrice}`}
                 </motion.button>
-                <div className="flex items-center gap-2 bg-muted rounded-xl px-2 py-1.5">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-border transition-colors"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
-                    <Minus size={16} />
+                    <Minus size={20} />
                   </button>
-                  <span className="font-bold text-lg w-6 text-center">{quantity}</span>
+                  <span className="font-black text-xl w-8 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-border transition-colors"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
-                    <Plus size={16} />
+                    <Plus size={20} />
                   </button>
                 </div>
               </div>
