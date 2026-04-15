@@ -19,6 +19,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  const [expanded, setExpanded] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    if (scrollRef.current && scrollRef.current.scrollTop > 10 && !expanded) {
+      setExpanded(true);
+    }
+  }, [expanded]);
 
   if (!item) return null;
 
