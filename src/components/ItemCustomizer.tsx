@@ -145,7 +145,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const hasImage = !!menuImages[item.id];
 
-  const [isClosing, setIsClosing] = useState(false);
 
   // Swipe/drag to close — works from any scroll position
   const handleTouchStart = (e: React.TouchEvent) => {
