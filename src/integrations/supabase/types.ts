@@ -131,6 +131,7 @@ export type Database = {
           id: string
           notes: string | null
           order_number: number
+          payment_method: string | null
           status: string
           total: number
           updated_at: string
@@ -144,6 +145,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: number
+          payment_method?: string | null
           status?: string
           total: number
           updated_at?: string
@@ -157,6 +159,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: number
+          payment_method?: string | null
           status?: string
           total?: number
           updated_at?: string
@@ -165,18 +168,24 @@ export type Database = {
       }
       restaurant_status: {
         Row: {
+          cash_enabled: boolean
+          credit_enabled: boolean
           id: string
           station_open: boolean
           updated_at: string
           website_open: boolean
         }
         Insert: {
+          cash_enabled?: boolean
+          credit_enabled?: boolean
           id?: string
           station_open?: boolean
           updated_at?: string
           website_open?: boolean
         }
         Update: {
+          cash_enabled?: boolean
+          credit_enabled?: boolean
           id?: string
           station_open?: boolean
           updated_at?: string
