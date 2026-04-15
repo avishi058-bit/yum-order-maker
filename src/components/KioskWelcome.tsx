@@ -55,14 +55,19 @@ const KioskWelcome = ({ onStart }: { onStart: () => void }) => {
 
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          whileHover={{ scale: 1.05 }}
+          animate={{ 
+            opacity: 1, 
+            scale: [1, 1.06, 1],
+          }}
+          transition={{ 
+            opacity: { duration: 0.6, delay: 0.8 },
+            scale: { duration: 1.5, delay: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" },
+          }}
           whileTap={{ scale: 0.95 }}
           onClick={onStart}
-          className="bg-primary text-primary-foreground font-black text-2xl md:text-3xl px-16 py-6 rounded-full shadow-2xl shadow-primary/40 hover:shadow-primary/60 transition-all"
+          className="bg-orange-500 text-white font-black text-3xl md:text-4xl px-20 py-8 rounded-full shadow-2xl shadow-orange-500/50 hover:shadow-orange-500/70 transition-shadow"
         >
-          התחל הזמנה 🔥
+          לחץ להתחיל הזמנה 👆
         </motion.button>
       </div>
     </div>
