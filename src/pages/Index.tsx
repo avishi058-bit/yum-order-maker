@@ -150,9 +150,7 @@ const Index = () => {
     if (item.dealBurgers) {
       return sum + (item.dealBurgers.length * item.quantity);
     }
-    const menuItem = menuItems.find(m => m.id === item.id.split('-')[0] || m.name === item.name);
-    const isBurger = item.id.startsWith("friends-deal") || item.id.startsWith("family-deal") ||
-      cart.some(c => c.id === item.id && (c.withMeal || ['burger', 'meal'].includes(menuItems.find(m => m.name === c.name)?.category || '')));
+    const menuItem = menuItems.find(m => m.name === item.name || item.id.startsWith(m.id));
     if (menuItem && (menuItem.category === 'burger' || menuItem.category === 'meal')) {
       return sum + item.quantity;
     }
