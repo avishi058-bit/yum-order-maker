@@ -231,39 +231,56 @@ const Kiosk = () => {
         })}
       </div>
 
-      {/* Menu grid - scrollable area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+      {/* Menu list - scrollable area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto">
           {filteredItems.map((item) => {
             const image = menuImages[item.id];
             return (
               <motion.div
                 key={item.id}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => handleAddItem(item)}
-                className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow active:bg-secondary/50 relative flex flex-col"
+                className="bg-card relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border flex items-center py-5 px-5 gap-5"
+                dir="rtl"
               >
+                {/* Text content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {item.badge && <span className="text-2xl">{item.badge}</span>}
+                    <h3 className="font-black text-2xl">{item.name}</h3>
+                    {item.weight && (
+                      <span className="text-base text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+                        {item.weight}
+                      </span>
+                    )}
+                    {item.popular && !image && (
+                      <span className="inline-flex items-center gap-1 text-sm font-bold bg-primary text-primary-foreground px-3 py-1 rounded-full">
+                        <Star size={12} fill="currentColor" />
+                        פופולארי
+                      </span>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className="text-lg text-muted-foreground leading-relaxed line-clamp-2 mb-2">{item.description}</p>
+                  )}
+                  <span className="text-primary font-black text-2xl">₪{item.price}</span>
+                </div>
+
+                {/* Image */}
                 {image && (
-                  <div className="relative w-full aspect-[4/3]">
-                    <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                  <div className="relative flex-shrink-0 w-36 h-36">
+                    <div className="w-full h-full rounded-xl overflow-hidden">
+                      <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                    </div>
                     {item.popular && (
-                      <span className="absolute right-3 top-3 inline-flex items-center gap-1 text-sm font-bold bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md">
-                        <Star size={14} fill="currentColor" />
+                      <span className="absolute -right-2 top-2 inline-flex items-center gap-1 text-xs font-bold bg-primary text-primary-foreground px-2 py-1 rounded-full shadow-md z-10">
+                        <Star size={10} fill="currentColor" />
                         פופולארי
                       </span>
                     )}
                   </div>
                 )}
-                <div className="p-4 flex flex-col items-center text-center flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap justify-center">
-                    {item.badge && <span className="text-2xl">{item.badge}</span>}
-                    <h3 className="font-black text-xl">{item.name}</h3>
-                  </div>
-                  {item.weight && (
-                    <span className="text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full mb-2">{item.weight}</span>
-                  )}
-                  <span className="text-primary font-black text-2xl mt-auto pt-2">₪{item.price}</span>
-                </div>
 
                 {/* Added feedback */}
                 <AnimatePresence>
@@ -272,7 +289,7 @@ const Kiosk = () => {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      className="absolute inset-0 bg-primary/90 flex items-center justify-center rounded-2xl"
+                      className="absolute inset-0 bg-primary/90 flex items-center justify-center"
                     >
                       <span className="text-primary-foreground text-2xl font-black flex items-center gap-2">
                         <ShoppingBag size={24} />
