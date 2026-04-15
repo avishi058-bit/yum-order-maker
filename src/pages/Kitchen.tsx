@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard } from "lucide-react";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 
@@ -29,6 +29,7 @@ interface Order {
   total: number;
   created_at: string;
   updated_at: string;
+  payment_method: string | null;
   order_items: OrderItem[];
 }
 
@@ -103,7 +104,7 @@ const nextStatus: Record<string, string> = {
 };
 
 const Kitchen = () => {
-  const { status: restaurantStatus, toggleWebsite, toggleStation, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -303,10 +304,26 @@ const Kitchen = () => {
       })
       .join("");
 
+    const isCash = order.payment_method === "cash";
+    const paymentBanner = isCash
+      ? `<div style="text-align:center;background:#000;color:#fff;padding:10px;margin-bottom:10px;font-size:18px;font-weight:bold;border:3px solid #000;">
+           ⚠️ לא שולם ⚠️
+         </div>`
+      : "";
+
+    const paymentFooter = isCash
+      ? `<div style="text-align:center;border:3px solid #000;padding:12px;margin-top:10px;font-size:16px;font-weight:bold;background:#f5f5f5;">
+           💵 תשלום במזומן בעת המסירה 💵
+         </div>`
+      : `<div style="text-align:center;margin-top:10px;font-size:12px;color:#060;font-weight:bold;">
+           ✅ שולם באשראי
+         </div>`;
+
     printWindow.document.write(`
       <html dir="rtl">
       <head><title>בון #${order.order_number}</title></head>
       <body style="font-family:Arial;width:280px;margin:0 auto;padding:10px;font-size:14px;">
+        ${paymentBanner}
         <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:10px;">
           <h2 style="margin:0;">הַבַּקְּתָה 🐄</h2>
           <p style="margin:4px 0;font-size:12px;">המבורגר של מושבניקים</p>
@@ -325,6 +342,7 @@ const Kitchen = () => {
         <div style="border-top:2px solid #000;padding-top:8px;font-size:18px;font-weight:bold;text-align:center;">
           סה״כ: ₪${order.total}
         </div>
+        ${paymentFooter}
         <div style="text-align:center;margin-top:10px;font-size:10px;color:#999;">
           בתיאבון! 🍔
         </div>
@@ -459,6 +477,42 @@ const Kitchen = () => {
 
         <div className="w-px h-6 bg-border" />
 
+        <div className="flex items-center gap-3">
+          <Banknote size={16} className={restaurantStatus.cash_enabled ? "text-green-400" : "text-destructive"} />
+          <span className="text-sm font-medium text-foreground">מזומן</span>
+          <button
+            onClick={() => toggleCash(!restaurantStatus.cash_enabled)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+              restaurantStatus.cash_enabled ? "bg-green-500" : "bg-destructive"
+            }`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: restaurantStatus.cash_enabled ? "1.5rem" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <CreditCard size={16} className={restaurantStatus.credit_enabled ? "text-green-400" : "text-destructive"} />
+          <span className="text-sm font-medium text-foreground">אשראי</span>
+          <button
+            onClick={() => toggleCredit(!restaurantStatus.credit_enabled)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+              restaurantStatus.credit_enabled ? "bg-green-500" : "bg-destructive"
+            }`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: restaurantStatus.credit_enabled ? "1.5rem" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-border" />
+
         {restaurantStatus.website_open || restaurantStatus.station_open ? (
           <button
             onClick={closeAll}
@@ -570,6 +624,12 @@ const Kitchen = () => {
                   )}
                   {order.notes && (
                     <p className="text-sm text-primary mt-1">📝 {order.notes}</p>
+                  )}
+                  {order.payment_method === "cash" && (
+                    <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
+                  )}
+                  {order.payment_method === "credit" && (
+                    <p className="text-sm font-bold text-green-400 mt-1">💳 שולם באשראי</p>
                   )}
                 </div>
 

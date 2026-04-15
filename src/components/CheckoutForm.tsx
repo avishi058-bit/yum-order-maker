@@ -4,6 +4,8 @@ import { CartItem } from "@/components/CartDrawer";
 import { toppings, removals, smashModifications, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { Banknote, CreditCard } from "lucide-react";
 
 interface CheckoutFormProps {
   items: CartItem[];
@@ -14,12 +16,14 @@ interface CheckoutFormProps {
 
 const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) => {
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
-  const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
+  const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | null>(null);
+  const { status: restaurantStatus } = useRestaurantStatus();
 
   const handleSendOtp = async () => {
     if (!form.phone || form.phone.replace(/[-\s]/g, '').length < 9) {
@@ -96,13 +100,29 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name) {
       toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
       return;
     }
+    setStep("payment");
+  };
 
+  const handlePaymentSelect = async (method: "cash" | "credit") => {
+    setPaymentMethod(method);
+
+    if (method === "credit") {
+      // Placeholder for future credit card gateway
+      toast({ title: "סליקת אשראי תתווסף בקרוב", description: "כרגע ניתן לשלם במזומן בלבד" });
+      return;
+    }
+
+    // Cash - submit order
+    await submitOrder(method);
+  };
+
+  const submitOrder = async (method: "cash" | "credit") => {
     setSubmitting(true);
 
     try {
@@ -121,6 +141,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
           notes: form.notes || null,
           total,
           status: "new",
+          payment_method: method,
         })
         .select("id, order_number")
         .single();
@@ -168,6 +189,11 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
     }
   };
 
+  const availablePaymentMethods = {
+    cash: restaurantStatus.cash_enabled,
+    credit: restaurantStatus.credit_enabled,
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -187,6 +213,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
           {step === "phone" && "הכנס מספר טלפון"}
           {step === "otp" && "הכנס קוד אימות"}
           {step === "details" && "סיום הזמנה"}
+          {step === "payment" && "בחר אמצעי תשלום"}
         </h2>
 
         {/* Step 1: Phone */}
@@ -306,7 +333,7 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleDetailsSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
                   שם מלא <span className="text-destructive">*</span>
@@ -334,10 +361,9 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  disabled={submitting}
-                  className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
+                  className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
                 >
-                  {submitting ? "שולח..." : "שלח הזמנה 🍔"}
+                  המשך לתשלום 💳
                 </motion.button>
                 <button
                   type="button"
@@ -349,6 +375,70 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
               </div>
             </form>
           </>
+        )}
+
+        {/* Step 4: Payment Method */}
+        {step === "payment" && (
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
+
+            <div className="grid grid-cols-1 gap-3">
+              {availablePaymentMethods.cash && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePaymentSelect("cash")}
+                  disabled={submitting}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50"
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Banknote size={24} className="text-green-400" />
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-foreground">מזומן 💵</div>
+                    <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>
+                  </div>
+                </motion.button>
+              )}
+
+              {availablePaymentMethods.credit && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handlePaymentSelect("credit")}
+                  disabled={submitting}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50"
+                >
+                  <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <CreditCard size={24} className="text-blue-400" />
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-foreground">אשראי 💳</div>
+                    <div className="text-sm text-muted-foreground">תשלום מאובטח בכרטיס אשראי</div>
+                  </div>
+                </motion.button>
+              )}
+
+              {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
+                  <p className="text-sm mt-1">אנא נסה שוב מאוחר יותר</p>
+                </div>
+              )}
+            </div>
+
+            {submitting && (
+              <div className="text-center text-primary font-bold py-2">שולח הזמנה...</div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setStep("details")}
+              className="w-full px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors text-center"
+            >
+              חזור
+            </button>
+          </div>
         )}
       </motion.div>
     </motion.div>

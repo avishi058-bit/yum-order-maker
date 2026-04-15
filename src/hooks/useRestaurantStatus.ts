@@ -4,20 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 export interface RestaurantStatus {
   website_open: boolean;
   station_open: boolean;
+  cash_enabled: boolean;
+  credit_enabled: boolean;
 }
 
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true });
+  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
       const { data } = await supabase
         .from("restaurant_status")
-        .select("website_open, station_open")
+        .select("website_open, station_open, cash_enabled, credit_enabled")
         .limit(1)
         .single();
-      if (data) setStatus(data);
+      if (data) setStatus(data as RestaurantStatus);
       setLoading(false);
     };
 
@@ -29,8 +31,8 @@ export const useRestaurantStatus = () => {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
         (payload) => {
-          const { website_open, station_open } = payload.new as RestaurantStatus;
-          setStatus({ website_open, station_open });
+          const { website_open, station_open, cash_enabled, credit_enabled } = payload.new as RestaurantStatus;
+          setStatus({ website_open, station_open, cash_enabled, credit_enabled });
         }
       )
       .subscribe();
@@ -50,15 +52,25 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, station_open: open }));
   };
 
+  const toggleCash = async (enabled: boolean) => {
+    await supabase.from("restaurant_status").update({ cash_enabled: enabled }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, cash_enabled: enabled }));
+  };
+
+  const toggleCredit = async (enabled: boolean) => {
+    await supabase.from("restaurant_status").update({ credit_enabled: enabled }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, credit_enabled: enabled }));
+  };
+
   const closeAll = async () => {
     await supabase.from("restaurant_status").update({ website_open: false, station_open: false }).neq("id", "00000000-0000-0000-0000-000000000000");
-    setStatus({ website_open: false, station_open: false });
+    setStatus((prev) => ({ ...prev, website_open: false, station_open: false }));
   };
 
   const openAll = async () => {
     await supabase.from("restaurant_status").update({ website_open: true, station_open: true }).neq("id", "00000000-0000-0000-0000-000000000000");
-    setStatus({ website_open: true, station_open: true });
+    setStatus((prev) => ({ ...prev, website_open: true, station_open: true }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, closeAll, openAll };
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll };
 };
