@@ -297,17 +297,19 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      <footer className="py-8 text-center border-t border-border space-y-2">
-        <p className="text-foreground font-bold">הַבַּקְּתָה — המבורגר של מושבניקים 🐄</p>
-        <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
-        <a
-          href="tel:058-4633-555"
-          className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
-        >
-          <Phone size={14} />
-          058-4633-555
-        </a>
-      </footer>
+      {!isStation && (
+        <footer className="py-8 text-center border-t border-border space-y-2">
+          <p className="text-foreground font-bold">הַבַּקְּתָה — המבורגר של מושבניקים 🐄</p>
+          <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
+          <a
+            href="tel:058-4633-555"
+            className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
+          >
+            <Phone size={14} />
+            058-4633-555
+          </a>
+        </footer>
+      )}
 
       <AccessibilityWidget />
     </div>
