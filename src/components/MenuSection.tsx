@@ -34,18 +34,18 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
       viewport={{ once: true }}
       layout={false}
       onClick={handleAdd}
-      className={`bg-card group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border py-4 px-2 flex items-center gap-4 ${
-        isKiosk ? "py-5 px-4 gap-5" : ""
+      className={`bg-card group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border flex items-center ${
+        isKiosk ? "py-6 px-5 gap-6" : "py-4 px-2 gap-4"
       }`}
       dir="rtl"
     >
       {/* Text content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          {item.badge && <span className={isKiosk ? "text-2xl" : "text-lg"}>{item.badge}</span>}
-          <h3 className={`font-bold ${isKiosk ? "text-xl" : "text-base"}`}>{item.name}</h3>
+          {item.badge && <span className={isKiosk ? "text-3xl" : "text-lg"}>{item.badge}</span>}
+          <h3 className={`font-bold ${isKiosk ? "text-2xl" : "text-base"}`}>{item.name}</h3>
           {item.weight && (
-            <span className={`text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-sm" : "text-xs"}`}>
+            <span className={`text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-base" : "text-xs"}`}>
               {item.weight}
             </span>
           )}
@@ -56,13 +56,13 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
             </span>
           )}
         </div>
-        <p className={`text-muted-foreground leading-relaxed line-clamp-2 ${isKiosk ? "text-base mb-2" : "text-sm mb-2"}`}>{item.description}</p>
-        <span className={`text-primary font-bold ${isKiosk ? "text-xl" : "text-lg"}`}>₪{item.price}</span>
+        <p className={`text-muted-foreground leading-relaxed line-clamp-2 ${isKiosk ? "text-lg mb-3" : "text-sm mb-2"}`}>{item.description}</p>
+        <span className={`text-primary font-bold ${isKiosk ? "text-2xl" : "text-lg"}`}>₪{item.price}</span>
       </div>
 
       {/* Image */}
       {image && (
-        <div className={`relative flex-shrink-0 ${isKiosk ? "w-36 h-36" : "w-28 h-28"}`}>
+        <div className={`relative flex-shrink-0 ${isKiosk ? "w-44 h-44" : "w-28 h-28"}`}>
           <div className="w-full h-full rounded-xl overflow-hidden">
             <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
           </div>
@@ -83,7 +83,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.2 }}
-            className={`absolute left-2 top-2 bg-green-500 text-white font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg z-10 pointer-events-none ${isKiosk ? "text-sm" : "text-xs"}`}
+            className={`absolute left-2 top-2 bg-green-500 text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg z-10 pointer-events-none ${isKiosk ? "text-base" : "text-xs"}`}
           >
             <ShoppingBag size={isKiosk ? 16 : 12} />
             נוסף לסל!
@@ -143,14 +143,14 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-4xl px-4 pt-4 pb-16' : 'max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-5xl px-6 pt-4 pb-16' : 'max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle - only show for kiosk */}
       {isKiosk && (
         <div className="flex justify-center mb-6">
           <div className="bg-secondary rounded-full p-1 flex gap-1">
             <button
               onClick={() => onDineInChange(true)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+              className={`px-8 py-3 rounded-full text-lg font-bold transition-all ${
                 dineIn === true ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
               }`}
             >
@@ -158,7 +158,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             </button>
             <button
               onClick={() => onDineInChange(false)}
-              className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+              className={`px-8 py-3 rounded-full text-lg font-bold transition-all ${
                 dineIn === false ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
               }`}
             >
@@ -176,7 +176,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
               <button
                 key={cat.key}
                 onClick={() => scrollToCategory(cat.key)}
-                className={`relative whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all flex-shrink-0 ${
+                className={`relative whitespace-nowrap px-6 py-3 rounded-full text-base font-bold transition-all flex-shrink-0 ${
                   activeCategory === cat.key
                     ? "text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary"
@@ -206,7 +206,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             data-category={cat.key}
             className="mb-10 scroll-mt-28"
           >
-            <h3 className={`font-bold mb-3 text-primary text-right ${isKiosk ? "text-3xl" : "text-2xl"}`}>{cat.label}</h3>
+            <h3 className={`font-bold mb-4 text-primary text-right ${isKiosk ? "text-4xl" : "text-2xl"}`}>{cat.label}</h3>
             <div className="divide-y divide-border">
               {items.map((item) => (
                 <MenuCard key={item.id} item={item} onAdd={onAddItem} isKiosk={isKiosk} />
