@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import heroBurger from "@/assets/hero-burger.jpg";
 import logo from "@/assets/logo.png";
 
-const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
+const HeroSection = ({ onOrderClick }: { onOrderClick?: () => void }) => {
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
