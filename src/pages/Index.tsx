@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
@@ -11,6 +11,7 @@ import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
+import ItemPreview from "@/components/ItemPreview";
 import KioskWelcome from "@/components/KioskWelcome";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -32,6 +33,18 @@ const Index = () => {
   const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
+  const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const cartButtonRef = useRef<HTMLDivElement>(null);
+
+  const addToCartDirect = useCallback((item: MenuItem) => {
+    setCart((prev) => {
+      const existing = prev.find((c) => c.id === item.id);
+      if (existing) {
+        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
+      }
+      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+    });
+  }, []);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
@@ -43,13 +56,7 @@ const Index = () => {
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
       setDrinkItem(item);
     } else {
-      setCart((prev) => {
-        const existing = prev.find((c) => c.id === item.id);
-        if (existing) {
-          return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
-        }
-        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
-      });
+      setPreviewItem(item);
     }
   }, []);
 
@@ -210,15 +217,17 @@ const Index = () => {
       )}
 
       {!isClosed && totalItems > 0 && !cartOpen && (
-        <button
-          onClick={() => setCartOpen(true)}
-          className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
-        >
-          <ShoppingBag size={22} />
-          <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-            {totalItems}
-          </span>
-        </button>
+        <div ref={cartButtonRef}>
+          <button
+            onClick={() => setCartOpen(true)}
+            className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
+          >
+            <ShoppingBag size={22} />
+            <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
+              {totalItems}
+            </span>
+          </button>
+        </div>
       )}
 
       {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
@@ -284,6 +293,13 @@ const Index = () => {
           setSauceSelectorOpen(false);
           setCheckoutOpen(true);
         }}
+      />
+
+      <ItemPreview
+        item={previewItem}
+        onClose={() => setPreviewItem(null)}
+        onAdd={(item) => addToCartDirect(item)}
+        cartButtonRef={cartButtonRef}
       />
 
       <AnimatePresence>
