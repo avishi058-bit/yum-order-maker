@@ -6,8 +6,7 @@ const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
-      <div className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 flex items-center gap-2 shadow-lg">
-        <span className="text-primary text-lg">✡</span>
+      <div className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 shadow-lg">
         <span className="text-xs font-bold text-foreground">כשר</span>
       </div>
 
