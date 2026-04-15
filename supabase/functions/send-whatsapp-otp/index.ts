@@ -6,6 +6,36 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from 'https://esm.sh/zod@3.22.4'
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio'
+const OTP_EXPIRY_MS = 5 * 60 * 1000
+
+const jsonResponse = (body: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+
+const normalizePhoneNumber = (value: string) => {
+  const sanitized = value.trim().replace(/^whatsapp:/i, '').replace(/[\s-]/g, '')
+
+  if (!sanitized) return null
+
+  if (sanitized.startsWith('+')) {
+    return /^\+\d{8,15}$/.test(sanitized) ? sanitized : null
+  }
+
+  if (sanitized.startsWith('00')) {
+    const normalized = `+${sanitized.slice(2)}`
+    return /^\+\d{8,15}$/.test(normalized) ? normalized : null
+  }
+
+  if (sanitized.startsWith('0')) {
+    const normalized = `+972${sanitized.slice(1)}`
+    return /^\+\d{8,15}$/.test(normalized) ? normalized : null
+  }
+
+  const normalized = `+${sanitized}`
+  return /^\+\d{8,15}$/.test(normalized) ? normalized : null
+}
 
 const SendSchema = z.object({
   phone: z.string().min(9).max(15),
@@ -23,12 +53,12 @@ Deno.serve(async (req) => {
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
   if (!LOVABLE_API_KEY) {
-    return new Response(JSON.stringify({ error: 'LOVABLE_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'LOVABLE_API_KEY not configured' }, 500)
   }
 
   const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY')
   if (!TWILIO_API_KEY) {
-    return new Response(JSON.stringify({ error: 'TWILIO_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'TWILIO_API_KEY not configured' }, 500)
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -43,28 +73,24 @@ Deno.serve(async (req) => {
     if (action === 'send') {
       const parsed = SendSchema.safeParse(body)
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: 'מספר טלפון לא תקין' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
       }
 
       const { phone } = parsed.data
-      const code = String(Math.floor(1000 + Math.random() * 9000))
-
-      // Store the code
-      await supabase.from('verification_codes').insert({
-        phone,
-        code,
-        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-      })
-
-      // Format phone for Twilio (add +972 if starts with 0)
-      let formattedPhone = phone.replace(/[-\s]/g, '')
-      if (formattedPhone.startsWith('0')) {
-        formattedPhone = '+972' + formattedPhone.slice(1)
-      } else if (!formattedPhone.startsWith('+')) {
-        formattedPhone = '+' + formattedPhone
+      const formattedPhone = normalizePhoneNumber(phone)
+      if (!formattedPhone) {
+        return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
       }
 
-      const whatsappFrom = Deno.env.get('TWILIO_WHATSAPP_FROM') || '+14155238886'
+      const whatsappFrom = Deno.env.get('TWILIO_WHATSAPP_FROM')
+      const formattedWhatsappFrom = whatsappFrom ? normalizePhoneNumber(whatsappFrom) : null
+      if (!formattedWhatsappFrom) {
+        console.error('TWILIO_WHATSAPP_FROM is invalid:', whatsappFrom)
+        return jsonResponse({ error: 'מספר השולח בוואטסאפ לא מוגדר נכון' }, 500)
+      }
+
+      const code = String(Math.floor(1000 + Math.random() * 9000))
+
       const twilioResponse = await fetch(`${GATEWAY_URL}/Messages.json`, {
         method: 'POST',
         headers: {
@@ -74,7 +100,7 @@ Deno.serve(async (req) => {
         },
         body: new URLSearchParams({
           To: `whatsapp:${formattedPhone}`,
-          From: `whatsapp:${whatsappFrom}`,
+          From: `whatsapp:${formattedWhatsappFrom}`,
           Body: `קוד האימות שלך מהבקתה: ${code}\nאין להעביר את הקוד לאף אחד`,
         }),
       })
@@ -82,7 +108,18 @@ Deno.serve(async (req) => {
       const twilioData = await twilioResponse.json()
       if (!twilioResponse.ok) {
         console.error('Twilio error:', twilioData)
-        return new Response(JSON.stringify({ error: 'שגיאה בשליחת הקוד' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return jsonResponse({ error: 'שגיאה בשליחת הקוד' }, 500)
+      }
+
+      const { error: insertError } = await supabase.from('verification_codes').insert({
+        phone,
+        code,
+        expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
+      })
+
+      if (insertError) {
+        console.error('Failed to store verification code:', insertError)
+        return jsonResponse({ error: 'שגיאה בשמירת קוד האימות' }, 500)
       }
 
       // Check if customer exists
@@ -92,14 +129,12 @@ Deno.serve(async (req) => {
         .eq('phone', phone)
         .maybeSingle()
 
-      return new Response(JSON.stringify({ success: true, customerName: customer?.name || null }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ success: true, customerName: customer?.name || null })
 
     } else if (action === 'verify') {
       const parsed = VerifySchema.safeParse(body)
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: 'קוד לא תקין' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return jsonResponse({ error: 'קוד לא תקין' }, 400)
       }
 
       const { phone, code } = parsed.data
@@ -116,19 +151,17 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!record) {
-        return new Response(JSON.stringify({ error: 'קוד שגוי או שפג תוקפו' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return jsonResponse({ error: 'קוד שגוי או שפג תוקפו' }, 400)
       }
 
       await supabase.from('verification_codes').update({ verified: true }).eq('id', record.id)
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return jsonResponse({ success: true })
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'Invalid action' }, 400)
   } catch (error) {
     console.error('Error:', error)
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return jsonResponse({ error: 'Internal server error' }, 500)
   }
 })
