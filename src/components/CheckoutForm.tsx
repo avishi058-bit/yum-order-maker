@@ -546,6 +546,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       </motion.div>
     </motion.div>
   );
-};
+});
+
+CheckoutForm.displayName = "CheckoutForm";
 
 export default CheckoutForm;
