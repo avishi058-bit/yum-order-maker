@@ -130,6 +130,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
+    setExpanded(false);
   };
 
   const handleClose = () => {
