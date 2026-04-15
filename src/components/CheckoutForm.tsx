@@ -113,13 +113,114 @@ const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) =
     setPaymentMethod(method);
 
     if (method === "credit") {
-      // Placeholder for future credit card gateway
-      toast({ title: "סליקת אשראי תתווסף בקרוב", description: "כרגע ניתן לשלם במזומן בלבד" });
+      await handleCreditPayment();
       return;
     }
 
     // Cash - submit order
     await submitOrder(method);
+  };
+
+  const handleCreditPayment = async () => {
+    setSubmitting(true);
+    try {
+      // First create the order in DB
+      await supabase.from("customers").upsert(
+        { phone: form.phone, name: form.name },
+        { onConflict: "phone" }
+      );
+
+      const isStation = localStorage.getItem("habakta_station") === "true";
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: form.name,
+          customer_phone: form.phone,
+          notes: form.notes || null,
+          total,
+          status: "pending_payment",
+          payment_method: "credit",
+          order_source: isStation ? "station" : "website",
+        } as any)
+        .select("id, order_number")
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map((item) => {
+        const toppingNames = item.toppings
+          .map((tId) => toppings.find((t) => t.id === tId)?.name)
+          .filter(Boolean) as string[];
+        const removalNames = item.removals
+          .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
+          .filter(Boolean) as string[];
+
+        return {
+          order_id: order.id,
+          item_name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          toppings: toppingNames,
+          removals: removalNames,
+          with_meal: item.withMeal,
+          meal_side: item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.name || null) : null,
+          meal_drink: item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name || null) : null,
+          deal_burgers: item.dealBurgers ? JSON.parse(JSON.stringify(item.dealBurgers)) : null,
+          deal_drinks: item.dealDrinks ? JSON.parse(JSON.stringify(item.dealDrinks)) : null,
+        };
+      });
+
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      if (itemsError) throw itemsError;
+
+      // Build item descriptions for Z-Credit invoice
+      const zcreditItems = items.map((item) => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        description: [
+          item.toppings.length > 0 ? `תוספות: ${item.toppings.map(tId => toppings.find(t => t.id === tId)?.name).filter(Boolean).join(", ")}` : "",
+          item.withMeal ? "ארוחה" : "",
+        ].filter(Boolean).join(" | ") || item.name,
+      }));
+
+      const baseUrl = window.location.origin;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            total,
+            items: zcreditItems,
+            customerName: form.name,
+            customerPhone: form.phone,
+            orderId: order.id,
+            successUrl: `${baseUrl}/track?order=${order.order_number}&paid=true`,
+            cancelUrl: `${baseUrl}/?payment=cancelled`,
+            callbackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-callback`,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "שגיאה ביצירת עמוד תשלום");
+      }
+
+      // Redirect to Z-Credit payment page
+      window.location.href = result.sessionUrl;
+    } catch (error: any) {
+      console.error("Credit payment error:", error);
+      toast({ title: error.message || "שגיאה בתשלום באשראי", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const submitOrder = async (method: "cash" | "credit") => {
