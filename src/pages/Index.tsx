@@ -9,8 +9,9 @@ import ItemCustomizer from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
+import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
-import { MenuItem, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 
 const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -21,6 +22,8 @@ const Index = () => {
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
   const [dineIn, setDineIn] = useState(true);
+  const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
+  const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
 
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
@@ -142,8 +145,21 @@ const Index = () => {
 
   const totalItems = cart.reduce((sum, c) => sum + c.quantity, 0);
 
+  // Count burgers in cart for free sauces calculation
+  const burgerCount = cart.reduce((sum, item) => {
+    if (item.dealBurgers) {
+      return sum + (item.dealBurgers.length * item.quantity);
+    }
+    const menuItem = menuItems.find(m => m.name === item.name || item.id.startsWith(m.id));
+    if (menuItem && (menuItem.category === 'burger' || menuItem.category === 'meal')) {
+      return sum + item.quantity;
+    }
+    return sum;
+  }, 0);
+  const freeSauces = burgerCount * 3;
+
   const getTotal = () => {
-    return cart.reduce((sum, item) => {
+    let base = cart.reduce((sum, item) => {
       if (item.dealBurgers) {
         return sum + item.price * item.quantity;
       }
@@ -156,6 +172,13 @@ const Index = () => {
       const drinkCost = item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) : 0;
       return sum + (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
     }, 0);
+    // Add extra sauce cost
+    if (!dineIn && selectedSauces.length > 0) {
+      const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
+      const extraSauces = Math.max(0, totalSauceQty - freeSauces);
+      base += extraSauces;
+    }
+    return base;
   };
 
   const scrollToMenu = () => {
@@ -210,6 +233,21 @@ const Index = () => {
         onUpdateQuantity={updateQuantity}
         onCheckout={() => {
           setCartOpen(false);
+          if (!dineIn && burgerCount > 0) {
+            setSauceSelectorOpen(true);
+          } else {
+            setCheckoutOpen(true);
+          }
+        }}
+      />
+
+      <SauceSelector
+        open={sauceSelectorOpen}
+        freeSauces={freeSauces}
+        onClose={() => setSauceSelectorOpen(false)}
+        onConfirm={(sauces) => {
+          setSelectedSauces(sauces);
+          setSauceSelectorOpen(false);
           setCheckoutOpen(true);
         }}
       />
