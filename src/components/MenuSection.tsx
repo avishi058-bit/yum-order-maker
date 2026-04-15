@@ -98,6 +98,8 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
 };
 
 const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
+  const { settings } = useSiteSettings();
+  const fontScale = isKiosk ? settings.kiosk_font_scale : settings.website_font_scale;
   type CategoryKey = typeof categories[number]["key"];
   const [activeCategory, setActiveCategory] = useState<CategoryKey>(categories[0].key);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
