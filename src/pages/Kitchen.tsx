@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard } from "lucide-react";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 
@@ -103,7 +103,7 @@ const nextStatus: Record<string, string> = {
 };
 
 const Kitchen = () => {
-  const { status: restaurantStatus, toggleWebsite, toggleStation, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
