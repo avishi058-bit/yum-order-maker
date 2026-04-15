@@ -21,7 +21,6 @@ const ItemPreview = ({ item, onClose, onAdd, cartButtonRef }: ItemPreviewProps) 
   const image = menuImages[item.id];
 
   const handleAdd = () => {
-    // Calculate fly target
     if (imageRef.current && cartButtonRef?.current) {
       const imgRect = imageRef.current.getBoundingClientRect();
       const cartRect = cartButtonRef.current.getBoundingClientRect();
@@ -29,8 +28,12 @@ const ItemPreview = ({ item, onClose, onAdd, cartButtonRef }: ItemPreviewProps) 
         x: cartRect.left + cartRect.width / 2 - (imgRect.left + imgRect.width / 2),
         y: cartRect.top + cartRect.height / 2 - (imgRect.top + imgRect.height / 2),
       });
+      setFlyAnim(true);
+    } else {
+      // No image to animate — add directly
+      onAdd(item);
+      onClose();
     }
-    setFlyAnim(true);
   };
 
   const handleFlyComplete = () => {
