@@ -224,9 +224,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         </div>
                       </div>
 
-                      <div className="px-5 py-5">
-                        <h3 className="text-2xl font-black text-right mb-1">תוספות בתשלום</h3>
-                        <p className="text-base text-gray-500 text-right mb-4">אפשר לבחור עד ל-9 פריטים</p>
+                      <div className="px-6 py-6">
+                        <h3 className="text-3xl font-black text-right mb-2">תוספות בתשלום</h3>
+                        <p className="text-lg text-gray-500 text-right mb-5">אפשר לבחור עד ל-9 פריטים</p>
                         <div className="space-y-0">
                           {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
                             const active = selectedToppings.includes(t.id);
@@ -235,11 +235,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               <button
                                 key={t.id}
                                 onClick={() => toggleTopping(t.id)}
-                                className="w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0"
+                                className="w-full flex items-center justify-between py-5 border-b border-gray-100 last:border-b-0"
                               >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-4">
                                   <div
-                                    className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    className={`w-10 h-10 rounded-full border-3 flex items-center justify-center transition-colors ${
                                       active ? "border-primary bg-primary" : "border-gray-300"
                                     }`}
                                   >
@@ -247,16 +247,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                       <motion.div
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        className="w-3 h-3 rounded-full bg-white"
+                                        className="w-4 h-4 rounded-full bg-white"
                                       />
                                     )}
                                   </div>
-                                  <span className="text-base text-gray-500 font-medium">+ ₪{t.price}</span>
+                                  <span className="text-xl text-gray-500 font-medium">+ ₪{t.price}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-lg">{t.name}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="font-bold text-2xl">{t.name}</span>
                                   {showRecommended && (
-                                    <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                    <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
                                       🔥 הולך טוב עם המנה
                                     </span>
                                   )}
