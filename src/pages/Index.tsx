@@ -35,6 +35,7 @@ const Index = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const [trackingOrderNumber, setTrackingOrderNumber] = useState<number | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
   const addToCartDirect = useCallback((item: MenuItem) => {
