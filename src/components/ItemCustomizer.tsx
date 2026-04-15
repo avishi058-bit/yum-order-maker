@@ -26,7 +26,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [isDragging, setIsDragging] = useState(false);
   const mouseDown = useRef(false);
   const [isClosing, setIsClosing] = useState(false);
-
+  const dragActive = useRef(false);
   // Lock body scroll when open
   useEffect(() => {
     if (item) {
@@ -146,22 +146,31 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const hasImage = !!menuImages[item.id];
 
 
-  // Swipe/drag to close — works from any scroll position
+
+  // Swipe/drag to close — activates when at scroll top or on image
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
+    dragActive.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const deltaY = e.touches[0].clientY - touchStartY.current;
-    if (deltaY > 10) {
+    const scrollTop = scrollRef.current?.scrollTop ?? 0;
+    
+    // Start dragging only if at top of scroll and pulling down
+    if (!dragActive.current && scrollTop <= 0 && deltaY > 10) {
+      dragActive.current = true;
+    }
+    
+    if (dragActive.current && deltaY > 0) {
+      e.preventDefault();
       setIsDragging(true);
-      setSheetTranslateY(Math.max(0, deltaY * 0.5));
+      setSheetTranslateY(deltaY * 0.5);
     }
   };
 
   const handleTouchEnd = () => {
-    if (sheetTranslateY > 60) {
-      // Animate out smoothly
+    if (sheetTranslateY > 80) {
       setIsClosing(true);
       setSheetTranslateY(window.innerHeight);
       setTimeout(() => {
@@ -173,25 +182,33 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
       setSheetTranslateY(0);
     }
     setIsDragging(false);
+    dragActive.current = false;
   };
 
   // Mouse drag support (for desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
     mouseDown.current = true;
     touchStartY.current = e.clientY;
+    dragActive.current = false;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!mouseDown.current) return;
     const deltaY = e.clientY - touchStartY.current;
-    if (deltaY > 10) {
+    const scrollTop = scrollRef.current?.scrollTop ?? 0;
+    
+    if (!dragActive.current && scrollTop <= 0 && deltaY > 10) {
+      dragActive.current = true;
+    }
+    
+    if (dragActive.current && deltaY > 0) {
       setIsDragging(true);
-      setSheetTranslateY(Math.max(0, deltaY * 0.5));
+      setSheetTranslateY(deltaY * 0.5);
     }
   };
 
   const handleMouseUp = () => {
-    if (sheetTranslateY > 60) {
+    if (sheetTranslateY > 80) {
       setIsClosing(true);
       setSheetTranslateY(window.innerHeight);
       setTimeout(() => {
@@ -204,6 +221,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     }
     mouseDown.current = false;
     setIsDragging(false);
+    dragActive.current = false;
   };
 
   return (
@@ -212,8 +230,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
         <>
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
+            animate={{ opacity: isClosing ? 0 : 0.6 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             onClick={handleClose}
             className="fixed inset-0 bg-black z-50"
           />
@@ -251,8 +270,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             <div 
               ref={scrollRef}
               className={`flex-1 overflow-y-auto overscroll-contain ${step !== "meal-upgrade" ? "rounded-t-3xl" : ""}`}
-              style={{ touchAction: "pan-y" }}
-              onTouchMove={(e) => e.stopPropagation()}
+              style={{ touchAction: isDragging ? "none" : "pan-y", overflowY: isDragging ? "hidden" : "auto" }}
             >
               {/* Hero image with overlay close button */}
               {step !== "meal-upgrade" && hasImage && (
