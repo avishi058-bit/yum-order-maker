@@ -471,27 +471,27 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
             {/* Bottom bar - only on customize step */}
             {step === "customize" && (
-              <div className="px-5 py-5 border-t border-gray-200 flex items-center gap-3 bg-white safe-bottom">
+              <div className="px-6 py-6 border-t border-gray-200 flex items-center gap-4 bg-white safe-bottom">
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleNext}
-                  className="flex-1 bg-primary text-primary-foreground font-black py-4 rounded-xl text-xl shadow-lg shadow-primary/20"
+                  className="flex-1 bg-primary text-primary-foreground font-black py-5 rounded-xl text-2xl shadow-lg shadow-primary/20"
                 >
                   {isBurger ? "המשך" : `הוספה להזמנה · ₪${totalPrice}`}
                 </motion.button>
-                <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-3 bg-gray-100 rounded-xl px-4 py-3">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    className="w-12 h-12 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
-                    <Minus size={20} />
+                    <Minus size={24} />
                   </button>
-                  <span className="font-black text-xl w-8 text-center">{quantity}</span>
+                  <span className="font-black text-2xl w-10 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    className="w-12 h-12 rounded-lg flex items-center justify-center hover:bg-gray-200 transition-colors"
                   >
-                    <Plus size={20} />
+                    <Plus size={24} />
                   </button>
                 </div>
               </div>
