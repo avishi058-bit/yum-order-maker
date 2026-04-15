@@ -202,9 +202,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                 >
                   {isBurger && (
                     <>
-                      <div className="px-6 py-6 border-b border-gray-200">
-                        <h3 className="text-3xl font-black text-right mb-2">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                        <p className="text-lg text-gray-500 text-right mb-5">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                      <div className="px-5 py-4 border-b border-gray-200">
+                        <h3 className="text-lg font-black text-right mb-1">{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                        <p className="text-sm text-gray-500 text-right mb-3">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                         <div className="space-y-0">
                           {removalsList.map((r) => {
                             const ingredientUnavailable = getIngredientUnavailable(r.id);
