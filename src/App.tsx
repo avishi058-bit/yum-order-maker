@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import Kitchen from "./pages/Kitchen.tsx";
 import OrderTracking from "./pages/OrderTracking.tsx";
 import AdminAvailability from "./pages/AdminAvailability.tsx";
+import StationSetup from "./pages/StationSetup.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/kitchen" element={<Kitchen />} />
           <Route path="/track" element={<OrderTracking />} />
           <Route path="/admin/availability" element={<AdminAvailability />} />
+          <Route path="/station-setup" element={<StationSetup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
