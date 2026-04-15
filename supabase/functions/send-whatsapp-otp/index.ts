@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     if (action === 'send') {
       const parsed = SendSchema.safeParse(body)
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: 'מספר טלפון לא תקין' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
       }
 
       const { phone } = parsed.data
