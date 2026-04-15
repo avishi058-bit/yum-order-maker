@@ -3,6 +3,7 @@ import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import KioskWelcome from "@/components/KioskWelcome";
+import MenuSection from "@/components/MenuSection";
 import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
 import ItemCustomizer from "@/components/ItemCustomizer";
@@ -193,115 +194,12 @@ const Kiosk = () => {
           <span className="text-lg font-bold">חזרה</span>
         </button>
         <h1 className="text-2xl font-black text-primary">הבקתה 🐄</h1>
-        {/* Dine-in toggle */}
-        <div className="bg-secondary rounded-full p-1 flex gap-1">
-          <button
-            onClick={() => setDineIn(true)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"}`}
-          >
-            🪑 לשבת
-          </button>
-          <button
-            onClick={() => setDineIn(false)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${!dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"}`}
-          >
-            🥡 לקחת
-          </button>
-        </div>
+        <div /> {/* spacer */}
       </div>
 
-      {/* Category tabs */}
-      <div className="flex-none flex gap-2 px-4 py-3 bg-card/50 border-b border-border overflow-x-auto">
-        {categories.map((cat) => {
-          const count = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id)).length;
-          if (count === 0) return null;
-          return (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
-              className={`px-6 py-3 rounded-2xl text-lg font-bold whitespace-nowrap transition-all ${
-                activeCategory === cat.key
-                  ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-              }`}
-            >
-              {cat.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Menu list - scrollable area */}
+      {/* Scrollable menu - all categories */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto">
-          {filteredItems.map((item) => {
-            const image = menuImages[item.id];
-            return (
-              <motion.div
-                key={item.id}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleAddItem(item)}
-                className="bg-card relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border flex items-center py-5 px-5 gap-5"
-                dir="rtl"
-              >
-                {/* Text content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    {item.badge && <span className="text-2xl">{item.badge}</span>}
-                    <h3 className="font-black text-2xl">{item.name}</h3>
-                    {item.weight && (
-                      <span className="text-base text-muted-foreground bg-secondary px-3 py-1 rounded-full">
-                        {item.weight}
-                      </span>
-                    )}
-                    {item.popular && !image && (
-                      <span className="inline-flex items-center gap-1 text-sm font-bold bg-primary text-primary-foreground px-3 py-1 rounded-full">
-                        <Star size={12} fill="currentColor" />
-                        פופולארי
-                      </span>
-                    )}
-                  </div>
-                  {item.description && (
-                    <p className="text-lg text-muted-foreground leading-relaxed line-clamp-2 mb-2">{item.description}</p>
-                  )}
-                  <span className="text-primary font-black text-2xl">₪{item.price}</span>
-                </div>
-
-                {/* Image */}
-                {image && (
-                  <div className="relative flex-shrink-0 w-36 h-36">
-                    <div className="w-full h-full rounded-xl overflow-hidden">
-                      <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                    {item.popular && (
-                      <span className="absolute -right-2 top-2 inline-flex items-center gap-1 text-xs font-bold bg-primary text-primary-foreground px-2 py-1 rounded-full shadow-md z-10">
-                        <Star size={10} fill="currentColor" />
-                        פופולארי
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Added feedback */}
-                <AnimatePresence>
-                  {justAddedId === item.id && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="absolute inset-0 bg-primary/90 flex items-center justify-center"
-                    >
-                      <span className="text-primary-foreground text-2xl font-black flex items-center gap-2">
-                        <ShoppingBag size={24} />
-                        נוסף לסל!
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
-        </div>
+        <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk />
       </div>
 
       {/* Bottom cart bar */}
