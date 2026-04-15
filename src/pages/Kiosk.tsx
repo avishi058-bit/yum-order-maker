@@ -258,7 +258,6 @@ const Kiosk = () => {
                         <ShoppingBag size={24} />
                         נוסף לסל!
                       </span>
-                      </span>
                     </motion.div>
                   )}
                 </AnimatePresence>
