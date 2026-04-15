@@ -70,7 +70,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
             transition={{ duration: 0.5, delay: 0.45 }}
             className="flex flex-col items-center gap-4"
           >
-            <p className="text-lg font-bold text-foreground">איפה אוכלים? 🍽️</p>
+            
             <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
               <button
                 onClick={() => onDineInChoice(true)}
