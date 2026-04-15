@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removals, smashModifications, mealSideOptions, mealDrinkOptions } from "@/data/menu";
@@ -14,7 +14,7 @@ interface CheckoutFormProps {
   onSuccess: () => void;
 }
 
-const CheckoutForm = ({ items, total, onClose, onSuccess }: CheckoutFormProps) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, onClose, onSuccess }, ref) => {
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
   const [otpCode, setOtpCode] = useState("");
