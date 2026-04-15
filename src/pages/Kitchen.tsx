@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface OrderItem {
   id: string;
