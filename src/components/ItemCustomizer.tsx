@@ -182,13 +182,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             initial={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
             animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
             exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            drag={step !== "meal-upgrade" ? "y" : false}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.6 }}
-            onDrag={handleDrag}
-            onDragEnd={handleDragEnd}
-            style={{ y: step !== "meal-upgrade" ? dragY : undefined, opacity: step !== "meal-upgrade" ? sheetOpacity : 1 }}
+            transition={{ type: "tween", duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+            onTouchStart={step !== "meal-upgrade" ? handleTouchStart : undefined}
+            onTouchMove={step !== "meal-upgrade" ? handleTouchMove : undefined}
+            onTouchEnd={step !== "meal-upgrade" ? handleTouchEnd : undefined}
+            style={{
+              transform: step !== "meal-upgrade" && sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
+              transition: isDragging ? "none" : undefined,
+            }}
             className={`fixed z-50 flex flex-col ${
               step === "meal-upgrade" 
                 ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl bg-card text-card-foreground" 
