@@ -311,7 +311,7 @@ const Index = () => {
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-2">
-          <p className="text-foreground font-bold">הַבַּקְּתָה — המבורגר של מושבניקים 🐄</p>
+          <p className="text-foreground font-bold">הַבִּקְתָּה — המבורגר של מושבניקים 🐄</p>
           <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
           <a
             href="tel:058-4633-555"
