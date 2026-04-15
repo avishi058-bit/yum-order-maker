@@ -181,7 +181,7 @@ const Index = () => {
       return sum + (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
     }, 0);
     // Add extra sauce cost
-    if (!dineIn && selectedSauces.length > 0) {
+    if (dineIn === false && selectedSauces.length > 0) {
       const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
       const extraSauces = Math.max(0, totalSauceQty - freeSauces);
       base += extraSauces;
@@ -267,7 +267,7 @@ const Index = () => {
         onUpdateQuantity={updateQuantity}
         onCheckout={() => {
           setCartOpen(false);
-          if (!dineIn && burgerCount > 0) {
+          if (dineIn === false && burgerCount > 0) {
             setSauceSelectorOpen(true);
           } else {
             setCheckoutOpen(true);
