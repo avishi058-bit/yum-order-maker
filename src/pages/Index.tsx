@@ -193,13 +193,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {websiteClosed && (
+      {isClosed && (
         <div className="bg-destructive text-destructive-foreground text-center py-4 px-6 font-bold text-lg sticky top-0 z-50">
           🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!
         </div>
       )}
 
-      {!websiteClosed && totalItems > 0 && !cartOpen && (
+      {!isClosed && totalItems > 0 && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}
           className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
@@ -211,8 +211,8 @@ const Index = () => {
         </button>
       )}
 
-      <HeroSection onOrderClick={websiteClosed ? undefined : scrollToMenu} />
-      {websiteClosed ? (
+      <HeroSection onOrderClick={isClosed ? undefined : scrollToMenu} />
+      {isClosed ? (
         <div className="py-20 text-center text-muted-foreground">
           <p className="text-6xl mb-4">🔒</p>
           <p className="text-xl font-bold">ההזמנות סגורות כרגע</p>
