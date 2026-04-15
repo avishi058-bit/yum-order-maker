@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Star } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 
@@ -42,6 +42,12 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           {item.badge && <span className="text-lg">{item.badge}</span>}
           <h3 className="text-base font-bold">{item.name}</h3>
+          {item.popular && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full">
+              <Star size={10} fill="currentColor" />
+              פופולארי
+            </span>
+          )}
           {item.weight && (
             <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
               {item.weight}
