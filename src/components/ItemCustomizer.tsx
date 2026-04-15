@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
 import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
+import { menuImages } from "@/data/menuImages";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
@@ -162,15 +163,34 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
               </div>
             )}
 
-            {/* Header - hide on meal-upgrade centered modal */}
+            {/* Hero image + Header - hide on meal-upgrade centered modal */}
             {step !== "meal-upgrade" && (
-              <div className="flex items-center justify-between px-5 pb-4 pt-2 border-b border-gray-200">
-                <button onClick={handleClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <X size={20} />
-                </button>
-                <h2 className="text-2xl font-black flex-1 text-center">{item.name}</h2>
-                <div className="w-10" />
-              </div>
+              <>
+                {menuImages[item.id] && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 200, opacity: 1 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200, delay: 0.1 }}
+                    className="w-full overflow-hidden"
+                  >
+                    <motion.img
+                      src={menuImages[item.id]}
+                      alt={item.name}
+                      initial={{ scale: 1.3 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.15 }}
+                      className="w-full h-[200px] object-cover"
+                    />
+                  </motion.div>
+                )}
+                <div className="flex items-center justify-between px-5 pb-4 pt-2 border-b border-gray-200">
+                  <button onClick={handleClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <X size={20} />
+                  </button>
+                  <h2 className="text-2xl font-black flex-1 text-center">{item.name}</h2>
+                  <div className="w-10" />
+                </div>
+              </>
             )}
 
             <AnimatePresence mode="wait">

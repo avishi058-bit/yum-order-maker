@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { MenuItem, drinkSubOptions, drinkToAvailabilityId } from "@/data/menu";
+import { menuImages } from "@/data/menuImages";
 
 interface DrinkSelectorProps {
   item: MenuItem | null;
@@ -56,10 +57,28 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
           >
             <button
               onClick={handleClose}
-              className="absolute left-4 top-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
+              className="absolute left-4 top-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center z-10"
             >
               <X size={16} />
             </button>
+
+            {menuImages[item.id] && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 160, opacity: 1 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200, delay: 0.1 }}
+                className="w-full overflow-hidden rounded-xl mb-3 -mt-1"
+              >
+                <motion.img
+                  src={menuImages[item.id]}
+                  alt={item.name}
+                  initial={{ scale: 1.3 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.15 }}
+                  className="w-full h-[160px] object-cover"
+                />
+              </motion.div>
+            )}
 
             <h3 className="text-xl font-bold mb-1">{item.name}</h3>
             <p className="text-muted-foreground text-sm mb-4">
