@@ -167,23 +167,23 @@ const Kiosk = () => {
   return (
     <div className="fixed inset-0 bg-background flex flex-col overflow-hidden" dir="rtl">
       {/* Top bar */}
-      <div className="flex-none flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-        <button onClick={resetOrder} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowRight size={28} />
-          <span className="text-lg font-bold">חזרה</span>
+      <div className="flex-none flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+        <button onClick={resetOrder} className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors">
+          <ArrowRight size={32} />
+          <span className="text-xl font-black">חזרה</span>
         </button>
-        <h1 className="text-2xl font-black text-primary">הבקתה 🐄</h1>
+        <h1 className="text-3xl font-black text-primary">הבקתה 🐄</h1>
         {/* Dine-in toggle */}
-        <div className="bg-secondary rounded-full p-1 flex gap-1">
+        <div className="bg-gray-100 rounded-full p-1 flex gap-1">
           <button
             onClick={() => setDineIn(true)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"}`}
+            className={`px-6 py-2.5 rounded-full text-base font-black transition-all ${dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-gray-500"}`}
           >
             🪑 לשבת
           </button>
           <button
             onClick={() => setDineIn(false)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${!dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"}`}
+            className={`px-6 py-2.5 rounded-full text-base font-black transition-all ${!dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-gray-500"}`}
           >
             🥡 לקחת
           </button>
@@ -191,7 +191,7 @@ const Kiosk = () => {
       </div>
 
       {/* Category tabs */}
-      <div className="flex-none flex gap-2 px-4 py-3 bg-card/50 border-b border-border overflow-x-auto">
+      <div className="flex-none flex gap-2 px-4 py-3 bg-white/80 border-b border-gray-200 overflow-x-auto">
         {categories.map((cat) => {
           const count = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id)).length;
           if (count === 0) return null;
@@ -199,10 +199,10 @@ const Kiosk = () => {
             <button
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
-              className={`px-6 py-3 rounded-2xl text-lg font-bold whitespace-nowrap transition-all ${
+              className={`px-7 py-3.5 rounded-2xl text-xl font-black whitespace-nowrap transition-all ${
                 activeCategory === cat.key
                   ? "bg-primary text-primary-foreground shadow-lg scale-105"
-                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {cat.label}
@@ -211,39 +211,39 @@ const Kiosk = () => {
         })}
       </div>
 
-      {/* Menu grid - scrollable area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+      {/* Menu list - scrollable area */}
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="max-w-2xl mx-auto space-y-2">
           {filteredItems.map((item) => {
             const image = menuImages[item.id];
             return (
               <motion.div
                 key={item.id}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => handleAddItem(item)}
-                className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow active:bg-secondary/50 relative flex flex-col"
+                className="bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow active:bg-gray-50 relative flex items-center gap-4 p-3"
               >
                 {image && (
-                  <div className="relative w-full aspect-[4/3]">
+                  <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden">
                     <img src={image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
                     {item.popular && (
-                      <span className="absolute right-3 top-3 inline-flex items-center gap-1 text-sm font-bold bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md">
-                        <Star size={14} fill="currentColor" />
+                      <span className="absolute right-1 top-1 inline-flex items-center gap-0.5 text-[10px] font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full shadow-md">
+                        <Star size={10} fill="currentColor" />
                         פופולארי
                       </span>
                     )}
                   </div>
                 )}
-                <div className="p-4 flex flex-col items-center text-center flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap justify-center">
+                <div className="flex-1 flex flex-col justify-center min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {item.badge && <span className="text-2xl">{item.badge}</span>}
-                    <h3 className="font-black text-xl">{item.name}</h3>
+                    <h3 className="font-black text-2xl text-black">{item.name}</h3>
                   </div>
                   {item.weight && (
-                    <span className="text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full mb-2">{item.weight}</span>
+                    <span className="text-base text-gray-500 font-medium">{item.weight}</span>
                   )}
-                  <span className="text-primary font-black text-2xl mt-auto pt-2">₪{item.price}</span>
                 </div>
+                <span className="text-primary font-black text-2xl flex-shrink-0 px-2">₪{item.price}</span>
 
                 {/* Added feedback */}
                 <AnimatePresence>
@@ -254,8 +254,8 @@ const Kiosk = () => {
                       exit={{ opacity: 0, scale: 0.8 }}
                       className="absolute inset-0 bg-primary/90 flex items-center justify-center rounded-2xl"
                     >
-                      <span className="text-primary-foreground text-2xl font-black flex items-center gap-2">
-                        <ShoppingBag size={24} />
+                      <span className="text-primary-foreground text-3xl font-black flex items-center gap-2">
+                        <ShoppingBag size={28} />
                         נוסף לסל!
                       </span>
                     </motion.div>
