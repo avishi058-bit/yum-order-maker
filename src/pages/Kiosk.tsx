@@ -38,6 +38,7 @@ const Kiosk = () => {
   const [view, setView] = useState<KioskView>("welcome");
   const [activeCategory, setActiveCategory] = useState<string>("burger");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [orderSuccess, setOrderSuccess] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
@@ -349,9 +350,49 @@ const Kiosk = () => {
             onClose={() => setCheckoutOpen(false)}
             onSuccess={() => {
               setCheckoutOpen(false);
-              resetOrder();
+              setOrderSuccess(true);
+              setTimeout(() => {
+                setOrderSuccess(false);
+                resetOrder();
+              }, 4000);
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Order success screen */}
+      <AnimatePresence>
+        {orderSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center text-center p-8"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="flex flex-col items-center"
+            >
+              <p className="text-9xl mb-8">✅</p>
+              <p className="text-5xl font-black text-foreground mb-4">ההזמנה התקבלה!</p>
+              <p className="text-3xl text-muted-foreground mb-8">תודה רבה, ההזמנה בהכנה 🍔</p>
+              <motion.div
+                className="w-64 h-2 bg-secondary rounded-full overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <motion.div
+                  className="h-full bg-primary rounded-full"
+                  initial={{ width: "100%" }}
+                  animate={{ width: "0%" }}
+                  transition={{ duration: 4, ease: "linear" }}
+                />
+              </motion.div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
