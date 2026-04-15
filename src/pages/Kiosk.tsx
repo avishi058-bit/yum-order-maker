@@ -371,7 +371,7 @@ const Kiosk = () => {
               setTimeout(() => {
                 setOrderSuccess(false);
                 resetOrder();
-              }, 4000);
+              }, 1500);
             }}
           />
         )}
