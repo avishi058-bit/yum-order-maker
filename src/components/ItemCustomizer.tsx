@@ -184,12 +184,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
             {/* Header */}
             {step !== "meal-upgrade" && (
-              <div className="flex items-center justify-between px-5 pb-3 pt-2 border-b border-gray-200">
-                <button onClick={handleClose} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <X size={20} />
+              <div className={`flex items-center justify-between px-5 pb-3 pt-2 border-b border-gray-200 ${isKiosk ? "px-8 pb-5 pt-4" : ""}`}>
+                <button onClick={handleClose} className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`}>
+                  <X size={isKiosk ? 28 : 20} />
                 </button>
-                <h2 className="text-xl font-black flex-1 text-center">{item.name}</h2>
-                <div className="w-10" />
+                <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[28px]" : "text-xl"}`}>{item.name}</h2>
+                <div className={isKiosk ? "w-14" : "w-10"} />
               </div>
             )}
 
