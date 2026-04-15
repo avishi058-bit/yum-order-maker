@@ -144,26 +144,52 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const hasImage = !!menuImages[item.id];
 
-  // Touch-based swipe to close
+  // Swipe/drag to close
+  const canDragDown = () => {
+    const el = scrollRef.current;
+    return !el || el.scrollTop <= 0;
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    const el = scrollRef.current;
     const deltaY = e.touches[0].clientY - touchStartY.current;
-    // Only allow pull-down when scrolled to top
-    if (el && el.scrollTop <= 0 && deltaY > 0) {
-      e.preventDefault();
+    if (canDragDown() && deltaY > 0) {
       setIsDragging(true);
-      setSheetTranslateY(deltaY * 0.6); // dampen
+      setSheetTranslateY(deltaY * 0.6);
     }
   };
 
   const handleTouchEnd = () => {
-    if (sheetTranslateY > 120) {
+    if (sheetTranslateY > 80) {
       handleClose();
     }
+    setSheetTranslateY(0);
+    setIsDragging(false);
+  };
+
+  // Mouse drag support (for desktop)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    mouseDown.current = true;
+    touchStartY.current = e.clientY;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!mouseDown.current) return;
+    const deltaY = e.clientY - touchStartY.current;
+    if (canDragDown() && deltaY > 0) {
+      setIsDragging(true);
+      setSheetTranslateY(deltaY * 0.6);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (sheetTranslateY > 80) {
+      handleClose();
+    }
+    mouseDown.current = false;
     setSheetTranslateY(0);
     setIsDragging(false);
   };
