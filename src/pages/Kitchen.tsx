@@ -175,6 +175,29 @@ const Kitchen = () => {
     } catch {}
   };
 
+  const toggleAvailability = async (itemId: string, currentValue: boolean) => {
+    setAvailabilityItems((prev) =>
+      prev.map((item) => (item.item_id === itemId ? { ...item, available: !currentValue } : item))
+    );
+    const { error } = await supabase
+      .from("menu_availability")
+      .update({ available: !currentValue, updated_at: new Date().toISOString() })
+      .eq("item_id", itemId);
+    if (error) {
+      setAvailabilityItems((prev) =>
+        prev.map((item) => (item.item_id === itemId ? { ...item, available: currentValue } : item))
+      );
+    }
+  };
+
+  const availabilityGrouped = availabilityCategoryOrder
+    .map((cat) => ({
+      category: cat,
+      label: availabilityCategoryLabels[cat] || cat,
+      items: availabilityItems.filter((i) => i.category === cat),
+    }))
+    .filter((g) => g.items.length > 0);
+
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
     const updateData: any = { status: newStatus };
     if (newStatus === "preparing" && prepMinutes) {
