@@ -229,6 +229,32 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     transform: `translateY(${sheetTranslateY}px)`,
     transition: isDragging ? "none" : "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
   } : {};
+
+  return (
+    <AnimatePresence>
+      {item && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isClosing ? 0 : 0.6 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={handleClose}
+            className="fixed inset-0 bg-black z-50"
+          />
+          <motion.div
+            initial={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
+            animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
+            exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
+            transition={{ type: "tween", duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+            onTouchStart={isNotMealUpgrade ? handleTouchStart : undefined}
+            onTouchMove={isNotMealUpgrade ? handleTouchMove : undefined}
+            onTouchEnd={isNotMealUpgrade ? handleTouchEnd : undefined}
+            onMouseDown={isNotMealUpgrade ? handleMouseDown : undefined}
+            onMouseMove={isNotMealUpgrade ? handleMouseMove : undefined}
+            onMouseUp={isNotMealUpgrade ? handleMouseUp : undefined}
+            onMouseLeave={isNotMealUpgrade ? handleMouseUp : undefined}
+            style={sheetStyle}
             className={`fixed z-50 flex flex-col ${
               step === "meal-upgrade" 
                 ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl bg-card text-card-foreground" 
