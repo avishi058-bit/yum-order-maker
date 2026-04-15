@@ -102,23 +102,28 @@ const Kitchen = () => {
 
   useEffect(() => {
     fetchOrders();
+    fetchAvailability();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel("orders-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        () => {
-          fetchOrders();
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
+      .subscribe();
+
+    const availChannel = supabase
+      .channel("availability-realtime")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
+        const updated = payload.new as AvailabilityItem;
+        setAvailabilityItems((prev) =>
+          prev.map((item) => (item.item_id === updated.item_id ? { ...item, available: updated.available } : item))
+        );
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(availChannel);
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, fetchAvailability]);
 
   // Play sound + auto-print on new order
   useEffect(() => {
