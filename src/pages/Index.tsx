@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
