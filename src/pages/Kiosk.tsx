@@ -405,7 +405,7 @@ const Kiosk = () => {
                   className="h-full bg-primary rounded-full"
                   initial={{ width: "100%" }}
                   animate={{ width: "0%" }}
-                  transition={{ duration: 4, ease: "linear" }}
+                  transition={{ duration: 1.5, ease: "linear" }}
                 />
               </motion.div>
             </motion.div>
