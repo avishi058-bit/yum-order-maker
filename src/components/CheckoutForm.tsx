@@ -355,6 +355,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 ביטול
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setForm({ name: "טסט", phone: "0501234567", notes: "" });
+                setStep("details");
+              }}
+              className="w-full text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors underline"
+            >
+              דלג (מצב בדיקה)
+            </button>
           </div>
         )}
 
