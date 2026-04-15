@@ -42,7 +42,7 @@ const HeroSection = ({ onOrderClick }: { onOrderClick: () => void }) => {
           transition={{ duration: 0.8, delay: 0.15 }}
           className="text-xl md:text-2xl text-primary font-bold mb-2"
         >
-          🐄 המבורגר של מושבניקים
+          🚜 המבורגר של מושבניקים
         </motion.p>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
