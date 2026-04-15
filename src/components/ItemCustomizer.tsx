@@ -21,8 +21,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const dragY = useMotionValue(0);
-  const sheetOpacity = useTransform(dragY, [0, 300], [1, 0.5]);
+  const touchStartY = useRef(0);
+  const [sheetTranslateY, setSheetTranslateY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
