@@ -405,6 +405,17 @@ const Kitchen = () => {
               <Package size={14} className="inline ml-1" />
               מלאי
             </button>
+            <button
+              onClick={() => setViewMode("dashboard")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                viewMode === "dashboard"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              <BarChart3 size={14} className="inline ml-1" />
+              דשבורד
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
