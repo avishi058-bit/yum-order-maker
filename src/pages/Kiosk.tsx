@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import KioskWelcome from "@/components/KioskWelcome";
@@ -9,6 +9,7 @@ import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
+import ItemPreview from "@/components/ItemPreview";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -46,7 +47,8 @@ const Kiosk = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
-
+  const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const cartButtonRef = useRef<HTMLDivElement>(null);
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
@@ -57,16 +59,21 @@ const Kiosk = () => {
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
       setDrinkItem(item);
     } else {
-      setCart((prev) => {
-        const existing = prev.find((c) => c.id === item.id);
-        if (existing) {
-          return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
-        }
-        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
-      });
-      setJustAddedId(item.id);
-      setTimeout(() => setJustAddedId(null), 1200);
+      // Simple items (sides, simple drinks) → open preview
+      setPreviewItem(item);
     }
+  }, []);
+
+  const handlePreviewAdd = useCallback((item: MenuItem) => {
+    setCart((prev) => {
+      const existing = prev.find((c) => c.id === item.id);
+      if (existing) {
+        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
+      }
+      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+    });
+    setJustAddedId(item.id);
+    setTimeout(() => setJustAddedId(null), 1200);
   }, []);
 
   const handleCustomizerConfirm = useCallback(
@@ -276,7 +283,7 @@ const Kiosk = () => {
           onClick={() => setCartOpen(true)}
         >
           <div className="flex items-center gap-3">
-            <div className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
+            <div ref={cartButtonRef} className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
               <ShoppingBag size={24} />
             </div>
             <div>
@@ -293,6 +300,7 @@ const Kiosk = () => {
       <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} />
       <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
       <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
+      <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
 
       <CartDrawer
         open={cartOpen}
