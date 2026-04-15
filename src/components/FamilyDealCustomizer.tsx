@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { removals, dealDrinkOptions } from "@/data/menu";
+import { removals, dealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 
 interface FamilyDealCustomizerProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
 type Step = "burger-1" | "burger-2" | "burger-3" | "burger-4" | "burger-5" | "drinks-ask" | "drink-count" | `drink-${number}`;
@@ -43,7 +44,12 @@ const familyDrinkOptions = [
 const softDrinks = familyDrinkOptions.filter((d) => d.category === "soft");
 const beerDrinks = familyDrinkOptions.filter((d) => d.category === "beer");
 
-const FamilyDealCustomizer = ({ open, onClose, onConfirm }: FamilyDealCustomizerProps) => {
+const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyDealCustomizerProps) => {
+  const isDrinkUnavailable = (drinkId: string) => {
+    const availId = drinkToAvailabilityId[drinkId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
   const [step, setStep] = useState<string>("burger-1");
   const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>(
     Array.from({ length: 5 }, () => ({ removals: ["no-changes"], name: "" }))
