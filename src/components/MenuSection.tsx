@@ -15,7 +15,7 @@ const categories = [
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
-const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void }) => {
+const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean }) => {
   const image = menuImages[item.id];
   const [justAdded, setJustAdded] = useState(false);
 
@@ -34,7 +34,11 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       viewport={{ once: true }}
       layout={false}
       onClick={handleAdd}
-      className="bg-card border-b border-border py-4 px-2 flex items-center gap-4 group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors"
+      className={`bg-card group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors ${
+        isKiosk 
+          ? "flex flex-col items-center text-center border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow" 
+          : "border-b border-border py-4 px-2 flex items-center gap-4"
+      }`}
       dir="rtl"
     >
       {/* Text content - right side */}
@@ -91,9 +95,9 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
   );
 };
 
-const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable }: { onAddItem: (item: MenuItem) => void; dineIn: boolean; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean }) => {
+const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
   return (
-    <section id="menu" className="py-16 px-4 max-w-2xl mx-auto">
+    <section id="menu" className={`py-16 px-4 mx-auto ${isKiosk ? 'max-w-6xl' : 'max-w-2xl'}`}>
       {/* Dine-in / Takeaway toggle */}
       <div className="flex justify-center mb-10">
         <div className="bg-secondary rounded-full p-1 flex gap-1">
@@ -121,9 +125,9 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable }: { onAdd
         return (
           <div key={cat.key} className="mb-10">
             <h3 className="text-2xl font-bold mb-3 text-primary text-right">{cat.label}</h3>
-            <div className="divide-y divide-border">
+            <div className={isKiosk ? "grid grid-cols-2 lg:grid-cols-3 gap-4" : "divide-y divide-border"}>
               {items.map((item) => (
-                <MenuCard key={item.id} item={item} onAdd={onAddItem} />
+                <MenuCard key={item.id} item={item} onAdd={onAddItem} isKiosk={isKiosk} />
               ))}
             </div>
           </div>
