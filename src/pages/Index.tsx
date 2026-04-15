@@ -315,6 +315,14 @@ const Index = () => {
         )}
       </AnimatePresence>
 
+      {/* Live order tracker */}
+      {trackingOrderNumber !== null && (
+        <OrderLiveTracker
+          orderNumber={trackingOrderNumber}
+          onClose={() => setTrackingOrderNumber(null)}
+        />
+      )}
+
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-2">
           <p className="text-foreground font-bold">הַבִּקְתָּה — המבורגר של מושבניקים 🐄</p>
