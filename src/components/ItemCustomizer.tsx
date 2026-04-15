@@ -153,12 +153,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         <p className="text-sm text-muted-foreground text-right mb-4">{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                         <div className="space-y-0">
                           {removalsList.map((r) => {
-                            const active = selectedRemovals.includes(r.id);
+                            const ingredientUnavailable = getIngredientUnavailable(r.id);
+                            const active = selectedRemovals.includes(r.id) || ingredientUnavailable;
+                            const isLocked = ingredientUnavailable;
                             return (
                               <button
                                 key={r.id}
-                                onClick={() => toggleRemoval(r.id)}
-                                className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                                onClick={() => !isLocked && toggleRemoval(r.id)}
+                                className={`w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0 ${isLocked ? "opacity-70" : ""}`}
                               >
                                 <div
                                   className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -173,7 +175,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                                     />
                                   )}
                                 </div>
-                                <span className="font-medium text-base">{r.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-base">{r.name}</span>
+                                  {isLocked && (
+                                    <span className="text-[10px] text-destructive font-bold">(חסר במלאי כרגע)</span>
+                                  )}
+                                </div>
                               </button>
                             );
                           })}
