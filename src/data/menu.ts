@@ -401,6 +401,44 @@ export interface SauceOption {
   recommended?: boolean;
 }
 
+// Mapping from any drink option ID to canonical availability ID
+export const drinkToAvailabilityId: Record<string, string> = {
+  // can sub-options (DrinkSelector)
+  "can-cola": "drink-cola", "can-zero": "drink-zero", "can-fanta": "drink-fanta",
+  "can-sprite": "drink-sprite", "can-blu": "drink-blu", "can-wave": "drink-wave",
+  "can-mojito": "drink-blu-mojito", "can-watermelon": "drink-watermelon", "can-day": "drink-blu-day",
+  // bottle sub-options
+  "bottle-grapes": "drink-grapes", "bottle-apples": "drink-apples",
+  // beer sub-options
+  "beer-carlsberg": "drink-carlsberg", "beer-goldstar": "drink-goldstar",
+  "beer-heineken": "drink-heineken", "beer-corona": "drink-corona",
+  "beer-hoegaarden": "drink-hoegaarden", "beer-laffe": "drink-laffe", "beer-unfiltered": "drink-unfiltered",
+  // meal drink options (ItemCustomizer)
+  "drink-cola": "drink-cola", "drink-zero": "drink-zero", "drink-fanta": "drink-fanta",
+  "drink-fanta-grape": "drink-fanta-grape", "drink-fanta-exotic": "drink-fanta-exotic",
+  "drink-sprite": "drink-sprite", "drink-sprite-zero": "drink-sprite-zero",
+  "drink-blu": "drink-blu", "drink-blu-mojito": "drink-blu-mojito", "drink-blu-day": "drink-blu-day",
+  "drink-goldstar": "drink-goldstar", "drink-heineken": "drink-heineken",
+  "drink-corona": "drink-corona", "drink-carlsberg": "drink-carlsberg",
+  "drink-laffe": "drink-laffe", "drink-unfiltered": "drink-unfiltered", "drink-guinness": "drink-guinness",
+  // deal drink options (DealCustomizer)
+  "deal-cola": "drink-cola", "deal-zero": "drink-zero", "deal-fanta": "drink-fanta",
+  "deal-fanta-grape": "drink-fanta-grape", "deal-fanta-exotic": "drink-fanta-exotic",
+  "deal-sprite": "drink-sprite", "deal-sprite-zero": "drink-sprite-zero",
+  "deal-blu": "drink-blu", "deal-blu-mojito": "drink-blu-mojito", "deal-blu-day": "drink-blu-day",
+  "deal-grapes": "drink-grapes", "deal-oranges": "drink-grapes", "deal-flavored-water": "drink-flavored-water",
+  "deal-goldstar": "drink-goldstar", "deal-heineken": "drink-heineken",
+  "deal-corona": "drink-corona", "deal-carlsberg": "drink-carlsberg",
+  "deal-laffe": "drink-laffe", "deal-unfiltered": "drink-unfiltered", "deal-guinness": "drink-guinness",
+  // family deal drink options (FamilyDealCustomizer)
+  "fam-cola": "drink-cola", "fam-zero": "drink-zero", "fam-fanta": "drink-fanta",
+  "fam-sprite": "drink-sprite", "fam-blu": "drink-blu",
+  "fam-grapes": "drink-grapes", "fam-apples": "drink-apples",
+  "fam-goldstar": "drink-goldstar", "fam-heineken": "drink-heineken",
+  "fam-corona": "drink-corona", "fam-carlsberg": "drink-carlsberg",
+  "fam-laffe": "drink-laffe", "fam-unfiltered": "drink-unfiltered", "fam-guinness": "drink-guinness",
+};
+
 export const sauceOptions: SauceOption[] = [
   { id: "ketchup", name: "קטשופ" },
   { id: "mayo", name: "מיונז" },
