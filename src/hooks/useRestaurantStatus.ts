@@ -27,7 +27,7 @@ export const useRestaurantStatus = () => {
     fetch();
 
     const channel = supabase
-      .channel("restaurant-status")
+      .channel(channelId.current)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
