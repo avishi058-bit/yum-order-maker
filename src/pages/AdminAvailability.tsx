@@ -18,9 +18,10 @@ const categoryLabels: Record<string, string> = {
   deal: "🤝 דילים",
   topping: "🧀 תוספות על ההמבורגר",
   sauce: "🥫 רטבים",
+  ingredient: "🥬 ירקות ורטבים",
 };
 
-const categoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce"];
+const categoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient"];
 
 const AdminAvailability = () => {
   const [items, setItems] = useState<AvailabilityItem[]>([]);
