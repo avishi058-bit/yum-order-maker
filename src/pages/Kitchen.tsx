@@ -625,6 +625,12 @@ const Kitchen = () => {
                   {order.notes && (
                     <p className="text-sm text-primary mt-1">📝 {order.notes}</p>
                   )}
+                  {order.payment_method === "cash" && (
+                    <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
+                  )}
+                  {order.payment_method === "credit" && (
+                    <p className="text-sm font-bold text-green-400 mt-1">💳 שולם באשראי</p>
+                  )}
                 </div>
 
                 {/* Items */}
