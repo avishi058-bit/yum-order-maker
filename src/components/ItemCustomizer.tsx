@@ -148,7 +148,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl max-h-[85vh] flex flex-col"
+            className={`fixed z-50 bg-card flex flex-col ${
+              step === "meal-upgrade" 
+                ? "inset-0 m-auto w-[90vw] max-w-md h-fit rounded-3xl shadow-2xl" 
+                : "bottom-0 left-0 right-0 rounded-t-3xl max-h-[85vh]"
+            }`}
             dir="rtl"
           >
             {/* Handle */}

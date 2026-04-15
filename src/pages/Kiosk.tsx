@@ -17,7 +17,7 @@ import { Star } from "lucide-react";
 
 const categories = [
   { key: "burger" as const, label: "🍔 המבורגרים" },
-  { key: "meal" as const, label: "🍽️ ארוחות" },
+  { key: "meal" as const, label: "🍽️ ארוחות עסקיות" },
   { key: "side" as const, label: "🍟 תוספות" },
   { key: "drink" as const, label: "🍺 שתייה" },
   { key: "deal" as const, label: "🤝 דילים" },
