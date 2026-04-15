@@ -13,9 +13,12 @@ import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
+import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
+  const { status: restaurantStatus } = useRestaurantStatus();
+  const websiteClosed = !restaurantStatus.website_open;
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
