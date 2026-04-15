@@ -323,6 +323,17 @@ const Kitchen = () => {
               <History size={14} className="inline ml-1" />
               היסטוריה
             </button>
+            <button
+              onClick={() => setViewMode("availability")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                viewMode === "availability"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              <Package size={14} className="inline ml-1" />
+              מלאי
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
