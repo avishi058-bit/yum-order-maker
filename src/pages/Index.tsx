@@ -12,6 +12,7 @@ import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
+import OrderLiveTracker from "@/components/OrderLiveTracker";
 import KioskWelcome from "@/components/KioskWelcome";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -34,6 +35,7 @@ const Index = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const [trackingOrderNumber, setTrackingOrderNumber] = useState<number | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
   const addToCartDirect = useCallback((item: MenuItem) => {
@@ -300,14 +302,26 @@ const Index = () => {
             items={cart}
             total={getTotal()}
             onClose={() => setCheckoutOpen(false)}
-            onSuccess={() => {
+            onSuccess={(orderNumber) => {
               setCheckoutOpen(false);
               setCart([]);
-              if (isStation) setShowKioskWelcome(true);
+              if (isStation) {
+                setShowKioskWelcome(true);
+              } else if (orderNumber) {
+                setTrackingOrderNumber(orderNumber);
+              }
             }}
           />
         )}
       </AnimatePresence>
+
+      {/* Live order tracker */}
+      {trackingOrderNumber !== null && (
+        <OrderLiveTracker
+          orderNumber={trackingOrderNumber}
+          onClose={() => setTrackingOrderNumber(null)}
+        />
+      )}
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-2">

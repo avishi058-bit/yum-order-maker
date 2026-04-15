@@ -340,7 +340,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.order_number}`,
       });
-      window.open(`/track?order=${order.order_number}`, "_blank");
       onSuccess(order.order_number);
     } catch (error) {
       console.error("Order error:", error);
