@@ -42,12 +42,6 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           {item.badge && <span className="text-lg">{item.badge}</span>}
           <h3 className="text-base font-bold">{item.name}</h3>
-          {item.popular && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full">
-              <Star size={10} fill="currentColor" />
-              פופולארי
-            </span>
-          )}
           {item.weight && (
             <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
               {item.weight}
@@ -60,13 +54,21 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
 
       {/* Image - left side */}
       {image && (
-        <div className="w-28 h-28 rounded-xl overflow-hidden flex-shrink-0">
-          <img
-            src={image}
-            alt={item.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+        <div className="relative w-28 h-28 flex-shrink-0">
+          <div className="w-full h-full rounded-xl overflow-hidden">
+            <img
+              src={image}
+              alt={item.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          {item.popular && (
+            <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full shadow-md z-10">
+              <Star size={9} fill="currentColor" />
+              פופולארי
+            </span>
+          )}
         </div>
       )}
 
