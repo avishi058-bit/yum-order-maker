@@ -31,6 +31,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     "no-onion": "onion",
   };
 
+  // Map meal side option IDs to availability IDs
+  const sideToAvailability: Record<string, string> = {
+    "side-fries": "fries",
+    "side-waffle": "waffle-fries",
+    "side-onion-rings": "onion-rings",
+    "side-tempura": "tempura-onion",
+  };
+
+  const isSideUnavailable = (sideId: string) => {
+    const availId = sideToAvailability[sideId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
+
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
