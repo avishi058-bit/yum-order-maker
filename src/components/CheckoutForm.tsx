@@ -241,6 +241,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       }
 
       const baseUrl = window.location.origin;
+      const isKiosk = window.location.pathname === "/kiosk";
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
         {
