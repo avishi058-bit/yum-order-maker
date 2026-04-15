@@ -169,6 +169,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                         <div className="space-y-0">
                           {toppings.map((t: Topping) => {
                             const active = selectedToppings.includes(t.id);
+                            const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
                             return (
                               <button
                                 key={t.id}
@@ -193,7 +194,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium text-base">{t.name}</span>
-                                  {t.recommended && (
+                                  {showRecommended && (
                                     <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
                                       🔥 הולך טוב עם המנה
                                     </span>
