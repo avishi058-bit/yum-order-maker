@@ -354,7 +354,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
                   <motion.button
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => setStep("drink-select")}
+                    onClick={() => {
+                      if (isDrinkUnavailable(selectedDrink)) {
+                        const firstAvail = mealDrinkOptions.find((d) => !isDrinkUnavailable(d.id));
+                        if (firstAvail) setSelectedDrink(firstAvail.id);
+                      }
+                      setStep("drink-select");
+                    }}
                     className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-8"
                   >
                     המשך
