@@ -103,8 +103,6 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
 
   // Intersection observer for auto-highlighting active category
   useEffect(() => {
-    if (!isKiosk) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (isScrollingToCategory.current) return;
@@ -123,7 +121,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     });
 
     return () => observer.disconnect();
-  }, [isKiosk]);
+  }, []);
 
   const scrollToCategory = useCallback((key: string) => {
     setActiveCategory(key as CategoryKey);
