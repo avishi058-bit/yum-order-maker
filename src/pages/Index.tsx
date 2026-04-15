@@ -12,6 +12,7 @@ import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
+import OrderLiveTracker from "@/components/OrderLiveTracker";
 import KioskWelcome from "@/components/KioskWelcome";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
