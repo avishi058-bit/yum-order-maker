@@ -143,7 +143,6 @@ const Kiosk = () => {
   const resetOrder = useCallback(() => {
     setCart([]);
     setView("welcome");
-    setActiveCategory("burger");
     setDineIn(true);
     setSelectedSauces([]);
     setCartOpen(false);
@@ -158,7 +157,7 @@ const Kiosk = () => {
 
   const { countdown } = useKioskInactivityTimer(view === "menu", resetOrder);
 
-  const filteredItems = menuItems.filter((i) => i.category === activeCategory && isAvailable(i.id));
+  
 
   if (isClosed) {
     return (
