@@ -163,6 +163,27 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_status: {
+        Row: {
+          id: string
+          station_open: boolean
+          updated_at: string
+          website_open: boolean
+        }
+        Insert: {
+          id?: string
+          station_open?: boolean
+          updated_at?: string
+          website_open?: boolean
+        }
+        Update: {
+          id?: string
+          station_open?: boolean
+          updated_at?: string
+          website_open?: boolean
+        }
+        Relationships: []
+      }
       verification_codes: {
         Row: {
           code: string

@@ -13,9 +13,12 @@ import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
+import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
+  const { status: restaurantStatus } = useRestaurantStatus();
+  const websiteClosed = !restaurantStatus.website_open;
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -189,7 +192,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {totalItems > 0 && !cartOpen && (
+      {websiteClosed && (
+        <div className="bg-destructive text-destructive-foreground text-center py-4 px-6 font-bold text-lg sticky top-0 z-50">
+          🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!
+        </div>
+      )}
+
+      {!websiteClosed && totalItems > 0 && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}
           className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
@@ -201,8 +210,16 @@ const Index = () => {
         </button>
       )}
 
-      <HeroSection onOrderClick={scrollToMenu} />
-      <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} />
+      <HeroSection onOrderClick={websiteClosed ? undefined : scrollToMenu} />
+      {websiteClosed ? (
+        <div className="py-20 text-center text-muted-foreground">
+          <p className="text-6xl mb-4">🔒</p>
+          <p className="text-xl font-bold">ההזמנות סגורות כרגע</p>
+          <p className="text-sm mt-2">נחזור בקרוב!</p>
+        </div>
+      ) : (
+        <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} />
+      )}
 
       <ItemCustomizer
         item={customizerItem}
