@@ -145,7 +145,8 @@ const Kiosk = () => {
   const resetOrder = useCallback(() => {
     setCart([]);
     setView("welcome");
-    setDineIn(true);
+    setDineIn(null);
+    setDineInSelectorOpen(false);
     setSelectedSauces([]);
     setCartOpen(false);
     setCheckoutOpen(false);
