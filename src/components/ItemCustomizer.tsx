@@ -155,19 +155,23 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             }`}
             dir="rtl"
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-muted" />
-            </div>
+            {/* Handle - hide on meal-upgrade centered modal */}
+            {step !== "meal-upgrade" && (
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1.5 rounded-full bg-muted" />
+              </div>
+            )}
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pb-4 border-b border-border">
-              <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                <X size={18} />
-              </button>
-              <h2 className="text-lg font-bold flex-1 text-center">{item.name}</h2>
-              <div className="w-9" />
-            </div>
+            {/* Header - hide on meal-upgrade centered modal */}
+            {step !== "meal-upgrade" && (
+              <div className="flex items-center justify-between px-5 pb-4 pt-2 border-b border-border">
+                <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                  <X size={18} />
+                </button>
+                <h2 className="text-lg font-bold flex-1 text-center">{item.name}</h2>
+                <div className="w-9" />
+              </div>
+            )}
 
             <AnimatePresence mode="wait">
               {step === "customize" && (
