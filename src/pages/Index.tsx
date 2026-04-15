@@ -243,6 +243,17 @@ const Index = () => {
         }}
       />
 
+      <SauceSelector
+        open={sauceSelectorOpen}
+        freeSauces={freeSauces}
+        onClose={() => setSauceSelectorOpen(false)}
+        onConfirm={(sauces) => {
+          setSelectedSauces(sauces);
+          setSauceSelectorOpen(false);
+          setCheckoutOpen(true);
+        }}
+      />
+
       <AnimatePresence>
         {checkoutOpen && (
           <CheckoutForm
