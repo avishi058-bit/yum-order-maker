@@ -200,26 +200,45 @@ const Kitchen = () => {
   };
 
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
+    const newValue = !currentValue;
+    // Determine which items to toggle (burger + its meal)
+    const idsToToggle = [itemId];
+    const linkedMeal = burgerToMeal[itemId];
+    if (linkedMeal && !newValue) {
+      // Turning off a burger → also turn off its meal
+      idsToToggle.push(linkedMeal);
+    }
+
+    // Optimistic update
     setAvailabilityItems((prev) =>
-      prev.map((item) => (item.item_id === itemId ? { ...item, available: !currentValue } : item))
+      prev.map((item) => (idsToToggle.includes(item.item_id) ? { ...item, available: newValue } : item))
     );
-    const { error } = await supabase
-      .from("menu_availability")
-      .update({ available: !currentValue, updated_at: new Date().toISOString() })
-      .eq("item_id", itemId);
-    if (error) {
-      setAvailabilityItems((prev) =>
-        prev.map((item) => (item.item_id === itemId ? { ...item, available: currentValue } : item))
-      );
+
+    // Update all in DB
+    for (const id of idsToToggle) {
+      const { error } = await supabase
+        .from("menu_availability")
+        .update({ available: newValue, updated_at: new Date().toISOString() })
+        .eq("item_id", id);
+      if (error) {
+        setAvailabilityItems((prev) =>
+          prev.map((item) => (item.item_id === id ? { ...item, available: currentValue } : item))
+        );
+      }
     }
   };
 
   const availabilityGrouped = availabilityCategoryOrder
-    .map((cat) => ({
-      category: cat,
-      label: availabilityCategoryLabels[cat] || cat,
-      items: availabilityItems.filter((i) => i.category === cat),
-    }))
+    .map((cat) => {
+      const order = itemOrder[cat] || [];
+      const catItems = availabilityItems.filter((i) => i.category === cat);
+      catItems.sort((a, b) => {
+        const ai = order.indexOf(a.item_id);
+        const bi = order.indexOf(b.item_id);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      });
+      return { category: cat, label: availabilityCategoryLabels[cat] || cat, items: catItems };
+    })
     .filter((g) => g.items.length > 0);
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
