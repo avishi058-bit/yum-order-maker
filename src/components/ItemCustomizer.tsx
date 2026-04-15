@@ -22,10 +22,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   if (!item) return null;
 
+  // Map removal IDs to ingredient availability IDs
+  const removalToIngredient: Record<string, string> = {
+    "no-lettuce": "lettuce",
+    "no-tomato": "tomato",
+    "no-pickles": "pickles",
+    "no-aioli": "aioli",
+    "no-onion": "onion",
+  };
+
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
   const removalsList = isSmash ? smashModifications : removals;
+
+  // Check which ingredients are unavailable
+  const getIngredientUnavailable = (removalId: string) => {
+    const ingredientId = removalToIngredient[removalId];
+    if (!ingredientId || !isAvailable) return false;
+    return !isAvailable(ingredientId);
+  };
 
   const toggleTopping = (id: string) => {
     setSelectedToppings((prev) =>
