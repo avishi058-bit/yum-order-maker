@@ -54,6 +54,30 @@ const availabilityCategoryLabels: Record<string, string> = {
 
 const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient"];
 
+// Fixed order of items within each category to match the menu
+const itemOrder: Record<string, string[]> = {
+  burger: ["classic", "smash-moshavnikim", "avishai", "double", "crazy-smash", "smash-double-cheese", "special-hadegel", "haf-mifsha"],
+  meal: ["meal-classic", "meal-smash-moshavnikim", "meal-avishai", "meal-double", "meal-crazy-smash", "meal-smash-double-cheese", "meal-special-hadegel", "meal-haf-mifsha"],
+  side: ["fries", "waffle-fries", "onion-rings", "tempura-onion", "friends-mix"],
+  drink: ["can", "bottle", "beer-regular", "beer-premium", "beer-weiss"],
+  deal: ["family-deal", "friends-deal"],
+  topping: ["onion-jam", "peanut-butter", "fried-onion", "garlic-confit", "egg", "vegan-cheddar", "roastbeef", "extra-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
+  sauce: ["ketchup", "mayo", "chili", "plum"],
+  ingredient: ["lettuce", "tomato", "pickles", "aioli", "onion"],
+};
+
+// Burger to meal mapping
+const burgerToMeal: Record<string, string> = {
+  classic: "meal-classic",
+  "smash-moshavnikim": "meal-smash-moshavnikim",
+  avishai: "meal-avishai",
+  double: "meal-double",
+  "crazy-smash": "meal-crazy-smash",
+  "smash-double-cheese": "meal-smash-double-cheese",
+  "special-hadegel": "meal-special-hadegel",
+  "haf-mifsha": "meal-haf-mifsha",
+};
+
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -176,26 +200,45 @@ const Kitchen = () => {
   };
 
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
+    const newValue = !currentValue;
+    // Determine which items to toggle (burger + its meal)
+    const idsToToggle = [itemId];
+    const linkedMeal = burgerToMeal[itemId];
+    if (linkedMeal && !newValue) {
+      // Turning off a burger → also turn off its meal
+      idsToToggle.push(linkedMeal);
+    }
+
+    // Optimistic update
     setAvailabilityItems((prev) =>
-      prev.map((item) => (item.item_id === itemId ? { ...item, available: !currentValue } : item))
+      prev.map((item) => (idsToToggle.includes(item.item_id) ? { ...item, available: newValue } : item))
     );
-    const { error } = await supabase
-      .from("menu_availability")
-      .update({ available: !currentValue, updated_at: new Date().toISOString() })
-      .eq("item_id", itemId);
-    if (error) {
-      setAvailabilityItems((prev) =>
-        prev.map((item) => (item.item_id === itemId ? { ...item, available: currentValue } : item))
-      );
+
+    // Update all in DB
+    for (const id of idsToToggle) {
+      const { error } = await supabase
+        .from("menu_availability")
+        .update({ available: newValue, updated_at: new Date().toISOString() })
+        .eq("item_id", id);
+      if (error) {
+        setAvailabilityItems((prev) =>
+          prev.map((item) => (item.item_id === id ? { ...item, available: currentValue } : item))
+        );
+      }
     }
   };
 
   const availabilityGrouped = availabilityCategoryOrder
-    .map((cat) => ({
-      category: cat,
-      label: availabilityCategoryLabels[cat] || cat,
-      items: availabilityItems.filter((i) => i.category === cat),
-    }))
+    .map((cat) => {
+      const order = itemOrder[cat] || [];
+      const catItems = availabilityItems.filter((i) => i.category === cat);
+      catItems.sort((a, b) => {
+        const ai = order.indexOf(a.item_id);
+        const bi = order.indexOf(b.item_id);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      });
+      return { category: cat, label: availabilityCategoryLabels[cat] || cat, items: catItems };
+    })
     .filter((g) => g.items.length > 0);
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
