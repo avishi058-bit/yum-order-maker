@@ -130,10 +130,6 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange }: { onAddItem: (item: 
         );
       })}
 
-      <div className="mt-10 bg-card border border-primary/30 rounded-xl p-6 text-center">
-        <h3 className="text-xl font-bold text-primary mb-2">🍽️ שדרוג לארוחה עסקית</h3>
-        <p className="text-muted-foreground">המבורגר + צ׳יפס + שתייה — רק <span className="text-primary font-bold">+₪23</span></p>
-      </div>
     </section>
   );
 };
