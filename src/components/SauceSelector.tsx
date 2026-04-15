@@ -139,7 +139,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm }: SauceSelectorPr
                 onClick={() => { onConfirm([]); setSauces({}); }}
                 className="w-full text-muted-foreground text-sm py-2"
               >
-                דלג
+                דלג — לא צריך רטבים בצד
               </button>
             </div>
           </motion.div>
