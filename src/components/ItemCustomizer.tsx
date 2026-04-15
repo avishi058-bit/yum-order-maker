@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
@@ -41,6 +41,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const isSideUnavailable = (sideId: string) => {
     const availId = sideToAvailability[sideId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
+
+  const isDrinkUnavailable = (drinkId: string) => {
+    const availId = drinkToAvailabilityId[drinkId];
     if (!availId || !isAvailable) return false;
     return !isAvailable(availId);
   };
