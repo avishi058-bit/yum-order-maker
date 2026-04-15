@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { removals, dealDrinkOptions, DrinkOption } from "@/data/menu";
+import { removals, dealDrinkOptions, DrinkOption, drinkToAvailabilityId } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 
 interface DealCustomizerProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
 type Step = "burger-1" | "burger-2" | "burger-3" | "drink-1" | "drink-2" | "drink-3";
@@ -21,7 +22,12 @@ const stepLabels: Record<Step, string> = {
   "drink-3": "שתייה 3 מתוך 3",
 };
 
-const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
+const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomizerProps) => {
+  const isDrinkUnavailable = (drinkId: string) => {
+    const availId = drinkToAvailabilityId[drinkId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
   const [step, setStep] = useState<Step>("burger-1");
   const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>([
     { removals: ["no-changes"], name: "" },
@@ -232,31 +238,30 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
                     <div className="space-y-0">
                       {softDrinks.map((drink) => {
                         const active = selectedDrinks[currentDrinkIndex] === drink.id;
+                        const unavailable = isDrinkUnavailable(drink.id);
                         return (
                           <button
                             key={drink.id}
-                            onClick={() => setDrink(currentDrinkIndex, drink.id)}
-                            className="w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0"
+                            disabled={unavailable}
+                            onClick={() => !unavailable && setDrink(currentDrinkIndex, drink.id)}
+                            className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
                               <div
                                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
                                 }`}
                               >
-                                {active && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-2 h-2 rounded-full bg-primary-foreground"
-                                  />
+                                {active && !unavailable && (
+                                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 rounded-full bg-primary-foreground" />
                                 )}
                               </div>
-                              {drink.price > 0 && (
+                              {unavailable && <span className="text-xs text-destructive">(אזל)</span>}
+                              {!unavailable && drink.price > 0 && (
                                 <span className="text-xs text-muted-foreground">+₪{drink.price}</span>
                               )}
                             </div>
-                            <span className="font-medium text-sm">{drink.name}</span>
+                            <span className={`font-medium text-sm ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
                           </button>
                         );
                       })}
@@ -266,29 +271,28 @@ const DealCustomizer = ({ open, onClose, onConfirm }: DealCustomizerProps) => {
                     <div className="space-y-0">
                       {beerDrinks.map((drink) => {
                         const active = selectedDrinks[currentDrinkIndex] === drink.id;
+                        const unavailable = isDrinkUnavailable(drink.id);
                         return (
                           <button
                             key={drink.id}
-                            onClick={() => setDrink(currentDrinkIndex, drink.id)}
-                            className="w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0"
+                            disabled={unavailable}
+                            onClick={() => !unavailable && setDrink(currentDrinkIndex, drink.id)}
+                            className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
                               <div
                                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
                                 }`}
                               >
-                                {active && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-2 h-2 rounded-full bg-primary-foreground"
-                                  />
+                                {active && !unavailable && (
+                                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 rounded-full bg-primary-foreground" />
                                 )}
                               </div>
-                              <span className="text-xs text-muted-foreground">+₪{drink.price}</span>
+                              {unavailable && <span className="text-xs text-destructive">(אזל)</span>}
+                              {!unavailable && <span className="text-xs text-muted-foreground">+₪{drink.price}</span>}
                             </div>
-                            <span className="font-medium text-sm">{drink.name}</span>
+                            <span className={`font-medium text-sm ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
                           </button>
                         );
                       })}

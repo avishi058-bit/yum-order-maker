@@ -1,21 +1,28 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check } from "lucide-react";
-import { MenuItem, drinkSubOptions } from "@/data/menu";
+import { MenuItem, drinkSubOptions, drinkToAvailabilityId } from "@/data/menu";
 
 interface DrinkSelectorProps {
   item: MenuItem | null;
   onClose: () => void;
   onConfirm: (item: MenuItem, selectedDrink: string) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
-const DrinkSelector = ({ item, onClose, onConfirm }: DrinkSelectorProps) => {
+const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorProps) => {
   const [selected, setSelected] = useState<string | null>(null);
 
   if (!item) return null;
 
   const options = drinkSubOptions[item.id];
   if (!options) return null;
+
+  const isDrinkUnavailable = (optId: string) => {
+    const availId = drinkToAvailabilityId[optId];
+    if (!availId || !isAvailable) return false;
+    return !isAvailable(availId);
+  };
 
   const handleConfirm = () => {
     if (!selected) return;
@@ -60,24 +67,31 @@ const DrinkSelector = ({ item, onClose, onConfirm }: DrinkSelectorProps) => {
             </p>
 
             <div className="space-y-2">
-              {options.map((opt) => (
+              {options.map((opt) => {
+                const unavailable = isDrinkUnavailable(opt.id);
+                return (
                 <button
                   key={opt.id}
-                  onClick={() => setSelected(opt.id)}
+                  disabled={unavailable}
+                  onClick={() => !unavailable && setSelected(opt.id)}
                   className={`w-full text-right px-4 py-3 rounded-xl border transition-all ${
-                    selected === opt.id
+                    unavailable
+                      ? "border-border bg-muted/30 cursor-not-allowed opacity-60"
+                      : selected === opt.id
                       ? "border-primary bg-primary/10 text-foreground"
                       : "border-border bg-secondary/50 text-foreground hover:border-primary/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{opt.name}</span>
-                    {selected === opt.id && (
+                    <span className={`font-medium ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
+                    {unavailable && <span className="text-xs text-destructive">אזל</span>}
+                    {!unavailable && selected === opt.id && (
                       <Check size={18} className="text-primary" />
                     )}
                   </div>
                 </button>
-              ))}
+              );
+              })}
             </div>
 
             <button

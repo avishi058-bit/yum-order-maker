@@ -215,18 +215,21 @@ const Index = () => {
         item={drinkItem}
         onClose={() => setDrinkItem(null)}
         onConfirm={handleDrinkConfirm}
+        isAvailable={isAvailable}
       />
 
       <DealCustomizer
         open={dealOpen}
         onClose={() => setDealOpen(false)}
         onConfirm={handleDealConfirm}
+        isAvailable={isAvailable}
       />
 
       <FamilyDealCustomizer
         open={familyDealOpen}
         onClose={() => setFamilyDealOpen(false)}
         onConfirm={handleFamilyDealConfirm}
+        isAvailable={isAvailable}
       />
 
       <CartDrawer
