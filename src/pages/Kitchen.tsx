@@ -79,6 +79,15 @@ const Kitchen = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
+  const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+
+  const fetchAvailability = useCallback(async () => {
+    const { data } = await supabase
+      .from("menu_availability")
+      .select("*")
+      .order("category");
+    if (data) setAvailabilityItems(data as AvailabilityItem[]);
+  }, []);
 
   const fetchOrders = useCallback(async () => {
     const { data, error } = await supabase
