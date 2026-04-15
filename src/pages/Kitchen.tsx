@@ -326,7 +326,7 @@ const Kitchen = () => {
       <body style="font-family:Arial;width:280px;margin:0 auto;padding:10px;font-size:14px;">
         ${paymentBanner}
         <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:10px;">
-          <h2 style="margin:0;">הַבַּקְּתָה 🐄</h2>
+          <h2 style="margin:0;">הַבִּקְתָּה 🐄</h2>
           <p style="margin:4px 0;font-size:12px;">המבורגר של מושבניקים</p>
         </div>
         <div style="border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:8px;">
