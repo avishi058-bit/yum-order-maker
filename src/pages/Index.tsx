@@ -292,6 +292,7 @@ const Index = () => {
             onSuccess={() => {
               setCheckoutOpen(false);
               setCart([]);
+              if (isStation) setShowKioskWelcome(true);
             }}
           />
         )}
