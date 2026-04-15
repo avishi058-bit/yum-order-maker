@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Star } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
@@ -91,13 +91,30 @@ const MenuCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
   );
 };
 
-const MenuSection = ({ onAddItem }: { onAddItem: (item: MenuItem) => void }) => {
+const MenuSection = ({ onAddItem, dineIn, onDineInChange }: { onAddItem: (item: MenuItem) => void; dineIn: boolean; onDineInChange: (val: boolean) => void }) => {
   return (
     <section id="menu" className="py-16 px-4 max-w-2xl mx-auto">
-      <h2 className="text-4xl font-black text-center mb-4">התפריט שלנו</h2>
-      <p className="text-center text-primary text-sm font-medium mb-12">
-        🎉 בעונתינו: התוספת הרביעית עלינו! (הזולה מביניהם)
-      </p>
+      {/* Dine-in / Takeaway toggle */}
+      <div className="flex justify-center mb-10">
+        <div className="bg-secondary rounded-full p-1 flex gap-1">
+          <button
+            onClick={() => onDineInChange(true)}
+            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+              dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
+            }`}
+          >
+            🪑 לשבת
+          </button>
+          <button
+            onClick={() => onDineInChange(false)}
+            className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+              !dineIn ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground"
+            }`}
+          >
+            🥡 לקחת
+          </button>
+        </div>
+      </div>
       {categories.map((cat) => {
         const items = menuItems.filter((i) => i.category === cat.key);
         if (items.length === 0) return null;
