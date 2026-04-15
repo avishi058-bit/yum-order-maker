@@ -36,6 +36,16 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
+  const addToCartDirect = useCallback((item: MenuItem) => {
+    setCart((prev) => {
+      const existing = prev.find((c) => c.id === item.id);
+      if (existing) {
+        return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
+      }
+      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+    });
+  }, []);
+
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
@@ -46,13 +56,7 @@ const Index = () => {
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
       setDrinkItem(item);
     } else {
-      setCart((prev) => {
-        const existing = prev.find((c) => c.id === item.id);
-        if (existing) {
-          return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
-        }
-        return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
-      });
+      setPreviewItem(item);
     }
   }, []);
 
