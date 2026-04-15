@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
 import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
@@ -13,6 +14,8 @@ interface ItemCustomizerProps {
 type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
 const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomizerProps) => {
+  const location = useLocation();
+  const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
@@ -157,6 +160,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             animate={
               step === "meal-upgrade"
                 ? { y: 0, height: "auto", top: "auto", bottom: 0 }
+                : isKiosk
+                ? { y: 0, height: "100%" }
                 : expanded
                 ? { y: 0, height: "100%" }
                 : { y: 0, height: "60%" }
