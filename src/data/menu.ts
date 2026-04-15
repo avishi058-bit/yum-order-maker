@@ -394,3 +394,16 @@ export const dealDrinkOptions: DrinkOption[] = [
   { id: "deal-unfiltered", name: "גולדסטאר אנפילטר", price: 12, category: "beer" },
   { id: "deal-guinness", name: "גינס", price: 12, category: "beer" },
 ];
+
+export interface SauceOption {
+  id: string;
+  name: string;
+  recommended?: boolean;
+}
+
+export const sauceOptions: SauceOption[] = [
+  { id: "ketchup", name: "קטשופ" },
+  { id: "mayo", name: "מיונז" },
+  { id: "chili", name: "צ׳ילי חריף" },
+  { id: "plum", name: "שזיפים", recommended: true },
+];
