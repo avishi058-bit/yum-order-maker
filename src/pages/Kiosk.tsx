@@ -28,7 +28,7 @@ const Kiosk = () => {
 
   const [view, setView] = useState<KioskView>("welcome");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
@@ -251,49 +251,42 @@ const Kiosk = () => {
             items={cart}
             total={getTotal()}
             onClose={() => setCheckoutOpen(false)}
-            onSuccess={() => {
+            onSuccess={(orderNumber) => {
               setCheckoutOpen(false);
-              setOrderSuccess(true);
+              setOrderSuccess(orderNumber ?? 0);
+              // Fire confetti
+              import("canvas-confetti").then(({ default: confetti }) => {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+              });
               setTimeout(() => {
-                setOrderSuccess(false);
+                setOrderSuccess(null);
                 resetOrder();
-              }, 1500);
+              }, 2000);
             }}
           />
         )}
       </AnimatePresence>
 
-      {/* Order success screen */}
+      {/* Order success popup */}
       <AnimatePresence>
-        {orderSuccess && (
+        {orderSuccess !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center text-center p-8"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", damping: 15 }}
-              className="flex flex-col items-center"
+              initial={{ scale: 0.5, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: -20 }}
+              transition={{ type: "spring", damping: 18, stiffness: 200 }}
+              className="bg-card rounded-3xl p-12 text-center shadow-2xl max-w-lg mx-4 border border-border"
             >
-              <p className="text-9xl mb-8">✅</p>
-              <p className="text-5xl font-black text-foreground mb-4">ההזמנה התקבלה!</p>
-              <p className="text-3xl text-muted-foreground mb-8">תודה רבה, ההזמנה בהכנה 🍔</p>
-              <motion.div
-                className="w-64 h-2 bg-secondary rounded-full overflow-hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <motion.div
-                  className="h-full bg-primary rounded-full"
-                  initial={{ width: "100%" }}
-                  animate={{ width: "0%" }}
-                  transition={{ duration: 1.5, ease: "linear" }}
-                />
-              </motion.div>
+              <p className="text-8xl mb-6">🎉</p>
+              <p className="text-4xl font-black text-foreground mb-3">הזמנתך התקבלה!</p>
+              <p className="text-5xl font-black text-primary mb-4">#{orderSuccess}</p>
+              <p className="text-2xl text-muted-foreground">תודה רבה, ההזמנה בהכנה 🍔</p>
             </motion.div>
           </motion.div>
         )}
