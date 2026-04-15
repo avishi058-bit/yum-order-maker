@@ -304,6 +304,7 @@ const Kiosk = () => {
       <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
 
       <CartDrawer
+        isKiosk
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cart}
