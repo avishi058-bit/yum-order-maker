@@ -29,6 +29,7 @@ interface Order {
   total: number;
   created_at: string;
   updated_at: string;
+  payment_method: string | null;
   order_items: OrderItem[];
 }
 
@@ -303,10 +304,26 @@ const Kitchen = () => {
       })
       .join("");
 
+    const isCash = order.payment_method === "cash";
+    const paymentBanner = isCash
+      ? `<div style="text-align:center;background:#000;color:#fff;padding:10px;margin-bottom:10px;font-size:18px;font-weight:bold;border:3px solid #000;">
+           ⚠️ לא שולם ⚠️
+         </div>`
+      : "";
+
+    const paymentFooter = isCash
+      ? `<div style="text-align:center;border:3px solid #000;padding:12px;margin-top:10px;font-size:16px;font-weight:bold;background:#f5f5f5;">
+           💵 תשלום במזומן בעת המסירה 💵
+         </div>`
+      : `<div style="text-align:center;margin-top:10px;font-size:12px;color:#060;font-weight:bold;">
+           ✅ שולם באשראי
+         </div>`;
+
     printWindow.document.write(`
       <html dir="rtl">
       <head><title>בון #${order.order_number}</title></head>
       <body style="font-family:Arial;width:280px;margin:0 auto;padding:10px;font-size:14px;">
+        ${paymentBanner}
         <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:10px;">
           <h2 style="margin:0;">הַבַּקְּתָה 🐄</h2>
           <p style="margin:4px 0;font-size:12px;">המבורגר של מושבניקים</p>
@@ -325,6 +342,7 @@ const Kitchen = () => {
         <div style="border-top:2px solid #000;padding-top:8px;font-size:18px;font-weight:bold;text-align:center;">
           סה״כ: ₪${order.total}
         </div>
+        ${paymentFooter}
         <div style="text-align:center;margin-top:10px;font-size:10px;color:#999;">
           בתיאבון! 🍔
         </div>
