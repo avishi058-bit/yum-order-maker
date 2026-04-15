@@ -14,6 +14,7 @@ export interface Topping {
   id: string;
   name: string;
   price: number;
+  recommended?: boolean;
 }
 
 export interface Upgrade {
@@ -69,7 +70,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "smash-double-cheese",
     name: "סמאש דאבל צ׳יז",
-    description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני. 🔥 ממליצים להוסיף ריבת בצל או חמאת בוטנים — שילוב שמשגע!",
+    description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני (הולך טוב עם ריבת בצל או חמאת בוטנים)",
     price: 66,
     weight: "220 גרם",
     category: "burger",
@@ -284,17 +285,17 @@ export const smashModifications: Removal[] = [
 export const smashBurgerIds = ["smash-moshavnikim", "smash-double-cheese", "crazy-smash"];
 
 export const toppings: Topping[] = [
+  { id: "onion-jam", name: "ריבת בצל של סבתא דינה", price: 9, recommended: true },
+  { id: "peanut-butter", name: "חמאת בוטנים", price: 8, recommended: true },
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
   { id: "garlic-confit", name: "קונפי שום", price: 7 },
   { id: "egg", name: "ביצת עין", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני", price: 7 },
-  { id: "onion-jam", name: "ריבת בצל של סבתא דינה", price: 9 },
   { id: "roastbeef", name: "רצועות רוסטביף", price: 20 },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים", price: 9 },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8 },
   { id: "maple", name: "מייפל", price: 5 },
-  { id: "peanut-butter", name: "חמאת בוטנים", price: 8 },
 ];
 
 export const mealUpgrade = {

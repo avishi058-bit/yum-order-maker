@@ -191,7 +191,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm }: ItemCustomizerProps) => {
                                   </div>
                                   <span className="text-sm text-muted-foreground">+ ₪{t.price}</span>
                                 </div>
-                                <span className="font-medium text-base">{t.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-base">{t.name}</span>
+                                  {t.recommended && (
+                                    <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                      🔥 הולך טוב עם המנה
+                                    </span>
+                                  )}
+                                </div>
                               </button>
                             );
                           })}
