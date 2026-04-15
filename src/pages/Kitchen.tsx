@@ -413,6 +413,69 @@ const Kitchen = () => {
         </div>
       </div>
 
+      {/* Restaurant Status Bar */}
+      <div className="bg-card border-b border-border px-6 py-3 flex items-center justify-center gap-6 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Globe size={16} className={restaurantStatus.website_open ? "text-green-400" : "text-destructive"} />
+          <span className="text-sm font-medium text-foreground">אתר הזמנות</span>
+          <button
+            onClick={() => toggleWebsite(!restaurantStatus.website_open)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+              restaurantStatus.website_open ? "bg-green-500" : "bg-destructive"
+            }`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: restaurantStatus.website_open ? "1.5rem" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className={`text-xs font-bold ${restaurantStatus.website_open ? "text-green-400" : "text-destructive"}`}>
+            {restaurantStatus.website_open ? "פתוח" : "סגור"}
+          </span>
+        </div>
+
+        <div className="w-px h-6 bg-border" />
+
+        <div className="flex items-center gap-3">
+          <Monitor size={16} className={restaurantStatus.station_open ? "text-green-400" : "text-destructive"} />
+          <span className="text-sm font-medium text-foreground">עמדת הזמנות</span>
+          <button
+            onClick={() => toggleStation(!restaurantStatus.station_open)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
+              restaurantStatus.station_open ? "bg-green-500" : "bg-destructive"
+            }`}
+          >
+            <motion.div
+              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
+              animate={{ left: restaurantStatus.station_open ? "1.5rem" : "0.125rem" }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className={`text-xs font-bold ${restaurantStatus.station_open ? "text-green-400" : "text-destructive"}`}>
+            {restaurantStatus.station_open ? "פתוח" : "סגור"}
+          </span>
+        </div>
+
+        <div className="w-px h-6 bg-border" />
+
+        {restaurantStatus.website_open || restaurantStatus.station_open ? (
+          <button
+            onClick={closeAll}
+            className="px-4 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90 transition-colors"
+          >
+            סגור הכל
+          </button>
+        ) : (
+          <button
+            onClick={openAll}
+            className="px-4 py-1.5 rounded-lg bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-colors"
+          >
+            פתח הכל
+          </button>
+        )}
+      </div>
+
       {/* Availability View */}
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
