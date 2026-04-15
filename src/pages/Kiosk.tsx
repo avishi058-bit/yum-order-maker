@@ -13,18 +13,8 @@ import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import ItemPreview from "@/components/ItemPreview";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
-import { menuImages } from "@/data/menuImages";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
-import { Star } from "lucide-react";
-
-const categories = [
-  { key: "burger" as const, label: "🍔 המבורגרים" },
-  { key: "meal" as const, label: "🍽️ ארוחות עסקיות" },
-  { key: "side" as const, label: "🍟 תוספות" },
-  { key: "drink" as const, label: "🍺 שתייה" },
-  { key: "deal" as const, label: "🤝 דילים" },
-];
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || item.id === "family-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
@@ -37,7 +27,6 @@ const Kiosk = () => {
   const isClosed = !restaurantStatus.station_open;
 
   const [view, setView] = useState<KioskView>("welcome");
-  const [activeCategory, setActiveCategory] = useState<string>("burger");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
