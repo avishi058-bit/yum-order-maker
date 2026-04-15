@@ -44,6 +44,26 @@ const Kiosk = () => {
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle return from credit card payment
+  useEffect(() => {
+    const paid = searchParams.get("paid");
+    const orderNum = searchParams.get("order");
+    if (paid === "true" && orderNum) {
+      setOrderSuccess(parseInt(orderNum));
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+      });
+      setTimeout(() => {
+        setOrderSuccess(null);
+        resetOrder();
+      }, 2000);
+      // Clear query params
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
   const handleAddItem = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
