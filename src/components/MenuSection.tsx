@@ -166,33 +166,33 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
         </div>
       )}
 
-      {/* Sticky category tabs - kiosk only */}
-      {isKiosk && (
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border pb-2 pt-3 mb-4 -mx-4 px-4">
-          <div ref={tabsRef} className="flex gap-2 overflow-x-auto no-scrollbar" dir="rtl">
-            {visibleCategories.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => scrollToCategory(cat.key)}
-                className={`relative whitespace-nowrap px-6 py-3 rounded-full text-base font-bold transition-all flex-shrink-0 ${
-                  activeCategory === cat.key
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                {activeCategory === cat.key && (
-                  <motion.div
-                    layoutId="activeCategoryTab"
-                    className="absolute inset-0 bg-primary rounded-full"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{cat.label}</span>
-              </button>
-            ))}
-          </div>
+      {/* Sticky category tabs */}
+      <div className={`sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border pb-2 pt-3 mb-4 ${isKiosk ? '-mx-4 px-4' : '-mx-4 px-4'}`}>
+        <div ref={tabsRef} className="flex gap-2 overflow-x-auto no-scrollbar" dir="rtl">
+          {visibleCategories.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => scrollToCategory(cat.key)}
+              className={`relative whitespace-nowrap px-5 py-2.5 rounded-full font-bold transition-all flex-shrink-0 ${
+                isKiosk ? "text-base" : "text-sm"
+              } ${
+                activeCategory === cat.key
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {activeCategory === cat.key && (
+                <motion.div
+                  layoutId="activeCategoryTab"
+                  className="absolute inset-0 bg-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{cat.label}</span>
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {categories.map((cat) => {
         const items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
