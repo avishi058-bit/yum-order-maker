@@ -54,6 +54,30 @@ const availabilityCategoryLabels: Record<string, string> = {
 
 const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient"];
 
+// Fixed order of items within each category to match the menu
+const itemOrder: Record<string, string[]> = {
+  burger: ["classic", "smash-moshavnikim", "avishai", "double", "crazy-smash", "smash-double-cheese", "special-hadegel", "haf-mifsha"],
+  meal: ["meal-classic", "meal-smash-moshavnikim", "meal-avishai", "meal-double", "meal-crazy-smash", "meal-smash-double-cheese", "meal-special-hadegel", "meal-haf-mifsha"],
+  side: ["fries", "waffle-fries", "onion-rings", "tempura-onion", "friends-mix"],
+  drink: ["can", "bottle", "beer-regular", "beer-premium", "beer-weiss"],
+  deal: ["family-deal", "friends-deal"],
+  topping: ["onion-jam", "peanut-butter", "fried-onion", "garlic-confit", "egg", "vegan-cheddar", "roastbeef", "extra-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
+  sauce: ["ketchup", "mayo", "chili", "plum"],
+  ingredient: ["lettuce", "tomato", "pickles", "aioli", "onion"],
+};
+
+// Burger to meal mapping
+const burgerToMeal: Record<string, string> = {
+  classic: "meal-classic",
+  "smash-moshavnikim": "meal-smash-moshavnikim",
+  avishai: "meal-avishai",
+  double: "meal-double",
+  "crazy-smash": "meal-crazy-smash",
+  "smash-double-cheese": "meal-smash-double-cheese",
+  "special-hadegel": "meal-special-hadegel",
+  "haf-mifsha": "meal-haf-mifsha",
+};
+
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
