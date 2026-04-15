@@ -213,6 +213,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             onTouchStart={step !== "meal-upgrade" ? handleTouchStart : undefined}
             onTouchMove={step !== "meal-upgrade" ? handleTouchMove : undefined}
             onTouchEnd={step !== "meal-upgrade" ? handleTouchEnd : undefined}
+            onMouseDown={step !== "meal-upgrade" ? handleMouseDown : undefined}
+            onMouseMove={step !== "meal-upgrade" ? handleMouseMove : undefined}
+            onMouseUp={step !== "meal-upgrade" ? handleMouseUp : undefined}
+            onMouseLeave={step !== "meal-upgrade" ? handleMouseUp : undefined}
             style={{
               transform: step !== "meal-upgrade" && sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
               transition: isDragging ? "none" : undefined,
