@@ -229,6 +229,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         };
       });
 
+      // If total includes extras (like sauces) not in cart items, add a reconciliation line
+      const itemsSum = zcreditItems.reduce((s, i) => s + i.price * i.quantity, 0);
+      if (total > itemsSum) {
+        zcreditItems.push({
+          name: "תוספות נוספות",
+          price: total - itemsSum,
+          quantity: 1,
+          description: "רטבים ותוספות",
+        });
+      }
+
       const baseUrl = window.location.origin;
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
