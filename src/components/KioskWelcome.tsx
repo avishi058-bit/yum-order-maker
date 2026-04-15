@@ -41,7 +41,7 @@ const KioskWelcome = ({ onStart }: { onStart: () => void }) => {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="text-3xl md:text-4xl text-primary font-bold mb-2"
         >
-          להמבורגר הבקתה 🐄
+          להמבורגר הַבִּקְתָּה 🐄
         </motion.p>
 
         <motion.p
