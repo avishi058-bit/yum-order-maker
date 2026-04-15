@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
 import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
@@ -21,8 +21,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const dragY = useMotionValue(0);
-  const sheetOpacity = useTransform(dragY, [0, 300], [1, 0.5]);
+  const touchStartY = useRef(0);
+  const [sheetTranslateY, setSheetTranslateY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -142,19 +143,28 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const hasImage = !!menuImages[item.id];
 
-  // Handle drag to dismiss - only allow when scrolled to top
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y > 100 && info.velocity.y > 0) {
-      handleClose();
+  // Touch-based swipe to close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const el = scrollRef.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    // Only allow pull-down when scrolled to top
+    if (el && el.scrollTop <= 0 && deltaY > 0) {
+      e.preventDefault();
+      setIsDragging(true);
+      setSheetTranslateY(deltaY * 0.6); // dampen
     }
   };
 
-  const handleDrag = (_: any, info: PanInfo) => {
-    // Only allow dragging down when scroll is at top
-    const el = scrollRef.current;
-    if (el && el.scrollTop > 0 && info.offset.y > 0) {
-      dragY.set(0);
+  const handleTouchEnd = () => {
+    if (sheetTranslateY > 120) {
+      handleClose();
     }
+    setSheetTranslateY(0);
+    setIsDragging(false);
   };
 
   return (
@@ -172,13 +182,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
             initial={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
             animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
             exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            drag={step !== "meal-upgrade" ? "y" : false}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.6 }}
-            onDrag={handleDrag}
-            onDragEnd={handleDragEnd}
-            style={{ y: step !== "meal-upgrade" ? dragY : undefined, opacity: step !== "meal-upgrade" ? sheetOpacity : 1 }}
+            transition={{ type: "tween", duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+            onTouchStart={step !== "meal-upgrade" ? handleTouchStart : undefined}
+            onTouchMove={step !== "meal-upgrade" ? handleTouchMove : undefined}
+            onTouchEnd={step !== "meal-upgrade" ? handleTouchEnd : undefined}
+            style={{
+              transform: step !== "meal-upgrade" && sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
+              transition: isDragging ? "none" : undefined,
+            }}
             className={`fixed z-50 flex flex-col ${
               step === "meal-upgrade" 
                 ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl bg-card text-card-foreground" 
