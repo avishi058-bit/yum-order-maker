@@ -312,22 +312,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                     <Utensils size={36} className="text-primary" />
                   </div>
-                   <h3 className="text-xl font-black mb-3">לשדרג לארוחה עסקית?</h3>
-                   <p className="text-primary font-black text-lg mb-1">+₪{mealUpgrade.price}</p>
-                   <p className="text-gray-500 text-sm mb-8">המבורגר + צ׳יפס + שתייה</p>
+                   <h3 className={`font-black mb-3 ${isKiosk ? "text-[26px]" : "text-xl"}`}>לשדרג לארוחה עסקית?</h3>
+                   <p className={`text-primary font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"}`}>+₪{mealUpgrade.price}</p>
+                   <p className={`text-gray-500 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
 
                   <div className="w-full space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => goToSideSelect()}
-                      className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20"
+                      className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
                       שדרגו לי! 🍟🥤
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleFinish(false)}
-                      className="w-full bg-gray-100 text-gray-500 font-bold py-4 rounded-xl text-base"
+                      className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl ${isKiosk ? "py-5 text-[20px]" : "py-4 text-base"}`}
                     >
                       לא תודה
                     </motion.button>
@@ -342,9 +342,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -40, scale: 0.97 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="flex-1 px-5 py-6"
+                  className={`flex-1 ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                 >
-                   <h3 className="text-lg font-black text-center mb-4">בחר סוג צ׳יפס לעסקית:</h3>
+                   <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
                   <div className="space-y-0">
                     {mealSideOptions.map((side) => {
                       const unavailable = isSideUnavailable(side.id);
@@ -354,13 +354,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={side.id}
                           onClick={() => !unavailable && setSelectedSide(side.id)}
                           disabled={unavailable}
-                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${
+                          className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${
                             unavailable ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
+                              className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                 active ? "border-primary bg-primary" : "border-gray-300"
                               }`}
                             >
@@ -373,13 +373,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               )}
                             </div>
                             {side.price > 0 && !unavailable && (
-                              <span className="text-base text-gray-500 font-medium">+₪{side.price}</span>
+                              <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{side.price}</span>
                             )}
                             {unavailable && (
                               <span className="text-sm font-bold text-destructive">(אזל מהמלאי כרגע)</span>
                             )}
                           </div>
-                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+                          <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
                         </button>
                       );
                     })}
@@ -394,7 +394,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                       }
                       setStep("drink-select");
                     }}
-                    className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-6"
+                    className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                   >
                     המשך
                   </motion.button>
@@ -408,9 +408,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -40, scale: 0.97 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="flex-1 overflow-y-auto px-5 py-6"
+                  className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                 >
-                   <h3 className="text-lg font-black text-center mb-4">בחר שתייה לעסקית:</h3>
+                   <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר שתייה לעסקית:</h3>
                   
                   <div className="space-y-0">
                     {softDrinks.map((drink) => {
@@ -421,13 +421,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={drink.id}
                           disabled={unavailable}
                           onClick={() => !unavailable && setSelectedDrink(drink.id)}
-                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
+                                className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                  unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
+                                }`}
                             >
                               {active && !unavailable && (
                                 <motion.div
@@ -439,13 +439,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                             </div>
                             {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
                           </div>
-                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                          <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                   <h4 className="text-base font-black text-right mt-4 mb-2">בירות:</h4>
+                   <h4 className={`font-black text-right mt-4 mb-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>בירות:</h4>
                   <div className="space-y-0">
                     {beerDrinks.map((drink) => {
                       const active = selectedDrink === drink.id;
@@ -455,13 +455,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           key={drink.id}
                           disabled={unavailable}
                           onClick={() => !unavailable && setSelectedDrink(drink.id)}
-                          className={`w-full flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                          className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
-                              }`}
+                                className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                  unavailable ? "border-gray-200" : active ? "border-primary bg-primary" : "border-gray-300"
+                                }`}
                             >
                               {active && !unavailable && (
                                 <motion.div
@@ -472,9 +472,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                               )}
                             </div>
                             {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
-                            {!unavailable && <span className="text-base text-gray-500 font-medium">+₪{drink.price}</span>}
+                            {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{drink.price}</span>}
                           </div>
-                          <span className={`font-bold text-lg ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                          <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                         </button>
                       );
                     })}
@@ -483,7 +483,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleFinish(true, selectedSide, selectedDrink)}
-                    className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg shadow-lg shadow-primary/20 mt-6"
+                    className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                   >
                     הוספה להזמנה 🍔
                   </motion.button>
