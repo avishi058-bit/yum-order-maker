@@ -196,6 +196,48 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          background_color: string
+          banner_enabled: boolean
+          banner_text: string | null
+          created_at: string
+          id: string
+          kiosk_font_scale: number
+          menu_item_overrides: Json
+          menu_order: Json
+          primary_color: string
+          updated_at: string
+          website_font_scale: number
+        }
+        Insert: {
+          background_color?: string
+          banner_enabled?: boolean
+          banner_text?: string | null
+          created_at?: string
+          id?: string
+          kiosk_font_scale?: number
+          menu_item_overrides?: Json
+          menu_order?: Json
+          primary_color?: string
+          updated_at?: string
+          website_font_scale?: number
+        }
+        Update: {
+          background_color?: string
+          banner_enabled?: boolean
+          banner_text?: string | null
+          created_at?: string
+          id?: string
+          kiosk_font_scale?: number
+          menu_item_overrides?: Json
+          menu_order?: Json
+          primary_color?: string
+          updated_at?: string
+          website_font_scale?: number
+        }
+        Relationships: []
+      }
       verification_codes: {
         Row: {
           code: string

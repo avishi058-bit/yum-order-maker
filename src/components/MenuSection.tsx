@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Star } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -15,8 +16,10 @@ const categories = [
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
-const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean }) => {
+const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, descOverride }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean; fontScale?: number; nameOverride?: string; descOverride?: string }) => {
   const image = menuImages[item.id];
+  const displayName = nameOverride || item.name;
+  const displayDesc = descOverride || item.description;
   const [justAdded, setJustAdded] = useState(false);
 
   const handleAdd = () => {
@@ -43,7 +46,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           {item.badge && <span className={isKiosk ? "text-3xl" : "text-lg"}>{item.badge}</span>}
-          <h3 className={`font-bold ${isKiosk ? "text-2xl" : "text-base"}`}>{item.name}</h3>
+          <h3 className="font-bold" style={{ fontSize: `${(isKiosk ? 24 : 16) * fontScale}px` }}>{displayName}</h3>
           {item.weight && (
             <span className={`text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-base" : "text-xs"}`}>
               {item.weight}
@@ -56,8 +59,8 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
             </span>
           )}
         </div>
-        <p className={`text-muted-foreground leading-relaxed line-clamp-2 ${isKiosk ? "text-lg mb-3" : "text-sm mb-2"}`}>{item.description}</p>
-        <span className={`text-primary font-bold ${isKiosk ? "text-2xl" : "text-lg"}`}>₪{item.price}</span>
+        <p className="text-muted-foreground leading-relaxed line-clamp-2" style={{ fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`, marginBottom: isKiosk ? 12 : 8 }}>{displayDesc}</p>
+        <span className="text-primary font-bold" style={{ fontSize: `${(isKiosk ? 24 : 18) * fontScale}px` }}>₪{item.price}</span>
       </div>
 
       {/* Image */}
@@ -95,6 +98,8 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
 };
 
 const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
+  const { settings } = useSiteSettings();
+  const fontScale = isKiosk ? settings.kiosk_font_scale : settings.website_font_scale;
   type CategoryKey = typeof categories[number]["key"];
   const [activeCategory, setActiveCategory] = useState<CategoryKey>(categories[0].key);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -175,7 +180,15 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       )}
 
       {categories.map((cat) => {
-        const items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
+        let items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
+        // Apply custom order if set
+        if (settings.menu_order && settings.menu_order.length > 0) {
+          items = [...items].sort((a, b) => {
+            const idxA = settings.menu_order.indexOf(a.id);
+            const idxB = settings.menu_order.indexOf(b.id);
+            return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+          });
+        }
         if (items.length === 0) return null;
         return (
           <div
@@ -184,10 +197,18 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             data-category={cat.key}
             className="mb-10 scroll-mt-28"
           >
-            <h3 className={`font-bold mb-4 text-primary text-right ${isKiosk ? "text-4xl" : "text-2xl"}`}>{cat.label}</h3>
+            <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 36 : 24) * fontScale}px` }}>{cat.label}</h3>
             <div className="divide-y divide-border">
               {items.map((item) => (
-                <MenuCard key={item.id} item={item} onAdd={onAddItem} isKiosk={isKiosk} />
+                <MenuCard
+                  key={item.id}
+                  item={item}
+                  onAdd={onAddItem}
+                  isKiosk={isKiosk}
+                  fontScale={fontScale}
+                  nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
+                  descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
+                />
               ))}
             </div>
           </div>

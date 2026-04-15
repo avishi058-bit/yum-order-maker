@@ -8,6 +8,7 @@ import Kitchen from "./pages/Kitchen.tsx";
 import OrderTracking from "./pages/OrderTracking.tsx";
 import AdminAvailability from "./pages/AdminAvailability.tsx";
 import StationSetup from "./pages/StationSetup.tsx";
+import AdminSettings from "./pages/AdminSettings.tsx";
 import Kiosk from "./pages/Kiosk.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/admin/availability" element={<AdminAvailability />} />
           <Route path="/station-setup" element={<StationSetup />} />
           <Route path="/kiosk" element={<Kiosk />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
