@@ -95,7 +95,8 @@ const MenuCard = ({ item, onAdd, isKiosk = false }: { item: MenuItem; onAdd: (it
 };
 
 const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
-  const [activeCategory, setActiveCategory] = useState(categories[0].key);
+  type CategoryKey = typeof categories[number]["key"];
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>(categories[0].key);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const isScrollingToCategory = useRef(false);
