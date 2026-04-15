@@ -157,7 +157,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     const deltaY = e.touches[0].clientY - touchStartY.current;
     const scrollTop = scrollRef.current?.scrollTop ?? 0;
     
-    // Start dragging only if at top of scroll and pulling down
     if (!dragActive.current && scrollTop <= 0 && deltaY > 10) {
       dragActive.current = true;
     }
@@ -169,23 +168,31 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     }
   };
 
-  const handleTouchEnd = () => {
-    if (sheetTranslateY > 80) {
-      setIsClosing(true);
-      setSheetTranslateY(window.innerHeight);
-      setTimeout(() => {
-        handleClose();
-        setIsClosing(false);
-        setSheetTranslateY(0);
-      }, 300);
-    } else {
+  const triggerClose = () => {
+    setIsClosing(true);
+    setSheetTranslateY(window.innerHeight);
+    setTimeout(() => {
+      handleClose();
+      setIsClosing(false);
       setSheetTranslateY(0);
-    }
+      setIsDragging(false);
+    }, 350);
+  };
+
+  const snapBack = () => {
+    setSheetTranslateY(0);
     setIsDragging(false);
     dragActive.current = false;
   };
 
-  // Mouse drag support (for desktop)
+  const handleTouchEnd = () => {
+    if (sheetTranslateY > 80) {
+      triggerClose();
+    } else {
+      snapBack();
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     mouseDown.current = true;
     touchStartY.current = e.clientY;
@@ -209,49 +216,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   const handleMouseUp = () => {
     if (sheetTranslateY > 80) {
-      setIsClosing(true);
-      setSheetTranslateY(window.innerHeight);
-      setTimeout(() => {
-        handleClose();
-        setIsClosing(false);
-        setSheetTranslateY(0);
-      }, 300);
+      triggerClose();
     } else {
-      setSheetTranslateY(0);
+      snapBack();
     }
     mouseDown.current = false;
-    setIsDragging(false);
-    dragActive.current = false;
   };
 
-  return (
-    <AnimatePresence>
-      {item && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isClosing ? 0 : 0.6 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={handleClose}
-            className="fixed inset-0 bg-black z-50"
-          />
-          <motion.div
-            initial={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
-            animate={step === "meal-upgrade" ? { opacity: 1, scale: 1 } : { y: 0 }}
-            exit={step === "meal-upgrade" ? { opacity: 0, scale: 0.9 } : { y: "100%" }}
-            transition={{ type: "tween", duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-            onTouchStart={step !== "meal-upgrade" ? handleTouchStart : undefined}
-            onTouchMove={step !== "meal-upgrade" ? handleTouchMove : undefined}
-            onTouchEnd={step !== "meal-upgrade" ? handleTouchEnd : undefined}
-            onMouseDown={step !== "meal-upgrade" ? handleMouseDown : undefined}
-            onMouseMove={step !== "meal-upgrade" ? handleMouseMove : undefined}
-            onMouseUp={step !== "meal-upgrade" ? handleMouseUp : undefined}
-            onMouseLeave={step !== "meal-upgrade" ? handleMouseUp : undefined}
-            style={{
-              transform: step !== "meal-upgrade" && sheetTranslateY > 0 ? `translateY(${sheetTranslateY}px)` : undefined,
-              transition: isDragging ? "none" : isClosing ? "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)" : undefined,
-            }}
+  // Compute the sheet's Y position: manual drag overrides framer-motion
+  const isNotMealUpgrade = step !== "meal-upgrade";
+  const sheetStyle: React.CSSProperties = isNotMealUpgrade ? {
+    transform: `translateY(${sheetTranslateY}px)`,
+    transition: isDragging ? "none" : "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
+  } : {};
             className={`fixed z-50 flex flex-col ${
               step === "meal-upgrade" 
                 ? "inset-0 m-auto w-[90vw] max-w-lg h-fit rounded-3xl shadow-2xl bg-card text-card-foreground" 
