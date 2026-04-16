@@ -208,6 +208,60 @@ const Kitchen = () => {
     };
   }, [orders, soundEnabled, selectedRingtone]);
 
+  const fetchAvailability = useCallback(async () => {
+    const { data } = await supabase
+      .from("menu_availability")
+      .select("*")
+      .order("category");
+    if (data) setAvailabilityItems(data as AvailabilityItem[]);
+  }, []);
+
+  const fetchOrders = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      setOrders(data as Order[]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+    fetchAvailability();
+    const channel = supabase
+      .channel("orders-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
+      .subscribe();
+    const availChannel = supabase
+      .channel("availability-realtime")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
+        const updated = payload.new as AvailabilityItem;
+        setAvailabilityItems((prev) =>
+          prev.map((item) => (item.item_id === updated.item_id ? { ...item, available: updated.available } : item))
+        );
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(availChannel);
+    };
+  }, [fetchOrders, fetchAvailability]);
+
+  // Auto-print new orders
+  useEffect(() => {
+    const newOrders = orders.filter((o) => o.status === "new");
+    if (autoPrint) {
+      newOrders.forEach((order) => {
+        if (!printedOrdersRef.current.has(order.id)) {
+          printedOrdersRef.current.add(order.id);
+          setTimeout(() => printOrder(order), 500);
+        }
+      });
+    }
+    prevOrderCountRef.current = newOrders.length;
+  }, [orders, autoPrint]);
+
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
     const newValue = !currentValue;
     // Determine which items to toggle (burger + its meal)
