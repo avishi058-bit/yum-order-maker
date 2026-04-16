@@ -315,6 +315,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_otp_rate_limit: { Args: { p_phone: string }; Returns: boolean }
+      cleanup_old_verification_codes: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

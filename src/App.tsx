@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import CookieBanner from "@/components/CookieBanner";
 
 // Eager load public pages
 import Index from "./pages/Index";
@@ -18,6 +19,11 @@ const AdminAvailability = lazy(() => import("./pages/AdminAvailability"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const StationSetup = lazy(() => import("./pages/StationSetup"));
 const Kiosk = lazy(() => import("./pages/Kiosk"));
+
+// Lazy load legal pages
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 
 const queryClient = new QueryClient();
 
@@ -39,6 +45,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/track" element={<OrderTracking />} />
             <Route path="/kiosk" element={<Kiosk />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route
               path="/kitchen"
               element={
@@ -74,6 +83,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        <CookieBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

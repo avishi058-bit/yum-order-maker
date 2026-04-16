@@ -322,7 +322,7 @@ const Index = () => {
       </AnimatePresence>
 
       {!isStation && (
-        <footer className="py-8 text-center border-t border-border space-y-2">
+        <footer className="py-8 text-center border-t border-border space-y-3">
           <p className="text-foreground font-bold">הַבִּקְתָּה — המבורגר של מושבניקים 🐄</p>
           <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
           <a
@@ -332,6 +332,13 @@ const Index = () => {
             <Phone size={14} />
             058-4633-555
           </a>
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
+            <a href="/privacy" className="hover:text-foreground transition-colors">מדיניות פרטיות</a>
+            <span>·</span>
+            <a href="/terms" className="hover:text-foreground transition-colors">תנאי שימוש</a>
+            <span>·</span>
+            <a href="/cookie-policy" className="hover:text-foreground transition-colors">מדיניות עוגיות</a>
+          </div>
         </footer>
       )}
 
