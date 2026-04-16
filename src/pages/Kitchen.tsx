@@ -204,11 +204,32 @@ const Kitchen = () => {
     return (localStorage.getItem("kitchen-ringtone") as RingtoneId) || "gentle-chime";
   });
   const [showRingtoneMenu, setShowRingtoneMenu] = useState(false);
+  const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Activate audio on first interaction
+  useEffect(() => {
+    const activate = () => {
+      const ctx = getAudioCtx();
+      if (ctx) setAudioActivated(true);
+      document.removeEventListener("click", activate);
+      document.removeEventListener("touchstart", activate);
+    };
+    document.addEventListener("click", activate);
+    document.addEventListener("touchstart", activate);
+    // Check if already activated
+    if (sharedAudioCtx && sharedAudioCtx.state === "running") {
+      setAudioActivated(true);
+    }
+    return () => {
+      document.removeEventListener("click", activate);
+      document.removeEventListener("touchstart", activate);
+    };
+  }, []);
 
   // Save ringtone choice
   useEffect(() => {
