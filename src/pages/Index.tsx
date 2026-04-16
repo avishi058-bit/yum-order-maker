@@ -17,6 +17,7 @@ import KioskWelcome from "@/components/KioskWelcome";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
@@ -217,7 +218,7 @@ const Index = () => {
         <div ref={cartButtonRef}>
           <button
             onClick={() => setCartOpen(true)}
-            className="fixed bottom-6 left-6 z-30 bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
+            className={`${uiPositions.cartButton.position} bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform`}
           >
             <ShoppingBag size={22} />
             <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">

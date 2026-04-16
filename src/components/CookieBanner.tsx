@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie, X } from "lucide-react";
+import { uiPositions, cookieBannerAnimation, timing } from "@/config/uiConfig";
 
 const COOKIE_KEY = "habakta_cookie_consent";
 
@@ -10,7 +11,7 @@ const CookieBanner = () => {
   useEffect(() => {
     const consent = localStorage.getItem(COOKIE_KEY);
     if (!consent) {
-      const timer = setTimeout(() => setVisible(true), 1500);
+      const timer = setTimeout(() => setVisible(true), timing.cookieBannerDelay);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -29,11 +30,8 @@ const CookieBanner = () => {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 inset-x-0 z-[100] p-4"
+          {...cookieBannerAnimation}
+          className={uiPositions.cookieBanner.position}
           dir="rtl"
         >
           <div className="max-w-lg mx-auto bg-card border border-border rounded-2xl shadow-2xl p-5">

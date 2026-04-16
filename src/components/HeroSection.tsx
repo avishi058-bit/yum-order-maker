@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.jpg";
 import logo from "@/assets/logo.png";
 
@@ -27,9 +28,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
       </div>
       <div className="relative z-10 text-center px-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.7 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, type: "spring", stiffness: 200 }}
+          {...heroAnimations.logo}
           className="w-36 h-36 mx-auto mb-6"
         >
           <img
@@ -39,25 +38,19 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
           />
         </motion.div>
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          {...heroAnimations.title}
           className="text-5xl md:text-7xl font-black mb-2 tracking-tight"
         >
           הַבִּקְתָּה
         </motion.h1>
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
+          {...heroAnimations.subtitle}
           className="text-xl md:text-2xl text-primary font-bold mb-2"
         >
           המבורגר של מושבניקים
         </motion.p>
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          {...heroAnimations.description}
           className="text-lg text-muted-foreground mb-8 max-w-md mx-auto"
         >
           כשר בהשגחת הרבנות המקומית-שדות נגב
@@ -65,9 +58,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
 
         {onDineInChoice ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.45 }}
+            {...heroAnimations.cta}
             className="flex flex-col items-center gap-4"
           >
             
