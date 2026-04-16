@@ -67,7 +67,8 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
 
       setIsExisting(!!data.customerName);
       if (data.customerName) setName(data.customerName);
-      toast({ title: "הקוד נשלח לוואטסאפ! 📱" });
+      setDevMode(!!data.devMode);
+      toast({ title: data.devMode ? "מצב פיתוח - הקוד הוא 1234 📱" : "הקוד נשלח לוואטסאפ! 📱" });
       setStep("otp");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
