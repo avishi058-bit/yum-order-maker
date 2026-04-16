@@ -159,7 +159,7 @@ const AccessibilityWidget = () => {
             <motion.div
               {...getSlideAnimation(drawerAnimations.accessibilityPanel.direction)}
               transition={drawerAnimations.accessibilityPanel.transition}
-              className={`fixed top-0 ${uiPositions.accessibility.panelSide === 'right' ? 'right-0' : 'left-0'} bottom-0 w-80 max-w-[90vw] z-[70] bg-card shadow-2xl flex flex-col`}
+              className={`fixed top-0 ${uiPositions.accessibility.panelSide === 'left' ? 'left-0' : 'right-0'} bottom-0 w-80 max-w-[90vw] z-[70] bg-card shadow-2xl flex flex-col`}
               dir="rtl"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
