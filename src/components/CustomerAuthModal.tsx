@@ -16,6 +16,7 @@ type Step = "phone" | "otp" | "register";
 
 const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps) => {
   const { register, login } = useCustomerAuth();
+  const [devMode, setDevMode] = useState(false);
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -66,7 +67,8 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
 
       setIsExisting(!!data.customerName);
       if (data.customerName) setName(data.customerName);
-      toast({ title: "הקוד נשלח לוואטסאפ! 📱" });
+      setDevMode(!!data.devMode);
+      toast({ title: data.devMode ? "מצב פיתוח - הקוד הוא 1234 📱" : "הקוד נשלח לוואטסאפ! 📱" });
       setStep("otp");
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
@@ -197,7 +199,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
               {step === "otp" && (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    הקוד נשלח ל-{phone}
+                    {devMode ? `מצב פיתוח - הכנס קוד 1234` : `הקוד נשלח ל-${phone}`}
                   </p>
                   <div className="relative">
                     <KeyRound size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
