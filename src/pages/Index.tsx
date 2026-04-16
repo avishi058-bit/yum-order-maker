@@ -25,6 +25,7 @@ import { uiPositions } from "@/config/uiConfig";
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
+  const { isLoggedIn } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
@@ -39,7 +40,7 @@ const Index = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
-  // trackingOrderNumber removed - now using OrderTopBar with localStorage
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
   const addToCartDirect = useCallback((item: MenuItem) => {
