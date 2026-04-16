@@ -115,54 +115,83 @@ const RINGTONES: { id: RingtoneId; label: string }[] = [
   { id: "triple-tap", label: "🎼 שלוש נקישות" },
 ];
 
-const playRingtone = (ringtoneId: RingtoneId) => {
+// Reuse a single AudioContext to avoid browser limits
+let sharedAudioCtx: AudioContext | null = null;
+
+const getAudioCtx = (): AudioContext | null => {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const now = ctx.currentTime;
-
-    const playTone = (freq: number, start: number, duration: number, type: OscillatorType = "sine", vol = 0.25) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = type;
-      gain.gain.setValueAtTime(vol, now + start);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration);
-      osc.start(now + start);
-      osc.stop(now + start + duration);
-    };
-
-    switch (ringtoneId) {
-      case "gentle-chime":
-        playTone(880, 0, 0.8);
-        playTone(1100, 0.5, 0.9);
-        playTone(880, 1.2, 0.6);
-        break;
-      case "double-bell":
-        playTone(660, 0, 0.7, "triangle", 0.3);
-        playTone(880, 0.6, 0.7, "triangle", 0.3);
-        playTone(1050, 1.2, 0.8, "triangle", 0.25);
-        break;
-      case "soft-pulse":
-        playTone(520, 0, 0.8, "sine", 0.2);
-        playTone(520, 0.9, 0.8, "sine", 0.15);
-        playTone(650, 1.8, 0.7, "sine", 0.2);
-        playTone(780, 2.5, 0.9, "sine", 0.2);
-        break;
-      case "ding-dong":
-        playTone(830, 0, 0.9, "triangle", 0.3);
-        playTone(620, 0.8, 1.0, "triangle", 0.25);
-        playTone(830, 1.7, 0.8, "triangle", 0.2);
-        break;
-      case "triple-tap":
-        playTone(700, 0, 0.5, "square", 0.1);
-        playTone(700, 0.55, 0.5, "square", 0.1);
-        playTone(900, 1.1, 0.7, "square", 0.12);
-        playTone(1100, 1.8, 0.6, "square", 0.1);
-        break;
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-  } catch {}
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume();
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+};
+
+// Unlock audio on first user click
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    getAudioCtx();
+    document.removeEventListener("click", unlock);
+    document.removeEventListener("touchstart", unlock);
+  };
+  document.addEventListener("click", unlock, { once: true });
+  document.addEventListener("touchstart", unlock, { once: true });
+}
+
+const playRingtone = (ringtoneId: RingtoneId) => {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+
+  const playTone = (freq: number, start: number, duration: number, type: OscillatorType = "sine", vol = 0.25) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = type;
+    gain.gain.setValueAtTime(vol, now + start);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration);
+    osc.start(now + start);
+    osc.stop(now + start + duration);
+  };
+
+  switch (ringtoneId) {
+    case "gentle-chime":
+      playTone(880, 0, 0.8);
+      playTone(1100, 0.5, 0.9);
+      playTone(880, 1.2, 0.6);
+      break;
+    case "double-bell":
+      playTone(660, 0, 0.7, "triangle", 0.3);
+      playTone(880, 0.6, 0.7, "triangle", 0.3);
+      playTone(1050, 1.2, 0.8, "triangle", 0.25);
+      break;
+    case "soft-pulse":
+      playTone(520, 0, 0.8, "sine", 0.2);
+      playTone(520, 0.9, 0.8, "sine", 0.15);
+      playTone(650, 1.8, 0.7, "sine", 0.2);
+      playTone(780, 2.5, 0.9, "sine", 0.2);
+      break;
+    case "ding-dong":
+      playTone(830, 0, 0.9, "triangle", 0.3);
+      playTone(620, 0.8, 1.0, "triangle", 0.25);
+      playTone(830, 1.7, 0.8, "triangle", 0.2);
+      break;
+    case "triple-tap":
+      playTone(700, 0, 0.5, "square", 0.1);
+      playTone(700, 0.55, 0.5, "square", 0.1);
+      playTone(900, 1.1, 0.7, "square", 0.12);
+      playTone(1100, 1.8, 0.6, "square", 0.1);
+      break;
+  }
+};
 };
 
 const Kitchen = () => {
