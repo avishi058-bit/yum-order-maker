@@ -192,7 +192,6 @@ const playRingtone = (ringtoneId: RingtoneId) => {
       break;
   }
 };
-};
 
 const Kitchen = () => {
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
