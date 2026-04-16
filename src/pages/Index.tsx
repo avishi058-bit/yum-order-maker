@@ -366,6 +366,7 @@ const Index = () => {
       )}
 
       <AccessibilityWidget />
+      <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 };
