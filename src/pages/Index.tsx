@@ -199,6 +199,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Persistent order tracking top bar */}
+      {!isStation && <OrderTopBar />}
+
       {/* Kiosk welcome screen */}
       {isStation && showKioskWelcome && !isClosed && (
         <KioskWelcome onStart={() => setShowKioskWelcome(false)} />
