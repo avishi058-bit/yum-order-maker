@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3 } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
@@ -104,6 +104,62 @@ const nextStatus: Record<string, string> = {
   ready: "completed",
 };
 
+// Ringtone definitions using Web Audio API
+type RingtoneId = "gentle-chime" | "double-bell" | "soft-pulse" | "ding-dong" | "triple-tap";
+
+const RINGTONES: { id: RingtoneId; label: string }[] = [
+  { id: "gentle-chime", label: "🔔 צלצול עדין" },
+  { id: "double-bell", label: "🎵 פעמון כפול" },
+  { id: "soft-pulse", label: "🎶 פולס רך" },
+  { id: "ding-dong", label: "🛎️ דינג דונג" },
+  { id: "triple-tap", label: "🎼 שלוש נקישות" },
+];
+
+const playRingtone = (ringtoneId: RingtoneId) => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    const playTone = (freq: number, start: number, duration: number, type: OscillatorType = "sine", vol = 0.25) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = type;
+      gain.gain.setValueAtTime(vol, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + duration);
+      osc.start(now + start);
+      osc.stop(now + start + duration);
+    };
+
+    switch (ringtoneId) {
+      case "gentle-chime":
+        playTone(880, 0, 0.4);
+        playTone(1100, 0.25, 0.5);
+        break;
+      case "double-bell":
+        playTone(660, 0, 0.3, "triangle", 0.3);
+        playTone(880, 0.35, 0.3, "triangle", 0.3);
+        break;
+      case "soft-pulse":
+        playTone(520, 0, 0.5, "sine", 0.2);
+        playTone(520, 0.6, 0.5, "sine", 0.15);
+        playTone(780, 1.2, 0.6, "sine", 0.2);
+        break;
+      case "ding-dong":
+        playTone(830, 0, 0.5, "triangle", 0.3);
+        playTone(620, 0.5, 0.7, "triangle", 0.25);
+        break;
+      case "triple-tap":
+        playTone(700, 0, 0.2, "square", 0.1);
+        playTone(700, 0.25, 0.2, "square", 0.1);
+        playTone(900, 0.5, 0.3, "square", 0.12);
+        break;
+    }
+  } catch {}
+};
+
 const Kitchen = () => {
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -111,10 +167,46 @@ const Kitchen = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
+  const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
+    return (localStorage.getItem("kitchen-ringtone") as RingtoneId) || "gentle-chime";
+  });
+  const [showRingtoneMenu, setShowRingtoneMenu] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+  const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Save ringtone choice
+  useEffect(() => {
+    localStorage.setItem("kitchen-ringtone", selectedRingtone);
+  }, [selectedRingtone]);
+
+  // Repeating alert for new orders - plays every 5 seconds while there are "new" orders
+  useEffect(() => {
+    const hasNewOrders = orders.some((o) => o.status === "new");
+
+    if (hasNewOrders && soundEnabled) {
+      // Play immediately
+      playRingtone(selectedRingtone);
+      // Then repeat every 5 seconds
+      alertIntervalRef.current = setInterval(() => {
+        playRingtone(selectedRingtone);
+      }, 5000);
+    } else {
+      if (alertIntervalRef.current) {
+        clearInterval(alertIntervalRef.current);
+        alertIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (alertIntervalRef.current) {
+        clearInterval(alertIntervalRef.current);
+        alertIntervalRef.current = null;
+      }
+    };
+  }, [orders, soundEnabled, selectedRingtone]);
 
   const fetchAvailability = useCallback(async () => {
     const { data } = await supabase
@@ -129,7 +221,6 @@ const Kitchen = () => {
       .from("orders")
       .select("*, order_items(*)")
       .order("created_at", { ascending: false });
-
     if (!error && data) {
       setOrders(data as Order[]);
     }
@@ -138,12 +229,10 @@ const Kitchen = () => {
   useEffect(() => {
     fetchOrders();
     fetchAvailability();
-
     const channel = supabase
       .channel("orders-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
       .subscribe();
-
     const availChannel = supabase
       .channel("availability-realtime")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
@@ -153,62 +242,25 @@ const Kitchen = () => {
         );
       })
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(availChannel);
     };
   }, [fetchOrders, fetchAvailability]);
 
-  // Play sound + auto-print on new order
+  // Auto-print new orders
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
-    if (newOrders.length > prevOrderCountRef.current && soundEnabled) {
-      playAlert();
-    }
-    // Auto-print new orders that haven't been printed yet
     if (autoPrint) {
       newOrders.forEach((order) => {
         if (!printedOrdersRef.current.has(order.id)) {
           printedOrdersRef.current.add(order.id);
-          // Small delay to ensure DOM is ready
           setTimeout(() => printOrder(order), 500);
         }
       });
     }
     prevOrderCountRef.current = newOrders.length;
-  }, [orders, soundEnabled, autoPrint]);
-
-  const playAlert = () => {
-    try {
-      // Use Web Audio API for a simple beep
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.frequency.value = 880;
-      oscillator.type = "sine";
-      gainNode.gain.value = 0.3;
-      oscillator.start();
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-      oscillator.stop(ctx.currentTime + 0.5);
-
-      // Second beep
-      setTimeout(() => {
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.frequency.value = 1100;
-        osc2.type = "sine";
-        gain2.gain.value = 0.3;
-        osc2.start();
-        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        osc2.stop(ctx.currentTime + 0.5);
-      }, 300);
-    } catch {}
-  };
+  }, [orders, autoPrint]);
 
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
     const newValue = !currentValue;
@@ -437,6 +489,43 @@ const Kitchen = () => {
           >
             {soundEnabled ? <Bell size={20} /> : <BellOff size={20} />}
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowRingtoneMenu(!showRingtoneMenu)}
+              className="p-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-secondary"
+              title="בחר צלצול"
+            >
+              <Music size={20} />
+            </button>
+            {showRingtoneMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-xl z-50 min-w-[200px] p-2">
+                <div className="text-xs font-bold text-muted-foreground px-3 py-1 mb-1">בחר צלצול</div>
+                {RINGTONES.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      setSelectedRingtone(r.id);
+                      playRingtone(r.id);
+                    }}
+                    className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
+                      selectedRingtone === r.id
+                        ? "bg-primary/20 text-primary font-bold"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <span>{r.label}</span>
+                    {selectedRingtone === r.id && <span className="text-primary">✓</span>}
+                  </button>
+                ))}
+                <button
+                  onClick={() => playRingtone(selectedRingtone)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg text-sm bg-muted hover:bg-secondary text-foreground transition-colors"
+                >
+                  ▶ נגן דוגמה
+                </button>
+              </div>
+            )}
+          </div>
           <div className="text-sm text-muted-foreground">
             {new Date().toLocaleDateString("he-IL")}
           </div>
