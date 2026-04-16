@@ -473,6 +473,21 @@ const Kitchen = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Audio activation prompt */}
+      {!audioActivated && soundEnabled && (
+        <div
+          className="bg-primary text-primary-foreground text-center py-3 px-6 font-bold text-sm cursor-pointer animate-pulse"
+          onClick={() => {
+            const ctx = getAudioCtx();
+            if (ctx) {
+              setAudioActivated(true);
+              playRingtone(selectedRingtone);
+            }
+          }}
+        >
+          🔊 לחץ כאן כדי להפעיל צלצולים להזמנות חדשות
+        </div>
+      )}
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-4">
