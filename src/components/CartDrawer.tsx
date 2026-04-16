@@ -68,9 +68,9 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, isKios
             className="fixed inset-0 bg-black z-40"
           />
           <motion.div
-            initial={{ x: "-100%" }}
+            initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
+            exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={`fixed top-0 right-0 h-full ${isKiosk ? 'w-full' : 'w-full max-w-md'} bg-card z-50 shadow-2xl flex flex-col`}
             dir="rtl"

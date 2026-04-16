@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Accessibility, Type, Sun, MousePointer, Link2, Pause, RotateCcw, ZoomIn, ZoomOut, Underline, AlignRight } from "lucide-react";
+import { uiPositions, drawerAnimations, getSlideAnimation } from "@/config/uiConfig";
 
 interface AccessibilityState {
   fontSize: number; // 0 = normal, 1 = large, 2 = larger
@@ -135,11 +136,11 @@ const AccessibilityWidget = () => {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button — position from uiConfig */}
       <button
         onClick={() => setOpen(true)}
         aria-label="פתח תפריט נגישות"
-        className="fixed bottom-6 right-6 z-[60] w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform`}
       >
         <Accessibility size={22} />
       </button>
@@ -156,11 +157,9 @@ const AccessibilityWidget = () => {
               className="fixed inset-0 bg-black z-[70]"
             />
             <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 bottom-0 w-80 max-w-[90vw] z-[70] bg-card shadow-2xl flex flex-col"
+              {...getSlideAnimation(drawerAnimations.accessibilityPanel.direction)}
+              transition={drawerAnimations.accessibilityPanel.transition}
+              className={`fixed top-0 ${uiPositions.accessibility.panelSide === 'right' ? 'right-0' : 'left-0'} bottom-0 w-80 max-w-[90vw] z-[70] bg-card shadow-2xl flex flex-col`}
               dir="rtl"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
