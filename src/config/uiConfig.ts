@@ -62,7 +62,7 @@ export const drawerAnimations = {
 
   /** Accessibility panel */
   accessibilityPanel: {
-    direction: "right" as SlideDirection,
+    direction: "left" as SlideDirection,
     transition: { type: "spring" as const, damping: 30, stiffness: 300 },
   },
 
