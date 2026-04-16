@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
+import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 
 // Eager load public pages
 import Index from "./pages/Index";
@@ -36,55 +37,57 @@ const Loading = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/track" element={<OrderTracking />} />
-            <Route path="/kiosk" element={<Kiosk />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/cookie-policy" element={<CookiePolicy />} />
-            <Route
-              path="/kitchen"
-              element={
-                <ProtectedRoute requiredRole="kitchen">
-                  <Kitchen />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/availability"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminAvailability />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminSettings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/station-setup"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <StationSetup />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-        <CookieBanner />
-      </BrowserRouter>
+      <CustomerAuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/track" element={<OrderTracking />} />
+              <Route path="/kiosk" element={<Kiosk />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route
+                path="/kitchen"
+                element={
+                  <ProtectedRoute requiredRole="kitchen">
+                    <Kitchen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/availability"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminAvailability />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminSettings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/station-setup"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <StationSetup />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <CookieBanner />
+        </BrowserRouter>
+      </CustomerAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
