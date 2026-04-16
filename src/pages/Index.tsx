@@ -311,20 +311,15 @@ const Index = () => {
               if (isStation) {
                 setShowKioskWelcome(true);
               } else if (orderNumber) {
-                setTrackingOrderNumber(orderNumber);
+                // Dispatch event to show persistent top bar tracker
+                const trackedOrder = { orderNumber, notificationsEnabled: false, soundEnabled: false };
+                setTrackedOrder(trackedOrder);
+                window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
               }
             }}
           />
         )}
       </AnimatePresence>
-
-      {/* Live order tracker */}
-      {trackingOrderNumber !== null && (
-        <OrderLiveTracker
-          orderNumber={trackingOrderNumber}
-          onClose={() => setTrackingOrderNumber(null)}
-        />
-      )}
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-2">
