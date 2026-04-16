@@ -16,6 +16,7 @@ type Step = "phone" | "otp" | "register";
 
 const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps) => {
   const { register, login } = useCustomerAuth();
+  const [devMode, setDevMode] = useState(false);
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
