@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
@@ -12,7 +12,7 @@ import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
-import OrderLiveTracker from "@/components/OrderLiveTracker";
+import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import KioskWelcome from "@/components/KioskWelcome";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -35,7 +35,7 @@ const Index = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
-  const [trackingOrderNumber, setTrackingOrderNumber] = useState<number | null>(null);
+  // trackingOrderNumber removed - now using OrderTopBar with localStorage
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
   const addToCartDirect = useCallback((item: MenuItem) => {
@@ -199,6 +199,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Persistent order tracking top bar */}
+      {!isStation && <OrderTopBar />}
+
       {/* Kiosk welcome screen */}
       {isStation && showKioskWelcome && !isClosed && (
         <KioskWelcome onStart={() => setShowKioskWelcome(false)} />
@@ -308,20 +311,15 @@ const Index = () => {
               if (isStation) {
                 setShowKioskWelcome(true);
               } else if (orderNumber) {
-                setTrackingOrderNumber(orderNumber);
+                // Dispatch event to show persistent top bar tracker
+                const trackedOrder = { orderNumber, notificationsEnabled: false, soundEnabled: false };
+                setTrackedOrder(trackedOrder);
+                window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
               }
             }}
           />
         )}
       </AnimatePresence>
-
-      {/* Live order tracker */}
-      {trackingOrderNumber !== null && (
-        <OrderLiveTracker
-          orderNumber={trackingOrderNumber}
-          onClose={() => setTrackingOrderNumber(null)}
-        />
-      )}
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-2">
