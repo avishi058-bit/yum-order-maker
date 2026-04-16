@@ -207,6 +207,24 @@ const Index = () => {
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
 
+      {/* Customer greeting / login bar */}
+      {!isStation && (
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border" dir="rtl">
+          {isLoggedIn ? (
+            <CustomerGreeting />
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-semibold"
+            >
+              <LogIn size={16} />
+              התחברות
+            </button>
+          )}
+          <div />
+        </div>
+      )}
+
       {/* Kiosk welcome screen */}
       {isStation && showKioskWelcome && !isClosed && (
         <KioskWelcome onStart={() => setShowKioskWelcome(false)} />
