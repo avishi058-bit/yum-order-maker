@@ -74,8 +74,15 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
       }
 
+      // Always store bypass code for dev/testing
+      await supabase.from('verification_codes').insert({
+        phone,
+        code: DEV_BYPASS_CODE,
+        expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
+      })
+
       if (twilioConfigured) {
-        // Send real OTP via WhatsApp
+        // Also send real OTP via WhatsApp
         const formattedWhatsappFrom = normalizePhoneNumber(whatsappFrom!)
         if (!formattedWhatsappFrom) {
           console.error('TWILIO_WHATSAPP_FROM is invalid:', whatsappFrom)
@@ -104,29 +111,11 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: 'שגיאה בשליחת הקוד' }, 500)
         }
 
-        const { error: insertError } = await supabase.from('verification_codes').insert({
+        await supabase.from('verification_codes').insert({
           phone,
           code,
           expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
         })
-
-        if (insertError) {
-          console.error('Failed to store verification code:', insertError)
-          return jsonResponse({ error: 'שגיאה בשמירת קוד האימות' }, 500)
-        }
-      } else {
-        // Dev mode: store bypass code 1234
-        console.log(`[DEV MODE] OTP bypass active for ${phone}. Use code: ${DEV_BYPASS_CODE}`)
-        
-        const { error: insertError } = await supabase.from('verification_codes').insert({
-          phone,
-          code: DEV_BYPASS_CODE,
-          expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
-        })
-
-        if (insertError) {
-          console.error('Failed to store dev verification code:', insertError)
-        }
       }
 
       // Check if customer exists
