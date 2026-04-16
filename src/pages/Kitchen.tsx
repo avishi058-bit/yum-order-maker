@@ -489,6 +489,43 @@ const Kitchen = () => {
           >
             {soundEnabled ? <Bell size={20} /> : <BellOff size={20} />}
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowRingtoneMenu(!showRingtoneMenu)}
+              className="p-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-secondary"
+              title="בחר צלצול"
+            >
+              <Music size={20} />
+            </button>
+            {showRingtoneMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-xl z-50 min-w-[200px] p-2">
+                <div className="text-xs font-bold text-muted-foreground px-3 py-1 mb-1">בחר צלצול</div>
+                {RINGTONES.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      setSelectedRingtone(r.id);
+                      playRingtone(r.id);
+                    }}
+                    className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
+                      selectedRingtone === r.id
+                        ? "bg-primary/20 text-primary font-bold"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <span>{r.label}</span>
+                    {selectedRingtone === r.id && <span className="text-primary">✓</span>}
+                  </button>
+                ))}
+                <button
+                  onClick={() => playRingtone(selectedRingtone)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg text-sm bg-muted hover:bg-secondary text-foreground transition-colors"
+                >
+                  ▶ נגן דוגמה
+                </button>
+              </div>
+            )}
+          </div>
           <div className="text-sm text-muted-foreground">
             {new Date().toLocaleDateString("he-IL")}
           </div>
