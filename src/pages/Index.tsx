@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ShoppingBag, Phone } from "lucide-react";
+import { ShoppingBag, Phone, LogIn } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
@@ -14,9 +14,12 @@ import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import KioskWelcome from "@/components/KioskWelcome";
+import CustomerGreeting from "@/components/CustomerGreeting";
+import CustomerAuthModal from "@/components/CustomerAuthModal";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
