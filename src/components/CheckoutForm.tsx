@@ -5,6 +5,7 @@ import { toppings, removals, smashModifications, mealSideOptions, mealDrinkOptio
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { Banknote, CreditCard } from "lucide-react";
 
 interface CheckoutFormProps {
@@ -15,6 +16,7 @@ interface CheckoutFormProps {
 }
 
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, onClose, onSuccess }, ref) => {
+  const { customer, isLoggedIn } = useCustomerAuth();
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
   const [otpCode, setOtpCode] = useState("");
@@ -24,6 +26,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
+
+  // Auto-fill from customer auth and skip to details/payment
+  useEffect(() => {
+    if (isLoggedIn && customer) {
+      setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
+      setCustomerName(customer.name);
+      setStep("details");
+    }
+  }, [isLoggedIn, customer]);
 
   const handleSendOtp = async () => {
     if (!form.phone || form.phone.replace(/[-\s]/g, '').length < 9) {

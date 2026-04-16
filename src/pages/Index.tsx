@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ShoppingBag, Phone } from "lucide-react";
+import { ShoppingBag, Phone, LogIn } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
@@ -14,14 +14,18 @@ import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import KioskWelcome from "@/components/KioskWelcome";
+import CustomerGreeting from "@/components/CustomerGreeting";
+import CustomerAuthModal from "@/components/CustomerAuthModal";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
+  const { isLoggedIn } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
@@ -36,7 +40,7 @@ const Index = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
-  // trackingOrderNumber removed - now using OrderTopBar with localStorage
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
   const addToCartDirect = useCallback((item: MenuItem) => {
@@ -203,6 +207,24 @@ const Index = () => {
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
 
+      {/* Customer greeting / login bar */}
+      {!isStation && (
+        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border" dir="rtl">
+          {isLoggedIn ? (
+            <CustomerGreeting />
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-semibold"
+            >
+              <LogIn size={16} />
+              התחברות
+            </button>
+          )}
+          <div />
+        </div>
+      )}
+
       {/* Kiosk welcome screen */}
       {isStation && showKioskWelcome && !isClosed && (
         <KioskWelcome onStart={() => setShowKioskWelcome(false)} />
@@ -344,6 +366,7 @@ const Index = () => {
       )}
 
       <AccessibilityWidget />
+      <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   );
 };
