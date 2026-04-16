@@ -17,23 +17,41 @@ export type Database = {
       customers: {
         Row: {
           created_at: string
+          device_token: string | null
           id: string
+          last_login_at: string | null
+          login_count: number
+          marketing_consent: boolean
+          marketing_consent_at: string | null
           name: string
           phone: string
+          terms_accepted_at: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          device_token?: string | null
           id?: string
+          last_login_at?: string | null
+          login_count?: number
+          marketing_consent?: boolean
+          marketing_consent_at?: string | null
           name: string
           phone: string
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          device_token?: string | null
           id?: string
+          last_login_at?: string | null
+          login_count?: number
+          marketing_consent?: boolean
+          marketing_consent_at?: string | null
           name?: string
           phone?: string
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: []
