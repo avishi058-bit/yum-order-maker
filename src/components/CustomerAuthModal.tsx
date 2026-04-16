@@ -199,7 +199,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
               {step === "otp" && (
                 <>
                   <p className="text-sm text-muted-foreground">
-                    הקוד נשלח ל-{phone}
+                    {devMode ? `מצב פיתוח - הכנס קוד 1234` : `הקוד נשלח ל-${phone}`}
                   </p>
                   <div className="relative">
                     <KeyRound size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
