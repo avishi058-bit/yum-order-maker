@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { Banknote, CreditCard } from "lucide-react";
+import TermsModal from "@/components/TermsModal";
 
 interface CheckoutFormProps {
   items: CartItem[];
@@ -25,7 +26,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
   const { status: restaurantStatus } = useRestaurantStatus();
+  // Kiosk context → larger touch-friendly checkbox + modal
+  const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
   // Auto-fill from customer auth and skip to details/payment
   useEffect(() => {
