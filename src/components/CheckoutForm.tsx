@@ -8,6 +8,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { Banknote, CreditCard } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
+import PrivacyModal from "@/components/PrivacyModal";
 
 interface CheckoutFormProps {
   items: CartItem[];
@@ -28,6 +29,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const { status: restaurantStatus } = useRestaurantStatus();
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
@@ -128,9 +130,12 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const handlePaymentSelect = async (method: "cash" | "credit") => {
     // Guard against double-clicks while a previous submission is in flight
     if (submitting) return;
-    // Hard gate: terms must be accepted before any payment can proceed
+    // Hard gate: terms + privacy must be accepted before any payment can proceed
     if (!termsAccepted) {
-      toast({ title: "יש לאשר את תנאי השימוש כדי להמשיך", variant: "destructive" });
+      toast({
+        title: "יש לאשר תנאי שימוש ומדיניות פרטיות לפני המשך",
+        variant: "destructive",
+      });
       return;
     }
     setPaymentMethod(method);
