@@ -45,13 +45,14 @@ const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
 
-  const addToCartDirect = useCallback((item: MenuItem) => {
+  const addToCartDirect = useCallback((item: MenuItem & { _menuItemId?: string }) => {
+    const menuItemId = item._menuItemId ?? item.id;
     setCart((prev) => {
       const existing = prev.find((c) => c.id === item.id);
       if (existing) {
         return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+      return [...prev, { id: item.id, menuItemId, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
     });
   }, []);
 
@@ -76,6 +77,7 @@ const Index = () => {
         ...prev,
         {
           id: cartItemId,
+          menuItemId: item.id,
           name: item.name,
           price: item.price,
           quantity,
@@ -99,6 +101,7 @@ const Index = () => {
         ...prev,
         {
           id: `friends-deal-${Date.now()}`,
+          menuItemId: "friends-deal",
           name: "דיל חברים",
           price: 216 + drinksExtra,
           quantity: 1,
@@ -122,6 +125,7 @@ const Index = () => {
         ...prev,
         {
           id: `family-deal-${Date.now()}`,
+          menuItemId: "family-deal",
           name: "דיל משפחתי",
           price: 300 + drinksExtra,
           quantity: 1,
@@ -141,12 +145,13 @@ const Index = () => {
   const handleDrinkConfirm = useCallback(
     (item: MenuItem, selectedDrink: string) => {
       setDrinkItem(null);
-      // Show preview with the selected drink variant
+      // Show preview with the selected drink variant; preserve canonical menu id for server-side pricing.
       setPreviewItem({
         ...item,
         id: `${item.id}-${selectedDrink}-${Date.now()}`,
         name: `${item.name} — ${selectedDrink}`,
-      });
+        _menuItemId: item.id,
+      } as MenuItem);
     },
     []
   );

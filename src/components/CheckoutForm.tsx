@@ -140,8 +140,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     const removalNames = item.removals
       .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
       .filter(Boolean) as string[];
+    // `id` may be a unique cart key like `classic-1776430479457`. Use `menuItemId` as the
+    // canonical pricing id; fall back to `id` for legacy carts that don't have it.
+    const menuItemId = (item as CartItem & { menuItemId?: string }).menuItemId ?? item.id;
     return {
-      itemId: item.id,
+      itemId: menuItemId,
       quantity: item.quantity,
       toppings: item.toppings,
       removals: item.removals,

@@ -116,13 +116,14 @@ const Kiosk = () => {
     }
   }, []);
 
-  const handlePreviewAdd = useCallback((item: MenuItem) => {
+  const handlePreviewAdd = useCallback((item: MenuItem & { _menuItemId?: string }) => {
+    const menuItemId = item._menuItemId ?? item.id;
     setCart((prev) => {
       const existing = prev.find((c) => c.id === item.id);
       if (existing) {
         return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+      return [...prev, { id: item.id, menuItemId, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
     });
     setJustAddedId(item.id);
     setTimeout(() => setJustAddedId(null), 1200);
@@ -133,7 +134,7 @@ const Kiosk = () => {
       const cartItemId = `${item.id}-${Date.now()}`;
       setCart((prev) => [
         ...prev,
-        { id: cartItemId, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId },
+        { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId },
       ]);
       setCustomizerItem(null);
     },
@@ -144,7 +145,7 @@ const Kiosk = () => {
     const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
     setCart((prev) => [
       ...prev,
-      { id: `friends-deal-${Date.now()}`, name: "דיל חברים", price: 216 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks },
+      { id: `friends-deal-${Date.now()}`, menuItemId: "friends-deal", name: "דיל חברים", price: 216 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks },
     ]);
     setDealOpen(false);
   }, []);
@@ -153,19 +154,20 @@ const Kiosk = () => {
     const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
     setCart((prev) => [
       ...prev,
-      { id: `family-deal-${Date.now()}`, name: "דיל משפחתי", price: 300 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks.length > 0 ? drinks : undefined },
+      { id: `family-deal-${Date.now()}`, menuItemId: "family-deal", name: "דיל משפחתי", price: 300 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks.length > 0 ? drinks : undefined },
     ]);
     setFamilyDealOpen(false);
   }, []);
 
   const handleDrinkConfirm = useCallback((item: MenuItem, selectedDrink: string) => {
     setDrinkItem(null);
-    // Show preview with the selected drink variant
+    // Show preview with the selected drink variant; preserve canonical menu id for server-side pricing.
     setPreviewItem({
       ...item,
       id: `${item.id}-${selectedDrink}-${Date.now()}`,
       name: `${item.name} — ${selectedDrink}`,
-    });
+      _menuItemId: item.id,
+    } as MenuItem);
   }, []);
 
   const updateQuantity = useCallback((id: string, delta: number) => {
