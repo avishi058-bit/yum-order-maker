@@ -11,6 +11,7 @@ import friendsMix from "@/assets/menu/friends-mix.jpg";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
 import beerImg from "@/assets/menu/beer-goldstar.jpeg";
 import bottleImg from "@/assets/menu/bottle-prigat.webp";
+import beerPremiumImg from "@/assets/menu/beer-leffe.jpeg";
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
