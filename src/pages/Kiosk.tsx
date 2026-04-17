@@ -303,11 +303,15 @@ const Kiosk = () => {
         items={cart}
         onUpdateQuantity={updateQuantity}
         isAvailable={isAvailable}
+        isKiosk
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {
           // One-tap add for simple items (sides + simple drinks).
-          // Reuses preview-add logic so identical items merge into one cart line.
           handlePreviewAdd(item);
+        }}
+        onSelectDrink={(item) => {
+          setCartOpen(false);
+          setDrinkItem(item);
         }}
         onCheckout={() => {
           setCartOpen(false);
