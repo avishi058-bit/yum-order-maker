@@ -100,6 +100,7 @@ const Index = () => {
         ...prev,
         {
           id: `friends-deal-${Date.now()}`,
+          menuItemId: "friends-deal",
           name: "דיל חברים",
           price: 216 + drinksExtra,
           quantity: 1,
@@ -123,6 +124,7 @@ const Index = () => {
         ...prev,
         {
           id: `family-deal-${Date.now()}`,
+          menuItemId: "family-deal",
           name: "דיל משפחתי",
           price: 300 + drinksExtra,
           quantity: 1,
