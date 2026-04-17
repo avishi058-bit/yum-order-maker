@@ -27,7 +27,7 @@ import { uiPositions } from "@/config/uiConfig";
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
-  const { isLoggedIn } = useCustomerAuth();
+  const { isLoggedIn, customer } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
