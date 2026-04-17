@@ -15,7 +15,7 @@ export const isAlcoholicItem = (item: MenuItem): boolean => {
 
 export const useAlcoholConsent = () => {
   const [pendingItem, setPendingItem] = useState<MenuItem | null>(null);
-  const [pendingResolve, setPendingResolve] = useState<((approved: boolean) => void) | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const hasConsent = (): boolean => {
     try {
@@ -25,22 +25,24 @@ export const useAlcoholConsent = () => {
     }
   };
 
+  const clearPending = () => {
+    setPendingItem(null);
+    setPendingAction(null);
+  };
+
   /**
    * Returns true if the action may proceed immediately,
    * false if the consent modal was opened (caller should bail and
    * wait for `onConfirm` / `onCancel`).
    */
   const guard = useCallback((item: MenuItem, onApproved: () => void): boolean => {
-    if (!isAlcoholicItem(item)) {
+    if (!isAlcoholicItem(item) || hasConsent()) {
       onApproved();
       return true;
     }
-    if (hasConsent()) {
-      onApproved();
-      return true;
-    }
+
     setPendingItem(item);
-    setPendingResolve(() => () => onApproved());
+    setPendingAction(() => onApproved);
     return false;
   }, []);
 
@@ -50,14 +52,14 @@ export const useAlcoholConsent = () => {
     } catch {
       /* ignore */
     }
-    pendingResolve?.(true);
-    setPendingItem(null);
-    setPendingResolve(null);
-  }, [pendingResolve]);
+
+    const action = pendingAction;
+    clearPending();
+    action?.();
+  }, [pendingAction]);
 
   const cancel = useCallback(() => {
-    setPendingItem(null);
-    setPendingResolve(null);
+    clearPending();
   }, []);
 
   return {
