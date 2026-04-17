@@ -15,6 +15,12 @@ export interface DealDrinkChoice {
 
 export interface CartItem {
   id: string;
+  /**
+   * The canonical menu item id used for server-side pricing.
+   * Distinct from `id` which may include a unique suffix (e.g. `classic-1776430479457`)
+   * to allow multiple customizations of the same menu item to coexist in the cart.
+   */
+  menuItemId: string;
   name: string;
   price: number;
   quantity: number;
