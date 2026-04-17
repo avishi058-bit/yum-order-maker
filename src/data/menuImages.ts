@@ -1,20 +1,20 @@
-import classicImg from "@/assets/menu/classic.jpg";
-import smashMoshavnikim from "@/assets/smash-moshavnikim.jpeg";
-import smashDoubleCheese from "@/assets/menu/smash-double-cheese.jpg";
-import doubleImg from "@/assets/menu/double.jpg";
-import avishai from "@/assets/menu/avishai.jpg";
-import crazySmash from "@/assets/menu/crazy-smash.jpg";
-import specialHadegel from "@/assets/menu/special-hadegel.jpg";
-import fries from "@/assets/menu/fries.jpg";
-import waffleFries from "@/assets/menu/waffle-fries.jpeg";
-import tempuraOnion from "@/assets/menu/tempura-onion.jpg";
-import friendsMix from "@/assets/menu/friends-mix.jpg";
+import classicImg from "@/assets/menu/classic.webp";
+import smashMoshavnikim from "@/assets/smash-moshavnikim.webp";
+import smashDoubleCheese from "@/assets/menu/smash-double-cheese.webp";
+import doubleImg from "@/assets/menu/double.webp";
+import avishai from "@/assets/menu/avishai.webp";
+import crazySmash from "@/assets/menu/crazy-smash.webp";
+import specialHadegel from "@/assets/menu/special-hadegel.webp";
+import fries from "@/assets/menu/fries.webp";
+import waffleFries from "@/assets/menu/waffle-fries.webp";
+import tempuraOnion from "@/assets/menu/tempura-onion.webp";
+import friendsMix from "@/assets/menu/friends-mix.webp";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
-import beerImg from "@/assets/menu/beer-goldstar.jpeg";
+import beerImg from "@/assets/menu/beer-goldstar.webp";
 import bottleImg from "@/assets/menu/bottle-prigat.webp";
-import beerPremiumImg from "@/assets/menu/beer-leffe.jpeg";
+import beerPremiumImg from "@/assets/menu/beer-leffe.webp";
 import beerWeissImg from "@/assets/menu/beer-weihenstephaner.webp";
-import hafMifsha from "@/assets/menu/haf-mifsha.jpg";
+import hafMifsha from "@/assets/menu/haf-mifsha.webp";
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
