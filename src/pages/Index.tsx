@@ -350,6 +350,10 @@ const Index = () => {
           }
         }}
         onQuickAdd={(item) => addToCartDirect(item)}
+        onSelectDrink={(item) => {
+          setCartOpen(false);
+          setDrinkItem(item);
+        }}
         onBackToMenu={() => {
           setCartOpen(false);
           setTimeout(() => {
@@ -357,6 +361,7 @@ const Index = () => {
           }, 100);
         }}
         isAvailable={isAvailable}
+        isKiosk={isStation}
       />
 
       <SauceSelector

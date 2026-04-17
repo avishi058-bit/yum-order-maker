@@ -8,6 +8,7 @@ import {
   menuItems,
   mealSideOptions,
   mealDrinkOptions,
+  drinkSubOptions,
   type MenuItem,
 } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
@@ -19,20 +20,23 @@ interface KioskCartDrawerProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
   onCheckout: () => void;
-  /** Quick-add for simple items (sides + simple drinks). Burgers/meals/deals NOT included. */
+  /** Quick-add for simple items (sides + simple drinks without sub-options). */
   onQuickAdd: (item: MenuItem) => void;
+  /** Open the drink-variant selector (for cans / beers with sub-options). */
+  onSelectDrink?: (item: MenuItem) => void;
   /** "Add another item" — return to menu */
   onBackToMenu: () => void;
   isAvailable: (id: string) => boolean;
+  /** Kiosk uses larger sizes; website uses compact sizes. */
+  isKiosk?: boolean;
 }
 
 /**
- * Wolt-inspired kiosk cart screen:
+ * Wolt-inspired cart screen used on BOTH kiosk and website.
  * - Large item cards with +/- controls
  * - "Recommended for you" rail of simple add-ons (one-tap +)
  * - Sticky bottom bar with totals + checkout CTA
- *
- * Used ONLY in kiosk mode. Website/mobile keeps the original CartDrawer.
+ * - Drinks with variants (can / beer) open the drink selector instead of quick-add.
  */
 const KioskCartDrawer = ({
   open,
@@ -41,8 +45,10 @@ const KioskCartDrawer = ({
   onUpdateQuantity,
   onCheckout,
   onQuickAdd,
+  onSelectDrink,
   onBackToMenu,
   isAvailable,
+  isKiosk = false,
 }: KioskCartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
@@ -74,21 +80,108 @@ const KioskCartDrawer = ({
       )
       .filter(Boolean);
 
-  // Recommendations: simple add-ons (sides + simple drinks). Exclude items already in cart.
-  // Burgers/meals/deals are excluded because they require customization flows.
+  // Recommendations: sides + drinks. Exclude items already in cart.
+  // Burgers/meals/deals are excluded (they require complex customization flows).
+  // "מיקס חברים" (friends-mix) is pinned first as the priority recommendation.
   const recommendations = useMemo(() => {
     const inCartMenuIds = new Set(items.map((i) => i.menuItemId));
-    return menuItems.filter((m) => {
+    const list = menuItems.filter((m) => {
       if (!isAvailable(m.id)) return false;
       if (inCartMenuIds.has(m.id)) return false;
-      // Simple categories only
       if (m.category === "side") return true;
-      // Simple drinks: cans, bottles, beers — these go through DrinkSelector normally,
-      // but per request, expose them as quick-add too
       if (m.category === "drink") return true;
       return false;
     });
+    // Pin friends-mix first
+    return list.sort((a, b) => {
+      if (a.id === "friends-mix") return -1;
+      if (b.id === "friends-mix") return 1;
+      return 0;
+    });
   }, [items, isAvailable]);
+
+  const handleRecommendationAdd = (item: MenuItem) => {
+    // If the drink has variants (cans, bottles, beers), open the selector
+    if (item.category === "drink" && drinkSubOptions[item.id] && onSelectDrink) {
+      onSelectDrink(item);
+      return;
+    }
+    onQuickAdd(item);
+  };
+
+  // Size tokens — kiosk uses larger touch targets, website uses compact sizes
+  const sz = isKiosk
+    ? {
+        headerPad: "p-6",
+        backIcon: 28,
+        backText: "text-lg",
+        title: "text-3xl",
+        titleIcon: 32,
+        closeIcon: 32,
+        contentPad: "p-6 space-y-4",
+        emptyText: "text-2xl mt-20",
+        cardPad: "p-5",
+        cardGap: "gap-4",
+        img: "w-24 h-24 rounded-xl",
+        imgFallbackText: "text-4xl",
+        itemName: "text-xl",
+        itemPrice: "text-xl",
+        modText: "text-sm",
+        qtyBtn: "w-12 h-12",
+        qtyIcon: 22,
+        qtyNum: "text-2xl w-10",
+        addMoreBtn: "py-5 text-xl",
+        addMoreIcon: 26,
+        recHeaderPad: "px-6 mb-4",
+        recIcon: 26,
+        recTitle: "text-2xl",
+        recCardWidth: "w-44",
+        recName: "text-base",
+        recPrice: "text-lg",
+        recBtn: "py-3 text-lg",
+        recBtnIcon: 22,
+        bottomPad: "p-5",
+        bottomCount: "text-sm",
+        bottomTotal: "text-3xl",
+        ckBtn: "py-5 px-10 text-2xl",
+      }
+    : {
+        headerPad: "p-4",
+        backIcon: 22,
+        backText: "text-sm",
+        title: "text-xl",
+        titleIcon: 24,
+        closeIcon: 26,
+        contentPad: "p-4 space-y-3",
+        emptyText: "text-base mt-16",
+        cardPad: "p-3",
+        cardGap: "gap-3",
+        img: "w-20 h-20 rounded-lg",
+        imgFallbackText: "text-3xl",
+        itemName: "text-base",
+        itemPrice: "text-base",
+        modText: "text-xs",
+        qtyBtn: "w-10 h-10",
+        qtyIcon: 18,
+        qtyNum: "text-lg w-8",
+        addMoreBtn: "py-3 text-base",
+        addMoreIcon: 20,
+        recHeaderPad: "px-4 mb-3",
+        recIcon: 20,
+        recTitle: "text-lg",
+        recCardWidth: "w-36",
+        recName: "text-sm",
+        recPrice: "text-base",
+        recBtn: "py-2.5 text-base",
+        recBtnIcon: 18,
+        bottomPad: "p-4",
+        bottomCount: "text-xs",
+        bottomTotal: "text-2xl",
+        ckBtn: "py-3 px-6 text-lg",
+      };
+
+  // On website, drawer slides from the right but capped to a sensible width
+  const drawerWidth = isKiosk ? "w-full" : "w-full sm:max-w-md";
 
   return (
     <AnimatePresence>
@@ -106,20 +199,20 @@ const KioskCartDrawer = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-full bg-background z-50 shadow-2xl flex flex-col"
+            className={`fixed top-0 right-0 h-full ${drawerWidth} bg-background z-50 shadow-2xl flex flex-col`}
             dir="rtl"
           >
             {/* Header */}
-            <div className="flex-none flex items-center justify-between p-6 bg-card border-b border-border">
+            <div className={`flex-none flex items-center justify-between ${sz.headerPad} bg-card border-b border-border`}>
               <button
                 onClick={onClose}
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ArrowRight size={28} />
-                <span className="text-lg font-bold">לתפריט</span>
+                <ArrowRight size={sz.backIcon} />
+                <span className={`${sz.backText} font-bold`}>לתפריט</span>
               </button>
-              <h2 className="text-3xl font-black flex items-center gap-3">
-                <ShoppingBag size={32} className="text-primary" />
+              <h2 className={`${sz.title} font-black flex items-center gap-2`}>
+                <ShoppingBag size={sz.titleIcon} className="text-primary" />
                 ההזמנה שלך
               </h2>
               <button
@@ -127,34 +220,34 @@ const KioskCartDrawer = ({
                 className="text-muted-foreground hover:text-foreground"
                 aria-label="סגור"
               >
-                <X size={32} />
+                <X size={sz.closeIcon} />
               </button>
             </div>
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto pb-40">
               {/* Cart items */}
-              <div className="p-6 space-y-4">
+              <div className={sz.contentPad}>
                 {items.length === 0 ? (
-                  <p className="text-center text-muted-foreground mt-20 text-2xl">העגלה ריקה</p>
+                  <p className={`text-center text-muted-foreground ${sz.emptyText}`}>העגלה ריקה</p>
                 ) : (
                   items.map((item) => {
                     const img = menuImages[item.menuItemId];
                     return (
                       <div
                         key={item.id}
-                        className="bg-card rounded-2xl p-5 shadow-sm border border-border flex gap-4"
+                        className={`bg-card rounded-2xl ${sz.cardPad} shadow-sm border border-border flex ${sz.cardGap}`}
                       >
                         {/* Image */}
                         {img ? (
                           <img
                             src={img}
                             alt={item.name}
-                            className="w-24 h-24 rounded-xl object-cover flex-none"
+                            className={`${sz.img} object-cover flex-none`}
                             loading="lazy"
                           />
                         ) : (
-                          <div className="w-24 h-24 rounded-xl bg-secondary flex items-center justify-center text-4xl flex-none">
+                          <div className={`${sz.img} bg-secondary flex items-center justify-center ${sz.imgFallbackText} flex-none`}>
                             🍔
                           </div>
                         )}
@@ -162,8 +255,8 @@ const KioskCartDrawer = ({
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className="text-xl font-black leading-tight">{item.name}</h3>
-                            <span className="text-xl font-black text-primary whitespace-nowrap">
+                            <h3 className={`${sz.itemName} font-black leading-tight`}>{item.name}</h3>
+                            <span className={`${sz.itemPrice} font-black text-primary whitespace-nowrap`}>
                               ₪{getItemTotal(item)}
                             </span>
                           </div>
@@ -171,17 +264,17 @@ const KioskCartDrawer = ({
                           {/* Modifiers — compact list */}
                           <div className="space-y-1 mb-3">
                             {item.removals.length > 0 && (
-                              <p className="text-sm text-destructive">
+                              <p className={`${sz.modText} text-destructive`}>
                                 ללא: {getRemovalNames(item.removals).join(", ")}
                               </p>
                             )}
                             {item.toppings.length > 0 && (
-                              <p className="text-sm text-primary">
+                              <p className={`${sz.modText} text-primary`}>
                                 + {getToppingNames(item.toppings).join(", ")}
                               </p>
                             )}
                             {item.withMeal && (
-                              <p className="text-sm text-accent-foreground">
+                              <p className={`${sz.modText} text-accent-foreground`}>
                                 🍟🥤 ארוחה עסקית
                                 {item.mealSideId &&
                                   ` · ${mealSideOptions.find((s) => s.id === item.mealSideId)?.name}`}
@@ -190,7 +283,7 @@ const KioskCartDrawer = ({
                               </p>
                             )}
                             {item.dealBurgers && (
-                              <p className="text-sm text-muted-foreground">
+                              <p className={`${sz.modText} text-muted-foreground`}>
                                 {item.dealBurgers.length} המבורגרים
                                 {item.dealDrinks && ` · ${item.dealDrinks.length} משקאות`}
                               </p>
@@ -201,20 +294,20 @@ const KioskCartDrawer = ({
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => onUpdateQuantity(item.id, -1)}
-                              className="w-12 h-12 rounded-full bg-secondary hover:bg-border transition-colors flex items-center justify-center active:scale-95"
+                              className={`${sz.qtyBtn} rounded-full bg-secondary hover:bg-border transition-colors flex items-center justify-center active:scale-95`}
                               aria-label="הפחת"
                             >
-                              <Minus size={22} />
+                              <Minus size={sz.qtyIcon} />
                             </button>
-                            <span className="font-black text-2xl w-10 text-center">
+                            <span className={`font-black ${sz.qtyNum} text-center`}>
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => onUpdateQuantity(item.id, 1)}
-                              className="w-12 h-12 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center active:scale-95"
+                              className={`${sz.qtyBtn} rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center active:scale-95`}
                               aria-label="הוסף"
                             >
-                              <Plus size={22} />
+                              <Plus size={sz.qtyIcon} />
                             </button>
                           </div>
                         </div>
@@ -226,13 +319,13 @@ const KioskCartDrawer = ({
 
               {/* Add another item CTA */}
               {items.length > 0 && (
-                <div className="px-6">
+                <div className={isKiosk ? "px-6" : "px-4"}>
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={onBackToMenu}
-                    className="w-full bg-secondary hover:bg-border text-foreground font-black py-5 rounded-2xl text-xl border-2 border-dashed border-border flex items-center justify-center gap-3 transition-colors"
+                    className={`w-full bg-secondary hover:bg-border text-foreground font-black ${sz.addMoreBtn} rounded-2xl border-2 border-dashed border-border flex items-center justify-center gap-3 transition-colors`}
                   >
-                    <Plus size={26} />
+                    <Plus size={sz.addMoreIcon} />
                     הוסף עוד מנה
                   </motion.button>
                 </div>
@@ -240,21 +333,22 @@ const KioskCartDrawer = ({
 
               {/* Recommendations rail */}
               {recommendations.length > 0 && items.length > 0 && (
-                <div className="mt-8">
-                  <div className="px-6 mb-4 flex items-center gap-3">
-                    <Sparkles size={26} className="text-primary" />
-                    <h3 className="text-2xl font-black">ממליצים לך להוסיף</h3>
+                <div className={isKiosk ? "mt-8" : "mt-6"}>
+                  <div className={`${sz.recHeaderPad} flex items-center gap-2`}>
+                    <Sparkles size={sz.recIcon} className="text-primary" />
+                    <h3 className={`${sz.recTitle} font-black`}>ממליצים לך להוסיף</h3>
                   </div>
 
                   {/* Horizontal scroll for quick browsing */}
-                  <div className="overflow-x-auto pb-4 px-6">
-                    <div className="flex gap-4 min-w-min">
+                  <div className={`overflow-x-auto pb-4 ${isKiosk ? "px-6" : "px-4"}`}>
+                    <div className={`flex ${isKiosk ? "gap-4" : "gap-3"} min-w-min`}>
                       {recommendations.map((rec) => {
                         const img = menuImages[rec.id];
+                        const hasVariants = rec.category === "drink" && !!drinkSubOptions[rec.id];
                         return (
                           <div
                             key={rec.id}
-                            className="flex-none w-44 bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col"
+                            className={`flex-none ${sz.recCardWidth} bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col`}
                           >
                             {/* Image */}
                             <div className="aspect-square bg-secondary flex items-center justify-center overflow-hidden">
@@ -273,23 +367,23 @@ const KioskCartDrawer = ({
                             </div>
 
                             {/* Info */}
-                            <div className="p-3 flex-1 flex flex-col">
-                              <p className="font-black text-base leading-tight mb-1 line-clamp-2">
+                            <div className={`${isKiosk ? "p-3" : "p-2.5"} flex-1 flex flex-col`}>
+                              <p className={`font-black ${sz.recName} leading-tight mb-1 line-clamp-2`}>
                                 {rec.name}
                               </p>
-                              <p className="text-primary font-black text-lg mt-auto">
+                              <p className={`text-primary font-black ${sz.recPrice} mt-auto`}>
                                 ₪{rec.price}
                               </p>
                             </div>
 
                             {/* Quick-add button */}
                             <button
-                              onClick={() => onQuickAdd(rec)}
-                              className="w-full bg-primary text-primary-foreground py-3 font-black text-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
+                              onClick={() => handleRecommendationAdd(rec)}
+                              className={`w-full bg-primary text-primary-foreground ${sz.recBtn} font-black flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]`}
                               aria-label={`הוסף ${rec.name}`}
                             >
-                              <Plus size={22} />
-                              הוסף
+                              <Plus size={sz.recBtnIcon} />
+                              {hasVariants ? "בחר" : "הוסף"}
                             </button>
                           </div>
                         );
@@ -302,16 +396,16 @@ const KioskCartDrawer = ({
 
             {/* Sticky bottom bar */}
             {items.length > 0 && (
-              <div className="flex-none p-5 bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-                <div className="flex items-center justify-between mb-3">
+              <div className={`flex-none ${sz.bottomPad} bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)]`}>
+                <div className="flex items-center justify-between mb-1">
                   <div>
-                    <p className="text-sm text-muted-foreground">{totalCount} פריטים</p>
-                    <p className="text-3xl font-black">₪{total}</p>
+                    <p className={`${sz.bottomCount} text-muted-foreground`}>{totalCount} פריטים</p>
+                    <p className={`${sz.bottomTotal} font-black`}>₪{total}</p>
                   </div>
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     onClick={onCheckout}
-                    className="bg-primary text-primary-foreground font-black py-5 px-10 rounded-2xl text-2xl shadow-lg shadow-primary/30 active:opacity-90"
+                    className={`bg-primary text-primary-foreground font-black ${sz.ckBtn} rounded-2xl shadow-lg shadow-primary/30 active:opacity-90`}
                   >
                     מעבר לתשלום ←
                   </motion.button>
