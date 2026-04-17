@@ -106,10 +106,8 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const isScrollingToCategory = useRef(false);
 
-  // Intersection observer for auto-highlighting active category
+  // Intersection observer for auto-highlighting active category (kiosk + website)
   useEffect(() => {
-    if (!isKiosk) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (isScrollingToCategory.current) return;
