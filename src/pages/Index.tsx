@@ -400,6 +400,17 @@ const Index = () => {
 
       <AccessibilityWidget />
       <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+
+      {/* Saved cart welcome-back prompt — only when current cart is empty
+          and we're not in the middle of an active order (kiosk / checkout). */}
+      <SavedCartModal
+        open={!!savedCart && cart.length === 0 && !checkoutOpen && !isStation}
+        savedCart={savedCart}
+        customerName={customer?.name ?? null}
+        onResume={handleResumeSavedCart}
+        onStartOver={handleStartOver}
+        onDismiss={dismissPrompt}
+      />
     </div>
   );
 };
