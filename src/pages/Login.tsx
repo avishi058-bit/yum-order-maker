@@ -28,7 +28,7 @@ const Login = () => {
     }
 
     toast.success("התחברת בהצלחה!");
-    navigate("/kitchen", { replace: true });
+    window.location.href = "/kitchen";
   };
 
   return (
