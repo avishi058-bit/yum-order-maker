@@ -3,11 +3,16 @@ import { useAuth, type AppRole } from "@/hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: AppRole;
+  requiredRole?: AppRole | AppRole[];
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, roles, loading } = useAuth();
+  const allowedRoles = requiredRole
+    ? Array.isArray(requiredRole)
+      ? requiredRole
+      : [requiredRole]
+    : [];
 
   if (loading) {
     return (
@@ -21,7 +26,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && !roles.includes(requiredRole)) {
+  if (allowedRoles.length > 0 && !allowedRoles.some((role) => roles.includes(role))) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground gap-4" dir="rtl">
         <h1 className="text-2xl font-bold">אין לך הרשאה לדף זה</h1>
