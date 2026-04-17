@@ -95,6 +95,40 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
     if (cart.length > 0) hasInteractedRef.current = true;
   }, [cart.length]);
 
+  const persistCart = useCallback(async (itemsToPersist: CartItem[]) => {
+    const identityColumn = phone ? "phone" : "guest_id";
+    const identityValue = phone ?? guestId;
+
+    if (!identityValue) return;
+
+    if (itemsToPersist.length === 0) {
+      await supabase.from("saved_carts").delete().eq(identityColumn, identityValue);
+      return;
+    }
+
+    const payload = {
+      phone,
+      guest_id: phone ? null : guestId,
+      customer_name: customer?.name ?? null,
+      items: itemsToPersist as unknown as never,
+      dine_in: dineIn,
+      total,
+      last_action: "updated",
+    };
+
+    const { data: existing } = await supabase
+      .from("saved_carts")
+      .select("id")
+      .eq(identityColumn, identityValue)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabase.from("saved_carts").update(payload).eq("id", existing.id);
+    } else {
+      await supabase.from("saved_carts").insert(payload);
+    }
+  }, [phone, guestId, customer?.name, dineIn, total]);
+
   // ── Persist on cart change (debounced) ───────────────────────────────────
   useEffect(() => {
     if (!loaded || paused) return;
@@ -108,37 +142,32 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
 
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
 
-    saveTimerRef.current = window.setTimeout(async () => {
-      try {
-        if (cart.length === 0) {
-          // Empty cart → drop the saved record (user actively cleared it)
-          if (phone) await supabase.from("saved_carts").delete().eq("phone", phone);
-          else await supabase.from("saved_carts").delete().eq("guest_id", guestId);
-          return;
-        }
-
-        const payload = {
-          phone,
-          guest_id: phone ? null : guestId,
-          customer_name: customer?.name ?? null,
-          items: cart as unknown as never,
-          dine_in: dineIn,
-          total,
-          last_action: "updated",
-        };
-
-        await supabase.from("saved_carts").upsert(payload, {
-          onConflict: phone ? "phone" : "guest_id",
-        });
-      } catch {
-        // Network errors are non-fatal — local cart still works
-      }
+    saveTimerRef.current = window.setTimeout(() => {
+      void persistCart(cart).catch(() => {
+        // Network / persistence errors are non-fatal — local cart still works
+      });
     }, SAVE_DEBOUNCE_MS);
 
     return () => {
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     };
-  }, [cart, dineIn, total, loaded, paused, phone, guestId, customer?.name]);
+  }, [cart, loaded, paused, persistCart]);
+
+  // If the user moves into an active order flow (e.g. checkout/payment),
+  // flush the cart immediately instead of waiting for the debounce window.
+  useEffect(() => {
+    if (!loaded || !paused) return;
+    if (cart.length === 0 && !hasInteractedRef.current) return;
+
+    if (saveTimerRef.current) {
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+
+    void persistCart(cart).catch(() => {
+      // Best-effort flush only
+    });
+  }, [cart, loaded, paused, persistCart]);
 
   /** Mark that the next cart change should NOT be persisted (e.g. when we restore the saved cart into state). */
   const suppressNextSave = useCallback(() => {
