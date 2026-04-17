@@ -448,6 +448,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
+                    {(item.id === "haf-mifsha" || item.baseBurgerId === "haf-mifsha") && (
+                      <div className={`mx-5 mt-4 rounded-xl border-2 border-destructive bg-destructive/10 ${isKiosk ? "p-5" : "p-3"}`}>
+                        <p className={`font-black text-destructive text-right ${isKiosk ? "text-[20px]" : "text-sm"}`}>
+                          ⚠️ שימו לב: מבושל באזור בשרי, אין הפרדה מוחלטת מהבשר
+                        </p>
+                      </div>
+                    )}
                     {isBurger && (
                       <>
                         <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
