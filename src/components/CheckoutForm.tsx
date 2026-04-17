@@ -242,8 +242,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             return s + (t?.price || 0);
           }, 0);
           if (toppingsCost > 0) {
-            const toppingNames = item.toppings
-              .map(tId => toppings.find(t => t.id === tId)?.name)
+            const counts = new Map<string, number>();
+            item.toppings.forEach((tId) => counts.set(tId, (counts.get(tId) || 0) + 1));
+            const toppingNames = Array.from(counts.entries())
+              .map(([tId, count]) => {
+                const name = toppings.find((t) => t.id === tId)?.name;
+                if (!name) return null;
+                return count > 1 ? `${name} × ${count}` : name;
+              })
               .filter(Boolean);
             descParts.push(`תוספות: ${toppingNames.join(", ")}`);
           }
@@ -485,8 +491,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
             <div className="mb-6 bg-secondary/50 rounded-lg p-4 space-y-1">
               {items.map((item) => {
-                const toppingNames = item.toppings
-                  .map((tId) => toppings.find((t) => t.id === tId)?.name)
+                const tCounts = new Map<string, number>();
+                item.toppings.forEach((tId) => tCounts.set(tId, (tCounts.get(tId) || 0) + 1));
+                const toppingNames = Array.from(tCounts.entries())
+                  .map(([tId, count]) => {
+                    const name = toppings.find((t) => t.id === tId)?.name;
+                    if (!name) return null;
+                    return count > 1 ? `${name} × ${count}` : name;
+                  })
                   .filter(Boolean);
                 return (
                   <div key={item.id} className="flex justify-between text-sm">

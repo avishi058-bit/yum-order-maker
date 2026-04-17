@@ -56,8 +56,17 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, isKios
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
 
-  const getToppingNames = (ids: string[]) =>
-    ids.map((id) => toppings.find((t) => t.id === id)?.name).filter(Boolean);
+  const getToppingNames = (ids: string[]) => {
+    const counts = new Map<string, number>();
+    ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
+    return Array.from(counts.entries())
+      .map(([id, count]) => {
+        const name = toppings.find((t) => t.id === id)?.name;
+        if (!name) return null;
+        return count > 1 ? `${name} × ${count}` : name;
+      })
+      .filter(Boolean) as string[];
+  };
 
   const getRemovalNames = (ids: string[]) =>
     ids.map((id) => removals.find((r) => r.id === id)?.name || smashModifications.find((r) => r.id === id)?.name).filter(Boolean);
