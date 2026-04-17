@@ -238,6 +238,48 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_carts: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          dine_in: boolean | null
+          guest_id: string | null
+          id: string
+          items: Json
+          last_action: string
+          phone: string | null
+          resumed_count: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          dine_in?: boolean | null
+          guest_id?: string | null
+          id?: string
+          items?: Json
+          last_action?: string
+          phone?: string | null
+          resumed_count?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          dine_in?: boolean | null
+          guest_id?: string | null
+          id?: string
+          items?: Json
+          last_action?: string
+          phone?: string | null
+          resumed_count?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           background_color: string
@@ -334,6 +376,7 @@ export type Database = {
     }
     Functions: {
       check_otp_rate_limit: { Args: { p_phone: string }; Returns: boolean }
+      cleanup_expired_saved_carts: { Args: never; Returns: undefined }
       cleanup_old_verification_codes: { Args: never; Returns: undefined }
       has_role: {
         Args: {

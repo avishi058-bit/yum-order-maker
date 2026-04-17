@@ -50,6 +50,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     rafId: 0 as number,
   });
 
+  // Ref-bound close handler so drag callbacks defined before handleClose
+  // can still call the latest version without hitting a TDZ error.
+  const handleCloseRef = useRef<() => void>(() => {});
+
   const heroHeight = isKiosk ? HERO_HEIGHT_KIOSK : HERO_HEIGHT;
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
@@ -171,7 +175,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
         backdrop.style.transition = "opacity 200ms ease-out";
         backdrop.style.opacity = "0";
       }
-      window.setTimeout(() => handleClose(), 180);
+      window.setTimeout(() => handleCloseRef.current(), 180);
     } else {
       if (sheet) {
         sheet.style.transition = "transform 220ms cubic-bezier(0.4,0,0.2,1)";
@@ -312,6 +316,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     resetState();
     onClose();
   };
+  // Keep the ref pointing at the latest handleClose for drag callbacks above.
+  handleCloseRef.current = handleClose;
 
   const softDrinks = mealDrinkOptions.filter(d => d.category === "soft");
   const beerDrinks = mealDrinkOptions.filter(d => d.category === "beer");

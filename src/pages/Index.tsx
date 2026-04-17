@@ -16,16 +16,18 @@ import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
 import CustomerAuthModal from "@/components/CustomerAuthModal";
+import SavedCartModal from "@/components/SavedCartModal";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useSavedCart } from "@/hooks/useSavedCart";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
-  const { isLoggedIn } = useCustomerAuth();
+  const { isLoggedIn, customer } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
@@ -194,6 +196,37 @@ const Index = () => {
     }
     return base;
   };
+
+  // ── Saved cart (server + localStorage) ─────────────────────────────────
+  // Pause persistence + prompt while checkout is in progress (already an active order).
+  const cartTotal = getTotal();
+  const {
+    savedCart,
+    suppressNextSave,
+    markResumed,
+    discardSaved,
+    dismissPrompt,
+  } = useSavedCart({
+    cart,
+    dineIn,
+    total: cartTotal,
+    paused: checkoutOpen || isStation,
+  });
+
+  const handleResumeSavedCart = useCallback(() => {
+    if (!savedCart) return;
+    suppressNextSave();
+    setCart(savedCart.items);
+    if (savedCart.dineIn !== null && dineIn === null) {
+      setDineIn(savedCart.dineIn);
+    }
+    markResumed();
+    setCartOpen(true);
+  }, [savedCart, suppressNextSave, dineIn, markResumed]);
+
+  const handleStartOver = useCallback(() => {
+    discardSaved();
+  }, [discardSaved]);
 
   const handleDineInChoice = (val: boolean) => {
     setDineIn(val);
@@ -367,6 +400,17 @@ const Index = () => {
 
       <AccessibilityWidget />
       <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+
+      {/* Saved cart welcome-back prompt — only when current cart is empty
+          and we're not in the middle of an active order (kiosk / checkout). */}
+      <SavedCartModal
+        open={!!savedCart && cart.length === 0 && !checkoutOpen && !isStation}
+        savedCart={savedCart}
+        customerName={customer?.name ?? null}
+        onResume={handleResumeSavedCart}
+        onStartOver={handleStartOver}
+        onDismiss={dismissPrompt}
+      />
     </div>
   );
 };
