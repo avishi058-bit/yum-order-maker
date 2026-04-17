@@ -134,58 +134,78 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     await submitOrder(method);
   };
 
+  // Map a cart item to the create-order Edge Function payload.
+  // Includes Hebrew names for removals/dealBurger removals so they're stored as-is.
+  const buildServerItem = (item: CartItem) => {
+    const removalNames = item.removals
+      .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
+      .filter(Boolean) as string[];
+    return {
+      itemId: item.id,
+      quantity: item.quantity,
+      toppings: item.toppings,
+      removals: item.removals,
+      removalNames,
+      withMeal: item.withMeal,
+      mealSideId: item.mealSideId ?? null,
+      mealDrinkId: item.mealDrinkId ?? null,
+      dealBurgers: item.dealBurgers
+        ? item.dealBurgers.map((b) => ({
+            name: b.name,
+            removals: b.removals ?? [],
+            removalNames: (b.removals ?? [])
+              .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
+              .filter(Boolean) as string[],
+          }))
+        : null,
+      dealDrinks: item.dealDrinks
+        ? item.dealDrinks.map((d) => ({ optionId: d.id }))
+        : null,
+    };
+  };
+
+  const callCreateOrder = async (paymentMethod: "cash" | "credit", status: "new" | "pending_payment") => {
+    const isStation = localStorage.getItem("habakta_station") === "true";
+    const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
+    const orderSource: "website" | "kiosk" | "station" = isKioskPath
+      ? "kiosk"
+      : isStation
+      ? "station"
+      : "website";
+
+    const { data, error } = await supabase.functions.invoke("create-order", {
+      body: {
+        customerName: form.name,
+        customerPhone: form.phone,
+        notes: form.notes || null,
+        paymentMethod,
+        orderSource,
+        status,
+        items: items.map(buildServerItem),
+      },
+    });
+
+    if (error) {
+      // Try to surface server-side error message
+      let serverMsg = error.message || "שגיאה ביצירת ההזמנה";
+      try {
+        const ctx: any = (error as any).context;
+        if (ctx && typeof ctx.json === "function") {
+          const parsed = await ctx.json();
+          if (parsed?.error) serverMsg = parsed.error;
+        }
+      } catch { /* ignore */ }
+      throw new Error(serverMsg);
+    }
+    if (data?.error) throw new Error(data.error);
+    if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    return data as { orderId: string; orderNumber: number; total: number };
+  };
+
   const handleCreditPayment = async () => {
     setSubmitting(true);
     try {
-      // First create the order in DB
-      await supabase.from("customers").upsert(
-        { phone: form.phone, name: form.name },
-        { onConflict: "phone" }
-      );
-
-      const isStation = localStorage.getItem("habakta_station") === "true";
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          customer_name: form.name,
-          customer_phone: form.phone,
-          notes: form.notes || null,
-          total,
-          status: "pending_payment",
-          payment_method: "credit",
-          order_source: isStation ? "station" : "website",
-        } as any)
-        .select("id, order_number")
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = items.map((item) => {
-        const toppingNames = item.toppings
-          .map((tId) => toppings.find((t) => t.id === tId)?.name)
-          .filter(Boolean) as string[];
-        const removalNames = item.removals
-          .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
-          .filter(Boolean) as string[];
-
-        return {
-          order_id: order.id,
-          item_name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          toppings: toppingNames,
-          removals: removalNames,
-          with_meal: item.withMeal,
-          meal_side: item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.name || null) : null,
-          meal_drink: item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name || null) : null,
-          deal_burgers: item.dealBurgers ? JSON.parse(JSON.stringify(item.dealBurgers)) : null,
-          deal_drinks: item.dealDrinks ? JSON.parse(JSON.stringify(item.dealDrinks)) : null,
-        };
-      });
-
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-      if (itemsError) throw itemsError;
+      const order = await callCreateOrder("credit", "pending_payment");
 
       // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
       const zcreditItems = items.map((item) => {
@@ -264,14 +284,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            total,
+            total: order.total,
             items: zcreditItems,
             customerName: form.name,
             customerPhone: form.phone,
-            orderId: order.id,
+            orderId: order.orderId,
              successUrl: isKiosk
-               ? `${baseUrl}/kiosk?paid=true&order=${order.order_number}`
-               : `${baseUrl}/track?order=${order.order_number}&paid=true`,
+               ? `${baseUrl}/kiosk?paid=true&order=${order.orderNumber}`
+               : `${baseUrl}/track?order=${order.orderNumber}&paid=true`,
              cancelUrl: isKiosk ? `${baseUrl}/kiosk?payment=cancelled` : `${baseUrl}/?payment=cancelled`,
             callbackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-callback`,
           }),
@@ -296,67 +316,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   const submitOrder = async (method: "cash" | "credit") => {
     setSubmitting(true);
-
     try {
-      // Upsert customer
-      await supabase.from("customers").upsert(
-        { phone: form.phone, name: form.name },
-        { onConflict: "phone" }
-      );
-
-      // Create the order
-      const isStation = localStorage.getItem("habakta_station") === "true";
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          customer_name: form.name,
-          customer_phone: form.phone,
-          notes: form.notes || null,
-          total,
-          status: "new",
-          payment_method: method,
-          order_source: isStation ? "station" : "website",
-        } as any)
-        .select("id, order_number")
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = items.map((item) => {
-        const toppingNames = item.toppings
-          .map((tId) => toppings.find((t) => t.id === tId)?.name)
-          .filter(Boolean) as string[];
-        const removalNames = item.removals
-          .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
-          .filter(Boolean) as string[];
-
-        return {
-          order_id: order.id,
-          item_name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          toppings: toppingNames,
-          removals: removalNames,
-          with_meal: item.withMeal,
-          meal_side: item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.name || null) : null,
-          meal_drink: item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name || null) : null,
-          deal_burgers: item.dealBurgers ? JSON.parse(JSON.stringify(item.dealBurgers)) : null,
-          deal_drinks: item.dealDrinks ? JSON.parse(JSON.stringify(item.dealDrinks)) : null,
-        };
-      });
-
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-      if (itemsError) throw itemsError;
-
+      const order = await callCreateOrder(method, "new");
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
-        description: `מספר הזמנה: #${order.order_number}`,
+        description: `מספר הזמנה: #${order.orderNumber}`,
       });
-      onSuccess(order.order_number, form.phone);
-    } catch (error) {
+      onSuccess(order.orderNumber, form.phone);
+    } catch (error: any) {
       console.error("Order error:", error);
-      toast({ title: "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+      toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
