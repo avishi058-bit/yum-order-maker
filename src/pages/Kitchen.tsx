@@ -4,6 +4,7 @@ import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, 
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 interface OrderItem {
   id: string;
