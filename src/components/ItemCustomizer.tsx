@@ -522,8 +522,62 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
                             {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
-                              const active = selectedToppings.includes(t.id);
+                              const isCheddar = t.id === "vegan-cheddar";
+                              const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === "vegan-cheddar").length : 0;
+                              const active = isCheddar ? cheddarCount > 0 : selectedToppings.includes(t.id);
                               const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
+
+                              if (isCheddar) {
+                                return (
+                                  <div
+                                    key={t.id}
+                                    className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                  >
+                                    {/* Left: stepper + price */}
+                                    <div className="flex items-center gap-3">
+                                      {cheddarCount > 0 ? (
+                                        <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
+                                          <button
+                                            onClick={removeCheddarSlice}
+                                            className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                                            aria-label="הסר פרוסה"
+                                          >
+                                            <Minus size={isKiosk ? 18 : 14} />
+                                          </button>
+                                          <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{cheddarCount}</span>
+                                          <button
+                                            onClick={addCheddarSlice}
+                                            disabled={cheddarCount >= VEGAN_CHEDDAR_MAX}
+                                            className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                                            aria-label="הוסף פרוסה"
+                                          >
+                                            <Plus size={isKiosk ? 18 : 14} />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={addCheddarSlice}
+                                          className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
+                                        >
+                                          <Plus size={isKiosk ? 18 : 14} />
+                                          הוסף
+                                        </button>
+                                      )}
+                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
+                                    </div>
+                                    {/* Right: name */}
+                                    <div className="flex items-center gap-3">
+                                      <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
+                                      {showRecommended && (
+                                        <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
+                                          🔥 הולך טוב עם המנה
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
                               return (
                                 <button
                                   key={t.id}
