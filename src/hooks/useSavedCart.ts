@@ -87,6 +87,14 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
     // Re-run when identity changes (e.g. user logs in mid-session)
   }, [phone, guestId]);
 
+  // Track whether the user has actually interacted with the cart in this session.
+  // Without this, an initial empty cart on page-load would wipe the saved record
+  // before the user even saw the resume prompt.
+  const hasInteractedRef = useRef(false);
+  useEffect(() => {
+    if (cart.length > 0) hasInteractedRef.current = true;
+  }, [cart.length]);
+
   // ── Persist on cart change (debounced) ───────────────────────────────────
   useEffect(() => {
     if (!loaded || paused) return;
@@ -94,12 +102,16 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
       skipNextSaveRef.current = false;
       return;
     }
+    // Don't touch the server until the user has actually put something in the cart
+    // at least once this session. Prevents wiping the saved cart on first load.
+    if (cart.length === 0 && !hasInteractedRef.current) return;
+
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
 
     saveTimerRef.current = window.setTimeout(async () => {
       try {
         if (cart.length === 0) {
-          // Empty cart → drop the saved record
+          // Empty cart → drop the saved record (user actively cleared it)
           if (phone) await supabase.from("saved_carts").delete().eq("phone", phone);
           else await supabase.from("saved_carts").delete().eq("guest_id", guestId);
           return;
