@@ -104,7 +104,20 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   const [activeCategory, setActiveCategory] = useState<CategoryKey>(categories[0].key);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const tabsRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const isScrollingToCategory = useRef(false);
+
+  // Keep the active tab visible inside the horizontally scrollable tabs strip
+  useEffect(() => {
+    const container = tabsRef.current;
+    const btn = tabRefs.current[activeCategory];
+    if (!container || !btn) return;
+    const cRect = container.getBoundingClientRect();
+    const bRect = btn.getBoundingClientRect();
+    // Center the active button within the visible area of the strip
+    const offset = (bRect.left + bRect.right) / 2 - (cRect.left + cRect.right) / 2;
+    container.scrollBy({ left: offset, behavior: "smooth" });
+  }, [activeCategory]);
 
   // Intersection observer for auto-highlighting active category (kiosk + website)
   useEffect(() => {
