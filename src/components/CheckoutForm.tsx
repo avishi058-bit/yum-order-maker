@@ -12,7 +12,7 @@ interface CheckoutFormProps {
   items: CartItem[];
   total: number;
   onClose: () => void;
-  onSuccess: (orderNumber?: number) => void;
+  onSuccess: (orderNumber?: number, phone?: string) => void;
 }
 
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, onClose, onSuccess }, ref) => {
@@ -353,7 +353,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.order_number}`,
       });
-      onSuccess(order.order_number);
+      onSuccess(order.order_number, form.phone);
     } catch (error) {
       console.error("Order error:", error);
       toast({ title: "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
