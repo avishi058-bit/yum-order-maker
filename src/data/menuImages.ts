@@ -27,7 +27,7 @@ export const menuImages: Record<string, string> = {
   can: canDrink,
   bottle: bottleImg,
   "beer-regular": beerImg,
-  "beer-premium": beerImg,
+  "beer-premium": beerPremiumImg,
   "beer-weiss": beerImg,
   // Meals - using burger images temporarily
   "meal-classic": classicImg,
