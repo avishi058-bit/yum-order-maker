@@ -50,6 +50,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     rafId: 0 as number,
   });
 
+  // Ref-bound close handler so drag callbacks defined before handleClose
+  // can still call the latest version without hitting a TDZ error.
+  const handleCloseRef = useRef<() => void>(() => {});
+
   const heroHeight = isKiosk ? HERO_HEIGHT_KIOSK : HERO_HEIGHT;
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
