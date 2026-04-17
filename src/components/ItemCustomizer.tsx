@@ -741,16 +741,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
               </div>
             </>
           )}
-
-          {/* Alcohol-consent gate for beer chosen as a meal-deal drink */}
-          <AlcoholConsentModal
-            open={alcoholConsent.consentOpen}
-            isKiosk={isKiosk}
-            onConfirm={alcoholConsent.confirm}
-            onCancel={alcoholConsent.cancel}
-          />
         </>
       )}
+
+      {/* Alcohol-consent gate for beer chosen as a meal-deal drink.
+          Rendered OUTSIDE the conditional <>…</> so AnimatePresence does not
+          try to forward a ref to a plain function component. */}
+      <AlcoholConsentModal
+        open={alcoholConsent.consentOpen}
+        isKiosk={isKiosk}
+        onConfirm={alcoholConsent.confirm}
+        onCancel={alcoholConsent.cancel}
+      />
     </AnimatePresence>
   );
 };
