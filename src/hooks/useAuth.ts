@@ -39,37 +39,41 @@ export const useAuth = () => {
   useEffect(() => {
     let mounted = true;
 
-    // Safety timeout — never stay in loading state for more than 6 seconds
     const safetyTimer = setTimeout(() => {
       if (!mounted) return;
       setState((prev) => (prev.loading ? { ...prev, loading: false } : prev));
     }, 6000);
 
+    const applySession = async (session: Session | null) => {
+      if (!mounted) return;
+      const user = session?.user ?? null;
+
+      if (!user) {
+        setState({ user: null, session: null, roles: [], loading: false });
+        return;
+      }
+
+      setState((prev) => ({ ...prev, user, session, loading: true }));
+      const roles = await fetchRoles(user.id);
+      if (!mounted) return;
+      setState({ user, session, roles, loading: false });
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        const user = session?.user ?? null;
-        // Set session immediately, fetch roles async to avoid blocking
-        setState({ user, session, roles: [], loading: false });
-        if (user) {
-          const roles = await fetchRoles(user.id);
-          if (mounted) setState({ user, session, roles, loading: false });
-        }
+      async (_event, session) => {
+        void applySession(session);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      const user = session?.user ?? null;
-      setState({ user, session, roles: [], loading: false });
-      if (user) {
-        const roles = await fetchRoles(user.id);
-        if (mounted) setState({ user, session, roles, loading: false });
-      }
-    }).catch((e) => {
-      console.error("[useAuth] getSession failed:", e);
-      if (mounted) setState({ user: null, session: null, roles: [], loading: false });
-    });
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        await applySession(session);
+      })
+      .catch((e) => {
+        console.error("[useAuth] getSession failed:", e);
+        if (mounted) setState({ user: null, session: null, roles: [], loading: false });
+      });
 
     return () => {
       mounted = false;
