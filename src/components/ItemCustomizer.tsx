@@ -335,7 +335,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const isMealUpgrade = step === "meal-upgrade";
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {item && (
         <>
           {/* Backdrop for the main sheet — hidden when meal-upgrade modal is shown */}
@@ -743,17 +744,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
           )}
         </>
       )}
+      </AnimatePresence>
 
       {/* Alcohol-consent gate for beer chosen as a meal-deal drink.
-          Rendered OUTSIDE the conditional <>…</> so AnimatePresence does not
-          try to forward a ref to a plain function component. */}
+          Rendered as a sibling of <AnimatePresence> — NOT as its child —
+          so framer-motion does not try to forward a ref to a plain function
+          component (which broke the modal from showing). */}
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}
         isKiosk={isKiosk}
         onConfirm={alcoholConsent.confirm}
         onCancel={alcoholConsent.cancel}
       />
-    </AnimatePresence>
+    </>
   );
 };
 
