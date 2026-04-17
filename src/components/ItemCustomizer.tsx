@@ -643,7 +643,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                     </div>
 
                     <button
-                      onClick={() => handleFinish(true, selectedSide, selectedDrink)}
+                      onClick={() => {
+                        if (isAlcoholDrinkId(selectedDrink)) {
+                          // Use a synthetic MenuItem-shaped object whose id starts with "beer-"
+                          // so the shared guard (isAlcoholicItem) recognizes it.
+                          alcoholConsent.guard(
+                            { id: `beer-${selectedDrink}`, name: "", description: "", price: 0, category: "drink" } as MenuItem,
+                            () => handleFinish(true, selectedSide, selectedDrink),
+                          );
+                        } else {
+                          handleFinish(true, selectedSide, selectedDrink);
+                        }
+                      }}
                       className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
                       הוספה להזמנה 🍔
