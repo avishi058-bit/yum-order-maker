@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
 import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
+import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
@@ -33,6 +35,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  const alcoholConsent = useAlcoholConsent();
+
+  // Helpers used by the drink-select step's "Add" button to gate alcohol selection.
+  const isAlcoholDrinkId = (drinkId: string) => {
+    const opt = mealDrinkOptions.find((d) => d.id === drinkId);
+    return opt?.category === "beer";
+  };
 
   // Refs for direct DOM transforms (no re-renders during drag/scroll)
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -634,7 +643,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                     </div>
 
                     <button
-                      onClick={() => handleFinish(true, selectedSide, selectedDrink)}
+                      onClick={() => {
+                        if (isAlcoholDrinkId(selectedDrink)) {
+                          // Use a synthetic MenuItem-shaped object whose id starts with "beer-"
+                          // so the shared guard (isAlcoholicItem) recognizes it.
+                          alcoholConsent.guard(
+                            { id: `beer-${selectedDrink}`, name: "", description: "", price: 0, category: "drink" } as MenuItem,
+                            () => handleFinish(true, selectedSide, selectedDrink),
+                          );
+                        } else {
+                          handleFinish(true, selectedSide, selectedDrink);
+                        }
+                      }}
                       className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
                       הוספה להזמנה 🍔
@@ -721,6 +741,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
               </div>
             </>
           )}
+
+          {/* Alcohol-consent gate for beer chosen as a meal-deal drink */}
+          <AlcoholConsentModal
+            open={alcoholConsent.consentOpen}
+            isKiosk={isKiosk}
+            onConfirm={alcoholConsent.confirm}
+            onCancel={alcoholConsent.cancel}
+          />
         </>
       )}
     </AnimatePresence>
