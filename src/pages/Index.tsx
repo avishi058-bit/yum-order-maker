@@ -51,7 +51,7 @@ const Index = () => {
       if (existing) {
         return prev.map((c) => (c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
       }
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
+      return [...prev, { id: item.id, menuItemId: item.id, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
     });
   }, []);
 
@@ -76,6 +76,7 @@ const Index = () => {
         ...prev,
         {
           id: cartItemId,
+          menuItemId: item.id,
           name: item.name,
           price: item.price,
           quantity,
