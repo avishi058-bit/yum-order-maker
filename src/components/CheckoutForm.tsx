@@ -121,6 +121,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   };
 
   const handlePaymentSelect = async (method: "cash" | "credit") => {
+    // Guard against double-clicks while a previous submission is in flight
+    if (submitting) return;
     setPaymentMethod(method);
 
     if (method === "credit") {
