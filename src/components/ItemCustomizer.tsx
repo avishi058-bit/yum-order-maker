@@ -278,10 +278,37 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     return !isAvailable(ingredientId);
   };
 
+  const VEGAN_CHEDDAR_MAX = 6;
+
   const toggleTopping = (id: string) => {
+    if (id === "vegan-cheddar") {
+      // Vegan cheddar supports multiple slices (counted by occurrences in the array)
+      setSelectedToppings((prev) =>
+        prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      );
+      return;
+    }
     setSelectedToppings((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
+  };
+
+  const addCheddarSlice = () => {
+    setSelectedToppings((prev) => {
+      const count = prev.filter((t) => t === "vegan-cheddar").length;
+      if (count >= VEGAN_CHEDDAR_MAX) return prev;
+      return [...prev, "vegan-cheddar"];
+    });
+  };
+
+  const removeCheddarSlice = () => {
+    setSelectedToppings((prev) => {
+      const idx = prev.lastIndexOf("vegan-cheddar");
+      if (idx === -1) return prev;
+      const copy = [...prev];
+      copy.splice(idx, 1);
+      return copy;
+    });
   };
 
   const toggleRemoval = (id: string) => {
