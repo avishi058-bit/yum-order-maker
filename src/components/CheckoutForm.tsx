@@ -284,14 +284,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            total,
+            total: order.total,
             items: zcreditItems,
             customerName: form.name,
             customerPhone: form.phone,
-            orderId: order.id,
+            orderId: order.orderId,
              successUrl: isKiosk
-               ? `${baseUrl}/kiosk?paid=true&order=${order.order_number}`
-               : `${baseUrl}/track?order=${order.order_number}&paid=true`,
+               ? `${baseUrl}/kiosk?paid=true&order=${order.orderNumber}`
+               : `${baseUrl}/track?order=${order.orderNumber}&paid=true`,
              cancelUrl: isKiosk ? `${baseUrl}/kiosk?payment=cancelled` : `${baseUrl}/?payment=cancelled`,
             callbackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-callback`,
           }),
@@ -316,67 +316,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   const submitOrder = async (method: "cash" | "credit") => {
     setSubmitting(true);
-
     try {
-      // Upsert customer
-      await supabase.from("customers").upsert(
-        { phone: form.phone, name: form.name },
-        { onConflict: "phone" }
-      );
-
-      // Create the order
-      const isStation = localStorage.getItem("habakta_station") === "true";
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          customer_name: form.name,
-          customer_phone: form.phone,
-          notes: form.notes || null,
-          total,
-          status: "new",
-          payment_method: method,
-          order_source: isStation ? "station" : "website",
-        } as any)
-        .select("id, order_number")
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = items.map((item) => {
-        const toppingNames = item.toppings
-          .map((tId) => toppings.find((t) => t.id === tId)?.name)
-          .filter(Boolean) as string[];
-        const removalNames = item.removals
-          .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
-          .filter(Boolean) as string[];
-
-        return {
-          order_id: order.id,
-          item_name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          toppings: toppingNames,
-          removals: removalNames,
-          with_meal: item.withMeal,
-          meal_side: item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.name || null) : null,
-          meal_drink: item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.name || null) : null,
-          deal_burgers: item.dealBurgers ? JSON.parse(JSON.stringify(item.dealBurgers)) : null,
-          deal_drinks: item.dealDrinks ? JSON.parse(JSON.stringify(item.dealDrinks)) : null,
-        };
-      });
-
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-      if (itemsError) throw itemsError;
-
+      const order = await callCreateOrder(method, "new");
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
-        description: `מספר הזמנה: #${order.order_number}`,
+        description: `מספר הזמנה: #${order.orderNumber}`,
       });
-      onSuccess(order.order_number, form.phone);
-    } catch (error) {
+      onSuccess(order.orderNumber, form.phone);
+    } catch (error: any) {
       console.error("Order error:", error);
-      toast({ title: "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+      toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
