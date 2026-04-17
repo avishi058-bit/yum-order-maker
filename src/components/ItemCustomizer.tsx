@@ -88,24 +88,34 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
 
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    // Only allow drag-to-close when the scroll container is at the top.
     const sc = scrollRef.current;
     if (sc && sc.scrollTop > 0) return;
-    // Ignore non-primary pointers
     if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("button, a, input, textarea, select, label")) return;
+
     dragState.current.active = true;
     dragState.current.startY = e.clientY;
     dragState.current.currentY = e.clientY;
     dragState.current.pointerId = e.pointerId;
+
+    const sheet = sheetRef.current;
+    const backdrop = backdropRef.current;
+    if (sheet) sheet.style.transition = "none";
+    if (backdrop) backdrop.style.transition = "none";
+
+    e.currentTarget.setPointerCapture?.(e.pointerId);
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const ds = dragState.current;
     if (!ds.active || e.pointerId !== ds.pointerId) return;
+
     const dy = e.clientY - ds.startY;
+
     // Only react to downward drags
     if (dy <= 0) {
-      // Reset transform if user dragged back up
       const sheet = sheetRef.current;
       const backdrop = backdropRef.current;
       if (sheet) sheet.style.transform = "translate3d(0,0,0)";
@@ -113,19 +123,23 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
       ds.currentY = e.clientY;
       return;
     }
+
+    e.preventDefault();
     ds.currentY = e.clientY;
     if (ds.rafId) return;
+
     ds.rafId = requestAnimationFrame(() => {
       ds.rafId = 0;
       const delta = ds.currentY - ds.startY;
-      // Resistance after threshold
       const tracked = Math.min(delta, DRAG_MAX_TRACK);
       const sheet = sheetRef.current;
       const backdrop = backdropRef.current;
+
       if (sheet) {
         sheet.style.transform = `translate3d(0, ${tracked}px, 0)`;
         sheet.style.transition = "none";
       }
+
       if (backdrop) {
         const fade = 0.5 * (1 - Math.min(1, tracked / 400));
         backdrop.style.opacity = String(fade);
@@ -136,16 +150,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const finishDrag = useCallback(() => {
     const ds = dragState.current;
     if (!ds.active) return;
+
     const delta = ds.currentY - ds.startY;
     ds.active = false;
+
     if (ds.rafId) {
       cancelAnimationFrame(ds.rafId);
       ds.rafId = 0;
     }
+
     const sheet = sheetRef.current;
     const backdrop = backdropRef.current;
+
     if (delta >= DRAG_CLOSE_THRESHOLD) {
-      // Close — let exit animation take over
       if (sheet) {
         sheet.style.transition = "transform 200ms cubic-bezier(0.4,0,0.2,1)";
         sheet.style.transform = "translate3d(0, 100%, 0)";
@@ -156,7 +173,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
       }
       window.setTimeout(() => handleClose(), 180);
     } else {
-      // Snap back smoothly
       if (sheet) {
         sheet.style.transition = "transform 220ms cubic-bezier(0.4,0,0.2,1)";
         sheet.style.transform = "translate3d(0,0,0)";
@@ -168,8 +184,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     }
   }, []);
 
-  const onPointerUp = useCallback(() => finishDrag(), [finishDrag]);
-  const onPointerCancel = useCallback(() => finishDrag(), [finishDrag]);
+  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    finishDrag();
+  }, [finishDrag]);
+
+  const onPointerCancel = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    finishDrag();
+  }, [finishDrag]);
 
   // Reset hero/scroll transform when step changes back to customize
   useEffect(() => {
