@@ -106,10 +106,8 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const isScrollingToCategory = useRef(false);
 
-  // Intersection observer for auto-highlighting active category
+  // Intersection observer for auto-highlighting active category (kiosk + website)
   useEffect(() => {
-    if (!isKiosk) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (isScrollingToCategory.current) return;
@@ -128,7 +126,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     });
 
     return () => observer.disconnect();
-  }, [isKiosk]);
+  }, []);
 
   const scrollToCategory = useCallback((key: string) => {
     setActiveCategory(key as CategoryKey);
@@ -151,33 +149,39 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-5xl px-6 pt-4 pb-16' : 'max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
-      {/* Sticky category tabs - kiosk only */}
-      {isKiosk && (
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border pb-2 pt-3 mb-4 -mx-4 px-4">
-          <div ref={tabsRef} className="flex gap-2 overflow-x-auto no-scrollbar" dir="rtl">
-            {visibleCategories.map((cat) => (
-              <button
-                key={cat.key}
-                onClick={() => scrollToCategory(cat.key)}
-                className={`relative whitespace-nowrap px-6 py-3 rounded-full text-base font-bold transition-all flex-shrink-0 ${
-                  activeCategory === cat.key
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                {activeCategory === cat.key && (
-                  <motion.div
-                    layoutId="activeCategoryTab"
-                    className="absolute inset-0 bg-primary rounded-full"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{cat.label}</span>
-              </button>
-            ))}
-          </div>
+      {/* Sticky category tabs - kiosk + website (different sizing) */}
+      <div
+        className={`sticky z-30 bg-background/90 backdrop-blur-md border-b border-border ${
+          isKiosk
+            ? "top-0 -mx-4 px-4 pt-3 pb-2 mb-4"
+            : "top-0 -mx-4 px-4 pt-2 pb-2 mb-6"
+        }`}
+      >
+        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-2" : "gap-1.5"}`} dir="rtl">
+          {visibleCategories.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => scrollToCategory(cat.key)}
+              className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
+                isKiosk ? "px-6 py-3 text-base" : "px-4 py-1.5 text-sm"
+              } ${
+                activeCategory === cat.key
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {activeCategory === cat.key && (
+                <motion.div
+                  layoutId="activeCategoryTab"
+                  className="absolute inset-0 bg-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{cat.label}</span>
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {categories.map((cat) => {
         let items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
