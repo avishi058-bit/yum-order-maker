@@ -20,29 +20,62 @@ export const useAuth = () => {
   });
 
   const fetchRoles = useCallback(async (userId: string): Promise<AppRole[]> => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    return (data?.map((r) => r.role as AppRole)) || [];
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      if (error) {
+        console.error("[useAuth] fetchRoles error:", error);
+        return [];
+      }
+      return (data?.map((r) => r.role as AppRole)) || [];
+    } catch (e) {
+      console.error("[useAuth] fetchRoles exception:", e);
+      return [];
+    }
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout — never stay in loading state for more than 6 seconds
+    const safetyTimer = setTimeout(() => {
+      if (!mounted) return;
+      setState((prev) => (prev.loading ? { ...prev, loading: false } : prev));
+    }, 6000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
         const user = session?.user ?? null;
-        const roles = user ? await fetchRoles(user.id) : [];
-        setState({ user, session, roles, loading: false });
+        // Set session immediately, fetch roles async to avoid blocking
+        setState({ user, session, roles: [], loading: false });
+        if (user) {
+          const roles = await fetchRoles(user.id);
+          if (mounted) setState({ user, session, roles, loading: false });
+        }
       }
     );
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       const user = session?.user ?? null;
-      const roles = user ? await fetchRoles(user.id) : [];
-      setState({ user, session, roles, loading: false });
+      setState({ user, session, roles: [], loading: false });
+      if (user) {
+        const roles = await fetchRoles(user.id);
+        if (mounted) setState({ user, session, roles, loading: false });
+      }
+    }).catch((e) => {
+      console.error("[useAuth] getSession failed:", e);
+      if (mounted) setState({ user: null, session: null, roles: [], loading: false });
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, [fetchRoles]);
 
   const signIn = async (email: string, password: string) => {
