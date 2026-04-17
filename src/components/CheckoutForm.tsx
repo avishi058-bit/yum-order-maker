@@ -574,16 +574,27 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 }`}
               />
               <span className={`text-foreground ${isKiosk ? "text-lg leading-relaxed" : "text-sm leading-relaxed"}`}>
-                אני מאשר/ת כי קראתי ואני מסכים/ה ל
+                {isKiosk ? "מאשר/ת " : "קראתי ואני מסכים/ה ל"}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     setTermsModalOpen(true);
                   }}
-                  className="text-blue-500 hover:text-blue-400 underline font-semibold mx-1"
+                  className="text-primary hover:opacity-80 underline font-semibold mx-1"
                 >
                   תנאי השימוש
+                </button>
+                ול
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPrivacyModalOpen(true);
+                  }}
+                  className="text-primary hover:opacity-80 underline font-semibold mx-1"
+                >
+                  מדיניות הפרטיות
                 </button>
                 <span className="text-destructive">*</span>
               </span>
@@ -659,8 +670,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         )}
       </motion.div>
 
-      {/* Terms modal — rendered inside the checkout overlay so it stacks above it */}
+      {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
+      <PrivacyModal open={privacyModalOpen} onClose={() => setPrivacyModalOpen(false)} isKiosk={isKiosk} />
     </motion.div>
   );
 });
