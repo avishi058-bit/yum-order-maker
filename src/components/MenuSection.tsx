@@ -126,7 +126,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     });
 
     return () => observer.disconnect();
-  }, [isKiosk]);
+  }, []);
 
   const scrollToCategory = useCallback((key: string) => {
     setActiveCategory(key as CategoryKey);
