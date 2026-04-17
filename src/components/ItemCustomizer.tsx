@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
 import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
+import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 
 interface ItemCustomizerProps {
   item: MenuItem | null;
@@ -33,6 +35,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  const alcoholConsent = useAlcoholConsent();
+
+  // Helpers used by the drink-select step's "Add" button to gate alcohol selection.
+  const isAlcoholDrinkId = (drinkId: string) => {
+    const opt = mealDrinkOptions.find((d) => d.id === drinkId);
+    return opt?.category === "beer";
+  };
 
   // Refs for direct DOM transforms (no re-renders during drag/scroll)
   const sheetRef = useRef<HTMLDivElement>(null);
