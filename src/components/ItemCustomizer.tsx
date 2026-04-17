@@ -54,19 +54,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Apply hero transform from scrollTop — direct DOM, no setState
+  // Apply hero transform from scrollTop — direct DOM, no setState.
+  // Wolt-style: hero shrinks in real height (so content fills the gap and the
+  // sticky header stays at the very top), while the image inside parallaxes & fades.
   const applyHeroTransform = useCallback((scrollTop: number) => {
     const hero = heroRef.current;
     const img = heroImgRef.current;
     if (!hero || !img) return;
+    const baseHeight = isKiosk ? HERO_HEIGHT_KIOSK : HERO_HEIGHT;
     const clamped = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE));
     const t = clamped / HERO_FADE_DISTANCE;       // 0 → 1
-    const scale = 1 - (1 - HERO_MIN_SCALE) * t;
-    const translateY = -clamped * 0.5;             // gentle parallax up
+    // Collapse the hero container height (cheap on a single element).
+    const newHeight = baseHeight * (1 - t);
+    hero.style.height = `${newHeight}px`;
+    // Image: gentle parallax + fade. Opacity nukes paint cost when hidden.
+    const translateY = -clamped * 0.35;
     const opacity = 1 - t;
-    img.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
+    img.style.transform = `translate3d(0, ${translateY}px, 0)`;
     img.style.opacity = String(opacity);
-  }, []);
+  }, [isKiosk]);
 
   // Scroll handler — passive, RAF-throttled, no setState
   const scrollRafRef = useRef(0);
