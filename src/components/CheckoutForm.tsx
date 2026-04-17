@@ -128,6 +128,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const handlePaymentSelect = async (method: "cash" | "credit") => {
     // Guard against double-clicks while a previous submission is in flight
     if (submitting) return;
+    // Hard gate: terms must be accepted before any payment can proceed
+    if (!termsAccepted) {
+      toast({ title: "יש לאשר את תנאי השימוש כדי להמשיך", variant: "destructive" });
+      return;
+    }
     setPaymentMethod(method);
 
     if (method === "credit") {
@@ -189,6 +194,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         paymentMethod,
         orderSource,
         status,
+        // Server-recorded proof that the customer accepted the terms at order time
+        termsAcceptedAt: new Date().toISOString(),
         items: items.map(buildServerItem),
       },
     });
