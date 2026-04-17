@@ -9,6 +9,7 @@ import waffleFries from "@/assets/menu/waffle-fries.jpeg";
 import tempuraOnion from "@/assets/menu/tempura-onion.jpg";
 import friendsMix from "@/assets/menu/friends-mix.jpg";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
+import beerImg from "@/assets/menu/beer-goldstar.jpeg";
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
@@ -22,6 +23,9 @@ export const menuImages: Record<string, string> = {
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
   can: canDrink,
+  "beer-regular": beerImg,
+  "beer-premium": beerImg,
+  "beer-weiss": beerImg,
   // Meals - using burger images temporarily
   "meal-classic": classicImg,
   "meal-smash-moshavnikim": smashMoshavnikim,
