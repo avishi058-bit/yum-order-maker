@@ -289,6 +289,13 @@ const Kiosk = () => {
       <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
       <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
 
+      <AlcoholConsentModal
+        open={alcoholConsent.consentOpen}
+        isKiosk
+        onConfirm={alcoholConsent.confirm}
+        onCancel={alcoholConsent.cancel}
+      />
+
       <CartDrawer
         isKiosk
         open={cartOpen}
