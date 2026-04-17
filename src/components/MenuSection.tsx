@@ -174,6 +174,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
           {visibleCategories.map((cat) => (
             <button
               key={cat.key}
+              ref={(el) => { tabRefs.current[cat.key] = el; }}
               onClick={() => scrollToCategory(cat.key)}
               className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
                 isKiosk ? "px-6 py-3 text-base" : "px-4 py-1.5 text-sm"
