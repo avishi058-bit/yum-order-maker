@@ -414,6 +414,13 @@ const Index = () => {
       <AccessibilityWidget />
       <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
+      <AlcoholConsentModal
+        open={alcoholConsent.consentOpen}
+        isKiosk={isStation}
+        onConfirm={alcoholConsent.confirm}
+        onCancel={alcoholConsent.cancel}
+      />
+
       {/* Saved cart welcome-back prompt — only when current cart is empty
           and we're not in the middle of an active order (kiosk / checkout). */}
       <SavedCartModal

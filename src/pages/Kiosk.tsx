@@ -53,6 +53,8 @@ import ItemPreview from "@/components/ItemPreview";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
+import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || item.id === "family-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
@@ -101,7 +103,9 @@ const Kiosk = () => {
     }
   }, []);
 
-  const handleAddItem = useCallback((item: MenuItem) => {
+  const alcoholConsent = useAlcoholConsent();
+
+  const openItemFlow = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
     } else if (item.id === "family-deal") {
@@ -115,6 +119,10 @@ const Kiosk = () => {
       setPreviewItem(item);
     }
   }, []);
+
+  const handleAddItem = useCallback((item: MenuItem) => {
+    alcoholConsent.guard(item, () => openItemFlow(item));
+  }, [alcoholConsent, openItemFlow]);
 
   const handlePreviewAdd = useCallback((item: MenuItem & { _menuItemId?: string }) => {
     const menuItemId = item._menuItemId ?? item.id;
