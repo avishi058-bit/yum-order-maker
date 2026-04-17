@@ -363,7 +363,22 @@ const Kitchen = () => {
     if (newStatus === "preparing" && prepMinutes) {
       updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
     }
-    await supabase.from("orders").update(updateData).eq("id", orderId);
+    const { data, error } = await supabase
+      .from("orders")
+      .update(updateData)
+      .eq("id", orderId)
+      .select();
+
+    if (error) {
+      console.error("[Kitchen] Failed to update order status:", error);
+      toast.error(`שגיאה בעדכון סטטוס: ${error.message}`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      console.warn("[Kitchen] Update returned no rows — likely RLS or session issue", { orderId, newStatus });
+      toast.error("העדכון לא בוצע — בדוק הרשאות / התחברות מחדש");
+      return;
+    }
     setShowTimePicker(null);
     fetchOrders();
   };
