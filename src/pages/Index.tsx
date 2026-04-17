@@ -22,6 +22,8 @@ import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useSavedCart } from "@/hooks/useSavedCart";
+import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
+import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
@@ -56,7 +58,9 @@ const Index = () => {
     });
   }, []);
 
-  const handleAddItem = useCallback((item: MenuItem) => {
+  const alcoholConsent = useAlcoholConsent();
+
+  const openItemFlow = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
     } else if (item.id === "family-deal") {
@@ -69,6 +73,10 @@ const Index = () => {
       setPreviewItem(item);
     }
   }, []);
+
+  const handleAddItem = useCallback((item: MenuItem) => {
+    alcoholConsent.guard(item, () => openItemFlow(item));
+  }, [alcoholConsent, openItemFlow]);
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => {
