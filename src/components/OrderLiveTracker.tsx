@@ -5,6 +5,8 @@ import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
+  /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
+  phone: string;
   onClose: () => void;
 }
 
