@@ -653,6 +653,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           </div>
         )}
       </motion.div>
+
+      {/* Terms modal — rendered inside the checkout overlay so it stacks above it */}
+      <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
     </motion.div>
   );
 });
