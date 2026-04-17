@@ -290,7 +290,7 @@ export const toppings: Topping[] = [
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
   { id: "garlic-confit", name: "קונפי שום", price: 7 },
   { id: "egg", name: "ביצת עין", price: 8 },
-  { id: "vegan-cheddar", name: "צ׳דר טבעוני", price: 7 },
+  { id: "vegan-cheddar", name: "פרוסת צ׳דר טבעוני", price: 7 },
   { id: "roastbeef", name: "רצועות רוסטביף", price: 20 },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים", price: 9 },
