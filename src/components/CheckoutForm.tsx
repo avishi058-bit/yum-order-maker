@@ -549,15 +549,52 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
+            {/* Required terms acceptance — gates both payment buttons */}
+            <label
+              className={`flex items-start gap-3 rounded-xl border-2 transition-colors cursor-pointer select-none ${
+                isKiosk ? "p-5" : "p-4"
+              } ${
+                termsAccepted
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border bg-secondary/40 hover:border-primary/30"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                aria-label="אישור תנאי שימוש"
+                className={`mt-0.5 shrink-0 rounded border-border accent-primary cursor-pointer ${
+                  isKiosk ? "w-7 h-7" : "w-5 h-5"
+                }`}
+              />
+              <span className={`text-foreground ${isKiosk ? "text-lg leading-relaxed" : "text-sm leading-relaxed"}`}>
+                אני מאשר/ת כי קראתי ואני מסכים/ה ל
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setTermsModalOpen(true);
+                  }}
+                  className="text-blue-500 hover:text-blue-400 underline font-semibold mx-1"
+                >
+                  תנאי השימוש
+                </button>
+                <span className="text-destructive">*</span>
+              </span>
+            </label>
+
             <div className="grid grid-cols-1 gap-3">
               {availablePaymentMethods.cash && (
                 <motion.button
-                  whileHover={!submitting ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("cash")}
-                  disabled={submitting}
+                  disabled={submitting || !termsAccepted}
                   aria-busy={submitting && paymentMethod === "cash"}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-disabled={!termsAccepted}
+                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
                     <Banknote size={24} className="text-green-400" />
@@ -573,12 +610,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
               {availablePaymentMethods.credit && (
                 <motion.button
-                  whileHover={!submitting ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("credit")}
-                  disabled={submitting}
+                  disabled={submitting || !termsAccepted}
                   aria-busy={submitting && paymentMethod === "credit"}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-disabled={!termsAccepted}
+                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
                     <CreditCard size={24} className="text-blue-400" />
