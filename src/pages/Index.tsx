@@ -197,6 +197,37 @@ const Index = () => {
     return base;
   };
 
+  // ── Saved cart (server + localStorage) ─────────────────────────────────
+  // Pause persistence + prompt while checkout is in progress (already an active order).
+  const cartTotal = getTotal();
+  const {
+    savedCart,
+    suppressNextSave,
+    markResumed,
+    discardSaved,
+    dismissPrompt,
+  } = useSavedCart({
+    cart,
+    dineIn,
+    total: cartTotal,
+    paused: checkoutOpen || isStation,
+  });
+
+  const handleResumeSavedCart = useCallback(() => {
+    if (!savedCart) return;
+    suppressNextSave();
+    setCart(savedCart.items);
+    if (savedCart.dineIn !== null && dineIn === null) {
+      setDineIn(savedCart.dineIn);
+    }
+    markResumed();
+    setCartOpen(true);
+  }, [savedCart, suppressNextSave, dineIn, markResumed]);
+
+  const handleStartOver = useCallback(() => {
+    discardSaved();
+  }, [discardSaved]);
+
   const handleDineInChoice = (val: boolean) => {
     setDineIn(val);
     setTimeout(() => {
