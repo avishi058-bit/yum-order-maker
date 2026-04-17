@@ -1,37 +1,41 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, Package } from "lucide-react";
+import { ChefHat, CheckCircle, Package } from "lucide-react";
 
+/**
+ * Public order tracking page. Requires both order number AND phone in the URL
+ * (e.g. /track?order=123&phone=0501234567) — phone acts as the auth token.
+ * Data is fetched via the secure `get-order-by-token` edge function.
+ */
 const OrderTracking = () => {
   const [searchParams] = useSearchParams();
   const orderNumber = searchParams.get("order");
+  const phone = searchParams.get("phone");
   const [order, setOrder] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!orderNumber) return;
+    if (!orderNumber || !phone) return;
 
     const fetchOrder = async () => {
-      const { data } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("order_number", parseInt(orderNumber))
-        .single();
-      if (data) setOrder(data);
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "get-order-by-token",
+        { body: { order_number: parseInt(orderNumber), phone } },
+      );
+      if (fnError || !data?.order) {
+        setError("not_found");
+        return;
+      }
+      setOrder(data.order);
     };
 
     fetchOrder();
-
-    const channel = supabase
-      .channel("tracking-" + orderNumber)
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-        fetchOrder();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [orderNumber]);
+    // Poll every 10s — realtime would expose channel access; polling is safer here
+    const interval = setInterval(fetchOrder, 10000);
+    return () => clearInterval(interval);
+  }, [orderNumber, phone]);
 
   // Countdown timer
   useEffect(() => {
@@ -50,10 +54,18 @@ const OrderTracking = () => {
     return () => clearInterval(interval);
   }, [order]);
 
-  if (!orderNumber) {
+  if (!orderNumber || !phone) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <p className="text-muted-foreground">לא צוין מספר הזמנה</p>
+        <p className="text-muted-foreground">קישור לא תקין — חסר מספר הזמנה או טלפון</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <p className="text-muted-foreground">הזמנה לא נמצאה</p>
       </div>
     );
   }
@@ -87,13 +99,11 @@ const OrderTracking = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6" dir="rtl">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-foreground mb-1">הזמנה #{order.order_number}</h1>
           <p className="text-muted-foreground">{order.customer_name}</p>
         </div>
 
-        {/* Progress Steps */}
         <div className="flex items-center justify-between mb-10 px-4">
           {steps.map((step, i) => {
             const isActive = i <= currentIndex;
@@ -126,14 +136,12 @@ const OrderTracking = () => {
           })}
         </div>
 
-        {/* Timer */}
         {order.status === "preparing" && timeLeft !== null && (
           <div className="bg-card border border-border rounded-2xl p-6 text-center mb-6">
             <p className="text-sm text-muted-foreground mb-2">זמן משוער עד שהמנה מוכנה</p>
             <div className="text-5xl font-black text-primary mb-4">
               {timeLeft === 0 ? "כמעט מוכן! 🔥" : formatTime(timeLeft)}
             </div>
-            {/* Progress bar */}
             <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
               <div
                 className="bg-primary h-full rounded-full transition-all duration-1000"

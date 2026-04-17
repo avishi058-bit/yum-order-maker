@@ -5,12 +5,14 @@ import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
+  /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
+  phone: string;
   onClose: () => void;
 }
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
-const OrderLiveTracker = ({ orderNumber, onClose }: OrderLiveTrackerProps) => {
+const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
   const [order, setOrder] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -18,34 +20,27 @@ const OrderLiveTracker = ({ orderNumber, onClose }: OrderLiveTrackerProps) => {
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(true);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
-  // Fetch order
+  // Fetch order via secure edge function (no direct DB access)
   useEffect(() => {
     const fetchOrder = async () => {
-      const { data } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("order_number", orderNumber)
-        .single();
-      if (data) {
+      const { data } = await supabase.functions.invoke("get-order-by-token", {
+        body: { order_number: orderNumber, phone },
+      });
+      const fetched = data?.order;
+      if (fetched) {
         setOrder((prev: any) => {
-          if (prev && prev.status !== data.status) {
+          if (prev && prev.status !== fetched.status) {
             setPrevStatus(prev.status);
           }
-          return data;
+          return fetched;
         });
       }
     };
 
     fetchOrder();
-
-    const channel = supabase
-      .channel("live-tracking-" + orderNumber)
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-        fetchOrder();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    // Poll every 8s instead of realtime (no public DB channel access)
+    const interval = setInterval(fetchOrder, 8000);
+    return () => clearInterval(interval);
   }, [orderNumber]);
 
   // Play sound & send notification on status change

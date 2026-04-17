@@ -9,6 +9,8 @@ const STORAGE_KEY = "habakta_tracked_order";
 
 interface TrackedOrder {
   orderNumber: number;
+  /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
+  phone?: string;
   notificationsEnabled: boolean;
   soundEnabled: boolean;
 }
@@ -53,39 +55,34 @@ const OrderTopBar = () => {
     if (!tracked) return;
 
     const fetchOrder = async () => {
-      const { data } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("order_number", tracked.orderNumber)
-        .single();
-      if (data) {
+      // Secure path — requires phone token. Older saved trackers without phone
+      // gracefully stop fetching (will be cleared on next manual close).
+      if (!tracked.phone) return;
+      const { data } = await supabase.functions.invoke("get-order-by-token", {
+        body: { order_number: tracked.orderNumber, phone: tracked.phone },
+      });
+      const fetched = data?.order;
+      if (fetched) {
         setOrder((prev: any) => {
-          if (prev && prev.status !== data.status) {
+          if (prev && prev.status !== fetched.status) {
             setPrevStatus(prev.status);
           }
-          return data;
+          return fetched;
         });
-        // Auto-remove when completed or cancelled
-        if (data.status === "completed" || data.status === "cancelled") {
+        if (fetched.status === "completed" || fetched.status === "cancelled") {
           setTimeout(() => {
             setTracked(null);
             setTrackedOrder(null);
-          }, 30000); // Keep showing for 30s after completion
+          }, 30000);
         }
       }
     };
 
     fetchOrder();
-
-    const channel = supabase
-      .channel("topbar-tracking-" + tracked.orderNumber)
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-        fetchOrder();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [tracked?.orderNumber]);
+    // Poll every 8s instead of realtime (no public DB channel access)
+    const interval = setInterval(fetchOrder, 8000);
+    return () => clearInterval(interval);
+  }, [tracked?.orderNumber, tracked?.phone]);
 
   // Sound & notification on status change
   useEffect(() => {

@@ -361,14 +361,14 @@ const Index = () => {
             items={cart}
             total={getTotal()}
             onClose={() => setCheckoutOpen(false)}
-            onSuccess={(orderNumber) => {
+            onSuccess={(orderNumber, phone) => {
               setCheckoutOpen(false);
               setCart([]);
               if (isStation) {
                 setShowKioskWelcome(true);
               } else if (orderNumber) {
-                // Dispatch event to show persistent top bar tracker
-                const trackedOrder = { orderNumber, notificationsEnabled: false, soundEnabled: false };
+                // Phone is required for the secure tracking endpoint to authorize reads
+                const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
                 setTrackedOrder(trackedOrder);
                 window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
               }
