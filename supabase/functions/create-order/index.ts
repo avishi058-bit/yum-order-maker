@@ -184,7 +184,9 @@ const BodySchema = z.object({
   paymentMethod: z.enum(["cash", "credit"]),
   orderSource: z.enum(["website", "kiosk", "station"]).default("website"),
   status: z.enum(["new", "pending_payment"]).default("new"),
-  termsAcceptedAt: z.string().datetime().optional(),
+  // Required: legal proof that the customer accepted Terms + Privacy at order time.
+  // Without this the order is rejected (no silent default).
+  termsAcceptedAt: z.string().datetime({ message: "termsAcceptedAt must be ISO datetime" }),
   items: z.array(CartItemSchema).min(1).max(50),
 });
 
@@ -398,7 +400,7 @@ Deno.serve(async (req: Request) => {
       status: body.status,
       payment_method: body.paymentMethod,
       order_source: body.orderSource,
-      terms_accepted_at: body.termsAcceptedAt ?? new Date().toISOString(),
+      terms_accepted_at: body.termsAcceptedAt,
     })
     .select("id, order_number, total")
     .single();
