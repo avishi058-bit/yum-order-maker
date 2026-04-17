@@ -16,10 +16,12 @@ import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
 import CustomerAuthModal from "@/components/CustomerAuthModal";
+import SavedCartModal from "@/components/SavedCartModal";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useSavedCart } from "@/hooks/useSavedCart";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
