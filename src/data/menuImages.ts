@@ -1,6 +1,7 @@
 import classicImg from "@/assets/menu/classic.jpg";
 import smashMoshavnikim from "@/assets/smash-moshavnikim.jpeg";
 import smashDoubleCheese from "@/assets/menu/smash-double-cheese.jpg";
+import doubleImg from "@/assets/menu/double.jpg";
 import avishai from "@/assets/menu/avishai.jpg";
 import crazySmash from "@/assets/menu/crazy-smash.jpg";
 import specialHadegel from "@/assets/menu/special-hadegel.jpg";
@@ -30,6 +31,7 @@ export const menuImages: Record<string, string> = {
   "beer-regular": beerImg,
   "beer-premium": beerPremiumImg,
   "beer-weiss": beerWeissImg,
+  double: doubleImg,
   // Meals - using burger images temporarily
   "meal-classic": classicImg,
   "meal-smash-moshavnikim": smashMoshavnikim,
@@ -37,4 +39,5 @@ export const menuImages: Record<string, string> = {
   "meal-avishai": avishai,
   "meal-crazy-smash": crazySmash,
   "meal-special-hadegel": specialHadegel,
+  "meal-double": doubleImg,
 };
