@@ -3,7 +3,8 @@ import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone, LogIn } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
-import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
+import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
+import KioskCartDrawer from "@/components/KioskCartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
 import ItemCustomizer from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
@@ -335,7 +336,7 @@ const Index = () => {
         isAvailable={isAvailable}
       />
 
-      <CartDrawer
+      <KioskCartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cart}
@@ -348,6 +349,14 @@ const Index = () => {
             setCheckoutOpen(true);
           }
         }}
+        onQuickAdd={(item) => addToCartDirect(item)}
+        onBackToMenu={() => {
+          setCartOpen(false);
+          setTimeout(() => {
+            document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+          }, 100);
+        }}
+        isAvailable={isAvailable}
       />
 
       <SauceSelector
