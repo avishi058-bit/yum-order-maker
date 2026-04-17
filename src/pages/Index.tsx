@@ -144,12 +144,13 @@ const Index = () => {
   const handleDrinkConfirm = useCallback(
     (item: MenuItem, selectedDrink: string) => {
       setDrinkItem(null);
-      // Show preview with the selected drink variant
+      // Show preview with the selected drink variant; preserve canonical menu id for server-side pricing.
       setPreviewItem({
         ...item,
         id: `${item.id}-${selectedDrink}-${Date.now()}`,
         name: `${item.name} — ${selectedDrink}`,
-      });
+        _menuItemId: item.id,
+      } as MenuItem);
     },
     []
   );
