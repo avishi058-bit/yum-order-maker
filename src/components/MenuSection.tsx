@@ -59,7 +59,20 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
             </span>
           )}
         </div>
-        <p className="text-muted-foreground leading-relaxed line-clamp-2" style={{ fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`, marginBottom: isKiosk ? 12 : 8 }}>{displayDesc}</p>
+        <p className={`text-muted-foreground leading-relaxed ${item.id === "haf-mifsha" || item.id === "meal-haf-mifsha" ? "" : "line-clamp-2"}`} style={{ fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`, marginBottom: isKiosk ? 12 : 8 }}>
+          {(() => {
+            const match = displayDesc.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+            if ((item.id === "haf-mifsha" || item.id === "meal-haf-mifsha") && match) {
+              return (
+                <>
+                  {match[1]}{" "}
+                  <span className="text-destructive font-bold">⚠️ {match[2]}</span>
+                </>
+              );
+            }
+            return displayDesc;
+          })()}
+        </p>
         <span className="text-primary font-bold" style={{ fontSize: `${(isKiosk ? 24 : 18) * fontScale}px` }}>₪{item.price}</span>
       </div>
 
