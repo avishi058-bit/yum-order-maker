@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import KioskWelcome from "@/components/KioskWelcome";
 import MenuSection from "@/components/MenuSection";
-import CartDrawer, { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
+import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
+import KioskCartDrawer from "@/components/KioskCartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
 import ItemCustomizer from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
@@ -296,12 +297,18 @@ const Kiosk = () => {
         onCancel={alcoholConsent.cancel}
       />
 
-      <CartDrawer
-        isKiosk
+      <KioskCartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cart}
         onUpdateQuantity={updateQuantity}
+        isAvailable={isAvailable}
+        onBackToMenu={() => setCartOpen(false)}
+        onQuickAdd={(item) => {
+          // One-tap add for simple items (sides + simple drinks).
+          // Reuses preview-add logic so identical items merge into one cart line.
+          handlePreviewAdd(item);
+        }}
         onCheckout={() => {
           setCartOpen(false);
           setDineInSelectorOpen(true);
