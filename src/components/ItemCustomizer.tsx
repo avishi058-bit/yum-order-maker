@@ -349,14 +349,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
               style={{ willChange: "transform", touchAction: "pan-y" }}
               dir="rtl"
             >
-              {/* Drag handle area — captures pointer events for drag-to-close */}
+              {/* Drag surface for header / hero */}
               <div
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerCancel={onPointerCancel}
                 className="relative shrink-0 select-none"
-                style={{ touchAction: "pan-y" }}
+                style={{ touchAction: "none" }}
               >
                 {/* Pull handle */}
                 <div className="flex justify-center pt-3 pb-2">
@@ -409,7 +409,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    style={{ WebkitOverflowScrolling: "touch" }}
+                    onPointerDown={onPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerCancel}
+                    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
                     {isBurger && (
                       <>
