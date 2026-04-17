@@ -37,10 +37,27 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
   const alcoholConsent = useAlcoholConsent();
 
-  // Helpers used by the drink-select step's "Add" button to gate alcohol selection.
+  const buildAlcoholDrinkGateItem = (drinkId: string): MenuItem => ({
+    id: `beer-${drinkId}`,
+    name: "",
+    description: "",
+    price: 0,
+    category: "drink",
+  });
+
+  // Helpers used by the drink-select step to gate alcohol selection.
   const isAlcoholDrinkId = (drinkId: string) => {
     const opt = mealDrinkOptions.find((d) => d.id === drinkId);
     return opt?.category === "beer";
+  };
+
+  const handleDrinkSelection = (drinkId: string) => {
+    if (isAlcoholDrinkId(drinkId)) {
+      alcoholConsent.guard(buildAlcoholDrinkGateItem(drinkId), () => setSelectedDrink(drinkId));
+      return;
+    }
+
+    setSelectedDrink(drinkId);
   };
 
   // Refs for direct DOM transforms (no re-renders during drag/scroll)
@@ -623,7 +640,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           <button
                             key={drink.id}
                             disabled={unavailable}
-                            onClick={() => !unavailable && setSelectedDrink(drink.id)}
+                            onClick={() => !unavailable && handleDrinkSelection(drink.id)}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
@@ -646,15 +663,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                     <button
                       onClick={() => {
                         if (isAlcoholDrinkId(selectedDrink)) {
-                          // Use a synthetic MenuItem-shaped object whose id starts with "beer-"
-                          // so the shared guard (isAlcoholicItem) recognizes it.
                           alcoholConsent.guard(
-                            { id: `beer-${selectedDrink}`, name: "", description: "", price: 0, category: "drink" } as MenuItem,
+                            buildAlcoholDrinkGateItem(selectedDrink),
                             () => handleFinish(true, selectedSide, selectedDrink),
                           );
-                        } else {
-                          handleFinish(true, selectedSide, selectedDrink);
+                          return;
                         }
+
+                        handleFinish(true, selectedSide, selectedDrink);
                       }}
                       className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
