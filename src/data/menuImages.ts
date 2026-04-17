@@ -10,6 +10,7 @@ import tempuraOnion from "@/assets/menu/tempura-onion.jpg";
 import friendsMix from "@/assets/menu/friends-mix.jpg";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
 import beerImg from "@/assets/menu/beer-goldstar.jpeg";
+import bottleImg from "@/assets/menu/bottle-prigat.webp";
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
@@ -23,6 +24,7 @@ export const menuImages: Record<string, string> = {
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
   can: canDrink,
+  bottle: bottleImg,
   "beer-regular": beerImg,
   "beer-premium": beerImg,
   "beer-weiss": beerImg,
