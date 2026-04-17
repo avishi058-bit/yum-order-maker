@@ -133,17 +133,16 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
     skipNextSaveRef.current = true;
   }, []);
 
-  /** User accepted to resume — increment counter and clear the prompt. */
+  /** User accepted to resume — mark as resumed and clear the prompt. */
   const markResumed = useCallback(async () => {
     if (!savedCart) return;
+    const target = savedCart;
     setSavedCart(null);
     try {
       await supabase
         .from("saved_carts")
-        .update({ resumed_count: (savedCart as SavedCart & { resumed_count?: number }).id ? undefined : 0, last_action: "resumed" })
-        .eq("id", savedCart.id);
-      // Use atomic increment via RPC-like update; fallback to fetch+update is fine here.
-      await supabase.rpc("noop").catch(() => {});
+        .update({ last_action: "resumed" })
+        .eq("id", target.id);
     } catch {}
   }, [savedCart]);
 
