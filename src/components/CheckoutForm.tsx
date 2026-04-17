@@ -568,17 +568,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             <div className="grid grid-cols-1 gap-3">
               {availablePaymentMethods.cash && (
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={!submitting ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("cash")}
                   disabled={submitting}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50"
+                  aria-busy={submitting && paymentMethod === "cash"}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
                     <Banknote size={24} className="text-green-400" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">מזומן 💵</div>
+                    <div className="font-bold text-lg text-foreground">
+                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן 💵"}
+                    </div>
                     <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>
                   </div>
                 </motion.button>
@@ -586,17 +589,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
               {availablePaymentMethods.credit && (
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={!submitting ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("credit")}
                   disabled={submitting}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50"
+                  aria-busy={submitting && paymentMethod === "credit"}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
                     <CreditCard size={24} className="text-blue-400" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">אשראי 💳</div>
+                    <div className="font-bold text-lg text-foreground">
+                      {submitting && paymentMethod === "credit" ? "מעביר לתשלום..." : "אשראי 💳"}
+                    </div>
                     <div className="text-sm text-muted-foreground">תשלום מאובטח בכרטיס אשראי</div>
                   </div>
                 </motion.button>
