@@ -31,9 +31,18 @@ type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
 // Hero image collapse parameters (kept tiny — pure transform/opacity, no layout)
 const HERO_HEIGHT = 280;          // initial hero height in px (mobile/web)
-const HERO_HEIGHT_KIOSK = 380;    // kiosk hero height
+const HERO_HEIGHT_KIOSK_DEFAULT = 380; // kiosk hero height (admin-tunable via CSS var)
 const HERO_MIN_SCALE = 0.55;      // scale at full collapse
 const HERO_FADE_DISTANCE = 200;   // px of scroll before image fully fades
+
+// Read the live admin-tuned kiosk hero height from the CSS var (set by useKioskCSSVars).
+// Falls back to the default if not present (non-kiosk pages).
+const readKioskHeroHeight = () => {
+  if (typeof window === "undefined") return HERO_HEIGHT_KIOSK_DEFAULT;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--kiosk-image-h").trim();
+  const n = parseFloat(raw);
+  return Number.isFinite(n) && n > 0 ? n : HERO_HEIGHT_KIOSK_DEFAULT;
+};
 
 // Drag-to-close parameters
 const DRAG_CLOSE_THRESHOLD = 120; // px the user must drag down to close
