@@ -650,6 +650,26 @@ const Kitchen = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Realtime status indicator */}
+          <div
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
+              realtimeConnected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+            }`}
+            title={realtimeConnected ? "Realtime פעיל" : "Realtime מנותק — משתמש ב-polling"}
+          >
+            {realtimeConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
+            <span>{realtimeConnected ? "Live" : "Polling"}</span>
+          </div>
+          {/* Settings button */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-2 rounded-lg transition-colors ${
+              showSettings ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+            title="הגדרות הסלמה"
+          >
+            <Settings size={20} />
+          </button>
           <button
             onClick={() => setAutoPrint(!autoPrint)}
             className={`p-2 rounded-lg transition-colors ${
