@@ -335,6 +335,7 @@ const Kiosk = () => {
         items={cart}
         onUpdateQuantity={updateQuantity}
         isAvailable={isAvailable}
+        onEditItem={handleEditCartItem}
         isKiosk
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {
