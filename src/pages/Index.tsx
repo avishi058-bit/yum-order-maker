@@ -27,14 +27,21 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useSavedCart } from "@/hooks/useSavedCart";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import ReopenNotifyModal from "@/components/ReopenNotifyModal";
+import { useBusinessHours } from "@/hooks/useBusinessHours";
+import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
+  const { status: businessStatus } = useBusinessHours();
   const { isLoggedIn, customer } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
+  // Manual closure = admin closed website while business hours say we should be open
+  const isManualClosure = !isStation && isClosed && businessStatus.isOpen;
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -284,7 +291,9 @@ const Index = () => {
 
       {isClosed && (
         <div className="bg-destructive text-destructive-foreground text-center py-4 px-6 font-bold text-lg sticky top-0 z-50">
-          🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!
+          {isManualClosure
+            ? "⏸️ האתר סגור כרגע עקב עומס · נחזור בקרוב!"
+            : "🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!"}
         </div>
       )}
 
@@ -304,10 +313,25 @@ const Index = () => {
 
       {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
       {isClosed ? (
-        <div className="py-20 text-center text-muted-foreground">
-          <p className="text-6xl mb-4">🔒</p>
-          <p className="text-xl font-bold">ההזמנות סגורות כרגע</p>
-          <p className="text-sm mt-2">נחזור בקרוב!</p>
+        <div className="py-16 text-center px-6">
+          <p className="text-6xl mb-4">{isManualClosure ? "⏸️" : "🔒"}</p>
+          <p className="text-2xl font-black text-foreground mb-2">
+            {isManualClosure ? "האתר סגור כרגע עקב עומס" : "ההזמנות סגורות כרגע"}
+          </p>
+          <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+            {isManualClosure
+              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם. השאירו לנו מספר ונעדכן אתכם ברגע שנפתח שוב 🙏"
+              : "נחזור בקרוב!"}
+          </p>
+          {!isStation && (
+            <button
+              onClick={() => setReopenModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-black px-6 py-3 rounded-xl shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
+            >
+              <Bell size={20} />
+              עדכנו אותי כשנפתח שוב
+            </button>
+          )}
         </div>
       ) : dineIn !== null ? (
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
@@ -439,6 +463,8 @@ const Index = () => {
         onConfirm={alcoholConsent.confirm}
         onCancel={alcoholConsent.cancel}
       />
+
+      <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
 
       {/* Saved cart welcome-back prompt — only when current cart is empty
           and we're not in the middle of an active order (kiosk / checkout). */}
