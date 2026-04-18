@@ -14,6 +14,7 @@ import {
 import { menuImages } from "@/data/menuImages";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { CartItem } from "@/components/CartDrawer";
+import { computeCartItemTotal } from "@/lib/cartPricing";
 
 interface KioskCartDrawerProps {
   open: boolean;
@@ -55,20 +56,7 @@ const KioskCartDrawer = ({
   isKiosk = false,
 }: KioskCartDrawerProps) => {
   useBodyScrollLock(open);
-  const getItemTotal = (item: CartItem) => {
-    const toppingsCost = item.toppings.reduce((sum, tId) => {
-      const t = toppings.find((tp) => tp.id === tId);
-      return sum + (t?.price || 0);
-    }, 0);
-    const mealCost = item.withMeal ? 23 : 0;
-    const sideCost = item.mealSideId
-      ? mealSideOptions.find((s) => s.id === item.mealSideId)?.price || 0
-      : 0;
-    const drinkCost = item.mealDrinkId
-      ? mealDrinkOptions.find((d) => d.id === item.mealDrinkId)?.price || 0
-      : 0;
-    return (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
-  };
+  const getItemTotal = (item: CartItem) => computeCartItemTotal(item);
 
   const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
   const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);

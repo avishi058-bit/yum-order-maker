@@ -21,6 +21,7 @@ import CustomerGreeting from "@/components/CustomerGreeting";
 import CustomerAuthModal from "@/components/CustomerAuthModal";
 import SavedCartModal from "@/components/SavedCartModal";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
@@ -251,14 +252,7 @@ const Index = () => {
       if (item.dealBurgers) {
         return sum + item.price * item.quantity;
       }
-      const toppingsCost = item.toppings.reduce((s, tId) => {
-        const t = toppings.find((tp) => tp.id === tId);
-        return s + (t?.price || 0);
-      }, 0);
-      const mealCost = item.withMeal ? 23 : 0;
-      const sideCost = item.mealSideId ? (mealSideOptions.find(s => s.id === item.mealSideId)?.price || 0) : 0;
-      const drinkCost = item.mealDrinkId ? (mealDrinkOptions.find(d => d.id === item.mealDrinkId)?.price || 0) : 0;
-      return sum + (item.price + toppingsCost + mealCost + sideCost + drinkCost) * item.quantity;
+      return sum + computeCartItemTotal(item);
     }, 0);
     // Add extra sauce cost
     if (dineIn === false && selectedSauces.length > 0) {
