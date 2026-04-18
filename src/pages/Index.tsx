@@ -347,15 +347,19 @@ const Index = () => {
       )}
 
       {!isClosed && totalItems > 0 && !cartOpen && (
-        <div ref={cartButtonCallbackRef}>
+        <div ref={cartButtonCallbackRef} className={uiPositions.cartButton.position}>
           <button
             onClick={() => setCartOpen(true)}
-            className={`${uiPositions.cartButton.position} bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform`}
+            className="bg-green-600 hover:bg-green-700 text-white font-black px-5 py-3.5 rounded-full flex items-center gap-3 shadow-xl shadow-green-600/40 transition-colors"
+            dir="rtl"
           >
-            <ShoppingBag size={22} />
-            <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">
-              {totalItems}
+            <span className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/20">
+              <ShoppingBag size={20} />
+              <span className="absolute -top-1 -right-1 bg-white text-green-700 text-[11px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+                {totalItems}
+              </span>
             </span>
+            <span className="text-base">סיום הזמנה</span>
           </button>
         </div>
       )}
