@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSiteSettings, type BusinessHoursMap } from "@/hooks/useSiteSettings";
 import { menuItems } from "@/data/menu";
-import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock } from "lucide-react";
+import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock, Maximize2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
@@ -19,7 +19,9 @@ const AdminSettings = () => {
   const [bannerText, setBannerText] = useState("");
   const [bannerEnabled, setBannerEnabled] = useState(false);
   const [businessHours, setBusinessHours] = useState<BusinessHoursMap>(DEFAULT_HOURS);
-  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours">("fonts");
+  const [kioskModalHeight, setKioskModalHeight] = useState(95);
+  const [websiteModalHeight, setWebsiteModalHeight] = useState(95);
+  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours" | "modal">("fonts");
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,6 +35,8 @@ const AdminSettings = () => {
       setBannerText(settings.banner_text);
       setBannerEnabled(settings.banner_enabled);
       setBusinessHours(settings.business_hours || DEFAULT_HOURS);
+      setKioskModalHeight(settings.kiosk_modal_height_vh ?? 95);
+      setWebsiteModalHeight(settings.website_modal_height_vh ?? 95);
     }
   }, [loading, settings]);
 
@@ -76,6 +80,7 @@ const AdminSettings = () => {
     { id: "colors" as const, label: "צבעים", icon: Palette },
     { id: "banner" as const, label: "באנר", icon: MessageSquare },
     { id: "hours" as const, label: "שעות פעילות", icon: Clock },
+    { id: "modal" as const, label: "גובה חלונית מנה", icon: Maximize2 },
   ];
 
   const orderedItems = menuOrder
