@@ -214,6 +214,30 @@ export type Database = {
         }
         Relationships: []
       }
+      reopen_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          notified: boolean
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          notified?: boolean
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          notified?: boolean
+          phone?: string
+        }
+        Relationships: []
+      }
       restaurant_status: {
         Row: {
           cash_enabled: boolean
