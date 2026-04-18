@@ -573,12 +573,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         Placed at the TOP so it's the first thing the customer sees. */}
                     {isBurger && (
                       <div className={`mx-5 ${isKiosk ? "mt-4" : "mt-3"}`}>
-                        {!ownerNameEnabled ? (
+                        {!ownerNameEnabled && (
                           <button
                             type="button"
                             onClick={() => {
-                              flushSync(() => setOwnerNameEnabled(true));
+                              // Focus input FIRST while we're still inside the
+                              // user gesture — required on iOS/Safari for the
+                              // on-screen keyboard to open. Then reveal it.
                               ownerInputRef.current?.focus();
+                              setOwnerNameEnabled(true);
                             }}
                             className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform flex flex-col items-center justify-center gap-1 ${isKiosk ? "py-5 px-4" : "py-4 px-3"}`}
                           >
@@ -590,7 +593,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               (רלוונטי למי שמזמין יותר ממנה אחת)
                             </span>
                           </button>
-                        ) : (
+                        )}
+                        {ownerNameEnabled && (
                           <div className={`rounded-xl border border-gray-300 bg-white ${isKiosk ? "px-4 py-3" : "px-3 py-2.5"}`}>
                             <div className="flex items-center justify-between gap-3 mb-2">
                               <h3 className={`font-black text-black flex items-center gap-1.5 ${isKiosk ? "text-[22px]" : "text-base"}`}>
@@ -605,27 +609,46 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 ביטול
                               </button>
                             </div>
-                            <input
-                              ref={ownerInputRef}
-                              type="text"
-                              value={ownerName}
-                              onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
-                              placeholder="שם (למשל: יוסי)"
-                              maxLength={30}
-                              autoFocus
-                              inputMode="text"
-                              enterKeyHint="done"
-                              autoComplete="off"
-                              autoCorrect="off"
-                              autoCapitalize="words"
-                              spellCheck={false}
-                              name="dish-owner-name"
-                              style={{ fontSize: "16px" }}
-                              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors"
-                              dir="rtl"
-                            />
                           </div>
                         )}
+                        {/* Input is ALWAYS mounted so iOS/Safari allows
+                            programmatic focus() inside the click gesture.
+                            When disabled, we keep it offscreen but focusable. */}
+                        <input
+                          ref={ownerInputRef}
+                          type="text"
+                          value={ownerName}
+                          onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                          placeholder="שם (למשל: יוסי)"
+                          maxLength={30}
+                          inputMode="text"
+                          enterKeyHint="done"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="words"
+                          spellCheck={false}
+                          name="dish-owner-name"
+                          dir="rtl"
+                          aria-hidden={!ownerNameEnabled}
+                          tabIndex={ownerNameEnabled ? 0 : -1}
+                          style={
+                            ownerNameEnabled
+                              ? { fontSize: "16px" }
+                              : {
+                                  position: "absolute",
+                                  opacity: 0,
+                                  pointerEvents: "none",
+                                  height: 1,
+                                  width: 1,
+                                  fontSize: "16px",
+                                }
+                          }
+                          className={
+                            ownerNameEnabled
+                              ? `mt-2 w-[calc(100%-2.5rem)] mx-5 bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors block`
+                              : ""
+                          }
+                        />
                       </div>
                     )}
 
