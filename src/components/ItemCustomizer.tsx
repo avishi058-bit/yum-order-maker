@@ -6,6 +6,7 @@ import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerI
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export interface ItemCustomizerInitialState {
   quantity: number;
@@ -42,6 +43,10 @@ const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
 const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }: ItemCustomizerProps) => {
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
+  const { settings } = useSiteSettings();
+  // Initial open height (in vh). Scroll still expands sheet to full screen.
+  const initialHeightVh = Math.min(100, Math.max(40, isKiosk ? settings.kiosk_modal_height_vh : settings.website_modal_height_vh));
+  const initialTopVh = 100 - initialHeightVh;
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
