@@ -974,28 +974,36 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                  className="bg-white text-black w-full max-w-md rounded-3xl shadow-2xl p-8 pointer-events-auto"
+                  className={`bg-white text-black w-full rounded-3xl shadow-2xl pointer-events-auto ${
+                    isKiosk ? "max-w-2xl p-12" : "max-w-md p-8"
+                  }`}
                   dir="rtl"
                   style={{ willChange: "transform, opacity" }}
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                      <Utensils size={36} className="text-primary" />
+                    <div className={`rounded-full bg-primary/10 flex items-center justify-center ${
+                      isKiosk ? "w-32 h-32 mb-8" : "w-20 h-20 mb-6"
+                    }`}>
+                      <Utensils size={isKiosk ? 64 : 36} className="text-primary" />
                     </div>
-                    <h3 className={`font-black mb-3 ${isKiosk ? "text-[26px]" : "text-xl"}`}>לשדרג לארוחה עסקית?</h3>
-                    <p className={`text-primary font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"}`}>+₪{mealUpgrade.price}</p>
-                    <p className={`text-gray-500 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
+                    <h3 className={`font-black mb-4 ${isKiosk ? "text-[40px]" : "text-xl mb-3"}`}>לשדרג לארוחה עסקית?</h3>
+                    <p className={`text-primary font-black mb-2 ${isKiosk ? "text-[36px]" : "text-lg mb-1"}`}>+₪{mealUpgrade.price}</p>
+                    <p className={`text-gray-500 ${isKiosk ? "text-[24px] mb-10" : "text-sm mb-8"}`}>המבורגר + צ׳יפס + שתייה</p>
 
-                    <div className="w-full space-y-3">
+                    <div className={`w-full ${isKiosk ? "space-y-4" : "space-y-3"}`}>
                       <button
                         onClick={() => goToSideSelect()}
-                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${
+                          isKiosk ? "py-7 text-[32px]" : "py-4 text-lg"
+                        }`}
                       >
                         שדרגו לי! 🍟🥤
                       </button>
                       <button
                         onClick={() => handleFinish(false)}
-                        className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[20px]" : "py-4 text-base"}`}
+                        className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${
+                          isKiosk ? "py-6 text-[26px]" : "py-4 text-base"
+                        }`}
                       >
                         לא תודה
                       </button>
