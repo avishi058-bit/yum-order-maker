@@ -100,10 +100,10 @@ const FlyLayer = ({ flies, onComplete }: { flies: ActiveFly[]; onComplete: (id: 
     <div className="pointer-events-none fixed inset-0 z-[9000]" aria-hidden>
       <AnimatePresence>
         {flies.map((f) => {
-          const startX = f.sourceRect.left + f.sourceRect.width / 2 - 28;
-          const startY = f.sourceRect.top + f.sourceRect.height / 2 - 28;
-          const endX = f.targetRect.left + f.targetRect.width / 2 - 28;
-          const endY = f.targetRect.top + f.targetRect.height / 2 - 28;
+          const startX = f.sourceRect.left + f.sourceRect.width / 2 - 24;
+          const startY = f.sourceRect.top + f.sourceRect.height / 2 - 24;
+          const endX = f.targetRect.left + f.targetRect.width / 2 - 24;
+          const endY = f.targetRect.top + f.targetRect.height / 2 - 24;
 
           return (
             <motion.div
