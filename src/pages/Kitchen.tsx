@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
@@ -194,6 +194,13 @@ const playRingtone = (ringtoneId: RingtoneId) => {
   }
 };
 
+// Escalation thresholds (seconds) — saved in localStorage
+const DEFAULT_RED_AFTER = 60;
+const DEFAULT_AGGRESSIVE_AFTER = 120;
+const POLLING_FALLBACK_MS = 3000;
+const AGGRESSIVE_RING_MS = 2000;
+const NORMAL_RING_MS = 5000;
+
 const Kitchen = () => {
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -208,9 +215,34 @@ const Kitchen = () => {
   const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
+  const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Realtime / fallback state
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Escalation thresholds (configurable from UI)
+  const [redAfter, setRedAfter] = useState<number>(() => {
+    const v = parseInt(localStorage.getItem("kitchen-red-after") || "");
+    return isNaN(v) ? DEFAULT_RED_AFTER : v;
+  });
+  const [aggressiveAfter, setAggressiveAfter] = useState<number>(() => {
+    const v = parseInt(localStorage.getItem("kitchen-aggressive-after") || "");
+    return isNaN(v) ? DEFAULT_AGGRESSIVE_AFTER : v;
+  });
+
+  useEffect(() => { localStorage.setItem("kitchen-red-after", String(redAfter)); }, [redAfter]);
+  useEffect(() => { localStorage.setItem("kitchen-aggressive-after", String(aggressiveAfter)); }, [aggressiveAfter]);
+
+  // Tick every second so escalation re-evaluates without re-fetching
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => (t + 1) % 1000000), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   // Activate audio on first interaction
   useEffect(() => {
@@ -237,17 +269,37 @@ const Kitchen = () => {
     localStorage.setItem("kitchen-ringtone", selectedRingtone);
   }, [selectedRingtone]);
 
-  // Repeating alert for new orders - plays every 5 seconds while there are "new" orders
+  // Compute escalation level for a "new" order based on server time (created_at)
+  // 0 = fresh (<= redAfter), 1 = waiting (red), 2 = aggressive (very red + fast ring)
+  const getEscalationLevel = useCallback((createdAt: string): 0 | 1 | 2 => {
+    const ageSec = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+    if (ageSec >= aggressiveAfter) return 2;
+    if (ageSec >= redAfter) return 1;
+    return 0;
+  }, [redAfter, aggressiveAfter]);
+
+  // Determine the highest escalation level among "new" orders → controls ring cadence
+  const maxEscalation = useMemo(() => {
+    let max: 0 | 1 | 2 = 0;
+    for (const o of orders) {
+      if (o.status !== "new") continue;
+      const lvl = getEscalationLevel(o.created_at);
+      if (lvl > max) max = lvl;
+      if (max === 2) break;
+    }
+    return max;
+  }, [orders, getEscalationLevel]);
+
+  // Repeating alert for new orders — cadence depends on escalation level
   useEffect(() => {
     const hasNewOrders = orders.some((o) => o.status === "new");
 
     if (hasNewOrders && soundEnabled) {
-      // Play immediately
+      const cadence = maxEscalation === 2 ? AGGRESSIVE_RING_MS : NORMAL_RING_MS;
       playRingtone(selectedRingtone);
-      // Then repeat every 5 seconds
       alertIntervalRef.current = setInterval(() => {
         playRingtone(selectedRingtone);
-      }, 5000);
+      }, cadence);
     } else {
       if (alertIntervalRef.current) {
         clearInterval(alertIntervalRef.current);
@@ -261,7 +313,7 @@ const Kitchen = () => {
         alertIntervalRef.current = null;
       }
     };
-  }, [orders, soundEnabled, selectedRingtone]);
+  }, [orders, soundEnabled, selectedRingtone, maxEscalation]);
 
   const fetchAvailability = useCallback(async () => {
     const { data } = await supabase
@@ -277,17 +329,43 @@ const Kitchen = () => {
       .select("*, order_items(*)")
       .order("created_at", { ascending: false });
     if (!error && data) {
-      setOrders(data as Order[]);
+      const fetched = data as Order[];
+
+      // Detect newly-arrived orders since last fetch and toast for them
+      const prevSeen = seenOrdersRef.current;
+      const isFirstLoad = prevSeen.size === 0;
+      const newlyArrived = fetched.filter(
+        (o) => o.status === "new" && !prevSeen.has(o.id)
+      );
+
+      const nextSeen = new Set<string>();
+      fetched.forEach((o) => nextSeen.add(o.id));
+      seenOrdersRef.current = nextSeen;
+
+      if (!isFirstLoad) {
+        newlyArrived.forEach((o) => {
+          toast.success(`🔔 הזמנה חדשה #${o.order_number}`, {
+            description: `${o.customer_name} • ₪${o.total}`,
+            duration: 6000,
+          });
+        });
+      }
+
+      setOrders(fetched);
     }
   }, []);
 
   useEffect(() => {
     fetchOrders();
     fetchAvailability();
+
     const channel = supabase
       .channel("orders-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
-      .subscribe();
+      .subscribe((status) => {
+        setRealtimeConnected(status === "SUBSCRIBED");
+      });
+
     const availChannel = supabase
       .channel("availability-realtime")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
@@ -297,9 +375,25 @@ const Kitchen = () => {
         );
       })
       .subscribe();
+
+    // Polling fallback — runs every 3s as a safety net even if realtime drops
+    const pollInterval = setInterval(() => {
+      fetchOrders();
+    }, POLLING_FALLBACK_MS);
+
+    // Refetch on tab visibility (handles long-idle tablets)
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchOrders();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(availChannel);
+      clearInterval(pollInterval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, [fetchOrders, fetchAvailability]);
 
@@ -556,6 +650,26 @@ const Kitchen = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Realtime status indicator */}
+          <div
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
+              realtimeConnected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+            }`}
+            title={realtimeConnected ? "Realtime פעיל" : "Realtime מנותק — משתמש ב-polling"}
+          >
+            {realtimeConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
+            <span>{realtimeConnected ? "Live" : "Polling"}</span>
+          </div>
+          {/* Settings button */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-2 rounded-lg transition-colors ${
+              showSettings ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+            title="הגדרות הסלמה"
+          >
+            <Settings size={20} />
+          </button>
           <button
             onClick={() => setAutoPrint(!autoPrint)}
             className={`p-2 rounded-lg transition-colors ${
@@ -716,7 +830,70 @@ const Kitchen = () => {
         )}
       </div>
 
-      {/* Availability View */}
+      {/* Escalation settings panel */}
+      {showSettings && (
+        <div className="bg-card border-b border-border px-6 py-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <AlertTriangle size={16} className="text-yellow-400" />
+                הגדרות הסלמה — הזמנות שלא אושרו
+              </h3>
+              <button
+                onClick={() => {
+                  setRedAfter(DEFAULT_RED_AFTER);
+                  setAggressiveAfter(DEFAULT_AGGRESSIVE_AFTER);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                איפוס לברירת מחדל
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-muted/40 rounded-lg p-3">
+                <label className="text-sm font-bold text-orange-400 mb-2 block">
+                  🟧 התראה אדומה אחרי: {redAfter} שניות
+                </label>
+                <input
+                  type="range"
+                  min={15}
+                  max={300}
+                  step={5}
+                  value={redAfter}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value);
+                    setRedAfter(v);
+                    if (v >= aggressiveAfter) setAggressiveAfter(v + 30);
+                  }}
+                  className="w-full accent-orange-500"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  הכרטיס יקבל מסגרת אדומה ובאדג׳ "ממתין"
+                </p>
+              </div>
+              <div className="bg-muted/40 rounded-lg p-3">
+                <label className="text-sm font-bold text-red-500 mb-2 block">
+                  🚨 צלצול אגרסיבי אחרי: {aggressiveAfter} שניות
+                </label>
+                <input
+                  type="range"
+                  min={Math.max(30, redAfter + 10)}
+                  max={600}
+                  step={10}
+                  value={aggressiveAfter}
+                  onChange={(e) => setAggressiveAfter(parseInt(e.target.value))}
+                  className="w-full accent-red-500"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  צלצול חזק כל {AGGRESSIVE_RING_MS / 1000} שניות עד אישור
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
           {availabilityGrouped.map((group) => (
@@ -773,13 +950,22 @@ const Kitchen = () => {
           {displayOrders.map((order) => {
             const config = statusConfig[order.status];
             const next = nextStatus[order.status];
+            const escLevel = order.status === "new" ? getEscalationLevel(order.created_at) : 0;
+
+            // Card visual escalation
+            const cardClass =
+              order.status !== "new"
+                ? "border-border"
+                : escLevel === 2
+                ? "border-red-600 border-2 shadow-2xl shadow-red-600/50 animate-pulse bg-red-950/20"
+                : escLevel === 1
+                ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
+                : "border-red-500 shadow-lg shadow-red-500/20 animate-pulse";
 
             return (
               <div
                 key={order.id}
-                className={`bg-card border rounded-xl overflow-hidden ${
-                  order.status === "new" ? "border-red-500 shadow-lg shadow-red-500/20 animate-pulse" : "border-border"
-                }`}
+                className={`bg-card border rounded-xl overflow-hidden ${cardClass}`}
               >
                 {/* Order header */}
                 <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
@@ -787,6 +973,21 @@ const Kitchen = () => {
                     {config.icon}
                     <span className="font-bold">#{order.order_number}</span>
                     <span className="text-sm opacity-80">{config.label}</span>
+                    {order.status === "new" && escLevel === 0 && (
+                      <span className="text-[10px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded-full animate-pulse">
+                        חדש
+                      </span>
+                    )}
+                    {order.status === "new" && escLevel === 1 && (
+                      <span className="text-[10px] font-black bg-yellow-300 text-red-700 px-1.5 py-0.5 rounded-full animate-pulse">
+                        ⏳ ממתין!
+                      </span>
+                    )}
+                    {order.status === "new" && escLevel === 2 && (
+                      <span className="text-[10px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse">
+                        🚨 דחוף!
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
