@@ -177,6 +177,12 @@ const CartItemSchema = z.object({
     .optional(),
 });
 
+const SauceSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().min(1).max(120),
+  quantity: z.number().int().min(1).max(50),
+});
+
 const BodySchema = z.object({
   customerName: z.string().trim().min(1).max(120),
   customerPhone: z.string().trim().min(7).max(30),
@@ -188,6 +194,11 @@ const BodySchema = z.object({
   // Without this the order is rejected (no silent default).
   termsAcceptedAt: z.string().datetime({ message: "termsAcceptedAt must be ISO datetime" }),
   items: z.array(CartItemSchema).min(1).max(50),
+  // Optional: sauces selected at checkout (chef-summary use). Server adds the
+  // extra-sauce charge (1₪ per sauce above the free quota) to the total and
+  // stores them as a synthetic order_item line for the kitchen receipt.
+  sauces: z.array(SauceSchema).max(20).optional().default([]),
+  freeSauces: z.number().int().min(0).max(100).optional().default(0),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
