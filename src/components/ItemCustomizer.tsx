@@ -654,9 +654,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     {active && <div className="w-3 h-3 rounded-full bg-white" />}
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{r.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{r.name}</span>
                                     {isLocked && (
-                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[16px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
+                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
                                     )}
                                   </div>
                                 </button>
