@@ -62,12 +62,22 @@ export const FlyToCartProvider = ({ children }: { children: React.ReactNode }) =
   }, []);
 
   const flyToCart = useCallback((opts: FlyOptions) => {
-    const target = cartTargetRef.current;
-    if (!target) return; // No cart visible → skip animation entirely.
-
-    const targetRect = target.getBoundingClientRect();
-    const id = ++idCounter.current;
-    setFlies((prev) => [...prev, { ...opts, id, targetRect }]);
+    const launch = (attempt = 0) => {
+      const target = cartTargetRef.current;
+      if (!target) {
+        // The cart icon may not have mounted yet (first item just added).
+        // Retry up to ~5 frames before giving up — keeps the animation
+        // smooth on the very first add without holding it forever.
+        if (attempt < 5) {
+          requestAnimationFrame(() => launch(attempt + 1));
+        }
+        return;
+      }
+      const targetRect = target.getBoundingClientRect();
+      const id = ++idCounter.current;
+      setFlies((prev) => [...prev, { ...opts, id, targetRect }]);
+    };
+    launch();
   }, []);
 
   const removeFly = useCallback((id: number) => {
