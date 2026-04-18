@@ -171,18 +171,18 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       <div
         className={`sticky z-30 bg-background/90 backdrop-blur-md border-b border-border ${
           isKiosk
-            ? "top-0 -mx-4 px-4 pt-3 pb-2 mb-4"
+            ? "top-0 -mx-4 px-4 pt-5 pb-4 mb-6"
             : "top-0 -mx-4 px-4 pt-2 pb-2 mb-6"
         }`}
       >
-        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-2" : "gap-1.5"}`} dir="rtl">
+        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-3" : "gap-1.5"}`} dir="rtl">
           {visibleCategories.map((cat) => (
             <button
               key={cat.key}
               ref={(el) => { tabRefs.current[cat.key] = el; }}
               onClick={() => scrollToCategory(cat.key)}
               className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
-                isKiosk ? "px-6 py-3 text-base" : "px-4 py-1.5 text-sm"
+                isKiosk ? "px-9 py-5 text-2xl" : "px-4 py-1.5 text-sm"
               } ${
                 activeCategory === cat.key
                   ? "text-primary-foreground"
