@@ -43,10 +43,13 @@ interface CartDrawerProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
   onCheckout: () => void;
+  /** Reopens the customizer with this cart item's selections prefilled.
+   *  Only relevant for items with customizable state (burger / meal). */
+  onEditItem?: (id: string) => void;
   isKiosk?: boolean;
 }
 
-const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, isKiosk = false }: CartDrawerProps) => {
+const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEditItem, isKiosk = false }: CartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);
