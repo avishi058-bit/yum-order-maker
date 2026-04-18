@@ -533,13 +533,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       className="w-full h-full object-cover"
                       style={{
                         willChange: "transform, opacity",
-                        transformOrigin: "center center",
-                        // Center the burger horizontally and slightly above
-                        // vertical center so the bun + patty are the focal
-                        // point (kiosk hero is tall — pure top would crop the
-                        // top of the bun, pure center hides patty detail).
-                        objectPosition: isKiosk ? "center 35%" : "center",
-                        transform: isKiosk ? "scale(var(--kiosk-image-scale, 1))" : undefined,
+                        transformOrigin: "center top",
                       }}
                       draggable={false}
                     />
