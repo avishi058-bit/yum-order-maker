@@ -472,7 +472,31 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
             />
           )}
 
-          {/* Main sheet (full-screen, hero on top, scrollable content). Hidden under meal-upgrade modal. */}
+          {/* Kiosk-only fixed hero layer behind the sheet — image is fully
+              visible above the sheet at rest, then zooms out + translates up
+              as the user scrolls (driven by applyHeroTransform). */}
+          {isKiosk && !isMealUpgrade && showHero && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed left-0 right-0 top-0 z-40 overflow-hidden bg-gray-100 pointer-events-none"
+              style={{ height: `${KIOSK_SHEET_TOP_INITIAL_VH + 6}vh` }}
+            >
+              <img
+                ref={heroImgRef}
+                src={heroImage as string}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                draggable={false}
+                style={{ transform: "translate3d(0,0,0) scale(1.12)", transformOrigin: "center center", willChange: "transform" }}
+              />
+            </motion.div>
+          )}
+
+          {/* Main sheet. On website: full-screen. On kiosk: starts at ~28vh
+              from the top so the hero image is fully visible above it. */}
           {!isMealUpgrade && (
             <motion.div
               ref={sheetRef}
@@ -480,8 +504,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
-              className="fixed inset-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
-              style={{ willChange: "transform", touchAction: "pan-y" }}
+              className={`fixed left-0 right-0 bottom-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden ${isKiosk ? "" : "top-0"}`}
+              style={{
+                willChange: "transform",
+                touchAction: "pan-y",
+                ...(isKiosk ? { top: `${KIOSK_SHEET_TOP_INITIAL_VH}vh` } : {}),
+              }}
               dir="rtl"
             >
               {/* Drag surface for header / hero */}
