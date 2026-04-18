@@ -56,6 +56,7 @@ const MENU_ITEMS: MenuItemPricing[] = [
 ];
 
 const TOPPINGS_PRICING: Record<string, { name: string; price: number }> = {
+  "gluten-free-bun": { name: "לחמנייה ללא גלוטן", price: 4 },
   "onion-jam": { name: "ריבת בצל של סבתא דינה", price: 9 },
   "peanut-butter": { name: "חמאת בוטנים", price: 8 },
   "fried-onion": { name: "בצל מטוגן", price: 7 },
