@@ -506,20 +506,24 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
+                    onScroll={isKiosk ? handleScroll : undefined}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
-                    {/* Hero image scrolls together with content (no parallax/fade) */}
+                    {/* Hero image. On kiosk: starts slightly zoomed in and zooms out as
+                        the user scrolls. On website: scrolls naturally with content. */}
                     {showHero && (
                       <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
                         <img
+                          ref={heroImgRef}
                           src={heroImage as string}
                           alt={item.name}
                           className="w-full h-full object-cover"
                           draggable={false}
+                          style={isKiosk ? { transform: "translate3d(0,0,0) scale(1.08)", transformOrigin: "center center", willChange: "transform" } : undefined}
                         />
                       </div>
                     )}
