@@ -75,7 +75,7 @@ const itemOrder: Record<string, string[]> = {
     "drink-hoegaarden", "drink-laffe", "drink-unfiltered", "drink-guinness", "drink-weiss",
   ],
   deal: ["family-deal", "friends-deal"],
-  topping: ["onion-jam", "peanut-butter", "fried-onion", "garlic-confit", "egg", "vegan-cheddar", "roastbeef", "extra-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
+  topping: ["onion-jam", "peanut-butter", "fried-onion", "garlic-confit", "egg", "vegan-cheddar", "roastbeef", "extra-patty", "extra-smash-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
   sauce: ["ketchup", "mayo", "chili", "plum"],
   ingredient: ["lettuce", "tomato", "pickles", "aioli", "onion"],
 };

@@ -65,6 +65,7 @@ const TOPPINGS_PRICING: Record<string, { name: string; price: number }> = {
   "vegan-cheddar": { name: "צ׳דר טבעוני", price: 7 },
   "roastbeef": { name: "רצועות רוסטביף", price: 20 },
   "extra-patty": { name: "אקסטרה קציצה (220 גרם)", price: 25 },
+  "extra-smash-patty": { name: "אקסטרה קציצת סמאש", price: 29 },
   "hot-pepper-jam": { name: "ריבת פלפלים חריפים", price: 9 },
   "onion-rings-topping": { name: "שלוש טבעות בצל ביתיות", price: 8 },
   "maple": { name: "מייפל", price: 5 },
