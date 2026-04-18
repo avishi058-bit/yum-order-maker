@@ -35,6 +35,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  // Optional "owner name" — chef sees who each dish belongs to.
+  // Toggle controls whether the input is shown; only sent if non-empty.
+  const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
+  const [ownerName, setOwnerName] = useState("");
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
 
@@ -365,7 +369,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   };
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
-    onConfirm(item, quantity, selectedToppings, selectedRemovals.filter(r => r !== "no-changes"), withMeal, sideId, drinkId);
+    const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
+    onConfirm(
+      item,
+      quantity,
+      selectedToppings,
+      selectedRemovals.filter(r => r !== "no-changes"),
+      withMeal,
+      sideId,
+      drinkId,
+      trimmedOwner || undefined,
+    );
     resetState();
   };
 
@@ -376,6 +390,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
+    setOwnerNameEnabled(false);
+    setOwnerName("");
   };
 
   const handleClose = () => {
