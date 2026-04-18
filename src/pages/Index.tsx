@@ -80,9 +80,7 @@ const Index = () => {
       80,
       80,
     );
-    // Defer to next frame so the cart button (which only renders when
-    // totalItems > 0) has a chance to mount on the first add.
-    requestAnimationFrame(() => requestAnimationFrame(() => flyToCart({ sourceRect })));
+    flyToCart({ sourceRect });
   }, [flyToCart]);
 
   const addToCartDirect = useCallback((item: MenuItem & { _menuItemId?: string }) => {
