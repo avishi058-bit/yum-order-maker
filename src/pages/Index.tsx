@@ -21,6 +21,7 @@ import CustomerGreeting from "@/components/CustomerGreeting";
 import CustomerAuthModal from "@/components/CustomerAuthModal";
 import SavedCartModal from "@/components/SavedCartModal";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";

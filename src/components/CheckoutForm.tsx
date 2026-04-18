@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removals, smashModifications, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { shouldChargeMealUpgrade, MEAL_UPGRADE_PRICE } from "@/lib/cartPricing";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";

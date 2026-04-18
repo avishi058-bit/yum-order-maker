@@ -53,6 +53,7 @@ const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: 
 };
 import ItemPreview from "@/components/ItemPreview";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
