@@ -311,25 +311,25 @@ const Kiosk = () => {
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk />
       </div>
 
-      {/* Bottom cart bar */}
+      {/* Floating green "סיום הזמנה" button — same as website */}
       {totalItems > 0 && (
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="flex-none bg-primary text-primary-foreground px-6 py-5 flex items-center justify-between cursor-pointer active:opacity-90"
-          onClick={() => setCartOpen(true)}
-        >
-          <div className="flex items-center gap-3">
-            <div ref={cartButtonCallbackRef} className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
-              <ShoppingBag size={24} />
-            </div>
-            <div>
-              <p className="text-xl font-black">הסל שלי</p>
-              <p className="text-sm opacity-80">{totalItems} פריטים</p>
-            </div>
-          </div>
-          <p className="text-3xl font-black">₪{getTotal()}</p>
-        </motion.div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <button
+            ref={cartButtonCallbackRef as any}
+            onClick={() => setCartOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white font-black px-8 py-5 rounded-full flex items-center gap-4 shadow-2xl shadow-green-600/40 transition-colors active:scale-[0.98]"
+            dir="rtl"
+          >
+            <span className="relative flex items-center justify-center w-12 h-12 rounded-full bg-white/20">
+              <ShoppingBag size={26} />
+              <span className="absolute -top-1 -right-1 bg-white text-green-700 text-sm font-black w-6 h-6 rounded-full flex items-center justify-center shadow-sm">
+                {totalItems}
+              </span>
+            </span>
+            <span className="text-2xl">סיום הזמנה</span>
+            <span className="text-2xl font-black border-r border-white/30 pr-4">₪{getTotal()}</span>
+          </button>
+        </div>
       )}
 
       {/* Modals - reuse existing components */}
