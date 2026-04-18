@@ -163,18 +163,31 @@ const SideMenu = ({ onLoginClick }: SideMenuProps) => {
               <DialogHeader>
                 <DialogTitle>כתובת</DialogTitle>
               </DialogHeader>
-              <div className="space-y-3 text-sm">
-                <p className="text-foreground">📍 ניר עוז, מועצה אזורית אשכול</p>
-                <p className="text-muted-foreground">בואו לטעום את הסמאש של מושבניקים, ישר מהבקתה.</p>
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=הבקתה+ניר+עוז"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-                >
-                  <MapPin size={14} />
-                  פתח בגוגל מפות
-                </a>
+              <div className="space-y-4 text-sm">
+                <div className="space-y-1">
+                  <p className="font-bold text-foreground">📍 דרך ערבי נחל 23, תושיה</p>
+                  <p className="text-muted-foreground">בואו לטעום את הסמאש של מושבניקים, ישר מהבקתה.</p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <a
+                    href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    <MapPin size={14} />
+                    נווט עם Waze
+                  </a>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=דרך+ערבי+נחל+23+תושיה"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-accent"
+                  >
+                    <MapPin size={14} />
+                    Google Maps
+                  </a>
+                </div>
               </div>
             </>
           )}
