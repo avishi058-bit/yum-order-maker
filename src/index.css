@@ -109,3 +109,40 @@
   letter-spacing: 0.12em !important;
   word-spacing: 0.16em !important;
 }
+
+/* ─── Kiosk layout stability ─────────────────────────────────────────
+   Active only when body has .kiosk-active. Prevents the "jumping" /
+   resizing issues reported on the kiosk: no rubber-band scroll, no
+   pinch zoom, no font-size auto-adjust. Pure CSS — zero runtime cost.
+*/
+body.kiosk-active {
+  /* Prevent iOS Safari rubber-band overscroll */
+  overscroll-behavior: none;
+  /* Stop mobile browsers from auto-scaling text on rotation */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Stop iOS double-tap zoom */
+  touch-action: manipulation;
+}
+
+body.kiosk-lock-layout {
+  /* Lock body — no scroll bounce, no horizontal jiggle.
+     The kiosk shell uses its own fixed/overflow containers. */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Disable text selection on kiosk for a more app-like feel */
+body.kiosk-active * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+body.kiosk-active input,
+body.kiosk-active textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
