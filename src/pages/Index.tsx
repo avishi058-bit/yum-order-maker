@@ -464,6 +464,8 @@ const Index = () => {
         onCancel={alcoholConsent.cancel}
       />
 
+      <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+
       {/* Saved cart welcome-back prompt — only when current cart is empty
           and we're not in the middle of an active order (kiosk / checkout). */}
       <SavedCartModal
