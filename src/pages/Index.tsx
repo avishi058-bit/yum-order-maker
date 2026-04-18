@@ -291,7 +291,9 @@ const Index = () => {
 
       {isClosed && (
         <div className="bg-destructive text-destructive-foreground text-center py-4 px-6 font-bold text-lg sticky top-0 z-50">
-          🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!
+          {isManualClosure
+            ? "⏸️ האתר סגור כרגע עקב עומס · נחזור בקרוב!"
+            : "🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!"}
         </div>
       )}
 
@@ -311,10 +313,25 @@ const Index = () => {
 
       {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
       {isClosed ? (
-        <div className="py-20 text-center text-muted-foreground">
-          <p className="text-6xl mb-4">🔒</p>
-          <p className="text-xl font-bold">ההזמנות סגורות כרגע</p>
-          <p className="text-sm mt-2">נחזור בקרוב!</p>
+        <div className="py-16 text-center px-6">
+          <p className="text-6xl mb-4">{isManualClosure ? "⏸️" : "🔒"}</p>
+          <p className="text-2xl font-black text-foreground mb-2">
+            {isManualClosure ? "האתר סגור כרגע עקב עומס" : "ההזמנות סגורות כרגע"}
+          </p>
+          <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+            {isManualClosure
+              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם. השאירו לנו מספר ונעדכן אתכם ברגע שנפתח שוב 🙏"
+              : "נחזור בקרוב!"}
+          </p>
+          {!isStation && (
+            <button
+              onClick={() => setReopenModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-black px-6 py-3 rounded-xl shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
+            >
+              <Bell size={20} />
+              עדכנו אותי כשנפתח שוב
+            </button>
+          )}
         </div>
       ) : dineIn !== null ? (
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
