@@ -63,6 +63,15 @@ const Index = () => {
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
+  // Re-register the cart target whenever the button mounts/unmounts.
+  // The button only renders once the cart has items, so on the very first
+  // add we use a small rAF deferral (see flyFromCenter) to give it a frame
+  // to appear before launching the animation.
+  const cartButtonCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    cartButtonRef.current = node;
+    registerCartTarget(node);
+  }, [registerCartTarget]);
+
   /** Fire a fly-to-cart from screen center (used after modal confirm). */
   const flyFromCenter = useCallback(() => {
     const sourceRect = new DOMRect(
@@ -71,7 +80,9 @@ const Index = () => {
       80,
       80,
     );
-    flyToCart({ sourceRect });
+    // Defer to next frame so the cart button (which only renders when
+    // totalItems > 0) has a chance to mount on the first add.
+    requestAnimationFrame(() => requestAnimationFrame(() => flyToCart({ sourceRect })));
   }, [flyToCart]);
 
   const addToCartDirect = useCallback((item: MenuItem & { _menuItemId?: string }) => {
@@ -338,7 +349,7 @@ const Index = () => {
       )}
 
       {!isClosed && totalItems > 0 && !cartOpen && (
-        <div ref={cartButtonRef}>
+        <div ref={cartButtonCallbackRef}>
           <button
             onClick={() => setCartOpen(true)}
             className={`${uiPositions.cartButton.position} bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform`}
