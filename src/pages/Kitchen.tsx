@@ -228,6 +228,28 @@ const Kitchen = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
 
+  // Lock body scroll while the receipt preview modal is open — prevents background
+  // scrolling on iOS/touch devices and traps the gesture inside the modal.
+  useEffect(() => {
+    if (!previewOrder) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
+    const scrollY = window.scrollY;
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, [previewOrder]);
+
   // Escalation thresholds (configurable from UI)
   const [redAfter, setRedAfter] = useState<number>(() => {
     const v = parseInt(localStorage.getItem("kitchen-red-after") || "");
