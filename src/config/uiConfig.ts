@@ -17,7 +17,7 @@ export const uiPositions = {
 
   /** Shopping cart floating button */
   cartButton: {
-    position: "fixed bottom-6 left-6 z-30",
+    position: "fixed bottom-6 left-1/2 -translate-x-1/2 z-30",
   },
 
   /** Cookie consent banner */
