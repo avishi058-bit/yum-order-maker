@@ -645,7 +645,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>תוספות בתשלום</h3>
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
-                            {toppings.filter((t: Topping) => !isAvailable || isAvailable(t.id)).map((t: Topping) => {
+                            {toppings
+                              .filter((t: Topping) => !isAvailable || isAvailable(t.id))
+                              .filter((t: Topping) => {
+                                // Smash burgers: hide regular extra patty, show smash extra patty.
+                                // Non-smash burgers: hide smash extra patty, show regular extra patty.
+                                if (t.id === "extra-patty") return !isSmash;
+                                if (t.id === "extra-smash-patty") return isSmash;
+                                return true;
+                              })
+                              .map((t: Topping) => {
                               const isCheddar = t.id === "vegan-cheddar";
                               const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === "vegan-cheddar").length : 0;
                               const active = isCheddar ? cheddarCount > 0 : selectedToppings.includes(t.id);
