@@ -288,6 +288,7 @@ export type Database = {
           background_color: string
           banner_enabled: boolean
           banner_text: string | null
+          business_hours: Json
           created_at: string
           id: string
           kiosk_font_scale: number
@@ -301,6 +302,7 @@ export type Database = {
           background_color?: string
           banner_enabled?: boolean
           banner_text?: string | null
+          business_hours?: Json
           created_at?: string
           id?: string
           kiosk_font_scale?: number
@@ -314,6 +316,7 @@ export type Database = {
           background_color?: string
           banner_enabled?: boolean
           banner_text?: string | null
+          business_hours?: Json
           created_at?: string
           id?: string
           kiosk_font_scale?: number
