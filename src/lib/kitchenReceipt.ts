@@ -97,7 +97,7 @@ const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.te
 
 // Drinks/non-burger items that don't add patty/bun.
 const isDrinkOrMisc = (name: string): boolean =>
-  /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנ忒|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
+  /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
 // Detect fried-side items by name. Order matters.
 type FriedKind = "friendsMix" | "tempuraOnionSide" | "waffleFries" | "onionRings" | "fries" | null;
@@ -111,6 +111,101 @@ const detectFried = (name: string): FriedKind => {
   if (/צ['׳]?יפס/.test(name)) return "fries";
   return null;
 };
+
+// ---------- owner-name (per-item label) ----------
+//
+// CheckoutForm encodes the optional "של מי המנה?" label as a sentinel entry
+// at the FRONT of the item's removals array: "__OWNER__:<name>". We strip it
+// out here so the receipt can show it as a header line instead of a removal,
+// and so chef-summary logic doesn't accidentally count it as an ingredient
+// removal.
+const OWNER_PREFIX = "__OWNER__:";
+const extractOwnerName = (
+  removals: string[] | null | undefined,
+): { ownerName: string | null; cleanedRemovals: string[] } => {
+  if (!removals || removals.length === 0) return { ownerName: null, cleanedRemovals: [] };
+  let ownerName: string | null = null;
+  const cleaned: string[] = [];
+  for (const r of removals) {
+    if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
+      ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
+    } else {
+      cleaned.push(r);
+    }
+  }
+  return { ownerName, cleanedRemovals: cleaned };
+};
+
+// ---------- drink categorisation (for drink-summary block) ----------
+//
+// Maps a chosen drink (by name OR by id) to a chef-friendly label.
+// Used only on takeaway orders to print a "סיכום שתייה" block at the bottom
+// of the receipt — both standalone drinks and meal/deal drinks are aggregated.
+const normaliseDrinkLabel = (raw: string): string | null => {
+  const s = (raw || "").trim();
+  if (!s) return null;
+  if (/קולה\s*זירו|זירו/.test(s)) return "זירו";
+  if (/קולה/.test(s)) return "קולה";
+  if (/ספרייט\s*זירו/.test(s)) return "ספרייט זירו";
+  if (/ספרייט/.test(s)) return "ספרייט";
+  if (/פאנטה\s*ענבים/.test(s)) return "פאנטה ענבים";
+  if (/פאנטה\s*אקזוטי/.test(s)) return "פאנטה אקזוטי";
+  if (/פאנטה/.test(s)) return "פאנטה";
+  if (/בלו\s*מוחיטו/.test(s)) return "בלו מוחיטו";
+  if (/בלו\s*דיי/.test(s)) return "בלו דיי";
+  if (/בלו/.test(s)) return "בלו";
+  if (/גולדסטאר\s*אנפילטר/.test(s)) return "גולדסטאר אנפילטר";
+  if (/גולדסטאר/.test(s)) return "גולדסטאר";
+  if (/הייניקן/.test(s)) return "הייניקן";
+  if (/קורונה/.test(s)) return "קורונה";
+  if (/קאלסברג|קלסטברג/.test(s)) return "קאלסברג";
+  if (/לאפ|לאף/.test(s)) return "לאפ בראון";
+  if (/גינס/.test(s)) return "גינס";
+  if (/ויינשטפאן/.test(s)) return "ויינשטפאן";
+  if (/הוגרדן/.test(s)) return "הוגרדן";
+  if (/מוחיטו/.test(s)) return "מוחיטו";
+  if (/אבטיח/.test(s)) return "מים אבטיח";
+  if (/ענבים/.test(s)) return "ענבים";
+  if (/תפוזים/.test(s)) return "תפוזים";
+  if (/תפוחים/.test(s)) return "תפוחים";
+  if (/מים/.test(s)) return "מים";
+  // Unrecognised — return raw (keeps it visible to chef rather than dropping)
+  return s;
+};
+
+export interface DrinkSummary {
+  drinks: Map<string, number>;
+}
+
+export function computeDrinkSummary(items: ReceiptOrderItem[]): DrinkSummary {
+  const drinks = new Map<string, number>();
+  const add = (label: string | null, qty: number) => {
+    if (!label) return;
+    drinks.set(label, (drinks.get(label) || 0) + qty);
+  };
+
+  for (const it of items) {
+    if (it.item_name === "רטבים") continue; // synthetic line, not a drink
+    const qty = it.quantity || 1;
+
+    // Standalone drinks (e.g. "פחית — קולה") — name itself is a drink
+    if (isDrinkOrMisc(it.item_name)) {
+      add(normaliseDrinkLabel(it.item_name), qty);
+    }
+
+    // Meal drinks
+    if (it.meal_drink) add(normaliseDrinkLabel(it.meal_drink), qty);
+
+    // Deal drinks (each drink object has its own quantity built into the array)
+    if (Array.isArray(it.deal_drinks)) {
+      for (const d of it.deal_drinks) {
+        const dn = String(d?.name || "");
+        if (dn) add(normaliseDrinkLabel(dn), qty);
+      }
+    }
+  }
+  return { drinks };
+}
 
 // Counts how many entries in `arr` match ANY of the needles (each entry once).
 const includesAny = (arr: string[] | null | undefined, needles: string[]): number => {
@@ -228,8 +323,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "טבעות בצל ביתיות"]) * qty;
 
     // ---- gluten-free bun swap ----
+    // Use cleaned removals (without __OWNER__ sentinel) to avoid false matches.
+    const cleanedForGf = extractOwnerName(it.removals).cleanedRemovals;
     const gfFlag =
-      includesAny(it.removals, ["ללא גלוטן", "גלוטן"]) +
+      includesAny(cleanedForGf, ["ללא גלוטן", "גלוטן"]) +
       includesAny(it.toppings, ["ללא גלוטן"]);
     if (gfFlag > 0) {
       const swap = Math.min(gfFlag * qty, regularBuns);
@@ -317,10 +414,22 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     .map((line) => {
       const it = line.item;
       const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
-      let html = `<div class="line"><div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
 
-      if (it.removals && it.removals.length > 0) {
-        html += `<div class="sub">— ללא: ${escapeHtml(it.removals.join(", "))}</div>`;
+      // Pull owner-name out of the removals array (set in CheckoutForm).
+      const { ownerName, cleanedRemovals } = extractOwnerName(it.removals);
+
+      let html = `<div class="line">`;
+
+      // Owner-name banner — printed ABOVE the dish so the chef can quickly
+      // see who each item belongs to. Only shown when the customer set it.
+      if (ownerName) {
+        html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
+      }
+
+      html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+
+      if (cleanedRemovals.length > 0) {
+        html += `<div class="sub">— ללא: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
       }
       if (it.toppings && it.toppings.length > 0) {
         html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
@@ -407,6 +516,24 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
          ${summaryBody}
        </div>`
     : "";
+
+  // ---- Drink summary — TAKEAWAY ONLY ----
+  // Dine-in (kiosk/station) serves drinks on the spot, so no aggregation needed.
+  const isTakeaway = order.order_source !== "kiosk" && order.order_source !== "station";
+  let drinkSummaryHtml = "";
+  if (isTakeaway) {
+    const drinkSummary = computeDrinkSummary(order.order_items);
+    const drinkRows: string[] = [];
+    for (const [name, qty] of drinkSummary.drinks.entries()) {
+      if (qty > 0) drinkRows.push(row(name, qty));
+    }
+    if (drinkRows.length > 0) {
+      drinkSummaryHtml = `<div class="summary drink-summary">
+         <div class="summary-title">סיכום שתייה</div>
+         ${drinkRows.join("")}
+       </div>`;
+    }
+  }
 
   const paymentLine = isCash
     ? `<div class="warn">לא שולם — מזומן בעת המסירה</div>`

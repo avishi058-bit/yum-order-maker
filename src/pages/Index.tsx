@@ -89,7 +89,7 @@ const Index = () => {
   }, [alcoholConsent, openItemFlow]);
 
   const handleCustomizerConfirm = useCallback(
-    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => {
+    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
       const cartItemId = `${item.id}-${Date.now()}`;
       setCart((prev) => [
         ...prev,
@@ -104,6 +104,7 @@ const Index = () => {
           withMeal,
           mealSideId,
           mealDrinkId,
+          ownerName,
         },
       ]);
       setCustomizerItem(null);

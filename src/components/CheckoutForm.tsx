@@ -166,12 +166,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // `id` may be a unique cart key like `classic-1776430479457`. Use `menuItemId` as the
     // canonical pricing id; fall back to `id` for legacy carts that don't have it.
     const menuItemId = (item as CartItem & { menuItemId?: string }).menuItemId ?? item.id;
+    // Owner name is shown on the printed receipt only — we encode it as a
+    // sentinel-prefixed entry inside removalNames (which the receipt builder
+    // already iterates over). The receipt extracts and removes it before
+    // rendering. Stored as text only — no DB schema change required.
+    const ownerName = (item as CartItem & { ownerName?: string }).ownerName?.trim();
+    const removalNamesWithOwner = ownerName
+      ? [`__OWNER__:${ownerName}`, ...removalNames]
+      : removalNames;
     return {
       itemId: menuItemId,
       quantity: item.quantity,
       toppings: item.toppings,
       removals: item.removals,
-      removalNames,
+      removalNames: removalNamesWithOwner,
       withMeal: item.withMeal,
       mealSideId: item.mealSideId ?? null,
       mealDrinkId: item.mealDrinkId ?? null,

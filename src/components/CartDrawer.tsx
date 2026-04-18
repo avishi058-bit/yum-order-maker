@@ -31,6 +31,10 @@ export interface CartItem {
   mealDrinkId?: string;
   dealBurgers?: DealBurgerConfig[];
   dealDrinks?: DealDrinkChoice[];
+  /** Optional "owner name" — for orders with multiple items, lets the kitchen
+   *  know which dish belongs to whom. Shown as a header line above the item
+   *  on the printed receipt only (not stored in a separate DB column). */
+  ownerName?: string;
 }
 
 interface CartDrawerProps {

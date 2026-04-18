@@ -10,7 +10,7 @@ import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => void;
   isAvailable?: (id: string) => boolean;
 }
 
@@ -35,6 +35,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  // Optional "owner name" — chef sees who each dish belongs to.
+  // Toggle controls whether the input is shown; only sent if non-empty.
+  const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
+  const [ownerName, setOwnerName] = useState("");
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
 
@@ -365,7 +369,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   };
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
-    onConfirm(item, quantity, selectedToppings, selectedRemovals.filter(r => r !== "no-changes"), withMeal, sideId, drinkId);
+    const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
+    onConfirm(
+      item,
+      quantity,
+      selectedToppings,
+      selectedRemovals.filter(r => r !== "no-changes"),
+      withMeal,
+      sideId,
+      drinkId,
+      trimmedOwner || undefined,
+    );
     resetState();
   };
 
@@ -376,6 +390,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
+    setOwnerNameEnabled(false);
+    setOwnerName("");
   };
 
   const handleClose = () => {
@@ -629,6 +645,55 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         <p className="text-lg font-bold text-primary mt-3">₪{item.price}</p>
                       </div>
                     )}
+
+                    {/* Owner-name field — printed on the kitchen receipt above this item.
+                        Helpful when one customer orders multiple dishes. */}
+                    <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"} border-t border-gray-100`}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOwnerNameEnabled((v) => {
+                            if (v) setOwnerName("");
+                            return !v;
+                          });
+                        }}
+                        className="w-full flex items-center justify-between"
+                      >
+                        <div className="text-right flex-1">
+                          <h3 className={`font-black ${isKiosk ? "text-[20px]" : "text-base"}`}>
+                            של מי המנה?
+                          </h3>
+                          <p className={`text-gray-500 ${isKiosk ? "text-[14px]" : "text-xs"} mt-0.5`}>
+                            (רלוונטי למי שמזמין יותר ממנה אחת)
+                          </p>
+                        </div>
+                        <div
+                          className={`rounded-md border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-8 h-8" : "w-6 h-6"} ${
+                            ownerNameEnabled ? "border-primary bg-primary text-primary-foreground" : "border-gray-300"
+                          }`}
+                        >
+                          {ownerNameEnabled && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={isKiosk ? "w-5 h-5" : "w-4 h-4"}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                      </button>
+                      {ownerNameEnabled && (
+                        <input
+                          type="text"
+                          value={ownerName}
+                          onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                          placeholder="שם (למשל: יוסי)"
+                          maxLength={30}
+                          autoFocus
+                          className={`mt-3 w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 text-right focus:outline-none focus:border-primary transition-colors ${
+                            isKiosk ? "py-4 text-[18px]" : "py-3 text-base"
+                          }`}
+                          dir="rtl"
+                        />
+                      )}
+                    </div>
 
                     {/* Bottom spacer so footer never overlaps content */}
                     <div className="h-4" />
