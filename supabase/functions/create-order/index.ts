@@ -254,10 +254,12 @@ function priceCart(
     }
 
     if (item.withMeal) {
-      if (menuItem.category !== "burger") {
-        return { ok: false, error: `שדרוג לארוחה רק על המבורגר (${menuItem.name})` };
+      // אם הפריט הוא כבר ארוחה (category=meal) - מתעלמים מ-withMeal בשקט
+      // (זה מצב שיכול לקרות בעריכת פריט מהעגלה)
+      if (menuItem.category === "burger") {
+        unit += MEAL_UPGRADE_PRICE;
       }
-      unit += MEAL_UPGRADE_PRICE;
+      // עבור meal/deal/side/drink - פשוט מתעלמים מהדגל בלי לזרוק שגיאה
     }
 
     const isMealContext = menuItem.category === "meal" || !!item.withMeal;
