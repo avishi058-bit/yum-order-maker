@@ -605,6 +605,31 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     font-size: 11pt;
   }
   .customer .name { font-weight: 900; font-size: 13pt; }
+  .customer .phone-row {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    margin-top: 1mm;
+  }
+  .customer .phone-row a {
+    color: #000;
+    text-decoration: none;
+    font-weight: 700;
+  }
+  .customer .phone-qr {
+    width: 14mm;
+    height: 14mm;
+    flex: 0 0 auto;
+    border: 1px solid #000;
+    padding: 0.5mm;
+    background: #fff;
+  }
+  .customer .phone-qr svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    shape-rendering: crispEdges;
+  }
   .notes {
     border: 2px solid #000;
     padding: 2mm;
