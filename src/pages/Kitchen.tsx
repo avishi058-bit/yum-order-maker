@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml } from "@/lib/kitchenReceipt";
 
 interface OrderItem {
   id: string;
@@ -226,6 +226,7 @@ const Kitchen = () => {
   // Realtime / fallback state
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
 
   // Escalation thresholds (configurable from UI)
   const [redAfter, setRedAfter] = useState<number>(() => {
@@ -954,6 +955,13 @@ const Kitchen = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setPreviewOrder(order)}
+                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                      title="צפייה בבון"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
                       onClick={() => printOrder(order)}
                       className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
                       title="הדפסת בון"
@@ -1122,6 +1130,54 @@ const Kitchen = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Receipt preview modal */}
+      {previewOrder && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+          onClick={() => setPreviewOrder(null)}
+        >
+          <div
+            className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-border">
+              <span className="font-bold text-foreground">תצוגת בון #{previewOrder.order_number}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { printOrder(previewOrder); }}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1"
+                >
+                  <Printer size={14} /> הדפס
+                </button>
+                <button
+                  onClick={() => setPreviewOrder(null)}
+                  className="p-1.5 rounded-lg hover:bg-secondary text-foreground"
+                  aria-label="סגור"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title="receipt-preview"
+              srcDoc={buildReceiptHtml({
+                order_number: previewOrder.order_number,
+                customer_name: previewOrder.customer_name,
+                customer_phone: previewOrder.customer_phone,
+                notes: previewOrder.notes,
+                total: previewOrder.total,
+                created_at: previewOrder.created_at,
+                payment_method: previewOrder.payment_method,
+                order_source: previewOrder.order_source,
+                order_items: previewOrder.order_items,
+              })}
+              className="flex-1 w-full bg-white rounded-b-xl"
+              style={{ minHeight: "60vh" }}
+            />
+          </div>
         </div>
       )}
     </div>
