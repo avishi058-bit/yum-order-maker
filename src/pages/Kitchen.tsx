@@ -1215,17 +1215,7 @@ const Kitchen = () => {
             </div>
             <iframe
               title="receipt-preview"
-              srcDoc={buildReceiptHtml({
-                order_number: previewOrder.order_number,
-                customer_name: previewOrder.customer_name,
-                customer_phone: previewOrder.customer_phone,
-                notes: previewOrder.notes,
-                total: previewOrder.total,
-                created_at: previewOrder.created_at,
-                payment_method: previewOrder.payment_method,
-                order_source: previewOrder.order_source,
-                order_items: previewOrder.order_items,
-              })}
+              srcDoc={previewHtml}
               className="flex-1 w-full bg-white"
               style={{ minHeight: "60vh" }}
             />
