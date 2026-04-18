@@ -27,6 +27,8 @@ interface KioskCartDrawerProps {
   /** "Add another item" — return to menu */
   onBackToMenu: () => void;
   isAvailable: (id: string) => boolean;
+  /** Reopens the customizer with this cart item's selections prefilled. */
+  onEditItem?: (id: string) => void;
   /** Kiosk uses larger sizes; website uses compact sizes. */
   isKiosk?: boolean;
 }
@@ -48,6 +50,7 @@ const KioskCartDrawer = ({
   onSelectDrink,
   onBackToMenu,
   isAvailable,
+  onEditItem,
   isKiosk = false,
 }: KioskCartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
