@@ -71,8 +71,9 @@ const isAvishai = (name: string): boolean =>
   /אבישי|שחוט לי פרה/.test(name);
 
 // Items that SHOULDN'T add a patty/bun (drinks, sides, sauces).
+// Note: Hebrew uses ׳ (U+05F3) and ״ (U+05F4), not regular ASCII apostrophe.
 const isNonBurgerItem = (name: string): boolean =>
-  /צ'?יפס|טבעות|מיקס|פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|לאפ|גינס|אנפילטר|מים/.test(name);
+  /צ['׳]?יפס|טבעות|מיקס|פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|לאפ|גינס|אנפילטר|מים|וופל/.test(name);
 
 const includesAny = (arr: string[] | null | undefined, needles: string[]): number => {
   if (!arr || arr.length === 0) return 0;
