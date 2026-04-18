@@ -210,6 +210,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         // Server-recorded proof that the customer accepted the terms at order time
         termsAcceptedAt: new Date().toISOString(),
         items: items.map(buildServerItem),
+        // Sauces (chef-summary only): qty per sauce + how many were free.
+        // Server adds extra-sauce charge to the total and stores them as a
+        // synthetic "רטבים" line so the kitchen receipt shows them.
+        sauces: sauces
+          .filter((s) => s.quantity > 0)
+          .map((s) => ({ id: s.id, name: s.name, quantity: s.quantity })),
+        freeSauces,
       },
     });
 
