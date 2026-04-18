@@ -124,29 +124,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Kiosk-only choreography: hero image zooms out + translates up while the
-  // sheet slides upward to expose more selection area. All driven by GPU
-  // transforms — no layout/reflow during the gesture.
-  const applyHeroTransform = useCallback((scrollTop: number) => {
-    if (!isKiosk) return;
-    const img = heroImgRef.current;
-    const sheet = sheetRef.current;
-
-    // Image: scale 1.12 → 1.00, translate up to -28% of hero height
-    if (img) {
-      const t = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE)) / HERO_FADE_DISTANCE;
-      const scale = 1.12 - t * 0.12;
-      const translateY = -t * (HERO_HEIGHT_KIOSK * 0.28);
-      img.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
-    }
-
-    // Sheet: slides from KIOSK_SHEET_TOP_INITIAL_VH → KIOSK_SHEET_TOP_FINAL_VH
-    if (sheet) {
-      const t = Math.max(0, Math.min(scrollTop, KIOSK_SCROLL_RANGE)) / KIOSK_SCROLL_RANGE;
-      const offsetVh = (KIOSK_SHEET_TOP_INITIAL_VH - KIOSK_SHEET_TOP_FINAL_VH) * t;
-      sheet.style.transform = `translate3d(0, -${offsetVh}vh, 0)`;
-    }
-  }, [isKiosk]);
+  // No-op scroll handler kept for parity (website behavior — image scrolls
+  // inline with content; no transforms applied).
+  const handleScroll = useCallback(() => {}, []);
+  const applyHeroTransform = useCallback((_scrollTop: number) => {}, []);
 
   // Scroll handler — passive, RAF-throttled, no setState
   const scrollRafRef = useRef(0);
