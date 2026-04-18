@@ -513,12 +513,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 <div className={`flex items-center justify-between px-5 pb-3 ${isKiosk ? "px-8 pb-4" : ""}`}>
                   <button
                     onClick={handleClose}
-                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`}
+                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-16 h-16" : "w-10 h-10"}`}
                   >
-                    <X size={isKiosk ? 28 : 20} />
+                    <X size={isKiosk ? 32 : 20} />
                   </button>
-                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[28px]" : "text-xl"}`}>{item.name}</h2>
-                  <div className={isKiosk ? "w-14" : "w-10"} />
+                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[34px]" : "text-xl"}`}>{item.name}</h2>
+                  <div className={isKiosk ? "w-16" : "w-10"} />
                 </div>
 
                 {/* Hero image (only on customize step, only if image exists) */}
@@ -526,17 +526,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   <div
                     ref={heroRef}
                     data-kiosk-hero={isKiosk ? "true" : undefined}
-                    className="relative w-full overflow-hidden bg-gray-100"
+                    className={`relative w-full overflow-hidden ${isKiosk ? "bg-gradient-to-b from-gray-900 to-gray-800" : "bg-gray-100"}`}
                     style={{ height: heroHeight }}
                   >
                     <img
                       ref={heroImgRef}
                       src={heroImage as string}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full ${isKiosk ? "object-contain" : "object-cover"}`}
                       style={{
                         willChange: "transform, opacity",
-                        transformOrigin: "center top",
+                        transformOrigin: "center center",
                         transform: isKiosk ? "scale(var(--kiosk-image-scale, 1))" : undefined,
                       }}
                       draggable={false}
@@ -586,11 +586,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           className="w-full flex items-center justify-between gap-3"
                         >
                           <div className="text-right flex-1">
-                            <h3 className={`font-black text-black flex items-center gap-1.5 justify-end ${isKiosk ? "text-[24px]" : "text-lg"}`}>
+                            <h3 className={`font-black text-black flex items-center gap-1.5 justify-end ${isKiosk ? "text-[28px]" : "text-lg"}`}>
                               <span>👤</span>
                               <span>של מי המנה?</span>
                             </h3>
-                            <p className={`text-gray-500 ${isKiosk ? "text-[14px]" : "text-xs"} mt-0.5`}>
+                            <p className={`text-gray-500 ${isKiosk ? "text-[16px]" : "text-xs"} mt-0.5`}>
                               (רלוונטי למי שמזמין יותר ממנה אחת)
                             </p>
                           </div>
@@ -633,8 +633,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     {isBurger && (
                       <>
                         <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                           <div className="space-y-0">
                             {removalsList.map((r) => {
                               const ingredientUnavailable = getIngredientUnavailable(r.id);
@@ -654,9 +654,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     {active && <div className="w-3 h-3 rounded-full bg-white" />}
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{r.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{r.name}</span>
                                     {isLocked && (
-                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[16px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
+                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
                                     )}
                                   </div>
                                 </button>
@@ -666,8 +666,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         </div>
 
                         <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>תוספות בתשלום</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
@@ -720,13 +720,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                           הוסף
                                         </button>
                                       )}
-                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
+                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
                                     </div>
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
-                                      <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
+                                      <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
                                       {showRecommended && (
-                                        <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
+                                        <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                           🔥 הולך טוב עם המנה
                                         </span>
                                       )}
@@ -749,12 +749,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     >
                                       {active && <div className="w-3 h-3 rounded-full bg-white" />}
                                     </div>
-                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price}</span>
+                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
                                     {showRecommended && (
-                                      <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
+                                      <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                         🔥 הולך טוב עם המנה
                                       </span>
                                     )}
@@ -790,7 +790,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                   >
-                    <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
+                    <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
                     <div className="space-y-0">
                       {mealSideOptions.map((side) => {
                         const unavailable = isSideUnavailable(side.id);
@@ -813,13 +813,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 {active && <div className="w-3 h-3 rounded-full bg-white" />}
                               </div>
                               {side.price > 0 && !unavailable && (
-                                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{side.price}</span>
+                                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{side.price}</span>
                               )}
                               {unavailable && (
-                                <span className="text-sm font-bold text-destructive">(אזל מהמלאי כרגע)</span>
+                                <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי כרגע)</span>
                               )}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
                           </button>
                         );
                       })}
@@ -849,7 +849,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                   >
-                    <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר שתייה לעסקית:</h3>
+                    <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר שתייה לעסקית:</h3>
 
                     <div className="space-y-0">
                       {softDrinks.map((drink) => {
@@ -870,15 +870,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               >
                                 {active && !unavailable && <div className="w-3 h-3 rounded-full bg-white" />}
                               </div>
-                              {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
+                              {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                           </button>
                         );
                       })}
                     </div>
 
-                    <h4 className={`font-black text-right mt-4 mb-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>בירות:</h4>
+                    <h4 className={`font-black text-right mt-6 mb-3 ${isKiosk ? "text-[26px]" : "text-base"}`}>בירות:</h4>
                     <div className="space-y-0">
                       {beerDrinks.map((drink) => {
                         const active = selectedDrink === drink.id;
@@ -898,10 +898,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               >
                                 {active && !unavailable && <div className="w-3 h-3 rounded-full bg-white" />}
                               </div>
-                              {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
-                              {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{drink.price}</span>}
+                              {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
+                              {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{drink.price}</span>}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                           </button>
                         );
                       })}
@@ -974,28 +974,36 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                  className="bg-white text-black w-full max-w-md rounded-3xl shadow-2xl p-8 pointer-events-auto"
+                  className={`bg-white text-black w-full rounded-3xl shadow-2xl pointer-events-auto ${
+                    isKiosk ? "max-w-2xl p-12" : "max-w-md p-8"
+                  }`}
                   dir="rtl"
                   style={{ willChange: "transform, opacity" }}
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                      <Utensils size={36} className="text-primary" />
+                    <div className={`rounded-full bg-primary/10 flex items-center justify-center ${
+                      isKiosk ? "w-32 h-32 mb-8" : "w-20 h-20 mb-6"
+                    }`}>
+                      <Utensils size={isKiosk ? 64 : 36} className="text-primary" />
                     </div>
-                    <h3 className={`font-black mb-3 ${isKiosk ? "text-[26px]" : "text-xl"}`}>לשדרג לארוחה עסקית?</h3>
-                    <p className={`text-primary font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"}`}>+₪{mealUpgrade.price}</p>
-                    <p className={`text-gray-500 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
+                    <h3 className={`font-black mb-4 ${isKiosk ? "text-[40px]" : "text-xl mb-3"}`}>לשדרג לארוחה עסקית?</h3>
+                    <p className={`text-primary font-black mb-2 ${isKiosk ? "text-[36px]" : "text-lg mb-1"}`}>+₪{mealUpgrade.price}</p>
+                    <p className={`text-gray-500 ${isKiosk ? "text-[24px] mb-10" : "text-sm mb-8"}`}>המבורגר + צ׳יפס + שתייה</p>
 
-                    <div className="w-full space-y-3">
+                    <div className={`w-full ${isKiosk ? "space-y-4" : "space-y-3"}`}>
                       <button
                         onClick={() => goToSideSelect()}
-                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${
+                          isKiosk ? "py-7 text-[32px]" : "py-4 text-lg"
+                        }`}
                       >
                         שדרגו לי! 🍟🥤
                       </button>
                       <button
                         onClick={() => handleFinish(false)}
-                        className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[20px]" : "py-4 text-base"}`}
+                        className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${
+                          isKiosk ? "py-6 text-[26px]" : "py-4 text-base"
+                        }`}
                       >
                         לא תודה
                       </button>
