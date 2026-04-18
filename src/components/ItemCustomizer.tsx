@@ -898,10 +898,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               >
                                 {active && !unavailable && <div className="w-3 h-3 rounded-full bg-white" />}
                               </div>
-                              {unavailable && <span className="text-sm text-destructive">(אזל מהמלאי)</span>}
-                              {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{drink.price}</span>}
+                              {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
+                              {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{drink.price}</span>}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
                           </button>
                         );
                       })}
