@@ -281,9 +281,12 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           }
           unitPrice += toppingsCost;
 
-          // Meal upgrade cost
+          // Meal upgrade cost — only when upgrading a burger to a meal.
+          // Items already in the "meal" category include the upgrade in their base price.
           if (item.withMeal) {
-            unitPrice += 23;
+            if (shouldChargeMealUpgrade(item)) {
+              unitPrice += MEAL_UPGRADE_PRICE;
+            }
             descParts.push("ארוחה");
           }
 
