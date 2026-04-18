@@ -303,8 +303,18 @@ const KioskCartDrawer = ({
                             )}
                           </div>
 
-                          {/* Quantity controls */}
+                          {/* Quantity controls + edit */}
                           <div className="flex items-center gap-3">
+                            {onEditItem && !item.dealBurgers && (
+                              <button
+                                onClick={() => onEditItem(item.id)}
+                                className={`flex items-center gap-1.5 rounded-full bg-background border-2 border-border text-foreground hover:bg-secondary transition-colors font-bold ${isKiosk ? 'px-4 py-2.5 text-base' : 'px-3 py-1.5 text-xs'}`}
+                                aria-label="ערוך מנה"
+                              >
+                                <Pencil size={isKiosk ? 18 : 12} />
+                                ערוך
+                              </button>
+                            )}
                             <button
                               onClick={() => onUpdateQuantity(item.id, -1)}
                               className={`${sz.qtyBtn} rounded-full bg-secondary hover:bg-border transition-colors flex items-center justify-center active:scale-95`}
