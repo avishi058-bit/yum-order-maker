@@ -26,6 +26,7 @@ export function useKioskCSSVars(enabled: boolean) {
     root.style.setProperty("--kiosk-card-img-size", `${settings.kiosk_card_image_size_px}px`);
     root.style.setProperty("--kiosk-spacing-scale", String(settings.kiosk_spacing_scale));
     root.style.setProperty("--kiosk-ui-scale", String(settings.kiosk_ui_scale));
+    root.style.setProperty("--kiosk-font-scale", String(settings.kiosk_font_scale));
 
     // Layout-stability classes
     document.body.classList.add("kiosk-active");
@@ -34,6 +35,19 @@ export function useKioskCSSVars(enabled: boolean) {
     } else {
       document.body.classList.remove("kiosk-lock-layout");
     }
+    // Toggle UI-scale CSS rule only when actually scaling (avoids unnecessary
+    // transform creating a new stacking context at scale 1).
+    if (settings.kiosk_ui_scale !== 1) {
+      document.body.classList.add("kiosk-ui-scale-on");
+    } else {
+      document.body.classList.remove("kiosk-ui-scale-on");
+    }
+
+    // Live-update any open ItemCustomizer hero (its height is set imperatively
+    // via JS, so a CSS-var change alone wouldn't reach it). Cheap query —
+    // there's at most one open at a time.
+    const openHero = document.querySelector<HTMLDivElement>("[data-kiosk-hero='true']");
+    if (openHero) openHero.style.height = `${settings.kiosk_image_height_px}px`;
 
     // Disable browser zoom (pinch/double-tap) on the kiosk
     let viewportTag = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
@@ -49,7 +63,7 @@ export function useKioskCSSVars(enabled: boolean) {
     }
 
     return () => {
-      document.body.classList.remove("kiosk-active", "kiosk-lock-layout");
+      document.body.classList.remove("kiosk-active", "kiosk-lock-layout", "kiosk-ui-scale-on");
       // Reset CSS vars so they don't leak to other routes
       root.style.removeProperty("--kiosk-modal-h");
       root.style.removeProperty("--kiosk-image-h");
@@ -57,6 +71,7 @@ export function useKioskCSSVars(enabled: boolean) {
       root.style.removeProperty("--kiosk-card-img-size");
       root.style.removeProperty("--kiosk-spacing-scale");
       root.style.removeProperty("--kiosk-ui-scale");
+      root.style.removeProperty("--kiosk-font-scale");
       if (viewportTag && originalContent) {
         viewportTag.content = originalContent;
       }
@@ -70,6 +85,7 @@ export function useKioskCSSVars(enabled: boolean) {
     settings.kiosk_card_image_size_px,
     settings.kiosk_spacing_scale,
     settings.kiosk_ui_scale,
+    settings.kiosk_font_scale,
     settings.kiosk_lock_layout,
     settings.kiosk_disable_zoom,
   ]);
