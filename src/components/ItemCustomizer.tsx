@@ -10,7 +10,7 @@ import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => void;
   isAvailable?: (id: string) => boolean;
 }
 
