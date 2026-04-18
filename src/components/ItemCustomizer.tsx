@@ -511,6 +511,61 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         </p>
                       </div>
                     )}
+                    {/* Owner-name field — printed on the kitchen receipt above this item.
+                        Helpful when one customer orders multiple dishes.
+                        Placed at the TOP so it's the first thing the customer sees. */}
+                    {isBurger && (
+                      <div className={`mx-5 ${isKiosk ? "mt-5" : "mt-4"} rounded-2xl border-2 ${
+                        ownerNameEnabled ? "border-primary bg-primary/5" : "border-primary/40 bg-primary/5"
+                      } ${isKiosk ? "p-5" : "p-4"} shadow-sm`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOwnerNameEnabled((v) => {
+                              if (v) setOwnerName("");
+                              return !v;
+                            });
+                          }}
+                          className="w-full flex items-center justify-between gap-3"
+                        >
+                          <div className="text-right flex-1">
+                            <h3 className={`font-black text-primary flex items-center gap-2 justify-end ${isKiosk ? "text-[22px]" : "text-lg"}`}>
+                              <span>👤</span>
+                              <span>של מי המנה?</span>
+                            </h3>
+                            <p className={`text-gray-600 ${isKiosk ? "text-[15px]" : "text-xs"} mt-1`}>
+                              (רלוונטי למי שמזמין יותר ממנה אחת)
+                            </p>
+                          </div>
+                          <div
+                            className={`rounded-lg border-2 flex items-center justify-center transition-colors shrink-0 ${isKiosk ? "w-10 h-10" : "w-8 h-8"} ${
+                              ownerNameEnabled ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 bg-white"
+                            }`}
+                          >
+                            {ownerNameEnabled && (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={isKiosk ? "w-6 h-6" : "w-5 h-5"}>
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                          </div>
+                        </button>
+                        {ownerNameEnabled && (
+                          <input
+                            type="text"
+                            value={ownerName}
+                            onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                            placeholder="שם (למשל: יוסי)"
+                            maxLength={30}
+                            autoFocus
+                            className={`mt-3 w-full bg-white border-2 border-primary/40 rounded-xl px-4 text-right focus:outline-none focus:border-primary transition-colors ${
+                              isKiosk ? "py-4 text-[18px]" : "py-3 text-base"
+                            }`}
+                            dir="rtl"
+                          />
+                        )}
+                      </div>
+                    )}
+
                     {isBurger && (
                       <>
                         <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
