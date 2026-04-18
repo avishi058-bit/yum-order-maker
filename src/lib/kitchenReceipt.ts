@@ -1,5 +1,6 @@
 // Kitchen receipt builder + chef-summary calculator.
 // 80mm thermal printers (printable area ~72mm). Black & white only.
+import QRCode from "qrcode";
 //
 // CHEF SUMMARY RULES:
 //   Patties (split by type):
