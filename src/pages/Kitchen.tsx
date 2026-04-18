@@ -1079,10 +1079,42 @@ const Kitchen = () => {
                   </div>
                 </div>
 
-                {/* Tracking link */}
+                {/* ETA control + tracking link (preparing only) */}
                 {order.status === "preparing" && (
-                  <div className="px-4 py-2 border-t border-border bg-secondary/20 text-center">
-                    <p className="text-xs text-muted-foreground">
+                  <div className="px-4 py-3 border-t border-border bg-secondary/30 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Clock size={14} className="text-primary" />
+                        זמן הכנה:
+                        <span className="text-primary font-black text-base">
+                          {etaCountdown(order.estimated_ready_at) || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => adjustEta(order, -5)}
+                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          title="קצר ב-5 דקות"
+                        >
+                          <Minus size={12} /> 5
+                        </button>
+                        <button
+                          onClick={() => adjustEta(order, 5)}
+                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          title="הוסף 5 דקות"
+                        >
+                          <Plus size={12} /> 5
+                        </button>
+                        <button
+                          onClick={() => adjustEta(order, 10)}
+                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          title="הוסף 10 דקות"
+                        >
+                          <Plus size={12} /> 10
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center">
                       קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
                     </p>
                   </div>
