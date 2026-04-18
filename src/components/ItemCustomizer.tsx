@@ -790,7 +790,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                   >
-                    <h3 className={`font-black text-center ${isKiosk ? "text-[24px] mb-6" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
+                    <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
                     <div className="space-y-0">
                       {mealSideOptions.map((side) => {
                         const unavailable = isSideUnavailable(side.id);
