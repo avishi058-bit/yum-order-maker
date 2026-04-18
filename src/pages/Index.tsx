@@ -420,6 +420,7 @@ const Index = () => {
           }, 100);
         }}
         isAvailable={isAvailable}
+        onEditItem={handleEditCartItem}
         isKiosk={isStation}
       />
 
