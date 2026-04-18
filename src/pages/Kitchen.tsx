@@ -227,6 +227,32 @@ const Kitchen = () => {
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+
+  // Build the preview HTML asynchronously (QR generation needs a Promise).
+  useEffect(() => {
+    if (!previewOrder) {
+      setPreviewHtml("");
+      return;
+    }
+    let cancelled = false;
+    buildReceiptHtml({
+      order_number: previewOrder.order_number,
+      customer_name: previewOrder.customer_name,
+      customer_phone: previewOrder.customer_phone,
+      notes: previewOrder.notes,
+      total: previewOrder.total,
+      created_at: previewOrder.created_at,
+      payment_method: previewOrder.payment_method,
+      order_source: previewOrder.order_source,
+      order_items: previewOrder.order_items,
+    }).then((html) => {
+      if (!cancelled) setPreviewHtml(html);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [previewOrder]);
 
   // Lock body scroll while the receipt preview modal is open — prevents background
   // scrolling on iOS/touch devices and traps the gesture inside the modal.
@@ -1189,17 +1215,7 @@ const Kitchen = () => {
             </div>
             <iframe
               title="receipt-preview"
-              srcDoc={buildReceiptHtml({
-                order_number: previewOrder.order_number,
-                customer_name: previewOrder.customer_name,
-                customer_phone: previewOrder.customer_phone,
-                notes: previewOrder.notes,
-                total: previewOrder.total,
-                created_at: previewOrder.created_at,
-                payment_method: previewOrder.payment_method,
-                order_source: previewOrder.order_source,
-                order_items: previewOrder.order_items,
-              })}
+              srcDoc={previewHtml}
               className="flex-1 w-full bg-white"
               style={{ minHeight: "60vh" }}
             />

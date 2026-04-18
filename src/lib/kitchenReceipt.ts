@@ -1,5 +1,6 @@
 // Kitchen receipt builder + chef-summary calculator.
 // 80mm thermal printers (printable area ~72mm). Black & white only.
+import QRCode from "qrcode";
 //
 // CHEF SUMMARY RULES:
 //   Patties (split by type):
@@ -400,7 +401,7 @@ const orderTypeLabel = (source: string): string => {
   return "איסוף עצמי";
 };
 
-export function buildReceiptHtml(order: ReceiptOrder): string {
+export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const merged = mergeItems(order.order_items);
   const summary = computeChefSummary(order.order_items);
   const isCash = order.payment_method === "cash";
@@ -409,6 +410,24 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // Generate a small `tel:` QR next to the phone number — kitchen staff /
+  // delivery riders can scan it to call the customer instantly.
+  // Inline SVG so it travels with the receipt HTML and prints reliably
+  // (no external image fetch, no canvas color-conversion surprises).
+  let phoneQrSvg = "";
+  if (order.customer_phone) {
+    try {
+      phoneQrSvg = await QRCode.toString(`tel:${order.customer_phone}`, {
+        type: "svg",
+        margin: 0,
+        errorCorrectionLevel: "M",
+        color: { dark: "#000000", light: "#ffffff" },
+      });
+    } catch (e) {
+      console.warn("[receipt] QR generation failed", e);
+    }
+  }
 
   const itemsHtml = merged
     .map((line) => {
@@ -586,6 +605,31 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     font-size: 11pt;
   }
   .customer .name { font-weight: 900; font-size: 13pt; }
+  .customer .phone-row {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    margin-top: 1mm;
+  }
+  .customer .phone-row a {
+    color: #000;
+    text-decoration: none;
+    font-weight: 700;
+  }
+  .customer .phone-qr {
+    width: 14mm;
+    height: 14mm;
+    flex: 0 0 auto;
+    border: 1px solid #000;
+    padding: 0.5mm;
+    background: #fff;
+  }
+  .customer .phone-qr svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    shape-rendering: crispEdges;
+  }
   .notes {
     border: 2px solid #000;
     padding: 2mm;
@@ -683,6 +727,12 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
   }
   @media print {
     body { width: auto; padding: 1mm 2mm; }
+    /* Make sure SVG QR keeps its black ink when printing — some browsers
+       drop colors on print without these flags. */
+    .phone-qr svg, .phone-qr svg * {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
   }
 </style>
 </head>
@@ -692,7 +742,12 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
 
   <div class="customer">
     <div class="name">${escapeHtml(order.customer_name)}</div>
-    <div>${escapeHtml(order.customer_phone)}</div>
+    ${order.customer_phone
+      ? `<div class="phone-row">
+           ${phoneQrSvg ? `<div class="phone-qr">${phoneQrSvg}</div>` : ""}
+           <a href="tel:${escapeHtml(order.customer_phone)}">${escapeHtml(order.customer_phone)}</a>
+         </div>`
+      : ""}
   </div>
 
   ${order.notes ? `<div class="notes">הערה: ${escapeHtml(order.notes)}</div>` : ""}
@@ -700,6 +755,8 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
   ${itemsHtml}
 
   ${summaryHtml}
+
+  ${drinkSummaryHtml}
 
   ${paymentLine}
 
@@ -716,8 +773,8 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-export function printReceipt(order: ReceiptOrder) {
-  const html = buildReceiptHtml(order);
+export async function printReceipt(order: ReceiptOrder) {
+  const html = await buildReceiptHtml(order);
   const w = window.open("", "_blank", "width=380,height=700");
   if (!w) return;
   w.document.write(html);
