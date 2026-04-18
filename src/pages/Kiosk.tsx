@@ -151,8 +151,8 @@ const Kiosk = () => {
       }
       return [...prev, { id: item.id, menuItemId, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
     });
-    setJustAddedId(item.id);
-    setTimeout(() => setJustAddedId(null), 1200);
+    // ItemPreview already plays its own fly animation, so no extra fly here
+    // (it would double-fire). Stay on menu — no auto-open.
   }, []);
 
   const handleCustomizerConfirm = useCallback(
@@ -174,8 +174,10 @@ const Kiosk = () => {
       setCustomizerItem(null);
       setEditingCartId(null);
       setCustomizerInitial(undefined);
+      // Stay on menu after add — no auto-open. Fly to cart for clear feedback.
+      if (!editingCartId) flyFromCenter();
     },
-    [editingCartId]
+    [editingCartId, flyFromCenter]
   );
 
   const handleEditCartItem = useCallback((cartId: string) => {
@@ -204,7 +206,8 @@ const Kiosk = () => {
       { id: `friends-deal-${Date.now()}`, menuItemId: "friends-deal", name: "דיל חברים", price: 216 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks },
     ]);
     setDealOpen(false);
-  }, []);
+    flyFromCenter();
+  }, [flyFromCenter]);
 
   const handleFamilyDealConfirm = useCallback((burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
     const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
@@ -213,7 +216,8 @@ const Kiosk = () => {
       { id: `family-deal-${Date.now()}`, menuItemId: "family-deal", name: "דיל משפחתי", price: 300 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks.length > 0 ? drinks : undefined },
     ]);
     setFamilyDealOpen(false);
-  }, []);
+    flyFromCenter();
+  }, [flyFromCenter]);
 
   const handleDrinkConfirm = useCallback((item: MenuItem, selectedDrink: string) => {
     setDrinkItem(null);
