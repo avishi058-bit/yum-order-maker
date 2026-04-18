@@ -164,7 +164,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-5xl px-6 pt-4 pb-16' : 'max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`mx-auto ${isKiosk ? 'w-full max-w-none px-8 pt-4 pb-32' : 'max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing) */}
