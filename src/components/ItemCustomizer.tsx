@@ -555,9 +555,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                             placeholder="שם (למשל: יוסי)"
                             maxLength={30}
                             autoFocus
-                            className={`mt-2 w-full bg-gray-50 border border-gray-300 rounded-lg px-3 text-right focus:outline-none focus:border-gray-500 transition-colors ${
-                              isKiosk ? "py-2.5 text-[16px]" : "py-2 text-sm"
-                            }`}
+                            // iOS-specific: disable autofill (which paints the field
+                            // yellow) and use min 16px font so Safari doesn't auto-zoom
+                            // the page when the input gains focus.
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck={false}
+                            name="dish-owner-name"
+                            style={{ fontSize: "16px" }}
+                            className="mt-2 w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors"
                             dir="rtl"
                           />
                         )}
