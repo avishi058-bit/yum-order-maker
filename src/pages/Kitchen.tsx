@@ -955,6 +955,13 @@ const Kitchen = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setPreviewOrder(order)}
+                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                      title="צפייה בבון"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
                       onClick={() => printOrder(order)}
                       className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
                       title="הדפסת בון"
