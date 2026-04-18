@@ -43,9 +43,19 @@ export const useRestaurantStatus = () => {
     };
   }, []);
 
+  const notifyReopen = async () => {
+    try {
+      await supabase.functions.invoke("notify-reopen");
+    } catch (e) {
+      console.error("notify-reopen failed", e);
+    }
+  };
+
   const toggleWebsite = async (open: boolean) => {
+    const wasClosed = !status.website_open;
     await supabase.from("restaurant_status").update({ website_open: open }).neq("id", "00000000-0000-0000-0000-000000000000");
     setStatus((prev) => ({ ...prev, website_open: open }));
+    if (open && wasClosed) notifyReopen();
   };
 
   const toggleStation = async (open: boolean) => {
@@ -69,8 +79,10 @@ export const useRestaurantStatus = () => {
   };
 
   const openAll = async () => {
+    const wasClosed = !status.website_open;
     await supabase.from("restaurant_status").update({ website_open: true, station_open: true }).neq("id", "00000000-0000-0000-0000-000000000000");
     setStatus((prev) => ({ ...prev, website_open: true, station_open: true }));
+    if (wasClosed) notifyReopen();
   };
 
   return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll };
