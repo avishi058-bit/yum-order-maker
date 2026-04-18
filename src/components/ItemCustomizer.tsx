@@ -495,29 +495,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   <div className={isKiosk ? "w-14" : "w-10"} />
                 </div>
 
-                {/* Hero image (only on customize step, only if image exists) */}
-                {showHero && (
-                  <div
-                    ref={heroRef}
-                    className="relative w-full overflow-hidden bg-gray-100"
-                    style={{ height: heroHeight }}
-                  >
-                    <img
-                      ref={heroImgRef}
-                      src={heroImage as string}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                      style={{
-                        willChange: "transform, opacity",
-                        transformOrigin: "center top",
-                      }}
-                      draggable={false}
-                    />
-                  </div>
-                )}
               </div>
 
-              {/* Scrollable content */}
+              {/* Scrollable content (hero is INSIDE so it scrolls with content, like a regular webpage) */}
               <AnimatePresence mode="wait">
                 {step === "customize" && (
                   <motion.div
