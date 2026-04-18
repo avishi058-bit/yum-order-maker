@@ -82,18 +82,8 @@ export const FlyToCartProvider = ({ children }: { children: React.ReactNode }) =
 
   const removeFly = useCallback((id: number) => {
     setFlies((prev) => prev.filter((f) => f.id !== id));
-    // Pulse the cart icon when fly arrives — small bump.
-    const target = cartTargetRef.current;
-    if (target) {
-      target.animate(
-        [
-          { transform: "scale(1)" },
-          { transform: "scale(1.18)" },
-          { transform: "scale(1)" },
-        ],
-        { duration: 280, easing: "cubic-bezier(.34,1.56,.64,1)" }
-      );
-    }
+    // No cart pulse — user requested a clean "lands in cart" feel without
+    // any blinking/bouncing on the destination.
   }, []);
 
   return (
@@ -110,10 +100,10 @@ const FlyLayer = ({ flies, onComplete }: { flies: ActiveFly[]; onComplete: (id: 
     <div className="pointer-events-none fixed inset-0 z-[9000]" aria-hidden>
       <AnimatePresence>
         {flies.map((f) => {
-          const startX = f.sourceRect.left + f.sourceRect.width / 2 - 28;
-          const startY = f.sourceRect.top + f.sourceRect.height / 2 - 28;
-          const endX = f.targetRect.left + f.targetRect.width / 2 - 28;
-          const endY = f.targetRect.top + f.targetRect.height / 2 - 28;
+          const startX = f.sourceRect.left + f.sourceRect.width / 2 - 24;
+          const startY = f.sourceRect.top + f.sourceRect.height / 2 - 24;
+          const endX = f.targetRect.left + f.targetRect.width / 2 - 24;
+          const endY = f.targetRect.top + f.targetRect.height / 2 - 24;
 
           return (
             <motion.div
@@ -122,14 +112,20 @@ const FlyLayer = ({ flies, onComplete }: { flies: ActiveFly[]; onComplete: (id: 
               animate={{
                 x: endX,
                 y: endY,
-                scale: 0.25,
-                opacity: 0.9,
+                scale: 0.2,
+                opacity: 0,
               }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.55, ease: [0.5, 0, 0.75, 0] }}
+              transition={{
+                // Smooth glide — slight ease-in-out so the item gently
+                // accelerates and softly lands in the cart (no abrupt jump
+                // up or blink at the destination).
+                duration: 0.5,
+                ease: [0.4, 0.0, 0.2, 1],
+                opacity: { duration: 0.5, ease: [0.7, 0, 1, 1] },
+              }}
               onAnimationComplete={() => onComplete(f.id)}
-              style={{ position: "absolute", left: 0, top: 0, width: 56, height: 56 }}
-              className="rounded-full overflow-hidden shadow-lg shadow-primary/40 bg-primary text-primary-foreground flex items-center justify-center"
+              style={{ position: "absolute", left: 0, top: 0, width: 48, height: 48, willChange: "transform, opacity" }}
+              className="rounded-2xl overflow-hidden shadow-lg shadow-primary/30 bg-primary text-primary-foreground flex items-center justify-center"
             >
               {f.imageUrl ? (
                 <img src={f.imageUrl} alt="" className="w-full h-full object-cover" />
