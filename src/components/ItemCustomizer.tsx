@@ -537,17 +537,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   <div
                     ref={heroRef}
                     data-kiosk-hero={isKiosk ? "true" : undefined}
-                    className={`relative w-full overflow-hidden ${isKiosk ? "bg-gradient-to-b from-gray-900 to-gray-800" : "bg-gray-100"}`}
+                    className="relative w-full overflow-hidden bg-gray-100"
                     style={{ height: heroHeight }}
                   >
                     <img
                       ref={heroImgRef}
                       src={heroImage as string}
                       alt={item.name}
-                      className={`w-full h-full ${isKiosk ? "object-contain" : "object-cover"}`}
+                      className="w-full h-full object-cover"
                       style={{
                         willChange: "transform, opacity",
                         transformOrigin: "center center",
+                        // Center the burger horizontally and slightly above
+                        // vertical center so the bun + patty are the focal
+                        // point (kiosk hero is tall — pure top would crop the
+                        // top of the bun, pure center hides patty detail).
+                        objectPosition: isKiosk ? "center 35%" : "center",
                         transform: isKiosk ? "scale(var(--kiosk-image-scale, 1))" : undefined,
                       }}
                       draggable={false}
