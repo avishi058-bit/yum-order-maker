@@ -8,7 +8,7 @@ import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import KioskCartDrawer from "@/components/KioskCartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer from "@/components/ItemCustomizer";
+import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
