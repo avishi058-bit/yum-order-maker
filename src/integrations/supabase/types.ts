@@ -315,8 +315,15 @@ export type Database = {
           business_hours: Json
           created_at: string
           id: string
+          kiosk_card_image_size_px: number
+          kiosk_disable_zoom: boolean
           kiosk_font_scale: number
+          kiosk_image_height_px: number
+          kiosk_image_scale: number
+          kiosk_lock_layout: boolean
           kiosk_modal_height_vh: number
+          kiosk_spacing_scale: number
+          kiosk_ui_scale: number
           menu_item_overrides: Json
           menu_order: Json
           primary_color: string
@@ -331,8 +338,15 @@ export type Database = {
           business_hours?: Json
           created_at?: string
           id?: string
+          kiosk_card_image_size_px?: number
+          kiosk_disable_zoom?: boolean
           kiosk_font_scale?: number
+          kiosk_image_height_px?: number
+          kiosk_image_scale?: number
+          kiosk_lock_layout?: boolean
           kiosk_modal_height_vh?: number
+          kiosk_spacing_scale?: number
+          kiosk_ui_scale?: number
           menu_item_overrides?: Json
           menu_order?: Json
           primary_color?: string
@@ -347,8 +361,15 @@ export type Database = {
           business_hours?: Json
           created_at?: string
           id?: string
+          kiosk_card_image_size_px?: number
+          kiosk_disable_zoom?: boolean
           kiosk_font_scale?: number
+          kiosk_image_height_px?: number
+          kiosk_image_scale?: number
+          kiosk_lock_layout?: boolean
           kiosk_modal_height_vh?: number
+          kiosk_spacing_scale?: number
+          kiosk_ui_scale?: number
           menu_item_overrides?: Json
           menu_order?: Json
           primary_color?: string
