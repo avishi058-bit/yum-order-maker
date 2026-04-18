@@ -142,15 +142,45 @@ const Kiosk = () => {
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
-      const cartItemId = `${item.id}-${Date.now()}`;
-      setCart((prev) => [
-        ...prev,
-        { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName },
-      ]);
+      setCart((prev) => {
+        if (editingCartId) {
+          return prev.map((c) =>
+            c.id === editingCartId
+              ? { ...c, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName }
+              : c
+          );
+        }
+        const cartItemId = `${item.id}-${Date.now()}`;
+        return [
+          ...prev,
+          { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName },
+        ];
+      });
       setCustomizerItem(null);
+      setEditingCartId(null);
+      setCustomizerInitial(undefined);
     },
-    []
+    [editingCartId]
   );
+
+  const handleEditCartItem = useCallback((cartId: string) => {
+    const cartItem = cart.find((c) => c.id === cartId);
+    if (!cartItem) return;
+    const menuItem = menuItems.find((m) => m.id === cartItem.menuItemId);
+    if (!menuItem) return;
+    setEditingCartId(cartId);
+    setCustomizerInitial({
+      quantity: cartItem.quantity,
+      selectedToppings: cartItem.toppings,
+      selectedRemovals: cartItem.removals,
+      withMeal: cartItem.withMeal,
+      mealSideId: cartItem.mealSideId,
+      mealDrinkId: cartItem.mealDrinkId,
+      ownerName: cartItem.ownerName,
+    });
+    setCartOpen(false);
+    setCustomizerItem(menuItem);
+  }, [cart]);
 
   const handleDealConfirm = useCallback((burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
     const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
