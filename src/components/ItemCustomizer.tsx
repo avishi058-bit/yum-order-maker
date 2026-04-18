@@ -749,12 +749,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     >
                                       {active && <div className="w-3 h-3 rounded-full bg-white" />}
                                     </div>
-                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price}</span>
+                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
                                     {showRecommended && (
-                                      <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
+                                      <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                         🔥 הולך טוב עם המנה
                                       </span>
                                     )}
