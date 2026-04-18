@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles, Pencil } from "lucide-react";
 import { useMemo } from "react";
 import {
   toppings,
