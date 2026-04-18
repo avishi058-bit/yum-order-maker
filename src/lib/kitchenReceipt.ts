@@ -517,6 +517,24 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
        </div>`
     : "";
 
+  // ---- Drink summary — TAKEAWAY ONLY ----
+  // Dine-in (kiosk/station) serves drinks on the spot, so no aggregation needed.
+  const isTakeaway = order.order_source !== "kiosk" && order.order_source !== "station";
+  let drinkSummaryHtml = "";
+  if (isTakeaway) {
+    const drinkSummary = computeDrinkSummary(order.order_items);
+    const drinkRows: string[] = [];
+    for (const [name, qty] of drinkSummary.drinks.entries()) {
+      if (qty > 0) drinkRows.push(row(name, qty));
+    }
+    if (drinkRows.length > 0) {
+      drinkSummaryHtml = `<div class="summary drink-summary">
+         <div class="summary-title">סיכום שתייה</div>
+         ${drinkRows.join("")}
+       </div>`;
+    }
+  }
+
   const paymentLine = isCash
     ? `<div class="warn">לא שולם — מזומן בעת המסירה</div>`
     : `<div class="paid">שולם באשראי</div>`;
