@@ -525,6 +525,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 {showHero && (
                   <div
                     ref={heroRef}
+                    data-kiosk-hero={isKiosk ? "true" : undefined}
                     className="relative w-full overflow-hidden bg-gray-100"
                     style={{ height: heroHeight }}
                   >
@@ -536,6 +537,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       style={{
                         willChange: "transform, opacity",
                         transformOrigin: "center top",
+                        transform: isKiosk ? "scale(var(--kiosk-image-scale, 1))" : undefined,
                       }}
                       draggable={false}
                     />
