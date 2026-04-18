@@ -323,8 +323,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "טבעות בצל ביתיות"]) * qty;
 
     // ---- gluten-free bun swap ----
+    // Use cleaned removals (without __OWNER__ sentinel) to avoid false matches.
+    const cleanedForGf = extractOwnerName(it.removals).cleanedRemovals;
     const gfFlag =
-      includesAny(it.removals, ["ללא גלוטן", "גלוטן"]) +
+      includesAny(cleanedForGf, ["ללא גלוטן", "גלוטן"]) +
       includesAny(it.toppings, ["ללא גלוטן"]);
     if (gfFlag > 0) {
       const swap = Math.min(gfFlag * qty, regularBuns);
