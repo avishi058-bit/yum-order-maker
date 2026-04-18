@@ -50,6 +50,7 @@ interface CartDrawerProps {
 }
 
 const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEditItem, isKiosk = false }: CartDrawerProps) => {
+  useBodyScrollLock(open);
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);
