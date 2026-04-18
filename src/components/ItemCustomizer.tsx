@@ -124,21 +124,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Apply hero transform from scrollTop — direct DOM, no setState.
-  // IMPORTANT: we DO NOT change the hero container height — that triggers
-  // reflow of all content below and makes the page "jump" while scrolling.
-  // Instead the hero stays at fixed height; only the image translates+fades.
+  // Kiosk-only hero zoom-out on scroll. On website the image scrolls naturally.
+  // Image starts slightly zoomed in (1.08) and scales down + translates up as
+  // the user scrolls. GPU-only transforms — no layout cost.
   const applyHeroTransform = useCallback((scrollTop: number) => {
+    if (!isKiosk) return;
     const img = heroImgRef.current;
     if (!img) return;
     const clamped = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE));
     const t = clamped / HERO_FADE_DISTANCE;       // 0 → 1
-    // Gentle parallax + fade. GPU-only — no layout cost.
-    const translateY = -clamped * 0.35;
-    const opacity = 1 - t;
-    img.style.transform = `translate3d(0, ${translateY}px, 0)`;
-    img.style.opacity = String(opacity);
-  }, []);
+    const scale = 1.08 - t * 0.13;                // 1.08 → 0.95
+    const translateY = -clamped * 0.25;
+    img.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
+  }, [isKiosk]);
 
   // Scroll handler — passive, RAF-throttled, no setState
   const scrollRafRef = useRef(0);
@@ -508,20 +506,24 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
+                    onScroll={isKiosk ? handleScroll : undefined}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
-                    {/* Hero image scrolls together with content (no parallax/fade) */}
+                    {/* Hero image. On kiosk: starts slightly zoomed in and zooms out as
+                        the user scrolls. On website: scrolls naturally with content. */}
                     {showHero && (
                       <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
                         <img
+                          ref={heroImgRef}
                           src={heroImage as string}
                           alt={item.name}
                           className="w-full h-full object-cover"
                           draggable={false}
+                          style={isKiosk ? { transform: "translate3d(0,0,0) scale(1.08)", transformOrigin: "center center", willChange: "transform" } : undefined}
                         />
                       </div>
                     )}
