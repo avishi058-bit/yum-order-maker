@@ -527,11 +527,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           className="w-full flex items-center justify-between gap-3"
                         >
                           <div className="text-right flex-1">
-                            <h3 className={`font-bold text-foreground flex items-center gap-1.5 justify-end ${isKiosk ? "text-[16px]" : "text-sm"}`}>
+                            <h3 className={`font-black text-black flex items-center gap-1.5 justify-end ${isKiosk ? "text-[24px]" : "text-lg"}`}>
                               <span>👤</span>
                               <span>של מי המנה?</span>
                             </h3>
-                            <p className={`text-gray-500 ${isKiosk ? "text-[12px]" : "text-[11px]"} mt-0.5`}>
+                            <p className={`text-gray-500 ${isKiosk ? "text-[14px]" : "text-xs"} mt-0.5`}>
                               (רלוונטי למי שמזמין יותר ממנה אחת)
                             </p>
                           </div>
