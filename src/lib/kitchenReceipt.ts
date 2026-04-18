@@ -75,13 +75,13 @@ const isAvishai = (name: string): boolean =>
 const isNonBurgerItem = (name: string): boolean =>
   /צ['׳]?יפס|טבעות|מיקס|פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|לאפ|גינס|אנפילטר|מים|וופל/.test(name);
 
+// Counts how many entries in `arr` match ANY of the given needles.
+// Each entry is counted at most once, even if it matches multiple needles.
 const includesAny = (arr: string[] | null | undefined, needles: string[]): number => {
   if (!arr || arr.length === 0) return 0;
   let n = 0;
   for (const t of arr) {
-    for (const needle of needles) {
-      if (t.includes(needle)) n++;
-    }
+    if (needles.some((needle) => t.includes(needle))) n++;
   }
   return n;
 };
