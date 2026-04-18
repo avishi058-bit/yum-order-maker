@@ -15,6 +15,7 @@ import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import BusinessStatusBar from "@/components/BusinessStatusBar";
+import SideMenu from "@/components/SideMenu";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
 import CustomerAuthModal from "@/components/CustomerAuthModal";
@@ -258,9 +259,10 @@ const Index = () => {
       {/* Business hours status bar — sticky, public-facing only */}
       {!isStation && <BusinessStatusBar />}
 
-      {/* Customer greeting / login bar */}
+      {/* Top action row: hamburger menu + customer greeting / login */}
       {!isStation && (
-        <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border" dir="rtl">
+        <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
+          <SideMenu onLoginClick={() => setAuthModalOpen(true)} />
           {isLoggedIn ? (
             <CustomerGreeting />
           ) : (
@@ -272,7 +274,6 @@ const Index = () => {
               התחברות
             </button>
           )}
-          <div />
         </div>
       )}
 

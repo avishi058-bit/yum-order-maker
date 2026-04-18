@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface DayHours {
@@ -71,11 +71,13 @@ export const useSiteSettings = () => {
     setLoading(false);
   };
 
+  const channelId = useRef(`site-settings-realtime-${Math.random().toString(36).slice(2)}`);
+
   useEffect(() => {
     fetchSettings();
 
     const channel = supabase
-      .channel("site-settings-realtime")
+      .channel(channelId.current)
       .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, () => {
         fetchSettings();
       })
