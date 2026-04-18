@@ -194,6 +194,13 @@ const playRingtone = (ringtoneId: RingtoneId) => {
   }
 };
 
+// Escalation thresholds (seconds) — saved in localStorage
+const DEFAULT_RED_AFTER = 60;
+const DEFAULT_AGGRESSIVE_AFTER = 120;
+const POLLING_FALLBACK_MS = 3000;
+const AGGRESSIVE_RING_MS = 2000;
+const NORMAL_RING_MS = 5000;
+
 const Kitchen = () => {
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -208,9 +215,34 @@ const Kitchen = () => {
   const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
+  const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Realtime / fallback state
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Escalation thresholds (configurable from UI)
+  const [redAfter, setRedAfter] = useState<number>(() => {
+    const v = parseInt(localStorage.getItem("kitchen-red-after") || "");
+    return isNaN(v) ? DEFAULT_RED_AFTER : v;
+  });
+  const [aggressiveAfter, setAggressiveAfter] = useState<number>(() => {
+    const v = parseInt(localStorage.getItem("kitchen-aggressive-after") || "");
+    return isNaN(v) ? DEFAULT_AGGRESSIVE_AFTER : v;
+  });
+
+  useEffect(() => { localStorage.setItem("kitchen-red-after", String(redAfter)); }, [redAfter]);
+  useEffect(() => { localStorage.setItem("kitchen-aggressive-after", String(aggressiveAfter)); }, [aggressiveAfter]);
+
+  // Tick every second so escalation re-evaluates without re-fetching
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((t) => (t + 1) % 1000000), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   // Activate audio on first interaction
   useEffect(() => {
