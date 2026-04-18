@@ -74,18 +74,18 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
       {/* Image — kiosk size is admin-controlled via CSS var */}
       {image && (
         <div
-          className="relative flex-shrink-0"
+          className={`relative flex-shrink-0 ${isKiosk ? "" : "w-28 h-28"}`}
           style={
             isKiosk
               ? { width: "var(--kiosk-card-img-size, 176px)", height: "var(--kiosk-card-img-size, 176px)" }
               : undefined
           }
         >
-          <div className={`w-full h-full rounded-xl overflow-hidden ${isKiosk ? "" : "w-28 h-28"}`}>
+          <div className="w-full h-full rounded-xl overflow-hidden">
             <img
               src={image}
               alt={item.name}
-              className={`w-full h-full object-cover ${isKiosk ? "" : "w-28 h-28"}`}
+              className="w-full h-full object-cover"
               loading="lazy"
               style={isKiosk ? { transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" } : undefined}
             />
