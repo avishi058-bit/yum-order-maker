@@ -1,26 +1,35 @@
 // Kitchen receipt builder + chef-summary calculator.
-// Designed for 80mm thermal printers (printable area ~72mm).
-// Black & white only, large fonts, no decorations.
+// 80mm thermal printers (printable area ~72mm). Black & white only.
 //
 // CHEF SUMMARY RULES:
-//   Patties:
-//     - "כפולה" / "ארוחת כפולה"  → +2 regular
-//     - any other non-smash burger → +1 regular
-//     - smash/קרייזי → +1 smash
-//   Topping "אקסטרה קציצה" → +1 regular patty
-//   Egg ("ביצת עין"): +1 per topping; "אבישי שחוט לי פרה" includes one
-//   Roastbeef ("רצועות רוסטביף"): +1 per topping; "אבישי" includes one
-//   Buns: +1 per main item; gluten-free swap based on removal/topping flag.
+//   Patties (split by type):
+//     - "חף מפשע" / "haf-mifsha"  → vegan patty
+//     - "כפולה" / "ארוחת כפולה"   → +2 regular
+//     - "סמאש" / "קרייזי"         → smash
+//     - any other meat burger     → +1 regular
+//   Topping "אקסטרה קציצה" → +1 regular patty (per the burger's category;
+//     for חף מפשע we still treat it as regular meat — that's a customer
+//     decision, no auto-promotion to vegan).
+//   Egg ("ביצת עין"): +1 per topping; "אבישי" includes one
+//   Roastbeef: +1 per topping; "אבישי" includes one
+//   Buns: +1 per main item (kept regular by default, GF swap if requested).
 //
-// FRIED ITEMS (added per actual order):
-//   צ'יפס, וופל צ'יפס, טבעות בצל, טבעות בצל בטמפורה
-//   - Standalone sides count by quantity
-//   - Meal side: count the chosen side (default fries if not specified)
-//   - Friends-mix ("מיקס חברים"): show as a single unsplit line
+// FRIED ITEMS (split by source — never merge):
+//   - Standalone sides → counted by quantity
+//   - Meal side       → the chosen side (default fries if missing)
+//   - Friends-mix     → single un-split line
+//   - Special-Hadegel → auto +2 of tempuraOnionSide for every burger ordered
+//                       (the recipe ships with 2 tempura rings on top, but the
+//                        chef preps them as a side portion — listed separately).
+//   - Topping "שלושטבעות בצל ביתיות" → tempuraOnionTopping (separate counter)
 //
-// NOT in summary (already prepped / assembled at last second):
-//   onion jam, lettuce, tomato, pickles, fried onion, sauces, garlic confit,
-//   peanut butter, vegan cheddar, hot pepper jam, onion rings topping, maple.
+// SAUCES: read from a synthetic "רטבים" order_item line.
+//   item_name === "רטבים", toppings carry "name × qty" labels we parse back.
+//
+// NOT in summary (already prepped):
+//   onion jam, lettuce, tomato, pickles, fried onion, sauces*, garlic confit,
+//   peanut butter, vegan cheddar, hot pepper jam, maple.
+//   (* sauces ARE shown in their own block, just not aggregated as ingredients)
 
 export interface ReceiptOrderItem {
   id: string;
@@ -49,54 +58,61 @@ export interface ReceiptOrder {
 }
 
 export interface ChefSummary {
+  // Patties — split by type
   regularPatties: number;
   smashPatties: number;
+  veganPatties: number;
+  // Built-in extras
   eggs: number;
   roastbeef: number;
+  // Buns
   regularBuns: number;
   glutenFreeBuns: number;
-  fries: number;          // צ'יפס רגיל
-  waffleFries: number;    // וופל צ'יפס
-  onionRings: number;     // טבעות בצל
-  tempuraOnion: number;   // טבעות בצל בטמפורה
-  friendsMix: number;     // מיקס חברים (לא לפרק)
+  // Fried sides (sources kept separate)
+  fries: number;
+  waffleFries: number;
+  onionRings: number;          //טבעות בצל (מנה בצד)
+  tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / מתוך עסקית / ספיישל הדגל)
+  tempuraOnionTopping: number; // שלוש טבעות בצל ביתיות (טופינג מעל ההמבורגר)
+  friendsMix: number;
+  // Sauces — aggregated by name
+  sauces: Map<string, number>;
 }
 
 // ---------- helpers ----------
 
-const isSmashName = (name: string): boolean =>
-  /סמאש|קרייזי/.test(name);
+const isSmashName = (name: string): boolean => /סמאש|קרייזי/.test(name);
 
-const isDoubleName = (name: string): boolean =>
-  /כפולה/.test(name);
+const isDoubleName = (name: string): boolean => /כפולה/.test(name);
+
+const isVeganBurgerName = (name: string): boolean =>
+  /חף\s*מפשע|haf[-\s]?mifsha/i.test(name);
 
 // "Avishai" burger ships with egg + roastbeef built-in.
-const isAvishai = (name: string): boolean =>
-  /אבישי|שחוט לי פרה/.test(name);
+const isAvishai = (name: string): boolean => /אבישי|שחוט לי פרה/.test(name);
 
-const isFriendsMix = (name: string): boolean =>
-  /מיקס\s*חברים/.test(name);
+const isFriendsMix = (name: string): boolean => /מיקס\s*חברים/.test(name);
+
+const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.test(name);
 
 // Drinks/non-burger items that don't add patty/bun.
-// Hebrew uses ׳ (U+05F3) and ״ (U+05F4), not ASCII apostrophe.
 const isDrinkOrMisc = (name: string): boolean =>
-  /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
+  /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנ忒|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
-// Detect fried-side items by name. Order matters: tempura before plain rings,
-// waffle before plain fries, mix before fries.
-type FriedKind = "friendsMix" | "tempuraOnion" | "waffleFries" | "onionRings" | "fries" | null;
+// Detect fried-side items by name. Order matters.
+type FriedKind = "friendsMix" | "tempuraOnionSide" | "waffleFries" | "onionRings" | "fries" | null;
 const detectFried = (name: string): FriedKind => {
   if (!name) return null;
   if (isFriendsMix(name)) return "friendsMix";
-  if (/טבעות.*טמפורה|טמפורה/.test(name)) return "tempuraOnion";
+  // "טבעות בצל בטמפורה" / "טבעות בצל ביתיות בטמפורה" / "טמפורה"
+  if (/טבעות.*טמפורה|טמפורה/.test(name)) return "tempuraOnionSide";
   if (/וופל/.test(name)) return "waffleFries";
   if (/טבעות\s*בצל/.test(name)) return "onionRings";
   if (/צ['׳]?יפס/.test(name)) return "fries";
   return null;
 };
 
-// Counts how many entries in `arr` match ANY of the given needles.
-// Each entry is counted at most once even if it matches multiple needles.
+// Counts how many entries in `arr` match ANY of the needles (each entry once).
 const includesAny = (arr: string[] | null | undefined, needles: string[]): number => {
   if (!arr || arr.length === 0) return 0;
   let n = 0;
@@ -106,11 +122,19 @@ const includesAny = (arr: string[] | null | undefined, needles: string[]): numbe
   return n;
 };
 
+// Parse "name × qty" strings (the synthetic sauces line stores them this way).
+const parseSauceLabel = (label: string): { name: string; qty: number } => {
+  const m = label.match(/^(.+?)\s*[×x]\s*(\d+)\s*$/);
+  if (m) return { name: m[1].trim(), qty: parseInt(m[2], 10) || 1 };
+  return { name: label.trim(), qty: 1 };
+};
+
 // ---------- chef summary ----------
 
 export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let regularPatties = 0;
   let smashPatties = 0;
+  let veganPatties = 0;
   let eggs = 0;
   let roastbeef = 0;
   let regularBuns = 0;
@@ -118,13 +142,15 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let fries = 0;
   let waffleFries = 0;
   let onionRings = 0;
-  let tempuraOnion = 0;
+  let tempuraOnionSide = 0;
+  let tempuraOnionTopping = 0;
   let friendsMix = 0;
+  const sauces = new Map<string, number>();
 
   const addFried = (kind: FriedKind, qty: number) => {
     if (!kind) return;
     if (kind === "friendsMix") friendsMix += qty;
-    else if (kind === "tempuraOnion") tempuraOnion += qty;
+    else if (kind === "tempuraOnionSide") tempuraOnionSide += qty;
     else if (kind === "waffleFries") waffleFries += qty;
     else if (kind === "onionRings") onionRings += qty;
     else if (kind === "fries") fries += qty;
@@ -134,11 +160,21 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     const qty = it.quantity || 1;
     const name = it.item_name;
 
+    // ---- sauces synthetic line ----
+    if (name === "רטבים") {
+      for (const lbl of it.toppings || []) {
+        const { name: sn, qty: sq } = parseSauceLabel(lbl);
+        sauces.set(sn, (sauces.get(sn) || 0) + sq);
+      }
+      continue;
+    }
+
     // ---- deal items (family-deal / friends-deal) ----
     if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
       for (const b of it.deal_burgers) {
         const bn = String(b?.name || "");
-        if (isSmashName(bn)) smashPatties += qty;
+        if (isVeganBurgerName(bn)) veganPatties += qty;
+        else if (isSmashName(bn)) smashPatties += qty;
         else if (isDoubleName(bn)) regularPatties += 2 * qty;
         else regularPatties += qty;
         if (isAvishai(bn)) {
@@ -162,12 +198,13 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     // ---- pure drinks: skip ----
     if (isDrinkOrMisc(name)) continue;
 
-    // ---- patties ----
-    if (isSmashName(name)) smashPatties += qty;
+    // ---- patties (by type) ----
+    if (isVeganBurgerName(name)) veganPatties += qty;
+    else if (isSmashName(name)) smashPatties += qty;
     else if (isDoubleName(name)) regularPatties += 2 * qty;
     else regularPatties += qty;
 
-    // ---- bun (1 per main item) ----
+    // ---- bun (1 per main item, even for double) ----
     regularBuns += qty;
 
     // ---- built-in extras for "Avishai" ----
@@ -176,10 +213,19 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
       roastbeef += qty;
     }
 
+    // ---- Special-Hadegel auto-extras: 2 tempura rings as a side portion
+    //      per burger ordered (the recipe lists them as a topping but the
+    //      chef preps them in the fryer like a side).
+    if (isSpecialHadegel(name)) {
+      tempuraOnionSide += 2 * qty;
+    }
+
     // ---- topping-driven extras ----
     regularPatties += includesAny(it.toppings, ["אקסטרה קציצה"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
+    // Onion-rings TOPPING ("שלושטבעות בצל ביתיות") — kept SEPARATE from side.
+    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "טבעות בצל ביתיות"]) * qty;
 
     // ---- gluten-free bun swap ----
     const gfFlag =
@@ -193,7 +239,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
 
     // ---- meal side (only meals/business deals carry their own side) ----
     if (it.with_meal || /ארוחת/.test(name)) {
-      const sideKind = detectFried(it.meal_side || "") || "fries"; // default to fries if unspecified
+      const sideKind = detectFried(it.meal_side || "") || "fries";
       addFried(sideKind, qty);
     }
   }
@@ -201,6 +247,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   return {
     regularPatties,
     smashPatties,
+    veganPatties,
     eggs,
     roastbeef,
     regularBuns,
@@ -208,8 +255,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     fries,
     waffleFries,
     onionRings,
-    tempuraOnion,
+    tempuraOnionSide,
+    tempuraOnionTopping,
     friendsMix,
+    sauces,
   };
 }
 
@@ -236,6 +285,9 @@ const lineKey = (it: ReceiptOrderItem): string =>
 function mergeItems(items: ReceiptOrderItem[]): MergedLine[] {
   const map = new Map<string, MergedLine>();
   for (const it of items) {
+    // Don't merge the synthetic sauces line into the menu listing — it has its
+    // own block at the bottom of the receipt.
+    if (it.item_name === "רטבים") continue;
     const k = lineKey(it);
     const existing = map.get(k);
     if (existing) existing.totalQty += it.quantity;
@@ -297,27 +349,62 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     })
     .join("");
 
-  // Chef summary block
-  const summaryRows: string[] = [];
+  // ---- Chef summary (sectioned for fast scanning) ----
   const row = (label: string, n: number, gf = false) =>
-    `<div class="sum-row${gf ? " gf" : ""}"><span>${label}</span><span class="sum-num">${n}</span></div>`;
+    `<div class="sum-row${gf ? " gf" : ""}"><span>${escapeHtml(label)}</span><span class="sum-num">${n}</span></div>`;
 
-  if (summary.regularPatties > 0) summaryRows.push(row("קציצות רגילות", summary.regularPatties));
-  if (summary.smashPatties > 0) summaryRows.push(row("קציצות סמאש", summary.smashPatties));
-  if (summary.eggs > 0) summaryRows.push(row("ביצי עין", summary.eggs));
-  if (summary.roastbeef > 0) summaryRows.push(row("רצועות רוסטביף", summary.roastbeef));
-  if (summary.regularBuns > 0) summaryRows.push(row("לחמניות", summary.regularBuns));
-  if (summary.glutenFreeBuns > 0) summaryRows.push(row("לחמניות ללא גלוטן", summary.glutenFreeBuns, true));
-  if (summary.fries > 0) summaryRows.push(row("צ׳יפס", summary.fries));
-  if (summary.waffleFries > 0) summaryRows.push(row("וופל צ׳יפס", summary.waffleFries));
-  if (summary.onionRings > 0) summaryRows.push(row("טבעות בצל", summary.onionRings));
-  if (summary.tempuraOnion > 0) summaryRows.push(row("טבעות בצל בטמפורה", summary.tempuraOnion));
-  if (summary.friendsMix > 0) summaryRows.push(row("מיקס חברים", summary.friendsMix));
+  const section = (title: string, rows: string[]) =>
+    rows.length === 0
+      ? ""
+      : `<div class="sum-section">
+           <div class="sum-section-title">${escapeHtml(title)}</div>
+           ${rows.join("")}
+         </div>`;
 
-  const summaryHtml = summaryRows.length > 0
+  // Patties
+  const pattyRows: string[] = [];
+  if (summary.regularPatties > 0) pattyRows.push(row("רגיל", summary.regularPatties));
+  if (summary.smashPatties > 0) pattyRows.push(row("סמאש", summary.smashPatties));
+  if (summary.veganPatties > 0) pattyRows.push(row("טבעוני (חף מפשע)", summary.veganPatties));
+
+  // Buns
+  const bunRows: string[] = [];
+  if (summary.regularBuns > 0) bunRows.push(row("לחמנייה רגילה", summary.regularBuns));
+  if (summary.glutenFreeBuns > 0) bunRows.push(row("לחמנייה ללא גלוטן", summary.glutenFreeBuns, true));
+
+  // Fried sides — keep types separate
+  const friedRows: string[] = [];
+  if (summary.fries > 0) friedRows.push(row("צ׳יפס", summary.fries));
+  if (summary.waffleFries > 0) friedRows.push(row("וופל צ׳יפס", summary.waffleFries));
+  if (summary.onionRings > 0) friedRows.push(row("טבעות בצל (מנה)", summary.onionRings));
+  if (summary.tempuraOnionSide > 0)
+    friedRows.push(row("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
+  if (summary.friendsMix > 0) friedRows.push(row("מיקס חברים", summary.friendsMix));
+
+  // Toppings ON the burger (separate from sides)
+  const toppingRows: string[] = [];
+  if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
+  if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
+  if (summary.tempuraOnionTopping > 0)
+    toppingRows.push(row("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+
+  // Sauces
+  const sauceRows: string[] = [];
+  for (const [name, qty] of summary.sauces.entries()) {
+    if (qty > 0) sauceRows.push(row(name, qty));
+  }
+
+  const summaryBody =
+    section("קציצות", pattyRows) +
+    section("לחמניות", bunRows) +
+    section("מטוגנים", friedRows) +
+    section("תוספות מעל ההמבורגר", toppingRows) +
+    section("רטבים", sauceRows);
+
+  const summaryHtml = summaryBody
     ? `<div class="summary">
          <div class="summary-title">סיכום לטבח</div>
-         ${summaryRows.join("")}
+         ${summaryBody}
        </div>`
     : "";
 
@@ -404,12 +491,28 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
   }
   .summary-title {
     text-align: center;
-    font-size: 14pt;
+    font-size: 15pt;
     font-weight: 900;
     border-bottom: 2px solid #fff;
     padding-bottom: 1mm;
     margin-bottom: 2mm;
     letter-spacing: 1px;
+  }
+  .sum-section {
+    margin-top: 2mm;
+    padding-top: 1mm;
+    border-top: 1px dashed #fff;
+  }
+  .sum-section:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .sum-section-title {
+    font-size: 11pt;
+    font-weight: 800;
+    text-align: center;
+    padding: 1mm 0;
+    margin-bottom: 1mm;
+    background: #fff; color: #000;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
   }
   .sum-row {
     display: flex;
@@ -420,9 +523,7 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     padding: 1mm 0;
   }
   .sum-row.gf {
-    border-top: 1px dashed #fff;
-    padding-top: 2mm;
-    margin-top: 1mm;
+    font-style: italic;
   }
   .sum-num {
     font-size: 16pt;

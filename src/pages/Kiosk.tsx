@@ -348,6 +348,8 @@ const Kiosk = () => {
           <CheckoutForm
             items={cart}
             total={getTotal()}
+            sauces={selectedSauces}
+            freeSauces={freeSauces}
             onClose={() => setCheckoutOpen(false)}
             onSuccess={(orderNumber) => {
               setCheckoutOpen(false);

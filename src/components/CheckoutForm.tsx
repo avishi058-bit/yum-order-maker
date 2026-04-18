@@ -10,14 +10,22 @@ import { Banknote, CreditCard } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 
+export interface CheckoutSauce {
+  id: string;
+  name: string;
+  quantity: number;
+}
+
 interface CheckoutFormProps {
   items: CartItem[];
   total: number;
+  sauces?: CheckoutSauce[];
+  freeSauces?: number;
   onClose: () => void;
   onSuccess: (orderNumber?: number, phone?: string) => void;
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, onClose, onSuccess }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
   const { customer, isLoggedIn } = useCustomerAuth();
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
@@ -202,6 +210,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         // Server-recorded proof that the customer accepted the terms at order time
         termsAcceptedAt: new Date().toISOString(),
         items: items.map(buildServerItem),
+        // Sauces (chef-summary only): qty per sauce + how many were free.
+        // Server adds extra-sauce charge to the total and stores them as a
+        // synthetic "רטבים" line so the kitchen receipt shows them.
+        sauces: sauces
+          .filter((s) => s.quantity > 0)
+          .map((s) => ({ id: s.id, name: s.name, quantity: s.quantity })),
+        freeSauces,
       },
     });
 

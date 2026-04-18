@@ -177,6 +177,12 @@ const CartItemSchema = z.object({
     .optional(),
 });
 
+const SauceSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().min(1).max(120),
+  quantity: z.number().int().min(1).max(50),
+});
+
 const BodySchema = z.object({
   customerName: z.string().trim().min(1).max(120),
   customerPhone: z.string().trim().min(7).max(30),
@@ -188,6 +194,11 @@ const BodySchema = z.object({
   // Without this the order is rejected (no silent default).
   termsAcceptedAt: z.string().datetime({ message: "termsAcceptedAt must be ISO datetime" }),
   items: z.array(CartItemSchema).min(1).max(50),
+  // Optional: sauces selected at checkout (chef-summary use). Server adds the
+  // extra-sauce charge (1₪ per sauce above the free quota) to the total and
+  // stores them as a synthetic order_item line for the kitchen receipt.
+  sauces: z.array(SauceSchema).max(20).optional().default([]),
+  freeSauces: z.number().int().min(0).max(100).optional().default(0),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
@@ -383,6 +394,12 @@ Deno.serve(async (req: Request) => {
   const pricing = priceCart(body.items, overrides);
   if (!pricing.ok) return jsonResponse({ error: pricing.error }, 400);
 
+  // Sauce extra-charge: 1₪ per sauce above the free quota (kept generous: free
+  // quota is whatever the client said, so worst case server overcharges = 0).
+  const totalSauceQty = body.sauces.reduce((s, x) => s + x.quantity, 0);
+  const extraSauces = Math.max(0, totalSauceQty - body.freeSauces);
+  const finalTotal = Math.round((pricing.total + extraSauces) * 100) / 100;
+
   // Upsert customer (best-effort)
   const { error: custErr } = await supabase
     .from("customers")
@@ -396,7 +413,7 @@ Deno.serve(async (req: Request) => {
       customer_name: body.customerName,
       customer_phone: body.customerPhone,
       notes: body.notes || null,
-      total: pricing.total,
+      total: finalTotal,
       status: body.status,
       payment_method: body.paymentMethod,
       order_source: body.orderSource,
@@ -437,6 +454,28 @@ Deno.serve(async (req: Request) => {
       deal_drinks: line.dealDrinks,
     };
   });
+
+  // Synthetic "רטבים" line — only used so the kitchen receipt builder can show
+  // sauces in the chef summary. price=0 (charge already on the order total).
+  // toppings carry "name × qty" so the receipt prints them as a sub-line.
+  if (body.sauces.length > 0) {
+    const sauceLabels = body.sauces.map((s) =>
+      s.quantity > 1 ? `${s.name} × ${s.quantity}` : s.name
+    );
+    orderItemsRows.push({
+      order_id: order.id,
+      item_name: "רטבים",
+      price: extraSauces, // 0 if all within free quota
+      quantity: 1,
+      toppings: sauceLabels,
+      removals: [],
+      with_meal: false,
+      meal_side: null,
+      meal_drink: null,
+      deal_burgers: null,
+      deal_drinks: null,
+    });
+  }
 
   const { error: itemsErr } = await supabase.from("order_items").insert(orderItemsRows);
   if (itemsErr) {
