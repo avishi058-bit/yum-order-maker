@@ -126,9 +126,11 @@ const Index = () => {
       setCustomizerItem(null);
       setEditingCartId(null);
       setCustomizerInitial(undefined);
-      setCartOpen(true);
+      // Stay on the menu after add. Fly the item toward the cart icon for
+      // a clear "added!" cue. Skip on EDIT (no fly — user is just updating).
+      if (!editingCartId) flyFromCenter();
     },
-    [editingCartId]
+    [editingCartId, flyFromCenter]
   );
 
   const handleEditCartItem = useCallback((cartId: string) => {
@@ -169,9 +171,9 @@ const Index = () => {
         },
       ]);
       setDealOpen(false);
-      setCartOpen(true);
+      flyFromCenter();
     },
-    []
+    [flyFromCenter]
   );
 
   const handleFamilyDealConfirm = useCallback(
@@ -193,9 +195,9 @@ const Index = () => {
         },
       ]);
       setFamilyDealOpen(false);
-      setCartOpen(true);
+      flyFromCenter();
     },
-    []
+    [flyFromCenter]
   );
 
   const handleDrinkConfirm = useCallback(
