@@ -73,21 +73,28 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
 
       {/* Image — kiosk size is admin-controlled via CSS var */}
       {image && (
-        <div
+        <motion.div
           className={`relative flex-shrink-0 ${isKiosk ? "" : "w-28 h-28"}`}
           style={
             isKiosk
               ? { width: "var(--kiosk-card-img-size, 176px)", height: "var(--kiosk-card-img-size, 176px)" }
               : undefined
           }
+          initial={{ opacity: 0, scale: 0.85 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <div className="w-full h-full rounded-xl overflow-hidden">
-            <img
+            <motion.img
               src={image}
               alt={item.name}
               className="w-full h-full object-cover"
               loading="lazy"
               style={isKiosk ? { transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" } : undefined}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             />
           </div>
           {item.popular && (
@@ -96,7 +103,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
               פופולארי
             </span>
           )}
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );
@@ -171,18 +178,18 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       <div
         className={`sticky z-30 bg-background/90 backdrop-blur-md border-b border-border ${
           isKiosk
-            ? "top-0 -mx-4 px-4 pt-3 pb-2 mb-4"
+            ? "top-0 -mx-4 px-4 pt-5 pb-4 mb-6"
             : "top-0 -mx-4 px-4 pt-2 pb-2 mb-6"
         }`}
       >
-        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-2" : "gap-1.5"}`} dir="rtl">
+        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-3" : "gap-1.5"}`} dir="rtl">
           {visibleCategories.map((cat) => (
             <button
               key={cat.key}
               ref={(el) => { tabRefs.current[cat.key] = el; }}
               onClick={() => scrollToCategory(cat.key)}
               className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
-                isKiosk ? "px-6 py-3 text-base" : "px-4 py-1.5 text-sm"
+                isKiosk ? "px-9 py-5 text-2xl" : "px-4 py-1.5 text-sm"
               } ${
                 activeCategory === cat.key
                   ? "text-primary-foreground"
