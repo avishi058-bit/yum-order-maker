@@ -129,7 +129,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   // can still call the latest version without hitting a TDZ error.
   const handleCloseRef = useRef<() => void>(() => {});
 
-  const heroHeight = isKiosk ? HERO_HEIGHT_KIOSK : HERO_HEIGHT;
+  const heroHeight = isKiosk ? readKioskHeroHeight() : HERO_HEIGHT;
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
@@ -140,7 +140,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const hero = heroRef.current;
     const img = heroImgRef.current;
     if (!hero || !img) return;
-    const baseHeight = isKiosk ? HERO_HEIGHT_KIOSK : HERO_HEIGHT;
+    // Re-read live admin value each frame-init so slider edits show up
+    // without remounting the component. Cheap: one getComputedStyle.
+    const baseHeight = isKiosk ? readKioskHeroHeight() : HERO_HEIGHT;
     const clamped = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE));
     const t = clamped / HERO_FADE_DISTANCE;       // 0 → 1
     // Collapse the hero container height (cheap on a single element).
@@ -152,6 +154,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     img.style.transform = `translate3d(0, ${translateY}px, 0)`;
     img.style.opacity = String(opacity);
   }, [isKiosk]);
+
 
   // Scroll handler — passive, RAF-throttled, no setState
   const scrollRafRef = useRef(0);
