@@ -124,22 +124,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // No-op scroll handler kept for parity (website behavior — image scrolls
-  // inline with content; no transforms applied).
-  const handleScroll = useCallback(() => {}, []);
+  // Hero behavior matches the website: image scrolls inline with content.
+  // No transforms applied during scroll.
   const applyHeroTransform = useCallback((_scrollTop: number) => {}, []);
-
-  // Scroll handler — passive, RAF-throttled, no setState
-  const scrollRafRef = useRef(0);
-  const handleScroll = useCallback(() => {
-    if (scrollRafRef.current) return;
-    scrollRafRef.current = requestAnimationFrame(() => {
-      scrollRafRef.current = 0;
-      const el = scrollRef.current;
-      if (!el) return;
-      applyHeroTransform(el.scrollTop);
-    });
-  }, [applyHeroTransform]);
+  const handleScroll = useCallback(() => {}, []);
 
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
