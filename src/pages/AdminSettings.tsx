@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSiteSettings, type BusinessHoursMap } from "@/hooks/useSiteSettings";
 import { menuItems } from "@/data/menu";
-import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock } from "lucide-react";
+import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock, Sliders } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
+import KioskSettingsTab from "@/components/admin/KioskSettingsTab";
 
 const AdminSettings = () => {
   const { settings, loading, updateSettings } = useSiteSettings();
@@ -19,7 +20,7 @@ const AdminSettings = () => {
   const [bannerText, setBannerText] = useState("");
   const [bannerEnabled, setBannerEnabled] = useState(false);
   const [businessHours, setBusinessHours] = useState<BusinessHoursMap>(DEFAULT_HOURS);
-  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours">("fonts");
+  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours" | "kiosk">("fonts");
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,6 +72,7 @@ const AdminSettings = () => {
 
   const tabs = [
     { id: "fonts" as const, label: "גודל כתב", icon: Type },
+    { id: "kiosk" as const, label: "קיוסק", icon: Sliders },
     { id: "menu" as const, label: "שמות מנות", icon: Monitor },
     { id: "order" as const, label: "סדר מנות", icon: GripVertical },
     { id: "colors" as const, label: "צבעים", icon: Palette },
@@ -117,6 +119,8 @@ const AdminSettings = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
+        {activeTab === "kiosk" && <KioskSettingsTab />}
+
         {activeTab === "fonts" && (
           <div className="max-w-2xl mx-auto space-y-8">
             <div className="bg-card rounded-2xl p-6 border border-border">

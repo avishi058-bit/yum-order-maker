@@ -19,6 +19,15 @@ export interface SiteSettings {
   banner_text: string;
   banner_enabled: boolean;
   business_hours: BusinessHoursMap;
+  // Kiosk display tuning (admin-controlled, kiosk-only)
+  kiosk_modal_height_vh: number;
+  kiosk_image_height_px: number;
+  kiosk_image_scale: number;
+  kiosk_card_image_size_px: number;
+  kiosk_spacing_scale: number;
+  kiosk_ui_scale: number;
+  kiosk_lock_layout: boolean;
+  kiosk_disable_zoom: boolean;
 }
 
 const defaultBusinessHours: BusinessHoursMap = {
@@ -31,6 +40,17 @@ const defaultBusinessHours: BusinessHoursMap = {
   "6": { open: true, from: "20:00", to: "23:59" },
 };
 
+export const KIOSK_DEFAULTS = {
+  kiosk_modal_height_vh: 70,
+  kiosk_image_height_px: 380,
+  kiosk_image_scale: 1.0,
+  kiosk_card_image_size_px: 176,
+  kiosk_spacing_scale: 1.0,
+  kiosk_ui_scale: 1.0,
+  kiosk_lock_layout: true,
+  kiosk_disable_zoom: true,
+} as const;
+
 const defaultSettings: SiteSettings = {
   id: "",
   kiosk_font_scale: 1.0,
@@ -42,6 +62,7 @@ const defaultSettings: SiteSettings = {
   banner_text: "",
   banner_enabled: false,
   business_hours: defaultBusinessHours,
+  ...KIOSK_DEFAULTS,
 };
 
 export const useSiteSettings = () => {
@@ -55,17 +76,26 @@ export const useSiteSettings = () => {
       .limit(1)
       .single();
     if (data && !error) {
+      const d = data as any;
       setSettings({
-        id: data.id,
-        kiosk_font_scale: Number(data.kiosk_font_scale) || 1.0,
-        website_font_scale: Number(data.website_font_scale) || 1.0,
-        primary_color: data.primary_color || defaultSettings.primary_color,
-        background_color: data.background_color || defaultSettings.background_color,
-        menu_item_overrides: (data.menu_item_overrides as Record<string, { name?: string; description?: string }>) || {},
-        menu_order: (data.menu_order as string[]) || [],
-        banner_text: data.banner_text || "",
-        banner_enabled: data.banner_enabled ?? false,
-        business_hours: ((data as any).business_hours as BusinessHoursMap) || defaultBusinessHours,
+        id: d.id,
+        kiosk_font_scale: Number(d.kiosk_font_scale) || 1.0,
+        website_font_scale: Number(d.website_font_scale) || 1.0,
+        primary_color: d.primary_color || defaultSettings.primary_color,
+        background_color: d.background_color || defaultSettings.background_color,
+        menu_item_overrides: (d.menu_item_overrides as Record<string, { name?: string; description?: string }>) || {},
+        menu_order: (d.menu_order as string[]) || [],
+        banner_text: d.banner_text || "",
+        banner_enabled: d.banner_enabled ?? false,
+        business_hours: (d.business_hours as BusinessHoursMap) || defaultBusinessHours,
+        kiosk_modal_height_vh: Number(d.kiosk_modal_height_vh) || KIOSK_DEFAULTS.kiosk_modal_height_vh,
+        kiosk_image_height_px: Number(d.kiosk_image_height_px) || KIOSK_DEFAULTS.kiosk_image_height_px,
+        kiosk_image_scale: Number(d.kiosk_image_scale) || KIOSK_DEFAULTS.kiosk_image_scale,
+        kiosk_card_image_size_px: Number(d.kiosk_card_image_size_px) || KIOSK_DEFAULTS.kiosk_card_image_size_px,
+        kiosk_spacing_scale: Number(d.kiosk_spacing_scale) || KIOSK_DEFAULTS.kiosk_spacing_scale,
+        kiosk_ui_scale: Number(d.kiosk_ui_scale) || KIOSK_DEFAULTS.kiosk_ui_scale,
+        kiosk_lock_layout: d.kiosk_lock_layout ?? KIOSK_DEFAULTS.kiosk_lock_layout,
+        kiosk_disable_zoom: d.kiosk_disable_zoom ?? KIOSK_DEFAULTS.kiosk_disable_zoom,
       });
     }
     setLoading(false);

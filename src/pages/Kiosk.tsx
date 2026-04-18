@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
+import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import KioskWelcome from "@/components/KioskWelcome";
@@ -64,6 +65,9 @@ const needsCustomization = (item: MenuItem) =>
 type KioskView = "welcome" | "menu" | "cart";
 
 const Kiosk = () => {
+  // Inject kiosk CSS variables + layout-stability classes (admin-controlled)
+  useKioskCSSVars(true);
+
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
   const isClosed = !restaurantStatus.station_open;

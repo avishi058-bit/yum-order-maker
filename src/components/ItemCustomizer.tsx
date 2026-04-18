@@ -469,8 +469,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
-              className="fixed inset-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
-              style={{ willChange: "transform", touchAction: "pan-y" }}
+              className={`fixed left-0 right-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden ${
+                isKiosk ? "bottom-0" : "inset-0"
+              }`}
+              style={{
+                willChange: "transform",
+                touchAction: "pan-y",
+                // Kiosk: cap modal height via admin-controlled CSS var so the
+                // burger remains visible behind it. Falls back to 70vh.
+                ...(isKiosk
+                  ? { top: "auto", height: "var(--kiosk-modal-h, 70vh)", maxHeight: "var(--kiosk-modal-h, 70vh)" }
+                  : {}),
+              }}
               dir="rtl"
             >
               {/* Drag surface for header / hero */}
