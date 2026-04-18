@@ -813,13 +813,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 {active && <div className="w-3 h-3 rounded-full bg-white" />}
                               </div>
                               {side.price > 0 && !unavailable && (
-                                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-base"}`}>+₪{side.price}</span>
+                                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{side.price}</span>
                               )}
                               {unavailable && (
-                                <span className="text-sm font-bold text-destructive">(אזל מהמלאי כרגע)</span>
+                                <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי כרגע)</span>
                               )}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
                           </button>
                         );
                       })}
