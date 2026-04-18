@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { printReceipt } from "@/lib/kitchenReceipt";
 
 interface OrderItem {
   id: string;
@@ -32,6 +33,8 @@ interface Order {
   created_at: string;
   updated_at: string;
   payment_method: string | null;
+  order_source: string;
+  estimated_ready_at: string | null;
   order_items: OrderItem[];
 }
 
@@ -479,95 +482,55 @@ const Kitchen = () => {
   };
 
   const printOrder = (order: Order) => {
-    const printWindow = window.open("", "_blank", "width=300,height=600");
-    if (!printWindow) return;
+    printReceipt({
+      order_number: order.order_number,
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      notes: order.notes,
+      total: order.total,
+      created_at: order.created_at,
+      payment_method: order.payment_method,
+      order_source: order.order_source,
+      order_items: order.order_items,
+    });
+  };
 
-    const itemsHtml = order.order_items
-      .map((item) => {
-        let html = `<div style="margin-bottom:8px;border-bottom:1px dashed #ccc;padding-bottom:8px;">
-          <div style="font-weight:bold;">${item.item_name} x${item.quantity}</div>
-          <div style="text-align:left;">₪${item.price * item.quantity}</div>`;
+  // Adjust ETA by +/- N minutes for an in-progress order
+  const adjustEta = async (order: Order, deltaMinutes: number) => {
+    const base = order.estimated_ready_at
+      ? new Date(order.estimated_ready_at).getTime()
+      : Date.now();
+    const newEta = new Date(base + deltaMinutes * 60 * 1000);
+    // Don't allow ETA before now
+    if (newEta.getTime() < Date.now() - 60_000) {
+      toast.error("לא ניתן להגדיר זמן עבר");
+      return;
+    }
+    const { error } = await supabase
+      .from("orders")
+      .update({ estimated_ready_at: newEta.toISOString() })
+      .eq("id", order.id);
+    if (error) {
+      toast.error("שגיאה בעדכון זמן הכנה");
+      return;
+    }
+    toast.success(
+      deltaMinutes > 0
+        ? `הזמן הוארך ב-${deltaMinutes} דק׳`
+        : `הזמן קוצר ב-${Math.abs(deltaMinutes)} דק׳`,
+      { duration: 2000 }
+    );
+    fetchOrders();
+  };
 
-        if (item.removals && item.removals.length > 0) {
-          html += `<div style="color:#c00;font-size:12px;">ללא: ${item.removals.join(", ")}</div>`;
-        }
-        if (item.toppings && item.toppings.length > 0) {
-          html += `<div style="color:#060;font-size:12px;">תוספות: ${item.toppings.join(", ")}</div>`;
-        }
-        if (item.with_meal) {
-          html += `<div style="font-size:12px;">🍟 ארוחה עסקית`;
-          if (item.meal_side) html += ` - ${item.meal_side}`;
-          if (item.meal_drink) html += `, ${item.meal_drink}`;
-          html += `</div>`;
-        }
-        if (item.deal_burgers) {
-          const burgers = item.deal_burgers as any[];
-          burgers.forEach((b: any, i: number) => {
-            html += `<div style="font-size:12px;">🍔 המבורגר ${i + 1}`;
-            if (b.name) html += ` (${b.name})`;
-            if (b.removals?.length > 0) html += ` — ${b.removals.join(", ")}`;
-            html += `</div>`;
-          });
-          html += `<div style="font-size:12px;">🍟 צ׳יפס ענק</div>`;
-        }
-        if (item.deal_drinks) {
-          const drinks = item.deal_drinks as any[];
-          drinks.forEach((d: any, i: number) => {
-            html += `<div style="font-size:12px;">🥤 ${d.name}${d.extraCost > 0 ? ` (+₪${d.extraCost})` : ""}</div>`;
-          });
-        }
-        html += `</div>`;
-        return html;
-      })
-      .join("");
-
-    const isCash = order.payment_method === "cash";
-    const paymentBanner = isCash
-      ? `<div style="text-align:center;background:#000;color:#fff;padding:10px;margin-bottom:10px;font-size:18px;font-weight:bold;border:3px solid #000;">
-           ⚠️ לא שולם ⚠️
-         </div>`
-      : "";
-
-    const paymentFooter = isCash
-      ? `<div style="text-align:center;border:3px solid #000;padding:12px;margin-top:10px;font-size:16px;font-weight:bold;background:#f5f5f5;">
-           💵 תשלום במזומן בעת המסירה 💵
-         </div>`
-      : `<div style="text-align:center;margin-top:10px;font-size:12px;color:#060;font-weight:bold;">
-           ✅ שולם באשראי
-         </div>`;
-
-    printWindow.document.write(`
-      <html dir="rtl">
-      <head><title>בון #${order.order_number}</title></head>
-      <body style="font-family:Arial;width:280px;margin:0 auto;padding:10px;font-size:14px;">
-        ${paymentBanner}
-        <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:10px;">
-          <h2 style="margin:0;">הַבִּקְתָּה 🐄</h2>
-          <p style="margin:4px 0;font-size:12px;">המבורגר של מושבניקים</p>
-        </div>
-        <div style="border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:8px;">
-          <strong>הזמנה #${order.order_number}</strong><br/>
-          <span style="font-size:12px;">${new Date(order.created_at).toLocaleString("he-IL")}</span>
-        </div>
-        <div style="border-bottom:1px solid #000;padding-bottom:8px;margin-bottom:8px;">
-          <strong>${order.customer_name}</strong><br/>
-          📞 ${order.customer_phone}<br/>
-          📍 ${order.customer_address || "—"}
-          ${order.notes ? `<br/>📝 ${order.notes}` : ""}
-        </div>
-        ${itemsHtml}
-        <div style="border-top:2px solid #000;padding-top:8px;font-size:18px;font-weight:bold;text-align:center;">
-          סה״כ: ₪${order.total}
-        </div>
-        ${paymentFooter}
-        <div style="text-align:center;margin-top:10px;font-size:10px;color:#999;">
-          בתיאבון! 🍔
-        </div>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+  const etaCountdown = (eta: string | null): string | null => {
+    if (!eta) return null;
+    const diffSec = Math.floor((new Date(eta).getTime() - Date.now()) / 1000);
+    if (diffSec <= 0) return "מוכן עכשיו";
+    const mins = Math.floor(diffSec / 60);
+    const secs = diffSec % 60;
+    if (mins === 0) return `${secs} שנ׳`;
+    return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
   const activeOrders = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
@@ -1116,10 +1079,42 @@ const Kitchen = () => {
                   </div>
                 </div>
 
-                {/* Tracking link */}
+                {/* ETA control + tracking link (preparing only) */}
                 {order.status === "preparing" && (
-                  <div className="px-4 py-2 border-t border-border bg-secondary/20 text-center">
-                    <p className="text-xs text-muted-foreground">
+                  <div className="px-4 py-3 border-t border-border bg-secondary/30 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Clock size={14} className="text-primary" />
+                        זמן הכנה:
+                        <span className="text-primary font-black text-base">
+                          {etaCountdown(order.estimated_ready_at) || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => adjustEta(order, -5)}
+                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          title="קצר ב-5 דקות"
+                        >
+                          <Minus size={12} /> 5
+                        </button>
+                        <button
+                          onClick={() => adjustEta(order, 5)}
+                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          title="הוסף 5 דקות"
+                        >
+                          <Plus size={12} /> 5
+                        </button>
+                        <button
+                          onClick={() => adjustEta(order, 10)}
+                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          title="הוסף 10 דקות"
+                        >
+                          <Plus size={12} /> 10
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center">
                       קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
                     </p>
                   </div>
