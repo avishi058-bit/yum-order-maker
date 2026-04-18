@@ -364,9 +364,14 @@ const Index = () => {
 
       <ItemCustomizer
         item={customizerItem}
-        onClose={() => setCustomizerItem(null)}
+        onClose={() => {
+          setCustomizerItem(null);
+          setEditingCartId(null);
+          setCustomizerInitial(undefined);
+        }}
         onConfirm={handleCustomizerConfirm}
         isAvailable={isAvailable}
+        initialState={customizerInitial}
       />
 
       <DrinkSelector
