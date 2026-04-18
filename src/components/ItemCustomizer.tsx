@@ -495,29 +495,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   <div className={isKiosk ? "w-14" : "w-10"} />
                 </div>
 
-                {/* Hero image (only on customize step, only if image exists) */}
-                {showHero && (
-                  <div
-                    ref={heroRef}
-                    className="relative w-full overflow-hidden bg-gray-100"
-                    style={{ height: heroHeight }}
-                  >
-                    <img
-                      ref={heroImgRef}
-                      src={heroImage as string}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                      style={{
-                        willChange: "transform, opacity",
-                        transformOrigin: "center top",
-                      }}
-                      draggable={false}
-                    />
-                  </div>
-                )}
               </div>
 
-              {/* Scrollable content */}
+              {/* Scrollable content (hero is INSIDE so it scrolls with content, like a regular webpage) */}
               <AnimatePresence mode="wait">
                 {step === "customize" && (
                   <motion.div
@@ -528,13 +508,23 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={handleScroll}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
+                    {/* Hero image scrolls together with content (no parallax/fade) */}
+                    {showHero && (
+                      <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
+                        <img
+                          src={heroImage as string}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                      </div>
+                    )}
                     {(item.id === "haf-mifsha" || item.baseBurgerId === "haf-mifsha") && (
                       <div className={`mx-5 mt-4 rounded-xl border-2 border-destructive bg-destructive/10 ${isKiosk ? "p-5" : "p-3"}`}>
                         <p className={`font-black text-destructive text-right ${isKiosk ? "text-[20px]" : "text-sm"}`}>
