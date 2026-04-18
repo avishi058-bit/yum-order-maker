@@ -950,13 +950,22 @@ const Kitchen = () => {
           {displayOrders.map((order) => {
             const config = statusConfig[order.status];
             const next = nextStatus[order.status];
+            const escLevel = order.status === "new" ? getEscalationLevel(order.created_at) : 0;
+
+            // Card visual escalation
+            const cardClass =
+              order.status !== "new"
+                ? "border-border"
+                : escLevel === 2
+                ? "border-red-600 border-2 shadow-2xl shadow-red-600/50 animate-pulse bg-red-950/20"
+                : escLevel === 1
+                ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
+                : "border-red-500 shadow-lg shadow-red-500/20 animate-pulse";
 
             return (
               <div
                 key={order.id}
-                className={`bg-card border rounded-xl overflow-hidden ${
-                  order.status === "new" ? "border-red-500 shadow-lg shadow-red-500/20 animate-pulse" : "border-border"
-                }`}
+                className={`bg-card border rounded-xl overflow-hidden ${cardClass}`}
               >
                 {/* Order header */}
                 <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
@@ -964,6 +973,21 @@ const Kitchen = () => {
                     {config.icon}
                     <span className="font-bold">#{order.order_number}</span>
                     <span className="text-sm opacity-80">{config.label}</span>
+                    {order.status === "new" && escLevel === 0 && (
+                      <span className="text-[10px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded-full animate-pulse">
+                        חדש
+                      </span>
+                    )}
+                    {order.status === "new" && escLevel === 1 && (
+                      <span className="text-[10px] font-black bg-yellow-300 text-red-700 px-1.5 py-0.5 rounded-full animate-pulse">
+                        ⏳ ממתין!
+                      </span>
+                    )}
+                    {order.status === "new" && escLevel === 2 && (
+                      <span className="text-[10px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse">
+                        🚨 דחוף!
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
