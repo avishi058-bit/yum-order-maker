@@ -164,3 +164,10 @@ body.kiosk-active .kiosk-spaced > * + * {
   margin-top: calc(1rem * var(--kiosk-spacing-scale, 1));
 }
 
+/* Font scale: applied as a root font-size multiplier on the kiosk body.
+   Affects all rem-based text. We also boost px-defined sizes inside the
+   item customizer modal so the admin slider has visible effect. */
+body.kiosk-active {
+  font-size: calc(1rem * var(--kiosk-font-scale, 1));
+}
+
