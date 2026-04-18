@@ -226,6 +226,7 @@ const Kitchen = () => {
   // Realtime / fallback state
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
 
   // Escalation thresholds (configurable from UI)
   const [redAfter, setRedAfter] = useState<number>(() => {
