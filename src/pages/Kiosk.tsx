@@ -313,26 +313,29 @@ const Kiosk = () => {
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk />
       </div>
 
-      {/* Bottom cart bar */}
-      {totalItems > 0 && (
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="flex-none bg-primary text-primary-foreground px-6 py-5 flex items-center justify-between cursor-pointer active:opacity-90"
-          onClick={() => setCartOpen(true)}
-        >
-          <div className="flex items-center gap-3">
-            <div ref={cartButtonCallbackRef} className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
-              <ShoppingBag size={24} />
+      {/* Floating green "Finish Order" button — appears only when cart has items */}
+      <AnimatePresence>
+        {totalItems > 0 && (
+          <motion.button
+            initial={{ y: 80, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 80, opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            onClick={() => setCartOpen(true)}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 bg-green-600 hover:bg-green-700 active:scale-95 text-white rounded-full shadow-2xl shadow-green-900/40 flex items-center gap-5 pl-7 pr-5 py-5 transition-all"
+            dir="rtl"
+          >
+            <div ref={cartButtonCallbackRef} className="bg-white/20 w-14 h-14 rounded-full flex items-center justify-center relative">
+              <ShoppingBag size={28} />
+              <span className="absolute -top-1 -right-1 bg-white text-green-700 text-base font-black rounded-full min-w-[28px] h-7 flex items-center justify-center px-1.5 shadow">
+                {totalItems}
+              </span>
             </div>
-            <div>
-              <p className="text-xl font-black">הסל שלי</p>
-              <p className="text-sm opacity-80">{totalItems} פריטים</p>
-            </div>
-          </div>
-          <p className="text-3xl font-black">₪{getTotal()}</p>
-        </motion.div>
-      )}
+            <span className="text-2xl font-black whitespace-nowrap">סיום הזמנה</span>
+            <span className="text-2xl font-black bg-white/15 rounded-full px-5 py-2">₪{getTotal()}</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Modals - reuse existing components */}
       <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} initialState={customizerInitial} />
