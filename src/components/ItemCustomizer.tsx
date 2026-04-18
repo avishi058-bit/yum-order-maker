@@ -501,10 +501,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
-                    {/* Hero image. On website: scrolls inline with content.
-                        On kiosk: rendered as a fixed layer behind the sheet
-                        (above), so we skip the inline copy here. */}
-                    {showHero && !isKiosk && (
+                    {/* Hero image — scrolls inline with content (same on
+                        website and kiosk; only the height differs). */}
+                    {showHero && (
                       <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
                         <img
                           ref={heroImgRef}
