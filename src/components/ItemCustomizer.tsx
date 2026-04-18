@@ -570,58 +570,55 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         Helpful when one customer orders multiple dishes.
                         Placed at the TOP so it's the first thing the customer sees. */}
                     {isBurger && (
-                      <div className={`mx-5 ${isKiosk ? "mt-4" : "mt-3"} rounded-xl border border-gray-300 bg-white ${isKiosk ? "px-4 py-3" : "px-3 py-2.5"}`}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOwnerNameEnabled((v) => {
-                              if (v) setOwnerName("");
-                              return !v;
-                            });
-                          }}
-                          className="w-full flex items-center justify-between gap-3"
-                        >
-                          <div className="text-right flex-1">
-                            <h3 className={`font-black text-black flex items-center gap-1.5 justify-end ${isKiosk ? "text-[28px]" : "text-lg"}`}>
-                              <span>👤</span>
-                              <span>של מי המנה?</span>
-                            </h3>
-                            <p className={`text-gray-500 ${isKiosk ? "text-[16px]" : "text-xs"} mt-0.5`}>
-                              (רלוונטי למי שמזמין יותר ממנה אחת)
-                            </p>
-                          </div>
-                          <div
-                            className={`rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${isKiosk ? "w-7 h-7" : "w-6 h-6"} ${
-                              ownerNameEnabled ? "border-foreground bg-foreground text-background" : "border-gray-400 bg-white"
-                            }`}
+                      <div className={`mx-5 ${isKiosk ? "mt-4" : "mt-3"}`}>
+                        {!ownerNameEnabled ? (
+                          <button
+                            type="button"
+                            onClick={() => setOwnerNameEnabled(true)}
+                            className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform flex flex-col items-center justify-center gap-1 ${isKiosk ? "py-5 px-4" : "py-4 px-3"}`}
                           >
-                            {ownerNameEnabled && (
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={isKiosk ? "w-4 h-4" : "w-3.5 h-3.5"}>
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            )}
+                            <span className={`flex items-center gap-2 ${isKiosk ? "text-[22px]" : "text-lg"}`}>
+                              <span>👤</span>
+                              <span>להוסיף שם על המנה?</span>
+                            </span>
+                            <span className={`text-destructive font-bold ${isKiosk ? "text-[16px]" : "text-xs"}`}>
+                              (רלוונטי למי שמזמין יותר ממנה אחת)
+                            </span>
+                          </button>
+                        ) : (
+                          <div className={`rounded-xl border border-gray-300 bg-white ${isKiosk ? "px-4 py-3" : "px-3 py-2.5"}`}>
+                            <div className="flex items-center justify-between gap-3 mb-2">
+                              <h3 className={`font-black text-black flex items-center gap-1.5 ${isKiosk ? "text-[22px]" : "text-base"}`}>
+                                <span>👤</span>
+                                <span>שם על המנה</span>
+                              </h3>
+                              <button
+                                type="button"
+                                onClick={() => { setOwnerName(""); setOwnerNameEnabled(false); }}
+                                className={`text-gray-500 underline ${isKiosk ? "text-[16px]" : "text-xs"}`}
+                              >
+                                ביטול
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              value={ownerName}
+                              onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                              placeholder="שם (למשל: יוסי)"
+                              maxLength={30}
+                              autoFocus
+                              inputMode="text"
+                              enterKeyHint="done"
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="words"
+                              spellCheck={false}
+                              name="dish-owner-name"
+                              style={{ fontSize: "16px" }}
+                              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors"
+                              dir="rtl"
+                            />
                           </div>
-                        </button>
-                        {ownerNameEnabled && (
-                          <input
-                            type="text"
-                            value={ownerName}
-                            onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
-                            placeholder="שם (למשל: יוסי)"
-                            maxLength={30}
-                            autoFocus
-                            // iOS-specific: disable autofill (which paints the field
-                            // yellow) and use min 16px font so Safari doesn't auto-zoom
-                            // the page when the input gains focus.
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck={false}
-                            name="dish-owner-name"
-                            style={{ fontSize: "16px" }}
-                            className="mt-2 w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors"
-                            dir="rtl"
-                          />
                         )}
                       </div>
                     )}
