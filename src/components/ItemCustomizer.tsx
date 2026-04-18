@@ -523,7 +523,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   <div
                     ref={heroRef}
                     data-kiosk-hero={isKiosk ? "true" : undefined}
-                    className="relative w-full overflow-hidden bg-background"
+                    className="relative w-full overflow-hidden"
                     style={{ height: heroHeight }}
                   >
                     <img
