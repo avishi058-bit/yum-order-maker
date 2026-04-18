@@ -35,13 +35,6 @@ const HERO_HEIGHT_KIOSK = 380;    // kiosk hero height (spacer + bg layer)
 const HERO_MIN_SCALE = 0.55;      // scale at full collapse
 const HERO_FADE_DISTANCE = 200;   // px of scroll before image fully fades
 
-// Kiosk sheet — starts low so the hero image is fully visible above it,
-// then slides upward as the user scrolls to give room for selections.
-// Pure translate3d on the sheet root (no layout reflow).
-const KIOSK_SHEET_TOP_INITIAL_VH = 28;  // sheet top at ~28vh → height ~72vh
-const KIOSK_SHEET_TOP_FINAL_VH = 4;     // sheet top at ~4vh on full scroll
-const KIOSK_SCROLL_RANGE = 220;         // px of scroll before sheet reaches top
-
 // Drag-to-close parameters
 const DRAG_CLOSE_THRESHOLD = 120; // px the user must drag down to close
 const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
