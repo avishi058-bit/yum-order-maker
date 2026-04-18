@@ -7,11 +7,24 @@ import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 
+export interface ItemCustomizerInitialState {
+  quantity: number;
+  selectedToppings: string[];
+  selectedRemovals: string[];
+  withMeal: boolean;
+  mealSideId?: string;
+  mealDrinkId?: string;
+  ownerName?: string;
+}
+
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
   onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => void;
   isAvailable?: (id: string) => boolean;
+  /** When set, the customizer opens with these values prefilled — used for
+   *  editing an item already in the cart. */
+  initialState?: ItemCustomizerInitialState;
 }
 
 type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
