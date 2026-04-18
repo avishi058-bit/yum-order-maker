@@ -319,10 +319,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     // ---- topping-driven extras ----
     // Regular extra patty topping → +1 regular meat patty
     regularPatties += includesAny(it.toppings, ["אקסטרה קציצה (220"]) * qty;
-    // Smash extra patty topping ("אקסטרה קציצת סמאש") → +2 smash patties
-    // (the topping is "+2 קציצות סמאש" by definition, but we hide that detail
-    //  from the customer-facing receipt — only chef summary reflects the count).
-    smashPatties += includesAny(it.toppings, ["אקסטרה קציצת סמאש"]) * 2 * qty;
+    // Smash extra patty topping ("אקסטרה קציצת סמאש") → +1 smash patty in
+    // the chef summary (the customer-facing label may say "+זוג קציצות 110ג",
+    // but the chef counts it as a single smash portion).
+    smashPatties += includesAny(it.toppings, ["אקסטרה קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
     // Onion-rings TOPPING ("שלושטבעות בצל ביתיות") — kept SEPARATE from side.
