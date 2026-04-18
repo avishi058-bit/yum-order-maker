@@ -151,25 +151,25 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-5xl px-6 pt-4 pb-16' : 'max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`mx-auto ${isKiosk ? 'max-w-6xl px-8 pt-4 pb-48' : 'max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing) */}
       <div
         className={`sticky z-30 bg-background/90 backdrop-blur-md border-b border-border ${
           isKiosk
-            ? "top-0 -mx-4 px-4 pt-3 pb-2 mb-4"
+            ? "top-0 -mx-8 px-8 pt-4 pb-3 mb-6"
             : "top-0 -mx-4 px-4 pt-2 pb-2 mb-6"
         }`}
       >
-        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-2" : "gap-1.5"}`} dir="rtl">
+        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-3" : "gap-1.5"}`} dir="rtl">
           {visibleCategories.map((cat) => (
             <button
               key={cat.key}
               ref={(el) => { tabRefs.current[cat.key] = el; }}
               onClick={() => scrollToCategory(cat.key)}
               className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
-                isKiosk ? "px-6 py-3 text-base" : "px-4 py-1.5 text-sm"
+                isKiosk ? "px-8 py-4 text-xl" : "px-4 py-1.5 text-sm"
               } ${
                 activeCategory === cat.key
                   ? "text-primary-foreground"
@@ -205,9 +205,9 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             key={cat.key}
             ref={(el) => { sectionRefs.current[cat.key] = el; }}
             data-category={cat.key}
-            className="mb-10 scroll-mt-28"
+            className={isKiosk ? "mb-14 scroll-mt-32" : "mb-10 scroll-mt-28"}
           >
-            <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 36 : 24) * fontScale}px` }}>{cat.label}</h3>
+            <h3 className={`font-black mb-6 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 44 : 24) * fontScale}px` }}>{cat.label}</h3>
             <div className="divide-y divide-border">
               {items.map((item) => (
                 <MenuCard
