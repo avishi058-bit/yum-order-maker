@@ -508,13 +508,23 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={handleScroll}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
+                    {/* Hero image scrolls together with content (no parallax/fade) */}
+                    {showHero && (
+                      <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
+                        <img
+                          src={heroImage as string}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                      </div>
+                    )}
                     {(item.id === "haf-mifsha" || item.baseBurgerId === "haf-mifsha") && (
                       <div className={`mx-5 mt-4 rounded-xl border-2 border-destructive bg-destructive/10 ${isKiosk ? "p-5" : "p-3"}`}>
                         <p className={`font-black text-destructive text-right ${isKiosk ? "text-[20px]" : "text-sm"}`}>
