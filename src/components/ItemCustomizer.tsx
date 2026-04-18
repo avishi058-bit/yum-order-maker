@@ -39,7 +39,7 @@ const HERO_FADE_DISTANCE = 200;   // px of scroll before image fully fades
 const DRAG_CLOSE_THRESHOLD = 120; // px the user must drag down to close
 const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
 
-const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomizerProps) => {
+const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }: ItemCustomizerProps) => {
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
@@ -54,6 +54,28 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [ownerName, setOwnerName] = useState("");
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
+
+  // Prefill state when opening for an EDIT (initialState provided alongside item).
+  // We only run this when the item id changes so the user's edits aren't clobbered
+  // by re-renders, and we treat a new item-open as a fresh prefill cycle.
+  useEffect(() => {
+    if (!item) return;
+    if (initialState) {
+      setQuantity(initialState.quantity || 1);
+      setSelectedToppings(initialState.selectedToppings || []);
+      setSelectedRemovals(
+        initialState.selectedRemovals && initialState.selectedRemovals.length > 0
+          ? initialState.selectedRemovals
+          : ["no-changes"]
+      );
+      setSelectedSide(initialState.mealSideId || "side-fries");
+      setSelectedDrink(initialState.mealDrinkId || "drink-cola");
+      setOwnerName(initialState.ownerName || "");
+      setOwnerNameEnabled(!!(initialState.ownerName && initialState.ownerName.length > 0));
+      setStep("customize");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id]);
 
   const buildAlcoholDrinkGateItem = (drinkId: string): MenuItem => ({
     id: `beer-${drinkId}`,
