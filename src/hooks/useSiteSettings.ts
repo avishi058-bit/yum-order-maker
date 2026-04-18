@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface DayHours {
+  open: boolean;
+  from: string; // "HH:MM"
+  to: string;   // "HH:MM"
+}
+export type BusinessHoursMap = Record<string, DayHours>;
+
 export interface SiteSettings {
   id: string;
   kiosk_font_scale: number;
@@ -11,7 +18,18 @@ export interface SiteSettings {
   menu_order: string[];
   banner_text: string;
   banner_enabled: boolean;
+  business_hours: BusinessHoursMap;
 }
+
+const defaultBusinessHours: BusinessHoursMap = {
+  "0": { open: true, from: "11:00", to: "23:00" },
+  "1": { open: true, from: "11:00", to: "23:00" },
+  "2": { open: true, from: "11:00", to: "23:00" },
+  "3": { open: true, from: "11:00", to: "23:00" },
+  "4": { open: true, from: "11:00", to: "23:00" },
+  "5": { open: false, from: "11:00", to: "15:00" },
+  "6": { open: true, from: "20:00", to: "23:59" },
+};
 
 const defaultSettings: SiteSettings = {
   id: "",
@@ -23,6 +41,7 @@ const defaultSettings: SiteSettings = {
   menu_order: [],
   banner_text: "",
   banner_enabled: false,
+  business_hours: defaultBusinessHours,
 };
 
 export const useSiteSettings = () => {
@@ -46,6 +65,7 @@ export const useSiteSettings = () => {
         menu_order: (data.menu_order as string[]) || [],
         banner_text: data.banner_text || "",
         banner_enabled: data.banner_enabled ?? false,
+        business_hours: ((data as any).business_hours as BusinessHoursMap) || defaultBusinessHours,
       });
     }
     setLoading(false);
