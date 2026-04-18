@@ -171,3 +171,12 @@ body.kiosk-active {
   font-size: calc(1rem * var(--kiosk-font-scale, 1));
 }
 
+/* Hide scrollbars everywhere on the kiosk — touchscreen, no need for
+   visible scroll thumbs/arrows that look like dead UI controls. */
+body.kiosk-active *::-webkit-scrollbar { display: none; }
+body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* Reusable no-scrollbar utility for category tabs etc. */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
