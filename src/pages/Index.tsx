@@ -31,6 +31,7 @@ import ReopenNotifyModal from "@/components/ReopenNotifyModal";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
+import { useFlyToCart } from "@/contexts/FlyToCartContext";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
@@ -60,6 +61,25 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
+  const { flyToCart, registerCartTarget } = useFlyToCart();
+
+  // Register the floating cart button as the fly-to-cart target whenever it
+  // mounts (it only renders once items are in the cart).
+  useEffect(() => {
+    registerCartTarget(cartButtonRef.current);
+    return () => registerCartTarget(null);
+  }, [registerCartTarget, totalItems > 0]);
+
+  /** Fire a fly-to-cart from screen center (used after modal confirm). */
+  const flyFromCenter = useCallback(() => {
+    const sourceRect = new DOMRect(
+      window.innerWidth / 2 - 40,
+      window.innerHeight / 2 - 40,
+      80,
+      80,
+    );
+    flyToCart({ sourceRect });
+  }, [flyToCart]);
 
   const addToCartDirect = useCallback((item: MenuItem & { _menuItemId?: string }) => {
     const menuItemId = item._menuItemId ?? item.id;
