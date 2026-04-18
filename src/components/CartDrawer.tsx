@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
 import { toppings, Topping, removals, smashModifications, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 
 export interface DealBurgerConfig {
@@ -43,10 +43,13 @@ interface CartDrawerProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
   onCheckout: () => void;
+  /** Reopens the customizer with this cart item's selections prefilled.
+   *  Only relevant for items with customizable state (burger / meal). */
+  onEditItem?: (id: string) => void;
   isKiosk?: boolean;
 }
 
-const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, isKiosk = false }: CartDrawerProps) => {
+const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEditItem, isKiosk = false }: CartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);
@@ -181,20 +184,34 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, isKios
                       </div>
                     )}
 
-                    <div className={`flex items-center ${isKiosk ? 'gap-4 mt-3' : 'gap-3'}`}>
-                      <button
-                        onClick={() => onUpdateQuantity(item.id, -1)}
-                        className={`${isKiosk ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors`}
-                      >
-                        <Minus size={isKiosk ? 22 : 14} />
-                      </button>
-                      <span className={`font-black ${isKiosk ? 'text-2xl w-8' : 'text-lg w-6'} text-center`}>{item.quantity}</span>
-                      <button
-                        onClick={() => onUpdateQuantity(item.id, 1)}
-                        className={`${isKiosk ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors`}
-                      >
-                        <Plus size={isKiosk ? 22 : 14} />
-                      </button>
+                    <div className={`flex items-center justify-between ${isKiosk ? 'mt-3' : ''}`}>
+                      <div className={`flex items-center ${isKiosk ? 'gap-4' : 'gap-3'}`}>
+                        <button
+                          onClick={() => onUpdateQuantity(item.id, -1)}
+                          className={`${isKiosk ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors`}
+                        >
+                          <Minus size={isKiosk ? 22 : 14} />
+                        </button>
+                        <span className={`font-black ${isKiosk ? 'text-2xl w-8' : 'text-lg w-6'} text-center`}>{item.quantity}</span>
+                        <button
+                          onClick={() => onUpdateQuantity(item.id, 1)}
+                          className={`${isKiosk ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors`}
+                        >
+                          <Plus size={isKiosk ? 22 : 14} />
+                        </button>
+                      </div>
+                      {/* Edit button — only for items that go through ItemCustomizer
+                          (not deals, which use their own customizers). */}
+                      {onEditItem && !item.dealBurgers && (
+                        <button
+                          onClick={() => onEditItem(item.id)}
+                          className={`flex items-center gap-1.5 rounded-full bg-background border border-border text-foreground hover:bg-secondary transition-colors ${isKiosk ? 'px-4 py-2 text-base' : 'px-3 py-1.5 text-xs'} font-bold`}
+                          aria-label="ערוך מנה"
+                        >
+                          <Pencil size={isKiosk ? 16 : 12} />
+                          ערוך
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))

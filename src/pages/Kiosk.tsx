@@ -8,7 +8,7 @@ import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import KioskCartDrawer from "@/components/KioskCartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer from "@/components/ItemCustomizer";
+import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
@@ -73,6 +73,8 @@ const Kiosk = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
+  const [editingCartId, setEditingCartId] = useState<string | null>(null);
+  const [customizerInitial, setCustomizerInitial] = useState<ItemCustomizerInitialState | undefined>(undefined);
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
@@ -140,15 +142,45 @@ const Kiosk = () => {
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
-      const cartItemId = `${item.id}-${Date.now()}`;
-      setCart((prev) => [
-        ...prev,
-        { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName },
-      ]);
+      setCart((prev) => {
+        if (editingCartId) {
+          return prev.map((c) =>
+            c.id === editingCartId
+              ? { ...c, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName }
+              : c
+          );
+        }
+        const cartItemId = `${item.id}-${Date.now()}`;
+        return [
+          ...prev,
+          { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName },
+        ];
+      });
       setCustomizerItem(null);
+      setEditingCartId(null);
+      setCustomizerInitial(undefined);
     },
-    []
+    [editingCartId]
   );
+
+  const handleEditCartItem = useCallback((cartId: string) => {
+    const cartItem = cart.find((c) => c.id === cartId);
+    if (!cartItem) return;
+    const menuItem = menuItems.find((m) => m.id === cartItem.menuItemId);
+    if (!menuItem) return;
+    setEditingCartId(cartId);
+    setCustomizerInitial({
+      quantity: cartItem.quantity,
+      selectedToppings: cartItem.toppings,
+      selectedRemovals: cartItem.removals,
+      withMeal: cartItem.withMeal,
+      mealSideId: cartItem.mealSideId,
+      mealDrinkId: cartItem.mealDrinkId,
+      ownerName: cartItem.ownerName,
+    });
+    setCartOpen(false);
+    setCustomizerItem(menuItem);
+  }, [cart]);
 
   const handleDealConfirm = useCallback((burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
     const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
@@ -284,7 +316,7 @@ const Kiosk = () => {
       )}
 
       {/* Modals - reuse existing components */}
-      <ItemCustomizer item={customizerItem} onClose={() => setCustomizerItem(null)} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} />
+      <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} initialState={customizerInitial} />
       <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} />
       <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
       <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
@@ -303,6 +335,7 @@ const Kiosk = () => {
         items={cart}
         onUpdateQuantity={updateQuantity}
         isAvailable={isAvailable}
+        onEditItem={handleEditCartItem}
         isKiosk
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {

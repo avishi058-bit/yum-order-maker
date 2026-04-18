@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles, Pencil } from "lucide-react";
 import { useMemo } from "react";
 import {
   toppings,
@@ -27,6 +27,8 @@ interface KioskCartDrawerProps {
   /** "Add another item" — return to menu */
   onBackToMenu: () => void;
   isAvailable: (id: string) => boolean;
+  /** Reopens the customizer with this cart item's selections prefilled. */
+  onEditItem?: (id: string) => void;
   /** Kiosk uses larger sizes; website uses compact sizes. */
   isKiosk?: boolean;
 }
@@ -48,6 +50,7 @@ const KioskCartDrawer = ({
   onSelectDrink,
   onBackToMenu,
   isAvailable,
+  onEditItem,
   isKiosk = false,
 }: KioskCartDrawerProps) => {
   const getItemTotal = (item: CartItem) => {
@@ -300,8 +303,18 @@ const KioskCartDrawer = ({
                             )}
                           </div>
 
-                          {/* Quantity controls */}
+                          {/* Quantity controls + edit */}
                           <div className="flex items-center gap-3">
+                            {onEditItem && !item.dealBurgers && (
+                              <button
+                                onClick={() => onEditItem(item.id)}
+                                className={`flex items-center gap-1.5 rounded-full bg-background border-2 border-border text-foreground hover:bg-secondary transition-colors font-bold ${isKiosk ? 'px-4 py-2.5 text-base' : 'px-3 py-1.5 text-xs'}`}
+                                aria-label="ערוך מנה"
+                              >
+                                <Pencil size={isKiosk ? 18 : 12} />
+                                ערוך
+                              </button>
+                            )}
                             <button
                               onClick={() => onUpdateQuantity(item.id, -1)}
                               className={`${sz.qtyBtn} rounded-full bg-secondary hover:bg-border transition-colors flex items-center justify-center active:scale-95`}

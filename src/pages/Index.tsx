@@ -6,7 +6,7 @@ import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import KioskCartDrawer from "@/components/KioskCartDrawer";
 import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer from "@/components/ItemCustomizer";
+import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
@@ -47,6 +47,10 @@ const Index = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
+  // When set, the customizer is opened in EDIT mode for this cart item.
+  // On confirm, we replace the cart entry instead of appending a new one.
+  const [editingCartId, setEditingCartId] = useState<string | null>(null);
+  const [customizerInitial, setCustomizerInitial] = useState<ItemCustomizerInitialState | undefined>(undefined);
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
@@ -90,28 +94,48 @@ const Index = () => {
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
-      const cartItemId = `${item.id}-${Date.now()}`;
-      setCart((prev) => [
-        ...prev,
-        {
-          id: cartItemId,
-          menuItemId: item.id,
-          name: item.name,
-          price: item.price,
-          quantity,
-          toppings: selectedToppings,
-          removals: selectedRemovals,
-          withMeal,
-          mealSideId,
-          mealDrinkId,
-          ownerName,
-        },
-      ]);
+      setCart((prev) => {
+        // EDIT mode: replace the existing cart entry in-place (preserve order + id).
+        if (editingCartId) {
+          return prev.map((c) =>
+            c.id === editingCartId
+              ? { ...c, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName }
+              : c
+          );
+        }
+        // ADD mode: append a new entry.
+        const cartItemId = `${item.id}-${Date.now()}`;
+        return [
+          ...prev,
+          { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName },
+        ];
+      });
       setCustomizerItem(null);
+      setEditingCartId(null);
+      setCustomizerInitial(undefined);
       setCartOpen(true);
     },
-    []
+    [editingCartId]
   );
+
+  const handleEditCartItem = useCallback((cartId: string) => {
+    const cartItem = cart.find((c) => c.id === cartId);
+    if (!cartItem) return;
+    const menuItem = menuItems.find((m) => m.id === cartItem.menuItemId);
+    if (!menuItem) return;
+    setEditingCartId(cartId);
+    setCustomizerInitial({
+      quantity: cartItem.quantity,
+      selectedToppings: cartItem.toppings,
+      selectedRemovals: cartItem.removals,
+      withMeal: cartItem.withMeal,
+      mealSideId: cartItem.mealSideId,
+      mealDrinkId: cartItem.mealDrinkId,
+      ownerName: cartItem.ownerName,
+    });
+    setCartOpen(false);
+    setCustomizerItem(menuItem);
+  }, [cart]);
 
   const handleDealConfirm = useCallback(
     (burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
@@ -340,9 +364,14 @@ const Index = () => {
 
       <ItemCustomizer
         item={customizerItem}
-        onClose={() => setCustomizerItem(null)}
+        onClose={() => {
+          setCustomizerItem(null);
+          setEditingCartId(null);
+          setCustomizerInitial(undefined);
+        }}
         onConfirm={handleCustomizerConfirm}
         isAvailable={isAvailable}
+        initialState={customizerInitial}
       />
 
       <DrinkSelector
@@ -391,6 +420,7 @@ const Index = () => {
           }, 100);
         }}
         isAvailable={isAvailable}
+        onEditItem={handleEditCartItem}
         isKiosk={isStation}
       />
 
