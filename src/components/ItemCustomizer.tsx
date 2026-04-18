@@ -36,6 +36,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
   const alcoholConsent = useAlcoholConsent();
+  const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
 
   const buildAlcoholDrinkGateItem = (drinkId: string): MenuItem => ({
     id: `beer-${drinkId}`,
@@ -288,9 +289,21 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
       );
       return;
     }
+    if (id === "gluten-free-bun" && !selectedToppings.includes(id)) {
+      // Require explicit allergen acknowledgement before adding GF bun
+      setGlutenConfirmOpen(true);
+      return;
+    }
     setSelectedToppings((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
+  };
+
+  const confirmGlutenFreeBun = () => {
+    setSelectedToppings((prev) =>
+      prev.includes("gluten-free-bun") ? prev : [...prev, "gluten-free-bun"]
+    );
+    setGlutenConfirmOpen(false);
   };
 
   const addCheddarSlice = () => {
