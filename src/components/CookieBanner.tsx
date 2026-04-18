@@ -1,20 +1,33 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie, X } from "lucide-react";
 import { uiPositions, cookieBannerAnimation, timing } from "@/config/uiConfig";
 
 const COOKIE_KEY = "habakta_cookie_consent";
 
+// Routes where the cookie banner is allowed to appear.
+// Kiosk, kitchen, admin, login, station-setup etc. should NEVER show it —
+// those are internal/in-store surfaces with no public web visitors.
+const WEBSITE_ROUTES = new Set<string>(["/", "/index"]);
+
 const CookieBanner = () => {
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
 
+  const isWebsiteRoute = WEBSITE_ROUTES.has(location.pathname);
+
   useEffect(() => {
+    if (!isWebsiteRoute) {
+      setVisible(false);
+      return;
+    }
     const consent = localStorage.getItem(COOKIE_KEY);
     if (!consent) {
       const timer = setTimeout(() => setVisible(true), timing.cookieBannerDelay);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isWebsiteRoute]);
 
   const accept = () => {
     localStorage.setItem(COOKIE_KEY, "accepted");
