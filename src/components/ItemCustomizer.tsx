@@ -134,13 +134,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const showHero = !!heroImage && step === "customize";
 
   // Apply hero transform from scrollTop — direct DOM, no setState.
-  // Behavior:
-  //  - Kiosk: hero stays FIXED in size (no shrink) and the scrolling content
-  //    slides up over it. Image only fades slightly so the burger stays
-  //    fully visible until covered. This avoids the "tiny image while
-  //    scrolling" effect the user reported.
-  //  - Web/mobile: keep the original Wolt-style collapse (height shrinks +
-  //    parallax fade) so on small screens you actually reclaim space.
+  // Wolt-style: hero shrinks in real height (so content fills the gap and the
+  // sticky header stays at the very top), while the image inside parallaxes & fades.
+  // SAME behavior on website + kiosk — only the base height differs (admin-tunable).
   const applyHeroTransform = useCallback((scrollTop: number) => {
     const hero = heroRef.current;
     const img = heroImgRef.current;
@@ -148,16 +144,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const baseHeight = isKiosk ? readKioskHeroHeight() : HERO_HEIGHT;
     const clamped = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE));
     const t = clamped / HERO_FADE_DISTANCE;       // 0 → 1
-
-    if (isKiosk) {
-      // Hero stays full-size; content covers it as it scrolls up.
-      hero.style.height = `${baseHeight}px`;
-      img.style.transform = "translate3d(0, 0, 0)";
-      img.style.opacity = "1";
-      return;
-    }
-
-    // Web: collapse + parallax fade (original behavior).
     const newHeight = baseHeight * (1 - t);
     hero.style.height = `${newHeight}px`;
     const translateY = -clamped * 0.35;
