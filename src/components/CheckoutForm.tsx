@@ -10,14 +10,22 @@ import { Banknote, CreditCard } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 
+export interface CheckoutSauce {
+  id: string;
+  name: string;
+  quantity: number;
+}
+
 interface CheckoutFormProps {
   items: CartItem[];
   total: number;
+  sauces?: CheckoutSauce[];
+  freeSauces?: number;
   onClose: () => void;
   onSuccess: (orderNumber?: number, phone?: string) => void;
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, onClose, onSuccess }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
   const { customer, isLoggedIn } = useCustomerAuth();
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
