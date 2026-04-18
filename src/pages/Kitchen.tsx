@@ -269,17 +269,37 @@ const Kitchen = () => {
     localStorage.setItem("kitchen-ringtone", selectedRingtone);
   }, [selectedRingtone]);
 
-  // Repeating alert for new orders - plays every 5 seconds while there are "new" orders
+  // Compute escalation level for a "new" order based on server time (created_at)
+  // 0 = fresh (<= redAfter), 1 = waiting (red), 2 = aggressive (very red + fast ring)
+  const getEscalationLevel = useCallback((createdAt: string): 0 | 1 | 2 => {
+    const ageSec = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+    if (ageSec >= aggressiveAfter) return 2;
+    if (ageSec >= redAfter) return 1;
+    return 0;
+  }, [redAfter, aggressiveAfter]);
+
+  // Determine the highest escalation level among "new" orders → controls ring cadence
+  const maxEscalation = useMemo(() => {
+    let max: 0 | 1 | 2 = 0;
+    for (const o of orders) {
+      if (o.status !== "new") continue;
+      const lvl = getEscalationLevel(o.created_at);
+      if (lvl > max) max = lvl;
+      if (max === 2) break;
+    }
+    return max;
+  }, [orders, getEscalationLevel]);
+
+  // Repeating alert for new orders — cadence depends on escalation level
   useEffect(() => {
     const hasNewOrders = orders.some((o) => o.status === "new");
 
     if (hasNewOrders && soundEnabled) {
-      // Play immediately
+      const cadence = maxEscalation === 2 ? AGGRESSIVE_RING_MS : NORMAL_RING_MS;
       playRingtone(selectedRingtone);
-      // Then repeat every 5 seconds
       alertIntervalRef.current = setInterval(() => {
         playRingtone(selectedRingtone);
-      }, 5000);
+      }, cadence);
     } else {
       if (alertIntervalRef.current) {
         clearInterval(alertIntervalRef.current);
@@ -293,7 +313,7 @@ const Kitchen = () => {
         alertIntervalRef.current = null;
       }
     };
-  }, [orders, soundEnabled, selectedRingtone]);
+  }, [orders, soundEnabled, selectedRingtone, maxEscalation]);
 
   const fetchAvailability = useCallback(async () => {
     const { data } = await supabase
@@ -309,17 +329,43 @@ const Kitchen = () => {
       .select("*, order_items(*)")
       .order("created_at", { ascending: false });
     if (!error && data) {
-      setOrders(data as Order[]);
+      const fetched = data as Order[];
+
+      // Detect newly-arrived orders since last fetch and toast for them
+      const prevSeen = seenOrdersRef.current;
+      const isFirstLoad = prevSeen.size === 0;
+      const newlyArrived = fetched.filter(
+        (o) => o.status === "new" && !prevSeen.has(o.id)
+      );
+
+      const nextSeen = new Set<string>();
+      fetched.forEach((o) => nextSeen.add(o.id));
+      seenOrdersRef.current = nextSeen;
+
+      if (!isFirstLoad) {
+        newlyArrived.forEach((o) => {
+          toast.success(`🔔 הזמנה חדשה #${o.order_number}`, {
+            description: `${o.customer_name} • ₪${o.total}`,
+            duration: 6000,
+          });
+        });
+      }
+
+      setOrders(fetched);
     }
   }, []);
 
   useEffect(() => {
     fetchOrders();
     fetchAvailability();
+
     const channel = supabase
       .channel("orders-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
-      .subscribe();
+      .subscribe((status) => {
+        setRealtimeConnected(status === "SUBSCRIBED");
+      });
+
     const availChannel = supabase
       .channel("availability-realtime")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
@@ -329,9 +375,25 @@ const Kitchen = () => {
         );
       })
       .subscribe();
+
+    // Polling fallback — runs every 3s as a safety net even if realtime drops
+    const pollInterval = setInterval(() => {
+      fetchOrders();
+    }, POLLING_FALLBACK_MS);
+
+    // Refetch on tab visibility (handles long-idle tablets)
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchOrders();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(availChannel);
+      clearInterval(pollInterval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, [fetchOrders, fetchAvailability]);
 
