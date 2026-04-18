@@ -1158,14 +1158,18 @@ const Kitchen = () => {
       {/* Receipt preview modal */}
       {previewOrder && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overscroll-contain touch-none"
           onClick={() => setPreviewOrder(null)}
+          onTouchMove={(e) => {
+            // Block touch-scroll on the backdrop so iOS Safari doesn't bubble it to body
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
         >
           <div
-            className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"
+            className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-3 border-b border-border">
+            <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
               <span className="font-bold text-foreground">תצוגת בון #{previewOrder.order_number}</span>
               <div className="flex items-center gap-2">
                 <button
@@ -1196,7 +1200,7 @@ const Kitchen = () => {
                 order_source: previewOrder.order_source,
                 order_items: previewOrder.order_items,
               })}
-              className="flex-1 w-full bg-white rounded-b-xl"
+              className="flex-1 w-full bg-white"
               style={{ minHeight: "60vh" }}
             />
           </div>
