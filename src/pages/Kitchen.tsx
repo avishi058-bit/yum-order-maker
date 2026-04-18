@@ -33,6 +33,8 @@ interface Order {
   created_at: string;
   updated_at: string;
   payment_method: string | null;
+  order_source: string;
+  estimated_ready_at: string | null;
   order_items: OrderItem[];
 }
 
