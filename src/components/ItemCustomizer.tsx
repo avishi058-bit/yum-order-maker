@@ -878,7 +878,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       })}
                     </div>
 
-                    <h4 className={`font-black text-right mt-4 mb-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>בירות:</h4>
+                    <h4 className={`font-black text-right mt-6 mb-3 ${isKiosk ? "text-[26px]" : "text-base"}`}>בירות:</h4>
                     <div className="space-y-0">
                       {beerDrinks.map((drink) => {
                         const active = selectedDrink === drink.id;
