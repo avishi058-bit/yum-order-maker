@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
+import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 
 // Eager load public pages
 import Index from "./pages/Index";
@@ -38,6 +39,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CustomerAuthProvider>
+      <FlyToCartProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -87,6 +89,7 @@ const App = () => (
           </Suspense>
           <CookieBanner />
         </BrowserRouter>
+      </FlyToCartProvider>
       </CustomerAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
