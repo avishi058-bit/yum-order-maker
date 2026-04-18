@@ -6,7 +6,6 @@ import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerI
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export interface ItemCustomizerInitialState {
   quantity: number;
@@ -32,7 +31,7 @@ type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
 
 // Hero image collapse parameters (kept tiny — pure transform/opacity, no layout)
 const HERO_HEIGHT = 280;          // initial hero height in px (mobile/web)
-const HERO_HEIGHT_KIOSK = 380;    // kiosk hero height (spacer + bg layer)
+const HERO_HEIGHT_KIOSK = 380;    // kiosk hero height
 const HERO_MIN_SCALE = 0.55;      // scale at full collapse
 const HERO_FADE_DISTANCE = 200;   // px of scroll before image fully fades
 
@@ -43,10 +42,6 @@ const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
 const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }: ItemCustomizerProps) => {
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
-  const { settings } = useSiteSettings();
-  // Initial open height (in vh). Scroll still expands sheet to full screen.
-  const initialHeightVh = Math.min(100, Math.max(40, isKiosk ? settings.kiosk_modal_height_vh : settings.website_modal_height_vh));
-  const initialTopVh = 100 - initialHeightVh;
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
@@ -129,20 +124,37 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Sheet expansion: starts at initialTopVh (e.g. 25vh) and shrinks to 0 as
-  // user scrolls — so the sheet grows toward the top of the screen until it
-  // reaches the same full-screen state as before.
-  const SHEET_EXPAND_RANGE = 160; // px of scroll over which to fully expand
-  const applyHeroTransform = useCallback((_scrollTop: number) => {}, []);
+  // Apply hero transform from scrollTop — direct DOM, no setState.
+  // Wolt-style: hero shrinks in real height (so content fills the gap and the
+  // sticky header stays at the very top), while the image inside parallaxes & fades.
+  const applyHeroTransform = useCallback((scrollTop: number) => {
+    const hero = heroRef.current;
+    const img = heroImgRef.current;
+    if (!hero || !img) return;
+    const baseHeight = isKiosk ? HERO_HEIGHT_KIOSK : HERO_HEIGHT;
+    const clamped = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE));
+    const t = clamped / HERO_FADE_DISTANCE;       // 0 → 1
+    // Collapse the hero container height (cheap on a single element).
+    const newHeight = baseHeight * (1 - t);
+    hero.style.height = `${newHeight}px`;
+    // Image: gentle parallax + fade. Opacity nukes paint cost when hidden.
+    const translateY = -clamped * 0.35;
+    const opacity = 1 - t;
+    img.style.transform = `translate3d(0, ${translateY}px, 0)`;
+    img.style.opacity = String(opacity);
+  }, [isKiosk]);
+
+  // Scroll handler — passive, RAF-throttled, no setState
+  const scrollRafRef = useRef(0);
   const handleScroll = useCallback(() => {
-    const sheet = sheetRef.current;
-    const sc = scrollRef.current;
-    if (!sheet || !sc) return;
-    if (initialTopVh <= 0) return;
-    const t = Math.min(1, Math.max(0, sc.scrollTop / SHEET_EXPAND_RANGE));
-    const currentTopVh = initialTopVh * (1 - t);
-    sheet.style.top = `${currentTopVh}vh`;
-  }, [initialTopVh]);
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = 0;
+      const el = scrollRef.current;
+      if (!el) return;
+      applyHeroTransform(el.scrollTop);
+    });
+  }, [applyHeroTransform]);
 
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -262,10 +274,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       const sc = scrollRef.current;
       if (sc) sc.scrollTop = 0;
       applyHeroTransform(0);
-      const sheet = sheetRef.current;
-      if (sheet) sheet.style.top = `${initialTopVh}vh`;
     }
-  }, [step, applyHeroTransform, initialTopVh]);
+  }, [step, applyHeroTransform]);
 
   if (!item) return null;
 
@@ -451,13 +461,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
             />
           )}
 
-          {/* Kiosk-only fixed hero layer behind the sheet — image is fully
-              visible above the sheet at rest, then zooms out + translates up
-              as the user scrolls (driven by applyHeroTransform). */}
-          {/* Main sheet — full-screen on both website and kiosk.
-              The hero image is rendered inline at the top of the scroll
-              container so it scrolls naturally with the rest of the content
-              (identical behavior to the website, just sized for kiosk). */}
+          {/* Main sheet (full-screen, hero on top, scrollable content). Hidden under meal-upgrade modal. */}
           {!isMealUpgrade && (
             <motion.div
               ref={sheetRef}
@@ -465,13 +469,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
-              className="fixed inset-x-0 bottom-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
-              style={{
-                top: `${initialTopVh}vh`,
-                willChange: "transform, top",
-                touchAction: "pan-y",
-                transition: "top 180ms cubic-bezier(0.4,0,0.2,1)",
-              }}
+              className="fixed inset-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
+              style={{ willChange: "transform", touchAction: "pan-y" }}
               dir="rtl"
             >
               {/* Drag surface for header / hero */}
@@ -489,20 +488,40 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 </div>
 
                 {/* Header (close button + title) */}
-                <div className={`flex items-center justify-between pb-3 ${isKiosk ? "px-8 pb-5" : "px-5"}`}>
+                <div className={`flex items-center justify-between px-5 pb-3 ${isKiosk ? "px-8 pb-4" : ""}`}>
                   <button
                     onClick={handleClose}
-                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-16 h-16" : "w-10 h-10"}`}
+                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`}
                   >
-                    <X size={isKiosk ? 32 : 20} />
+                    <X size={isKiosk ? 28 : 20} />
                   </button>
-                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[36px]" : "text-xl"}`}>{item.name}</h2>
-                  <div className={isKiosk ? "w-16" : "w-10"} />
+                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[28px]" : "text-xl"}`}>{item.name}</h2>
+                  <div className={isKiosk ? "w-14" : "w-10"} />
                 </div>
 
+                {/* Hero image (only on customize step, only if image exists) */}
+                {showHero && (
+                  <div
+                    ref={heroRef}
+                    className="relative w-full overflow-hidden bg-gray-100"
+                    style={{ height: heroHeight }}
+                  >
+                    <img
+                      ref={heroImgRef}
+                      src={heroImage as string}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      style={{
+                        willChange: "transform, opacity",
+                        transformOrigin: "center top",
+                      }}
+                      draggable={false}
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Scrollable content (hero is INSIDE so it scrolls with content, like a regular webpage) */}
+              {/* Scrollable content */}
               <AnimatePresence mode="wait">
                 {step === "customize" && (
                   <motion.div
@@ -520,19 +539,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
-                    {/* Hero image — scrolls inline with content (same on
-                        website and kiosk; only the height differs). */}
-                    {showHero && (
-                      <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
-                        <img
-                          ref={heroImgRef}
-                          src={heroImage as string}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                          draggable={false}
-                        />
-                      </div>
-                    )}
                     {(item.id === "haf-mifsha" || item.baseBurgerId === "haf-mifsha") && (
                       <div className={`mx-5 mt-4 rounded-xl border-2 border-destructive bg-destructive/10 ${isKiosk ? "p-5" : "p-3"}`}>
                         <p className={`font-black text-destructive text-right ${isKiosk ? "text-[20px]" : "text-sm"}`}>
@@ -602,9 +608,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
                     {isBurger && (
                       <>
-                        <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-7" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[22px] mb-5" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                        <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                           <div className="space-y-0">
                             {removalsList.map((r) => {
                               const ingredientUnavailable = getIngredientUnavailable(r.id);
@@ -614,19 +620,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 <button
                                   key={r.id}
                                   onClick={() => !isLocked && toggleRemoval(r.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-6" : "py-3"}`}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-5" : "py-3"}`}
                                 >
                                   <div
-                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-11 h-11" : "w-7 h-7"} ${
+                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                       active ? "border-primary bg-primary" : "border-gray-300"
                                     }`}
                                   >
-                                    {active && <div className={`rounded-full bg-white ${isKiosk ? "w-4 h-4" : "w-3 h-3"}`} />}
+                                    {active && <div className="w-3 h-3 rounded-full bg-white" />}
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{r.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{r.name}</span>
                                     {isLocked && (
-                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
+                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[16px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
                                     )}
                                   </div>
                                 </button>
@@ -635,9 +641,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           </div>
                         </div>
 
-                        <div className={`px-5 ${isKiosk ? "px-8 py-7" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[22px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
+                        <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>תוספות בתשלום</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
@@ -658,45 +664,45 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 return (
                                   <div
                                     key={t.id}
-                                    className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-6" : "py-3"}`}
+                                    className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                   >
                                     {/* Left: stepper + price */}
                                     <div className="flex items-center gap-3">
                                       {cheddarCount > 0 ? (
-                                        <div className={`flex items-center gap-2 ${isKiosk ? "text-[24px]" : "text-base"}`}>
+                                        <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
                                           <button
                                             onClick={removeCheddarSlice}
-                                            className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-12 h-12" : "w-8 h-8"}`}
+                                            className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                             aria-label="הסר פרוסה"
                                           >
-                                            <Minus size={isKiosk ? 22 : 14} />
+                                            <Minus size={isKiosk ? 18 : 14} />
                                           </button>
-                                          <span className={`font-black w-8 text-center ${isKiosk ? "text-[26px]" : "text-base"}`}>{cheddarCount}</span>
+                                          <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{cheddarCount}</span>
                                           <button
                                             onClick={addCheddarSlice}
                                             disabled={cheddarCount >= VEGAN_CHEDDAR_MAX}
-                                            className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-12 h-12" : "w-8 h-8"}`}
+                                            className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                             aria-label="הוסף פרוסה"
                                           >
-                                            <Plus size={isKiosk ? 22 : 14} />
+                                            <Plus size={isKiosk ? 18 : 14} />
                                           </button>
                                         </div>
                                       ) : (
                                         <button
                                           onClick={addCheddarSlice}
-                                          className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-5 py-3 text-[22px]" : "px-3 py-1.5 text-sm"}`}
+                                          className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
                                         >
-                                          <Plus size={isKiosk ? 22 : 14} />
+                                          <Plus size={isKiosk ? 18 : 14} />
                                           הוסף
                                         </button>
                                       )}
-                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[22px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
+                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
                                     </div>
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
-                                      <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
+                                      <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
                                       {showRecommended && (
-                                        <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-base px-3 py-1.5" : "text-xs px-2 py-1"}`}>
+                                        <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
                                           🔥 הולך טוב עם המנה
                                         </span>
                                       )}
@@ -709,22 +715,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 <button
                                   key={t.id}
                                   onClick={() => toggleTopping(t.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-6" : "py-3"}`}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div
-                                      className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-11 h-11" : "w-7 h-7"} ${
+                                      className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
                                         active ? "border-primary bg-primary" : "border-gray-300"
                                       }`}
                                     >
-                                      {active && <div className={`rounded-full bg-white ${isKiosk ? "w-4 h-4" : "w-3 h-3"}`} />}
+                                      {active && <div className="w-3 h-3 rounded-full bg-white" />}
                                     </div>
-                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[22px]" : "text-sm"}`}>+ ₪{t.price}</span>
+                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
                                     {showRecommended && (
-                                      <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-base px-3 py-1.5" : "text-xs px-2 py-1"}`}>
+                                      <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
                                         🔥 הולך טוב עם המנה
                                       </span>
                                     )}
@@ -926,12 +932,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
             </motion.div>
           )}
 
-          {/* Meal-upgrade — independent centered floating orange modal (fade + scale only) */}
+          {/* Meal-upgrade — independent centered modal (fade + scale only, opens directly in center) */}
           {isMealUpgrade && (
             <>
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 0.5 }}
+                animate={{ opacity: 0.6 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
                 onClick={() => handleFinish(false)}
@@ -944,47 +950,28 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                  className={`w-full max-w-md rounded-3xl shadow-2xl p-8 pointer-events-auto ${
-                    isKiosk ? "bg-primary text-primary-foreground" : "bg-background text-foreground"
-                  }`}
+                  className="bg-white text-black w-full max-w-md rounded-3xl shadow-2xl p-8 pointer-events-auto"
                   dir="rtl"
-                  style={{
-                    willChange: "transform, opacity",
-                    boxShadow: isKiosk
-                      ? "0 25px 60px -10px hsl(var(--primary) / 0.6)"
-                      : "0 25px 60px -10px hsl(var(--foreground) / 0.25)",
-                  }}
+                  style={{ willChange: "transform, opacity" }}
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div
-                      className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
-                        isKiosk ? "bg-primary-foreground/15" : "bg-primary/10"
-                      }`}
-                    >
-                      <Utensils size={36} className={isKiosk ? "text-primary-foreground" : "text-primary"} />
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                      <Utensils size={36} className="text-primary" />
                     </div>
                     <h3 className={`font-black mb-3 ${isKiosk ? "text-[26px]" : "text-xl"}`}>לשדרג לארוחה עסקית?</h3>
-                    <p className={`font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"} ${isKiosk ? "" : "text-primary"}`}>+₪{mealUpgrade.price}</p>
-                    <p className={`opacity-80 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
+                    <p className={`text-primary font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"}`}>+₪{mealUpgrade.price}</p>
+                    <p className={`text-gray-500 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
 
                     <div className="w-full space-y-3">
                       <button
                         onClick={() => goToSideSelect()}
-                        className={`w-full font-black rounded-xl shadow-lg active:scale-[0.98] transition-transform ${
-                          isKiosk
-                            ? "bg-primary-foreground text-primary py-5 text-[22px]"
-                            : "bg-primary text-primary-foreground py-4 text-lg"
-                        }`}
+                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                       >
                         שדרגו לי! 🍟🥤
                       </button>
                       <button
                         onClick={() => handleFinish(false)}
-                        className={`w-full font-bold rounded-xl active:scale-[0.98] transition-transform ${
-                          isKiosk
-                            ? "bg-primary-foreground/15 text-primary-foreground py-5 text-[20px]"
-                            : "bg-muted text-foreground py-4 text-base"
-                        }`}
+                        className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[20px]" : "py-4 text-base"}`}
                       >
                         לא תודה
                       </button>

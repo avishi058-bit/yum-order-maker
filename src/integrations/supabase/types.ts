@@ -316,13 +316,11 @@ export type Database = {
           created_at: string
           id: string
           kiosk_font_scale: number
-          kiosk_modal_height_vh: number
           menu_item_overrides: Json
           menu_order: Json
           primary_color: string
           updated_at: string
           website_font_scale: number
-          website_modal_height_vh: number
         }
         Insert: {
           background_color?: string
@@ -332,13 +330,11 @@ export type Database = {
           created_at?: string
           id?: string
           kiosk_font_scale?: number
-          kiosk_modal_height_vh?: number
           menu_item_overrides?: Json
           menu_order?: Json
           primary_color?: string
           updated_at?: string
           website_font_scale?: number
-          website_modal_height_vh?: number
         }
         Update: {
           background_color?: string
@@ -348,13 +344,11 @@ export type Database = {
           created_at?: string
           id?: string
           kiosk_font_scale?: number
-          kiosk_modal_height_vh?: number
           menu_item_overrides?: Json
           menu_order?: Json
           primary_color?: string
           updated_at?: string
           website_font_scale?: number
-          website_modal_height_vh?: number
         }
         Relationships: []
       }

@@ -19,9 +19,6 @@ export interface SiteSettings {
   banner_text: string;
   banner_enabled: boolean;
   business_hours: BusinessHoursMap;
-  /** Initial open height of the item-customization modal, in vh (viewport-height %). Scroll still expands it to full screen. */
-  kiosk_modal_height_vh: number;
-  website_modal_height_vh: number;
 }
 
 const defaultBusinessHours: BusinessHoursMap = {
@@ -45,8 +42,6 @@ const defaultSettings: SiteSettings = {
   banner_text: "",
   banner_enabled: false,
   business_hours: defaultBusinessHours,
-  kiosk_modal_height_vh: 95,
-  website_modal_height_vh: 95,
 };
 
 export const useSiteSettings = () => {
@@ -71,8 +66,6 @@ export const useSiteSettings = () => {
         banner_text: data.banner_text || "",
         banner_enabled: data.banner_enabled ?? false,
         business_hours: ((data as any).business_hours as BusinessHoursMap) || defaultBusinessHours,
-        kiosk_modal_height_vh: Number((data as any).kiosk_modal_height_vh) || 95,
-        website_modal_height_vh: Number((data as any).website_modal_height_vh) || 95,
       });
     }
     setLoading(false);
