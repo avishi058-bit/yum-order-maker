@@ -62,6 +62,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   // Toggle controls whether the input is shown; only sent if non-empty.
   const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
   const [ownerName, setOwnerName] = useState("");
+  const ownerInputRef = useRef<HTMLInputElement>(null);
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
 
