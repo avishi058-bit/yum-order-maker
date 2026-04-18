@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useSiteSettings, type BusinessHoursMap } from "@/hooks/useSiteSettings";
 import { menuItems } from "@/data/menu";
-import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
 
 const AdminSettings = () => {
   const { settings, loading, updateSettings } = useSiteSettings();
@@ -17,7 +18,8 @@ const AdminSettings = () => {
   const [menuOrder, setMenuOrder] = useState<string[]>([]);
   const [bannerText, setBannerText] = useState("");
   const [bannerEnabled, setBannerEnabled] = useState(false);
-  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order">("fonts");
+  const [businessHours, setBusinessHours] = useState<BusinessHoursMap>(DEFAULT_HOURS);
+  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours">("fonts");
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,6 +32,7 @@ const AdminSettings = () => {
       setMenuOrder(settings.menu_order.length > 0 ? settings.menu_order : menuItems.map((m) => m.id));
       setBannerText(settings.banner_text);
       setBannerEnabled(settings.banner_enabled);
+      setBusinessHours(settings.business_hours || DEFAULT_HOURS);
     }
   }, [loading, settings]);
 
@@ -72,6 +75,7 @@ const AdminSettings = () => {
     { id: "order" as const, label: "סדר מנות", icon: GripVertical },
     { id: "colors" as const, label: "צבעים", icon: Palette },
     { id: "banner" as const, label: "באנר", icon: MessageSquare },
+    { id: "hours" as const, label: "שעות פעילות", icon: Clock },
   ];
 
   const orderedItems = menuOrder
@@ -325,6 +329,75 @@ const AdminSettings = () => {
             >
               <Save size={20} />
               שמור באנר
+            </button>
+          </div>
+        )}
+
+        {activeTab === "hours" && (
+          <div className="max-w-2xl mx-auto space-y-4">
+            <p className="text-muted-foreground text-sm mb-4">
+              קבע את שעות הפעילות של העסק. שורת הסטטוס באתר תתעדכן אוטומטית.
+            </p>
+            {DAY_NAMES_HE.map((name, idx) => {
+              const day = businessHours[String(idx)] ?? DEFAULT_HOURS[String(idx)];
+              return (
+                <div key={idx} className="bg-card rounded-2xl p-4 border border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-base">{name}</h3>
+                    <button
+                      onClick={() =>
+                        setBusinessHours((prev) => ({
+                          ...prev,
+                          [String(idx)]: { ...day, open: !day.open },
+                        }))
+                      }
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors ${
+                        day.open ? "bg-green-500/20 text-green-600" : "bg-secondary text-muted-foreground"
+                      }`}
+                    >
+                      {day.open ? <Eye size={14} /> : <EyeOff size={14} />}
+                      {day.open ? "פתוח" : "סגור"}
+                    </button>
+                  </div>
+                  <div className={`grid grid-cols-2 gap-3 ${day.open ? "" : "opacity-40 pointer-events-none"}`}>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs text-muted-foreground">פתיחה</span>
+                      <input
+                        type="time"
+                        value={day.from}
+                        onChange={(e) =>
+                          setBusinessHours((prev) => ({
+                            ...prev,
+                            [String(idx)]: { ...day, from: e.target.value },
+                          }))
+                        }
+                        className="bg-secondary border border-border rounded-xl px-3 py-2 text-foreground"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs text-muted-foreground">סגירה</span>
+                      <input
+                        type="time"
+                        value={day.to}
+                        onChange={(e) =>
+                          setBusinessHours((prev) => ({
+                            ...prev,
+                            [String(idx)]: { ...day, to: e.target.value },
+                          }))
+                        }
+                        className="bg-secondary border border-border rounded-xl px-3 py-2 text-foreground"
+                      />
+                    </label>
+                  </div>
+                </div>
+              );
+            })}
+            <button
+              onClick={() => handleSave("שעות פעילות", { business_hours: businessHours })}
+              className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg flex items-center justify-center gap-2 sticky bottom-0"
+            >
+              <Save size={20} />
+              שמור שעות פעילות
             </button>
           </div>
         )}
