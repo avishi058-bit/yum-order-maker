@@ -773,8 +773,8 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-export function printReceipt(order: ReceiptOrder) {
-  const html = buildReceiptHtml(order);
+export async function printReceipt(order: ReceiptOrder) {
+  const html = await buildReceiptHtml(order);
   const w = window.open("", "_blank", "width=380,height=700");
   if (!w) return;
   w.document.write(html);
