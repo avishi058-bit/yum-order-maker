@@ -97,7 +97,7 @@ const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.te
 
 // Drinks/non-burger items that don't add patty/bun.
 const isDrinkOrMisc = (name: string): boolean =>
-  /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנ忒|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
+  /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
 // Detect fried-side items by name. Order matters.
 type FriedKind = "friendsMix" | "tempuraOnionSide" | "waffleFries" | "onionRings" | "fries" | null;
@@ -111,6 +111,101 @@ const detectFried = (name: string): FriedKind => {
   if (/צ['׳]?יפס/.test(name)) return "fries";
   return null;
 };
+
+// ---------- owner-name (per-item label) ----------
+//
+// CheckoutForm encodes the optional "של מי המנה?" label as a sentinel entry
+// at the FRONT of the item's removals array: "__OWNER__:<name>". We strip it
+// out here so the receipt can show it as a header line instead of a removal,
+// and so chef-summary logic doesn't accidentally count it as an ingredient
+// removal.
+const OWNER_PREFIX = "__OWNER__:";
+const extractOwnerName = (
+  removals: string[] | null | undefined,
+): { ownerName: string | null; cleanedRemovals: string[] } => {
+  if (!removals || removals.length === 0) return { ownerName: null, cleanedRemovals: [] };
+  let ownerName: string | null = null;
+  const cleaned: string[] = [];
+  for (const r of removals) {
+    if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
+      ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
+    } else {
+      cleaned.push(r);
+    }
+  }
+  return { ownerName, cleanedRemovals: cleaned };
+};
+
+// ---------- drink categorisation (for drink-summary block) ----------
+//
+// Maps a chosen drink (by name OR by id) to a chef-friendly label.
+// Used only on takeaway orders to print a "סיכום שתייה" block at the bottom
+// of the receipt — both standalone drinks and meal/deal drinks are aggregated.
+const normaliseDrinkLabel = (raw: string): string | null => {
+  const s = (raw || "").trim();
+  if (!s) return null;
+  if (/קולה\s*זירו|זירו/.test(s)) return "זירו";
+  if (/קולה/.test(s)) return "קולה";
+  if (/ספרייט\s*זירו/.test(s)) return "ספרייט זירו";
+  if (/ספרייט/.test(s)) return "ספרייט";
+  if (/פאנטה\s*ענבים/.test(s)) return "פאנטה ענבים";
+  if (/פאנטה\s*אקזוטי/.test(s)) return "פאנטה אקזוטי";
+  if (/פאנטה/.test(s)) return "פאנטה";
+  if (/בלו\s*מוחיטו/.test(s)) return "בלו מוחיטו";
+  if (/בלו\s*דיי/.test(s)) return "בלו דיי";
+  if (/בלו/.test(s)) return "בלו";
+  if (/גולדסטאר\s*אנפילטר/.test(s)) return "גולדסטאר אנפילטר";
+  if (/גולדסטאר/.test(s)) return "גולדסטאר";
+  if (/הייניקן/.test(s)) return "הייניקן";
+  if (/קורונה/.test(s)) return "קורונה";
+  if (/קאלסברג|קלסטברג/.test(s)) return "קאלסברג";
+  if (/לאפ|לאף/.test(s)) return "לאפ בראון";
+  if (/גינס/.test(s)) return "גינס";
+  if (/ויינשטפאן/.test(s)) return "ויינשטפאן";
+  if (/הוגרדן/.test(s)) return "הוגרדן";
+  if (/מוחיטו/.test(s)) return "מוחיטו";
+  if (/אבטיח/.test(s)) return "מים אבטיח";
+  if (/ענבים/.test(s)) return "ענבים";
+  if (/תפוזים/.test(s)) return "תפוזים";
+  if (/תפוחים/.test(s)) return "תפוחים";
+  if (/מים/.test(s)) return "מים";
+  // Unrecognised — return raw (keeps it visible to chef rather than dropping)
+  return s;
+};
+
+export interface DrinkSummary {
+  drinks: Map<string, number>;
+}
+
+export function computeDrinkSummary(items: ReceiptOrderItem[]): DrinkSummary {
+  const drinks = new Map<string, number>();
+  const add = (label: string | null, qty: number) => {
+    if (!label) return;
+    drinks.set(label, (drinks.get(label) || 0) + qty);
+  };
+
+  for (const it of items) {
+    if (it.item_name === "רטבים") continue; // synthetic line, not a drink
+    const qty = it.quantity || 1;
+
+    // Standalone drinks (e.g. "פחית — קולה") — name itself is a drink
+    if (isDrinkOrMisc(it.item_name)) {
+      add(normaliseDrinkLabel(it.item_name), qty);
+    }
+
+    // Meal drinks
+    if (it.meal_drink) add(normaliseDrinkLabel(it.meal_drink), qty);
+
+    // Deal drinks (each drink object has its own quantity built into the array)
+    if (Array.isArray(it.deal_drinks)) {
+      for (const d of it.deal_drinks) {
+        const dn = String(d?.name || "");
+        if (dn) add(normaliseDrinkLabel(dn), qty);
+      }
+    }
+  }
+  return { drinks };
+}
 
 // Counts how many entries in `arr` match ANY of the needles (each entry once).
 const includesAny = (arr: string[] | null | undefined, needles: string[]): number => {
