@@ -515,9 +515,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                         Helpful when one customer orders multiple dishes.
                         Placed at the TOP so it's the first thing the customer sees. */}
                     {isBurger && (
-                      <div className={`mx-5 ${isKiosk ? "mt-5" : "mt-4"} rounded-2xl border-2 ${
-                        ownerNameEnabled ? "border-primary bg-primary/5" : "border-primary/40 bg-primary/5"
-                      } ${isKiosk ? "p-5" : "p-4"} shadow-sm`}>
+                      <div className={`mx-5 ${isKiosk ? "mt-4" : "mt-3"} rounded-xl border border-gray-300 bg-white ${isKiosk ? "px-4 py-3" : "px-3 py-2.5"}`}>
                         <button
                           type="button"
                           onClick={() => {
@@ -529,21 +527,21 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                           className="w-full flex items-center justify-between gap-3"
                         >
                           <div className="text-right flex-1">
-                            <h3 className={`font-black text-primary flex items-center gap-2 justify-end ${isKiosk ? "text-[22px]" : "text-lg"}`}>
+                            <h3 className={`font-bold text-foreground flex items-center gap-1.5 justify-end ${isKiosk ? "text-[16px]" : "text-sm"}`}>
                               <span>👤</span>
                               <span>של מי המנה?</span>
                             </h3>
-                            <p className={`text-gray-600 ${isKiosk ? "text-[15px]" : "text-xs"} mt-1`}>
+                            <p className={`text-gray-500 ${isKiosk ? "text-[12px]" : "text-[11px]"} mt-0.5`}>
                               (רלוונטי למי שמזמין יותר ממנה אחת)
                             </p>
                           </div>
                           <div
-                            className={`rounded-lg border-2 flex items-center justify-center transition-colors shrink-0 ${isKiosk ? "w-10 h-10" : "w-8 h-8"} ${
-                              ownerNameEnabled ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 bg-white"
+                            className={`rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${isKiosk ? "w-7 h-7" : "w-6 h-6"} ${
+                              ownerNameEnabled ? "border-foreground bg-foreground text-background" : "border-gray-400 bg-white"
                             }`}
                           >
                             {ownerNameEnabled && (
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={isKiosk ? "w-6 h-6" : "w-5 h-5"}>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={isKiosk ? "w-4 h-4" : "w-3.5 h-3.5"}>
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
                             )}
@@ -557,8 +555,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
                             placeholder="שם (למשל: יוסי)"
                             maxLength={30}
                             autoFocus
-                            className={`mt-3 w-full bg-white border-2 border-primary/40 rounded-xl px-4 text-right focus:outline-none focus:border-primary transition-colors ${
-                              isKiosk ? "py-4 text-[18px]" : "py-3 text-base"
+                            className={`mt-2 w-full bg-gray-50 border border-gray-300 rounded-lg px-3 text-right focus:outline-none focus:border-gray-500 transition-colors ${
+                              isKiosk ? "py-2.5 text-[16px]" : "py-2 text-sm"
                             }`}
                             dir="rtl"
                           />
