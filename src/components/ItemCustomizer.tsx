@@ -890,9 +890,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className={`bg-card rounded-2xl shadow-2xl w-full ${isKiosk ? "max-w-xl p-8" : "max-w-md p-6"}`}
+              className={`relative bg-card rounded-2xl shadow-2xl w-full ${isKiosk ? "max-w-xl p-8" : "max-w-md p-6"}`}
             >
-              <h3 className={`font-black text-foreground mb-3 text-right ${isKiosk ? "text-2xl" : "text-xl"}`}>
+              <button
+                onClick={() => setGlutenConfirmOpen(false)}
+                aria-label="סגור"
+                className={`absolute top-3 left-3 rounded-full bg-secondary hover:bg-border flex items-center justify-center transition active:scale-95 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+              >
+                <X size={isKiosk ? 20 : 16} />
+              </button>
+              <h3 className={`font-black text-foreground mb-3 text-right pl-10 ${isKiosk ? "text-2xl" : "text-xl"}`}>
                 ⚠️ לחמנייה ללא גלוטן
               </h3>
               <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
