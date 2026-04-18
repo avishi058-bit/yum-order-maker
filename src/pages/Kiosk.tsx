@@ -56,6 +56,7 @@ import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import { useFlyToCart } from "@/contexts/FlyToCartContext";
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || item.id === "family-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
@@ -82,9 +83,23 @@ const Kiosk = () => {
   const [dineInSelectorOpen, setDineInSelectorOpen] = useState(false);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
-  const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
+  const { flyToCart, registerCartTarget } = useFlyToCart();
+  const cartButtonCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    cartButtonRef.current = node;
+    registerCartTarget(node);
+  }, [registerCartTarget]);
+
+  const flyFromCenter = useCallback(() => {
+    const sourceRect = new DOMRect(
+      window.innerWidth / 2 - 40,
+      window.innerHeight / 2 - 40,
+      80,
+      80,
+    );
+    flyToCart({ sourceRect });
+  }, [flyToCart]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Handle return from credit card payment
@@ -136,8 +151,8 @@ const Kiosk = () => {
       }
       return [...prev, { id: item.id, menuItemId, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
     });
-    setJustAddedId(item.id);
-    setTimeout(() => setJustAddedId(null), 1200);
+    // ItemPreview already plays its own fly animation, so no extra fly here
+    // (it would double-fire). Stay on menu — no auto-open.
   }, []);
 
   const handleCustomizerConfirm = useCallback(
@@ -159,8 +174,10 @@ const Kiosk = () => {
       setCustomizerItem(null);
       setEditingCartId(null);
       setCustomizerInitial(undefined);
+      // Stay on menu after add — no auto-open. Fly to cart for clear feedback.
+      if (!editingCartId) flyFromCenter();
     },
-    [editingCartId]
+    [editingCartId, flyFromCenter]
   );
 
   const handleEditCartItem = useCallback((cartId: string) => {
@@ -189,7 +206,8 @@ const Kiosk = () => {
       { id: `friends-deal-${Date.now()}`, menuItemId: "friends-deal", name: "דיל חברים", price: 216 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks },
     ]);
     setDealOpen(false);
-  }, []);
+    flyFromCenter();
+  }, [flyFromCenter]);
 
   const handleFamilyDealConfirm = useCallback((burgers: DealBurgerConfig[], drinks: DealDrinkChoice[]) => {
     const drinksExtra = drinks.reduce((sum, d) => sum + d.extraCost, 0);
@@ -198,7 +216,8 @@ const Kiosk = () => {
       { id: `family-deal-${Date.now()}`, menuItemId: "family-deal", name: "דיל משפחתי", price: 300 + drinksExtra, quantity: 1, toppings: [], removals: [], withMeal: false, dealBurgers: burgers, dealDrinks: drinks.length > 0 ? drinks : undefined },
     ]);
     setFamilyDealOpen(false);
-  }, []);
+    flyFromCenter();
+  }, [flyFromCenter]);
 
   const handleDrinkConfirm = useCallback((item: MenuItem, selectedDrink: string) => {
     setDrinkItem(null);
@@ -303,7 +322,7 @@ const Kiosk = () => {
           onClick={() => setCartOpen(true)}
         >
           <div className="flex items-center gap-3">
-            <div ref={cartButtonRef} className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
+            <div ref={cartButtonCallbackRef} className="bg-primary-foreground/20 w-12 h-12 rounded-full flex items-center justify-center">
               <ShoppingBag size={24} />
             </div>
             <div>

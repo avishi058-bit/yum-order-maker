@@ -31,6 +31,7 @@ import ReopenNotifyModal from "@/components/ReopenNotifyModal";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
+import { useFlyToCart } from "@/contexts/FlyToCartContext";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
@@ -60,6 +61,27 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
+  const { flyToCart, registerCartTarget } = useFlyToCart();
+
+  // Re-register the cart target whenever the button mounts/unmounts.
+  // The button only renders once the cart has items, so on the very first
+  // add we use a small rAF deferral (see flyFromCenter) to give it a frame
+  // to appear before launching the animation.
+  const cartButtonCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    cartButtonRef.current = node;
+    registerCartTarget(node);
+  }, [registerCartTarget]);
+
+  /** Fire a fly-to-cart from screen center (used after modal confirm). */
+  const flyFromCenter = useCallback(() => {
+    const sourceRect = new DOMRect(
+      window.innerWidth / 2 - 40,
+      window.innerHeight / 2 - 40,
+      80,
+      80,
+    );
+    flyToCart({ sourceRect });
+  }, [flyToCart]);
 
   const addToCartDirect = useCallback((item: MenuItem & { _menuItemId?: string }) => {
     const menuItemId = item._menuItemId ?? item.id;
@@ -113,9 +135,11 @@ const Index = () => {
       setCustomizerItem(null);
       setEditingCartId(null);
       setCustomizerInitial(undefined);
-      setCartOpen(true);
+      // Stay on the menu after add. Fly the item toward the cart icon for
+      // a clear "added!" cue. Skip on EDIT (no fly — user is just updating).
+      if (!editingCartId) flyFromCenter();
     },
-    [editingCartId]
+    [editingCartId, flyFromCenter]
   );
 
   const handleEditCartItem = useCallback((cartId: string) => {
@@ -156,9 +180,9 @@ const Index = () => {
         },
       ]);
       setDealOpen(false);
-      setCartOpen(true);
+      flyFromCenter();
     },
-    []
+    [flyFromCenter]
   );
 
   const handleFamilyDealConfirm = useCallback(
@@ -180,9 +204,9 @@ const Index = () => {
         },
       ]);
       setFamilyDealOpen(false);
-      setCartOpen(true);
+      flyFromCenter();
     },
-    []
+    [flyFromCenter]
   );
 
   const handleDrinkConfirm = useCallback(
@@ -323,7 +347,7 @@ const Index = () => {
       )}
 
       {!isClosed && totalItems > 0 && !cartOpen && (
-        <div ref={cartButtonRef}>
+        <div ref={cartButtonCallbackRef}>
           <button
             onClick={() => setCartOpen(true)}
             className={`${uiPositions.cartButton.position} bg-primary text-primary-foreground w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-primary/30 hover:scale-105 transition-transform`}

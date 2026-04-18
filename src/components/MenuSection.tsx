@@ -4,6 +4,7 @@ import { ShoppingBag, Star } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useFlyToCart } from "@/contexts/FlyToCartContext";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -20,18 +21,25 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   const image = menuImages[item.id];
   const displayName = nameOverride || item.name;
   const displayDesc = descOverride || item.description;
-  const [justAdded, setJustAdded] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { flyToCart } = useFlyToCart();
 
   const handleAdd = () => {
-    onAdd(item);
-    if (!needsCustomization(item)) {
-      setJustAdded(true);
-      setTimeout(() => setJustAdded(false), 1200);
+    // For simple items (no customization step), the item is added directly to
+    // the cart — fire the fly animation from the card's image rect so the user
+    // sees the item "land" in the cart icon. Skipped for items that open a
+    // modal first; those fire the animation on confirm via the parent page.
+    if (!needsCustomization(item) && cardRef.current) {
+      const imgEl = cardRef.current.querySelector("img");
+      const sourceRect = (imgEl ?? cardRef.current).getBoundingClientRect();
+      flyToCart({ sourceRect, imageUrl: image });
     }
+    onAdd(item);
   };
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -77,22 +85,6 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
           )}
         </div>
       )}
-
-      {/* Toast notification */}
-      <AnimatePresence>
-        {justAdded && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
-            className={`absolute left-2 top-2 bg-green-500 text-white font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg z-10 pointer-events-none ${isKiosk ? "text-base" : "text-xs"}`}
-          >
-            <ShoppingBag size={isKiosk ? 16 : 12} />
-            נוסף לסל!
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
