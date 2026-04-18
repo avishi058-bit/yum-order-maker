@@ -463,10 +463,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
-              className="fixed inset-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
+              className="fixed inset-x-0 bottom-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
               style={{
-                willChange: "transform",
+                top: `${initialTopVh}vh`,
+                willChange: "transform, top",
                 touchAction: "pan-y",
+                transition: "top 180ms cubic-bezier(0.4,0,0.2,1)",
               }}
               dir="rtl"
             >
@@ -509,7 +511,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={isKiosk ? handleScroll : undefined}
+                    onScroll={handleScroll}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
