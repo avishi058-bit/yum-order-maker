@@ -129,10 +129,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Hero behavior matches the website: image scrolls inline with content.
-  // No transforms applied during scroll.
+  // Sheet expansion: starts at initialTopVh (e.g. 25vh) and shrinks to 0 as
+  // user scrolls — so the sheet grows toward the top of the screen until it
+  // reaches the same full-screen state as before.
+  const SHEET_EXPAND_RANGE = 160; // px of scroll over which to fully expand
   const applyHeroTransform = useCallback((_scrollTop: number) => {}, []);
-  const handleScroll = useCallback(() => {}, []);
+  const handleScroll = useCallback(() => {
+    const sheet = sheetRef.current;
+    const sc = scrollRef.current;
+    if (!sheet || !sc) return;
+    if (initialTopVh <= 0) return;
+    const t = Math.min(1, Math.max(0, sc.scrollTop / SHEET_EXPAND_RANGE));
+    const currentTopVh = initialTopVh * (1 - t);
+    sheet.style.top = `${currentTopVh}vh`;
+  }, [initialTopVh]);
 
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
