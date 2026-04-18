@@ -35,13 +35,6 @@ const HERO_HEIGHT_KIOSK = 380;    // kiosk hero height (spacer + bg layer)
 const HERO_MIN_SCALE = 0.55;      // scale at full collapse
 const HERO_FADE_DISTANCE = 200;   // px of scroll before image fully fades
 
-// Kiosk sheet — starts low so the hero image is fully visible above it,
-// then slides upward as the user scrolls to give room for selections.
-// Pure translate3d on the sheet root (no layout reflow).
-const KIOSK_SHEET_TOP_INITIAL_VH = 28;  // sheet top at ~28vh → height ~72vh
-const KIOSK_SHEET_TOP_FINAL_VH = 4;     // sheet top at ~4vh on full scroll
-const KIOSK_SCROLL_RANGE = 220;         // px of scroll before sheet reaches top
-
 // Drag-to-close parameters
 const DRAG_CLOSE_THRESHOLD = 120; // px the user must drag down to close
 const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
@@ -131,41 +124,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Kiosk-only choreography: hero image zooms out + translates up while the
-  // sheet slides upward to expose more selection area. All driven by GPU
-  // transforms — no layout/reflow during the gesture.
-  const applyHeroTransform = useCallback((scrollTop: number) => {
-    if (!isKiosk) return;
-    const img = heroImgRef.current;
-    const sheet = sheetRef.current;
-
-    // Image: scale 1.12 → 1.00, translate up to -28% of hero height
-    if (img) {
-      const t = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE)) / HERO_FADE_DISTANCE;
-      const scale = 1.12 - t * 0.12;
-      const translateY = -t * (HERO_HEIGHT_KIOSK * 0.28);
-      img.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
-    }
-
-    // Sheet: slides from KIOSK_SHEET_TOP_INITIAL_VH → KIOSK_SHEET_TOP_FINAL_VH
-    if (sheet) {
-      const t = Math.max(0, Math.min(scrollTop, KIOSK_SCROLL_RANGE)) / KIOSK_SCROLL_RANGE;
-      const offsetVh = (KIOSK_SHEET_TOP_INITIAL_VH - KIOSK_SHEET_TOP_FINAL_VH) * t;
-      sheet.style.transform = `translate3d(0, -${offsetVh}vh, 0)`;
-    }
-  }, [isKiosk]);
-
-  // Scroll handler — passive, RAF-throttled, no setState
-  const scrollRafRef = useRef(0);
-  const handleScroll = useCallback(() => {
-    if (scrollRafRef.current) return;
-    scrollRafRef.current = requestAnimationFrame(() => {
-      scrollRafRef.current = 0;
-      const el = scrollRef.current;
-      if (!el) return;
-      applyHeroTransform(el.scrollTop);
-    });
-  }, [applyHeroTransform]);
+  // Hero behavior matches the website: image scrolls inline with content.
+  // No transforms applied during scroll.
+  const applyHeroTransform = useCallback((_scrollTop: number) => {}, []);
+  const handleScroll = useCallback(() => {}, []);
 
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -475,28 +437,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
           {/* Kiosk-only fixed hero layer behind the sheet — image is fully
               visible above the sheet at rest, then zooms out + translates up
               as the user scrolls (driven by applyHeroTransform). */}
-          {isKiosk && !isMealUpgrade && showHero && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="fixed left-0 right-0 top-0 z-40 overflow-hidden bg-gray-100 pointer-events-none"
-              style={{ height: `${KIOSK_SHEET_TOP_INITIAL_VH + 6}vh` }}
-            >
-              <img
-                ref={heroImgRef}
-                src={heroImage as string}
-                alt={item.name}
-                className="w-full h-full object-cover"
-                draggable={false}
-                style={{ transform: "translate3d(0,0,0) scale(1.12)", transformOrigin: "center center", willChange: "transform" }}
-              />
-            </motion.div>
-          )}
-
-          {/* Main sheet. On website: full-screen. On kiosk: starts at ~28vh
-              from the top so the hero image is fully visible above it. */}
+          {/* Main sheet — full-screen on both website and kiosk.
+              The hero image is rendered inline at the top of the scroll
+              container so it scrolls naturally with the rest of the content
+              (identical behavior to the website, just sized for kiosk). */}
           {!isMealUpgrade && (
             <motion.div
               ref={sheetRef}
@@ -504,11 +448,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
-              className={`fixed left-0 right-0 bottom-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden ${isKiosk ? "" : "top-0"}`}
+              className="fixed inset-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
               style={{
                 willChange: "transform",
                 touchAction: "pan-y",
-                ...(isKiosk ? { top: `${KIOSK_SHEET_TOP_INITIAL_VH}vh` } : {}),
               }}
               dir="rtl"
             >
@@ -558,10 +501,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     onPointerCancel={onPointerCancel}
                     style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
                   >
-                    {/* Hero image. On website: scrolls inline with content.
-                        On kiosk: rendered as a fixed layer behind the sheet
-                        (above), so we skip the inline copy here. */}
-                    {showHero && !isKiosk && (
+                    {/* Hero image — scrolls inline with content (same on
+                        website and kiosk; only the height differs). */}
+                    {showHero && (
                       <div className="relative w-full overflow-hidden bg-gray-100" style={{ height: heroHeight }}>
                         <img
                           ref={heroImgRef}
