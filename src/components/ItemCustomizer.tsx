@@ -484,15 +484,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 </div>
 
                 {/* Header (close button + title) */}
-                <div className={`flex items-center justify-between px-5 pb-3 ${isKiosk ? "px-8 pb-4" : ""}`}>
+                <div className={`flex items-center justify-between pb-3 ${isKiosk ? "px-8 pb-5" : "px-5"}`}>
                   <button
                     onClick={handleClose}
-                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`}
+                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-16 h-16" : "w-10 h-10"}`}
                   >
-                    <X size={isKiosk ? 28 : 20} />
+                    <X size={isKiosk ? 32 : 20} />
                   </button>
-                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[28px]" : "text-xl"}`}>{item.name}</h2>
-                  <div className={isKiosk ? "w-14" : "w-10"} />
+                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[36px]" : "text-xl"}`}>{item.name}</h2>
+                  <div className={isKiosk ? "w-16" : "w-10"} />
                 </div>
 
               </div>
@@ -594,9 +594,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
                     {isBurger && (
                       <>
-                        <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                        <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-7" : "py-4"}`}>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[22px] mb-5" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
                           <div className="space-y-0">
                             {removalsList.map((r) => {
                               const ingredientUnavailable = getIngredientUnavailable(r.id);
@@ -606,19 +606,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 <button
                                   key={r.id}
                                   onClick={() => !isLocked && toggleRemoval(r.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-5" : "py-3"}`}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-6" : "py-3"}`}
                                 >
                                   <div
-                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-11 h-11" : "w-7 h-7"} ${
                                       active ? "border-primary bg-primary" : "border-gray-300"
                                     }`}
                                   >
-                                    {active && <div className="w-3 h-3 rounded-full bg-white" />}
+                                    {active && <div className={`rounded-full bg-white ${isKiosk ? "w-4 h-4" : "w-3 h-3"}`} />}
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{r.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{r.name}</span>
                                     {isLocked && (
-                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[16px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
+                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
                                     )}
                                   </div>
                                 </button>
@@ -627,9 +627,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           </div>
                         </div>
 
-                        <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[24px] mb-2" : "text-lg"}`}>תוספות בתשלום</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[18px] mb-4" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
+                        <div className={`px-5 ${isKiosk ? "px-8 py-7" : "py-4"}`}>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[22px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
@@ -650,45 +650,45 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 return (
                                   <div
                                     key={t.id}
-                                    className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                    className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-6" : "py-3"}`}
                                   >
                                     {/* Left: stepper + price */}
                                     <div className="flex items-center gap-3">
                                       {cheddarCount > 0 ? (
-                                        <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
+                                        <div className={`flex items-center gap-2 ${isKiosk ? "text-[24px]" : "text-base"}`}>
                                           <button
                                             onClick={removeCheddarSlice}
-                                            className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                                            className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-12 h-12" : "w-8 h-8"}`}
                                             aria-label="הסר פרוסה"
                                           >
-                                            <Minus size={isKiosk ? 18 : 14} />
+                                            <Minus size={isKiosk ? 22 : 14} />
                                           </button>
-                                          <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{cheddarCount}</span>
+                                          <span className={`font-black w-8 text-center ${isKiosk ? "text-[26px]" : "text-base"}`}>{cheddarCount}</span>
                                           <button
                                             onClick={addCheddarSlice}
                                             disabled={cheddarCount >= VEGAN_CHEDDAR_MAX}
-                                            className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                                            className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-12 h-12" : "w-8 h-8"}`}
                                             aria-label="הוסף פרוסה"
                                           >
-                                            <Plus size={isKiosk ? 18 : 14} />
+                                            <Plus size={isKiosk ? 22 : 14} />
                                           </button>
                                         </div>
                                       ) : (
                                         <button
                                           onClick={addCheddarSlice}
-                                          className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
+                                          className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-5 py-3 text-[22px]" : "px-3 py-1.5 text-sm"}`}
                                         >
-                                          <Plus size={isKiosk ? 18 : 14} />
+                                          <Plus size={isKiosk ? 22 : 14} />
                                           הוסף
                                         </button>
                                       )}
-                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
+                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[22px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
                                     </div>
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
-                                      <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
+                                      <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
                                       {showRecommended && (
-                                        <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
+                                        <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-base px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                           🔥 הולך טוב עם המנה
                                         </span>
                                       )}
@@ -701,22 +701,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 <button
                                   key={t.id}
                                   onClick={() => toggleTopping(t.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-6" : "py-3"}`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div
-                                      className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                      className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-11 h-11" : "w-7 h-7"} ${
                                         active ? "border-primary bg-primary" : "border-gray-300"
                                       }`}
                                     >
-                                      {active && <div className="w-3 h-3 rounded-full bg-white" />}
+                                      {active && <div className={`rounded-full bg-white ${isKiosk ? "w-4 h-4" : "w-3 h-3"}`} />}
                                     </div>
-                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[18px]" : "text-sm"}`}>+ ₪{t.price}</span>
+                                    <span className={`text-gray-500 font-medium ${isKiosk ? "text-[22px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[20px]" : "text-base"}`}>{t.name}</span>
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{t.name}</span>
                                     {showRecommended && (
-                                      <span className="text-xs font-bold bg-green-500 text-white px-2 py-1 rounded-full whitespace-nowrap">
+                                      <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-base px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                         🔥 הולך טוב עם המנה
                                       </span>
                                     )}
