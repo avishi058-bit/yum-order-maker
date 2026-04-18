@@ -830,7 +830,70 @@ const Kitchen = () => {
         )}
       </div>
 
-      {/* Availability View */}
+      {/* Escalation settings panel */}
+      {showSettings && (
+        <div className="bg-card border-b border-border px-6 py-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <AlertTriangle size={16} className="text-yellow-400" />
+                הגדרות הסלמה — הזמנות שלא אושרו
+              </h3>
+              <button
+                onClick={() => {
+                  setRedAfter(DEFAULT_RED_AFTER);
+                  setAggressiveAfter(DEFAULT_AGGRESSIVE_AFTER);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                איפוס לברירת מחדל
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-muted/40 rounded-lg p-3">
+                <label className="text-sm font-bold text-orange-400 mb-2 block">
+                  🟧 התראה אדומה אחרי: {redAfter} שניות
+                </label>
+                <input
+                  type="range"
+                  min={15}
+                  max={300}
+                  step={5}
+                  value={redAfter}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value);
+                    setRedAfter(v);
+                    if (v >= aggressiveAfter) setAggressiveAfter(v + 30);
+                  }}
+                  className="w-full accent-orange-500"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  הכרטיס יקבל מסגרת אדומה ובאדג׳ "ממתין"
+                </p>
+              </div>
+              <div className="bg-muted/40 rounded-lg p-3">
+                <label className="text-sm font-bold text-red-500 mb-2 block">
+                  🚨 צלצול אגרסיבי אחרי: {aggressiveAfter} שניות
+                </label>
+                <input
+                  type="range"
+                  min={Math.max(30, redAfter + 10)}
+                  max={600}
+                  step={10}
+                  value={aggressiveAfter}
+                  onChange={(e) => setAggressiveAfter(parseInt(e.target.value))}
+                  className="w-full accent-red-500"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  צלצול חזק כל {AGGRESSIVE_RING_MS / 1000} שניות עד אישור
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
           {availabilityGrouped.map((group) => (
