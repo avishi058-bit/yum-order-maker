@@ -412,10 +412,22 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     .map((line) => {
       const it = line.item;
       const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
-      let html = `<div class="line"><div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
 
-      if (it.removals && it.removals.length > 0) {
-        html += `<div class="sub">— ללא: ${escapeHtml(it.removals.join(", "))}</div>`;
+      // Pull owner-name out of the removals array (set in CheckoutForm).
+      const { ownerName, cleanedRemovals } = extractOwnerName(it.removals);
+
+      let html = `<div class="line">`;
+
+      // Owner-name banner — printed ABOVE the dish so the chef can quickly
+      // see who each item belongs to. Only shown when the customer set it.
+      if (ownerName) {
+        html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
+      }
+
+      html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+
+      if (cleanedRemovals.length > 0) {
+        html += `<div class="sub">— ללא: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
       }
       if (it.toppings && it.toppings.length > 0) {
         html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
