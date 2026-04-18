@@ -12,6 +12,7 @@ import {
   type MenuItem,
 } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { CartItem } from "@/components/CartDrawer";
 
 interface KioskCartDrawerProps {
@@ -53,6 +54,7 @@ const KioskCartDrawer = ({
   onEditItem,
   isKiosk = false,
 }: KioskCartDrawerProps) => {
+  useBodyScrollLock(open);
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);

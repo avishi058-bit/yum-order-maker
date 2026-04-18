@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
 import { toppings, Topping, removals, smashModifications, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 export interface DealBurgerConfig {
   removals: string[];
@@ -50,6 +51,7 @@ interface CartDrawerProps {
 }
 
 const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEditItem, isKiosk = false }: CartDrawerProps) => {
+  useBodyScrollLock(open);
   const getItemTotal = (item: CartItem) => {
     const toppingsCost = item.toppings.reduce((sum, tId) => {
       const t = toppings.find((tp) => tp.id === tId);

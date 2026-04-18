@@ -6,6 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { Banknote, CreditCard } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
@@ -26,6 +27,8 @@ interface CheckoutFormProps {
 }
 
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
+  // Lock background scroll while the checkout modal is mounted (iOS-safe).
+  useBodyScrollLock(true);
   const { customer, isLoggedIn } = useCustomerAuth();
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
