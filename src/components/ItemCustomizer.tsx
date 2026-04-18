@@ -873,6 +873,52 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable }: ItemCustomize
         onConfirm={alcoholConsent.confirm}
         onCancel={alcoholConsent.cancel}
       />
+
+      {/* Gluten-free bun acknowledgement gate */}
+      <AnimatePresence>
+        {glutenConfirmOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+            onClick={() => setGlutenConfirmOpen(false)}
+            dir="rtl"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-card rounded-2xl shadow-2xl w-full ${isKiosk ? "max-w-xl p-8" : "max-w-md p-6"}`}
+            >
+              <h3 className={`font-black text-foreground mb-3 text-right ${isKiosk ? "text-2xl" : "text-xl"}`}>
+                ⚠️ לחמנייה ללא גלוטן
+              </h3>
+              <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
+                המנה מוכנה באזור עם גלוטן ואינה סטרילית ב-100% מגלוטן. ייתכן זיהום צולב.
+              </p>
+              <p className={`text-muted-foreground text-right leading-relaxed mb-5 ${isKiosk ? "text-base" : "text-sm"}`}>
+                הוספת לחמנייה ללא גלוטן בעלות של ₪4.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setGlutenConfirmOpen(false)}
+                  className={`flex-1 rounded-full border border-border bg-background font-bold text-foreground hover:bg-accent transition ${isKiosk ? "py-3 text-base" : "py-2.5 text-sm"}`}
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={confirmGlutenFreeBun}
+                  className={`flex-1 rounded-full bg-primary font-bold text-primary-foreground hover:opacity-90 transition ${isKiosk ? "py-3 text-base" : "py-2.5 text-sm"}`}
+                >
+                  קראתי ואני מאשר
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
