@@ -727,6 +727,12 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   }
   @media print {
     body { width: auto; padding: 1mm 2mm; }
+    /* Make sure SVG QR keeps its black ink when printing — some browsers
+       drop colors on print without these flags. */
+    .phone-qr svg, .phone-qr svg * {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
   }
 </style>
 </head>
@@ -736,7 +742,12 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 
   <div class="customer">
     <div class="name">${escapeHtml(order.customer_name)}</div>
-    <div>${escapeHtml(order.customer_phone)}</div>
+    ${order.customer_phone
+      ? `<div class="phone-row">
+           ${phoneQrSvg ? `<div class="phone-qr">${phoneQrSvg}</div>` : ""}
+           <a href="tel:${escapeHtml(order.customer_phone)}">${escapeHtml(order.customer_phone)}</a>
+         </div>`
+      : ""}
   </div>
 
   ${order.notes ? `<div class="notes">הערה: ${escapeHtml(order.notes)}</div>` : ""}
@@ -744,6 +755,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   ${itemsHtml}
 
   ${summaryHtml}
+
+  ${drinkSummaryHtml}
 
   ${paymentLine}
 
