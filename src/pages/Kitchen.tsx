@@ -1132,6 +1132,54 @@ const Kitchen = () => {
           })}
         </div>
       )}
+
+      {/* Receipt preview modal */}
+      {previewOrder && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+          onClick={() => setPreviewOrder(null)}
+        >
+          <div
+            className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-border">
+              <span className="font-bold text-foreground">תצוגת בון #{previewOrder.order_number}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { printOrder(previewOrder); }}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1"
+                >
+                  <Printer size={14} /> הדפס
+                </button>
+                <button
+                  onClick={() => setPreviewOrder(null)}
+                  className="p-1.5 rounded-lg hover:bg-secondary text-foreground"
+                  aria-label="סגור"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title="receipt-preview"
+              srcDoc={buildReceiptHtml({
+                order_number: previewOrder.order_number,
+                customer_name: previewOrder.customer_name,
+                customer_phone: previewOrder.customer_phone,
+                notes: previewOrder.notes,
+                total: previewOrder.total,
+                created_at: previewOrder.created_at,
+                payment_method: previewOrder.payment_method,
+                order_source: previewOrder.order_source,
+                order_items: previewOrder.order_items,
+              })}
+              className="flex-1 w-full bg-white rounded-b-xl"
+              style={{ minHeight: "60vh" }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
