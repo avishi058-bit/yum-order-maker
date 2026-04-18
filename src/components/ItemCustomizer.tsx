@@ -513,12 +513,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 <div className={`flex items-center justify-between px-5 pb-3 ${isKiosk ? "px-8 pb-4" : ""}`}>
                   <button
                     onClick={handleClose}
-                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`}
+                    className={`rounded-full bg-gray-100 flex items-center justify-center ${isKiosk ? "w-16 h-16" : "w-10 h-10"}`}
                   >
-                    <X size={isKiosk ? 28 : 20} />
+                    <X size={isKiosk ? 32 : 20} />
                   </button>
-                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[28px]" : "text-xl"}`}>{item.name}</h2>
-                  <div className={isKiosk ? "w-14" : "w-10"} />
+                  <h2 className={`font-black flex-1 text-center ${isKiosk ? "text-[34px]" : "text-xl"}`}>{item.name}</h2>
+                  <div className={isKiosk ? "w-16" : "w-10"} />
                 </div>
 
                 {/* Hero image (only on customize step, only if image exists) */}
