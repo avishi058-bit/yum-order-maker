@@ -262,8 +262,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       const sc = scrollRef.current;
       if (sc) sc.scrollTop = 0;
       applyHeroTransform(0);
+      const sheet = sheetRef.current;
+      if (sheet) sheet.style.top = `${initialTopVh}vh`;
     }
-  }, [step, applyHeroTransform]);
+  }, [step, applyHeroTransform, initialTopVh]);
 
   if (!item) return null;
 
