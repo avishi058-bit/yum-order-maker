@@ -285,6 +285,7 @@ export const smashModifications: Removal[] = [
 export const smashBurgerIds = ["smash-moshavnikim", "smash-double-cheese", "crazy-smash"];
 
 export const toppings: Topping[] = [
+  { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן", price: 4 },
   { id: "onion-jam", name: "ריבת בצל של סבתא דינה", price: 9, recommended: true },
   { id: "peanut-butter", name: "חמאת בוטנים", price: 8, recommended: true },
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
