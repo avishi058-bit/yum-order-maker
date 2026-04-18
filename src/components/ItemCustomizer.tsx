@@ -530,7 +530,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       ref={heroImgRef}
                       src={heroImage as string}
                       alt={item.name}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-cover"
                       style={{
                         willChange: "transform, opacity",
                         transformOrigin: "center center",
