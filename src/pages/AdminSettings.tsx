@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSiteSettings, type BusinessHoursMap } from "@/hooks/useSiteSettings";
 import { menuItems } from "@/data/menu";
-import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock } from "lucide-react";
+import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock, Maximize2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
@@ -19,7 +19,9 @@ const AdminSettings = () => {
   const [bannerText, setBannerText] = useState("");
   const [bannerEnabled, setBannerEnabled] = useState(false);
   const [businessHours, setBusinessHours] = useState<BusinessHoursMap>(DEFAULT_HOURS);
-  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours">("fonts");
+  const [kioskModalHeight, setKioskModalHeight] = useState(95);
+  const [websiteModalHeight, setWebsiteModalHeight] = useState(95);
+  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours" | "modal">("fonts");
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,6 +35,8 @@ const AdminSettings = () => {
       setBannerText(settings.banner_text);
       setBannerEnabled(settings.banner_enabled);
       setBusinessHours(settings.business_hours || DEFAULT_HOURS);
+      setKioskModalHeight(settings.kiosk_modal_height_vh ?? 95);
+      setWebsiteModalHeight(settings.website_modal_height_vh ?? 95);
     }
   }, [loading, settings]);
 
@@ -76,6 +80,7 @@ const AdminSettings = () => {
     { id: "colors" as const, label: "צבעים", icon: Palette },
     { id: "banner" as const, label: "באנר", icon: MessageSquare },
     { id: "hours" as const, label: "שעות פעילות", icon: Clock },
+    { id: "modal" as const, label: "גובה חלונית מנה", icon: Maximize2 },
   ];
 
   const orderedItems = menuOrder
@@ -398,6 +403,88 @@ const AdminSettings = () => {
             >
               <Save size={20} />
               שמור שעות פעילות
+            </button>
+          </div>
+        )}
+
+        {activeTab === "modal" && (
+          <div className="max-w-2xl mx-auto space-y-8">
+            <p className="text-muted-foreground text-sm mb-2">
+              שולט על הגובה ההתחלתי של חלונית בחירת התוספות (כשנפתחת לראשונה).
+              גלילה כלפי מעלה תמיד תרחיב את החלונית עד למסך מלא — בדיוק כמו היום.
+            </p>
+
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="flex items-center gap-3 mb-6">
+                <Tablet size={24} className="text-primary" />
+                <h2 className="text-lg font-black">גובה התחלתי — קיוסק</h2>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="100"
+                step="1"
+                value={kioskModalHeight}
+                onChange={(e) => setKioskModalHeight(parseInt(e.target.value))}
+                className="w-full h-3 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                <span>נמוך (50%)</span>
+                <span className="font-black text-primary text-lg">{kioskModalHeight}%</span>
+                <span>מלא (100%)</span>
+              </div>
+              <div className="mt-4 p-4 bg-secondary/50 rounded-xl text-center">
+                <p className="text-muted-foreground text-xs mb-3">תצוגה מקדימה (יחסית למסך):</p>
+                <div className="relative mx-auto w-32 h-48 bg-background border border-border rounded-lg overflow-hidden">
+                  <div
+                    className="absolute inset-x-0 bottom-0 bg-primary/30 border-t-2 border-primary"
+                    style={{ height: `${kioskModalHeight}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <div className="flex items-center gap-3 mb-6">
+                <Monitor size={24} className="text-primary" />
+                <h2 className="text-lg font-black">גובה התחלתי — אתר</h2>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="100"
+                step="1"
+                value={websiteModalHeight}
+                onChange={(e) => setWebsiteModalHeight(parseInt(e.target.value))}
+                className="w-full h-3 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                <span>נמוך (50%)</span>
+                <span className="font-black text-primary text-lg">{websiteModalHeight}%</span>
+                <span>מלא (100%)</span>
+              </div>
+              <div className="mt-4 p-4 bg-secondary/50 rounded-xl text-center">
+                <p className="text-muted-foreground text-xs mb-3">תצוגה מקדימה (יחסית למסך):</p>
+                <div className="relative mx-auto w-32 h-48 bg-background border border-border rounded-lg overflow-hidden">
+                  <div
+                    className="absolute inset-x-0 bottom-0 bg-primary/30 border-t-2 border-primary"
+                    style={{ height: `${websiteModalHeight}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() =>
+                handleSave("גובה חלונית מנה", {
+                  kiosk_modal_height_vh: kioskModalHeight,
+                  website_modal_height_vh: websiteModalHeight,
+                })
+              }
+              className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg flex items-center justify-center gap-2"
+            >
+              <Save size={20} />
+              שמור שינויים
             </button>
           </div>
         )}

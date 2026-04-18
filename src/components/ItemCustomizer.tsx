@@ -6,6 +6,7 @@ import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerI
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export interface ItemCustomizerInitialState {
   quantity: number;
@@ -42,6 +43,10 @@ const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
 const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }: ItemCustomizerProps) => {
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
+  const { settings } = useSiteSettings();
+  // Initial open height (in vh). Scroll still expands sheet to full screen.
+  const initialHeightVh = Math.min(100, Math.max(40, isKiosk ? settings.kiosk_modal_height_vh : settings.website_modal_height_vh));
+  const initialTopVh = 100 - initialHeightVh;
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
   const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
@@ -124,10 +129,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
 
-  // Hero behavior matches the website: image scrolls inline with content.
-  // No transforms applied during scroll.
+  // Sheet expansion: starts at initialTopVh (e.g. 25vh) and shrinks to 0 as
+  // user scrolls — so the sheet grows toward the top of the screen until it
+  // reaches the same full-screen state as before.
+  const SHEET_EXPAND_RANGE = 160; // px of scroll over which to fully expand
   const applyHeroTransform = useCallback((_scrollTop: number) => {}, []);
-  const handleScroll = useCallback(() => {}, []);
+  const handleScroll = useCallback(() => {
+    const sheet = sheetRef.current;
+    const sc = scrollRef.current;
+    if (!sheet || !sc) return;
+    if (initialTopVh <= 0) return;
+    const t = Math.min(1, Math.max(0, sc.scrollTop / SHEET_EXPAND_RANGE));
+    const currentTopVh = initialTopVh * (1 - t);
+    sheet.style.top = `${currentTopVh}vh`;
+  }, [initialTopVh]);
 
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -247,8 +262,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       const sc = scrollRef.current;
       if (sc) sc.scrollTop = 0;
       applyHeroTransform(0);
+      const sheet = sheetRef.current;
+      if (sheet) sheet.style.top = `${initialTopVh}vh`;
     }
-  }, [step, applyHeroTransform]);
+  }, [step, applyHeroTransform, initialTopVh]);
 
   if (!item) return null;
 
@@ -448,10 +465,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
-              className="fixed inset-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
+              className="fixed inset-x-0 bottom-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden"
               style={{
-                willChange: "transform",
+                top: `${initialTopVh}vh`,
+                willChange: "transform, top",
                 touchAction: "pan-y",
+                transition: "top 180ms cubic-bezier(0.4,0,0.2,1)",
               }}
               dir="rtl"
             >
@@ -494,7 +513,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={isKiosk ? handleScroll : undefined}
+                    onScroll={handleScroll}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
