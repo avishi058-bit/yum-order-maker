@@ -27,14 +27,21 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useSavedCart } from "@/hooks/useSavedCart";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import ReopenNotifyModal from "@/components/ReopenNotifyModal";
+import { useBusinessHours } from "@/hooks/useBusinessHours";
+import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
+  const { status: businessStatus } = useBusinessHours();
   const { isLoggedIn, customer } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
+  // Manual closure = admin closed website while business hours say we should be open
+  const isManualClosure = !isStation && isClosed && businessStatus.isOpen;
+  const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
