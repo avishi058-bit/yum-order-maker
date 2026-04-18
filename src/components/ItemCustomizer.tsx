@@ -134,21 +134,32 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const showHero = !!heroImage && step === "customize";
 
   // Apply hero transform from scrollTop — direct DOM, no setState.
-  // Wolt-style: hero shrinks in real height (so content fills the gap and the
-  // sticky header stays at the very top), while the image inside parallaxes & fades.
+  // Behavior:
+  //  - Kiosk: hero stays FIXED in size (no shrink) and the scrolling content
+  //    slides up over it. Image only fades slightly so the burger stays
+  //    fully visible until covered. This avoids the "tiny image while
+  //    scrolling" effect the user reported.
+  //  - Web/mobile: keep the original Wolt-style collapse (height shrinks +
+  //    parallax fade) so on small screens you actually reclaim space.
   const applyHeroTransform = useCallback((scrollTop: number) => {
     const hero = heroRef.current;
     const img = heroImgRef.current;
     if (!hero || !img) return;
-    // Re-read live admin value each frame-init so slider edits show up
-    // without remounting the component. Cheap: one getComputedStyle.
     const baseHeight = isKiosk ? readKioskHeroHeight() : HERO_HEIGHT;
     const clamped = Math.max(0, Math.min(scrollTop, HERO_FADE_DISTANCE));
     const t = clamped / HERO_FADE_DISTANCE;       // 0 → 1
-    // Collapse the hero container height (cheap on a single element).
+
+    if (isKiosk) {
+      // Hero stays full-size; content covers it as it scrolls up.
+      hero.style.height = `${baseHeight}px`;
+      img.style.transform = "translate3d(0, 0, 0)";
+      img.style.opacity = "1";
+      return;
+    }
+
+    // Web: collapse + parallax fade (original behavior).
     const newHeight = baseHeight * (1 - t);
     hero.style.height = `${newHeight}px`;
-    // Image: gentle parallax + fade. Opacity nukes paint cost when hidden.
     const translateY = -clamped * 0.35;
     const opacity = 1 - t;
     img.style.transform = `translate3d(0, ${translateY}px, 0)`;
@@ -526,17 +537,22 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   <div
                     ref={heroRef}
                     data-kiosk-hero={isKiosk ? "true" : undefined}
-                    className={`relative w-full overflow-hidden ${isKiosk ? "bg-gradient-to-b from-gray-900 to-gray-800" : "bg-gray-100"}`}
+                    className="relative w-full overflow-hidden bg-gray-100"
                     style={{ height: heroHeight }}
                   >
                     <img
                       ref={heroImgRef}
                       src={heroImage as string}
                       alt={item.name}
-                      className={`w-full h-full ${isKiosk ? "object-contain" : "object-cover"}`}
+                      className="w-full h-full object-cover"
                       style={{
                         willChange: "transform, opacity",
                         transformOrigin: "center center",
+                        // Center the burger horizontally and slightly above
+                        // vertical center so the bun + patty are the focal
+                        // point (kiosk hero is tall — pure top would crop the
+                        // top of the bun, pure center hides patty detail).
+                        objectPosition: isKiosk ? "center 35%" : "center",
                         transform: isKiosk ? "scale(var(--kiosk-image-scale, 1))" : undefined,
                       }}
                       draggable={false}
