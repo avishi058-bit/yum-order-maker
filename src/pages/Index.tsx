@@ -63,13 +63,6 @@ const Index = () => {
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
-  // Register the floating cart button as the fly-to-cart target whenever it
-  // mounts (it only renders once items are in the cart).
-  useEffect(() => {
-    registerCartTarget(cartButtonRef.current);
-    return () => registerCartTarget(null);
-  }, [registerCartTarget, totalItems > 0]);
-
   /** Fire a fly-to-cart from screen center (used after modal confirm). */
   const flyFromCenter = useCallback(() => {
     const sourceRect = new DOMRect(
