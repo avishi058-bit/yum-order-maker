@@ -944,28 +944,47 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                  className="bg-primary text-primary-foreground w-full max-w-md rounded-3xl shadow-2xl p-8 pointer-events-auto"
+                  className={`w-full max-w-md rounded-3xl shadow-2xl p-8 pointer-events-auto ${
+                    isKiosk ? "bg-primary text-primary-foreground" : "bg-background text-foreground"
+                  }`}
                   dir="rtl"
-                  style={{ willChange: "transform, opacity", boxShadow: "0 25px 60px -10px hsl(var(--primary) / 0.6)" }}
+                  style={{
+                    willChange: "transform, opacity",
+                    boxShadow: isKiosk
+                      ? "0 25px 60px -10px hsl(var(--primary) / 0.6)"
+                      : "0 25px 60px -10px hsl(var(--foreground) / 0.25)",
+                  }}
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-primary-foreground/15 flex items-center justify-center mb-6">
-                      <Utensils size={36} className="text-primary-foreground" />
+                    <div
+                      className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+                        isKiosk ? "bg-primary-foreground/15" : "bg-primary/10"
+                      }`}
+                    >
+                      <Utensils size={36} className={isKiosk ? "text-primary-foreground" : "text-primary"} />
                     </div>
                     <h3 className={`font-black mb-3 ${isKiosk ? "text-[26px]" : "text-xl"}`}>לשדרג לארוחה עסקית?</h3>
-                    <p className={`font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"}`}>+₪{mealUpgrade.price}</p>
+                    <p className={`font-black mb-1 ${isKiosk ? "text-[22px]" : "text-lg"} ${isKiosk ? "" : "text-primary"}`}>+₪{mealUpgrade.price}</p>
                     <p className={`opacity-80 mb-8 ${isKiosk ? "text-[18px]" : "text-sm"}`}>המבורגר + צ׳יפס + שתייה</p>
 
                     <div className="w-full space-y-3">
                       <button
                         onClick={() => goToSideSelect()}
-                        className={`w-full bg-primary-foreground text-primary font-black rounded-xl shadow-lg active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                        className={`w-full font-black rounded-xl shadow-lg active:scale-[0.98] transition-transform ${
+                          isKiosk
+                            ? "bg-primary-foreground text-primary py-5 text-[22px]"
+                            : "bg-primary text-primary-foreground py-4 text-lg"
+                        }`}
                       >
                         שדרגו לי! 🍟🥤
                       </button>
                       <button
                         onClick={() => handleFinish(false)}
-                        className={`w-full bg-primary-foreground/15 text-primary-foreground font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[20px]" : "py-4 text-base"}`}
+                        className={`w-full font-bold rounded-xl active:scale-[0.98] transition-transform ${
+                          isKiosk
+                            ? "bg-primary-foreground/15 text-primary-foreground py-5 text-[20px]"
+                            : "bg-muted text-foreground py-4 text-base"
+                        }`}
                       >
                         לא תודה
                       </button>
