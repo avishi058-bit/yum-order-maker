@@ -576,14 +576,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         {!ownerNameEnabled ? (
                           <button
                             type="button"
-                            onClick={() => setOwnerNameEnabled(true)}
+                            onClick={() => {
+                              flushSync(() => setOwnerNameEnabled(true));
+                              ownerInputRef.current?.focus();
+                            }}
                             className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform flex flex-col items-center justify-center gap-1 ${isKiosk ? "py-5 px-4" : "py-4 px-3"}`}
                           >
                             <span className={`flex items-center gap-2 ${isKiosk ? "text-[22px]" : "text-lg"}`}>
                               <span>לחץ כדי להוסיף שם למנה</span>
                               <span>✍🏼</span>
                             </span>
-                            <span className={`text-destructive font-bold ${isKiosk ? "text-[16px]" : "text-xs"}`}>
+                            <span className={`text-black font-black ${isKiosk ? "text-[16px]" : "text-xs"}`}>
                               (רלוונטי למי שמזמין יותר ממנה אחת)
                             </span>
                           </button>
@@ -603,6 +606,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               </button>
                             </div>
                             <input
+                              ref={ownerInputRef}
                               type="text"
                               value={ownerName}
                               onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
