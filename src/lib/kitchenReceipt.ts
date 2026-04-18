@@ -401,7 +401,7 @@ const orderTypeLabel = (source: string): string => {
   return "איסוף עצמי";
 };
 
-export function buildReceiptHtml(order: ReceiptOrder): string {
+export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const merged = mergeItems(order.order_items);
   const summary = computeChefSummary(order.order_items);
   const isCash = order.payment_method === "cash";
@@ -410,6 +410,24 @@ export function buildReceiptHtml(order: ReceiptOrder): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // Generate a small `tel:` QR next to the phone number — kitchen staff /
+  // delivery riders can scan it to call the customer instantly.
+  // Inline SVG so it travels with the receipt HTML and prints reliably
+  // (no external image fetch, no canvas color-conversion surprises).
+  let phoneQrSvg = "";
+  if (order.customer_phone) {
+    try {
+      phoneQrSvg = await QRCode.toString(`tel:${order.customer_phone}`, {
+        type: "svg",
+        margin: 0,
+        errorCorrectionLevel: "M",
+        color: { dark: "#000000", light: "#ffffff" },
+      });
+    } catch (e) {
+      console.warn("[receipt] QR generation failed", e);
+    }
+  }
 
   const itemsHtml = merged
     .map((line) => {
