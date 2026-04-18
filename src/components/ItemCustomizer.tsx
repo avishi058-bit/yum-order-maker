@@ -576,11 +576,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         {!ownerNameEnabled && (
                           <button
                             type="button"
-                            onClick={() => {
-                              // Focus input FIRST while we're still inside the
-                              // user gesture — required on iOS/Safari for the
-                              // on-screen keyboard to open. Then reveal it.
-                              ownerInputRef.current?.focus();
+                            // onPointerDown fires earlier in the touch lifecycle
+                            // than onClick — gives Safari/iOS the user-gesture
+                            // window it needs to allow programmatic .focus()
+                            // to open the on-screen keyboard.
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              const el = ownerInputRef.current;
+                              if (el) {
+                                el.focus({ preventScroll: true } as any);
+                                // Some Android/Chromium kiosks need a click too
+                                try { el.click(); } catch {}
+                              }
                               setOwnerNameEnabled(true);
                             }}
                             className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform flex flex-col items-center justify-center gap-1 ${isKiosk ? "py-5 px-4" : "py-4 px-3"}`}
@@ -611,9 +618,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                             </div>
                           </div>
                         )}
-                        {/* Input is ALWAYS mounted so iOS/Safari allows
-                            programmatic focus() inside the click gesture.
-                            When disabled, we keep it offscreen but focusable. */}
+                        {/* Input is ALWAYS mounted and visible (clipped when
+                            disabled). iOS Safari refuses programmatic focus
+                            on display:none/opacity:0/visibility:hidden inputs
+                            — clip-path keeps it 'visible' to the engine. */}
                         <input
                           ref={ownerInputRef}
                           type="text"
@@ -636,16 +644,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               ? { fontSize: "16px" }
                               : {
                                   position: "absolute",
-                                  opacity: 0,
-                                  pointerEvents: "none",
-                                  height: 1,
                                   width: 1,
+                                  height: 1,
+                                  padding: 0,
+                                  margin: 0,
+                                  border: 0,
+                                  clipPath: "inset(50%)",
+                                  whiteSpace: "nowrap",
                                   fontSize: "16px",
                                 }
                           }
                           className={
                             ownerNameEnabled
-                              ? `mt-2 w-[calc(100%-2.5rem)] mx-5 bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors block`
+                              ? `mt-2 w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors block`
                               : ""
                           }
                         />
