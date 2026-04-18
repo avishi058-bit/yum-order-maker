@@ -95,7 +95,7 @@ export const useBusinessHours = () => {
   }, []);
 
   const hours: BusinessHours = useMemo(() => {
-    const raw = (settings as any).business_hours as BusinessHours | undefined;
+    const raw = settings.business_hours as BusinessHours | undefined;
     if (raw && typeof raw === "object") {
       const merged: BusinessHours = { ...DEFAULT_HOURS };
       for (const k of Object.keys(DEFAULT_HOURS)) {

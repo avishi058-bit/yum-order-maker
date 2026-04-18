@@ -255,6 +255,9 @@ const Index = () => {
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
 
+      {/* Business hours status bar — sticky, public-facing only */}
+      {!isStation && <BusinessStatusBar />}
+
       {/* Customer greeting / login bar */}
       {!isStation && (
         <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border" dir="rtl">
