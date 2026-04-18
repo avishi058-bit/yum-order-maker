@@ -14,6 +14,7 @@ import SauceSelector from "@/components/SauceSelector";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import ItemPreview from "@/components/ItemPreview";
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
+import BusinessStatusBar from "@/components/BusinessStatusBar";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
 import CustomerAuthModal from "@/components/CustomerAuthModal";
@@ -253,6 +254,9 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
+
+      {/* Business hours status bar — sticky, public-facing only */}
+      {!isStation && <BusinessStatusBar />}
 
       {/* Customer greeting / login bar */}
       {!isStation && (
