@@ -483,6 +483,9 @@ const Kiosk = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* On-screen keyboard for kiosk — auto shows on input focus */}
+      <KioskKeyboard />
     </div>
   );
 };
