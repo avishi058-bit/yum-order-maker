@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { Banknote, CreditCard } from "lucide-react";
+import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
+import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 
 export interface CheckoutSauce {
   id: string;
@@ -38,7 +39,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
@@ -46,14 +47,25 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
-  // Auto-fill from customer auth and skip to details/payment
+  // ─── Temporary soft-launch flow ───────────────────────────────────────────
+  // Kiosk: never collect a phone number → start at the details step.
+  // Website: skip OTP entirely → start at details (still collect phone there).
+  // Logged-in customers always skip straight to details (existing behavior).
   useEffect(() => {
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
       setStep("details");
+      return;
     }
-  }, [isLoggedIn, customer]);
+    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) {
+      setStep("details");
+      return;
+    }
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) {
+      setStep("details");
+    }
+  }, [isLoggedIn, customer, isKiosk]);
 
   const handleSendOtp = async () => {
     if (!form.phone || form.phone.replace(/[-\s]/g, '').length < 9) {
