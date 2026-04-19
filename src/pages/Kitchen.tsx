@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt, buildReceiptHtml } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary } from "@/lib/kitchenReceipt";
 
 interface OrderItem {
   id: string;
@@ -228,6 +228,7 @@ const Kitchen = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [showRoundSummary, setShowRoundSummary] = useState(false);
 
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
