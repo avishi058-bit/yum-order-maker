@@ -144,14 +144,23 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name) {
+    if (!form.name.trim()) {
       toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
       return;
+    }
+    // Website (no logged-in user, OTP skipped) → phone is required.
+    // Kiosk → phone field is hidden, no validation.
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && !isLoggedIn) {
+      const cleaned = form.phone.replace(/[-\s]/g, "");
+      if (cleaned.length < 9) {
+        toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+        return;
+      }
     }
     setStep("payment");
   };
 
-  const handlePaymentSelect = async (method: "cash" | "credit") => {
+  const handlePaymentSelect = async (method: "cash" | "credit" | "counter") => {
     // Guard against double-clicks while a previous submission is in flight
     if (submitting) return;
     // Hard gate: terms + privacy must be accepted before any payment can proceed
@@ -169,7 +178,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       return;
     }
 
-    // Cash - submit order
+    // Cash or counter — submit order immediately (no online payment).
     await submitOrder(method);
   };
 
@@ -214,7 +223,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     };
   };
 
-  const callCreateOrder = async (paymentMethod: "cash" | "credit", status: "new" | "pending_payment") => {
+  const callCreateOrder = async (paymentMethod: "cash" | "credit" | "counter", status: "new" | "pending_payment") => {
     const isStation = localStorage.getItem("habakta_station") === "true";
     const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
@@ -226,7 +235,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     const { data, error } = await supabase.functions.invoke("create-order", {
       body: {
         customerName: form.name,
-        customerPhone: form.phone,
+        // Kiosk skip-phone flow: send empty string; server normalizes to placeholder.
+        customerPhone: (isKioskPath && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) ? "" : form.phone,
         notes: form.notes || null,
         paymentMethod,
         orderSource,
@@ -382,7 +392,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
   };
 
-  const submitOrder = async (method: "cash" | "credit") => {
+  const submitOrder = async (method: "cash" | "credit" | "counter") => {
     setSubmitting(true);
     try {
       const order = await callCreateOrder(method, "new");
