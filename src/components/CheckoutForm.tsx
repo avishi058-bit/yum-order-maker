@@ -32,39 +32,57 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
   const { customer, isLoggedIn } = useCustomerAuth();
-  const [form, setForm] = useState({ name: "", phone: "", notes: "" });
-  const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">("phone");
+  // Kiosk context → larger touch-friendly checkbox + modal
+  const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
+
+  // ─── Temporary soft-launch flow ───────────────────────────────────────────
+  // Kiosk: never collect phone (KIOSK_SKIP_PHONE) → start at details.
+  // Website: skip OTP entirely (WEBSITE_SKIP_OTP) → start at details (phone still required there).
+  // Logged-in customers always skip straight to details.
+  // IMPORTANT: compute initial step synchronously so the OTP modal NEVER
+  // flashes on first render in the kiosk.
+  const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
+    if (isLoggedIn && customer) return "details";
+    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) return "details";
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) return "details";
+    return "phone";
+  };
+
+  const [form, setForm] = useState({
+    name: isLoggedIn && customer ? customer.name : "",
+    phone: isLoggedIn && customer ? customer.phone : "",
+    notes: "",
+  });
+  const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [customerName, setCustomerName] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState<string | null>(
+    isLoggedIn && customer ? customer.name : null
+  );
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const { status: restaurantStatus } = useRestaurantStatus();
-  // Kiosk context → larger touch-friendly checkbox + modal
-  const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
-  // ─── Temporary soft-launch flow ───────────────────────────────────────────
-  // Kiosk: never collect a phone number → start at the details step.
-  // Website: skip OTP entirely → start at details (still collect phone there).
-  // Logged-in customers always skip straight to details (existing behavior).
+  // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
+      if (step === "phone" || step === "otp") setStep("details");
+      return;
+    }
+    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE && (step === "phone" || step === "otp")) {
       setStep("details");
       return;
     }
-    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) {
-      setStep("details");
-      return;
-    }
-    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) {
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && step === "otp") {
       setStep("details");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, customer, isKiosk]);
 
   const handleSendOtp = async () => {
