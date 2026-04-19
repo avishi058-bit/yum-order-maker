@@ -23,7 +23,7 @@ const AdminSettings = () => {
   const [bannerText, setBannerText] = useState("");
   const [bannerEnabled, setBannerEnabled] = useState(false);
   const [businessHours, setBusinessHours] = useState<BusinessHoursMap>(DEFAULT_HOURS);
-  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours" | "kiosk">("fonts");
+  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours">("fonts");
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,7 +75,6 @@ const AdminSettings = () => {
 
   const tabs = [
     { id: "fonts" as const, label: "גודל כתב", icon: Type },
-    { id: "kiosk" as const, label: "קיוסק", icon: Sliders },
     { id: "menu" as const, label: "שמות מנות", icon: Monitor },
     { id: "order" as const, label: "סדר מנות", icon: GripVertical },
     { id: "colors" as const, label: "צבעים", icon: Palette },
@@ -122,7 +121,7 @@ const AdminSettings = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {activeTab === "kiosk" && <KioskSettingsTab />}
+        {/* טאב הקיוסק הוסתר זמנית — ההגדרות שמורות במסד הנתונים ולא השתנו. */}
 
         {activeTab === "fonts" && (
           <div className="max-w-2xl mx-auto space-y-8">
