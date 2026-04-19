@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSiteSettings, type BusinessHoursMap } from "@/hooks/useSiteSettings";
 import { menuItems } from "@/data/menu";
-import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock, Sliders } from "lucide-react";
+import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
-import KioskSettingsTab from "@/components/admin/KioskSettingsTab";
+// NOTE: טאב הקיוסק הוסתר זמנית כדי למנוע שינוי בטעות.
+// כדי להחזיר: ייבא בחזרה את KioskSettingsTab, הוסף "kiosk" ל-activeTab type,
+// הוסף את הטאב ל-tabs ואת הבלוק {activeTab === "kiosk" && <KioskSettingsTab />}.
+// import KioskSettingsTab from "@/components/admin/KioskSettingsTab";
 
 const AdminSettings = () => {
   const { settings, loading, updateSettings } = useSiteSettings();
