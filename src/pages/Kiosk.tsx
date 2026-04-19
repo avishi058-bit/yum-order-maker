@@ -52,6 +52,7 @@ const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: 
   );
 };
 import ItemPreview from "@/components/ItemPreview";
+import KioskKeyboard from "@/components/KioskKeyboard";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -482,6 +483,9 @@ const Kiosk = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* On-screen keyboard for kiosk — auto shows on input focus */}
+      <KioskKeyboard />
     </div>
   );
 };
