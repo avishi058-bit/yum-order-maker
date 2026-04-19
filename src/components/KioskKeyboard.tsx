@@ -176,89 +176,84 @@ const KioskKeyboard = () => {
           transition={{ type: "spring", damping: 28, stiffness: 280 }}
           onPointerDown={handlePointerDown}
           dir="rtl"
-          className="fixed bottom-0 left-0 right-0 z-[10000] bg-card/95 backdrop-blur-md border-t-2 border-border shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          className="fixed left-0 right-0 z-[10000] bg-[#d1d5db] border-t border-black/10 shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
+          style={{
+            bottom: "10vh",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          }}
           role="dialog"
           aria-label="מקלדת"
         >
-          {/* Top bar */}
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onPointerDown={handlePointerDown}
-                onClick={() => setLayout("hebrew")}
-                className={`px-4 py-2 rounded-lg text-base font-bold transition-colors ${
-                  layout === "hebrew" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                }`}
-              >
-                א-ב
-              </button>
-              <button
-                type="button"
-                onPointerDown={handlePointerDown}
-                onClick={() => setLayout("numeric")}
-                className={`px-4 py-2 rounded-lg text-base font-bold transition-colors ${
-                  layout === "numeric" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                }`}
-              >
-                123
-              </button>
-            </div>
-            <button
-              type="button"
-              onPointerDown={handlePointerDown}
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-muted text-foreground flex items-center gap-1 text-sm font-bold"
-              aria-label="סגור מקלדת"
-            >
-              <ArrowDown size={18} /> סגור
-            </button>
-          </div>
-
           {/* Keys */}
-          <div className="px-2 py-3 space-y-2">
-            {rows.map((row, i) => (
-              <div key={i} className="flex gap-1.5 justify-center">
-                {row.map((k, j) =>
-                  k === "" ? (
-                    <div key={j} className="flex-1" />
-                  ) : (
+          <div className="px-1.5 pt-2 pb-1.5 space-y-1.5">
+            {rows.map((row, i) => {
+              const isLastHebrewRow = layout === "hebrew" && i === rows.length - 1;
+              return (
+                <div key={i} className="flex gap-1 justify-center items-center">
+                  {/* Last Hebrew row gets backspace at the LEFT (visually) */}
+                  {row.map((k, j) =>
+                    k === "" ? (
+                      <div key={j} className="flex-1" />
+                    ) : (
+                      <button
+                        key={j}
+                        type="button"
+                        onPointerDown={handlePointerDown}
+                        onClick={() => press(k)}
+                        className="flex-1 min-w-0 h-12 rounded-md bg-white text-3xl font-normal text-black active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
+                        style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
+                      >
+                        {k}
+                      </button>
+                    )
+                  )}
+                  {/* First row: backspace at the LEFT (end in RTL) */}
+                  {i === 0 && (
                     <button
-                      key={j}
                       type="button"
                       onPointerDown={handlePointerDown}
-                      onClick={() => press(k)}
-                      className="flex-1 min-w-[7%] h-14 rounded-lg bg-background border border-border text-2xl font-bold text-foreground active:bg-primary/20 active:scale-95 transition-transform shadow-sm"
+                      onClick={onBackspace}
+                      className="h-12 px-3 rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                      style={{ minWidth: "44px" }}
+                      aria-label="מחק"
                     >
-                      {k}
+                      <Delete size={22} strokeWidth={2.2} />
                     </button>
-                  )
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
 
-            {/* Bottom utility row */}
-            <div className="flex gap-1.5 justify-center pt-1">
-              {layout === "hebrew" && (
-                <button
-                  type="button"
-                  onPointerDown={handlePointerDown}
-                  onClick={onSpace}
-                  className="flex-[6] h-14 rounded-lg bg-background border border-border text-base font-bold text-foreground active:bg-primary/20 active:scale-95 transition-transform shadow-sm flex items-center justify-center gap-2"
-                  aria-label="רווח"
-                >
-                  <Space size={20} /> רווח
-                </button>
-              )}
+            {/* Bottom utility row — like iOS */}
+            <div className="flex gap-1 justify-center items-center">
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
-                onClick={onBackspace}
-                className="flex-[2] h-14 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-base font-bold active:bg-destructive/20 active:scale-95 transition-transform shadow-sm flex items-center justify-center gap-2"
-                aria-label="מחק"
+                onClick={() => setLayout(layout === "hebrew" ? "numeric" : "hebrew")}
+                className="h-12 px-3 rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                style={{ minWidth: "60px" }}
               >
-                <Delete size={22} />
+                {layout === "hebrew" ? "123" : "א-ב"}
+              </button>
+              <button
+                type="button"
+                onPointerDown={handlePointerDown}
+                onClick={onSpace}
+                className="flex-1 h-12 rounded-md bg-white text-black text-base font-normal active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
+                style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
+                aria-label="רווח"
+              >
+                רווח
+              </button>
+              <button
+                type="button"
+                onPointerDown={handlePointerDown}
+                onClick={onClose}
+                className="h-12 px-3 rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                style={{ minWidth: "60px" }}
+                aria-label="סגור מקלדת"
+              >
+                <ArrowDown size={20} strokeWidth={2.2} />
               </button>
             </div>
           </div>
