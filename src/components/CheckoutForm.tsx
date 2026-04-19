@@ -582,6 +582,24 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
+              {/* Website (no logged-in user) → phone field shown here when OTP is bypassed.
+                  Kiosk → phone is never collected. */}
+              {!isKiosk && !isLoggedIn && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    מספר טלפון <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    placeholder="050-1234567"
+                    dir="ltr"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1">הערות</label>
                 <textarea
