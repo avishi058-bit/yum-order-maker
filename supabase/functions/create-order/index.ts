@@ -187,9 +187,11 @@ const SauceSchema = z.object({
 
 const BodySchema = z.object({
   customerName: z.string().trim().min(1).max(120),
-  customerPhone: z.string().trim().min(7).max(30),
+  // Phone may be empty during the temporary kiosk/no-phone flow.
+  // Empty strings are normalized to a placeholder before insert.
+  customerPhone: z.string().trim().max(30).optional().default(""),
   notes: z.string().max(500).optional().nullable(),
-  paymentMethod: z.enum(["cash", "credit"]),
+  paymentMethod: z.enum(["cash", "credit", "counter"]),
   orderSource: z.enum(["website", "kiosk", "station"]).default("website"),
   status: z.enum(["new", "pending_payment"]).default("new"),
   // Required: legal proof that the customer accepted Terms + Privacy at order time.
@@ -361,6 +363,9 @@ Deno.serve(async (req: Request) => {
   if (body.paymentMethod === "credit" && !status.credit_enabled) {
     return jsonResponse({ error: "תשלום באשראי אינו זמין כרגע" }, 403);
   }
+  // "counter" = pay-at-counter (cash or card paid physically at the location).
+  // Always allowed regardless of cash/credit toggles, since payment happens
+  // in-person and is not gated by online payment availability.
 
   // Admin price overrides
   let overrides: Record<string, { price?: number }> = {};
@@ -404,18 +409,27 @@ Deno.serve(async (req: Request) => {
   const extraSauces = Math.max(0, totalSauceQty - body.freeSauces);
   const finalTotal = Math.round((pricing.total + extraSauces) * 100) / 100;
 
-  // Upsert customer (best-effort)
-  const { error: custErr } = await supabase
-    .from("customers")
-    .upsert({ phone: body.customerPhone, name: body.customerName }, { onConflict: "phone" });
-  if (custErr) console.warn("customer upsert non-fatal", custErr);
+  // Normalize phone: kiosk no-phone flow sends "" — store a placeholder so
+  // the NOT NULL column on `orders.customer_phone` stays satisfied without
+  // polluting the customers table.
+  const phoneForOrder = body.customerPhone && body.customerPhone.length >= 7
+    ? body.customerPhone
+    : "—";
+
+  // Upsert customer only when we have a real phone number
+  if (body.customerPhone && body.customerPhone.length >= 7) {
+    const { error: custErr } = await supabase
+      .from("customers")
+      .upsert({ phone: body.customerPhone, name: body.customerName }, { onConflict: "phone" });
+    if (custErr) console.warn("customer upsert non-fatal", custErr);
+  }
 
   // Insert order
   const { data: order, error: orderErr } = await supabase
     .from("orders")
     .insert({
       customer_name: body.customerName,
-      customer_phone: body.customerPhone,
+      customer_phone: phoneForOrder,
       notes: body.notes || null,
       total: finalTotal,
       status: body.status,
