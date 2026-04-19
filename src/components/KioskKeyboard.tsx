@@ -16,6 +16,8 @@ import { Delete, ArrowDown, Space } from "lucide-react";
 
 type Layout = "hebrew" | "numeric";
 
+// Letters in VISUAL order, right-to-left as shown in iOS Hebrew keyboard.
+// Index 0 = rightmost key on screen. Container uses LTR so array index = visual position from the right.
 const HEBREW_ROWS: string[][] = [
   ["ק", "ר", "א", "ט", "ו", "ן", "ם", "פ"],
   ["ש", "ד", "ג", "כ", "ע", "י", "ח", "ל", "ך", "ף"],
@@ -175,85 +177,96 @@ const KioskKeyboard = () => {
           exit={{ y: "100%" }}
           transition={{ type: "spring", damping: 28, stiffness: 280 }}
           onPointerDown={handlePointerDown}
-          dir="rtl"
-          className="fixed left-0 right-0 z-[10000] bg-[#d1d5db] border-t border-black/10 shadow-[0_-8px_30px_rgba(0,0,0,0.25)]"
+          dir="ltr"
+          className="fixed bottom-0 left-0 right-0 z-[10000] bg-[#d1d5db] border-t border-black/10 shadow-[0_-8px_30px_rgba(0,0,0,0.25)] flex flex-col"
           style={{
-            bottom: "10vh",
+            height: "45vh",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
           role="dialog"
           aria-label="מקלדת"
         >
-          {/* Keys */}
-          <div className="px-1.5 pt-2 pb-1.5 space-y-1.5">
-            {rows.map((row, i) => {
-              const isLastHebrewRow = layout === "hebrew" && i === rows.length - 1;
-              return (
-                <div key={i} className="flex gap-1 justify-center items-center">
-                  {/* Last Hebrew row gets backspace at the LEFT (visually) */}
-                  {row.map((k, j) =>
-                    k === "" ? (
-                      <div key={j} className="flex-1" />
-                    ) : (
-                      <button
-                        key={j}
-                        type="button"
-                        onPointerDown={handlePointerDown}
-                        onClick={() => press(k)}
-                        className="flex-1 min-w-0 h-12 rounded-md bg-white text-3xl font-normal text-black active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
-                        style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
-                      >
-                        {k}
-                      </button>
-                    )
-                  )}
-                  {/* First row: backspace at the LEFT (end in RTL) */}
-                  {i === 0 && (
-                    <button
-                      type="button"
-                      onPointerDown={handlePointerDown}
-                      onClick={onBackspace}
-                      className="h-12 px-3 rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
-                      style={{ minWidth: "44px" }}
-                      aria-label="מחק"
-                    >
-                      <Delete size={22} strokeWidth={2.2} />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+          {/* Keys area — flex column that fills available height */}
+          <div className="flex-1 flex flex-col justify-around px-1.5 py-2 gap-1.5">
+            {/* Row 1: ק ר א ט ו ן ם פ ⌫  (right-to-left) */}
+            {/* We use flex-row-reverse so array index 0 (ק) appears on the RIGHT */}
+            <div className="flex-1 flex flex-row-reverse gap-1 items-stretch">
+              {rows[0].map((k, j) => (
+                <button
+                  key={j}
+                  type="button"
+                  onPointerDown={handlePointerDown}
+                  onClick={() => press(k)}
+                  className="flex-1 min-w-0 rounded-md bg-white text-3xl font-normal text-black active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
+                  style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
+                >
+                  {k}
+                </button>
+              ))}
+              {/* Backspace at the LEFT end of row 1 */}
+              <button
+                type="button"
+                onPointerDown={handlePointerDown}
+                onClick={onBackspace}
+                className="rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                style={{ minWidth: "9%", flex: "0 0 auto", padding: "0 12px" }}
+                aria-label="מחק"
+              >
+                <Delete size={26} strokeWidth={2.2} />
+              </button>
+            </div>
 
-            {/* Bottom utility row — like iOS */}
-            <div className="flex gap-1 justify-center items-center">
+            {/* Rows 2 and 3 — letters only */}
+            {rows.slice(1).map((row, i) => (
+              <div key={i + 1} className="flex-1 flex flex-row-reverse gap-1 items-stretch">
+                {row.map((k, j) => (
+                  <button
+                    key={j}
+                    type="button"
+                    onPointerDown={handlePointerDown}
+                    onClick={() => press(k)}
+                    className="flex-1 min-w-0 rounded-md bg-white text-3xl font-normal text-black active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
+                    style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
+                  >
+                    {k}
+                  </button>
+                ))}
+              </div>
+            ))}
+
+            {/* Bottom utility row (visually RTL): close | space | 123 → using row-reverse */}
+            <div className="flex-1 flex flex-row-reverse gap-1 items-stretch">
+              {/* 123 — rightmost */}
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
                 onClick={() => setLayout(layout === "hebrew" ? "numeric" : "hebrew")}
-                className="h-12 px-3 rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
-                style={{ minWidth: "60px" }}
+                className="rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
               >
                 {layout === "hebrew" ? "123" : "א-ב"}
               </button>
+              {/* Space — center, takes the rest */}
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
                 onClick={onSpace}
-                className="flex-1 h-12 rounded-md bg-white text-black text-base font-normal active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
+                className="flex-1 rounded-md bg-white text-black text-base font-normal active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
                 style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
                 aria-label="רווח"
               >
                 רווח
               </button>
+              {/* Close — leftmost */}
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
                 onClick={onClose}
-                className="h-12 px-3 rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
-                style={{ minWidth: "60px" }}
+                className="rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
                 aria-label="סגור מקלדת"
               >
-                <ArrowDown size={20} strokeWidth={2.2} />
+                <ArrowDown size={22} strokeWidth={2.2} />
               </button>
             </div>
           </div>
