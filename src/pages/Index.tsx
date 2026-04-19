@@ -33,6 +33,7 @@ import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
@@ -482,6 +483,14 @@ const Index = () => {
                 const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
                 setTrackedOrder(trackedOrder);
                 window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
+                // Soft-launch reassurance: tell the customer they can track the
+                // order from the top bar at any time, even after leaving the site.
+                toast({
+                  title: "ההזמנה התקבלה בהצלחה 🎉",
+                  description:
+                    "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
+                  duration: 10000,
+                });
               }
             }}
           />
