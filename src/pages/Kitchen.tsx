@@ -587,6 +587,17 @@ const Kitchen = () => {
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
 
+  // Orders currently in preparation — used as input for the round-summary print/preview.
+  // Excludes 'new' (not yet acknowledged), 'ready' (already cooked), and finished/cancelled.
+  const preparingOrders = useMemo(
+    () => orders.filter((o) => o.status === "preparing"),
+    [orders],
+  );
+  const roundSummaryHtml = useMemo(
+    () => (showRoundSummary ? buildRoundSummaryHtml(preparingOrders) : ""),
+    [showRoundSummary, preparingOrders],
+  );
+
   const timeSince = (dateStr: string) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
     if (diff < 60) return `${diff} שניות`;
