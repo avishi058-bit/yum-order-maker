@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { Banknote, CreditCard } from "lucide-react";
+import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
+import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 
 export interface CheckoutSauce {
   id: string;
@@ -38,7 +39,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
@@ -46,14 +47,25 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
-  // Auto-fill from customer auth and skip to details/payment
+  // ─── Temporary soft-launch flow ───────────────────────────────────────────
+  // Kiosk: never collect a phone number → start at the details step.
+  // Website: skip OTP entirely → start at details (still collect phone there).
+  // Logged-in customers always skip straight to details (existing behavior).
   useEffect(() => {
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
       setStep("details");
+      return;
     }
-  }, [isLoggedIn, customer]);
+    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) {
+      setStep("details");
+      return;
+    }
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) {
+      setStep("details");
+    }
+  }, [isLoggedIn, customer, isKiosk]);
 
   const handleSendOtp = async () => {
     if (!form.phone || form.phone.replace(/[-\s]/g, '').length < 9) {
@@ -132,14 +144,23 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name) {
+    if (!form.name.trim()) {
       toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
       return;
+    }
+    // Website (no logged-in user, OTP skipped) → phone is required.
+    // Kiosk → phone field is hidden, no validation.
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && !isLoggedIn) {
+      const cleaned = form.phone.replace(/[-\s]/g, "");
+      if (cleaned.length < 9) {
+        toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+        return;
+      }
     }
     setStep("payment");
   };
 
-  const handlePaymentSelect = async (method: "cash" | "credit") => {
+  const handlePaymentSelect = async (method: "cash" | "credit" | "counter") => {
     // Guard against double-clicks while a previous submission is in flight
     if (submitting) return;
     // Hard gate: terms + privacy must be accepted before any payment can proceed
@@ -157,7 +178,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       return;
     }
 
-    // Cash - submit order
+    // Cash or counter — submit order immediately (no online payment).
     await submitOrder(method);
   };
 
@@ -202,7 +223,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     };
   };
 
-  const callCreateOrder = async (paymentMethod: "cash" | "credit", status: "new" | "pending_payment") => {
+  const callCreateOrder = async (paymentMethod: "cash" | "credit" | "counter", status: "new" | "pending_payment") => {
     const isStation = localStorage.getItem("habakta_station") === "true";
     const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
@@ -214,7 +235,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     const { data, error } = await supabase.functions.invoke("create-order", {
       body: {
         customerName: form.name,
-        customerPhone: form.phone,
+        // Kiosk skip-phone flow: send empty string; server normalizes to placeholder.
+        customerPhone: (isKioskPath && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) ? "" : form.phone,
         notes: form.notes || null,
         paymentMethod,
         orderSource,
@@ -370,7 +392,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
   };
 
-  const submitOrder = async (method: "cash" | "credit") => {
+  const submitOrder = async (method: "cash" | "credit" | "counter") => {
     setSubmitting(true);
     try {
       const order = await callCreateOrder(method, "new");
@@ -560,6 +582,24 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
+              {/* Website (no logged-in user) → phone field shown here when OTP is bypassed.
+                  Kiosk → phone is never collected. */}
+              {!isKiosk && !isLoggedIn && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    מספר טלפון <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    placeholder="050-1234567"
+                    dir="ltr"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1">הערות</label>
                 <textarea
@@ -689,7 +729,34 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 </motion.button>
               )}
 
-              {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
+              {/* Pay-at-counter — always available regardless of online toggles.
+                  Sends order to kitchen immediately; customer pays in person. */}
+              {RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
+                <motion.button
+                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  onClick={() => handlePaymentSelect("counter")}
+                  disabled={submitting || !termsAccepted}
+                  aria-busy={submitting && paymentMethod === "counter"}
+                  aria-disabled={!termsAccepted}
+                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                >
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <Store size={24} className="text-orange-400" />
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-foreground">
+                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : "תשלום בקופה 🏪"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">תשלום בעסק (מזומן או אשראי)</div>
+                  </div>
+                </motion.button>
+              )}
+
+              {!availablePaymentMethods.cash &&
+                !availablePaymentMethods.credit &&
+                !RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
                   <p className="text-sm mt-1">אנא נסה שוב מאוחר יותר</p>
