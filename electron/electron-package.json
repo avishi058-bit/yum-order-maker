@@ -1,0 +1,8 @@
+{
+  "name": "hakata-kiosk",
+  "productName": "הבקתה-Kiosk",
+  "version": "1.0.0",
+  "description": "Kiosk wrapper for הבקתה ordering site with Windows TabTip integration",
+  "main": "electron/main.cjs",
+  "private": true
+}
