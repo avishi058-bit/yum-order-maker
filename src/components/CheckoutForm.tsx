@@ -729,7 +729,34 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 </motion.button>
               )}
 
-              {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
+              {/* Pay-at-counter — always available regardless of online toggles.
+                  Sends order to kitchen immediately; customer pays in person. */}
+              {RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
+                <motion.button
+                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  onClick={() => handlePaymentSelect("counter")}
+                  disabled={submitting || !termsAccepted}
+                  aria-busy={submitting && paymentMethod === "counter"}
+                  aria-disabled={!termsAccepted}
+                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                >
+                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+                    <Store size={24} className="text-orange-400" />
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-foreground">
+                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : "תשלום בקופה 🏪"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">תשלום בעסק (מזומן או אשראי)</div>
+                  </div>
+                </motion.button>
+              )}
+
+              {!availablePaymentMethods.cash &&
+                !availablePaymentMethods.credit &&
+                !RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
                   <p className="text-sm mt-1">אנא נסה שוב מאוחר יותר</p>
