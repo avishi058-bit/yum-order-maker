@@ -16,12 +16,12 @@ import { Delete, ArrowDown, Space } from "lucide-react";
 
 type Layout = "hebrew" | "numeric";
 
-// Letters in VISUAL order, right-to-left as shown in iOS Hebrew keyboard.
-// Index 0 = rightmost key on screen. Container uses LTR so array index = visual position from the right.
+// Letters in VISUAL order right-to-left, matching standard Hebrew keyboard.
+// The container uses direction:rtl so index 0 = rightmost key on screen.
 const HEBREW_ROWS: string[][] = [
-  ["ק", "ר", "א", "ט", "ו", "ן", "ם", "פ"],
-  ["ש", "ד", "ג", "כ", "ע", "י", "ח", "ל", "ך", "ף"],
-  ["ז", "ס", "ב", "ה", "נ", "מ", "צ", "ת", "ץ"],
+  ["פ", "ם", "ן", "ו", "ט", "א", "ר", "ק"],
+  ["ף", "ך", "ל", "ח", "י", "ע", "כ", "ג", "ד", "ש"],
+  ["ץ", "ת", "צ", "מ", "נ", "ה", "ב", "ס", "ז"],
 ];
 
 const NUMERIC_KEYS = [
