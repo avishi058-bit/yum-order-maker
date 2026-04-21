@@ -57,9 +57,10 @@ const availabilityCategoryLabels: Record<string, string> = {
   topping: "🧀 תוספות על ההמבורגר",
   sauce: "🥫 רטבים",
   ingredient: "🥬 ירקות ורטבים",
+  doneness: "🔥 מידת עשייה",
 };
 
-const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient"];
+const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient", "doneness"];
 
 // Fixed order of items within each category to match the menu
 const itemOrder: Record<string, string[]> = {
@@ -78,6 +79,7 @@ const itemOrder: Record<string, string[]> = {
   topping: ["onion-jam", "peanut-butter", "fried-onion", "garlic-confit", "egg", "vegan-cheddar", "roastbeef", "extra-patty", "extra-smash-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
   sauce: ["ketchup", "mayo", "chili", "plum"],
   ingredient: ["lettuce", "tomato", "pickles", "aioli", "onion"],
+  doneness: ["doneness-category", "doneness-m", "doneness-mw", "doneness-wd"],
 };
 
 // Burger to meal mapping
