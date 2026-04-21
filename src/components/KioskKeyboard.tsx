@@ -159,9 +159,19 @@ const KioskKeyboard = () => {
 
   const onSpace = useCallback(() => press(" "), [press]);
 
-  const onClose = useCallback(() => {
-    // Just hide the keyboard — don't blur the input so the user stays on the form
+  const onEnter = useCallback(() => {
     setOpen(false);
+    // Find and click the "המשך לתשלום" submit button
+    setTimeout(() => {
+      const submitBtn = document.querySelector<HTMLButtonElement>('form button[type="submit"], form motion\\.button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.click();
+      } else {
+        // Fallback: submit the form directly
+        const form = document.querySelector<HTMLFormElement>('form');
+        form?.requestSubmit();
+      }
+    }, 50);
   }, []);
 
   const rows = layout === "numeric" ? NUMERIC_KEYS : HEBREW_ROWS;
