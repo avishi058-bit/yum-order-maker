@@ -121,20 +121,29 @@ const detectFried = (name: string): FriedKind => {
 // and so chef-summary logic doesn't accidentally count it as an ingredient
 // removal.
 const OWNER_PREFIX = "__OWNER__:";
+const DONENESS_PREFIX = "doneness-";
+const DONENESS_LABELS: Record<string, string> = {
+  "doneness-m": "M — מדיום",
+  "doneness-mw": "MW — מדיום וואל",
+  "doneness-wd": "WD — וואל דאן",
+};
 const extractOwnerName = (
   removals: string[] | null | undefined,
-): { ownerName: string | null; cleanedRemovals: string[] } => {
-  if (!removals || removals.length === 0) return { ownerName: null, cleanedRemovals: [] };
+): { ownerName: string | null; doneness: string | null; cleanedRemovals: string[] } => {
+  if (!removals || removals.length === 0) return { ownerName: null, doneness: null, cleanedRemovals: [] };
   let ownerName: string | null = null;
+  let doneness: string | null = null;
   const cleaned: string[] = [];
   for (const r of removals) {
     if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
       ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
+    } else if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
+      doneness = DONENESS_LABELS[r] || r;
     } else {
       cleaned.push(r);
     }
   }
-  return { ownerName, cleanedRemovals: cleaned };
+  return { ownerName, doneness, cleanedRemovals: cleaned };
 };
 
 // ---------- drink categorisation (for drink-summary block) ----------
