@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Delete, ArrowDown, Space } from "lucide-react";
+import { Delete, CornerDownLeft } from "lucide-react";
 
 /**
  * KioskKeyboard
@@ -159,9 +159,19 @@ const KioskKeyboard = () => {
 
   const onSpace = useCallback(() => press(" "), [press]);
 
-  const onClose = useCallback(() => {
-    // Just hide the keyboard — don't blur the input so the user stays on the form
+  const onEnter = useCallback(() => {
     setOpen(false);
+    // Find and click the "המשך לתשלום" submit button
+    setTimeout(() => {
+      const submitBtn = document.querySelector<HTMLButtonElement>('form button[type="submit"], form motion\\.button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.click();
+      } else {
+        // Fallback: submit the form directly
+        const form = document.querySelector<HTMLFormElement>('form');
+        form?.requestSubmit();
+      }
+    }, 50);
   }, []);
 
   const rows = layout === "numeric" ? NUMERIC_KEYS : HEBREW_ROWS;
@@ -235,16 +245,17 @@ const KioskKeyboard = () => {
 
             {/* Bottom utility row (visually RTL): close | space | 123 → using row-reverse */}
             <div className="flex-1 flex flex-row-reverse gap-1 items-stretch">
-              {/* Close — rightmost (first in row-reverse) */}
+              {/* Enter — rightmost (first in row-reverse) */}
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
-                onClick={onClose}
-                className="rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
-                style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
-                aria-label="סגור מקלדת"
+                onClick={onEnter}
+                className="rounded-md bg-[#4a90d9] text-white font-semibold active:bg-[#3a7bc8] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center gap-1"
+                style={{ minWidth: "14%", flex: "0 0 auto", padding: "0 12px" }}
+                aria-label="אנטר"
               >
-                <ArrowDown size={22} strokeWidth={2.2} />
+                <CornerDownLeft size={20} strokeWidth={2.2} />
+                <span className="text-sm">אנטר</span>
               </button>
               {/* Space — center, takes the rest */}
               <button
