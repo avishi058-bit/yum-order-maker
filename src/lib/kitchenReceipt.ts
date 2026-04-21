@@ -448,18 +448,20 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       const it = line.item;
       const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
 
-      // Pull owner-name out of the removals array (set in CheckoutForm).
-      const { ownerName, cleanedRemovals } = extractOwnerName(it.removals);
+      // Pull owner-name and doneness out of the removals array.
+      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
 
       let html = `<div class="line">`;
 
-      // Owner-name banner — printed ABOVE the dish so the chef can quickly
-      // see who each item belongs to. Only shown when the customer set it.
       if (ownerName) {
         html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
       }
 
       html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+
+      if (doneness) {
+        html += `<div class="sub" style="font-weight:900;font-size:1.1em;">🔥 ${escapeHtml(doneness)}</div>`;
+      }
 
       if (cleanedRemovals.length > 0) {
         html += `<div class="sub">— ללא: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
