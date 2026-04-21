@@ -422,7 +422,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
     const donenessCategoryOn = !isAvailable || isAvailable("doneness-category");
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
-    const includeDoneness = isBurger && donenessCategoryOn && donenessOptionOn;
+    const includeDoneness = isBurger && !isSmash && donenessCategoryOn && donenessOptionOn;
     const finalRemovals = [
       ...selectedRemovals.filter(r => r !== "no-changes"),
       ...(includeDoneness ? [selectedDoneness] : []),
