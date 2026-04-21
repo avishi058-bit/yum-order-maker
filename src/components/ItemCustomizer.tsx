@@ -58,6 +58,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  const [selectedDoneness, setSelectedDoneness] = useState<string>(DEFAULT_DONENESS);
   // Optional "owner name" — chef sees who each dish belongs to.
   // Toggle controls whether the input is shown; only sent if non-empty.
   const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
