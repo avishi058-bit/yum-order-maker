@@ -1094,9 +1094,21 @@ const Kitchen = () => {
                         <span>{item.item_name} x{item.quantity}</span>
                         <span className="text-primary">₪{item.price * item.quantity}</span>
                       </div>
-                      {item.removals && item.removals.length > 0 && (
-                        <p className="text-xs text-red-400">ללא: {item.removals.join(", ")}</p>
-                      )}
+                      {(() => {
+                        const doneEntry = item.removals?.find(r => r.startsWith("doneness-"));
+                        const doneLabel: Record<string, string> = { "doneness-m": "M — מדיום", "doneness-mw": "MW — מדיום וואל", "doneness-wd": "WD — וואל דאן" };
+                        const otherRemovals = item.removals?.filter(r => !r.startsWith("doneness-") && !r.startsWith("__OWNER__:")) || [];
+                        return (
+                          <>
+                            {doneEntry && (
+                              <p className="text-xs font-bold text-orange-400">🔥 {doneLabel[doneEntry] || doneEntry}</p>
+                            )}
+                            {otherRemovals.length > 0 && (
+                              <p className="text-xs text-red-400">ללא: {otherRemovals.join(", ")}</p>
+                            )}
+                          </>
+                        );
+                      })()}
                       {item.toppings && item.toppings.length > 0 && (
                         <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
                       )}
