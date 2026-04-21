@@ -420,9 +420,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
     const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
+    const donenessCategoryOn = !isAvailable || isAvailable("doneness-category");
+    const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
+    const includeDoneness = isBurger && donenessCategoryOn && donenessOptionOn;
     const finalRemovals = [
       ...selectedRemovals.filter(r => r !== "no-changes"),
-      ...(isBurger ? [selectedDoneness] : []),
+      ...(includeDoneness ? [selectedDoneness] : []),
     ];
     onConfirm(
       item,
