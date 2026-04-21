@@ -75,9 +75,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     if (initialState) {
       setQuantity(initialState.quantity || 1);
       setSelectedToppings(initialState.selectedToppings || []);
+      const restoredRemovals = initialState.selectedRemovals || [];
+      const donenessFromRemovals = restoredRemovals.find(r => r.startsWith("doneness-"));
+      setSelectedDoneness(donenessFromRemovals || DEFAULT_DONENESS);
       setSelectedRemovals(
-        initialState.selectedRemovals && initialState.selectedRemovals.length > 0
-          ? initialState.selectedRemovals
+        restoredRemovals.filter(r => !r.startsWith("doneness-")).length > 0
+          ? restoredRemovals.filter(r => !r.startsWith("doneness-"))
           : ["no-changes"]
       );
       setSelectedSide(initialState.mealSideId || "side-fries");
@@ -417,11 +420,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
     const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
+    const finalRemovals = [
+      ...selectedRemovals.filter(r => r !== "no-changes"),
+      ...(isBurger ? [selectedDoneness] : []),
+    ];
     onConfirm(
       item,
       quantity,
       selectedToppings,
-      selectedRemovals.filter(r => r !== "no-changes"),
+      finalRemovals,
       withMeal,
       sideId,
       drinkId,
@@ -434,6 +441,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     setQuantity(1);
     setSelectedToppings([]);
     setSelectedRemovals(["no-changes"]);
+    setSelectedDoneness(DEFAULT_DONENESS);
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
