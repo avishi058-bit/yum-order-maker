@@ -25,9 +25,9 @@ const HEBREW_ROWS: string[][] = [
 ];
 
 const NUMERIC_KEYS = [
-  ["1", "2", "3"],
-  ["4", "5", "6"],
-  ["7", "8", "9"],
+  ["3", "2", "1"],
+  ["6", "5", "4"],
+  ["9", "8", "7"],
   ["", "0", ""],
 ];
 
@@ -160,9 +160,8 @@ const KioskKeyboard = () => {
   const onSpace = useCallback(() => press(" "), [press]);
 
   const onClose = useCallback(() => {
-    targetRef.current?.blur();
+    // Just hide the keyboard — don't blur the input so the user stays on the form
     setOpen(false);
-    targetRef.current = null;
   }, []);
 
   const rows = layout === "numeric" ? NUMERIC_KEYS : HEBREW_ROWS;
@@ -180,7 +179,7 @@ const KioskKeyboard = () => {
           dir="ltr"
           className="fixed bottom-0 left-0 right-0 z-[10000] bg-[#d1d5db] border-t border-black/10 shadow-[0_-8px_30px_rgba(0,0,0,0.25)] flex flex-col"
           style={{
-            height: "45vh",
+            height: "36vh",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
           role="dialog"
