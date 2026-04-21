@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
+import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -58,6 +58,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
+  const [selectedDoneness, setSelectedDoneness] = useState<string>(DEFAULT_DONENESS);
   // Optional "owner name" — chef sees who each dish belongs to.
   // Toggle controls whether the input is shown; only sent if non-empty.
   const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
@@ -74,9 +75,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     if (initialState) {
       setQuantity(initialState.quantity || 1);
       setSelectedToppings(initialState.selectedToppings || []);
+      const restoredRemovals = initialState.selectedRemovals || [];
+      const donenessFromRemovals = restoredRemovals.find(r => r.startsWith("doneness-"));
+      setSelectedDoneness(donenessFromRemovals || DEFAULT_DONENESS);
       setSelectedRemovals(
-        initialState.selectedRemovals && initialState.selectedRemovals.length > 0
-          ? initialState.selectedRemovals
+        restoredRemovals.filter(r => !r.startsWith("doneness-")).length > 0
+          ? restoredRemovals.filter(r => !r.startsWith("doneness-"))
           : ["no-changes"]
       );
       setSelectedSide(initialState.mealSideId || "side-fries");
@@ -416,11 +420,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
     const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
+    const finalRemovals = [
+      ...selectedRemovals.filter(r => r !== "no-changes"),
+      ...(isBurger ? [selectedDoneness] : []),
+    ];
     onConfirm(
       item,
       quantity,
       selectedToppings,
-      selectedRemovals.filter(r => r !== "no-changes"),
+      finalRemovals,
       withMeal,
       sideId,
       drinkId,
@@ -433,6 +441,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     setQuantity(1);
     setSelectedToppings([]);
     setSelectedRemovals(["no-changes"]);
+    setSelectedDoneness(DEFAULT_DONENESS);
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
@@ -800,6 +809,45 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       </>
                     )}
 
+                    {/* Doneness selector — only for burgers */}
+                    {isBurger && (
+                      <div className={`px-5 border-t border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                        <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>בחר מידת עשייה</h3>
+                        <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>חובה לבחור אחת</p>
+                        <div className="space-y-0">
+                          {donenessOptions.map((d) => {
+                            const active = selectedDoneness === d.id;
+                            return (
+                              <button
+                                key={d.id}
+                                onClick={() => setSelectedDoneness(d.id)}
+                                className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                      active ? "border-primary bg-primary" : "border-gray-300"
+                                    }`}
+                                  >
+                                    {active && <div className="w-3 h-3 rounded-full bg-white" />}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>
+                                    {d.label} ({d.shortLabel})
+                                  </span>
+                                  {d.recommended && (
+                                    <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
+                                      מומלץ
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     {!isBurger && (
                       <div className="px-5 py-8 text-center text-muted-foreground">
                         {item.description && <p className="text-sm">{item.description}</p>}

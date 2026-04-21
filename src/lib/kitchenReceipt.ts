@@ -121,20 +121,29 @@ const detectFried = (name: string): FriedKind => {
 // and so chef-summary logic doesn't accidentally count it as an ingredient
 // removal.
 const OWNER_PREFIX = "__OWNER__:";
+const DONENESS_PREFIX = "doneness-";
+const DONENESS_LABELS: Record<string, string> = {
+  "doneness-m": "M — מדיום",
+  "doneness-mw": "MW — מדיום וואל",
+  "doneness-wd": "WD — וואל דאן",
+};
 const extractOwnerName = (
   removals: string[] | null | undefined,
-): { ownerName: string | null; cleanedRemovals: string[] } => {
-  if (!removals || removals.length === 0) return { ownerName: null, cleanedRemovals: [] };
+): { ownerName: string | null; doneness: string | null; cleanedRemovals: string[] } => {
+  if (!removals || removals.length === 0) return { ownerName: null, doneness: null, cleanedRemovals: [] };
   let ownerName: string | null = null;
+  let doneness: string | null = null;
   const cleaned: string[] = [];
   for (const r of removals) {
     if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
       ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
+    } else if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
+      doneness = DONENESS_LABELS[r] || r;
     } else {
       cleaned.push(r);
     }
   }
-  return { ownerName, cleanedRemovals: cleaned };
+  return { ownerName, doneness, cleanedRemovals: cleaned };
 };
 
 // ---------- drink categorisation (for drink-summary block) ----------
@@ -439,18 +448,20 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       const it = line.item;
       const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
 
-      // Pull owner-name out of the removals array (set in CheckoutForm).
-      const { ownerName, cleanedRemovals } = extractOwnerName(it.removals);
+      // Pull owner-name and doneness out of the removals array.
+      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
 
       let html = `<div class="line">`;
 
-      // Owner-name banner — printed ABOVE the dish so the chef can quickly
-      // see who each item belongs to. Only shown when the customer set it.
       if (ownerName) {
         html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
       }
 
       html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+
+      if (doneness) {
+        html += `<div class="sub" style="font-weight:900;font-size:1.1em;">🔥 ${escapeHtml(doneness)}</div>`;
+      }
 
       if (cleanedRemovals.length > 0) {
         html += `<div class="sub">— ללא: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;

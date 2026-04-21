@@ -284,6 +284,21 @@ export const smashModifications: Removal[] = [
 
 export const smashBurgerIds = ["smash-moshavnikim", "smash-double-cheese", "crazy-smash"];
 
+export interface DonenessOption {
+  id: string;
+  label: string;
+  shortLabel: string;
+  recommended?: boolean;
+}
+
+export const donenessOptions: DonenessOption[] = [
+  { id: "doneness-m", label: "מדיום", shortLabel: "M" },
+  { id: "doneness-mw", label: "מדיום וואל", shortLabel: "MW", recommended: true },
+  { id: "doneness-wd", label: "וואל דאן", shortLabel: "WD" },
+];
+
+export const DEFAULT_DONENESS = "doneness-mw";
+
 export const toppings: Topping[] = [
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן", price: 4 },
   { id: "onion-jam", name: "ריבת בצל של סבתא דינה", price: 9, recommended: true },
