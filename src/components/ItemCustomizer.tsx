@@ -422,7 +422,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
     const donenessCategoryOn = !isAvailable || isAvailable("doneness-category");
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
-    const includeDoneness = isBurger && donenessCategoryOn && donenessOptionOn;
+    const includeDoneness = isBurger && !isSmash && donenessCategoryOn && donenessOptionOn;
     const finalRemovals = [
       ...selectedRemovals.filter(r => r !== "no-changes"),
       ...(includeDoneness ? [selectedDoneness] : []),
@@ -675,6 +675,50 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       </div>
                     )}
 
+                    {/* Doneness selector — only for non-smash burgers, only if category is available */}
+                    {isBurger && !isSmash && (!isAvailable || isAvailable("doneness-category")) && (() => {
+                      const visibleOptions = donenessOptions.filter(d => !isAvailable || isAvailable(d.id));
+                      if (visibleOptions.length === 0) return null;
+                      return (
+                        <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>בחר מידת עשייה</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>חובה לבחור אחת</p>
+                          <div className="space-y-0">
+                            {visibleOptions.map((d) => {
+                              const active = selectedDoneness === d.id;
+                              return (
+                                <button
+                                  key={d.id}
+                                  onClick={() => setSelectedDoneness(d.id)}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                        active ? "border-primary bg-primary" : "border-gray-300"
+                                      }`}
+                                    >
+                                      {active && <div className="w-3 h-3 rounded-full bg-white" />}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>
+                                      {d.label} ({d.shortLabel})
+                                    </span>
+                                    {d.recommended && (
+                                      <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
+                                        מומלץ
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {isBurger && (
                       <>
                         <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
@@ -812,49 +856,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       </>
                     )}
 
-                    {/* Doneness selector — only for burgers, only if category is available */}
-                    {isBurger && (!isAvailable || isAvailable("doneness-category")) && (() => {
-                      const visibleOptions = donenessOptions.filter(d => !isAvailable || isAvailable(d.id));
-                      if (visibleOptions.length === 0) return null;
-                      return (
-                        <div className={`px-5 border-t border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>בחר מידת עשייה</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>חובה לבחור אחת</p>
-                          <div className="space-y-0">
-                            {visibleOptions.map((d) => {
-                              const active = selectedDoneness === d.id;
-                              return (
-                                <button
-                                  key={d.id}
-                                  onClick={() => setSelectedDoneness(d.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
-                                        active ? "border-primary bg-primary" : "border-gray-300"
-                                      }`}
-                                    >
-                                      {active && <div className="w-3 h-3 rounded-full bg-white" />}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>
-                                      {d.label} ({d.shortLabel})
-                                    </span>
-                                    {d.recommended && (
-                                      <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
-                                        מומלץ
-                                      </span>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
                     {!isBurger && (
                       <div className="px-5 py-8 text-center text-muted-foreground">
                         {item.description && <p className="text-sm">{item.description}</p>}
