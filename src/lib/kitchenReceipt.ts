@@ -559,8 +559,11 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     }
   }
 
+  const isCounter = order.payment_method === "counter";
   const paymentLine = isCash
     ? `<div class="warn">לא שולם — מזומן בעת המסירה</div>`
+    : isCounter
+    ? `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ לתשלום בקופה ⚠️</div>`
     : `<div class="paid">שולם באשראי</div>`;
 
   return `<!DOCTYPE html>
