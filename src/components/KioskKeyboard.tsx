@@ -236,15 +236,16 @@ const KioskKeyboard = () => {
 
             {/* Bottom utility row (visually RTL): close | space | 123 → using row-reverse */}
             <div className="flex-1 flex flex-row-reverse gap-1 items-stretch">
-              {/* 123 — rightmost */}
+              {/* Close — rightmost (first in row-reverse) */}
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
-                onClick={() => setLayout(layout === "hebrew" ? "numeric" : "hebrew")}
-                className="rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                onClick={onClose}
+                className="rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
                 style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
+                aria-label="סגור מקלדת"
               >
-                {layout === "hebrew" ? "123" : "א-ב"}
+                <ArrowDown size={22} strokeWidth={2.2} />
               </button>
               {/* Space — center, takes the rest */}
               <button
@@ -257,16 +258,15 @@ const KioskKeyboard = () => {
               >
                 רווח
               </button>
-              {/* Close — leftmost */}
+              {/* 123 — leftmost (last in row-reverse) */}
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
-                onClick={onClose}
-                className="rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
+                onClick={() => setLayout(layout === "hebrew" ? "numeric" : "hebrew")}
+                className="rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
                 style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
-                aria-label="סגור מקלדת"
               >
-                <ArrowDown size={22} strokeWidth={2.2} />
+                {layout === "hebrew" ? "123" : "א-ב"}
               </button>
             </div>
           </div>
