@@ -809,7 +809,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                   <span className={`font-bold ${isKiosk ? "text-[30px]" : "text-lg"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
                                     {ing.name}
                                     {ing.image && ingredientImages[ing.image] ? (
-                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block object-contain ${isKiosk ? (ing.image === "garlic-confit" ? "w-24 h-24" : "w-16 h-16") : (ing.image === "garlic-confit" ? "w-16 h-16" : "w-12 h-12")}`} />
+                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block object-contain ${isKiosk ? "w-9 h-9" : "w-7 h-7"}`} />
                                     ) : null}
                                   </span>
                                 </button>
