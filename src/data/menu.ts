@@ -328,10 +328,11 @@ export interface DonenessOption {
   label: string;
   shortLabel: string;
   recommended?: boolean;
+  image?: string;
 }
 
 export const donenessOptions: DonenessOption[] = [
-  { id: "doneness-m", label: "מדיום", shortLabel: "M" },
+  { id: "doneness-m", label: "מדיום", shortLabel: "M", image: "doneness-medium" },
   { id: "doneness-mw", label: "מדיום וואל", shortLabel: "MW", recommended: true },
   { id: "doneness-wd", label: "וואל דאן", shortLabel: "WD" },
 ];
