@@ -789,6 +789,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 if (t.id === "extra-smash-patty") return isSmash;
                                 return true;
                               })
+                              .sort((a, b) => {
+                                // For double cheese items, move vegan-cheddar to top
+                                const isDoubleCheeseItem = item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese";
+                                if (isDoubleCheeseItem) {
+                                  if (a.id === "vegan-cheddar") return -1;
+                                  if (b.id === "vegan-cheddar") return 1;
+                                }
+                                return 0;
+                              })
                               .map((t: Topping) => {
                               const isCheddar = t.id === "vegan-cheddar";
                               const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === "vegan-cheddar").length : 0;
