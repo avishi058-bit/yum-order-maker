@@ -262,11 +262,25 @@ const KioskCartDrawer = ({
 
                           {/* Modifiers — compact list */}
                           <div className="space-y-1 mb-3">
-                            {item.removals.length > 0 && (
-                              <p className={`${sz.modText} text-destructive`}>
-                                ללא: {getRemovalNames(item.removals).join(", ")}
-                              </p>
-                            )}
+                            {(() => {
+                              const names = getRemovalNames(item.removals);
+                              const noChanges = names.length === 1 && names[0] === "ללא שינויים";
+                              if (noChanges) return (
+                                <p className={`${sz.modText} text-green-600`}>✅ ללא שינויים</p>
+                              );
+                              const removes = names.filter(n => !n.startsWith("להוסיף"));
+                              const adds = names.filter(n => n.startsWith("להוסיף"));
+                              return (
+                                <>
+                                  {removes.length > 0 && (
+                                    <p className={`${sz.modText} text-destructive`}>{removes.join(", ")}</p>
+                                  )}
+                                  {adds.length > 0 && (
+                                    <p className={`${sz.modText} text-green-600`}>{adds.join(", ")}</p>
+                                  )}
+                                </>
+                              );
+                            })()}
                             {item.toppings.length > 0 && (
                               <p className={`${sz.modText} text-primary`}>
                                 + {getToppingNames(item.toppings).join(", ")}
