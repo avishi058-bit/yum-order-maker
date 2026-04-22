@@ -110,7 +110,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       });
       setIngredientState(defaults);
     }
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id]);
 
