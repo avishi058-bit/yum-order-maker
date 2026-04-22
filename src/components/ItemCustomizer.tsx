@@ -18,10 +18,12 @@ import friedOnionImg from "@/assets/fried-onion.png";
 import onionJamImg from "@/assets/onion-jam.png";
 import donenessMediumImg from "@/assets/doneness-medium.png";
 import donenessMediumWellImg from "@/assets/doneness-medium-well.png";
+import donenessWellDoneImg from "@/assets/doneness-well-done.png";
 
 const donenessImages: Record<string, string> = {
   "doneness-medium": donenessMediumImg,
   "doneness-medium-well": donenessMediumWellImg,
+  "doneness-well-done": donenessWellDoneImg,
 };
 
 const ingredientImages: Record<string, string> = {
