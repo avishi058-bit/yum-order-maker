@@ -16,6 +16,7 @@ import onionRingsImg from "@/assets/onion-rings.png";
 import garlicConfitImg from "@/assets/garlic-confit.png";
 import friedOnionImg from "@/assets/fried-onion.png";
 import onionJamImg from "@/assets/onion-jam.png";
+import extraPattyImg from "@/assets/extra-patty.png";
 import donenessMediumImg from "@/assets/doneness-medium.png";
 import donenessMediumWellImg from "@/assets/doneness-medium-well.png";
 import donenessWellDoneImg from "@/assets/doneness-well-done.png";
@@ -36,6 +37,7 @@ const ingredientImages: Record<string, string> = {
   "garlic-confit": garlicConfitImg,
   "fried-onion": friedOnionImg,
   "onion-jam": onionJamImg,
+  "extra-patty": extraPattyImg,
 };
 
 export interface ItemCustomizerInitialState {
