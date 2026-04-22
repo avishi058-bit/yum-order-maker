@@ -458,6 +458,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     setSelectedDrink("drink-cola");
     setOwnerNameEnabled(false);
     setOwnerName("");
+    setToppingsSeen(false);
   };
 
   const handleClose = () => {
