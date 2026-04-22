@@ -305,7 +305,7 @@ export const ingredients: Ingredient[] = [
   { id: "lettuce", name: "🥬 חסה", removalId: "no-lettuce", defaultRegular: true, defaultSmash: true },
   { id: "onion", name: "🧅 בצל", removalId: "no-onion", addId: "add-onion", defaultRegular: true, defaultSmash: false },
   { id: "tomato", name: "🍅 עגבנייה", removalId: "no-tomato", addId: "add-tomato", defaultRegular: true, defaultSmash: false },
-  { id: "pickles", name: "🥒 חמוצים", removalId: "no-pickles", defaultRegular: true, defaultSmash: true },
+  { id: "pickles", name: "חמוצים", removalId: "no-pickles", defaultRegular: true, defaultSmash: true, image: "pickles" },
 ];
 
 /** Map removal/addition IDs to Hebrew display text for cart & receipt */
