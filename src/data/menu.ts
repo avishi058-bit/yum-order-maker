@@ -340,7 +340,7 @@ export const DEFAULT_DONENESS = "doneness-mw";
 
 export const toppings: Topping[] = [
   { id: "onion-jam", name: "ריבת בצל של סבתא דינה 👵🏼", price: 9, recommended: true },
-  { id: "garlic-confit", name: "קונפי שום 🧄", price: 7 },
+  { id: "garlic-confit", name: "קונפי שום", price: 7, image: "garlic-confit" },
   { id: "roastbeef", name: "רוסטביף 🥓", price: 20 },
   { id: "egg", name: "ביצת עין 🍳", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני 🧀🌱", price: 7 },
