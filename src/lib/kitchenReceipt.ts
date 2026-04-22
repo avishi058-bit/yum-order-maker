@@ -464,7 +464,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       }
 
       if (cleanedRemovals.length > 0) {
-        html += `<div class="sub">— ללא: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
+        html += `<div class="sub">— שינויים: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
       }
       if (it.toppings && it.toppings.length > 0) {
         html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
