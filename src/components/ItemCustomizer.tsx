@@ -778,32 +778,29 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     {isBurger && (
                       <>
                         <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>מה במנה שלך</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>לחץ כדי להוסיף או להוריד</p>
                           <div className="space-y-0">
-                            {removalsList.map((r) => {
-                              const ingredientUnavailable = getIngredientUnavailable(r.id);
-                              const active = selectedRemovals.includes(r.id) || ingredientUnavailable;
-                              const isLocked = ingredientUnavailable;
+                            {ingredients.map((ing) => {
+                              const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
+                              const ingredientUnavailable = isAvailable ? !isAvailable(ing.id) : false;
+                              if (ingredientUnavailable) return null;
                               return (
                                 <button
-                                  key={r.id}
-                                  onClick={() => !isLocked && toggleRemoval(r.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-5" : "py-3"}`}
+                                  key={ing.id}
+                                  onClick={() => toggleIngredient(ing.id)}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                 >
                                   <div
-                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
-                                      active ? "border-primary bg-primary" : "border-gray-300"
+                                    className={`rounded-lg border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                      isOn ? "border-green-500 bg-green-500" : "border-gray-300 bg-white"
                                     }`}
                                   >
-                                    {active && <div className="w-3 h-3 rounded-full bg-white" />}
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{r.name}</span>
-                                    {isLocked && (
-                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
+                                    {isOn && (
+                                      <svg className={`text-white ${isKiosk ? "w-6 h-6" : "w-4 h-4"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                     )}
                                   </div>
+                                  <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""}`}>{ing.name}</span>
                                 </button>
                               );
                             })}
