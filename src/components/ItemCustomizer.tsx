@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, removals, smashModifications, smashBurgerIds, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
+import { MenuItem, toppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -54,7 +54,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
-  const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
+  const [ingredientState, setIngredientState] = useState<Record<string, boolean>>({});
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
@@ -74,22 +74,41 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   // by re-renders, and we treat a new item-open as a fresh prefill cycle.
   useEffect(() => {
     if (!item) return;
+    const itemIsSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
     if (initialState) {
       setQuantity(initialState.quantity || 1);
       setSelectedToppings(initialState.selectedToppings || []);
       const restoredRemovals = initialState.selectedRemovals || [];
       const donenessFromRemovals = restoredRemovals.find(r => r.startsWith("doneness-"));
       setSelectedDoneness(donenessFromRemovals || DEFAULT_DONENESS);
-      setSelectedRemovals(
-        restoredRemovals.filter(r => !r.startsWith("doneness-")).length > 0
-          ? restoredRemovals.filter(r => !r.startsWith("doneness-"))
-          : ["no-changes"]
-      );
+      // Restore ingredient state from saved removals
+      const savedRemovals = restoredRemovals.filter(r => !r.startsWith("doneness-"));
+      const restored: Record<string, boolean> = {};
+      ingredients.forEach(ing => {
+        const def = itemIsSmash ? ing.defaultSmash : ing.defaultRegular;
+        // Check if removal is present → ingredient is OFF
+        if (savedRemovals.includes(ing.removalId)) {
+          restored[ing.id] = false;
+        } else if (ing.addId && savedRemovals.includes(ing.addId)) {
+          // Addition present → ingredient is ON (from non-default)
+          restored[ing.id] = true;
+        } else {
+          restored[ing.id] = def;
+        }
+      });
+      setIngredientState(restored);
       setSelectedSide(initialState.mealSideId || "side-fries");
       setSelectedDrink(initialState.mealDrinkId || "drink-cola");
       setOwnerName(initialState.ownerName || "");
       setOwnerNameEnabled(!!(initialState.ownerName && initialState.ownerName.length > 0));
       setStep("customize");
+    } else {
+      // Fresh open — set defaults
+      const defaults: Record<string, boolean> = {};
+      ingredients.forEach(ing => {
+        defaults[ing.id] = itemIsSmash ? ing.defaultSmash : ing.defaultRegular;
+      });
+      setIngredientState(defaults);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id]);
@@ -309,14 +328,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
   if (!item) return null;
 
-  // Map removal IDs to ingredient availability IDs
-  const removalToIngredient: Record<string, string> = {
-    "no-lettuce": "lettuce",
-    "no-tomato": "tomato",
-    "no-pickles": "pickles",
-    "no-aioli": "aioli",
-    "no-onion": "onion",
-  };
 
   const sideToAvailability: Record<string, string> = {
     "side-fries": "fries",
@@ -340,13 +351,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
-  const removalsList = isSmash ? smashModifications : removals;
-
-  const getIngredientUnavailable = (removalId: string) => {
-    const ingredientId = removalToIngredient[removalId];
-    if (!ingredientId || !isAvailable) return false;
-    return !isAvailable(ingredientId);
-  };
 
   const VEGAN_CHEDDAR_MAX = 6;
 
@@ -393,18 +397,33 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     });
   };
 
-  const toggleRemoval = (id: string) => {
-    if (id === "no-changes") {
-      setSelectedRemovals((prev) => prev.includes("no-changes") ? [] : ["no-changes"]);
-    } else if (id === "dry") {
-      setSelectedRemovals((prev) => prev.includes("dry") ? ["no-changes"] : ["dry"]);
-    } else {
-      setSelectedRemovals((prev) =>
-        prev.includes(id)
-          ? prev.filter((r) => r !== id).length === 0 ? ["no-changes"] : prev.filter((r) => r !== id)
-          : [...prev.filter((r) => r !== "no-changes" && r !== "dry"), id]
-      );
-    }
+  const toggleIngredient = (id: string) => {
+    setIngredientState(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const setAllIngredientsOff = () => {
+    setIngredientState(prev => {
+      const next: Record<string, boolean> = {};
+      Object.keys(prev).forEach(k => { next[k] = false; });
+      return next;
+    });
+  };
+
+  /** Convert ingredient state to removals array for backend */
+  const computeRemovals = (): string[] => {
+    const result: string[] = [];
+    ingredients.forEach(ing => {
+      const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
+      const def = isSmash ? ing.defaultSmash : ing.defaultRegular;
+      if (def && !isOn) {
+        // Was default ON, customer turned OFF → removal
+        result.push(ing.removalId);
+      } else if (!def && isOn && ing.addId) {
+        // Was default OFF, customer turned ON → addition
+        result.push(ing.addId);
+      }
+    });
+    return result;
   };
 
   const toppingsCost = selectedToppings.reduce((sum, tId) => {
@@ -445,7 +464,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
     const includeDoneness = isBurger && !isSmash && donenessCategoryOn && donenessOptionOn;
     const finalRemovals = [
-      ...selectedRemovals.filter(r => r !== "no-changes"),
+      ...computeRemovals(),
       ...(includeDoneness ? [selectedDoneness] : []),
     ];
     onConfirm(
@@ -464,7 +483,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const resetState = () => {
     setQuantity(1);
     setSelectedToppings([]);
-    setSelectedRemovals(["no-changes"]);
+    setIngredientState({});
     setSelectedDoneness(DEFAULT_DONENESS);
     setStep("customize");
     setSelectedSide("side-fries");
@@ -744,32 +763,29 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     {isBurger && (
                       <>
                         <div className={`px-5 border-b border-gray-200 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
-                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>{isSmash ? "שינויים" : "שינויים אפשריים"}</h3>
-                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>{isSmash ? "ברירת מחדל: חסה, חמוצים ואיולי" : "אפשר לבחור עד ל-5 פריטים"}</p>
+                          <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>מה במנה שלך</h3>
+                          <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>לחץ כדי להוסיף או להוריד</p>
                           <div className="space-y-0">
-                            {removalsList.map((r) => {
-                              const ingredientUnavailable = getIngredientUnavailable(r.id);
-                              const active = selectedRemovals.includes(r.id) || ingredientUnavailable;
-                              const isLocked = ingredientUnavailable;
+                            {ingredients.map((ing) => {
+                              const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
+                              const ingredientUnavailable = isAvailable ? !isAvailable(ing.id) : false;
+                              if (ingredientUnavailable) return null;
                               return (
                                 <button
-                                  key={r.id}
-                                  onClick={() => !isLocked && toggleRemoval(r.id)}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isLocked ? "opacity-70" : ""} ${isKiosk ? "py-5" : "py-3"}`}
+                                  key={ing.id}
+                                  onClick={() => toggleIngredient(ing.id)}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                 >
                                   <div
-                                    className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
-                                      active ? "border-primary bg-primary" : "border-gray-300"
+                                    className={`rounded-lg border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                      isOn ? "border-green-500 bg-green-500" : "border-gray-300 bg-white"
                                     }`}
                                   >
-                                    {active && <div className="w-3 h-3 rounded-full bg-white" />}
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>{r.name}</span>
-                                    {isLocked && (
-                                      <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(חסר במלאי כרגע)</span>
+                                    {isOn && (
+                                      <svg className={`text-white ${isKiosk ? "w-6 h-6" : "w-4 h-4"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                     )}
                                   </div>
+                                  <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""}`}>{ing.name}</span>
                                 </button>
                               );
                             })}

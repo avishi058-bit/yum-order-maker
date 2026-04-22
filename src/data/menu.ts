@@ -282,6 +282,30 @@ export const smashModifications: Removal[] = [
   { id: "add-onion", name: "להוסיף בצל" },
 ];
 
+/** Ingredient checklist model — replaces the old removal radio buttons.
+ *  Each ingredient has a default ON/OFF state per burger type.
+ *  The customer toggles ingredients on/off; we convert to removals/additions at submit. */
+export interface Ingredient {
+  id: string;
+  name: string;
+  /** Removal ID emitted when ingredient is turned OFF (e.g. "no-aioli") */
+  removalId: string;
+  /** Addition ID emitted when ingredient is turned ON from OFF default (smash extras) */
+  addId?: string;
+  /** Included by default in regular burgers */
+  defaultRegular: boolean;
+  /** Included by default in smash burgers */
+  defaultSmash: boolean;
+}
+
+export const ingredients: Ingredient[] = [
+  { id: "aioli", name: "איולי הבית (במנה)", removalId: "no-aioli", defaultRegular: true, defaultSmash: true },
+  { id: "lettuce", name: "חסה", removalId: "no-lettuce", defaultRegular: true, defaultSmash: true },
+  { id: "onion", name: "בצל", removalId: "no-onion", addId: "add-onion", defaultRegular: true, defaultSmash: false },
+  { id: "tomato", name: "עגבנייה", removalId: "no-tomato", addId: "add-tomato", defaultRegular: true, defaultSmash: false },
+  { id: "pickles", name: "חמוצים", removalId: "no-pickles", defaultRegular: true, defaultSmash: true },
+];
+
 export const smashBurgerIds = ["smash-moshavnikim", "smash-double-cheese", "crazy-smash"];
 
 export interface DonenessOption {
