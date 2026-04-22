@@ -7,6 +7,7 @@ import { MenuItem, toppings, Topping, smashBurgerIds, ingredients, mealUpgrade, 
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import aioliImg from "@/assets/aioli-sauce.png";
 
 export interface ItemCustomizerInitialState {
   quantity: number;
@@ -785,7 +786,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                       <svg className={`text-white ${isKiosk ? "w-6 h-6" : "w-4 h-4"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                     )}
                                   </div>
-                                  <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""}`}>{ing.name}</span>
+                                  <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
+                                    {ing.image === "aioli-sauce" ? (
+                                      <img src={aioliImg} alt="איולי" className={`inline-block ${isKiosk ? "w-8 h-8" : "w-6 h-6"} object-contain`} />
+                                    ) : null}
+                                    {ing.name}
+                                  </span>
                                 </button>
                               );
                             })}
