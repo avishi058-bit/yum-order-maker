@@ -299,7 +299,7 @@ export interface Ingredient {
 }
 
 export const ingredients: Ingredient[] = [
-  { id: "aioli", name: "🥣 איולי הבית (במנה)", removalId: "no-aioli", defaultRegular: true, defaultSmash: true },
+  { id: "aioli", name: "איולי הבית (במנה)", removalId: "no-aioli", defaultRegular: true, defaultSmash: true, image: "aioli-sauce" },
   { id: "lettuce", name: "🥬 חסה", removalId: "no-lettuce", defaultRegular: true, defaultSmash: true },
   { id: "onion", name: "🧅 בצל", removalId: "no-onion", addId: "add-onion", defaultRegular: true, defaultSmash: false },
   { id: "tomato", name: "🍅 עגבנייה", removalId: "no-tomato", addId: "add-tomato", defaultRegular: true, defaultSmash: false },
