@@ -940,7 +940,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
                                       {t.name}
                                       {t.image && ingredientImages[t.image] ? (
-                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${isKiosk ? "w-9 h-9" : "w-7 h-7"}`} />
+                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${t.image === "extra-patty" ? (isKiosk ? "w-[60px] h-[60px]" : "w-12 h-12") : (isKiosk ? "w-9 h-9" : "w-7 h-7")}`} />
                                       ) : null}
                                     </span>
                                     {showRecommended && (
