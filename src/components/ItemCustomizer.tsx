@@ -12,6 +12,7 @@ import picklesImg from "@/assets/pickles.png";
 import tomatoImg from "@/assets/tomato.png";
 import onionImg from "@/assets/onion.png";
 import mapleImg from "@/assets/maple.png";
+import onionRingsImg from "@/assets/onion-rings.png";
 
 const ingredientImages: Record<string, string> = {
   "aioli-sauce": aioliImg,
@@ -19,6 +20,7 @@ const ingredientImages: Record<string, string> = {
   "tomato": tomatoImg,
   "onion": onionImg,
   "maple": mapleImg,
+  "onion-rings": onionRingsImg,
 };
 
 export interface ItemCustomizerInitialState {
