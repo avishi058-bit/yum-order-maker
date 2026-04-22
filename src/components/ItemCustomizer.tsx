@@ -66,6 +66,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const ownerInputRef = useRef<HTMLInputElement>(null);
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
+  const [toppingsSeen, setToppingsSeen] = useState(false);
+  const toppingsRef = useRef<HTMLDivElement>(null);
 
   // Prefill state when opening for an EDIT (initialState provided alongside item).
   // We only run this when the item id changes so the user's edits aren't clobbered
