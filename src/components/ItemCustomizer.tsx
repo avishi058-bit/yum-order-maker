@@ -66,6 +66,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const ownerInputRef = useRef<HTMLInputElement>(null);
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
+  const [toppingsSeen, setToppingsSeen] = useState(false);
+  const toppingsRef = useRef<HTMLDivElement>(null);
 
   // Prefill state when opening for an EDIT (initialState provided alongside item).
   // We only run this when the item id changes so the user's edits aren't clobbered
@@ -292,6 +294,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     }
   }, [step, applyHeroTransform]);
 
+  // Track whether the toppings section has been scrolled into view
+  useEffect(() => {
+    const el = toppingsRef.current;
+    const container = scrollRef.current;
+    if (!el || !container) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setToppingsSeen(true); },
+      { root: container, threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [item?.id, step]);
+
   if (!item) return null;
 
   // Map removal IDs to ingredient availability IDs
@@ -409,6 +424,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   };
 
   const handleNext = () => {
+    // If burger and user hasn't scrolled to see toppings, scroll there first
+    if (isBurger && step === "customize" && !toppingsSeen && toppingsRef.current && scrollRef.current) {
+      toppingsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      setToppingsSeen(true);
+      return;
+    }
     if (isMeal && step === "customize") {
       goToSideSelect();
     } else if (isBurger && step === "customize") {
@@ -450,6 +471,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     setSelectedDrink("drink-cola");
     setOwnerNameEnabled(false);
     setOwnerName("");
+    setToppingsSeen(false);
   };
 
   const handleClose = () => {
@@ -754,7 +776,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           </div>
                         </div>
 
-                        <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                        <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`} ref={toppingsRef}>
                           <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
