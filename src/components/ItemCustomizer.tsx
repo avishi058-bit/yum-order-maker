@@ -7,19 +7,19 @@ import { MenuItem, toppings, Topping, smashBurgerIds, ingredients, mealUpgrade, 
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
-import aioliImg from "@/assets/aioli-sauce.png";
-import picklesImg from "@/assets/pickles.png";
-import tomatoImg from "@/assets/tomato.png";
-import onionImg from "@/assets/onion.png";
-import mapleImg from "@/assets/maple.png";
-import onionRingsImg from "@/assets/onion-rings.png";
-import garlicConfitImg from "@/assets/garlic-confit.png";
-import friedOnionImg from "@/assets/fried-onion.png";
-import onionJamImg from "@/assets/onion-jam.png";
-import extraPattyImg from "@/assets/extra-patty.png";
-import donenessMediumImg from "@/assets/doneness-medium.png";
-import donenessMediumWellImg from "@/assets/doneness-medium-well.png";
-import donenessWellDoneImg from "@/assets/doneness-well-done.png";
+import aioliImg from "@/assets/aioli-sauce.webp";
+import picklesImg from "@/assets/pickles.webp";
+import tomatoImg from "@/assets/tomato.webp";
+import onionImg from "@/assets/onion.webp";
+import mapleImg from "@/assets/maple.webp";
+import onionRingsImg from "@/assets/onion-rings.webp";
+import garlicConfitImg from "@/assets/garlic-confit.webp";
+import friedOnionImg from "@/assets/fried-onion.webp";
+import onionJamImg from "@/assets/onion-jam.webp";
+import extraPattyImg from "@/assets/extra-patty.webp";
+import donenessMediumImg from "@/assets/doneness-medium.webp";
+import donenessMediumWellImg from "@/assets/doneness-medium-well.webp";
+import donenessWellDoneImg from "@/assets/doneness-well-done.webp";
 
 const donenessImages: Record<string, string> = {
   "doneness-medium": donenessMediumImg,
