@@ -10,11 +10,13 @@ import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import aioliImg from "@/assets/aioli-sauce.png";
 import picklesImg from "@/assets/pickles.png";
 import tomatoImg from "@/assets/tomato.png";
+import onionImg from "@/assets/onion.png";
 
 const ingredientImages: Record<string, string> = {
   "aioli-sauce": aioliImg,
   "pickles": picklesImg,
   "tomato": tomatoImg,
+  "onion": onionImg,
 };
 
 export interface ItemCustomizerInitialState {
@@ -796,7 +798,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                   </div>
                                   <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
                                     {ing.image && ingredientImages[ing.image] ? (
-                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block ${isKiosk ? "w-8 h-8" : "w-6 h-6"} object-contain`} />
+                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block ${isKiosk ? "w-11 h-11" : "w-8 h-8"} object-contain`} />
                                     ) : null}
                                     {ing.name}
                                   </span>
