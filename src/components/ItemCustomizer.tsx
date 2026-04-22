@@ -479,7 +479,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
     const includeDoneness = isBurger && !isSmash && donenessCategoryOn && donenessOptionOn;
     const finalRemovals = [
-      ...selectedRemovals.filter(r => r !== "no-changes"),
+      ...computeRemovals(),
       ...(includeDoneness ? [selectedDoneness] : []),
     ];
     onConfirm(
