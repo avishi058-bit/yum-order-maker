@@ -299,12 +299,24 @@ export interface Ingredient {
 }
 
 export const ingredients: Ingredient[] = [
-  { id: "aioli", name: "איולי הבית (במנה)", removalId: "no-aioli", defaultRegular: true, defaultSmash: true },
-  { id: "lettuce", name: "חסה", removalId: "no-lettuce", defaultRegular: true, defaultSmash: true },
-  { id: "onion", name: "בצל", removalId: "no-onion", addId: "add-onion", defaultRegular: true, defaultSmash: false },
-  { id: "tomato", name: "עגבנייה", removalId: "no-tomato", addId: "add-tomato", defaultRegular: true, defaultSmash: false },
-  { id: "pickles", name: "חמוצים", removalId: "no-pickles", defaultRegular: true, defaultSmash: true },
+  { id: "aioli", name: "🥣 איולי הבית (במנה)", removalId: "no-aioli", defaultRegular: true, defaultSmash: true },
+  { id: "lettuce", name: "🥬 חסה", removalId: "no-lettuce", defaultRegular: true, defaultSmash: true },
+  { id: "onion", name: "🧅 בצל", removalId: "no-onion", addId: "add-onion", defaultRegular: true, defaultSmash: false },
+  { id: "tomato", name: "🍅 עגבנייה", removalId: "no-tomato", addId: "add-tomato", defaultRegular: true, defaultSmash: false },
+  { id: "pickles", name: "🥒 חמוצים", removalId: "no-pickles", defaultRegular: true, defaultSmash: true },
 ];
+
+/** Map removal/addition IDs to Hebrew display text for cart & receipt */
+export const removalDisplayNames: Record<string, string> = {
+  "no-aioli": "ללא איולי",
+  "no-lettuce": "ללא חסה",
+  "no-onion": "ללא בצל",
+  "no-tomato": "ללא עגבנייה",
+  "no-pickles": "ללא חמוצים",
+  "add-onion": "להוסיף בצל",
+  "add-tomato": "להוסיף עגבנייה",
+  "dry": "יבש ללא ירקות ורטבים",
+};
 
 export const smashBurgerIds = ["smash-moshavnikim", "smash-double-cheese", "crazy-smash"];
 
