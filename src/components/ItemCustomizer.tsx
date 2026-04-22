@@ -809,7 +809,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                   <span className={`font-bold ${isKiosk ? "text-[30px]" : "text-lg"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
                                     {ing.name}
                                     {ing.image && ingredientImages[ing.image] ? (
-                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain`} />
+                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block object-contain ${isKiosk ? (ing.image === "garlic-confit" ? "w-24 h-24" : "w-16 h-16") : (ing.image === "garlic-confit" ? "w-16 h-16" : "w-12 h-12")}`} />
                                     ) : null}
                                   </span>
                                 </button>
@@ -887,11 +887,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
                                       <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
-                                        {t.name}
-                                        {t.image && ingredientImages[t.image] ? (
-                                          <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain ${t.image === "garlic-confit" ? (isKiosk ? "!w-16 !h-16" : "!w-12 !h-12") : ""}`} />
-                                        ) : null}
-                                      </span>
+                                      {t.name}
+                                      {t.image && ingredientImages[t.image] ? (
+                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${isKiosk ? (t.image === "garlic-confit" ? "w-24 h-24" : "w-16 h-16") : (t.image === "garlic-confit" ? "w-16 h-16" : "w-12 h-12")}`} />
+                                      ) : null}
+                                    </span>
                                       {showRecommended && (
                                         <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                           🔥 הולך טוב עם המנה
@@ -922,7 +922,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
                                       {t.name}
                                       {t.image && ingredientImages[t.image] ? (
-                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain ${t.image === "garlic-confit" ? (isKiosk ? "!w-16 !h-16" : "!w-12 !h-12") : ""}`} />
+                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${isKiosk ? (t.image === "garlic-confit" ? "w-24 h-24" : "w-16 h-16") : (t.image === "garlic-confit" ? "w-16 h-16" : "w-12 h-12")}`} />
                                       ) : null}
                                     </span>
                                     {showRecommended && (
