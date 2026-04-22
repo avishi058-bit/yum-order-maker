@@ -8,6 +8,7 @@ import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import aioliImg from "@/assets/aioli-sauce.png";
+import picklesImg from "@/assets/pickles.png";
 
 export interface ItemCustomizerInitialState {
   quantity: number;
