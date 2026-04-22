@@ -821,8 +821,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                   <span className={`font-bold ${isKiosk ? "text-[30px]" : "text-lg"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
                                     {ing.name.includes("🥬") ? (
                                       <>
-                                        <span className="inline-block" style={{ transform: "scaleX(-1)" }}>🥬</span>
-                                        {ing.name.replace("🥬 ", "")}
+                                        {ing.name.replace("🥬 ", "")} 🥬
                                       </>
                                     ) : ing.name}
                                     {ing.image && ingredientImages[ing.image] ? (
