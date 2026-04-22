@@ -411,6 +411,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   };
 
   const handleNext = () => {
+    // If burger and user hasn't scrolled to see toppings, scroll there first
+    if (isBurger && step === "customize" && !toppingsSeen && toppingsRef.current && scrollRef.current) {
+      toppingsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      setToppingsSeen(true);
+      return;
+    }
     if (isMeal && step === "customize") {
       goToSideSelect();
     } else if (isBurger && step === "customize") {
