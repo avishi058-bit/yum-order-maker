@@ -204,7 +204,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Includes Hebrew names for removals/dealBurger removals so they're stored as-is.
   const buildServerItem = (item: CartItem) => {
     const removalNames = item.removals
-      .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
+      .filter(rId => !rId.startsWith("doneness-"))
+      .map((rId) => removalDisplayNames[rId] || rId)
       .filter(Boolean) as string[];
     // `id` may be a unique cart key like `classic-1776430479457`. Use `menuItemId` as the
     // canonical pricing id; fall back to `id` for legacy carts that don't have it.
@@ -231,7 +232,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             name: b.name,
             removals: b.removals ?? [],
             removalNames: (b.removals ?? [])
-              .map((rId) => removals.find((r) => r.id === rId)?.name || smashModifications.find((r) => r.id === rId)?.name)
+              .map((rId) => removalDisplayNames[rId] || rId)
               .filter(Boolean) as string[],
           }))
         : null,
