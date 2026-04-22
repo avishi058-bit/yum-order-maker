@@ -359,13 +359,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
-  const removalsList = isSmash ? smashModifications : removals;
-
-  const getIngredientUnavailable = (removalId: string) => {
-    const ingredientId = removalToIngredient[removalId];
-    if (!ingredientId || !isAvailable) return false;
-    return !isAvailable(ingredientId);
-  };
 
   const VEGAN_CHEDDAR_MAX = 6;
 
