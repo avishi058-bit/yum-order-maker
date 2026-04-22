@@ -788,8 +788,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     )}
                                   </div>
                                   <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
-                                    {ing.image === "aioli-sauce" ? (
-                                      <img src={aioliImg} alt="איולי" className={`inline-block ${isKiosk ? "w-8 h-8" : "w-6 h-6"} object-contain`} />
+                                    {ing.image && ingredientImages[ing.image] ? (
+                                      <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block ${isKiosk ? "w-8 h-8" : "w-6 h-6"} object-contain`} />
                                     ) : null}
                                     {ing.name}
                                   </span>
