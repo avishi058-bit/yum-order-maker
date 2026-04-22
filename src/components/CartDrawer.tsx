@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
-import { toppings, Topping, removals, smashModifications, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 
@@ -69,8 +69,12 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
       .filter(Boolean) as string[];
   };
 
-  const getRemovalNames = (ids: string[]) =>
-    ids.map((id) => removals.find((r) => r.id === id)?.name || smashModifications.find((r) => r.id === id)?.name).filter(Boolean);
+  const getRemovalNames = (ids: string[]) => {
+    // Filter out doneness and owner entries
+    const filtered = ids.filter(id => !id.startsWith("doneness-") && !id.startsWith("__OWNER__"));
+    if (filtered.length === 0) return ["ללא שינויים"];
+    return filtered.map(id => removalDisplayNames[id] || id).filter(Boolean);
+  };
 
   return (
     <AnimatePresence>
@@ -112,16 +116,24 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
                       <span className={`${isKiosk ? 'text-2xl' : 'text-base'} text-primary font-black`}>₪{getItemTotal(item)}</span>
                     </div>
 
-                    {/* Show selected removals */}
-                    {item.removals.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {getRemovalNames(item.removals).map((name) => (
-                          <span key={name} className={`${isKiosk ? 'text-base px-3 py-1' : 'text-xs px-2 py-0.5'} rounded-full bg-destructive/10 text-destructive line-through`}>
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {/* Show selected removals/additions */}
+                    {(() => {
+                      const names = getRemovalNames(item.removals);
+                      const noChanges = names.length === 1 && names[0] === "ללא שינויים";
+                      return (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {names.map((name) => (
+                            <span key={name} className={`${isKiosk ? 'text-base px-3 py-1' : 'text-xs px-2 py-0.5'} rounded-full ${
+                              noChanges ? 'bg-green-100 text-green-700' :
+                              name.startsWith("להוסיף") ? 'bg-green-100 text-green-700' :
+                              'bg-destructive/10 text-destructive'
+                            }`}>
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Show meal upgrade */}
                     {item.withMeal && (
