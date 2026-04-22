@@ -17,9 +17,11 @@ import garlicConfitImg from "@/assets/garlic-confit.png";
 import friedOnionImg from "@/assets/fried-onion.png";
 import onionJamImg from "@/assets/onion-jam.png";
 import donenessMediumImg from "@/assets/doneness-medium.png";
+import donenessMediumWellImg from "@/assets/doneness-medium-well.png";
 
 const donenessImages: Record<string, string> = {
   "doneness-medium": donenessMediumImg,
+  "doneness-medium-well": donenessMediumWellImg,
 };
 
 const ingredientImages: Record<string, string> = {
