@@ -806,7 +806,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                       <svg className={`text-white ${isKiosk ? "w-6 h-6" : "w-4 h-4"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                     )}
                                   </div>
-                                  <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
+                                  <span className={`font-bold ${isKiosk ? "text-[30px]" : "text-lg"} ${!isOn ? "text-gray-400 line-through" : ""} flex items-center gap-1.5`}>
                                     {ing.name}
                                     {ing.image && ingredientImages[ing.image] ? (
                                       <img src={ingredientImages[ing.image]} alt={ing.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain`} />
@@ -886,10 +886,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     </div>
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
-                                      <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[26px]" : "text-base"}`}>
+                                      <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
                                         {t.name}
                                         {t.image && ingredientImages[t.image] ? (
-                                          <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain`} />
+                                          <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain ${t.image === "garlic-confit" ? (isKiosk ? "!w-16 !h-16" : "!w-12 !h-12") : ""}`} />
                                         ) : null}
                                       </span>
                                       {showRecommended && (
@@ -919,10 +919,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[26px]" : "text-base"}`}>
+                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
                                       {t.name}
                                       {t.image && ingredientImages[t.image] ? (
-                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain`} />
+                                        <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block ${isKiosk ? "w-14 h-14" : "w-10 h-10"} object-contain ${t.image === "garlic-confit" ? (isKiosk ? "!w-16 !h-16" : "!w-12 !h-12") : ""}`} />
                                       ) : null}
                                     </span>
                                     {showRecommended && (
