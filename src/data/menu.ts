@@ -296,6 +296,8 @@ export interface Ingredient {
   defaultRegular: boolean;
   /** Included by default in smash burgers */
   defaultSmash: boolean;
+  /** Optional image asset key (imported in component) */
+  image?: string;
 }
 
 export const ingredients: Ingredient[] = [
