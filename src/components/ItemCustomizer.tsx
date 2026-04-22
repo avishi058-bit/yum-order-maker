@@ -763,7 +763,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           </div>
                         </div>
 
-                        <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                        <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`} ref={toppingsRef}>
                           <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
