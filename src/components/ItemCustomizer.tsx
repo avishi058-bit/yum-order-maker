@@ -328,14 +328,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
   if (!item) return null;
 
-  // Map removal IDs to ingredient availability IDs
-  const removalToIngredient: Record<string, string> = {
-    "no-lettuce": "lettuce",
-    "no-tomato": "tomato",
-    "no-pickles": "pickles",
-    "no-aioli": "aioli",
-    "no-onion": "onion",
-  };
 
   const sideToAvailability: Record<string, string> = {
     "side-fries": "fries",
