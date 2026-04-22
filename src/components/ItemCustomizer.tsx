@@ -10,6 +10,11 @@ import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import aioliImg from "@/assets/aioli-sauce.png";
 import picklesImg from "@/assets/pickles.png";
 
+const ingredientImages: Record<string, string> = {
+  "aioli-sauce": aioliImg,
+  "pickles": picklesImg,
+};
+
 export interface ItemCustomizerInitialState {
   quantity: number;
   selectedToppings: string[];
