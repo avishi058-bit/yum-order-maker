@@ -333,7 +333,7 @@ export interface DonenessOption {
 
 export const donenessOptions: DonenessOption[] = [
   { id: "doneness-m", label: "מדיום", shortLabel: "M", image: "doneness-medium" },
-  { id: "doneness-mw", label: "מדיום וואל", shortLabel: "MW", recommended: true },
+  { id: "doneness-mw", label: "מדיום וואל", shortLabel: "MW", recommended: true, image: "doneness-medium-well" },
   { id: "doneness-wd", label: "וואל דאן", shortLabel: "WD" },
 ];
 
