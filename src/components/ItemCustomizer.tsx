@@ -54,7 +54,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
   const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
-  const [selectedRemovals, setSelectedRemovals] = useState<string[]>(["no-changes"]);
+  const [ingredientState, setIngredientState] = useState<Record<string, boolean>>({});
   const [step, setStep] = useState<Step>("customize");
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
