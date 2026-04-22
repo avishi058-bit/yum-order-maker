@@ -771,17 +771,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[26px]" : "text-base"}`}>
-                                      {d.label} ({d.shortLabel})
-                                      {d.image && donenessImages[d.image] && (
-                                        <img src={donenessImages[d.image]} alt={d.label} className={`inline-block object-contain rounded ${isKiosk ? "w-9 h-9" : "w-7 h-7"}`} />
-                                      )}
-                                    </span>
                                     {d.recommended && (
                                       <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                         מומלץ
                                       </span>
                                     )}
+                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[26px]" : "text-base"}`}>
+                                      {d.label} ({d.shortLabel})
+                                      {d.image && donenessImages[d.image] && (
+                                        <img src={donenessImages[d.image]} alt={d.label} className={`inline-block object-contain rounded ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`} />
+                                      )}
+                                    </span>
                                   </div>
                                 </button>
                               );
