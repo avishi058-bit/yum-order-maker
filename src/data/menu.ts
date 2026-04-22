@@ -15,6 +15,7 @@ export interface Topping {
   name: string;
   price: number;
   recommended?: boolean;
+  image?: string;
 }
 
 export interface Upgrade {
@@ -346,7 +347,7 @@ export const toppings: Topping[] = [
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים 🌶️", price: 9 },
   { id: "fried-onion", name: "בצל מטוגן 🧅", price: 7 },
   { id: "peanut-butter", name: "חמאת בוטנים 🥜", price: 8, recommended: true },
-  { id: "maple", name: "סירופ בטעם מייפל 🍯", price: 5 },
+  { id: "maple", name: "סירופ בטעם מייפל 🍯", price: 5, image: "maple" },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם) 🍔", price: 25 },
   { id: "extra-smash-patty", name: "זוג קציצות סמאש 110 גרם כל אחת 🍔", price: 29 },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות 🧅", price: 8 },
