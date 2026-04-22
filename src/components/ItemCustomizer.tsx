@@ -412,18 +412,33 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     });
   };
 
-  const toggleRemoval = (id: string) => {
-    if (id === "no-changes") {
-      setSelectedRemovals((prev) => prev.includes("no-changes") ? [] : ["no-changes"]);
-    } else if (id === "dry") {
-      setSelectedRemovals((prev) => prev.includes("dry") ? ["no-changes"] : ["dry"]);
-    } else {
-      setSelectedRemovals((prev) =>
-        prev.includes(id)
-          ? prev.filter((r) => r !== id).length === 0 ? ["no-changes"] : prev.filter((r) => r !== id)
-          : [...prev.filter((r) => r !== "no-changes" && r !== "dry"), id]
-      );
-    }
+  const toggleIngredient = (id: string) => {
+    setIngredientState(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const setAllIngredientsOff = () => {
+    setIngredientState(prev => {
+      const next: Record<string, boolean> = {};
+      Object.keys(prev).forEach(k => { next[k] = false; });
+      return next;
+    });
+  };
+
+  /** Convert ingredient state to removals array for backend */
+  const computeRemovals = (): string[] => {
+    const result: string[] = [];
+    ingredients.forEach(ing => {
+      const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
+      const def = isSmash ? ing.defaultSmash : ing.defaultRegular;
+      if (def && !isOn) {
+        // Was default ON, customer turned OFF → removal
+        result.push(ing.removalId);
+      } else if (!def && isOn && ing.addId) {
+        // Was default OFF, customer turned ON → addition
+        result.push(ing.addId);
+      }
+    });
+    return result;
   };
 
   const toppingsCost = selectedToppings.reduce((sum, tId) => {
