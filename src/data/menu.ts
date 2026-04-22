@@ -345,7 +345,7 @@ export const toppings: Topping[] = [
   { id: "egg", name: "ביצת עין 🍳", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני 🧀🌱", price: 7 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים 🌶️", price: 9 },
-  { id: "fried-onion", name: "בצל מטוגן 🧅", price: 7 },
+  { id: "fried-onion", name: "בצל מטוגן", price: 7, image: "fried-onion" },
   { id: "peanut-butter", name: "חמאת בוטנים 🥜", price: 8, recommended: true },
   { id: "maple", name: "סירופ בטעם מייפל", price: 5, image: "maple" },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם) 🍔", price: 25 },
