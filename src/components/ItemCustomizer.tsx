@@ -498,7 +498,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const resetState = () => {
     setQuantity(1);
     setSelectedToppings([]);
-    setSelectedRemovals(["no-changes"]);
+    setIngredientState({});
     setSelectedDoneness(DEFAULT_DONENESS);
     setStep("customize");
     setSelectedSide("side-fries");
