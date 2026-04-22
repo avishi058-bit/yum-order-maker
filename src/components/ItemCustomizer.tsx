@@ -294,6 +294,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     }
   }, [step, applyHeroTransform]);
 
+  // Track whether the toppings section has been scrolled into view
+  useEffect(() => {
+    const el = toppingsRef.current;
+    const container = scrollRef.current;
+    if (!el || !container) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setToppingsSeen(true); },
+      { root: container, threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [item?.id, step]);
+
   if (!item) return null;
 
   // Map removal IDs to ingredient availability IDs
