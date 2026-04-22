@@ -16,6 +16,11 @@ import onionRingsImg from "@/assets/onion-rings.png";
 import garlicConfitImg from "@/assets/garlic-confit.png";
 import friedOnionImg from "@/assets/fried-onion.png";
 import onionJamImg from "@/assets/onion-jam.png";
+import donenessMediumImg from "@/assets/doneness-medium.png";
+
+const donenessImages: Record<string, string> = {
+  "doneness-medium": donenessMediumImg,
+};
 
 const ingredientImages: Record<string, string> = {
   "aioli-sauce": aioliImg,
@@ -764,8 +769,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-base"}`}>
+                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[26px]" : "text-base"}`}>
                                       {d.label} ({d.shortLabel})
+                                      {d.image && donenessImages[d.image] && (
+                                        <img src={donenessImages[d.image]} alt={d.label} className={`inline-block object-contain rounded ${isKiosk ? "w-9 h-9" : "w-7 h-7"}`} />
+                                      )}
                                     </span>
                                     {d.recommended && (
                                       <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
