@@ -3,8 +3,7 @@ import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles, Pencil } from "lucid
 import { useMemo } from "react";
 import {
   toppings,
-  removals,
-  smashModifications,
+  removalDisplayNames,
   menuItems,
   mealSideOptions,
   mealDrinkOptions,
@@ -74,14 +73,11 @@ const KioskCartDrawer = ({
       .filter(Boolean);
   };
 
-  const getRemovalNames = (ids: string[]) =>
-    ids
-      .map(
-        (id) =>
-          removals.find((r) => r.id === id)?.name ||
-          smashModifications.find((r) => r.id === id)?.name,
-      )
-      .filter(Boolean);
+  const getRemovalNames = (ids: string[]) => {
+    const filtered = ids.filter(id => !id.startsWith("doneness-") && !id.startsWith("__OWNER__"));
+    if (filtered.length === 0) return ["ללא שינויים"];
+    return filtered.map(id => removalDisplayNames[id] || id).filter(Boolean);
+  };
 
   // Recommendations: sides + drinks. Exclude items already in cart.
   // Burgers/meals/deals are excluded (they require complex customization flows).
