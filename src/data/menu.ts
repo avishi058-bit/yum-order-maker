@@ -350,7 +350,7 @@ export const toppings: Topping[] = [
   { id: "peanut-butter", name: "חמאת בוטנים 🥜", price: 8, recommended: true },
   { id: "maple", name: "סירופ בטעם מייפל", price: 5, image: "maple" },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25, image: "extra-patty" },
-  { id: "extra-smash-patty", name: "זוג קציצות סמאש 110 גרם כל אחת 🍔", price: 29 },
+  { id: "extra-smash-patty", name: "זוג קציצות סמאש 110 גרם כל אחת", price: 29, image: "extra-patty" },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8, image: "onion-rings" },
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים) 🌾", price: 4 },
 ];
