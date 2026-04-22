@@ -10,11 +10,13 @@ import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import aioliImg from "@/assets/aioli-sauce.png";
 import picklesImg from "@/assets/pickles.png";
 import tomatoImg from "@/assets/tomato.png";
+import onionImg from "@/assets/onion.png";
 
 const ingredientImages: Record<string, string> = {
   "aioli-sauce": aioliImg,
   "pickles": picklesImg,
   "tomato": tomatoImg,
+  "onion": onionImg,
 };
 
 export interface ItemCustomizerInitialState {
