@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
-import { toppings, Topping, removals, smashModifications, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 
@@ -69,8 +69,12 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
       .filter(Boolean) as string[];
   };
 
-  const getRemovalNames = (ids: string[]) =>
-    ids.map((id) => removals.find((r) => r.id === id)?.name || smashModifications.find((r) => r.id === id)?.name).filter(Boolean);
+  const getRemovalNames = (ids: string[]) => {
+    // Filter out doneness and owner entries
+    const filtered = ids.filter(id => !id.startsWith("doneness-") && !id.startsWith("__OWNER__"));
+    if (filtered.length === 0) return ["ללא שינויים"];
+    return filtered.map(id => removalDisplayNames[id] || id).filter(Boolean);
+  };
 
   return (
     <AnimatePresence>
