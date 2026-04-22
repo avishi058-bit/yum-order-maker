@@ -74,22 +74,42 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   // by re-renders, and we treat a new item-open as a fresh prefill cycle.
   useEffect(() => {
     if (!item) return;
+    const itemIsSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
     if (initialState) {
       setQuantity(initialState.quantity || 1);
       setSelectedToppings(initialState.selectedToppings || []);
       const restoredRemovals = initialState.selectedRemovals || [];
       const donenessFromRemovals = restoredRemovals.find(r => r.startsWith("doneness-"));
       setSelectedDoneness(donenessFromRemovals || DEFAULT_DONENESS);
-      setSelectedRemovals(
-        restoredRemovals.filter(r => !r.startsWith("doneness-")).length > 0
-          ? restoredRemovals.filter(r => !r.startsWith("doneness-"))
-          : ["no-changes"]
-      );
+      // Restore ingredient state from saved removals
+      const savedRemovals = restoredRemovals.filter(r => !r.startsWith("doneness-"));
+      const restored: Record<string, boolean> = {};
+      ingredients.forEach(ing => {
+        const def = itemIsSmash ? ing.defaultSmash : ing.defaultRegular;
+        // Check if removal is present → ingredient is OFF
+        if (savedRemovals.includes(ing.removalId)) {
+          restored[ing.id] = false;
+        } else if (ing.addId && savedRemovals.includes(ing.addId)) {
+          // Addition present → ingredient is ON (from non-default)
+          restored[ing.id] = true;
+        } else {
+          restored[ing.id] = def;
+        }
+      });
+      setIngredientState(restored);
       setSelectedSide(initialState.mealSideId || "side-fries");
       setSelectedDrink(initialState.mealDrinkId || "drink-cola");
       setOwnerName(initialState.ownerName || "");
       setOwnerNameEnabled(!!(initialState.ownerName && initialState.ownerName.length > 0));
       setStep("customize");
+    } else {
+      // Fresh open — set defaults
+      const defaults: Record<string, boolean> = {};
+      ingredients.forEach(ing => {
+        defaults[ing.id] = itemIsSmash ? ing.defaultSmash : ing.defaultRegular;
+      });
+      setIngredientState(defaults);
+    }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id]);
