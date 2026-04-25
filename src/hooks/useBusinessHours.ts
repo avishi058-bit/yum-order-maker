@@ -48,7 +48,14 @@ const computeStatus = (hours: BusinessHours, now: Date): BusinessStatus => {
   const today = hours[String(dow)] ?? DEFAULT_HOURS[String(dow)];
   const cur = minutesOfDay(now);
 
-  const isOpen = today.open && cur >= toMin(today.from) && cur < toMin(today.to);
+  // Handle overnight windows (e.g. 19:50 → 00:00 or 20:00 → 02:00):
+  // when "to" is 00:00 or earlier than "from", treat it as end-of-day / next day.
+  const fromMin = toMin(today.from);
+  let toMinVal = toMin(today.to);
+  if (toMinVal <= fromMin) {
+    toMinVal = 24 * 60; // wrap to end of day
+  }
+  const isOpen = today.open && cur >= fromMin && cur < toMinVal;
 
   if (isOpen) {
     return { isOpen: true, todayHours: today, minutesUntilOpen: null, nextOpenDay: null, nextOpenAt: null };
