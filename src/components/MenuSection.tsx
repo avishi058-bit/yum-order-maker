@@ -174,9 +174,12 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32' : 'mx-auto max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
-      {/* Sticky category tabs - kiosk + website (different sizing) */}
+      {/* Sticky category tabs - kiosk + website (different sizing).
+          NOTE: backdrop-blur removed — it caused per-frame re-sampling of the
+          scrolling content underneath, producing jitter on the kiosk. Solid
+          background is cheaper and visually equivalent here. */}
       <div
-        className={`sticky z-30 bg-background/90 backdrop-blur-md border-b border-border ${
+        className={`sticky z-30 bg-background border-b border-border ${
           isKiosk
             ? "top-0 -mx-4 px-4 pt-5 pb-4 mb-6"
             : "top-0 -mx-4 px-4 pt-2 pb-2 mb-6"
