@@ -104,7 +104,7 @@ export const useSiteSettings = () => {
       .single();
     if (data && !error) {
       const d = data as any;
-      setSettings({
+      const fresh: SiteSettings = {
         id: d.id,
         kiosk_font_scale: Number(d.kiosk_font_scale) || 1.0,
         website_font_scale: Number(d.website_font_scale) || 1.0,
@@ -123,7 +123,9 @@ export const useSiteSettings = () => {
         kiosk_ui_scale: Number(d.kiosk_ui_scale) || KIOSK_DEFAULTS.kiosk_ui_scale,
         kiosk_lock_layout: d.kiosk_lock_layout ?? KIOSK_DEFAULTS.kiosk_lock_layout,
         kiosk_disable_zoom: d.kiosk_disable_zoom ?? KIOSK_DEFAULTS.kiosk_disable_zoom,
-      });
+      };
+      setSettings(fresh);
+      writeCachedSettings(fresh);
     }
     setLoading(false);
   };
