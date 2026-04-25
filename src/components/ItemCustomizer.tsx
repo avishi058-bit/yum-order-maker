@@ -850,6 +850,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                             {toppings
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
                               .filter((t: Topping) => {
+                                // Per-item topping exclusions (e.g. don't offer onion jam on a burger that already has it)
+                                const baseId = item.baseBurgerId || item.id;
+                                const excluded = excludedToppingsByItem[baseId];
+                                if (excluded && excluded.includes(t.id)) return false;
                                 // Smash burgers: hide regular extra patty, show smash extra patty.
                                 // Non-smash burgers: hide smash extra patty, show regular extra patty.
                                 if (t.id === "extra-patty") return !isSmash;
