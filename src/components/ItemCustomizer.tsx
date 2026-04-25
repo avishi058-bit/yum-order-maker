@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
+import { MenuItem, toppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS, excludedToppingsByItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -850,6 +850,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                             {toppings
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
                               .filter((t: Topping) => {
+                                // Per-item topping exclusions (e.g. don't offer onion jam on a burger that already has it)
+                                const baseId = item.baseBurgerId || item.id;
+                                const excluded = excludedToppingsByItem[baseId];
+                                if (excluded && excluded.includes(t.id)) return false;
                                 // Smash burgers: hide regular extra patty, show smash extra patty.
                                 // Non-smash burgers: hide smash extra patty, show regular extra patty.
                                 if (t.id === "extra-patty") return !isSmash;

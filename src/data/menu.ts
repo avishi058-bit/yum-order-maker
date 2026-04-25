@@ -355,6 +355,14 @@ export const toppings: Topping[] = [
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים) 🌾", price: 4 },
 ];
 
+/** Toppings to hide entirely from the customizer for specific burger items.
+ *  Keyed by burger id (the meal variant inherits via baseBurgerId). */
+export const excludedToppingsByItem: Record<string, string[]> = {
+  "special-hadegel": ["onion-jam", "garlic-confit", "onion-rings-topping"],
+  "avishai": ["egg"],
+  "crazy-smash": ["maple", "hot-pepper-jam"],
+};
+
 export const mealUpgrade = {
   name: "שדרוג לארוחה עסקית (המבורגר+צ׳יפס+שתייה)",
   price: 23,
