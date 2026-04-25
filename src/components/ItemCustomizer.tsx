@@ -611,7 +611,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     ref={heroRef}
                     data-kiosk-hero={isKiosk ? "true" : undefined}
                     className="relative w-full overflow-hidden"
-                    style={{ height: heroHeight }}
+                    style={{
+                      height: heroHeight,
+                      // Contain layout/paint inside the hero so per-frame height
+                      // changes during scroll don't trigger a reflow of the
+                      // surrounding modal — kills the scroll-jitter on kiosk.
+                      contain: "layout paint size",
+                      willChange: "height",
+                    }}
                   >
                     <img
                       ref={heroImgRef}
