@@ -65,9 +65,36 @@ const defaultSettings: SiteSettings = {
   ...KIOSK_DEFAULTS,
 };
 
+const SETTINGS_CACHE_KEY = "site_settings_cache_v1";
+
+const readCachedSettings = (): SiteSettings | null => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Merge with defaults so any missing keys (e.g. after schema additions)
+    // don't break consumers.
+    return { ...defaultSettings, ...parsed };
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedSettings = (s: SiteSettings) => {
+  try {
+    localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(s));
+  } catch {
+    /* quota / private mode — ignore */
+  }
+};
+
 export const useSiteSettings = () => {
-  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
-  const [loading, setLoading] = useState(true);
+  // Initialise from localStorage cache so kiosk-tuning vars (scale, sizes…)
+  // are applied on the very first render — no jump when the network reply lands.
+  const [settings, setSettings] = useState<SiteSettings>(() => readCachedSettings() ?? defaultSettings);
+  // If we already had a cached snapshot, treat the hook as ready immediately
+  // so consumers (useKioskCSSVars) inject CSS vars on first paint.
+  const [loading, setLoading] = useState(() => readCachedSettings() === null);
 
   const fetchSettings = async () => {
     const { data, error } = await supabase
