@@ -614,6 +614,10 @@ const Kitchen = () => {
     () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders) : ""),
     [showRoundSummary, activeRoundOrders],
   );
+  const roundChefSummaryHtml = useMemo(
+    () => (showRoundChefSummary ? buildRoundChefSummaryHtml(activeRoundOrders) : ""),
+    [showRoundChefSummary, activeRoundOrders],
+  );
 
   const timeSince = (dateStr: string) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
