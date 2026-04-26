@@ -1309,12 +1309,18 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
     if (qty > 0) sauceRows.push(sumRow(name, qty));
   }
 
+  // Doneness aggregation (excludes smash + vegan)
+  const donenessRows: string[] = formatDonenessRows(computeDonenessSummary(allItems)).map((r) =>
+    sumRow(r.label, r.n),
+  );
+
   const summaryBody =
     sumSection("קציצות", pattyRows) +
     sumSection("לחמניות", bunRows) +
     sumSection("מטוגנים", friedRows) +
     sumSection("תוספות מעל ההמבורגר", toppingRows) +
-    sumSection("רטבים", sauceRows);
+    sumSection("רטבים", sauceRows) +
+    sumSection("מידות עשייה", donenessRows);
 
   const bodyHtml = summaryBody
     ? `<div class="summary">
