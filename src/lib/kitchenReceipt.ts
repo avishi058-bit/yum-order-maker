@@ -1160,7 +1160,8 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   <div class="head">הזמנות פעילות<small>${time}</small></div>
   <div class="meta">${sorted.length} הזמנות · לפי סדר קבלה (ישן → חדש)</div>
   ${blocksHtml}
-  ${summaryHtml}
+  <!-- Chef summary intentionally omitted from active-orders bon — only per-order summaries are shown -->
+
   <div class="footer">המנה הראשונה ברשימה — להכין ראשונה</div>
 </body>
 </html>`;
