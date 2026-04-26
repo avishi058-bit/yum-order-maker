@@ -159,17 +159,29 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     container.scrollBy({ left: offset, behavior: "smooth" });
   }, [activeCategory]);
 
-  // Intersection observer for auto-highlighting active category (kiosk + website)
+  // Intersection observer for auto-highlighting active category.
+  // Debounced via rAF + timeout so state updates don't fire mid-scroll —
+  // setState during scroll forces React to reconcile the sticky tab bar
+  // and was causing visible scroll "jumps" between menu sections.
   useEffect(() => {
+    let pendingKey: string | null = null;
+    let timeoutId: number | null = null;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (isScrollingToCategory.current) return;
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const key = entry.target.getAttribute("data-category");
-            if (key) setActiveCategory(key as CategoryKey);
+            if (key) pendingKey = key;
           }
         }
+        if (timeoutId) window.clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(() => {
+          if (pendingKey) {
+            setActiveCategory((prev) => (prev === pendingKey ? prev : (pendingKey as CategoryKey)));
+          }
+        }, 120);
       },
       { rootMargin: "-120px 0px -60% 0px", threshold: 0.1 }
     );
@@ -178,7 +190,10 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       if (el) observer.observe(el);
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, []);
 
   const scrollToCategory = useCallback((key: string) => {
