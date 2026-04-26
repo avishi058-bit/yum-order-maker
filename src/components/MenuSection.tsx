@@ -37,34 +37,57 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
     onAdd(item);
   };
 
+  // Fixed kiosk card height — locks every row to identical dimensions so no
+  // card can grow/shrink based on text length, font load, or image presence.
+  // This is the root cause of scroll "jumping" when scrolling through smash
+  // burgers (longer descriptions wrap differently than shorter items).
+  const kioskMinHeight = "calc(var(--kiosk-card-img-size, 176px) + 48px)"; // image + py-6*2
+
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      layout={false}
       onClick={handleAdd}
       className={`bg-card group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border flex items-center ${
         isKiosk ? "py-6 px-5 gap-6" : "py-4 px-2 gap-4"
       }`}
       dir="rtl"
+      style={{
+        // contain: layout prevents this card's internal reflows from affecting
+        // the scroll position or sibling cards. content-visibility:auto lets
+        // the browser skip rendering offscreen cards entirely.
+        contain: "layout style",
+        ...(isKiosk ? { minHeight: kioskMinHeight } : {}),
+      }}
     >
       {/* Text content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          {item.badge && <span className={isKiosk ? "text-3xl" : "text-lg"}>{item.badge}</span>}
-          <h3 className="font-bold" style={{ fontSize: `${(isKiosk ? 24 : 16) * fontScale}px` }}>{displayName}</h3>
+        <div className="flex items-center gap-2 mb-1 flex-nowrap">
+          {item.badge && <span className={`flex-shrink-0 ${isKiosk ? "text-3xl" : "text-lg"}`}>{item.badge}</span>}
+          <h3 className="font-bold truncate" style={{ fontSize: `${(isKiosk ? 24 : 16) * fontScale}px` }}>{displayName}</h3>
           {item.weight && (
-            <span className={`text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-base" : "text-xs"}`}>
+            <span className={`flex-shrink-0 text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-base" : "text-xs"}`}>
               {item.weight}
             </span>
           )}
           {item.popular && !image && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+            <span className="flex-shrink-0 inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
               <Star size={9} fill="currentColor" />
               פופולארי
             </span>
           )}
         </div>
-        <p className="text-muted-foreground leading-relaxed line-clamp-2" style={{ fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`, marginBottom: isKiosk ? 12 : 8 }}>{displayDesc}</p>
+        <p
+          className="text-muted-foreground leading-relaxed line-clamp-2"
+          style={{
+            fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`,
+            marginBottom: isKiosk ? 12 : 8,
+            // Reserve exactly 2 lines of vertical space so descriptions of
+            // varying length don't change the card's height. 1.6 ≈ leading-relaxed.
+            minHeight: `${(isKiosk ? 18 : 14) * fontScale * 1.6 * 2}px`,
+          }}
+        >
+          {displayDesc}
+        </p>
         <span className="text-primary font-bold" style={{ fontSize: `${(isKiosk ? 24 : 18) * fontScale}px` }}>₪{item.price}</span>
       </div>
 
