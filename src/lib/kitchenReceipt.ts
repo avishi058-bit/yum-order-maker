@@ -1090,6 +1090,55 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
     font-weight: 700;
     border: 2px dashed #000;
   }
+  .summary {
+    border: 3px solid #000;
+    margin-top: 3mm;
+    padding: 2mm;
+    background: #000; color: #fff;
+  }
+  .summary-title {
+    text-align: center;
+    font-size: 14pt;
+    font-weight: 900;
+    border-bottom: 2px solid #fff;
+    padding-bottom: 1mm;
+    margin-bottom: 2mm;
+    letter-spacing: 1px;
+  }
+  .sum-section {
+    margin-top: 2mm;
+    padding-top: 1mm;
+    border-top: 1px dashed #fff;
+  }
+  .sum-section:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .sum-section-title {
+    font-size: 10.5pt;
+    font-weight: 800;
+    text-align: center;
+    padding: 1mm 0;
+    margin-bottom: 1mm;
+    background: #fff; color: #000;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+  }
+  .sum-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12pt;
+    font-weight: 800;
+    padding: 1mm 0;
+  }
+  .sum-row.gf { font-style: italic; }
+  .sum-num {
+    font-size: 14pt;
+    font-weight: 900;
+    min-width: 8mm;
+    text-align: center;
+    background: #fff; color: #000;
+    border-radius: 2px;
+    padding: 0 2mm;
+  }
   .footer {
     text-align: center;
     font-size: 10pt;
