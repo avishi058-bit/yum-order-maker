@@ -288,8 +288,8 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
         }
         regularBuns += qty;
       }
-      // Deals include giant fries by default
-      fries += qty;
+      // Deals include a "giant fries" which equals 3 regular fries portions
+      fries += qty * 3;
       continue;
     }
 
