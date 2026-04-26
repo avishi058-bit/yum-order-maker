@@ -729,7 +729,7 @@ const Kitchen = () => {
                 ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
-            title={`הצג סיכום סבב (${activeRoundOrders.length} בהכנה)`}
+            title={`הצג בון הזמנות פעילות (${activeRoundOrders.length})`}
           >
             <ClipboardList size={20} />
             <span className="text-xs font-bold">{activeRoundOrders.length}</span>
@@ -745,7 +745,7 @@ const Kitchen = () => {
                 ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
-            title="הדפס סיכום סבב"
+            title="הדפס בון הזמנות פעילות"
           >
             <Printer size={20} />
           </button>
@@ -1313,7 +1313,7 @@ const Kitchen = () => {
             <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
               <span className="font-bold text-foreground flex items-center gap-2">
                 <ClipboardList size={16} className="text-purple-400" />
-                סיכום סבב — {activeRoundOrders.length} הזמנות בהכנה
+                בון הזמנות פעילות — {activeRoundOrders.length} הזמנות
               </span>
               <div className="flex items-center gap-2">
                 <button
