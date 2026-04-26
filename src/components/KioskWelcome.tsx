@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import heroBurger from "@/assets/hero-burger.jpg";
 
-const KioskWelcome = ({ onStart }: { onStart: () => void }) => {
+const KioskWelcome = ({ onStart, imagesReady = true }: { onStart: () => void; imagesReady?: boolean }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" dir="rtl">
       {/* Background */}
