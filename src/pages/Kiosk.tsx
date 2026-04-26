@@ -127,18 +127,36 @@ const Kiosk = () => {
     }
   }, []);
 
-  // Preload all menu images on kiosk mount so they're cached and appear
-  // instantly when the user enters the menu — no progressive loading flicker.
+  // Preload + decode all menu images on kiosk mount (runs during the Welcome
+  // screen too, since this component mounts immediately). By the time the user
+  // taps "התחל הזמנה" the bitmaps are already in memory & decoded — no
+  // progressive flicker, no layout settle, no scroll jump.
+  const [imagesReady, setImagesReady] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    import("@/data/menuImages").then(({ menuImages }) => {
+    import("@/data/menuImages").then(async ({ menuImages }) => {
       if (cancelled) return;
       const unique = Array.from(new Set(Object.values(menuImages)));
-      unique.forEach((src) => {
-        const img = new Image();
-        img.decoding = "async";
-        img.src = src;
-      });
+      await Promise.all(
+        unique.map(
+          (src) =>
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.decoding = "async";
+              // High fetch priority: these are the first thing the user sees.
+              (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = "high";
+              const done = () => resolve();
+              img.onload = () => {
+                // decode() ensures the bitmap is ready for paint with zero
+                // additional work when the <img> mounts in the menu.
+                img.decode().then(done, done);
+              };
+              img.onerror = done;
+              img.src = src;
+            })
+        )
+      );
+      if (!cancelled) setImagesReady(true);
     });
     return () => { cancelled = true; };
   }, []);
