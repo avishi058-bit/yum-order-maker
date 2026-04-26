@@ -133,7 +133,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
           </span>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
