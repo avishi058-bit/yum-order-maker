@@ -460,11 +460,11 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
 
       if (doneness) {
-        html += `<div class="sub" style="font-weight:900;font-size:1.1em;">🔥 ${escapeHtml(doneness)}</div>`;
+        html += `<div class="sub" style="font-weight:900;">🔥 ${escapeHtml(doneness)}</div>`;
       }
 
       if (cleanedRemovals.length > 0) {
-        html += `<div class="sub">— שינויים: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
+        html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
       }
       if (it.toppings && it.toppings.length > 0) {
         html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
@@ -477,9 +477,11 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       }
       if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
         it.deal_burgers.forEach((b: any, i: number) => {
-          let bLine = `${i + 1}. ${b.name || ""}`;
-          if (b.removals?.length > 0) bLine += ` — שינויים: ${b.removals.join(", ")}`;
-          html += `<div class="sub">${escapeHtml(bLine)}</div>`;
+          const bName = `${i + 1}. ${b.name || ""}`;
+          html += `<div class="sub">${escapeHtml(bName)}</div>`;
+          if (b.removals?.length > 0) {
+            html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(b.removals.join(", "))}</div>`;
+          }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;
       }
