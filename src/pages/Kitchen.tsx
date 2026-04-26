@@ -596,7 +596,7 @@ const Kitchen = () => {
   const activeRoundOrders = useMemo(
     () =>
       orders
-        .filter((o) => ["new", "preparing", "ready"].includes(o.status))
+        .filter((o) => ["new", "preparing"].includes(o.status))
         .map((o) => ({
           order_number: o.order_number,
           customer_name: o.customer_name,
