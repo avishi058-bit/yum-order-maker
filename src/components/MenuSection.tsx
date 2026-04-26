@@ -228,11 +228,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
               }`}
             >
               {activeCategory === cat.key && (
-                <motion.div
-                  layoutId="activeCategoryTab"
-                  className="absolute inset-0 bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
+                <div className="absolute inset-0 bg-primary rounded-full" />
               )}
               <span className="relative z-10">{cat.label}</span>
             </button>
