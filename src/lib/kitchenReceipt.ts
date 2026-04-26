@@ -808,89 +808,119 @@ export async function printReceipt(order: ReceiptOrder) {
   }, 250);
 }
 
-// ---------- ROUND SUMMARY (aggregate across active orders) ----------
+// ---------- ACTIVE-ORDERS BON (per-order detail, oldest → newest) ----------
 //
-// Flattens order_items from a list of orders (typically all "preparing" orders)
-// and runs the SAME computeChefSummary pipeline used per-order. Produces a
-// standalone bon containing ONLY the chef-summary block — no per-order detail,
-// no drinks block. Intended for kitchen "current round" overview/print.
-export function buildRoundSummaryHtml(
-  orders: { order_number: number; order_items: ReceiptOrderItem[] }[],
-): string {
-  const allItems: ReceiptOrderItem[] = [];
-  for (const o of orders) {
-    if (Array.isArray(o.order_items)) allItems.push(...o.order_items);
-  }
-  const summary = computeChefSummary(allItems);
+// Produces a single big bon listing every active order in the order they
+// were received (oldest first → so the customer who ordered first gets served
+// first). Each block shows: order number, customer name, time received, and
+// every item with its toppings/changes/meal/deal details. NO aggregated chef
+// summary, NO drinks summary — pure per-order list for the kitchen.
+export interface RoundOrder {
+  order_number: number;
+  customer_name?: string | null;
+  created_at?: string | null;
+  status?: string | null;
+  order_items: ReceiptOrderItem[];
+}
 
-  const orderNumbers = orders
-    .map((o) => `#${o.order_number}`)
-    .join(" · ");
+const statusLabel = (s?: string | null): string => {
+  if (s === "new") return "חדשה";
+  if (s === "preparing") return "בהכנה";
+  if (s === "ready") return "מוכנה";
+  return "";
+};
+
+function buildOrderBlockHtml(order: RoundOrder, index: number): string {
+  const merged = mergeItems(order.order_items);
+
+  const time = order.created_at
+    ? new Date(order.created_at).toLocaleTimeString("he-IL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+
+  const itemsHtml = merged
+    .map((line) => {
+      const it = line.item;
+      const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
+      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
+
+      let html = `<div class="line">`;
+      if (ownerName) {
+        html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
+      }
+      html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+      if (doneness) {
+        html += `<div class="sub" style="font-weight:900;font-size:1.1em;">🔥 ${escapeHtml(doneness)}</div>`;
+      }
+      if (cleanedRemovals.length > 0) {
+        html += `<div class="sub">— שינויים: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
+      }
+      if (it.toppings && it.toppings.length > 0) {
+        html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
+      }
+      if (it.with_meal) {
+        let mealText = "ארוחה";
+        if (it.meal_side) mealText += ` — ${it.meal_side}`;
+        if (it.meal_drink) mealText += `, ${it.meal_drink}`;
+        html += `<div class="sub">→ ${escapeHtml(mealText)}</div>`;
+      }
+      if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
+        it.deal_burgers.forEach((b: any, i: number) => {
+          let bLine = `${i + 1}. ${b.name || ""}`;
+          if (b.removals?.length > 0) bLine += ` — שינויים: ${b.removals.join(", ")}`;
+          html += `<div class="sub">${escapeHtml(bLine)}</div>`;
+        });
+        html += `<div class="sub">+ צ׳יפס ענק</div>`;
+      }
+      if (it.deal_drinks && Array.isArray(it.deal_drinks)) {
+        it.deal_drinks.forEach((d: any) => {
+          html += `<div class="sub">+ ${escapeHtml(d.name)}</div>`;
+        });
+      }
+      html += `</div>`;
+      return html;
+    })
+    .join("");
+
+  const status = statusLabel(order.status);
+
+  return `<div class="order-block">
+    <div class="order-head">
+      <div class="order-num">${index + 1}. הזמנה #${order.order_number}</div>
+      <div class="order-meta">
+        <span class="cust">${escapeHtml(order.customer_name || "")}</span>
+        ${time ? `<span class="time">⏱ ${escapeHtml(time)}</span>` : ""}
+        ${status ? `<span class="status">${escapeHtml(status)}</span>` : ""}
+      </div>
+    </div>
+    <div class="order-items">${itemsHtml || '<div class="sub">— אין פריטים —</div>'}</div>
+  </div>`;
+}
+
+export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
+  // Sort oldest → newest so first orderer is served first.
+  const sorted = [...orders].sort((a, b) => {
+    const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return ta - tb;
+  });
+
   const time = new Date().toLocaleTimeString("he-IL", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  const row = (label: string, n: number, gf = false) =>
-    `<div class="sum-row${gf ? " gf" : ""}"><span>${escapeHtml(label)}</span><span class="sum-num">${n}</span></div>`;
-
-  const section = (title: string, rows: string[]) =>
-    rows.length === 0
-      ? ""
-      : `<div class="sum-section">
-           <div class="sum-section-title">${escapeHtml(title)}</div>
-           ${rows.join("")}
-         </div>`;
-
-  const pattyRows: string[] = [];
-  if (summary.regularPatties > 0) pattyRows.push(row("רגיל", summary.regularPatties));
-  if (summary.smashPatties > 0) pattyRows.push(row("סמאש", summary.smashPatties));
-  if (summary.veganPatties > 0) pattyRows.push(row("טבעוני (חף מפשע)", summary.veganPatties));
-
-  const bunRows: string[] = [];
-  if (summary.regularBuns > 0) bunRows.push(row("לחמנייה רגילה", summary.regularBuns));
-  if (summary.glutenFreeBuns > 0) bunRows.push(row("לחמנייה ללא גלוטן", summary.glutenFreeBuns, true));
-
-  const friedRows: string[] = [];
-  if (summary.fries > 0) friedRows.push(row("צ׳יפס", summary.fries));
-  if (summary.waffleFries > 0) friedRows.push(row("וופל צ׳יפס", summary.waffleFries));
-  if (summary.onionRings > 0) friedRows.push(row("טבעות בצל (מנה)", summary.onionRings));
-  if (summary.tempuraOnionSide > 0)
-    friedRows.push(row("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
-  if (summary.friendsMix > 0) friedRows.push(row("מיקס חברים", summary.friendsMix));
-
-  const toppingRows: string[] = [];
-  if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
-  if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
-  if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(row("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
-
-  const sauceRows: string[] = [];
-  for (const [name, qty] of summary.sauces.entries()) {
-    if (qty > 0) sauceRows.push(row(name, qty));
-  }
-
-  const summaryBody =
-    section("קציצות", pattyRows) +
-    section("לחמניות", bunRows) +
-    section("מטוגנים", friedRows) +
-    section("תוספות מעל ההמבורגר", toppingRows) +
-    section("רטבים", sauceRows);
-
-  const emptyHtml = `<div class="empty">אין פריטים להצגה בסבב הנוכחי</div>`;
-
-  const summaryHtml = summaryBody
-    ? `<div class="summary">
-         <div class="summary-title">סיכום סבב — לטבח</div>
-         ${summaryBody}
-       </div>`
-    : emptyHtml;
+  const blocksHtml = sorted.length
+    ? sorted.map((o, i) => buildOrderBlockHtml(o, i)).join("")
+    : `<div class="empty">אין הזמנות פעילות</div>`;
 
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
 <meta charset="utf-8" />
-<title>סיכום סבב</title>
+<title>הזמנות פעילות</title>
 <style>
   @page { size: 80mm auto; margin: 0; }
   * { box-sizing: border-box; }
@@ -909,14 +939,14 @@ export function buildRoundSummaryHtml(
   }
   .head {
     text-align: center;
-    font-size: 18pt;
+    font-size: 17pt;
     font-weight: 900;
     line-height: 1.1;
-    margin: 0 0 2mm;
+    margin: 0 0 1mm;
   }
   .head small {
     display: block;
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: 700;
     margin-top: 1mm;
   }
@@ -924,55 +954,75 @@ export function buildRoundSummaryHtml(
     text-align: center;
     font-size: 11pt;
     font-weight: 700;
-    border-bottom: 1px dashed #000;
+    border-bottom: 2px solid #000;
     padding-bottom: 2mm;
     margin-bottom: 2mm;
-    word-break: break-all;
   }
-  .summary {
-    border: 3px solid #000;
-    margin-top: 3mm;
-    padding: 2mm;
-    background: #000; color: #fff;
-  }
-  .summary-title {
-    text-align: center;
-    font-size: 15pt;
-    font-weight: 900;
-    border-bottom: 2px solid #fff;
-    padding-bottom: 1mm;
-    margin-bottom: 2mm;
-    letter-spacing: 1px;
-  }
-  .sum-section { margin-top: 2mm; padding-top: 1mm; border-top: 1px dashed #fff; }
-  .sum-section:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
-  .sum-section-title {
-    font-size: 11pt;
-    font-weight: 800;
-    text-align: center;
-    padding: 1mm 0;
-    margin-bottom: 1mm;
-    background: #fff; color: #000;
+  .order-block {
+    border: 2px solid #000;
     border-radius: 2px;
-    letter-spacing: 0.5px;
+    margin-top: 2mm;
+    padding: 2mm;
+    page-break-inside: avoid;
   }
-  .sum-row {
+  .order-block:first-of-type { margin-top: 0; }
+  .order-head {
+    border-bottom: 1px dashed #000;
+    padding-bottom: 1mm;
+    margin-bottom: 1.5mm;
+  }
+  .order-num {
+    font-size: 14pt;
+    font-weight: 900;
+    text-align: center;
+    background: #000; color: #fff;
+    padding: 1mm 2mm;
+    border-radius: 2px;
+    margin-bottom: 1mm;
+  }
+  .order-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13pt;
-    font-weight: 800;
-    padding: 1mm 0;
+    flex-wrap: wrap;
+    gap: 2mm;
+    font-size: 10.5pt;
+    font-weight: 700;
   }
-  .sum-row.gf { font-style: italic; }
-  .sum-num {
-    font-size: 16pt;
-    font-weight: 900;
-    min-width: 8mm;
-    text-align: center;
-    background: #fff; color: #000;
+  .order-meta .cust { font-weight: 900; font-size: 12pt; }
+  .order-meta .time { white-space: nowrap; }
+  .order-meta .status {
+    background: #000; color: #fff;
+    padding: 0.3mm 1.5mm;
     border-radius: 2px;
-    padding: 0 2mm;
+    font-size: 9.5pt;
+  }
+  .order-items { padding-top: 1mm; }
+  .line {
+    padding: 1mm 0;
+    border-bottom: 1px dotted #000;
+  }
+  .line:last-child { border-bottom: none; }
+  .line-name {
+    font-size: 13pt;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+  .owner {
+    font-size: 11pt;
+    font-weight: 800;
+    background: #000; color: #fff;
+    display: inline-block;
+    padding: 0.3mm 1.5mm;
+    border-radius: 2px;
+    margin-bottom: 1mm;
+  }
+  .sub {
+    font-size: 10.5pt;
+    font-weight: 600;
+    padding-right: 2mm;
+    line-height: 1.3;
+    margin-top: 0.5mm;
   }
   .empty {
     text-align: center;
@@ -986,6 +1036,8 @@ export function buildRoundSummaryHtml(
     font-size: 10pt;
     margin-top: 3mm;
     padding-bottom: 5mm;
+    border-top: 2px solid #000;
+    padding-top: 2mm;
   }
   @media print {
     body { width: auto; padding: 1mm 2mm; }
@@ -993,17 +1045,15 @@ export function buildRoundSummaryHtml(
 </style>
 </head>
 <body>
-  <div class="head">סיכום סבב<small>${time}</small></div>
-  <div class="meta">${orders.length} הזמנות בהכנה${orderNumbers ? `<br/>${escapeHtml(orderNumbers)}` : ""}</div>
-  ${summaryHtml}
-  <div class="footer">סיכום מצטבר — לא להגשה ללקוח</div>
+  <div class="head">הזמנות פעילות<small>${time}</small></div>
+  <div class="meta">${sorted.length} הזמנות · לפי סדר קבלה (ישן → חדש)</div>
+  ${blocksHtml}
+  <div class="footer">המנה הראשונה ברשימה — להכין ראשונה</div>
 </body>
 </html>`;
 }
 
-export function printRoundSummary(
-  orders: { order_number: number; order_items: ReceiptOrderItem[] }[],
-) {
+export function printRoundSummary(orders: RoundOrder[]) {
   const html = buildRoundSummaryHtml(orders);
   const w = window.open("", "_blank", "width=380,height=700");
   if (!w) return;

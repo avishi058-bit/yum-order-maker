@@ -589,15 +589,29 @@ const Kitchen = () => {
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
 
-  // Orders currently in preparation — used as input for the round-summary print/preview.
-  // Excludes 'new' (not yet acknowledged), 'ready' (already cooked), and finished/cancelled.
-  const preparingOrders = useMemo(
-    () => orders.filter((o) => o.status === "preparing"),
+  // Active orders feeding the round bon — every order not yet completed/cancelled.
+  // Sorted oldest → newest so the customer who ordered first appears first
+  // (and gets prepared first).
+  const activeRoundOrders = useMemo(
+    () =>
+      orders
+        .filter((o) => ["new", "preparing", "ready"].includes(o.status))
+        .map((o) => ({
+          order_number: o.order_number,
+          customer_name: o.customer_name,
+          created_at: o.created_at,
+          status: o.status,
+          order_items: o.order_items,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        ),
     [orders],
   );
   const roundSummaryHtml = useMemo(
-    () => (showRoundSummary ? buildRoundSummaryHtml(preparingOrders) : ""),
-    [showRoundSummary, preparingOrders],
+    () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders) : ""),
+    [showRoundSummary, activeRoundOrders],
   );
 
   const timeSince = (dateStr: string) => {
@@ -709,29 +723,29 @@ const Kitchen = () => {
               orders being prepared, so the buttons disable themselves otherwise. */}
           <button
             onClick={() => setShowRoundSummary(true)}
-            disabled={preparingOrders.length === 0}
+            disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-              preparingOrders.length === 0
+              activeRoundOrders.length === 0
                 ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
-            title={`הצג סיכום סבב (${preparingOrders.length} בהכנה)`}
+            title={`הצג בון הזמנות פעילות (${activeRoundOrders.length})`}
           >
             <ClipboardList size={20} />
-            <span className="text-xs font-bold">{preparingOrders.length}</span>
+            <span className="text-xs font-bold">{activeRoundOrders.length}</span>
           </button>
           <button
             onClick={() => {
-              if (preparingOrders.length === 0) return;
-              printRoundSummary(preparingOrders);
+              if (activeRoundOrders.length === 0) return;
+              printRoundSummary(activeRoundOrders);
             }}
-            disabled={preparingOrders.length === 0}
+            disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
-              preparingOrders.length === 0
+              activeRoundOrders.length === 0
                 ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
-            title="הדפס סיכום סבב"
+            title="הדפס בון הזמנות פעילות"
           >
             <Printer size={20} />
           </button>
@@ -1299,12 +1313,12 @@ const Kitchen = () => {
             <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
               <span className="font-bold text-foreground flex items-center gap-2">
                 <ClipboardList size={16} className="text-purple-400" />
-                סיכום סבב — {preparingOrders.length} הזמנות בהכנה
+                בון הזמנות פעילות — {activeRoundOrders.length} הזמנות
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => printRoundSummary(preparingOrders)}
-                  disabled={preparingOrders.length === 0}
+                  onClick={() => printRoundSummary(activeRoundOrders)}
+                  disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
                   <Printer size={14} /> הדפס
