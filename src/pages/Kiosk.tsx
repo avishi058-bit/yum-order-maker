@@ -14,6 +14,7 @@ import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
+import { menuImages } from "@/data/menuImages";
 // Inline DineInSelector - was a separate component but only used here
 const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: boolean) => void }) => {
   if (!open) return null;
