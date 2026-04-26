@@ -589,15 +589,29 @@ const Kitchen = () => {
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
 
-  // Orders currently in preparation — used as input for the round-summary print/preview.
-  // Excludes 'new' (not yet acknowledged), 'ready' (already cooked), and finished/cancelled.
-  const preparingOrders = useMemo(
-    () => orders.filter((o) => o.status === "preparing"),
+  // Active orders feeding the round bon — every order not yet completed/cancelled.
+  // Sorted oldest → newest so the customer who ordered first appears first
+  // (and gets prepared first).
+  const activeRoundOrders = useMemo(
+    () =>
+      orders
+        .filter((o) => ["new", "preparing", "ready"].includes(o.status))
+        .map((o) => ({
+          order_number: o.order_number,
+          customer_name: o.customer_name,
+          created_at: o.created_at,
+          status: o.status,
+          order_items: o.order_items,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        ),
     [orders],
   );
   const roundSummaryHtml = useMemo(
-    () => (showRoundSummary ? buildRoundSummaryHtml(preparingOrders) : ""),
-    [showRoundSummary, preparingOrders],
+    () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders) : ""),
+    [showRoundSummary, activeRoundOrders],
   );
 
   const timeSince = (dateStr: string) => {
