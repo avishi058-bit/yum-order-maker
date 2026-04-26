@@ -40,9 +40,6 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       layout={false}
       onClick={handleAdd}
       className={`bg-card group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border flex items-center ${
@@ -72,18 +69,19 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
       </div>
 
       {/* Image — kiosk size is admin-controlled via CSS var.
-          Container has FIXED dimensions (no inView/scale animation) so the
-          card never reflows while the image loads — eliminates scroll jump. */}
-      {image && (
-        <div
-          className={`relative flex-shrink-0 ${isKiosk ? "" : "w-28 h-28"}`}
-          style={
-            isKiosk
-              ? { width: "var(--kiosk-card-img-size, 176px)", height: "var(--kiosk-card-img-size, 176px)" }
-              : undefined
-          }
-        >
-          <div className="w-full h-full rounded-xl overflow-hidden bg-muted">
+          Container ALWAYS renders with FIXED dimensions (even when no image
+          exists) so every card in the list has the same height — eliminates
+          scroll jump caused by some items having images and others not. */}
+      <div
+        className={`relative flex-shrink-0 ${isKiosk ? "" : "w-28 h-28"}`}
+        style={
+          isKiosk
+            ? { width: "var(--kiosk-card-img-size, 176px)", height: "var(--kiosk-card-img-size, 176px)" }
+            : undefined
+        }
+      >
+        <div className="w-full h-full rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+          {image ? (
             <img
               src={image}
               alt={item.name}
@@ -94,15 +92,21 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
               decoding="async"
               style={isKiosk ? { transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" } : undefined}
             />
-          </div>
-          {item.popular && (
-            <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-md z-10">
-              <Star size={9} fill="currentColor" />
-              פופולארי
+          ) : (
+            // Placeholder keeps the same fixed footprint as a real image,
+            // so cards without an image don't change the row height.
+            <span className={`text-muted-foreground/60 ${isKiosk ? "text-5xl" : "text-3xl"}`} aria-hidden>
+              {item.badge || "🍽️"}
             </span>
           )}
         </div>
-      )}
+        {item.popular && image && (
+          <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-md z-10">
+            <Star size={9} fill="currentColor" />
+            פופולארי
+          </span>
+        )}
+      </div>
     </motion.div>
   );
 };
