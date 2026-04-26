@@ -386,6 +386,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
+  // חף מפשע (צמחוני) — ללא בחירת מידת עשייה
+  const isVegan = (item.baseBurgerId || item.id) === "haf-mifsha";
 
   const VEGAN_CHEDDAR_MAX = 6;
 
@@ -497,7 +499,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
     const donenessCategoryOn = !isAvailable || isAvailable("doneness-category");
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
-    const includeDoneness = isBurger && !isSmash && donenessCategoryOn && donenessOptionOn;
+    const includeDoneness = isBurger && !isSmash && !isVegan && donenessCategoryOn && donenessOptionOn;
     const finalRemovals = [
       ...computeRemovals(),
       ...(includeDoneness ? [selectedDoneness] : []),
