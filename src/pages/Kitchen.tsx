@@ -231,6 +231,7 @@ const Kitchen = () => {
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [showRoundSummary, setShowRoundSummary] = useState(false);
+  const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
 
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
