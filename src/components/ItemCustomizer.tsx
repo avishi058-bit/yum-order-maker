@@ -386,6 +386,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
+  // חף מפשע (צמחוני) — ללא בחירת מידת עשייה
+  const isVegan = (item.baseBurgerId || item.id) === "haf-mifsha";
 
   const VEGAN_CHEDDAR_MAX = 6;
 
