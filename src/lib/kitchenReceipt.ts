@@ -916,6 +916,65 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
     ? sorted.map((o, i) => buildOrderBlockHtml(o, i)).join("")
     : `<div class="empty">אין הזמנות פעילות</div>`;
 
+  // ---- Aggregated chef summary across ALL active orders ----
+  // Combine items from every order and reuse computeChefSummary so the kitchen
+  // gets a single rolled-up count at the bottom of the active-orders bon
+  // (in addition to the per-order blocks above).
+  const allItems: ReceiptOrderItem[] = sorted.flatMap((o) => o.order_items || []);
+  const summary = computeChefSummary(allItems);
+
+  const sumRow = (label: string, n: number, gf = false) =>
+    `<div class="sum-row${gf ? " gf" : ""}"><span>${escapeHtml(label)}</span><span class="sum-num">${n}</span></div>`;
+  const sumSection = (title: string, rows: string[]) =>
+    rows.length === 0
+      ? ""
+      : `<div class="sum-section">
+           <div class="sum-section-title">${escapeHtml(title)}</div>
+           ${rows.join("")}
+         </div>`;
+
+  const pattyRows: string[] = [];
+  if (summary.regularPatties > 0) pattyRows.push(sumRow("רגיל", summary.regularPatties));
+  if (summary.smashPatties > 0) pattyRows.push(sumRow("סמאש", summary.smashPatties));
+  if (summary.veganPatties > 0) pattyRows.push(sumRow("טבעוני (חף מפשע)", summary.veganPatties));
+
+  const bunRows: string[] = [];
+  if (summary.regularBuns > 0) bunRows.push(sumRow("לחמנייה רגילה", summary.regularBuns));
+  if (summary.glutenFreeBuns > 0) bunRows.push(sumRow("לחמנייה ללא גלוטן", summary.glutenFreeBuns, true));
+
+  const friedRows: string[] = [];
+  if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
+  if (summary.waffleFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.waffleFries));
+  if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל (מנה)", summary.onionRings));
+  if (summary.tempuraOnionSide > 0)
+    friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
+  if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
+
+  const toppingRows: string[] = [];
+  if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
+  if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
+  if (summary.tempuraOnionTopping > 0)
+    toppingRows.push(sumRow("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+
+  const sauceRows: string[] = [];
+  for (const [name, qty] of summary.sauces.entries()) {
+    if (qty > 0) sauceRows.push(sumRow(name, qty));
+  }
+
+  const summaryBody =
+    sumSection("קציצות", pattyRows) +
+    sumSection("לחמניות", bunRows) +
+    sumSection("מטוגנים", friedRows) +
+    sumSection("תוספות מעל ההמבורגר", toppingRows) +
+    sumSection("רטבים", sauceRows);
+
+  const summaryHtml = sorted.length && summaryBody
+    ? `<div class="summary">
+         <div class="summary-title">סיכום לטבח — סה״כ</div>
+         ${summaryBody}
+       </div>`
+    : "";
+
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
