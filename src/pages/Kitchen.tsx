@@ -723,25 +723,25 @@ const Kitchen = () => {
               orders being prepared, so the buttons disable themselves otherwise. */}
           <button
             onClick={() => setShowRoundSummary(true)}
-            disabled={preparingOrders.length === 0}
+            disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-              preparingOrders.length === 0
+              activeRoundOrders.length === 0
                 ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
-            title={`הצג סיכום סבב (${preparingOrders.length} בהכנה)`}
+            title={`הצג סיכום סבב (${activeRoundOrders.length} בהכנה)`}
           >
             <ClipboardList size={20} />
-            <span className="text-xs font-bold">{preparingOrders.length}</span>
+            <span className="text-xs font-bold">{activeRoundOrders.length}</span>
           </button>
           <button
             onClick={() => {
-              if (preparingOrders.length === 0) return;
-              printRoundSummary(preparingOrders);
+              if (activeRoundOrders.length === 0) return;
+              printRoundSummary(activeRoundOrders);
             }}
-            disabled={preparingOrders.length === 0}
+            disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
-              preparingOrders.length === 0
+              activeRoundOrders.length === 0
                 ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
@@ -1313,12 +1313,12 @@ const Kitchen = () => {
             <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
               <span className="font-bold text-foreground flex items-center gap-2">
                 <ClipboardList size={16} className="text-purple-400" />
-                סיכום סבב — {preparingOrders.length} הזמנות בהכנה
+                סיכום סבב — {activeRoundOrders.length} הזמנות בהכנה
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => printRoundSummary(preparingOrders)}
-                  disabled={preparingOrders.length === 0}
+                  onClick={() => printRoundSummary(activeRoundOrders)}
+                  disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
                   <Printer size={14} /> הדפס
