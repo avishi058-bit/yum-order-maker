@@ -234,6 +234,73 @@ const parseSauceLabel = (label: string): { name: string; qty: number } => {
   return { name: label.trim(), qty: 1 };
 };
 
+// ---------- doneness summary ----------
+//
+// Aggregates doneness selections (M / MW / WD) across orders, EXCLUDING smash
+// patties and the vegan "חף מפשע" patty — those don't have doneness.
+// Reads doneness from the removals array (encoded as "doneness-m" etc.) on
+// each main item AND on each entry of deal_burgers (family/friends deals).
+const DONENESS_SHORT: Record<string, string> = {
+  "doneness-m": "M",
+  "doneness-mw": "MW",
+  "doneness-wd": "WD",
+};
+
+const extractDonenessKey = (removals: string[] | null | undefined): string | null => {
+  if (!removals) return null;
+  for (const r of removals) {
+    if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
+      return DONENESS_SHORT[r] || null;
+    }
+  }
+  return null;
+};
+
+export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  const add = (key: string | null, qty: number) => {
+    if (!key || qty <= 0) return;
+    counts.set(key, (counts.get(key) || 0) + qty);
+  };
+
+  for (const it of items) {
+    const qty = it.quantity || 1;
+    const name = it.item_name;
+
+    if (name === "רטבים") continue;
+
+    // Deals: each deal_burgers entry can carry its own doneness in removals
+    if (Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0) {
+      for (const b of it.deal_burgers) {
+        const bn = String(b?.name || "");
+        if (isSmashName(bn) || isVeganBurgerName(bn)) continue;
+        add(extractDonenessKey(b?.removals), qty);
+      }
+      continue;
+    }
+
+    // Skip non-burgers, smash, vegan
+    if (isDrinkOrMisc(name)) continue;
+    if (detectFried(name)) continue;
+    if (isSmashName(name) || isVeganBurgerName(name)) continue;
+
+    add(extractDonenessKey(it.removals), qty);
+  }
+
+  return counts;
+}
+
+// Render doneness map as ordered list of "<n><LABEL>" strings (M, MW, WD order)
+const DONENESS_ORDER = ["M", "MW", "WD"];
+export const formatDonenessRows = (counts: Map<string, number>): Array<{ label: string; n: number }> => {
+  const rows: Array<{ label: string; n: number }> = [];
+  for (const key of DONENESS_ORDER) {
+    const n = counts.get(key) || 0;
+    if (n > 0) rows.push({ label: key, n });
+  }
+  return rows;
+};
+
 // ---------- chef summary ----------
 
 export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
