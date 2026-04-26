@@ -14,6 +14,7 @@ import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import SauceSelector from "@/components/SauceSelector";
+import { menuImages } from "@/data/menuImages";
 // Inline DineInSelector - was a separate component but only used here
 const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: boolean) => void }) => {
   if (!open) return null;
@@ -134,32 +135,36 @@ const Kiosk = () => {
   const [imagesReady, setImagesReady] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    import("@/data/menuImages").then(async ({ menuImages }) => {
-      if (cancelled) return;
-      const unique = Array.from(new Set(Object.values(menuImages)));
-      await Promise.all(
-        unique.map(
-          (src) =>
-            new Promise<void>((resolve) => {
-              const img = new Image();
-              img.decoding = "async";
-              // High fetch priority: these are the first thing the user sees.
-              (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = "high";
-              const done = () => resolve();
-              img.onload = () => {
-                // decode() ensures the bitmap is ready for paint with zero
-                // additional work when the <img> mounts in the menu.
-                img.decode().then(done, done);
-              };
-              img.onerror = done;
-              img.src = src;
-            })
-        )
-      );
+    const unique = Array.from(new Set(Object.values(menuImages)));
+    Promise.all(
+      unique.map(
+        (src) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.decoding = "async";
+            (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = "high";
+            const done = () => resolve();
+            img.onload = () => {
+              img.decode().then(done, done);
+            };
+            img.onerror = done;
+            img.src = src;
+          })
+      )
+    ).then(() => {
       if (!cancelled) setImagesReady(true);
     });
     return () => { cancelled = true; };
   }, []);
+
+  // If user tapped "Start" before images finished, auto-advance once ready.
+  const [pendingStart, setPendingStart] = useState(false);
+  useEffect(() => {
+    if (pendingStart && imagesReady) {
+      setView("menu");
+      setPendingStart(false);
+    }
+  }, [pendingStart, imagesReady]);
 
   const alcoholConsent = useAlcoholConsent();
 
@@ -326,7 +331,18 @@ const Kiosk = () => {
   }
 
   if (view === "welcome") {
-    return <KioskWelcome onStart={() => setView("menu")} />;
+    return (
+      <KioskWelcome
+        imagesReady={imagesReady}
+        onStart={() => {
+          if (imagesReady) {
+            setView("menu");
+          } else {
+            setPendingStart(true);
+          }
+        }}
+      />
+    );
   }
 
   return (
