@@ -776,7 +776,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     )}
 
                     {/* Doneness selector — only for non-smash burgers, only if category is available */}
-                    {isBurger && !isSmash && (!isAvailable || isAvailable("doneness-category")) && (() => {
+                    {isBurger && !isSmash && !isVegan && (!isAvailable || isAvailable("doneness-category")) && (() => {
                       const visibleOptions = donenessOptions.filter(d => !isAvailable || isAvailable(d.id));
                       if (visibleOptions.length === 0) return null;
                       return (
