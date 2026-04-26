@@ -1177,3 +1177,204 @@ export function printRoundSummary(orders: RoundOrder[]) {
     }
   }, 250);
 }
+
+// ---------- ROUND CHEF SUMMARY (aggregated only, no per-order detail) ----------
+//
+// A standalone bon that contains ONLY the aggregated chef summary across all
+// active orders (קציצות / לחמניות / מטוגנים / תוספות / רטבים). No per-order
+// listing — useful when the chef just wants a quick rolled-up "what to fire"
+// view without scrolling through every customer's bon.
+export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
+  const allItems: ReceiptOrderItem[] = orders.flatMap((o) => o.order_items || []);
+  const summary = computeChefSummary(allItems);
+
+  const time = new Date().toLocaleTimeString("he-IL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const sumRow = (label: string, n: number, gf = false) =>
+    `<div class="sum-row${gf ? " gf" : ""}"><span>${escapeHtml(label)}</span><span class="sum-num">${n}</span></div>`;
+  const sumSection = (title: string, rows: string[]) =>
+    rows.length === 0
+      ? ""
+      : `<div class="sum-section">
+           <div class="sum-section-title">${escapeHtml(title)}</div>
+           ${rows.join("")}
+         </div>`;
+
+  const pattyRows: string[] = [];
+  if (summary.regularPatties > 0) pattyRows.push(sumRow("רגיל", summary.regularPatties));
+  if (summary.smashPatties > 0) pattyRows.push(sumRow("סמאש", summary.smashPatties));
+  if (summary.veganPatties > 0) pattyRows.push(sumRow("טבעוני (חף מפשע)", summary.veganPatties));
+
+  const bunRows: string[] = [];
+  if (summary.regularBuns > 0) bunRows.push(sumRow("לחמנייה רגילה", summary.regularBuns));
+  if (summary.glutenFreeBuns > 0) bunRows.push(sumRow("לחמנייה ללא גלוטן", summary.glutenFreeBuns, true));
+
+  const friedRows: string[] = [];
+  if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
+  if (summary.waffleFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.waffleFries));
+  if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל (מנה)", summary.onionRings));
+  if (summary.tempuraOnionSide > 0)
+    friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
+  if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
+
+  const toppingRows: string[] = [];
+  if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
+  if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
+  if (summary.tempuraOnionTopping > 0)
+    toppingRows.push(sumRow("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+
+  const sauceRows: string[] = [];
+  for (const [name, qty] of summary.sauces.entries()) {
+    if (qty > 0) sauceRows.push(sumRow(name, qty));
+  }
+
+  const summaryBody =
+    sumSection("קציצות", pattyRows) +
+    sumSection("לחמניות", bunRows) +
+    sumSection("מטוגנים", friedRows) +
+    sumSection("תוספות מעל ההמבורגר", toppingRows) +
+    sumSection("רטבים", sauceRows);
+
+  const bodyHtml = summaryBody
+    ? `<div class="summary">
+         <div class="summary-title">סיכום סבב — לטבח</div>
+         ${summaryBody}
+       </div>`
+    : `<div class="empty">אין מנות פעילות לסיכום</div>`;
+
+  return `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8" />
+<title>סיכום סבב לטבח</title>
+<style>
+  @page { size: 80mm auto; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #fff; color: #000;
+    font-family: 'Heebo', 'Arial', sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    width: 72mm;
+    padding: 2mm;
+    font-size: 12pt;
+    line-height: 1.3;
+  }
+  .head {
+    text-align: center;
+    font-size: 17pt;
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 0 0 1mm;
+  }
+  .head small {
+    display: block;
+    font-size: 10pt;
+    font-weight: 700;
+    margin-top: 1mm;
+  }
+  .meta {
+    text-align: center;
+    font-size: 11pt;
+    font-weight: 700;
+    border-bottom: 2px solid #000;
+    padding-bottom: 2mm;
+    margin-bottom: 2mm;
+  }
+  .empty {
+    text-align: center;
+    padding: 6mm 2mm;
+    font-size: 13pt;
+    font-weight: 700;
+    border: 2px dashed #000;
+  }
+  .summary {
+    border: 3px solid #000;
+    margin-top: 2mm;
+    padding: 2mm;
+    background: #000; color: #fff;
+  }
+  .summary-title {
+    text-align: center;
+    font-size: 15pt;
+    font-weight: 900;
+    border-bottom: 2px solid #fff;
+    padding-bottom: 1mm;
+    margin-bottom: 2mm;
+    letter-spacing: 1px;
+  }
+  .sum-section {
+    margin-top: 2mm;
+    padding-top: 1mm;
+    border-top: 1px dashed #fff;
+  }
+  .sum-section:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .sum-section-title {
+    font-size: 11pt;
+    font-weight: 800;
+    text-align: center;
+    padding: 1mm 0;
+    margin-bottom: 1mm;
+    background: #fff; color: #000;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+  }
+  .sum-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13pt;
+    font-weight: 800;
+    padding: 1mm 0;
+  }
+  .sum-row.gf { font-style: italic; }
+  .sum-num {
+    font-size: 16pt;
+    font-weight: 900;
+    min-width: 8mm;
+    text-align: center;
+    background: #fff; color: #000;
+    border-radius: 2px;
+    padding: 0 2mm;
+  }
+  .footer {
+    text-align: center;
+    font-size: 10pt;
+    margin-top: 3mm;
+    padding-bottom: 5mm;
+    border-top: 2px solid #000;
+    padding-top: 2mm;
+  }
+  @media print { body { width: auto; padding: 1mm 2mm; } }
+</style>
+</head>
+<body>
+  <div class="head">סיכום סבב לטבח<small>${time}</small></div>
+  <div class="meta">${orders.length} הזמנות פעילות · אגרגציה כוללת</div>
+  ${bodyHtml}
+  <div class="footer">סה״כ מנות להכנה בסבב</div>
+</body>
+</html>`;
+}
+
+export function printRoundChefSummary(orders: RoundOrder[]) {
+  const html = buildRoundChefSummaryHtml(orders);
+  const w = window.open("", "_blank", "width=380,height=700");
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => {
+    try {
+      w.focus();
+      w.print();
+    } catch (e) {
+      console.warn("[round-chef-summary] print failed", e);
+    }
+  }, 250);
+}

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary } from "@/lib/kitchenReceipt";
 
 interface OrderItem {
   id: string;
@@ -231,6 +231,7 @@ const Kitchen = () => {
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [showRoundSummary, setShowRoundSummary] = useState(false);
+  const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
 
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
@@ -613,6 +614,10 @@ const Kitchen = () => {
     () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders) : ""),
     [showRoundSummary, activeRoundOrders],
   );
+  const roundChefSummaryHtml = useMemo(
+    () => (showRoundChefSummary ? buildRoundChefSummaryHtml(activeRoundOrders) : ""),
+    [showRoundChefSummary, activeRoundOrders],
+  );
 
   const timeSince = (dateStr: string) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -719,8 +724,7 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
-          {/* Round summary — preview (eye) + print. Only meaningful while there are
-              orders being prepared, so the buttons disable themselves otherwise. */}
+          {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
             disabled={activeRoundOrders.length === 0}
@@ -746,6 +750,34 @@ const Kitchen = () => {
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
             title="הדפס בון הזמנות פעילות"
+          >
+            <Printer size={20} />
+          </button>
+          {/* Round CHEF summary (aggregated only) — preview (list) + print (orange). */}
+          <button
+            onClick={() => setShowRoundChefSummary(true)}
+            disabled={activeRoundOrders.length === 0}
+            className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
+              activeRoundOrders.length === 0
+                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                : "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
+            }`}
+            title={`הצג סיכום סבב לטבח (${activeRoundOrders.length})`}
+          >
+            <ListChecks size={20} />
+          </button>
+          <button
+            onClick={() => {
+              if (activeRoundOrders.length === 0) return;
+              printRoundChefSummary(activeRoundOrders);
+            }}
+            disabled={activeRoundOrders.length === 0}
+            className={`p-2 rounded-lg transition-colors ${
+              activeRoundOrders.length === 0
+                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                : "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
+            }`}
+            title="הדפס סיכום סבב לטבח"
           >
             <Printer size={20} />
           </button>
@@ -1335,6 +1367,51 @@ const Kitchen = () => {
             <iframe
               title="round-summary-preview"
               srcDoc={roundSummaryHtml}
+              className="flex-1 w-full bg-white"
+              style={{ minHeight: "60vh" }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Round CHEF summary preview modal — aggregated counts only (no per-order detail). */}
+      {showRoundChefSummary && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overscroll-contain touch-none"
+          onClick={() => setShowRoundChefSummary(false)}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
+              <span className="font-bold text-foreground flex items-center gap-2">
+                <ListChecks size={16} className="text-orange-400" />
+                סיכום סבב לטבח — {activeRoundOrders.length} הזמנות
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => printRoundChefSummary(activeRoundOrders)}
+                  disabled={activeRoundOrders.length === 0}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Printer size={14} /> הדפס
+                </button>
+                <button
+                  onClick={() => setShowRoundChefSummary(false)}
+                  className="p-1.5 rounded-lg hover:bg-secondary text-foreground"
+                  aria-label="סגור"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title="round-chef-summary-preview"
+              srcDoc={roundChefSummaryHtml}
               className="flex-1 w-full bg-white"
               style={{ minHeight: "60vh" }}
             />
