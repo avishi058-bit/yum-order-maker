@@ -5,7 +5,7 @@ import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary } from "@/lib/kitchenReceipt";
 
 interface OrderItem {
   id: string;
