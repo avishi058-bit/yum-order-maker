@@ -67,7 +67,7 @@ const KioskWelcome = ({ onStart, imagesReady = true }: { onStart: () => void; im
           onClick={onStart}
           className="bg-orange-500 text-white font-black text-3xl md:text-4xl px-20 py-8 rounded-full shadow-2xl shadow-orange-500/50 hover:shadow-orange-500/70 transition-shadow"
         >
-          לחץ להתחיל הזמנה 👆
+          {imagesReady ? "לחץ להתחיל הזמנה 👆" : "טוען תפריט… ⏳"}
         </motion.button>
       </div>
     </div>
