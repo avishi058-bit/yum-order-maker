@@ -1373,6 +1373,51 @@ const Kitchen = () => {
           </div>
         </div>
       )}
+
+      {/* Round CHEF summary preview modal — aggregated counts only (no per-order detail). */}
+      {showRoundChefSummary && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overscroll-contain touch-none"
+          onClick={() => setShowRoundChefSummary(false)}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            className="bg-card rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
+              <span className="font-bold text-foreground flex items-center gap-2">
+                <ListChecks size={16} className="text-orange-400" />
+                סיכום סבב לטבח — {activeRoundOrders.length} הזמנות
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => printRoundChefSummary(activeRoundOrders)}
+                  disabled={activeRoundOrders.length === 0}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Printer size={14} /> הדפס
+                </button>
+                <button
+                  onClick={() => setShowRoundChefSummary(false)}
+                  className="p-1.5 rounded-lg hover:bg-secondary text-foreground"
+                  aria-label="סגור"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title="round-chef-summary-preview"
+              srcDoc={roundChefSummaryHtml}
+              className="flex-1 w-full bg-white"
+              style={{ minHeight: "60vh" }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
