@@ -191,12 +191,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroHeight = isKiosk ? readKioskHeroHeight() : HERO_HEIGHT;
   const heroImage = item ? menuImages[item.id] || menuImages[item.baseBurgerId || ""] : null;
   const showHero = !!heroImage && step === "customize";
+  const showCollapsingHero = showHero && !isKiosk;
+  const showStaticScrollHero = showHero && isKiosk;
 
   // Apply hero transform from scrollTop — direct DOM, no setState.
   // Wolt-style: hero shrinks in real height (so content fills the gap and the
   // sticky header stays at the very top), while the image inside parallaxes & fades.
   // SAME behavior on website + kiosk — only the base height differs (admin-tunable).
   const applyHeroTransform = useCallback((scrollTop: number) => {
+    if (isKiosk) return;
     const hero = heroRef.current;
     const img = heroImgRef.current;
     if (!hero || !img) return;
@@ -606,7 +609,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 </div>
 
                 {/* Hero image (only on customize step, only if image exists) */}
-                {showHero && (
+                {showCollapsingHero && (
                   <div
                     ref={heroRef}
                     data-kiosk-hero={isKiosk ? "true" : undefined}
@@ -646,13 +649,28 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={handleScroll}
+                    onScroll={isKiosk ? undefined : handleScroll}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
                     onPointerCancel={onPointerCancel}
-                    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+                    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y", overflowAnchor: "none" }}
                   >
+                    {showStaticScrollHero && (
+                      <div
+                        data-kiosk-hero="true"
+                        className="relative w-full shrink-0 overflow-hidden"
+                        style={{ height: heroHeight, contain: "layout paint size", overflowAnchor: "none" }}
+                      >
+                        <img
+                          src={heroImage as string}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                          decoding="sync"
+                        />
+                      </div>
+                    )}
                     {(item.id === "haf-mifsha" || item.baseBurgerId === "haf-mifsha") && (
                       <div className={`mx-5 mt-4 rounded-xl border-2 border-destructive bg-destructive/10 ${isKiosk ? "p-5" : "p-3"}`}>
                         <p className={`font-black text-destructive text-right ${isKiosk ? "text-[20px]" : "text-sm"}`}>
