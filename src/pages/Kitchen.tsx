@@ -724,8 +724,7 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
-          {/* Round summary — preview (eye) + print. Only meaningful while there are
-              orders being prepared, so the buttons disable themselves otherwise. */}
+          {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
             disabled={activeRoundOrders.length === 0}
@@ -751,6 +750,34 @@ const Kitchen = () => {
                 : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
             }`}
             title="הדפס בון הזמנות פעילות"
+          >
+            <Printer size={20} />
+          </button>
+          {/* Round CHEF summary (aggregated only) — preview (list) + print (orange). */}
+          <button
+            onClick={() => setShowRoundChefSummary(true)}
+            disabled={activeRoundOrders.length === 0}
+            className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
+              activeRoundOrders.length === 0
+                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                : "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
+            }`}
+            title={`הצג סיכום סבב לטבח (${activeRoundOrders.length})`}
+          >
+            <ListChecks size={20} />
+          </button>
+          <button
+            onClick={() => {
+              if (activeRoundOrders.length === 0) return;
+              printRoundChefSummary(activeRoundOrders);
+            }}
+            disabled={activeRoundOrders.length === 0}
+            className={`p-2 rounded-lg transition-colors ${
+              activeRoundOrders.length === 0
+                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                : "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
+            }`}
+            title="הדפס סיכום סבב לטבח"
           >
             <Printer size={20} />
           </button>
