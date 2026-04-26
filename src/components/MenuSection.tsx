@@ -89,7 +89,10 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
               height={isKiosk ? 176 : 112}
               className="w-full h-full object-cover"
               loading={isKiosk ? "eager" : "lazy"}
-              decoding="async"
+              decoding={isKiosk ? "sync" : "async"}
+              // High fetch priority on kiosk so images aren't deprioritized
+              // behind fonts / chunks when the menu first paints.
+              {...(isKiosk ? { fetchpriority: "high" as const } : {})}
               style={isKiosk ? { transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" } : undefined}
             />
           ) : (
