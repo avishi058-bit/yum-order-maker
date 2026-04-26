@@ -331,7 +331,18 @@ const Kiosk = () => {
   }
 
   if (view === "welcome") {
-    return <KioskWelcome onStart={() => setView("menu")} />;
+    return (
+      <KioskWelcome
+        imagesReady={imagesReady}
+        onStart={() => {
+          if (imagesReady) {
+            setView("menu");
+          } else {
+            setPendingStart(true);
+          }
+        }}
+      />
+    );
   }
 
   return (
