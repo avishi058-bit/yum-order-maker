@@ -127,6 +127,22 @@ const Kiosk = () => {
     }
   }, []);
 
+  // Preload all menu images on kiosk mount so they're cached and appear
+  // instantly when the user enters the menu — no progressive loading flicker.
+  useEffect(() => {
+    let cancelled = false;
+    import("@/data/menuImages").then(({ menuImages }) => {
+      if (cancelled) return;
+      const unique = Array.from(new Set(Object.values(menuImages)));
+      unique.forEach((src) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = src;
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   const alcoholConsent = useAlcoholConsent();
 
   const openItemFlow = useCallback((item: MenuItem) => {
