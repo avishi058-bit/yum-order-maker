@@ -1156,6 +1156,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   <div class="head">הזמנות פעילות<small>${time}</small></div>
   <div class="meta">${sorted.length} הזמנות · לפי סדר קבלה (ישן → חדש)</div>
   ${blocksHtml}
+  ${summaryHtml}
   <div class="footer">המנה הראשונה ברשימה — להכין ראשונה</div>
 </body>
 </html>`;
