@@ -69,6 +69,8 @@ const TOPPINGS_PRICING: Record<string, { name: string; price: number }> = {
   "hot-pepper-jam": { name: "ריבת פלפלים חריפים", price: 9 },
   "onion-rings-topping": { name: "שלוש טבעות בצל ביתיות", price: 8 },
   "maple": { name: "מייפל", price: 5 },
+  "vegan-busha": { name: "גבינת בושה טבעונית 🧀🌱", price: 9 },
+  "crispy-onion-chips": { name: "שבבי בצל קריספי", price: 6 },
 };
 
 const MEAL_UPGRADE_PRICE = 23;
