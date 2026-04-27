@@ -1,8 +1,15 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import heroBurger from "@/assets/hero-burger.jpg";
 
-const KioskWelcome = ({ onStart, imagesReady = true }: { onStart: () => void; imagesReady?: boolean }) => {
+/**
+ * Welcome screen for the kiosk. Wrapped in React.memo so background re-renders
+ * of the parent <Kiosk> page (e.g. realtime updates from menu_availability or
+ * site_settings) do NOT re-render this component or restart its animations.
+ * The screen must stay perfectly stable until the user touches it.
+ */
+const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: () => void; imagesReady?: boolean }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" dir="rtl">
       {/* Background */}
