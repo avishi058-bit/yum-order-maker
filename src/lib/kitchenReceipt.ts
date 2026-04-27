@@ -396,11 +396,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
       roastbeef += qty;
     }
 
-    // ---- Special-Hadegel auto-extras: 2 tempura rings as a side portion
-    //      per burger ordered (the recipe lists them as a topping but the
-    //      chef preps them in the fryer like a side).
+    // ---- Special-Hadegel auto-extras: 2 tempura rings counted as INDIVIDUAL
+    //      units (not as a side portion) — chef preps them like single rings.
     if (isSpecialHadegel(name)) {
-      tempuraOnionSide += 2 * qty;
+      tempuraOnionTopping += 2 * qty;
     }
 
     // ---- topping-driven extras ----
