@@ -211,7 +211,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "bottle",
     name: "בקבוק",
-    description: "ענבים / תפוחים",
+    description: "ענבים / תפוזים",
     price: 12,
     category: "drink",
   },
