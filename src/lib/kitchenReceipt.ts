@@ -610,7 +610,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
   if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(row("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+    toppingRows.push(row("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   // Sauces
   const sauceRows: string[] = [];
@@ -1036,7 +1036,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
   if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(sumRow("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+    toppingRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   const sauceRows: string[] = [];
   for (const [name, qty] of summary.sauces.entries()) {
@@ -1313,7 +1313,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
   if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(sumRow("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+    toppingRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   const sauceRows: string[] = [];
   for (const [name, qty] of summary.sauces.entries()) {
