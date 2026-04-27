@@ -246,14 +246,19 @@ const DONENESS_SHORT: Record<string, string> = {
   "doneness-wd": "WD",
 };
 
+// Returns the doneness short-key for a burger. If none was selected/saved, falls
+// back to "MW" (medium-well) — that's the system-wide default for any burger
+// that supports doneness, so the chef summary should reflect it even when the
+// order item lacks an explicit doneness-* entry in removals.
 const extractDonenessKey = (removals: string[] | null | undefined): string | null => {
-  if (!removals) return null;
-  for (const r of removals) {
-    if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
-      return DONENESS_SHORT[r] || null;
+  if (removals) {
+    for (const r of removals) {
+      if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
+        return DONENESS_SHORT[r] || "MW";
+      }
     }
   }
-  return null;
+  return "MW";
 };
 
 export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, number> {
