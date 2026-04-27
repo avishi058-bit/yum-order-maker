@@ -482,37 +482,36 @@ const Index = () => {
         cartButtonRef={cartButtonRef}
       />
 
-      <AnimatePresence>
-        {checkoutOpen && (
-          <CheckoutForm
-            items={cart}
-            total={getTotal()}
-            sauces={selectedSauces}
-            freeSauces={freeSauces}
-            onClose={() => setCheckoutOpen(false)}
-            onSuccess={(orderNumber, phone) => {
-              setCheckoutOpen(false);
-              setCart([]);
-              if (isStation) {
-                setShowKioskWelcome(true);
-              } else if (orderNumber) {
-                // Phone is required for the secure tracking endpoint to authorize reads
-                const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
-                setTrackedOrder(trackedOrder);
-                window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
-                // Soft-launch reassurance: tell the customer they can track the
-                // order from the top bar at any time, even after leaving the site.
-                toast({
-                  title: "ההזמנה התקבלה בהצלחה 🎉",
-                  description:
-                    "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
-                  duration: 10000,
-                });
-              }
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <Suspense fallback={null}>
+        <AnimatePresence>
+          {checkoutOpen && (
+            <CheckoutForm
+              items={cart}
+              total={getTotal()}
+              sauces={selectedSauces}
+              freeSauces={freeSauces}
+              onClose={() => setCheckoutOpen(false)}
+              onSuccess={(orderNumber, phone) => {
+                setCheckoutOpen(false);
+                setCart([]);
+                if (isStation) {
+                  setShowKioskWelcome(true);
+                } else if (orderNumber) {
+                  const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
+                  setTrackedOrder(trackedOrder);
+                  window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
+                  toast({
+                    title: "ההזמנה התקבלה בהצלחה 🎉",
+                    description:
+                      "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
+                    duration: 10000,
+                  });
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>
+      </Suspense>
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-3">
@@ -535,28 +534,36 @@ const Index = () => {
         </footer>
       )}
 
-      <AccessibilityWidget />
-      <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <Suspense fallback={null}>
+        <AccessibilityWidget />
+        {authModalOpen && (
+          <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+        )}
 
-      <AlcoholConsentModal
-        open={alcoholConsent.consentOpen}
-        isKiosk={isStation}
-        onConfirm={alcoholConsent.confirm}
-        onCancel={alcoholConsent.cancel}
-      />
+        {alcoholConsent.consentOpen && (
+          <AlcoholConsentModal
+            open={alcoholConsent.consentOpen}
+            isKiosk={isStation}
+            onConfirm={alcoholConsent.confirm}
+            onCancel={alcoholConsent.cancel}
+          />
+        )}
 
-      <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+        {reopenModalOpen && (
+          <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+        )}
 
-      {/* Saved cart welcome-back prompt — only when current cart is empty
-          and we're not in the middle of an active order (kiosk / checkout). */}
-      <SavedCartModal
-        open={!!savedCart && cart.length === 0 && !checkoutOpen && !isStation}
-        savedCart={savedCart}
-        customerName={customer?.name ?? null}
-        onResume={handleResumeSavedCart}
-        onStartOver={handleStartOver}
-        onDismiss={dismissPrompt}
-      />
+        {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && (
+          <SavedCartModal
+            open={true}
+            savedCart={savedCart}
+            customerName={customer?.name ?? null}
+            onResume={handleResumeSavedCart}
+            onStartOver={handleStartOver}
+            onDismiss={dismissPrompt}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };
