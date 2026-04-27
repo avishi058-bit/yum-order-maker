@@ -62,23 +62,61 @@ const AdminAvailability = () => {
     };
   }, []);
 
+  const syncDependentDishes = async (changedItemId: string, currentItems: AvailabilityItem[]) => {
+    const dependents = getDependentDishes(changedItemId);
+    if (dependents.length === 0) return;
+
+    for (const dishId of dependents) {
+      const dish = currentItems.find((i) => i.item_id === dishId);
+      if (!dish) continue;
+
+      const ingredientIds = MENU_DEPENDENCIES[dishId] || [];
+      const allIngredientsAvailable = ingredientIds.every((ingId) => {
+        const ing = currentItems.find((i) => i.item_id === ingId);
+        return ing ? ing.available : true;
+      });
+
+      // אם המנה כובתה ידנית - לא נוגעים בה
+      if (dish.manually_disabled && !allIngredientsAvailable) continue;
+      if (dish.manually_disabled && allIngredientsAvailable) continue;
+
+      const shouldBeAvailable = allIngredientsAvailable;
+      if (dish.available !== shouldBeAvailable) {
+        await supabase
+          .from("menu_availability")
+          .update({ available: shouldBeAvailable, updated_at: new Date().toISOString() })
+          .eq("item_id", dishId);
+      }
+    }
+  };
+
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
-    // Optimistic update
-    setItems((prev) =>
-      prev.map((item) => (item.item_id === itemId ? { ...item, available: !currentValue } : item))
+    const newValue = !currentValue;
+
+    // Optimistic update - מסמן manually_disabled לפי הפעולה הידנית
+    const optimisticItems = items.map((item) =>
+      item.item_id === itemId ? { ...item, available: newValue, manually_disabled: !newValue } : item
     );
+    setItems(optimisticItems);
 
     const { error } = await supabase
       .from("menu_availability")
-      .update({ available: !currentValue, updated_at: new Date().toISOString() })
+      .update({
+        available: newValue,
+        manually_disabled: !newValue,
+        updated_at: new Date().toISOString(),
+      })
       .eq("item_id", itemId);
 
     if (error) {
-      // Revert on error
       setItems((prev) =>
         prev.map((item) => (item.item_id === itemId ? { ...item, available: currentValue } : item))
       );
+      return;
     }
+
+    // החלת לוגיקת תלויות על מנות שמכילות את המרכיב הזה
+    await syncDependentDishes(itemId, optimisticItems);
   };
 
   const grouped = categoryOrder
