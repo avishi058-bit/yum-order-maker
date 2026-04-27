@@ -33,8 +33,6 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useSavedCart } from "@/hooks/useSavedCart";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
-import AlcoholConsentModal from "@/components/AlcoholConsentModal";
-import ReopenNotifyModal from "@/components/ReopenNotifyModal";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
