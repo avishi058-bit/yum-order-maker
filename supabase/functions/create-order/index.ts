@@ -129,7 +129,7 @@ const DEAL_DRINK_PRICING: Record<string, { name: string; price: number }> = {
   "fam-sprite": { name: "ספרייט", price: 0 },
   "fam-blu": { name: "בלו", price: 0 },
   "fam-grapes": { name: "ענבים", price: 0 },
-  "fam-apples": { name: "תפוחים", price: 0 },
+  "fam-apples": { name: "תפוזים", price: 0 },
   "fam-goldstar": { name: "גולדסטאר", price: 8 },
   "fam-heineken": { name: "הייניקן", price: 8 },
   "fam-corona": { name: "קורונה", price: 8 },
