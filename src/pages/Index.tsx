@@ -389,79 +389,92 @@ const Index = () => {
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
       ) : null}
 
-      <ItemCustomizer
-        item={customizerItem}
-        onClose={() => {
-          setCustomizerItem(null);
-          setEditingCartId(null);
-          setCustomizerInitial(undefined);
-        }}
-        onConfirm={handleCustomizerConfirm}
-        isAvailable={isAvailable}
-        initialState={customizerInitial}
-      />
+      <Suspense fallback={null}>
+        {customizerItem && (
+          <ItemCustomizer
+            item={customizerItem}
+            onClose={() => {
+              setCustomizerItem(null);
+              setEditingCartId(null);
+              setCustomizerInitial(undefined);
+            }}
+            onConfirm={handleCustomizerConfirm}
+            isAvailable={isAvailable}
+            initialState={customizerInitial}
+          />
+        )}
 
-      <DrinkSelector
-        item={drinkItem}
-        onClose={() => setDrinkItem(null)}
-        onConfirm={handleDrinkConfirm}
-        isAvailable={isAvailable}
-      />
+        {drinkItem && (
+          <DrinkSelector
+            item={drinkItem}
+            onClose={() => setDrinkItem(null)}
+            onConfirm={handleDrinkConfirm}
+            isAvailable={isAvailable}
+          />
+        )}
 
-      <DealCustomizer
-        open={dealOpen}
-        onClose={() => setDealOpen(false)}
-        onConfirm={handleDealConfirm}
-        isAvailable={isAvailable}
-      />
+        {dealOpen && (
+          <DealCustomizer
+            open={dealOpen}
+            onClose={() => setDealOpen(false)}
+            onConfirm={handleDealConfirm}
+            isAvailable={isAvailable}
+          />
+        )}
 
-      <FamilyDealCustomizer
-        open={familyDealOpen}
-        onClose={() => setFamilyDealOpen(false)}
-        onConfirm={handleFamilyDealConfirm}
-        isAvailable={isAvailable}
-      />
+        {familyDealOpen && (
+          <FamilyDealCustomizer
+            open={familyDealOpen}
+            onClose={() => setFamilyDealOpen(false)}
+            onConfirm={handleFamilyDealConfirm}
+            isAvailable={isAvailable}
+          />
+        )}
 
-      <KioskCartDrawer
-        open={cartOpen}
-        onClose={() => setCartOpen(false)}
-        items={cart}
-        onUpdateQuantity={updateQuantity}
-        onCheckout={() => {
-          setCartOpen(false);
-          if (dineIn === false && burgerCount > 0) {
-            setSauceSelectorOpen(true);
-          } else {
-            setCheckoutOpen(true);
-          }
-        }}
-        onQuickAdd={(item) => addToCartDirect(item)}
-        onSelectDrink={(item) => {
-          setCartOpen(false);
-          setDrinkItem(item);
-        }}
-        onBackToMenu={() => {
-          setCartOpen(false);
-          setTimeout(() => {
-            document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        }}
-        isAvailable={isAvailable}
-        onEditItem={handleEditCartItem}
-        isKiosk={isStation}
-      />
+        {cartOpen && (
+          <KioskCartDrawer
+            open={cartOpen}
+            onClose={() => setCartOpen(false)}
+            items={cart}
+            onUpdateQuantity={updateQuantity}
+            onCheckout={() => {
+              setCartOpen(false);
+              if (dineIn === false && burgerCount > 0) {
+                setSauceSelectorOpen(true);
+              } else {
+                setCheckoutOpen(true);
+              }
+            }}
+            onQuickAdd={(item) => addToCartDirect(item)}
+            onSelectDrink={(item) => {
+              setCartOpen(false);
+              setDrinkItem(item);
+            }}
+            onBackToMenu={() => {
+              setCartOpen(false);
+              setTimeout(() => {
+                document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            }}
+            isAvailable={isAvailable}
+            onEditItem={handleEditCartItem}
+            isKiosk={isStation}
+          />
+        )}
 
-      <SauceSelector
-        open={sauceSelectorOpen}
-        freeSauces={freeSauces}
-        onClose={() => setSauceSelectorOpen(false)}
-        onConfirm={(sauces) => {
-          setSelectedSauces(sauces);
-          setSauceSelectorOpen(false);
-          setCheckoutOpen(true);
-        }}
-      />
-
+        {sauceSelectorOpen && (
+          <SauceSelector
+            open={sauceSelectorOpen}
+            freeSauces={freeSauces}
+            onClose={() => setSauceSelectorOpen(false)}
+            onConfirm={(sauces) => {
+              setSelectedSauces(sauces);
+              setSauceSelectorOpen(false);
+              setCheckoutOpen(true);
+            }}
+          />
+        )}
+      </Suspense>
       <ItemPreview
         item={previewItem}
         onClose={() => setPreviewItem(null)}
