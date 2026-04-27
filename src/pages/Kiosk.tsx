@@ -166,6 +166,18 @@ const Kiosk = () => {
     }
   }, [pendingStart, imagesReady]);
 
+  // Stable callback so memoized <KioskWelcome> never re-renders when the parent
+  // re-renders (e.g. realtime availability/settings updates).
+  const imagesReadyRef = useRef(imagesReady);
+  imagesReadyRef.current = imagesReady;
+  const handleWelcomeStart = useCallback(() => {
+    if (imagesReadyRef.current) {
+      setView("menu");
+    } else {
+      setPendingStart(true);
+    }
+  }, []);
+
   const alcoholConsent = useAlcoholConsent();
 
   const openItemFlow = useCallback((item: MenuItem) => {
