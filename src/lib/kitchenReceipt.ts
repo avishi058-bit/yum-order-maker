@@ -73,8 +73,8 @@ export interface ChefSummary {
   fries: number;
   waffleFries: number;
   onionRings: number;          //טבעות בצל (מנה בצד)
-  tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / מתוך עסקית / ספיישל הדגל)
-  tempuraOnionTopping: number; // שלוש טבעות בצל ביתיות (טופינג מעל ההמבורגר)
+  tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
+  tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
   friendsMix: number;
   // Sauces — aggregated by name
   sauces: Map<string, number>;
