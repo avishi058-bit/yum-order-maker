@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import { MENU_DEPENDENCIES, getDependentDishes } from "@/lib/menuDependencies";
 
 interface AvailabilityItem {
   id: string;
@@ -8,6 +9,7 @@ interface AvailabilityItem {
   item_name: string;
   category: string;
   available: boolean;
+  manually_disabled?: boolean;
 }
 
 const categoryLabels: Record<string, string> = {
