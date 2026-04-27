@@ -290,13 +290,18 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
   return counts;
 }
 
-// Render doneness map as ordered list of "<n><LABEL>" strings (M, MW, WD order)
-const DONENESS_ORDER = ["M", "MW", "WD"];
+// Render doneness map as ordered list of "<n> <LABEL>" rows (MW, M, WD order — MW first as it's the default/most common)
+const DONENESS_ORDER = ["MW", "M", "WD"];
+const DONENESS_FULL_LABELS: Record<string, string> = {
+  M: "מדיום",
+  MW: "מדיום וואל",
+  WD: "וואל דאן",
+};
 export const formatDonenessRows = (counts: Map<string, number>): Array<{ label: string; n: number }> => {
   const rows: Array<{ label: string; n: number }> = [];
   for (const key of DONENESS_ORDER) {
     const n = counts.get(key) || 0;
-    if (n > 0) rows.push({ label: key, n });
+    if (n > 0) rows.push({ label: DONENESS_FULL_LABELS[key] || key, n });
   }
   return rows;
 };
