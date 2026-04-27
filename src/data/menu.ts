@@ -211,7 +211,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "bottle",
     name: "בקבוק",
-    description: "ענבים / תפוחים",
+    description: "ענבים / תפוזים",
     price: 12,
     category: "drink",
   },
@@ -424,7 +424,7 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
   ],
   bottle: [
     { id: "bottle-grapes", name: "ענבים" },
-    { id: "bottle-apples", name: "תפוחים" },
+    { id: "bottle-apples", name: "תפוזים" },
   ],
   "beer-regular": [
     { id: "beer-carlsberg", name: "קלסטברג" },

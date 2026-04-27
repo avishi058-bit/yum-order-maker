@@ -32,7 +32,7 @@ const familyDrinkOptions = [
   { id: "fam-sprite", name: "ספרייט (פחית)", price: 10, category: "soft" as const },
   { id: "fam-blu", name: "בלו (פחית)", price: 10, category: "soft" as const },
   { id: "fam-grapes", name: "ענבים (בקבוק)", price: 12, category: "soft" as const },
-  { id: "fam-apples", name: "תפוחים (בקבוק)", price: 12, category: "soft" as const },
+  { id: "fam-apples", name: "תפוזים (בקבוק)", price: 12, category: "soft" as const },
   { id: "fam-goldstar", name: "גולדסטאר", price: 18, category: "beer" as const },
   { id: "fam-heineken", name: "הייניקן", price: 18, category: "beer" as const },
   { id: "fam-corona", name: "קורונה", price: 18, category: "beer" as const },
