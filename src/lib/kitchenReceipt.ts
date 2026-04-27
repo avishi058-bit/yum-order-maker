@@ -73,8 +73,8 @@ export interface ChefSummary {
   fries: number;
   waffleFries: number;
   onionRings: number;          //טבעות בצל (מנה בצד)
-  tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / מתוך עסקית / ספיישל הדגל)
-  tempuraOnionTopping: number; // שלוש טבעות בצל ביתיות (טופינג מעל ההמבורגר)
+  tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
+  tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
   friendsMix: number;
   // Sauces — aggregated by name
   sauces: Map<string, number>;
@@ -396,11 +396,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
       roastbeef += qty;
     }
 
-    // ---- Special-Hadegel auto-extras: 2 tempura rings as a side portion
-    //      per burger ordered (the recipe lists them as a topping but the
-    //      chef preps them in the fryer like a side).
+    // ---- Special-Hadegel auto-extras: 2 tempura rings counted as INDIVIDUAL
+    //      units (not as a side portion) — chef preps them like single rings.
     if (isSpecialHadegel(name)) {
-      tempuraOnionSide += 2 * qty;
+      tempuraOnionTopping += 2 * qty;
     }
 
     // ---- topping-driven extras ----
@@ -412,8 +411,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     smashPatties += includesAny(it.toppings, ["אקסטרה קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
-    // Onion-rings TOPPING ("שלושטבעות בצל ביתיות") — kept SEPARATE from side.
-    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "טבעות בצל ביתיות"]) * qty;
+    // Onion-rings TOPPING ("שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
+    // ring units (3 per topping), aggregated together with rings from Special-Hadegel.
+    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "שלוש טבעות בצל", "טבעות בצל ביתיות"]) * 3 * qty;
 
     // ---- gluten-free bun swap ----
     // Use cleaned removals (without __OWNER__ sentinel) to avoid false matches.
@@ -610,7 +610,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
   if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(row("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+    toppingRows.push(row("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   // Sauces
   const sauceRows: string[] = [];
@@ -1036,7 +1036,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
   if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(sumRow("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+    toppingRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   const sauceRows: string[] = [];
   for (const [name, qty] of summary.sauces.entries()) {
@@ -1313,7 +1313,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
   if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(sumRow("טבעות בצל בטמפורה (טופינג)", summary.tempuraOnionTopping));
+    toppingRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   const sauceRows: string[] = [];
   for (const [name, qty] of summary.sauces.entries()) {
