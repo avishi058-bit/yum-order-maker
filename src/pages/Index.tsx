@@ -1,25 +1,31 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone, LogIn } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
-import KioskCartDrawer from "@/components/KioskCartDrawer";
-import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
-import DealCustomizer from "@/components/DealCustomizer";
-import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
-import DrinkSelector from "@/components/DrinkSelector";
-import SauceSelector from "@/components/SauceSelector";
-import AccessibilityWidget from "@/components/AccessibilityWidget";
-import ItemPreview from "@/components/ItemPreview";
+import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import BusinessStatusBar from "@/components/BusinessStatusBar";
 import SideMenu from "@/components/SideMenu";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
-import CustomerAuthModal from "@/components/CustomerAuthModal";
-import SavedCartModal from "@/components/SavedCartModal";
+import ItemPreview from "@/components/ItemPreview";
+
+// Lazy-loaded: only needed once the user opens a modal/customizer/checkout.
+// This trims the initial JS bundle significantly (ItemCustomizer alone ~1300 lines).
+const KioskCartDrawer = lazy(() => import("@/components/KioskCartDrawer"));
+const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
+const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
+const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
+const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
+const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
+const SauceSelector = lazy(() => import("@/components/SauceSelector"));
+const AccessibilityWidget = lazy(() => import("@/components/AccessibilityWidget"));
+const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
+const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
+const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
+const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
