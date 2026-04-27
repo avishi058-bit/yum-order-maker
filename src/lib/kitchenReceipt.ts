@@ -600,7 +600,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(row("צ׳יפס", summary.fries));
   if (summary.waffleFries > 0) friedRows.push(row("וופל צ׳יפס", summary.waffleFries));
-  if (summary.onionRings > 0) friedRows.push(row("טבעות בצל (מנה)", summary.onionRings));
+  if (summary.onionRings > 0) friedRows.push(row("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(row("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
   if (summary.tempuraOnionTopping > 0)
@@ -1027,7 +1027,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
   if (summary.waffleFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.waffleFries));
-  if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל (מנה)", summary.onionRings));
+  if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
   if (summary.tempuraOnionTopping > 0)
@@ -1304,7 +1304,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
   if (summary.waffleFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.waffleFries));
-  if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל (מנה)", summary.onionRings));
+  if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
   if (summary.tempuraOnionTopping > 0)
