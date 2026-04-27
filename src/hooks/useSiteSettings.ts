@@ -124,8 +124,19 @@ export const useSiteSettings = () => {
         kiosk_lock_layout: d.kiosk_lock_layout ?? KIOSK_DEFAULTS.kiosk_lock_layout,
         kiosk_disable_zoom: d.kiosk_disable_zoom ?? KIOSK_DEFAULTS.kiosk_disable_zoom,
       };
-      setSettings(fresh);
-      writeCachedSettings(fresh);
+      // Skip state update if nothing actually changed — prevents downstream
+      // effects (like useKioskCSSVars) from re-running on every realtime
+      // heartbeat / unrelated-row update, which used to flicker the kiosk
+      // welcome screen.
+      setSettings((prev) => {
+        try {
+          if (JSON.stringify(prev) === JSON.stringify(fresh)) return prev;
+        } catch {
+          /* fall through to update */
+        }
+        writeCachedSettings(fresh);
+        return fresh;
+      });
     }
     setLoading(false);
   };
