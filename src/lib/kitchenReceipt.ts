@@ -411,8 +411,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     smashPatties += includesAny(it.toppings, ["אקסטרה קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
-    // Onion-rings TOPPING ("שלושטבעות בצל ביתיות") — kept SEPARATE from side.
-    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "טבעות בצל ביתיות"]) * qty;
+    // Onion-rings TOPPING ("שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
+    // ring units (3 per topping), aggregated together with rings from Special-Hadegel.
+    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "שלוש טבעות בצל", "טבעות בצל ביתיות"]) * 3 * qty;
 
     // ---- gluten-free bun swap ----
     // Use cleaned removals (without __OWNER__ sentinel) to avoid false matches.
