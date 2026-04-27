@@ -1,25 +1,31 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Phone, LogIn } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
-import KioskCartDrawer from "@/components/KioskCartDrawer";
-import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
-import DealCustomizer from "@/components/DealCustomizer";
-import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
-import DrinkSelector from "@/components/DrinkSelector";
-import SauceSelector from "@/components/SauceSelector";
-import AccessibilityWidget from "@/components/AccessibilityWidget";
-import ItemPreview from "@/components/ItemPreview";
+import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import BusinessStatusBar from "@/components/BusinessStatusBar";
 import SideMenu from "@/components/SideMenu";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
-import CustomerAuthModal from "@/components/CustomerAuthModal";
-import SavedCartModal from "@/components/SavedCartModal";
+import ItemPreview from "@/components/ItemPreview";
+
+// Lazy-loaded: only needed once the user opens a modal/customizer/checkout.
+// This trims the initial JS bundle significantly (ItemCustomizer alone ~1300 lines).
+const KioskCartDrawer = lazy(() => import("@/components/KioskCartDrawer"));
+const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
+const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
+const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
+const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
+const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
+const SauceSelector = lazy(() => import("@/components/SauceSelector"));
+const AccessibilityWidget = lazy(() => import("@/components/AccessibilityWidget"));
+const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
+const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
+const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
+const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -27,8 +33,6 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useSavedCart } from "@/hooks/useSavedCart";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
-import AlcoholConsentModal from "@/components/AlcoholConsentModal";
-import ReopenNotifyModal from "@/components/ReopenNotifyModal";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
@@ -385,79 +389,92 @@ const Index = () => {
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
       ) : null}
 
-      <ItemCustomizer
-        item={customizerItem}
-        onClose={() => {
-          setCustomizerItem(null);
-          setEditingCartId(null);
-          setCustomizerInitial(undefined);
-        }}
-        onConfirm={handleCustomizerConfirm}
-        isAvailable={isAvailable}
-        initialState={customizerInitial}
-      />
+      <Suspense fallback={null}>
+        {customizerItem && (
+          <ItemCustomizer
+            item={customizerItem}
+            onClose={() => {
+              setCustomizerItem(null);
+              setEditingCartId(null);
+              setCustomizerInitial(undefined);
+            }}
+            onConfirm={handleCustomizerConfirm}
+            isAvailable={isAvailable}
+            initialState={customizerInitial}
+          />
+        )}
 
-      <DrinkSelector
-        item={drinkItem}
-        onClose={() => setDrinkItem(null)}
-        onConfirm={handleDrinkConfirm}
-        isAvailable={isAvailable}
-      />
+        {drinkItem && (
+          <DrinkSelector
+            item={drinkItem}
+            onClose={() => setDrinkItem(null)}
+            onConfirm={handleDrinkConfirm}
+            isAvailable={isAvailable}
+          />
+        )}
 
-      <DealCustomizer
-        open={dealOpen}
-        onClose={() => setDealOpen(false)}
-        onConfirm={handleDealConfirm}
-        isAvailable={isAvailable}
-      />
+        {dealOpen && (
+          <DealCustomizer
+            open={dealOpen}
+            onClose={() => setDealOpen(false)}
+            onConfirm={handleDealConfirm}
+            isAvailable={isAvailable}
+          />
+        )}
 
-      <FamilyDealCustomizer
-        open={familyDealOpen}
-        onClose={() => setFamilyDealOpen(false)}
-        onConfirm={handleFamilyDealConfirm}
-        isAvailable={isAvailable}
-      />
+        {familyDealOpen && (
+          <FamilyDealCustomizer
+            open={familyDealOpen}
+            onClose={() => setFamilyDealOpen(false)}
+            onConfirm={handleFamilyDealConfirm}
+            isAvailable={isAvailable}
+          />
+        )}
 
-      <KioskCartDrawer
-        open={cartOpen}
-        onClose={() => setCartOpen(false)}
-        items={cart}
-        onUpdateQuantity={updateQuantity}
-        onCheckout={() => {
-          setCartOpen(false);
-          if (dineIn === false && burgerCount > 0) {
-            setSauceSelectorOpen(true);
-          } else {
-            setCheckoutOpen(true);
-          }
-        }}
-        onQuickAdd={(item) => addToCartDirect(item)}
-        onSelectDrink={(item) => {
-          setCartOpen(false);
-          setDrinkItem(item);
-        }}
-        onBackToMenu={() => {
-          setCartOpen(false);
-          setTimeout(() => {
-            document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        }}
-        isAvailable={isAvailable}
-        onEditItem={handleEditCartItem}
-        isKiosk={isStation}
-      />
+        {cartOpen && (
+          <KioskCartDrawer
+            open={cartOpen}
+            onClose={() => setCartOpen(false)}
+            items={cart}
+            onUpdateQuantity={updateQuantity}
+            onCheckout={() => {
+              setCartOpen(false);
+              if (dineIn === false && burgerCount > 0) {
+                setSauceSelectorOpen(true);
+              } else {
+                setCheckoutOpen(true);
+              }
+            }}
+            onQuickAdd={(item) => addToCartDirect(item)}
+            onSelectDrink={(item) => {
+              setCartOpen(false);
+              setDrinkItem(item);
+            }}
+            onBackToMenu={() => {
+              setCartOpen(false);
+              setTimeout(() => {
+                document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+              }, 100);
+            }}
+            isAvailable={isAvailable}
+            onEditItem={handleEditCartItem}
+            isKiosk={isStation}
+          />
+        )}
 
-      <SauceSelector
-        open={sauceSelectorOpen}
-        freeSauces={freeSauces}
-        onClose={() => setSauceSelectorOpen(false)}
-        onConfirm={(sauces) => {
-          setSelectedSauces(sauces);
-          setSauceSelectorOpen(false);
-          setCheckoutOpen(true);
-        }}
-      />
-
+        {sauceSelectorOpen && (
+          <SauceSelector
+            open={sauceSelectorOpen}
+            freeSauces={freeSauces}
+            onClose={() => setSauceSelectorOpen(false)}
+            onConfirm={(sauces) => {
+              setSelectedSauces(sauces);
+              setSauceSelectorOpen(false);
+              setCheckoutOpen(true);
+            }}
+          />
+        )}
+      </Suspense>
       <ItemPreview
         item={previewItem}
         onClose={() => setPreviewItem(null)}
@@ -465,37 +482,36 @@ const Index = () => {
         cartButtonRef={cartButtonRef}
       />
 
-      <AnimatePresence>
-        {checkoutOpen && (
-          <CheckoutForm
-            items={cart}
-            total={getTotal()}
-            sauces={selectedSauces}
-            freeSauces={freeSauces}
-            onClose={() => setCheckoutOpen(false)}
-            onSuccess={(orderNumber, phone) => {
-              setCheckoutOpen(false);
-              setCart([]);
-              if (isStation) {
-                setShowKioskWelcome(true);
-              } else if (orderNumber) {
-                // Phone is required for the secure tracking endpoint to authorize reads
-                const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
-                setTrackedOrder(trackedOrder);
-                window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
-                // Soft-launch reassurance: tell the customer they can track the
-                // order from the top bar at any time, even after leaving the site.
-                toast({
-                  title: "ההזמנה התקבלה בהצלחה 🎉",
-                  description:
-                    "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
-                  duration: 10000,
-                });
-              }
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <Suspense fallback={null}>
+        <AnimatePresence>
+          {checkoutOpen && (
+            <CheckoutForm
+              items={cart}
+              total={getTotal()}
+              sauces={selectedSauces}
+              freeSauces={freeSauces}
+              onClose={() => setCheckoutOpen(false)}
+              onSuccess={(orderNumber, phone) => {
+                setCheckoutOpen(false);
+                setCart([]);
+                if (isStation) {
+                  setShowKioskWelcome(true);
+                } else if (orderNumber) {
+                  const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
+                  setTrackedOrder(trackedOrder);
+                  window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
+                  toast({
+                    title: "ההזמנה התקבלה בהצלחה 🎉",
+                    description:
+                      "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
+                    duration: 10000,
+                  });
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>
+      </Suspense>
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-3">
@@ -518,28 +534,36 @@ const Index = () => {
         </footer>
       )}
 
-      <AccessibilityWidget />
-      <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <Suspense fallback={null}>
+        <AccessibilityWidget />
+        {authModalOpen && (
+          <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+        )}
 
-      <AlcoholConsentModal
-        open={alcoholConsent.consentOpen}
-        isKiosk={isStation}
-        onConfirm={alcoholConsent.confirm}
-        onCancel={alcoholConsent.cancel}
-      />
+        {alcoholConsent.consentOpen && (
+          <AlcoholConsentModal
+            open={alcoholConsent.consentOpen}
+            isKiosk={isStation}
+            onConfirm={alcoholConsent.confirm}
+            onCancel={alcoholConsent.cancel}
+          />
+        )}
 
-      <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+        {reopenModalOpen && (
+          <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+        )}
 
-      {/* Saved cart welcome-back prompt — only when current cart is empty
-          and we're not in the middle of an active order (kiosk / checkout). */}
-      <SavedCartModal
-        open={!!savedCart && cart.length === 0 && !checkoutOpen && !isStation}
-        savedCart={savedCart}
-        customerName={customer?.name ?? null}
-        onResume={handleResumeSavedCart}
-        onStartOver={handleStartOver}
-        onDismiss={dismissPrompt}
-      />
+        {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && (
+          <SavedCartModal
+            open={true}
+            savedCart={savedCart}
+            customerName={customer?.name ?? null}
+            onResume={handleResumeSavedCart}
+            onStartOver={handleStartOver}
+            onDismiss={dismissPrompt}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };
