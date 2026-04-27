@@ -274,7 +274,9 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
       for (const b of it.deal_burgers) {
         const bn = String(b?.name || "");
         if (isSmashName(bn) || isVeganBurgerName(bn)) continue;
-        add(extractDonenessKey(b?.removals), qty);
+        // "כפולה" within a deal counts as 2 patties for doneness
+        const multiplier = isDoubleName(bn) ? 2 : 1;
+        add(extractDonenessKey(b?.removals), qty * multiplier);
       }
       continue;
     }
@@ -284,7 +286,11 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
     if (detectFried(name)) continue;
     if (isSmashName(name) || isVeganBurgerName(name)) continue;
 
-    add(extractDonenessKey(it.removals), qty);
+    // "כפולה" = 2 patties → 2× the doneness count
+    const multiplier = isDoubleName(name) ? 2 : 1;
+    // Extra patty topping also adds another patty of the same doneness
+    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220"]);
+    add(extractDonenessKey(it.removals), qty * (multiplier + extraPatties));
   }
 
   return counts;
