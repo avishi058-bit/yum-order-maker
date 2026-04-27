@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { heroAnimations } from "@/config/uiConfig";
-import heroBurger from "@/assets/hero-burger.jpg";
+import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
 
 interface HeroSectionProps {
