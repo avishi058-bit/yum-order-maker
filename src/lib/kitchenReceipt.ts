@@ -603,14 +603,14 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.onionRings > 0) friedRows.push(row("טבעות בצל (מנה)", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(row("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
+  if (summary.tempuraOnionTopping > 0)
+    friedRows.push(row("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(row("מיקס חברים", summary.friendsMix));
 
   // Toppings ON the burger (separate from sides)
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
-  if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(row("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   // Sauces
   const sauceRows: string[] = [];
@@ -1030,13 +1030,13 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל (מנה)", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
+  if (summary.tempuraOnionTopping > 0)
+    friedRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
 
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
-  if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   const sauceRows: string[] = [];
   for (const [name, qty] of summary.sauces.entries()) {
@@ -1307,13 +1307,13 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל (מנה)", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
+  if (summary.tempuraOnionTopping > 0)
+    friedRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
 
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
-  if (summary.tempuraOnionTopping > 0)
-    toppingRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
 
   const sauceRows: string[] = [];
   for (const [name, qty] of summary.sauces.entries()) {
