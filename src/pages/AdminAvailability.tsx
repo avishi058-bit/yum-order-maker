@@ -51,7 +51,11 @@ const AdminAvailability = () => {
         (payload) => {
           const updated = payload.new as AvailabilityItem;
           setItems((prev) =>
-            prev.map((item) => (item.item_id === updated.item_id ? { ...item, available: updated.available } : item))
+            prev.map((item) =>
+              item.item_id === updated.item_id
+                ? { ...item, available: updated.available, manually_disabled: updated.manually_disabled }
+                : item
+            )
           );
         }
       )
