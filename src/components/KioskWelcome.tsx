@@ -81,4 +81,6 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: () => void
   );
 };
 
+const KioskWelcome = memo(KioskWelcomeImpl);
+
 export default KioskWelcome;
