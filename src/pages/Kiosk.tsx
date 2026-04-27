@@ -346,13 +346,7 @@ const Kiosk = () => {
     return (
       <KioskWelcome
         imagesReady={imagesReady}
-        onStart={() => {
-          if (imagesReady) {
-            setView("menu");
-          } else {
-            setPendingStart(true);
-          }
-        }}
+        onStart={handleWelcomeStart}
       />
     );
   }
