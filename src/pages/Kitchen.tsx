@@ -1222,12 +1222,21 @@ const Kitchen = () => {
                     )}
                     {next && (
                       next === "preparing" ? (
-                        <button
-                          onClick={() => setShowTimePicker(order.id)}
-                          className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
-                        >
-                          התחל הכנה 👨‍🍳
-                        </button>
+                        order.order_source === "kiosk" ? (
+                          <button
+                            onClick={() => updateStatus(order.id, "preparing")}
+                            className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                          >
+                            קבל הזמנה ✅
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setShowTimePicker(order.id)}
+                            className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                          >
+                            התחל הכנה 👨‍🍳
+                          </button>
+                        )
                       ) : (
                         <button
                           onClick={() => updateStatus(order.id, next)}
