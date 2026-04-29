@@ -18,6 +18,10 @@ export const MENU_DEPENDENCIES: Record<string, string[]> = {
   // אבישי שחוט לי פרה - דורש רוסטביף וביצת עין
   avishai: ["roastbeef", "egg"],
   "meal-avishai": ["roastbeef", "egg"],
+
+  // קרייזי סמאש - דורש ריבת פלפלים חריפים
+  "crazy-smash": ["hot-pepper-jam"],
+  "meal-crazy-smash": ["hot-pepper-jam"],
 };
 
 /**
