@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
+import kosherCertificate from "@/assets/kosher-certificate.jpeg";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
@@ -9,12 +12,30 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
+  const [showKosher, setShowKosher] = useState(false);
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
-      <div className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 shadow-lg">
+      <button
+        type="button"
+        onClick={() => setShowKosher(true)}
+        className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 shadow-lg flex flex-col items-center gap-0.5 hover:bg-card transition-colors"
+      >
         <span className="text-xs font-bold text-foreground">כשר</span>
-      </div>
+        <span className="text-[10px] text-muted-foreground leading-tight">לצפיה בתעודת כשרות לחץ</span>
+      </button>
+
+      <Dialog open={showKosher} onOpenChange={setShowKosher}>
+        <DialogContent className="max-w-lg p-2">
+          <DialogTitle className="sr-only">תעודת כשרות</DialogTitle>
+          <DialogDescription className="sr-only">תעודת כשרות של הבקתה</DialogDescription>
+          <img
+            src={kosherCertificate}
+            alt="תעודת כשרות הבקתה"
+            className="w-full h-auto rounded-md"
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="absolute inset-0">
         <img
