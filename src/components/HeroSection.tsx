@@ -19,10 +19,10 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
       <button
         type="button"
         onClick={() => setShowKosher(true)}
-        className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 shadow-lg flex flex-col items-center gap-0.5 hover:bg-card transition-colors"
+        className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 shadow-lg hover:bg-card transition-colors"
       >
-        <span className="text-xs font-bold text-foreground">כשר</span>
-        <span className="text-[10px] text-muted-foreground leading-tight">לצפיה בתעודת כשרות לחץ</span>
+        <span className="text-xs font-bold text-foreground">כשר </span>
+        <span className="text-[9px] text-muted-foreground">(לצפייה)</span>
       </button>
 
       <Dialog open={showKosher} onOpenChange={setShowKosher}>
