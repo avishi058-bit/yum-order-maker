@@ -679,7 +679,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     )}
                     {item.description && (
                       <div className={`mx-5 ${isKiosk ? "mt-4" : "mt-3"}`}>
-                        <p className={`text-foreground/80 leading-relaxed text-right ${isKiosk ? "text-[18px]" : "text-sm"}`}>
+                        <p className={`text-black font-bold leading-relaxed text-right ${isKiosk ? "text-[20px]" : "text-base"}`}>
                           {item.description}
                         </p>
                       </div>
