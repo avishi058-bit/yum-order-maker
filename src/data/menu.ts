@@ -424,6 +424,7 @@ export const mealDrinkOptions: DrinkOption[] = [
   { id: "drink-laffe", name: "לאפ בראון", price: 12, category: "beer" },
   { id: "drink-unfiltered", name: "גולדסטאר אנפילטר", price: 12, category: "beer" },
   { id: "drink-guinness", name: "גינס", price: 12, category: "beer" },
+  { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15, category: "beer" },
 ];
 
 // Sub-options for standalone drink menu items
