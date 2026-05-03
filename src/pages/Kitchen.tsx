@@ -542,6 +542,7 @@ const Kitchen = () => {
     toast.success("נמחק");
   };
 
+  const availabilityGrouped = availabilityCategoryOrder
     .map((cat) => {
       const order = itemOrder[cat] || [];
       const catItems = availabilityItems.filter((i) => i.category === cat);
