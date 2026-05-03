@@ -14,6 +14,7 @@ import { menuImages } from "@/data/menuImages";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { CartItem } from "@/components/CartDrawer";
 import { computeCartItemTotal } from "@/lib/cartPricing";
+import { findTopping } from "@/lib/toppingsLookup";
 
 interface KioskCartDrawerProps {
   open: boolean;
