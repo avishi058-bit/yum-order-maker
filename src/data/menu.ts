@@ -87,6 +87,16 @@ export const menuItems: MenuItem[] = [
     category: "burger",
   },
   {
+    id: "napoleon",
+    name: "🇫🇷 נפוליאון",
+    description: "קציצת בקר 220, גבינה כחולה טבעונית, ריבת בצל ביין, חסה, עגבנייה, בצל, חמוצים",
+    price: 78,
+    weight: "220 גרם",
+    category: "burger",
+    badge: "⭐",
+    popular: true,
+  },
+  {
     id: "haf-mifsha",
     name: "חף מפשע",
     description: "המבורגר צמחוני - חסה, עגבנייה, בצל, חמוצים ואיולי (מבושל באיזור בשרי, אין הפרדה מוחלטת)",
@@ -160,6 +170,16 @@ export const menuItems: MenuItem[] = [
     weight: "220 גרם",
     category: "meal",
     baseBurgerId: "special-hadegel",
+  },
+  {
+    id: "meal-napoleon",
+    name: "ארוחת נפוליאון",
+    description: "נפוליאון + צ׳יפס + שתייה",
+    price: 101,
+    weight: "220 גרם",
+    category: "meal",
+    baseBurgerId: "napoleon",
+    badge: "⭐",
   },
   {
     id: "meal-haf-mifsha",
@@ -346,6 +366,7 @@ export const toppings: Topping[] = [
   { id: "egg", name: "ביצת עין 🍳", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני 🧀🌱", price: 7 },
   { id: "vegan-busha", name: "גבינת בושה טבעונית 🧀🌱", price: 9 },
+  { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית 🧀🌱", price: 9 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים 🌶️", price: 9 },
   { id: "fried-onion", name: "בצל מטוגן", price: 7, image: "fried-onion" },
   { id: "crispy-onion-chips", name: "שבבי בצל קריספי", price: 6 },
@@ -363,6 +384,7 @@ export const excludedToppingsByItem: Record<string, string[]> = {
   "special-hadegel": ["onion-jam", "garlic-confit", "onion-rings-topping"],
   "avishai": ["egg"],
   "crazy-smash": ["maple", "hot-pepper-jam"],
+  "napoleon": ["vegan-blue-cheese", "onion-jam"],
 };
 
 export const mealUpgrade = {
