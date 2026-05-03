@@ -223,6 +223,9 @@ const Kitchen = () => {
   const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+  const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
+  const [newTopName, setNewTopName] = useState("");
+  const [newTopPrice, setNewTopPrice] = useState("");
   const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Realtime / fallback state
@@ -379,6 +382,14 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
+  const fetchCustomToppings = useCallback(async () => {
+    const { data } = await supabase
+      .from("custom_toppings")
+      .select("id, item_id, name, price")
+      .order("created_at");
+    if (data) setCustomToppings(data.map((r: any) => ({ ...r, price: Number(r.price) })));
+  }, []);
+
   const fetchOrders = useCallback(async () => {
     const { data, error } = await supabase
       .from("orders")
@@ -414,6 +425,7 @@ const Kitchen = () => {
   useEffect(() => {
     fetchOrders();
     fetchAvailability();
+    fetchCustomToppings();
 
     const channel = supabase
       .channel("orders-realtime")
@@ -424,11 +436,15 @@ const Kitchen = () => {
 
     const availChannel = supabase
       .channel("availability-realtime")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
-        const updated = payload.new as AvailabilityItem;
-        setAvailabilityItems((prev) =>
-          prev.map((item) => (item.item_id === updated.item_id ? { ...item, available: updated.available } : item))
-        );
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_availability" }, () => {
+        fetchAvailability();
+      })
+      .subscribe();
+
+    const ctChannel = supabase
+      .channel("custom-toppings-kitchen")
+      .on("postgres_changes", { event: "*", schema: "public", table: "custom_toppings" }, () => {
+        fetchCustomToppings();
       })
       .subscribe();
 
@@ -447,11 +463,12 @@ const Kitchen = () => {
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(availChannel);
+      supabase.removeChannel(ctChannel);
       clearInterval(pollInterval);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [fetchOrders, fetchAvailability]);
+  }, [fetchOrders, fetchAvailability, fetchCustomToppings]);
 
   // Auto-print new orders
   useEffect(() => {
@@ -494,6 +511,35 @@ const Kitchen = () => {
         );
       }
     }
+  };
+
+  const addCustomTopping = async () => {
+    const name = newTopName.trim();
+    const price = parseFloat(newTopPrice);
+    if (!name || isNaN(price) || price < 0) {
+      toast.error("הכנס שם ומחיר תקין");
+      return;
+    }
+    const slug = `custom-${Date.now()}`;
+    const { error } = await supabase.from("custom_toppings").insert({
+      item_id: slug, name, price,
+    });
+    if (error) { toast.error("שגיאה בהוספה"); return; }
+    // Create matching availability row
+    await supabase.from("menu_availability").insert({
+      item_id: slug, item_name: name, category: "topping", available: true, manually_disabled: false,
+    });
+    setNewTopName(""); setNewTopPrice("");
+    fetchCustomToppings(); fetchAvailability();
+    toast.success(`התוספת "${name}" נוספה`);
+  };
+
+  const deleteCustomTopping = async (itemId: string, name: string) => {
+    if (!confirm(`למחוק את "${name}"?`)) return;
+    await supabase.from("custom_toppings").delete().eq("item_id", itemId);
+    await supabase.from("menu_availability").delete().eq("item_id", itemId);
+    fetchCustomToppings(); fetchAvailability();
+    toast.success("נמחק");
   };
 
   const availabilityGrouped = availabilityCategoryOrder
@@ -1036,6 +1082,55 @@ const Kitchen = () => {
               </div>
             </div>
           ))}
+
+          {/* Custom toppings management */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-primary mb-3">➕ ניהול תוספות מותאמות אישית</h2>
+            <div className="bg-card rounded-xl border border-border p-4">
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newTopName}
+                  onChange={(e) => setNewTopName(e.target.value)}
+                  placeholder="שם התוספת"
+                  className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-right"
+                />
+                <input
+                  type="number"
+                  value={newTopPrice}
+                  onChange={(e) => setNewTopPrice(e.target.value)}
+                  placeholder="מחיר ₪"
+                  className="w-full sm:w-28 px-3 py-2 rounded-md border border-border bg-background text-foreground text-right"
+                />
+                <button
+                  onClick={addCustomTopping}
+                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition"
+                >
+                  הוסף תוספת
+                </button>
+              </div>
+              {customToppings.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-3">אין תוספות מותאמות אישית</p>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {customToppings.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between py-2.5">
+                      <button
+                        onClick={() => deleteCustomTopping(t.item_id, t.name)}
+                        className="px-3 py-1 rounded-md bg-destructive text-destructive-foreground text-sm font-bold hover:opacity-90"
+                      >
+                        מחק
+                      </button>
+                      <div className="text-right">
+                        <span className="font-medium text-foreground">{t.name}</span>
+                        <span className="text-muted-foreground text-sm mr-2">₪{t.price}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       ) : viewMode === "dashboard" ? (
         <DashboardView />

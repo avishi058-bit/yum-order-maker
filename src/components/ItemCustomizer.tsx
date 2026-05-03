@@ -3,7 +3,9 @@ import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils } from "lucide-react";
-import { MenuItem, toppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS, excludedToppingsByItem } from "@/data/menu";
+import { MenuItem, toppings as staticToppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS, excludedToppingsByItem } from "@/data/menu";
+import { useCustomToppings } from "@/lib/customToppingsStore";
+import { findTopping } from "@/lib/toppingsLookup";
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -100,6 +102,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
   const [toppingsSeen, setToppingsSeen] = useState(false);
   const toppingsRef = useRef<HTMLDivElement>(null);
+  const customToppings = useCustomToppings();
+  const toppings = [...staticToppings, ...customToppings];
 
   // Prefill state when opening for an EDIT (initialState provided alongside item).
   // We only run this when the item id changes so the user's edits aren't clobbered

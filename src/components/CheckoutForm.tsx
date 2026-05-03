@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removalDisplayNames, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { findTopping } from "@/lib/toppingsLookup";
 import { shouldChargeMealUpgrade, MEAL_UPGRADE_PRICE } from "@/lib/cartPricing";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -306,7 +307,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         } else {
           // Toppings cost
           const toppingsCost = item.toppings.reduce((s, tId) => {
-            const t = toppings.find((tp) => tp.id === tId);
+            const t = findTopping(tId);
             return s + (t?.price || 0);
           }, 0);
           if (toppingsCost > 0) {
@@ -314,7 +315,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             item.toppings.forEach((tId) => counts.set(tId, (counts.get(tId) || 0) + 1));
             const toppingNames = Array.from(counts.entries())
               .map(([tId, count]) => {
-                const name = toppings.find((t) => t.id === tId)?.name;
+                const name = findTopping(tId)?.name;
                 if (!name) return null;
                 return count > 1 ? `${name} × ${count}` : name;
               })
@@ -566,7 +567,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 item.toppings.forEach((tId) => tCounts.set(tId, (tCounts.get(tId) || 0) + 1));
                 const toppingNames = Array.from(tCounts.entries())
                   .map(([tId, count]) => {
-                    const name = toppings.find((t) => t.id === tId)?.name;
+                    const name = findTopping(tId)?.name;
                     if (!name) return null;
                     return count > 1 ? `${name} × ${count}` : name;
                   })

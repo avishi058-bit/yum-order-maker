@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
 import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { findTopping } from "@/lib/toppingsLookup";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 
@@ -62,7 +63,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
     ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
     return Array.from(counts.entries())
       .map(([id, count]) => {
-        const name = toppings.find((t) => t.id === id)?.name;
+        const name = findTopping(id)?.name;
         if (!name) return null;
         return count > 1 ? `${name} × ${count}` : name;
       })
