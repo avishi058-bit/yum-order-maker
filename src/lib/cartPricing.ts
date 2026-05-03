@@ -24,7 +24,7 @@ export const shouldChargeMealUpgrade = (item: CartItem): boolean => {
 export const computeCartItemUnitPrice = (item: CartItem): number => {
   if (item.dealBurgers) return item.price; // deal price already final
   const toppingsCost = item.toppings.reduce((sum, tId) => {
-    const t = toppings.find((tp) => tp.id === tId);
+    const t = findTopping(tId);
     return sum + (t?.price || 0);
   }, 0);
   const mealCost = shouldChargeMealUpgrade(item) ? MEAL_UPGRADE_PRICE : 0;
