@@ -15,6 +15,7 @@ import bottleImg from "@/assets/menu/bottle-prigat.webp";
 import beerPremiumImg from "@/assets/menu/beer-leffe.webp";
 import beerWeissImg from "@/assets/menu/beer-weihenstephaner.webp";
 import hafMifsha from "@/assets/menu/haf-mifsha.webp";
+import napoleon from "@/assets/menu/napoleon.jpg";
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
@@ -34,6 +35,7 @@ export const menuImages: Record<string, string> = {
   "beer-weiss": beerWeissImg,
   double: doubleImg,
   "haf-mifsha": hafMifsha,
+  napoleon: napoleon,
   // Meals - using burger images temporarily
   "meal-classic": classicImg,
   "meal-smash-moshavnikim": smashMoshavnikim,
@@ -43,4 +45,5 @@ export const menuImages: Record<string, string> = {
   "meal-special-hadegel": specialHadegel,
   "meal-double": doubleImg,
   "meal-haf-mifsha": hafMifsha,
+  "meal-napoleon": napoleon,
 };
