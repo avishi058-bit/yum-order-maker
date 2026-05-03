@@ -67,7 +67,7 @@ const KioskCartDrawer = ({
     ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
     return Array.from(counts.entries())
       .map(([id, count]) => {
-        const name = toppings.find((t) => t.id === id)?.name;
+        const name = findTopping(id)?.name;
         if (!name) return null;
         return count > 1 ? `${name} × ${count}` : name;
       })
