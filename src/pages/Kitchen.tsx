@@ -223,6 +223,9 @@ const Kitchen = () => {
   const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+  const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
+  const [newTopName, setNewTopName] = useState("");
+  const [newTopPrice, setNewTopPrice] = useState("");
   const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Realtime / fallback state
