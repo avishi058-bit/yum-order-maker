@@ -1082,6 +1082,55 @@ const Kitchen = () => {
               </div>
             </div>
           ))}
+
+          {/* Custom toppings management */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-primary mb-3">➕ ניהול תוספות מותאמות אישית</h2>
+            <div className="bg-card rounded-xl border border-border p-4">
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newTopName}
+                  onChange={(e) => setNewTopName(e.target.value)}
+                  placeholder="שם התוספת"
+                  className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-right"
+                />
+                <input
+                  type="number"
+                  value={newTopPrice}
+                  onChange={(e) => setNewTopPrice(e.target.value)}
+                  placeholder="מחיר ₪"
+                  className="w-full sm:w-28 px-3 py-2 rounded-md border border-border bg-background text-foreground text-right"
+                />
+                <button
+                  onClick={addCustomTopping}
+                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition"
+                >
+                  הוסף תוספת
+                </button>
+              </div>
+              {customToppings.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-3">אין תוספות מותאמות אישית</p>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {customToppings.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between py-2.5">
+                      <button
+                        onClick={() => deleteCustomTopping(t.item_id, t.name)}
+                        className="px-3 py-1 rounded-md bg-destructive text-destructive-foreground text-sm font-bold hover:opacity-90"
+                      >
+                        מחק
+                      </button>
+                      <div className="text-right">
+                        <span className="font-medium text-foreground">{t.name}</span>
+                        <span className="text-muted-foreground text-sm mr-2">₪{t.price}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       ) : viewMode === "dashboard" ? (
         <DashboardView />
