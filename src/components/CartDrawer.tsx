@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
 import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { findTopping } from "@/lib/toppingsLookup";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 
