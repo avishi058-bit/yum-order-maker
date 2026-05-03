@@ -513,7 +513,35 @@ const Kitchen = () => {
     }
   };
 
-  const availabilityGrouped = availabilityCategoryOrder
+  const addCustomTopping = async () => {
+    const name = newTopName.trim();
+    const price = parseFloat(newTopPrice);
+    if (!name || isNaN(price) || price < 0) {
+      toast.error("הכנס שם ומחיר תקין");
+      return;
+    }
+    const slug = `custom-${Date.now()}`;
+    const { error } = await supabase.from("custom_toppings").insert({
+      item_id: slug, name, price,
+    });
+    if (error) { toast.error("שגיאה בהוספה"); return; }
+    // Create matching availability row
+    await supabase.from("menu_availability").insert({
+      item_id: slug, item_name: name, category: "topping", available: true, manually_disabled: false,
+    });
+    setNewTopName(""); setNewTopPrice("");
+    fetchCustomToppings(); fetchAvailability();
+    toast.success(`התוספת "${name}" נוספה`);
+  };
+
+  const deleteCustomTopping = async (itemId: string, name: string) => {
+    if (!confirm(`למחוק את "${name}"?`)) return;
+    await supabase.from("custom_toppings").delete().eq("item_id", itemId);
+    await supabase.from("menu_availability").delete().eq("item_id", itemId);
+    fetchCustomToppings(); fetchAvailability();
+    toast.success("נמחק");
+  };
+
     .map((cat) => {
       const order = itemOrder[cat] || [];
       const catItems = availabilityItems.filter((i) => i.category === cat);
