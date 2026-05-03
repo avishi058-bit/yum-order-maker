@@ -382,6 +382,14 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
+  const fetchCustomToppings = useCallback(async () => {
+    const { data } = await supabase
+      .from("custom_toppings")
+      .select("id, item_id, name, price")
+      .order("created_at");
+    if (data) setCustomToppings(data.map((r: any) => ({ ...r, price: Number(r.price) })));
+  }, []);
+
   const fetchOrders = useCallback(async () => {
     const { data, error } = await supabase
       .from("orders")
