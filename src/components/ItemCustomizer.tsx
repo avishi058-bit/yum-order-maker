@@ -677,6 +677,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         />
                       </div>
                     )}
+                    {item.description && (
+                      <div className={`mx-5 ${isKiosk ? "mt-4" : "mt-3"}`}>
+                        <p className={`text-foreground/80 leading-relaxed text-right ${isKiosk ? "text-[18px]" : "text-sm"}`}>
+                          {item.description}
+                        </p>
+                      </div>
+                    )}
                     {(item.id === "haf-mifsha" || item.baseBurgerId === "haf-mifsha") && (
                       <div className={`mx-5 mt-4 rounded-xl border-2 border-destructive bg-destructive/10 ${isKiosk ? "p-5" : "p-3"}`}>
                         <p className={`font-black text-destructive text-right ${isKiosk ? "text-[20px]" : "text-sm"}`}>
