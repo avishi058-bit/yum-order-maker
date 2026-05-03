@@ -8,6 +8,7 @@ export interface MenuItem {
   badge?: string;
   baseBurgerId?: string;
   popular?: boolean;
+  specialOfMonth?: boolean;
 }
 
 export interface Topping {
@@ -93,8 +94,7 @@ export const menuItems: MenuItem[] = [
     price: 78,
     weight: "220 גרם",
     category: "burger",
-    badge: "⭐",
-    popular: true,
+    specialOfMonth: true,
   },
   {
     id: "haf-mifsha",
@@ -179,7 +179,7 @@ export const menuItems: MenuItem[] = [
     weight: "220 גרם",
     category: "meal",
     baseBurgerId: "napoleon",
-    badge: "⭐",
+    specialOfMonth: true,
   },
   {
     id: "meal-haf-mifsha",
@@ -366,7 +366,7 @@ export const toppings: Topping[] = [
   { id: "egg", name: "ביצת עין 🍳", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני 🧀🌱", price: 7 },
   { id: "vegan-busha", name: "גבינת בושה טבעונית 🧀🌱", price: 9 },
-  { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית 🧀🌱", price: 9 },
+  { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית 🧀🌱", price: 15 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים 🌶️", price: 9 },
   { id: "fried-onion", name: "בצל מטוגן", price: 7, image: "fried-onion" },
   { id: "crispy-onion-chips", name: "שבבי בצל קריספי", price: 6 },
