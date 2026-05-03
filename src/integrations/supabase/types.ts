@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_toppings: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          name: string
+          price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
