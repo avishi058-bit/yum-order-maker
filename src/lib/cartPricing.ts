@@ -1,4 +1,5 @@
-import { menuItems, toppings, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { findTopping } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
 
 export const MEAL_UPGRADE_PRICE = 23;
