@@ -365,7 +365,6 @@ export const toppings: Topping[] = [
   { id: "roastbeef", name: "רוסטביף 🥓", price: 20 },
   { id: "egg", name: "ביצת עין 🍳", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני 🧀🌱", price: 7 },
-  { id: "vegan-busha", name: "גבינת בושה טבעונית 🧀🌱", price: 9 },
   { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית 🧀🌱", price: 15 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים 🌶️", price: 9 },
   { id: "fried-onion", name: "בצל מטוגן", price: 7, image: "fried-onion" },
