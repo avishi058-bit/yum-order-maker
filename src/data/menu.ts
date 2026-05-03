@@ -89,7 +89,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: "napoleon",
-    name: "🇫🇷 נפוליאון",
+    name: "נפוליאון",
     description: "קציצת בקר 220, גבינה כחולה טבעונית, ריבת בצל ביין, חסה, עגבנייה, בצל, חמוצים",
     price: 78,
     weight: "220 גרם",
