@@ -425,6 +425,7 @@ const Kitchen = () => {
   useEffect(() => {
     fetchOrders();
     fetchAvailability();
+    fetchCustomToppings();
 
     const channel = supabase
       .channel("orders-realtime")
@@ -435,11 +436,15 @@ const Kitchen = () => {
 
     const availChannel = supabase
       .channel("availability-realtime")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "menu_availability" }, (payload) => {
-        const updated = payload.new as AvailabilityItem;
-        setAvailabilityItems((prev) =>
-          prev.map((item) => (item.item_id === updated.item_id ? { ...item, available: updated.available } : item))
-        );
+      .on("postgres_changes", { event: "*", schema: "public", table: "menu_availability" }, () => {
+        fetchAvailability();
+      })
+      .subscribe();
+
+    const ctChannel = supabase
+      .channel("custom-toppings-kitchen")
+      .on("postgres_changes", { event: "*", schema: "public", table: "custom_toppings" }, () => {
+        fetchCustomToppings();
       })
       .subscribe();
 
@@ -458,11 +463,12 @@ const Kitchen = () => {
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(availChannel);
+      supabase.removeChannel(ctChannel);
       clearInterval(pollInterval);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [fetchOrders, fetchAvailability]);
+  }, [fetchOrders, fetchAvailability, fetchCustomToppings]);
 
   // Auto-print new orders
   useEffect(() => {
