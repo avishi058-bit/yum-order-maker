@@ -20,6 +20,7 @@ import friedOnionImg from "@/assets/fried-onion.webp";
 import onionJamImg from "@/assets/onion-jam.webp";
 import extraPattyImg from "@/assets/extra-patty.webp";
 import blueCheeseIcon from "@/assets/menu/blue-cheese-icon.png";
+import cheddarIcon from "@/assets/menu/cheddar-icon.png";
 import donenessMediumImg from "@/assets/doneness-medium.webp";
 import donenessMediumWellImg from "@/assets/doneness-medium-well.webp";
 import donenessWellDoneImg from "@/assets/doneness-well-done.webp";
@@ -42,6 +43,7 @@ const ingredientImages: Record<string, string> = {
   "onion-jam": onionJamImg,
   "extra-patty": extraPattyImg,
   "blue-cheese": blueCheeseIcon,
+  "cheddar": cheddarIcon,
 };
 
 export interface ItemCustomizerInitialState {
