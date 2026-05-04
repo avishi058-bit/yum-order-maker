@@ -43,6 +43,7 @@ const ingredientImages: Record<string, string> = {
   "onion-jam": onionJamImg,
   "extra-patty": extraPattyImg,
   "blue-cheese": blueCheeseIcon,
+  "cheddar": cheddarIcon,
 };
 
 export interface ItemCustomizerInitialState {
