@@ -459,6 +459,7 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "beer-hoegaarden", name: "הוגרדן" },
     { id: "beer-laffe", name: "לאף" },
     { id: "beer-unfiltered", name: "גולדסטאר אנפילטר" },
+    { id: "beer-paulaner", name: "פאולנר" },
   ],
 };
 
