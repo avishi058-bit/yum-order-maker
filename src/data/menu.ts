@@ -245,7 +245,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "beer-premium",
     name: "בירה פרימיום",
-    description: "הוגרדן, לאף, גולסטאר אנפילטר",
+    description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר",
     price: 23,
     category: "drink",
   },
@@ -459,6 +459,7 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "beer-hoegaarden", name: "הוגרדן" },
     { id: "beer-laffe", name: "לאף" },
     { id: "beer-unfiltered", name: "גולדסטאר אנפילטר" },
+    { id: "beer-paulaner", name: "פאולנר" },
   ],
 };
 
