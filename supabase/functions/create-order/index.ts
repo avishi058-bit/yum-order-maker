@@ -73,6 +73,7 @@ const TOPPINGS_PRICING: Record<string, { name: string; price: number }> = {
   "maple": { name: "מייפל", price: 5 },
   "vegan-busha": { name: "גבינת בושה טבעונית 🧀🌱", price: 9 },
   "crispy-onion-chips": { name: "שבבי בצל קריספי", price: 6 },
+  "vegan-blue-cheese": { name: "גבינה כחולה טבעונית", price: 15 },
 };
 
 const MEAL_UPGRADE_PRICE = 23;
