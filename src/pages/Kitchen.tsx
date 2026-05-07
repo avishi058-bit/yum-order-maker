@@ -555,6 +555,24 @@ const Kitchen = () => {
     })
     .filter((g) => g.items.length > 0);
 
+  const completeAllReady = async () => {
+    const readyIds = orders.filter((o) => o.status === "ready").map((o) => o.id);
+    if (readyIds.length === 0) {
+      toast.info("אין הזמנות מוכנות");
+      return;
+    }
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "completed" })
+      .in("id", readyIds);
+    if (error) {
+      toast.error(`שגיאה: ${error.message}`);
+      return;
+    }
+    toast.success(`${readyIds.length} הזמנות הושלמו`);
+    fetchOrders();
+  };
+
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
     const updateData: any = { status: newStatus };
     if (newStatus === "preparing" && prepMinutes) {
@@ -737,6 +755,19 @@ const Kitchen = () => {
             >
               <BarChart3 size={14} className="inline ml-1" />
               דשבורד
+            </button>
+            <button
+              onClick={completeAllReady}
+              disabled={!orders.some((o) => o.status === "ready")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                orders.some((o) => o.status === "ready")
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+              }`}
+              title="העבר את כל ההזמנות המוכנות לסטטוס הושלמה"
+            >
+              <CheckCircle size={14} className="inline ml-1" />
+              השלם הכל ({orders.filter((o) => o.status === "ready").length})
             </button>
           </div>
         </div>
