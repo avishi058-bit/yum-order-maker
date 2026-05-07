@@ -321,7 +321,7 @@ const Index = () => {
         <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
           <SideMenu onLoginClick={() => setAuthModalOpen(true)} />
           {isLoggedIn ? (
-            <CustomerGreeting />
+            <CustomerGreeting onOpenHistory={() => setHistoryModalOpen(true)} />
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
@@ -563,6 +563,17 @@ const Index = () => {
             onResume={handleResumeSavedCart}
             onStartOver={handleStartOver}
             onDismiss={dismissPrompt}
+          />
+        )}
+
+        {historyModalOpen && (
+          <OrderHistoryModal
+            open={historyModalOpen}
+            onClose={() => setHistoryModalOpen(false)}
+            onReorder={(newItems) => {
+              setCart((prev) => [...prev, ...newItems]);
+              setCartOpen(true);
+            }}
           />
         )}
       </Suspense>
