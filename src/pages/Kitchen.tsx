@@ -756,6 +756,19 @@ const Kitchen = () => {
               <BarChart3 size={14} className="inline ml-1" />
               דשבורד
             </button>
+            <button
+              onClick={completeAllReady}
+              disabled={!orders.some((o) => o.status === "ready")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                orders.some((o) => o.status === "ready")
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+              }`}
+              title="העבר את כל ההזמנות המוכנות לסטטוס הושלמה"
+            >
+              <CheckCircle size={14} className="inline ml-1" />
+              השלם הכל ({orders.filter((o) => o.status === "ready").length})
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
