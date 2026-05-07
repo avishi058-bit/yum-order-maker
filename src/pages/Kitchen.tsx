@@ -555,6 +555,24 @@ const Kitchen = () => {
     })
     .filter((g) => g.items.length > 0);
 
+  const completeAllReady = async () => {
+    const readyIds = orders.filter((o) => o.status === "ready").map((o) => o.id);
+    if (readyIds.length === 0) {
+      toast.info("אין הזמנות מוכנות");
+      return;
+    }
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "completed" })
+      .in("id", readyIds);
+    if (error) {
+      toast.error(`שגיאה: ${error.message}`);
+      return;
+    }
+    toast.success(`${readyIds.length} הזמנות הושלמו`);
+    fetchOrders();
+  };
+
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
     const updateData: any = { status: newStatus };
     if (newStatus === "preparing" && prepMinutes) {
