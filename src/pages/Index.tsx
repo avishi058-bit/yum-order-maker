@@ -26,6 +26,7 @@ const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
 const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
 const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
 const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
+const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
