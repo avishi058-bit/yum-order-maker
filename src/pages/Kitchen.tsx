@@ -1346,6 +1346,15 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
+                    {order.status === "ready" && (
+                      <button
+                        onClick={() => updateStatus(order.id, "preparing")}
+                        className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm hover:bg-secondary transition-colors"
+                        title="החזר להכנה"
+                      >
+                        ↩ חזור להכנה
+                      </button>
+                    )}
                     {next && (
                       next === "preparing" ? (
                         order.order_source === "kiosk" ? (
