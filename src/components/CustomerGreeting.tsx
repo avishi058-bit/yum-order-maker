@@ -1,9 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Package } from "lucide-react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useState } from "react";
 
-const CustomerGreeting = () => {
+interface CustomerGreetingProps {
+  onOpenHistory?: () => void;
+}
+
+const CustomerGreeting = ({ onOpenHistory }: CustomerGreetingProps) => {
   const { customer, isLoggedIn, logout } = useCustomerAuth();
   const [showMenu, setShowMenu] = useState(false);
 
@@ -36,7 +40,7 @@ const CustomerGreeting = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -5 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden min-w-[180px]"
+              className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden min-w-[200px]"
             >
               <div className="px-4 py-3 border-b border-border">
                 <p className="text-sm font-bold text-foreground">{customer.name}</p>
@@ -47,6 +51,15 @@ const CustomerGreeting = () => {
                   </p>
                 )}
               </div>
+              {onOpenHistory && (
+                <button
+                  onClick={() => { onOpenHistory(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors border-b border-border"
+                >
+                  <Package size={14} />
+                  ההזמנות שלי
+                </button>
+              )}
               <button
                 onClick={() => { logout(); setShowMenu(false); }}
                 className="w-full flex items-center gap-2 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
@@ -63,3 +76,4 @@ const CustomerGreeting = () => {
 };
 
 export default CustomerGreeting;
+
