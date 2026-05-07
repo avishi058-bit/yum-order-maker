@@ -116,6 +116,7 @@ export type Database = {
           deal_burgers: Json | null
           deal_drinks: Json | null
           id: string
+          item_id: string | null
           item_name: string
           meal_drink: string | null
           meal_side: string | null
@@ -131,6 +132,7 @@ export type Database = {
           deal_burgers?: Json | null
           deal_drinks?: Json | null
           id?: string
+          item_id?: string | null
           item_name: string
           meal_drink?: string | null
           meal_side?: string | null
@@ -146,6 +148,7 @@ export type Database = {
           deal_burgers?: Json | null
           deal_drinks?: Json | null
           id?: string
+          item_id?: string | null
           item_name?: string
           meal_drink?: string | null
           meal_side?: string | null

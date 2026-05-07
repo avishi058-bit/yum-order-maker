@@ -26,6 +26,7 @@ const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
 const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
 const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
 const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
+const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -66,6 +67,7 @@ const Index = () => {
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
@@ -319,7 +321,7 @@ const Index = () => {
         <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
           <SideMenu onLoginClick={() => setAuthModalOpen(true)} />
           {isLoggedIn ? (
-            <CustomerGreeting />
+            <CustomerGreeting onOpenHistory={() => setHistoryModalOpen(true)} />
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
@@ -561,6 +563,17 @@ const Index = () => {
             onResume={handleResumeSavedCart}
             onStartOver={handleStartOver}
             onDismiss={dismissPrompt}
+          />
+        )}
+
+        {historyModalOpen && (
+          <OrderHistoryModal
+            open={historyModalOpen}
+            onClose={() => setHistoryModalOpen(false)}
+            onReorder={(newItems) => {
+              setCart((prev) => [...prev, ...newItems]);
+              setCartOpen(true);
+            }}
           />
         )}
       </Suspense>
