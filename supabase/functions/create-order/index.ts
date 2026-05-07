@@ -462,6 +462,7 @@ Deno.serve(async (req: Request) => {
       : null;
     return {
       order_id: order.id,
+      item_id: line.itemId,
       item_name: line.name,
       price: line.unitPrice,
       quantity: line.quantity,
