@@ -67,6 +67,7 @@ const Index = () => {
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
