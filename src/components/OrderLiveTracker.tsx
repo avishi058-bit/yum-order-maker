@@ -10,16 +10,18 @@ interface OrderLiveTrackerProps {
   /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
   phone: string;
   onClose: () => void;
+  /** When true, disables all browser notification prompts and push subscriptions (kiosk mode). */
+  isKiosk?: boolean;
 }
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
-const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
+const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: OrderLiveTrackerProps) => {
   const [order, setOrder] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [showPermissionPrompt, setShowPermissionPrompt] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(isKiosk); // sound on by default in kiosk
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(!isKiosk);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   // Fetch order via secure edge function (no direct DB access)
@@ -67,8 +69,8 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
       } catch {}
     }
 
-    // Send browser notification
-    if (notificationsEnabled && Notification.permission === "granted") {
+    // Send browser notification (skip entirely in kiosk mode)
+    if (!isKiosk && notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
         new Notification(`הזמנה #${orderNumber}`, {
           body: message,
@@ -76,7 +78,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
         });
       } catch {}
     }
-  }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber]);
+  }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber, isKiosk]);
 
   // Countdown timer
   useEffect(() => {
@@ -95,15 +97,16 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     return () => clearInterval(interval);
   }, [order]);
 
-  // Auto-hide prompt if user already subscribed for this device
+  // Auto-hide prompt if user already subscribed for this device (skip in kiosk)
   useEffect(() => {
+    if (isKiosk) return;
     getExistingSubscription().then((sub) => {
       if (sub) {
         setNotificationsEnabled(true);
         setShowPermissionPrompt(false);
       }
     });
-  }, []);
+  }, [isKiosk]);
 
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
@@ -228,22 +231,24 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
               >
                 <Volume2 size={14} />
               </button>
-              <button
-                onClick={() => {
-                  if (!notificationsEnabled && Notification.permission !== "granted") {
-                    Notification.requestPermission().then((p) => {
-                      if (p === "granted") setNotificationsEnabled(true);
-                    });
-                  } else {
-                    setNotificationsEnabled(!notificationsEnabled);
-                  }
-                }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                  notificationsEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
-              </button>
+              {!isKiosk && (
+                <button
+                  onClick={() => {
+                    if (!notificationsEnabled && typeof Notification !== "undefined" && Notification.permission !== "granted") {
+                      Notification.requestPermission().then((p) => {
+                        if (p === "granted") setNotificationsEnabled(true);
+                      });
+                    } else {
+                      setNotificationsEnabled(!notificationsEnabled);
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    notificationsEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
+                </button>
+              )}
             </div>
           </div>
 
