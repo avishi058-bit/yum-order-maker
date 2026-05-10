@@ -403,6 +403,48 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </button>
           </div>
         </motion.div>
+
+        {/* iOS Add-to-Home-Screen instructions */}
+        <AnimatePresence>
+          {showIosInstallModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowIosInstallModal(false)}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-card rounded-3xl shadow-2xl border border-border max-w-sm w-full p-6 text-center"
+              >
+                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                  <Bell size={26} className="text-primary" />
+                </div>
+                <h3 className="text-lg font-black text-foreground mb-2">
+                  כדי לקבל התראות ב-iPhone
+                </h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Safari ב-iPhone דורש להוסיף את האתר למסך הבית כדי לתמוך בהתראות.
+                </p>
+                <ol className="text-right text-sm text-foreground space-y-2 mb-5 bg-muted/50 rounded-xl p-4">
+                  <li>1. לחץ על כפתור <strong>שתף</strong> ⬆️ בתחתית Safari</li>
+                  <li>2. בחר <strong>"הוסף למסך הבית"</strong> 🏠</li>
+                  <li>3. פתח את האתר מהמסך הראשי ואשר התראות</li>
+                </ol>
+                <button
+                  onClick={() => setShowIosInstallModal(false)}
+                  className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm"
+                >
+                  הבנתי
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );
