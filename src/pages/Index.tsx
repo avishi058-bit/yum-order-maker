@@ -27,6 +27,7 @@ const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
 const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
 const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
+const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -68,6 +69,7 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
@@ -501,6 +503,7 @@ const Index = () => {
                 } else if (orderNumber) {
                   const trackedOrder = { orderNumber, phone, notificationsEnabled: false, soundEnabled: false };
                   setTrackedOrder(trackedOrder);
+                  setLiveTrackerOrder({ orderNumber, phone: phone ?? "" });
                   window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
                   toast({
                     title: "ההזמנה התקבלה בהצלחה 🎉",
@@ -574,6 +577,14 @@ const Index = () => {
               setCart((prev) => [...prev, ...newItems]);
               setCartOpen(true);
             }}
+          />
+        )}
+
+        {liveTrackerOrder && (
+          <OrderLiveTracker
+            orderNumber={liveTrackerOrder.orderNumber}
+            phone={liveTrackerOrder.phone}
+            onClose={() => setLiveTrackerOrder(null)}
           />
         )}
       </Suspense>
