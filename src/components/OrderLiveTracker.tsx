@@ -254,7 +254,17 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </div>
           </div>
 
-          {/* Permission prompt — pops up immediately on order success */}
+          {/* Add to home screen button */}
+          <div className="px-4 py-2 border-b border-border bg-primary/5">
+            <button
+              onClick={() => setShowIosInstallModal(true)}
+              className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
+            >
+              <Smartphone size={16} />
+              הוסף את הבקתה למסך הבית
+            </button>
+          </div>
+
           <AnimatePresence>
             {showPermissionPrompt && (
               <motion.div
