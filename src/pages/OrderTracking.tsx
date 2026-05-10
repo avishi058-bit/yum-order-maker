@@ -210,6 +210,32 @@ const OrderTracking = () => {
             <p className="text-sm text-muted-foreground mt-2">בתיאבון!</p>
           </div>
         )}
+
+        {/* Push notification opt-in — hidden when order is already done */}
+        {order.status !== "ready" && order.status !== "completed" && order.status !== "cancelled" && isPushSupported() && (
+          <div className="mt-6">
+            {pushState === "subscribed" ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-card border border-border rounded-xl py-3">
+                <BellRing size={16} className="text-primary" />
+                התראות פעילות ✅
+              </div>
+            ) : (
+              <button
+                onClick={handleEnablePush}
+                disabled={pushState === "subscribing"}
+                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+              >
+                <Bell size={18} />
+                {pushState === "subscribing" ? "מפעיל..." : "אשר התראות כדי שנדע להודיע לך כשההזמנה מוכנה"}
+              </button>
+            )}
+            {iosNeedsInstall() && pushState !== "subscribed" && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                ב-iPhone: שתף → "הוסף למסך הבית" כדי שההתראות יעבדו
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
