@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide-react";
+import { toast } from "sonner";
+import { isPushSupported, iosNeedsInstall, subscribeToPush, getExistingSubscription } from "@/lib/push";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
@@ -93,16 +95,54 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     return () => clearInterval(interval);
   }, [order]);
 
-  const handleEnableNotifications = useCallback(async () => {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
+  // Auto-hide prompt if user already subscribed for this device
+  useEffect(() => {
+    getExistingSubscription().then((sub) => {
+      if (sub) {
         setNotificationsEnabled(true);
+        setShowPermissionPrompt(false);
       }
-    } catch {}
-    setSoundEnabled(true);
-    setShowPermissionPrompt(false);
+    });
   }, []);
+
+  const handleEnableNotifications = useCallback(async () => {
+    setSoundEnabled(true);
+
+    if (!isPushSupported()) {
+      // Fallback: in-tab Notification API
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") setNotificationsEnabled(true);
+      } catch {}
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    if (iosNeedsInstall()) {
+      toast.message("ב-iPhone צריך להוסיף למסך הבית", {
+        description: "שתף → 'הוסף למסך הבית', ואז חזור לכאן ואשר התראות",
+      });
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    if (!order?.id) {
+      // Order not loaded yet — wait, but still ask permission so the prompt counts as accepted
+      try { await Notification.requestPermission(); } catch {}
+      return;
+    }
+
+    const res = await subscribeToPush({ orderId: order.id, customerPhone: phone });
+    if (res.ok) {
+      setNotificationsEnabled(true);
+      toast.success("מעולה! נעדכן אותך כשההזמנה מוכנה 🔔");
+    } else if (res.reason === "denied") {
+      toast.error("לא ניתן אישור להתראות");
+    } else {
+      toast.error("לא ניתן להפעיל התראות");
+    }
+    setShowPermissionPrompt(false);
+  }, [order?.id, phone]);
 
   const handleSkipNotifications = useCallback(() => {
     setShowPermissionPrompt(false);
@@ -179,7 +219,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </div>
           </div>
 
-          {/* Permission prompt */}
+          {/* Permission prompt — pops up immediately on order success */}
           <AnimatePresence>
             {showPermissionPrompt && (
               <motion.div
@@ -188,21 +228,37 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="px-5 py-4 bg-primary/5 border-b border-border">
-                  <p className="text-sm font-bold text-foreground mb-1">🔔 רוצה לקבל עדכונים בזמן אמת?</p>
-                  <p className="text-xs text-muted-foreground mb-3">נעדכן אותך כשההזמנה בהכנה וכשהיא מוכנה עם צליל והתראה</p>
+                <div className="px-5 py-5 bg-gradient-to-b from-primary/10 to-primary/5 border-b border-border">
+                  <div className="flex items-center justify-center mb-3">
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, -10, 0] }}
+                      transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1.5 }}
+                      className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center"
+                    >
+                      <Bell size={28} className="text-primary" />
+                    </motion.div>
+                  </div>
+                  <p className="text-base font-black text-foreground text-center mb-1">
+                    רוצה שנעדכן אותך כשההזמנה מוכנה?
+                  </p>
+                  <p className="text-xs text-muted-foreground text-center mb-4">
+                    תקבל התראה לטלפון גם אם תצא מהאתר
+                  </p>
                   <div className="flex gap-2">
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      animate={{ boxShadow: ["0 0 0 0 hsl(142 76% 45% / 0.7)", "0 0 0 12px hsl(142 76% 45% / 0)"] }}
+                      transition={{ duration: 1.4, repeat: Infinity }}
                       onClick={handleEnableNotifications}
-                      className="flex-1 bg-primary text-primary-foreground font-bold py-2.5 rounded-xl text-sm"
+                      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-xl text-sm shadow-lg"
                     >
                       כן, עדכנו אותי! 🔔
-                    </button>
+                    </motion.button>
                     <button
                       onClick={handleSkipNotifications}
-                      className="px-4 bg-muted text-muted-foreground font-medium py-2.5 rounded-xl text-sm"
+                      className="px-4 bg-muted text-muted-foreground font-medium py-3 rounded-xl text-sm hover:bg-muted/80"
                     >
-                      לא עכשיו
+                      לא רוצה
                     </button>
                   </div>
                 </div>
