@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ChefHat, CheckCircle, Package } from "lucide-react";
+import { ChefHat, CheckCircle, Package, Bell, BellRing } from "lucide-react";
+import { toast } from "sonner";
+import {
+  isPushSupported,
+  iosNeedsInstall,
+  subscribeToPush,
+  getExistingSubscription,
+} from "@/lib/push";
 
 /**
  * Public order tracking page. Requires both order number AND phone in the URL
@@ -15,6 +22,7 @@ const OrderTracking = () => {
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [pushState, setPushState] = useState<"idle" | "subscribing" | "subscribed">("idle");
 
   useEffect(() => {
     if (!orderNumber || !phone) return;
@@ -53,6 +61,37 @@ const OrderTracking = () => {
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [order]);
+
+  // Detect existing push subscription
+  useEffect(() => {
+    if (!order?.id) return;
+    getExistingSubscription().then((sub) => {
+      if (sub) setPushState("subscribed");
+    });
+  }, [order?.id]);
+
+  const handleEnablePush = async () => {
+    if (!order?.id) return;
+    if (iosNeedsInstall()) {
+      toast.message("ב-iPhone צריך להוסיף את האתר למסך הבית כדי לקבל התראות", {
+        description: "שתף → הוסף למסך הבית, ואז חזור לכאן",
+      });
+      return;
+    }
+    setPushState("subscribing");
+    const res = await subscribeToPush({ orderId: order.id, customerPhone: phone ?? undefined });
+    if (res.ok) {
+      setPushState("subscribed");
+      toast.success("התראות הופעלו ✅");
+    } else {
+      setPushState("idle");
+      const msg =
+        res.reason === "denied" ? "לא ניתן אישור להתראות" :
+        res.reason === "unsupported" ? "הדפדפן לא תומך בהתראות" :
+        "לא ניתן להפעיל התראות";
+      toast.error(msg);
+    }
+  };
 
   if (!orderNumber || !phone) {
     return (
@@ -169,6 +208,32 @@ const OrderTracking = () => {
           <div className="bg-card border border-border rounded-2xl p-6 text-center">
             <p className="text-lg text-foreground">ההזמנה הושלמה ✅</p>
             <p className="text-sm text-muted-foreground mt-2">בתיאבון!</p>
+          </div>
+        )}
+
+        {/* Push notification opt-in — hidden when order is already done */}
+        {order.status !== "ready" && order.status !== "completed" && order.status !== "cancelled" && isPushSupported() && (
+          <div className="mt-6">
+            {pushState === "subscribed" ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-card border border-border rounded-xl py-3">
+                <BellRing size={16} className="text-primary" />
+                התראות פעילות ✅
+              </div>
+            ) : (
+              <button
+                onClick={handleEnablePush}
+                disabled={pushState === "subscribing"}
+                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+              >
+                <Bell size={18} />
+                {pushState === "subscribing" ? "מפעיל..." : "אשר התראות כדי שנדע להודיע לך כשההזמנה מוכנה"}
+              </button>
+            )}
+            {iosNeedsInstall() && pushState !== "subscribed" && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                ב-iPhone: שתף → "הוסף למסך הבית" כדי שההתראות יעבדו
+              </p>
+            )}
           </div>
         )}
       </div>
