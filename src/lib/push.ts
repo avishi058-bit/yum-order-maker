@@ -14,7 +14,18 @@ export const isPushSupported = (): boolean => {
 
 export const isIos = (): boolean => {
   if (typeof navigator === "undefined") return false;
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const ua = navigator.userAgent || "";
+  // iPhone / iPod / iPad (older)
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  // iPadOS 13+ reports as Mac but is touch-enabled
+  if (/Macintosh/.test(ua) && typeof document !== "undefined" && "ontouchend" in document) return true;
+  return false;
+};
+
+export const isSafari = (): boolean => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
 };
 
 export const isStandalonePwa = (): boolean => {
