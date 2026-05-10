@@ -62,6 +62,37 @@ const OrderTracking = () => {
     return () => clearInterval(interval);
   }, [order]);
 
+  // Detect existing push subscription
+  useEffect(() => {
+    if (!order?.id) return;
+    getExistingSubscription().then((sub) => {
+      if (sub) setPushState("subscribed");
+    });
+  }, [order?.id]);
+
+  const handleEnablePush = async () => {
+    if (!order?.id) return;
+    if (iosNeedsInstall()) {
+      toast.message("ב-iPhone צריך להוסיף את האתר למסך הבית כדי לקבל התראות", {
+        description: "שתף → הוסף למסך הבית, ואז חזור לכאן",
+      });
+      return;
+    }
+    setPushState("subscribing");
+    const res = await subscribeToPush({ orderId: order.id, customerPhone: phone ?? undefined });
+    if (res.ok) {
+      setPushState("subscribed");
+      toast.success("התראות הופעלו ✅");
+    } else {
+      setPushState("idle");
+      const msg =
+        res.reason === "denied" ? "לא ניתן אישור להתראות" :
+        res.reason === "unsupported" ? "הדפדפן לא תומך בהתראות" :
+        "לא ניתן להפעיל התראות";
+      toast.error(msg);
+    }
+  };
+
   if (!orderNumber || !phone) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
