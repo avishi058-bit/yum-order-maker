@@ -3,25 +3,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide-react";
 import { toast } from "sonner";
-import { isPushSupported, iosNeedsInstall, subscribeToPush, getExistingSubscription } from "@/lib/push";
+import { isPushSupported, iosNeedsInstall, isIos, subscribeToPush, getExistingSubscription } from "@/lib/push";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
   /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
   phone: string;
   onClose: () => void;
-  /** When true, disables all browser notification prompts and push subscriptions (kiosk mode). */
-  isKiosk?: boolean;
 }
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
-const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: OrderLiveTrackerProps) => {
+const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
   const [order, setOrder] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(isKiosk); // sound on by default in kiosk
-  const [showPermissionPrompt, setShowPermissionPrompt] = useState(!isKiosk);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(true);
+  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   // Fetch order via secure edge function (no direct DB access)
