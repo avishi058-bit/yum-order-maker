@@ -161,8 +161,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
   };
 
-  const handleDetailsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDetailsSubmit = (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && "preventDefault" in e) e.preventDefault();
+    console.log("[Checkout] handleDetailsSubmit called", { name: form.name, phone: form.phone, isLoggedIn, isKiosk });
     if (!form.name.trim()) {
       toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
       return;
@@ -176,6 +177,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         return;
       }
     }
+    console.log("[Checkout] advancing to payment step");
     setStep("payment");
   };
 
@@ -633,6 +635,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               <div className="flex gap-3 pt-2">
                 <motion.button
                   type="submit"
+                  onClick={(e) => handleDetailsSubmit(e)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
