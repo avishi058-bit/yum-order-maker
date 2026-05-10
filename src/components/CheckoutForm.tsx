@@ -441,13 +441,21 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
     >
-      <div className="absolute inset-0 bg-black/60" onClick={isKiosk ? undefined : onClose} />
+      <div
+        className="absolute inset-0 bg-black/60"
+        onClick={(e) => {
+          // Only close when the click actually lands on the backdrop itself.
+          // Prevents iOS edge cases where a child click is reported on the parent.
+          if (e.target === e.currentTarget && !isKiosk) onClose();
+        }}
+      />
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         className="relative bg-card rounded-2xl p-6 w-full max-w-lg border border-border max-h-[90vh] overflow-y-auto"
         dir="rtl"
+        onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-black mb-6">
           {step === "phone" && "הכנס מספר טלפון"}
@@ -631,18 +639,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <motion.button
-                  type="button"
-                  onClick={handleDetailsSubmit}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full active:scale-[0.98] transition-transform"
                 >
                   המשך לתשלום 💳
-                </motion.button>
+                </button>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={(e) => { e.stopPropagation(); onClose(); }}
                   className="px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ביטול
