@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ChefHat, CheckCircle, Package } from "lucide-react";
+import { ChefHat, CheckCircle, Package, Bell, BellRing } from "lucide-react";
+import { toast } from "sonner";
+import {
+  isPushSupported,
+  iosNeedsInstall,
+  subscribeToPush,
+  getExistingSubscription,
+} from "@/lib/push";
 
 /**
  * Public order tracking page. Requires both order number AND phone in the URL
@@ -15,6 +22,7 @@ const OrderTracking = () => {
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [pushState, setPushState] = useState<"idle" | "subscribing" | "subscribed">("idle");
 
   useEffect(() => {
     if (!orderNumber || !phone) return;
