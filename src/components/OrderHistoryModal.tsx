@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Package, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Package, RefreshCw, ChevronDown, ChevronUp, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { menuItems, type MenuItem } from "@/data/menu";
 import type { CartItem } from "@/components/CartDrawer";
 import { toast } from "@/hooks/use-toast";
+import IosInstallModal from "@/components/IosInstallModal";
 
 interface HistoryItem {
   item_id: string | null;
