@@ -231,22 +231,24 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
               >
                 <Volume2 size={14} />
               </button>
-              <button
-                onClick={() => {
-                  if (!notificationsEnabled && Notification.permission !== "granted") {
-                    Notification.requestPermission().then((p) => {
-                      if (p === "granted") setNotificationsEnabled(true);
-                    });
-                  } else {
-                    setNotificationsEnabled(!notificationsEnabled);
-                  }
-                }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                  notificationsEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
-              </button>
+              {!isKiosk && (
+                <button
+                  onClick={() => {
+                    if (!notificationsEnabled && typeof Notification !== "undefined" && Notification.permission !== "granted") {
+                      Notification.requestPermission().then((p) => {
+                        if (p === "granted") setNotificationsEnabled(true);
+                      });
+                    } else {
+                      setNotificationsEnabled(!notificationsEnabled);
+                    }
+                  }}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    notificationsEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
+                </button>
+              )}
             </div>
           </div>
 
