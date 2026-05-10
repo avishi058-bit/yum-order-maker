@@ -266,6 +266,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
               })}
             </div>
           </motion.div>
+          <IosInstallModal open={showInstall} onClose={() => setShowInstall(false)} />
         </>
       )}
     </AnimatePresence>
