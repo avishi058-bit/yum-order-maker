@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide-react";
+import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { isPushSupported, iosNeedsInstall, isIos, subscribeToPush, getExistingSubscription } from "@/lib/push";
 import IosInstallModal from "@/components/IosInstallModal";
