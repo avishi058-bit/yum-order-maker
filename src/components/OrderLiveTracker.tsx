@@ -97,15 +97,16 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
     return () => clearInterval(interval);
   }, [order]);
 
-  // Auto-hide prompt if user already subscribed for this device
+  // Auto-hide prompt if user already subscribed for this device (skip in kiosk)
   useEffect(() => {
+    if (isKiosk) return;
     getExistingSubscription().then((sub) => {
       if (sub) {
         setNotificationsEnabled(true);
         setShowPermissionPrompt(false);
       }
     });
-  }, []);
+  }, [isKiosk]);
 
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
