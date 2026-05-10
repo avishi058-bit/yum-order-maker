@@ -585,6 +585,7 @@ const Index = () => {
             orderNumber={liveTrackerOrder.orderNumber}
             phone={liveTrackerOrder.phone}
             onClose={() => setLiveTrackerOrder(null)}
+            isKiosk={isStation}
           />
         )}
       </Suspense>
