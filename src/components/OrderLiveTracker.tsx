@@ -69,8 +69,8 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
       } catch {}
     }
 
-    // Send browser notification
-    if (notificationsEnabled && Notification.permission === "granted") {
+    // Send browser notification (skip entirely in kiosk mode)
+    if (!isKiosk && notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
         new Notification(`הזמנה #${orderNumber}`, {
           body: message,
@@ -78,7 +78,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
         });
       } catch {}
     }
-  }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber]);
+  }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber, isKiosk]);
 
   // Countdown timer
   useEffect(() => {
