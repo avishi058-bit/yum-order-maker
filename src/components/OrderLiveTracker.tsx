@@ -96,36 +96,43 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     return () => clearInterval(interval);
   }, [order]);
 
-  // Auto-hide prompt if user already subscribed for this device (skip in kiosk)
+  // Auto-hide prompt if user already subscribed for this device
   useEffect(() => {
-    if (isKiosk) return;
     getExistingSubscription().then((sub) => {
       if (sub) {
         setNotificationsEnabled(true);
         setShowPermissionPrompt(false);
       }
     });
-  }, [isKiosk]);
+  }, []);
 
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
 
-    // iOS check FIRST — on iOS Safari without PWA, Notification API may not exist at all
+    // iOS check FIRST — on iOS Safari without PWA, Notification API doesn't exist.
+    // Show a proper in-app modal with Add-to-Home-Screen instructions instead of
+    // a broken native permission popup.
     if (iosNeedsInstall()) {
-      toast.message("ב-iPhone צריך להוסיף למסך הבית", {
-        description: "שתף → 'הוסף למסך הבית', ואז חזור לכאן ואשר התראות",
-      });
+      setShowPermissionPrompt(false);
+      setShowIosInstallModal(true);
+      return;
+    }
+
+    // Browser doesn't support Web Push at all (e.g. older browser, in-app webview).
+    // Don't try to call requestPermission — just inform the user.
+    if (!isPushSupported()) {
+      if (isIos()) {
+        // iOS in PWA but still missing APIs (very old iOS)
+        setShowPermissionPrompt(false);
+        setShowIosInstallModal(true);
+        return;
+      }
+      toast.error("הדפדפן לא תומך בהתראות דחיפה. נשאיר התראת קול בתוך האתר.");
       setShowPermissionPrompt(false);
       return;
     }
 
-    if (!("Notification" in window)) {
-      toast.error("הדפדפן לא תומך בהתראות. נסה בדפדפן אחר (Chrome / Safari)");
-      setShowPermissionPrompt(false);
-      return;
-    }
-
-    // STEP 1: Always request browser permission FIRST so the native prompt appears
+    // STEP 1: Request browser permission (only when supported)
     let permission: NotificationPermission = Notification.permission;
     if (permission === "default") {
       try {
@@ -143,16 +150,9 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
 
     setNotificationsEnabled(true);
 
-    // STEP 2: Subscribe to push if supported (waits for order to load if needed)
-    if (!isPushSupported()) {
-      toast.success("התראות הופעלו! 🔔");
-      setShowPermissionPrompt(false);
-      return;
-    }
-
+    // STEP 2: Subscribe to push (waits for order to load if needed)
     let orderId = order?.id;
     if (!orderId) {
-      // Wait up to ~10s for order to load
       for (let i = 0; i < 20 && !orderId; i++) {
         await new Promise((r) => setTimeout(r, 500));
         orderId = order?.id;
