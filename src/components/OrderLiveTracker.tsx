@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide-react";
+import { toast } from "sonner";
+import { isPushSupported, iosNeedsInstall, subscribeToPush, getExistingSubscription } from "@/lib/push";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
@@ -93,16 +95,54 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     return () => clearInterval(interval);
   }, [order]);
 
-  const handleEnableNotifications = useCallback(async () => {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
+  // Auto-hide prompt if user already subscribed for this device
+  useEffect(() => {
+    getExistingSubscription().then((sub) => {
+      if (sub) {
         setNotificationsEnabled(true);
+        setShowPermissionPrompt(false);
       }
-    } catch {}
-    setSoundEnabled(true);
-    setShowPermissionPrompt(false);
+    });
   }, []);
+
+  const handleEnableNotifications = useCallback(async () => {
+    setSoundEnabled(true);
+
+    if (!isPushSupported()) {
+      // Fallback: in-tab Notification API
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") setNotificationsEnabled(true);
+      } catch {}
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    if (iosNeedsInstall()) {
+      toast.message("ב-iPhone צריך להוסיף למסך הבית", {
+        description: "שתף → 'הוסף למסך הבית', ואז חזור לכאן ואשר התראות",
+      });
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    if (!order?.id) {
+      // Order not loaded yet — wait, but still ask permission so the prompt counts as accepted
+      try { await Notification.requestPermission(); } catch {}
+      return;
+    }
+
+    const res = await subscribeToPush({ orderId: order.id, customerPhone: phone });
+    if (res.ok) {
+      setNotificationsEnabled(true);
+      toast.success("מעולה! נעדכן אותך כשההזמנה מוכנה 🔔");
+    } else if (res.reason === "denied") {
+      toast.error("לא ניתן אישור להתראות");
+    } else {
+      toast.error("לא ניתן להפעיל התראות");
+    }
+    setShowPermissionPrompt(false);
+  }, [order?.id, phone]);
 
   const handleSkipNotifications = useCallback(() => {
     setShowPermissionPrompt(false);
