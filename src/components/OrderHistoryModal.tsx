@@ -68,6 +68,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
     if (!open) return;
