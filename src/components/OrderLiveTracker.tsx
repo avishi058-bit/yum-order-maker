@@ -108,12 +108,8 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
 
-    if (!isPushSupported()) {
-      // Fallback: in-tab Notification API
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") setNotificationsEnabled(true);
-      } catch {}
+    if (!("Notification" in window)) {
+      toast.error("הדפדפן לא תומך בהתראות");
       setShowPermissionPrompt(false);
       return;
     }
@@ -126,20 +122,51 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
       return;
     }
 
-    if (!order?.id) {
-      // Order not loaded yet — wait, but still ask permission so the prompt counts as accepted
-      try { await Notification.requestPermission(); } catch {}
+    // STEP 1: Always request browser permission FIRST so the native prompt appears
+    let permission: NotificationPermission = Notification.permission;
+    if (permission === "default") {
+      try {
+        permission = await Notification.requestPermission();
+      } catch {
+        permission = "denied";
+      }
+    }
+
+    if (permission !== "granted") {
+      toast.error("לא ניתן אישור להתראות");
+      setShowPermissionPrompt(false);
       return;
     }
 
-    const res = await subscribeToPush({ orderId: order.id, customerPhone: phone });
+    setNotificationsEnabled(true);
+
+    // STEP 2: Subscribe to push if supported (waits for order to load if needed)
+    if (!isPushSupported()) {
+      toast.success("התראות הופעלו! 🔔");
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    let orderId = order?.id;
+    if (!orderId) {
+      // Wait up to ~10s for order to load
+      for (let i = 0; i < 20 && !orderId; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        orderId = order?.id;
+      }
+    }
+
+    if (!orderId) {
+      toast.success("התראות הופעלו! 🔔");
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    const res = await subscribeToPush({ orderId, customerPhone: phone });
     if (res.ok) {
-      setNotificationsEnabled(true);
       toast.success("מעולה! נעדכן אותך כשההזמנה מוכנה 🔔");
-    } else if (res.reason === "denied") {
-      toast.error("לא ניתן אישור להתראות");
     } else {
-      toast.error("לא ניתן להפעיל התראות");
+      toast.success("התראות הופעלו! 🔔");
     }
     setShowPermissionPrompt(false);
   }, [order?.id, phone]);
