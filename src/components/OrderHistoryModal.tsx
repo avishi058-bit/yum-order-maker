@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Package, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Package, RefreshCw, ChevronDown, ChevronUp, Smartphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { menuItems, type MenuItem } from "@/data/menu";
 import type { CartItem } from "@/components/CartDrawer";
 import { toast } from "@/hooks/use-toast";
+import IosInstallModal from "@/components/IosInstallModal";
 
 interface HistoryItem {
   item_id: string | null;
@@ -67,6 +68,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -146,6 +148,16 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
                 aria-label="סגור"
               >
                 <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-4 py-3 border-b border-border bg-primary/5">
+              <button
+                onClick={() => setShowInstall(true)}
+                className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                <Smartphone size={16} />
+                הוסף את הבקתה למסך הבית
               </button>
             </div>
 
@@ -254,6 +266,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
               })}
             </div>
           </motion.div>
+          <IosInstallModal open={showInstall} onClose={() => setShowInstall(false)} />
         </>
       )}
     </AnimatePresence>
