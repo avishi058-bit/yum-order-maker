@@ -108,16 +108,17 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
 
-    if (!("Notification" in window)) {
-      toast.error("הדפדפן לא תומך בהתראות");
-      setShowPermissionPrompt(false);
-      return;
-    }
-
+    // iOS check FIRST — on iOS Safari without PWA, Notification API may not exist at all
     if (iosNeedsInstall()) {
       toast.message("ב-iPhone צריך להוסיף למסך הבית", {
         description: "שתף → 'הוסף למסך הבית', ואז חזור לכאן ואשר התראות",
       });
+      setShowPermissionPrompt(false);
+      return;
+    }
+
+    if (!("Notification" in window)) {
+      toast.error("הדפדפן לא תומך בהתראות. נסה בדפדפן אחר (Chrome / Safari)");
       setShowPermissionPrompt(false);
       return;
     }
