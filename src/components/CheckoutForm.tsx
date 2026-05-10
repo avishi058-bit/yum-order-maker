@@ -163,7 +163,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   const handleDetailsSubmit = (e?: React.FormEvent | React.MouseEvent) => {
     if (e && "preventDefault" in e) e.preventDefault();
-    console.log("[Checkout] handleDetailsSubmit called", { name: form.name, phone: form.phone, isLoggedIn, isKiosk });
     if (!form.name.trim()) {
       toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
       return;
@@ -177,7 +176,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         return;
       }
     }
-    console.log("[Checkout] advancing to payment step");
     setStep("payment");
   };
 
@@ -441,7 +439,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
     >
       <div className="absolute inset-0 bg-black/60" onClick={isKiosk ? undefined : onClose} />
       <motion.div
@@ -634,8 +632,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </div>
               <div className="flex gap-3 pt-2">
                 <motion.button
-                  type="submit"
-                  onClick={(e) => handleDetailsSubmit(e)}
+                  type="button"
+                  onClick={handleDetailsSubmit}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
