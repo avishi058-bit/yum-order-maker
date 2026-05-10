@@ -3,25 +3,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2 } from "lucide-react";
 import { toast } from "sonner";
-import { isPushSupported, iosNeedsInstall, subscribeToPush, getExistingSubscription } from "@/lib/push";
+import { isPushSupported, iosNeedsInstall, isIos, subscribeToPush, getExistingSubscription } from "@/lib/push";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
   /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
   phone: string;
   onClose: () => void;
-  /** When true, disables all browser notification prompts and push subscriptions (kiosk mode). */
-  isKiosk?: boolean;
 }
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
-const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: OrderLiveTrackerProps) => {
+const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
   const [order, setOrder] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(isKiosk); // sound on by default in kiosk
-  const [showPermissionPrompt, setShowPermissionPrompt] = useState(!isKiosk);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(true);
+  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   // Fetch order via secure edge function (no direct DB access)
@@ -69,8 +68,8 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
       } catch {}
     }
 
-    // Send browser notification (skip entirely in kiosk mode)
-    if (!isKiosk && notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
+    // Send browser notification
+    if (notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
         new Notification(`הזמנה #${orderNumber}`, {
           body: message,
@@ -78,7 +77,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
         });
       } catch {}
     }
-  }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber, isKiosk]);
+  }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber]);
 
   // Countdown timer
   useEffect(() => {
@@ -97,36 +96,43 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
     return () => clearInterval(interval);
   }, [order]);
 
-  // Auto-hide prompt if user already subscribed for this device (skip in kiosk)
+  // Auto-hide prompt if user already subscribed for this device
   useEffect(() => {
-    if (isKiosk) return;
     getExistingSubscription().then((sub) => {
       if (sub) {
         setNotificationsEnabled(true);
         setShowPermissionPrompt(false);
       }
     });
-  }, [isKiosk]);
+  }, []);
 
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
 
-    // iOS check FIRST — on iOS Safari without PWA, Notification API may not exist at all
+    // iOS check FIRST — on iOS Safari without PWA, Notification API doesn't exist.
+    // Show a proper in-app modal with Add-to-Home-Screen instructions instead of
+    // a broken native permission popup.
     if (iosNeedsInstall()) {
-      toast.message("ב-iPhone צריך להוסיף למסך הבית", {
-        description: "שתף → 'הוסף למסך הבית', ואז חזור לכאן ואשר התראות",
-      });
+      setShowPermissionPrompt(false);
+      setShowIosInstallModal(true);
+      return;
+    }
+
+    // Browser doesn't support Web Push at all (e.g. older browser, in-app webview).
+    // Don't try to call requestPermission — just inform the user.
+    if (!isPushSupported()) {
+      if (isIos()) {
+        // iOS in PWA but still missing APIs (very old iOS)
+        setShowPermissionPrompt(false);
+        setShowIosInstallModal(true);
+        return;
+      }
+      toast.error("הדפדפן לא תומך בהתראות דחיפה. נשאיר התראת קול בתוך האתר.");
       setShowPermissionPrompt(false);
       return;
     }
 
-    if (!("Notification" in window)) {
-      toast.error("הדפדפן לא תומך בהתראות. נסה בדפדפן אחר (Chrome / Safari)");
-      setShowPermissionPrompt(false);
-      return;
-    }
-
-    // STEP 1: Always request browser permission FIRST so the native prompt appears
+    // STEP 1: Request browser permission (only when supported)
     let permission: NotificationPermission = Notification.permission;
     if (permission === "default") {
       try {
@@ -144,16 +150,9 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
 
     setNotificationsEnabled(true);
 
-    // STEP 2: Subscribe to push if supported (waits for order to load if needed)
-    if (!isPushSupported()) {
-      toast.success("התראות הופעלו! 🔔");
-      setShowPermissionPrompt(false);
-      return;
-    }
-
+    // STEP 2: Subscribe to push (waits for order to load if needed)
     let orderId = order?.id;
     if (!orderId) {
-      // Wait up to ~10s for order to load
       for (let i = 0; i < 20 && !orderId; i++) {
         await new Promise((r) => setTimeout(r, 500));
         orderId = order?.id;
@@ -231,24 +230,26 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
               >
                 <Volume2 size={14} />
               </button>
-              {!isKiosk && (
-                <button
-                  onClick={() => {
-                    if (!notificationsEnabled && typeof Notification !== "undefined" && Notification.permission !== "granted") {
-                      Notification.requestPermission().then((p) => {
-                        if (p === "granted") setNotificationsEnabled(true);
-                      });
-                    } else {
-                      setNotificationsEnabled(!notificationsEnabled);
-                    }
-                  }}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                    notificationsEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (iosNeedsInstall() || !isPushSupported()) {
+                    setShowIosInstallModal(true);
+                    return;
+                  }
+                  if (!notificationsEnabled && Notification.permission !== "granted") {
+                    Notification.requestPermission().then((p) => {
+                      if (p === "granted") setNotificationsEnabled(true);
+                    });
+                  } else {
+                    setNotificationsEnabled(!notificationsEnabled);
+                  }
+                }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                  notificationsEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
+              </button>
             </div>
           </div>
 
@@ -402,6 +403,48 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose, isKiosk = false }: Orde
             </button>
           </div>
         </motion.div>
+
+        {/* iOS Add-to-Home-Screen instructions */}
+        <AnimatePresence>
+          {showIosInstallModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowIosInstallModal(false)}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-card rounded-3xl shadow-2xl border border-border max-w-sm w-full p-6 text-center"
+              >
+                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                  <Bell size={26} className="text-primary" />
+                </div>
+                <h3 className="text-lg font-black text-foreground mb-2">
+                  כדי לקבל התראות ב-iPhone
+                </h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Safari ב-iPhone דורש להוסיף את האתר למסך הבית כדי לתמוך בהתראות.
+                </p>
+                <ol className="text-right text-sm text-foreground space-y-2 mb-5 bg-muted/50 rounded-xl p-4">
+                  <li>1. לחץ על כפתור <strong>שתף</strong> ⬆️ בתחתית Safari</li>
+                  <li>2. בחר <strong>"הוסף למסך הבית"</strong> 🏠</li>
+                  <li>3. פתח את האתר מהמסך הראשי ואשר התראות</li>
+                </ol>
+                <button
+                  onClick={() => setShowIosInstallModal(false)}
+                  className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm"
+                >
+                  הבנתי
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );
