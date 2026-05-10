@@ -639,18 +639,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <motion.button
-                  type="button"
-                  onClick={handleDetailsSubmit}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full"
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full active:scale-[0.98] transition-transform"
                 >
                   המשך לתשלום 💳
-                </motion.button>
+                </button>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={(e) => { e.stopPropagation(); onClose(); }}
                   className="px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ביטול
