@@ -596,6 +596,14 @@ const Kitchen = () => {
     }
     setShowTimePicker(null);
     fetchOrders();
+
+    // Fire push notification when order becomes ready (non-blocking)
+    if (newStatus === "ready") {
+      supabase.functions.invoke("send-order-ready-push", { body: { order_id: orderId } })
+        .then(({ error: pushErr }) => {
+          if (pushErr) console.warn("[Kitchen] push send failed", pushErr);
+        });
+    }
   };
 
   const printOrder = (order: Order) => {
