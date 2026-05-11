@@ -131,6 +131,12 @@ const PostInstallPermissionModal = () => {
         } catch {}
       }
     } catch {}
+    // Lock-in once user has actually responded to the OS prompt (granted OR denied) — stop nudging.
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission !== "default") {
+        localStorage.setItem(SEEN_KEY, "1");
+      }
+    } catch {}
     // After permission flow — if not installed yet, explain why to add to home screen
     if (!isStandalone()) {
       if (isIos()) {
