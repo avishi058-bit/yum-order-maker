@@ -339,7 +339,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     if (!kind) return;
     if (kind === "friendsMix") friendsMix += qty;
     else if (kind === "tempuraOnionSide") tempuraOnionSide += qty;
-    else if (kind === "waffleFries") waffleFries += qty;
+    else if (kind === "sweetPotatoFries") sweetPotatoFries += qty;
     else if (kind === "onionRings") onionRings += qty;
     else if (kind === "fries") fries += qty;
   };
