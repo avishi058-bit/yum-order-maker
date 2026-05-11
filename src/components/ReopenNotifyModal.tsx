@@ -26,7 +26,6 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
     }
     const cleaned = phone.replace(/[\s-]/g, "");
     setSubmitting(true);
-    setSubmitting(true);
     const { error } = await supabase.from("reopen_notifications").insert({
       phone: cleaned,
       name: name.trim() || null,
