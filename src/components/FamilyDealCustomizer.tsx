@@ -1,10 +1,16 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { removals, drinkToAvailabilityId } from "@/data/menu";
+import { drinkToAvailabilityId } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import BurgerIngredientChecklist, {
+  IngredientState,
+  defaultRegularIngredientState,
+  ingredientStateToRemovals,
+} from "@/components/BurgerIngredientChecklist";
 
 interface FamilyDealCustomizerProps {
   open: boolean;
@@ -47,6 +53,8 @@ const beerDrinks = familyDrinkOptions.filter((d) => d.category === "beer");
 
 const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyDealCustomizerProps) => {
   const alcoholConsent = useAlcoholConsent();
+  const location = useLocation();
+  const isKiosk = location.pathname === "/kiosk";
 
   const isDrinkUnavailable = (drinkId: string) => {
     const availId = drinkToAvailabilityId[drinkId];
@@ -55,8 +63,9 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   };
 
   const [step, setStep] = useState<string>("burger-1");
-  const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>(
-    Array.from({ length: 5 }, () => ({ removals: ["no-changes"], name: "" }))
+  const [burgerNames, setBurgerNames] = useState<string[]>(Array.from({ length: 5 }, () => ""));
+  const [burgerIngredients, setBurgerIngredients] = useState<IngredientState[]>(
+    Array.from({ length: 5 }, () => defaultRegularIngredientState())
   );
   const [wantsDrinks, setWantsDrinks] = useState<boolean | null>(null);
   const [drinkCount, setDrinkCount] = useState(0);
@@ -94,7 +103,8 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const resetState = () => {
     setStep("burger-1");
-    setBurgerConfigs(Array.from({ length: 5 }, () => ({ removals: ["no-changes"], name: "" })));
+    setBurgerNames(Array.from({ length: 5 }, () => ""));
+    setBurgerIngredients(Array.from({ length: 5 }, () => defaultRegularIngredientState()));
     setWantsDrinks(null);
     setDrinkCount(0);
     setSelectedDrinks([]);
@@ -105,37 +115,25 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
     onClose();
   };
 
-  const toggleRemoval = (id: string) => {
+  const toggleIngredient = (ingId: string) => {
     const idx = currentBurgerIndex;
     if (idx < 0) return;
-    setBurgerConfigs((prev) => {
+    setBurgerIngredients((prev) => {
       const updated = [...prev];
-      const current = [...updated[idx].removals];
-      if (id === "no-changes") {
-        updated[idx] = { ...updated[idx], removals: current.includes("no-changes") ? [] : ["no-changes"] };
-      } else if (id === "dry") {
-        updated[idx] = { ...updated[idx], removals: current.includes("dry") ? ["no-changes"] : ["dry"] };
-      } else {
-        const filtered = current.filter((r) => r !== "no-changes" && r !== "dry");
-        if (filtered.includes(id)) {
-          const result = filtered.filter((r) => r !== id);
-          updated[idx] = { ...updated[idx], removals: result.length === 0 ? ["no-changes"] : result };
-        } else {
-          updated[idx] = { ...updated[idx], removals: [...filtered, id] };
-        }
-      }
+      updated[idx] = { ...updated[idx], [ingId]: !updated[idx][ingId] };
       return updated;
     });
   };
 
   const finishDeal = (drinks: DealDrinkChoice[]) => {
-    const cleanBurgers = burgerConfigs.map((b) => ({
-      removals: b.removals.filter((r) => r !== "no-changes"),
-      name: b.name?.trim() || undefined,
+    const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, i) => ({
+      removals: ingredientStateToRemovals(state),
+      name: burgerNames[i]?.trim() || undefined,
     }));
     onConfirm(cleanBurgers, drinks);
     resetState();
   };
+
 
   const handleNext = () => {
     if (burgerSteps.includes(step)) {
@@ -188,7 +186,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const progressSteps = getProgressSteps();
   const currentProgressIndex = progressSteps.indexOf(step);
-  const currentRemovals = currentBurgerIndex >= 0 ? burgerConfigs[currentBurgerIndex].removals : [];
+  
 
   if (!open) return null;
 
@@ -265,45 +263,27 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                         <input
                           type="text"
                           placeholder="שם (לא חובה)"
-                          value={burgerConfigs[currentBurgerIndex]?.name || ""}
+                          value={burgerNames[currentBurgerIndex] || ""}
                           onChange={(e) => {
                             const idx = currentBurgerIndex;
-                            setBurgerConfigs((prev) => {
+                            const value = e.target.value;
+                            setBurgerNames((prev) => {
                               const updated = [...prev];
-                              updated[idx] = { ...updated[idx], name: e.target.value };
+                              updated[idx] = value;
                               return updated;
                             });
                           }}
                           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
-                      <div className="space-y-0">
-                        {removals.map((r) => {
-                          const active = currentRemovals.includes(r.id);
-                          return (
-                            <button
-                              key={r.id}
-                              onClick={() => toggleRemoval(r.id)}
-                              className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                }`}
-                              >
-                                {active && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
-                                  />
-                                )}
-                              </div>
-                              <span className="font-medium text-base">{r.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {currentBurgerIndex >= 0 && (
+                        <BurgerIngredientChecklist
+                          state={burgerIngredients[currentBurgerIndex]}
+                          onToggle={toggleIngredient}
+                          isAvailable={isAvailable}
+                          isKiosk={isKiosk}
+                        />
+                      )}
                     </div>
                   </motion.div>
                 )}

@@ -1,10 +1,16 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { removals, dealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
+import { dealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import BurgerIngredientChecklist, {
+  IngredientState,
+  defaultRegularIngredientState,
+  ingredientStateToRemovals,
+} from "@/components/BurgerIngredientChecklist";
 
 interface DealCustomizerProps {
   open: boolean;
@@ -33,11 +39,15 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
     return !isAvailable(availId);
   };
 
+  const location = useLocation();
+  const isKiosk = location.pathname === "/kiosk";
+
   const [step, setStep] = useState<Step>("burger-1");
-  const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>([
-    { removals: ["no-changes"], name: "" },
-    { removals: ["no-changes"], name: "" },
-    { removals: ["no-changes"], name: "" },
+  const [burgerNames, setBurgerNames] = useState<string[]>(["", "", ""]);
+  const [burgerIngredients, setBurgerIngredients] = useState<IngredientState[]>([
+    defaultRegularIngredientState(),
+    defaultRegularIngredientState(),
+    defaultRegularIngredientState(),
   ]);
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
@@ -72,10 +82,11 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
 
   const resetState = () => {
     setStep("burger-1");
-    setBurgerConfigs([
-      { removals: ["no-changes"], name: "" },
-      { removals: ["no-changes"], name: "" },
-      { removals: ["no-changes"], name: "" },
+    setBurgerNames(["", "", ""]);
+    setBurgerIngredients([
+      defaultRegularIngredientState(),
+      defaultRegularIngredientState(),
+      defaultRegularIngredientState(),
     ]);
     setSelectedDrinks(["", "", ""]);
   };
@@ -85,25 +96,11 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
     onClose();
   };
 
-  const toggleRemoval = (id: string) => {
+  const toggleIngredient = (ingId: string) => {
     const idx = currentBurgerIndex;
-    setBurgerConfigs((prev) => {
+    setBurgerIngredients((prev) => {
       const updated = [...prev];
-      const current = [...updated[idx].removals];
-
-      if (id === "no-changes") {
-        updated[idx] = { removals: current.includes("no-changes") ? [] : ["no-changes"] };
-      } else if (id === "dry") {
-        updated[idx] = { removals: current.includes("dry") ? ["no-changes"] : ["dry"] };
-      } else {
-        const filtered = current.filter((r) => r !== "no-changes" && r !== "dry");
-        if (filtered.includes(id)) {
-          const result = filtered.filter((r) => r !== id);
-          updated[idx] = { removals: result.length === 0 ? ["no-changes"] : result };
-        } else {
-          updated[idx] = { removals: [...filtered, id] };
-        }
-      }
+      updated[idx] = { ...updated[idx], [ingId]: !updated[idx][ingId] };
       return updated;
     });
   };
@@ -124,16 +121,14 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
         const drink = dealDrinkOptions.find((d) => d.id === dId)!;
         return { id: drink.id, name: drink.name, extraCost: drink.price };
       });
-      const cleanBurgers = burgerConfigs.map((b) => ({
-        removals: b.removals.filter((r) => r !== "no-changes"),
-        name: b.name?.trim() || undefined,
+      const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, i) => ({
+        removals: ingredientStateToRemovals(state),
+        name: burgerNames[i]?.trim() || undefined,
       }));
       onConfirm(cleanBurgers, drinks);
       resetState();
     }
   };
-
-  const currentRemovals = !isDrinkStep ? burgerConfigs[currentBurgerIndex].removals : [];
 
   const softDrinks = dealDrinkOptions.filter((d) => d.category === "soft");
   const beerDrinks = dealDrinkOptions.filter((d) => d.category === "beer");
@@ -206,45 +201,25 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
                         <input
                           type="text"
                           placeholder="שם (לא חובה)"
-                          value={burgerConfigs[currentBurgerIndex].name || ""}
+                          value={burgerNames[currentBurgerIndex] || ""}
                           onChange={(e) => {
                             const idx = currentBurgerIndex;
-                            setBurgerConfigs((prev) => {
+                            const value = e.target.value;
+                            setBurgerNames((prev) => {
                               const updated = [...prev];
-                              updated[idx] = { ...updated[idx], name: e.target.value };
+                              updated[idx] = value;
                               return updated;
                             });
                           }}
                           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
-                      <div className="space-y-0">
-                        {removals.map((r) => {
-                          const active = currentRemovals.includes(r.id);
-                          return (
-                            <button
-                              key={r.id}
-                              onClick={() => toggleRemoval(r.id)}
-                              className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                }`}
-                              >
-                                {active && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
-                                  />
-                                )}
-                              </div>
-                              <span className="font-medium text-base">{r.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <BurgerIngredientChecklist
+                        state={burgerIngredients[currentBurgerIndex]}
+                        onToggle={toggleIngredient}
+                        isAvailable={isAvailable}
+                        isKiosk={isKiosk}
+                      />
                     </div>
                   </motion.div>
                 ) : (
