@@ -219,6 +219,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
                         onToggle={toggleIngredient}
                         isAvailable={isAvailable}
                         isKiosk={isKiosk}
+                        title={`מה במנה ה${["ראשונה", "שנייה", "שלישית"][currentBurgerIndex]} שלך?`}
                       />
                     </div>
                   </motion.div>
