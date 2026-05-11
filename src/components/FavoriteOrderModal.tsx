@@ -449,17 +449,24 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                     </button>
                     <div className="flex flex-col gap-2 pt-2">
                       <button
-                        onClick={handleConfirmUse}
+                        onClick={() => handleConfirmUse("checkout")}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30"
                       >
                         <Check size={18} />
-                        המשך עם הקבוע
+                        המשך לתשלום עם הקבוע
+                      </button>
+                      <button
+                        onClick={() => handleConfirmUse("cart")}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm"
+                      >
+                        <ShoppingBag size={15} />
+                        הוסף לעגלה והמשך לקנות
                       </button>
                       <button
                         onClick={() => setView("setup")}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-sm"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-sm"
                       >
-                        <Pencil size={16} />
+                        <Pencil size={15} />
                         ערוך / שנה את הקבוע השמור
                       </button>
                       <button
