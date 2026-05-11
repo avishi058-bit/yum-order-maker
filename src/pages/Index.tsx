@@ -635,7 +635,8 @@ const Index = () => {
               total={getTotal()}
               sauces={selectedSauces}
               freeSauces={freeSauces}
-              onClose={() => setCheckoutOpen(false)}
+              skipDetails={checkoutSkipDetails}
+              onClose={() => { setCheckoutOpen(false); setCheckoutSkipDetails(false); }}
               onSuccess={(orderNumber, phone) => {
                 // Snapshot the cart BEFORE clearing — used for the
                 // "save as your regular" post-order prompt.
