@@ -33,123 +33,12 @@ interface MenuItemPricing {
   category: "burger" | "side" | "drink" | "deal" | "meal";
 }
 
-const MENU_ITEMS: MenuItemPricing[] = [
-  { id: "classic", name: "קלאסי", price: 52, category: "burger" },
-  { id: "smash-moshavnikim", name: "סמאש של מושבניקים", price: 58, category: "burger" },
-  { id: "avishai", name: "אבישי שחוט לי פרה!", price: 78, category: "burger" },
-  { id: "double", name: "כפולה", price: 76, category: "burger" },
-  { id: "crazy-smash", name: "קרייזי סמאש", price: 64, category: "burger" },
-  { id: "smash-double-cheese", name: "סמאש דאבל צ׳יז", price: 66, category: "burger" },
-  { id: "special-hadegel", name: "ספיישל הדגל", price: 73, category: "burger" },
-  { id: "napoleon", name: "נפוליאון", price: 78, category: "burger" },
-  { id: "haf-mifsha", name: "חף מפשע", price: 55, category: "burger" },
-  { id: "meal-classic", name: "ארוחת קלאסי", price: 75, category: "meal" },
-  { id: "meal-smash-moshavnikim", name: "ארוחת סמאש של מושבניקים", price: 81, category: "meal" },
-  { id: "meal-avishai", name: "ארוחת אבישי שחוט לי פרה!", price: 101, category: "meal" },
-  { id: "meal-double", name: "ארוחת כפולה", price: 99, category: "meal" },
-  { id: "meal-crazy-smash", name: "ארוחת קרייזי סמאש", price: 87, category: "meal" },
-  { id: "meal-smash-double-cheese", name: "ארוחת סמאש דאבל צ׳יז", price: 89, category: "meal" },
-  { id: "meal-special-hadegel", name: "ארוחת ספיישל הדגל", price: 96, category: "meal" },
-  { id: "meal-napoleon", name: "ארוחת נפוליאון", price: 101, category: "meal" },
-  { id: "meal-haf-mifsha", name: "ארוחת חף מפשע", price: 78, category: "meal" },
-  { id: "fries", name: "צ׳יפס", price: 20, category: "side" },
-  { id: "waffle-fries", name: "וופל צ׳יפס", price: 25, category: "side" },
-  { id: "onion-rings", name: "טבעות בצל", price: 24, category: "side" },
-  { id: "tempura-onion", name: "טבעות בצל ביתיות בטמפורה", price: 32, category: "side" },
-  { id: "friends-mix", name: "מיקס חברים", price: 59, category: "side" },
-  { id: "can", name: "פחית", price: 10, category: "drink" },
-  { id: "bottle", name: "בקבוק", price: 12, category: "drink" },
-  { id: "beer-regular", name: "בירה", price: 18, category: "drink" },
-  { id: "beer-premium", name: "בירה פרימיום", price: 23, category: "drink" },
-  { id: "beer-weiss", name: "ויינשטפאן (חצי)", price: 25, category: "drink" },
-  { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
-  { id: "friends-deal", name: "דיל חברים", price: 216, category: "deal" },
-];
-
-const TOPPINGS_PRICING: Record<string, { name: string; price: number }> = {
-  "gluten-free-bun": { name: "לחמנייה ללא גלוטן", price: 4 },
-  "onion-jam": { name: "ריבת בצל של סבתא דינה", price: 9 },
-  "peanut-butter": { name: "חמאת בוטנים", price: 8 },
-  "fried-onion": { name: "בצל מטוגן", price: 7 },
-  "garlic-confit": { name: "קונפי שום", price: 7 },
-  "egg": { name: "ביצת עין", price: 8 },
-  "vegan-cheddar": { name: "צ׳דר טבעוני", price: 7 },
-  "roastbeef": { name: "רצועות רוסטביף", price: 20 },
-  "extra-patty": { name: "אקסטרה קציצה (220 גרם)", price: 25 },
-  "extra-smash-patty": { name: "אקסטרה קציצת סמאש", price: 29 },
-  "hot-pepper-jam": { name: "ריבת פלפלים חריפים", price: 9 },
-  "onion-rings-topping": { name: "שלוש טבעות בצל ביתיות", price: 8 },
-  "maple": { name: "מייפל", price: 5 },
-  "vegan-busha": { name: "גבינת בושה טבעונית 🧀🌱", price: 9 },
-  "crispy-onion-chips": { name: "שבבי בצל קריספי", price: 6 },
-  "vegan-blue-cheese": { name: "גבינה כחולה טבעונית", price: 15 },
-};
-
-const MEAL_UPGRADE_PRICE = 23;
-
-const MEAL_SIDE_PRICING: Record<string, { name: string; price: number }> = {
-  "side-fries": { name: "צ׳יפס רגיל", price: 0 },
-  "side-waffle": { name: "וופל צ׳יפס", price: 5 },
-  "side-onion-rings": { name: "טבעות בצל", price: 4 },
-  "side-tempura": { name: "טבעות בצל ביתיות בטמפורה", price: 13 },
-};
-
-const MEAL_DRINK_PRICING: Record<string, { name: string; price: number }> = {
-  "drink-cola": { name: "קולה", price: 0 },
-  "drink-zero": { name: "זירו", price: 0 },
-  "drink-fanta": { name: "פאנטה", price: 0 },
-  "drink-fanta-grape": { name: "פאנטה ענבים", price: 0 },
-  "drink-fanta-exotic": { name: "פאנטה אקזוטי", price: 0 },
-  "drink-sprite": { name: "ספרייט", price: 0 },
-  "drink-sprite-zero": { name: "ספרייט זירו", price: 0 },
-  "drink-blu": { name: "בלו", price: 0 },
-  "drink-blu-mojito": { name: "בלו מוחיטו", price: 0 },
-  "drink-blu-day": { name: "בלו דיי", price: 0 },
-  "drink-goldstar": { name: "גולדסטאר", price: 8 },
-  "drink-heineken": { name: "הייניקן", price: 8 },
-  "drink-corona": { name: "קורונה", price: 8 },
-  "drink-carlsberg": { name: "קאלסברג", price: 8 },
-  "drink-laffe": { name: "לאפ בראון", price: 12 },
-  "drink-unfiltered": { name: "גולדסטאר אנפילטר", price: 12 },
-  "drink-guinness": { name: "גינס", price: 12 },
-};
-
-const DEAL_DRINK_PRICING: Record<string, { name: string; price: number }> = {
-  "deal-cola": { name: "קולה", price: 0 },
-  "deal-zero": { name: "זירו", price: 0 },
-  "deal-fanta": { name: "פאנטה", price: 0 },
-  "deal-fanta-grape": { name: "פאנטה ענבים", price: 0 },
-  "deal-fanta-exotic": { name: "פאנטה אקזוטי", price: 0 },
-  "deal-sprite": { name: "ספרייט", price: 0 },
-  "deal-sprite-zero": { name: "ספרייט זירו", price: 0 },
-  "deal-blu": { name: "בלו", price: 0 },
-  "deal-blu-mojito": { name: "בלו מוחיטו", price: 0 },
-  "deal-blu-day": { name: "בלו דיי", price: 0 },
-  "deal-grapes": { name: "ענבים (בקבוק)", price: 2 },
-  "deal-oranges": { name: "תפוזים (בקבוק)", price: 2 },
-  "deal-flavored-water": { name: "מים בטעמים (בקבוק)", price: 2 },
-  "deal-goldstar": { name: "גולדסטאר", price: 8 },
-  "deal-heineken": { name: "הייניקן", price: 8 },
-  "deal-corona": { name: "קורונה", price: 8 },
-  "deal-carlsberg": { name: "קאלסברג", price: 8 },
-  "deal-laffe": { name: "לאפ בראון", price: 12 },
-  "deal-unfiltered": { name: "גולדסטאר אנפילטר", price: 12 },
-  "deal-guinness": { name: "גינס", price: 12 },
-  "fam-cola": { name: "קולה", price: 0 },
-  "fam-zero": { name: "זירו", price: 0 },
-  "fam-fanta": { name: "פאנטה", price: 0 },
-  "fam-sprite": { name: "ספרייט", price: 0 },
-  "fam-blu": { name: "בלו", price: 0 },
-  "fam-grapes": { name: "ענבים", price: 0 },
-  "fam-apples": { name: "תפוזים", price: 0 },
-  "fam-goldstar": { name: "גולדסטאר", price: 8 },
-  "fam-heineken": { name: "הייניקן", price: 8 },
-  "fam-corona": { name: "קורונה", price: 8 },
-  "fam-carlsberg": { name: "קאלסברג", price: 8 },
-  "fam-laffe": { name: "לאפ בראון", price: 12 },
-  "fam-unfiltered": { name: "גולדסטאר אנפילטר", price: 12 },
-  "fam-guinness": { name: "גינס", price: 12 },
-};
+const MENU_ITEMS: MenuItemPricing[] = MENU_ITEMS_PRICING;
+const TOPPINGS_PRICING: Record<string, { name: string; price: number }> = toLookup(TOPPINGS_LIST);
+const MEAL_UPGRADE_PRICE = SHARED_MEAL_UPGRADE_PRICE;
+const MEAL_SIDE_PRICING: Record<string, { name: string; price: number }> = toLookup(MEAL_SIDES_LIST);
+const MEAL_DRINK_PRICING: Record<string, { name: string; price: number }> = toLookup(MEAL_DRINKS_LIST);
+const DEAL_DRINK_PRICING: Record<string, { name: string; price: number }> = toLookup(DEAL_DRINKS_LIST);
 
 const MENU_BY_ID = new Map(MENU_ITEMS.map((m) => [m.id, m]));
 
