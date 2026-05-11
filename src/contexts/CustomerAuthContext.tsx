@@ -4,6 +4,46 @@ import type { CartItem } from "@/components/CartDrawer";
 const DEVICE_TOKEN_KEY = "habakta_device_token";
 const CUSTOMER_KEY = "habakta_customer";
 const FAVORITE_KEY = "habakta_favorite";
+const LAST_ORDER_CUSTOMER_KEY = "habakta_last_order_customer";
+const LAST_ORDER_COOKIE = "habakta_loc";
+
+const isStandalone = () => {
+  if (typeof window === "undefined") return false;
+  // @ts-ignore iOS Safari
+  if (window.navigator.standalone === true) return true;
+  return window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+};
+
+const readCookie = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.split("; ").find((c) => c.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1] ?? "") : null;
+};
+
+const writeCookie = (name: string, value: string, days = 365) => {
+  if (typeof document === "undefined") return;
+  const exp = new Date(Date.now() + days * 86400000).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
+};
+
+/** Persist the most recent order customer on this device for cross-context recovery (e.g. PWA install). */
+export const rememberLastOrderCustomer = (phone: string, name: string) => {
+  try {
+    const payload = JSON.stringify({ phone, name, ts: Date.now() });
+    localStorage.setItem(LAST_ORDER_CUSTOMER_KEY, payload);
+    writeCookie(LAST_ORDER_COOKIE, payload);
+  } catch {}
+};
+
+const readLastOrderCustomer = (): { phone: string; name: string } | null => {
+  try {
+    const raw = localStorage.getItem(LAST_ORDER_CUSTOMER_KEY) || readCookie(LAST_ORDER_COOKIE);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    if (v?.phone && v?.name) return { phone: v.phone, name: v.name };
+  } catch {}
+  return null;
+};
 const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-auth`;
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
