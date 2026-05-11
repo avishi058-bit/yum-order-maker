@@ -29,8 +29,9 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body || "ההזמנה שלך מוכנה!",
-    icon: data.icon || "/favicon.ico",
-    badge: data.badge || "/favicon.ico",
+    icon: data.icon || "/icons/icon-192.png",
+    badge: data.badge || "/icons/icon-96.png",
+    image: data.image,
     tag,
     renotify: true,
     requireInteraction: true,

@@ -151,25 +151,12 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
 
     setNotificationsEnabled(true);
 
-    // STEP 2: Subscribe to push (waits for order to load if needed)
-    let orderId = order?.id;
-    if (!orderId) {
-      for (let i = 0; i < 20 && !orderId; i++) {
-        await new Promise((r) => setTimeout(r, 500));
-        orderId = order?.id;
-      }
-    }
-
-    if (!orderId) {
-      toast.success("התראות הופעלו! 🔔");
-      setShowPermissionPrompt(false);
-      return;
-    }
-
-    const res = await subscribeToPush({ orderId, customerPhone: phone });
+    // STEP 2: Subscribe to push immediately (orderId optional — looked up by phone server-side).
+    const res = await subscribeToPush({ orderId: order?.id ?? null, customerPhone: phone });
     if (res.ok) {
       toast.success("מעולה! נעדכן אותך כשההזמנה מוכנה 🔔");
     } else {
+      console.warn("[push] subscribe failed:", res.reason);
       toast.success("התראות הופעלו! 🔔");
     }
     setShowPermissionPrompt(false);
