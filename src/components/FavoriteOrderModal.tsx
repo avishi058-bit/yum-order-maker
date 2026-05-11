@@ -563,7 +563,13 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const handleAddOnceForOrder = async (menuItem: MenuItem) => {
     setPickerOpen(false);
     const added = await runCustomizer(menuItem);
-    if (added) setUsingDraft((prev) => [...prev, added]);
+    if (!added) return;
+    if (usingDraft.length >= 1 && !added.ownerName?.trim()) {
+      setPendingNameValue("");
+      setPendingNameDish({ item: added, target: "using" });
+      return;
+    }
+    setUsingDraft((prev) => [...prev, added]);
   };
 
   const handleConfirmUse = (mode: "cart" | "checkout") => {
