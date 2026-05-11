@@ -104,10 +104,27 @@ const PostInstallPermissionModal = () => {
     } catch {}
     // After permission flow — if not installed yet, explain why to add to home screen
     if (!isStandalone()) {
-      setStep("explain");
+      if (isIos()) {
+        // On iOS: open the install instructions modal directly (it contains the why explanation)
+        setOpen(false);
+        setIosInstallOpen(true);
+        try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
+      } else {
+        setStep("explain");
+      }
       return;
     }
     dismiss();
+  };
+
+  const handleAndroidInstall = async () => {
+    const result = await promptInstall();
+    if (result === "accepted" || result === "dismissed") {
+      dismiss(true);
+    } else {
+      // Native prompt unavailable — keep modal open with the explanation
+      dismiss(true);
+    }
   };
 
   if (!open) return null;
