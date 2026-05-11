@@ -598,18 +598,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             </div>
 
             <form onSubmit={handleDetailsSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  שם מלא <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
+              {!isLoggedIn && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    שם מלא <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+              )}
               {/* Website (no logged-in user) → phone field shown here when OTP is bypassed.
                   Kiosk → phone is never collected. */}
               {!isKiosk && !isLoggedIn && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && (
