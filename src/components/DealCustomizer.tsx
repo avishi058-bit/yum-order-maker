@@ -22,9 +22,9 @@ interface DealCustomizerProps {
 type Step = "burger-1" | "burger-2" | "burger-3" | "drink-1" | "drink-2" | "drink-3";
 
 const stepLabels: Record<Step, string> = {
-  "burger-1": "המבורגר 1 מתוך 3",
-  "burger-2": "המבורגר 2 מתוך 3",
-  "burger-3": "המבורגר 3 מתוך 3",
+  "burger-1": "מנה ראשונה מתוך שלוש",
+  "burger-2": "מנה שנייה מתוך שלוש",
+  "burger-3": "מנה שלישית מתוך שלוש",
   "drink-1": "שתייה 1 מתוך 3",
   "drink-2": "שתייה 2 מתוך 3",
   "drink-3": "שתייה 3 מתוך 3",
@@ -152,7 +152,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl max-h-[85vh] flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white text-black rounded-t-3xl max-h-[85vh] flex flex-col"
               dir="rtl"
             >
               <div className="flex justify-center pt-3 pb-1">
