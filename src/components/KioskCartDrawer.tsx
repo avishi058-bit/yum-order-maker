@@ -199,7 +199,7 @@ const KioskCartDrawer = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`fixed top-0 right-0 h-full ${drawerWidth} bg-background z-50 shadow-2xl flex flex-col pwa-safe-screen page-cart`}
+            className={`fixed top-0 right-0 h-full ${drawerWidth} bg-background z-50 shadow-2xl flex flex-col pwa-safe-screen`}
             dir="rtl"
           >
             {/* Header */}
@@ -225,7 +225,7 @@ const KioskCartDrawer = ({
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 min-h-0 overflow-y-auto pb-40 cart-content">
+            <div className="flex-1 overflow-y-auto pb-40">
               {/* Cart items */}
               <div className={sz.contentPad}>
                 {items.length === 0 ? (
@@ -391,7 +391,7 @@ const KioskCartDrawer = ({
                             </div>
 
                             {/* Info */}
-                            <div className={`${isKiosk ? "p-3" : "p-2.5"} flex-1 flex flex-col recommendation-card-info`}>
+                            <div className={`${isKiosk ? "p-3" : "p-2.5"} flex-1 flex flex-col`}>
                               <p className={`font-black ${sz.recName} leading-tight mb-1 line-clamp-2`}>
                                 {rec.name}
                               </p>

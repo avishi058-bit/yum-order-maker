@@ -230,66 +230,28 @@ html.pwa-installed body {
    `pwa-safe-screen` and they'll respect the top safe area internally.
    Bottom is handled directly on the footer bar (smaller gap). */
 html.pwa-installed .pwa-safe-screen {
+  /* Anchor to BOTH top and bottom of the viewport instead of relying on
+     100vh / 100dvh, which are unreliable in iOS standalone (they may exclude
+     or include the Home Indicator inconsistently). With top:0 + bottom:0 the
+     fixed drawer is always exactly as tall as the visual viewport. */
+  top: 0 !important;
+  bottom: 0 !important;
+  height: auto !important;
+  max-height: none !important;
   padding-top: env(safe-area-inset-top);
-}
-
-html.pwa-installed .page-cart {
-  height: 100dvh !important;
-  max-height: 100dvh !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-html.pwa-installed .cart-content {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
-  padding-bottom: 120px !important;
+  overflow: hidden;
 }
 
 html.pwa-installed .pwa-checkout-bar {
-  position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: env(safe-area-inset-bottom) !important;
-  z-index: 999 !important;
-  padding: 12px 16px !important;
-  margin-bottom: 0 !important;
+  /* Tighten the bar in PWA: small top padding, just enough bottom padding
+     to clear the iOS Home Indicator with a minimal gap. */
+  padding-top: 8px !important;
+  padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
 }
-
-html.pwa-installed .page-cart .recommendation-card-info {
-  flex: none !important;
-}
-
 @media (display-mode: standalone) {
-  .page-cart {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  .cart-content {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    padding-bottom: 120px !important;
-  }
-
   .pwa-checkout-bar {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: env(safe-area-inset-bottom) !important;
-    z-index: 999 !important;
-    padding: 12px 16px !important;
-    margin-bottom: 0 !important;
-  }
-
-  .page-cart .recommendation-card-info {
-    flex: none !important;
+    padding-top: 8px !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
   }
 }
 
