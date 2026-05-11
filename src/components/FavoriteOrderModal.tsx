@@ -267,6 +267,37 @@ const EditableList = ({
 );
 
 
+/** Map mealSide id → menu_availability item_id (mirrors ItemCustomizer). */
+const sideToAvailability: Record<string, string> = {
+  "side-fries": "fries",
+  "side-waffle": "waffle-fries",
+  "side-onion-rings": "onion-rings",
+  "side-tempura": "tempura-onion",
+};
+
+/** Convert a meal-drink id to a standalone drink menuItem (used when the meal
+ *  upgrade is broken because the side is gone — we keep the drink at full
+ *  price as a separate cart line). */
+const mealDrinkToStandalone = (drinkId: string): { menuItem: MenuItem; label: string } | null => {
+  const drink = mealDrinkOptions.find((d) => d.id === drinkId);
+  if (!drink) return null;
+  let standaloneId: string;
+  if (drink.category === "soft") standaloneId = "can";
+  else if (drink.price >= 15) standaloneId = "beer-weiss";
+  else if (drink.price >= 12) standaloneId = "beer-premium";
+  else standaloneId = "beer-regular";
+  const menuItem = menuItems.find((m) => m.id === standaloneId);
+  if (!menuItem) return null;
+  return { menuItem, label: `${menuItem.name} (${drink.name}) — ₪${menuItem.price}` };
+};
+
+/** What's broken in a single line item right now. */
+type LineIssue =
+  | { kind: "main"; missingId: string; missingName: string; alternatives: MenuItem[] }
+  | { kind: "topping"; missingId: string; missingName: string; alternatives: { id: string; name: string; price: number }[] }
+  | { kind: "side"; missingId: string; missingName: string; alternatives: typeof mealSideOptions; keepDrink?: { menuItem: MenuItem; label: string } | null }
+  | { kind: "drink"; missingId: string; missingName: string; alternatives: typeof mealDrinkOptions };
+
 const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startInSetup, customizeMenuItem }: Props) => {
   useBodyScrollLock(open);
   const { favoriteItems, setFavoriteItems, isLoggedIn } = useCustomerAuth();
