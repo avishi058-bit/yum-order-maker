@@ -38,6 +38,10 @@ export interface CartItem {
    *  know which dish belongs to whom. Shown as a header line above the item
    *  on the printed receipt only (not stored in a separate DB column). */
   ownerName?: string;
+  /** Marks this line as coming from the customer's "saved favorite" order.
+   *  Surfaced to the kitchen display (green "הקבוע" badge) but intentionally
+   *  NOT printed on the kitchen receipt/bon. */
+  isFavorite?: boolean;
 }
 
 interface CartDrawerProps {
