@@ -58,6 +58,8 @@ const PostInstallPermissionModal = () => {
     };
 
     const maybeShow = (v: Variant, ignoreCooldown = false) => {
+      // ONLY inside the installed app (PWA standalone). Web visitors are never nudged.
+      if (!isStandalone()) return;
       // If permission already granted/denied, lock it in and stop asking.
       if (typeof Notification !== "undefined" && Notification.permission !== "default") {
         try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
