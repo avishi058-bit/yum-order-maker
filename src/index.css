@@ -208,27 +208,3 @@ body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
   animation: dance-loop 2.4s ease-in-out infinite;
   transform-origin: center center;
 }
-
-/* ===================================================================
-   PWA / Installed-app overrides
-   Active only when the app runs as an installed standalone app
-   (Add to Home Screen on iOS, installed PWA on Android/Desktop).
-   Use the .pwa-installed class on <html> to scope adjustments.
-   =================================================================== */
-html.pwa-installed {
-  /* Slightly smaller base font so the layout fits better in the
-     standalone window without browser chrome. Tweak as needed. */
-  font-size: 94%;
-}
-
-html.pwa-installed body {
-  /* Respect device safe-area insets (iPhone notch / home-indicator). */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Example: tighten hero spacing only inside the installed app. */
-html.pwa-installed .hero-section {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
