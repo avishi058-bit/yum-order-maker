@@ -66,7 +66,7 @@ const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "t
 const itemOrder: Record<string, string[]> = {
   burger: ["classic", "smash-moshavnikim", "avishai", "double", "crazy-smash", "smash-double-cheese", "special-hadegel", "haf-mifsha"],
   meal: ["meal-classic", "meal-smash-moshavnikim", "meal-avishai", "meal-double", "meal-crazy-smash", "meal-smash-double-cheese", "meal-special-hadegel", "meal-haf-mifsha"],
-  side: ["fries", "sweet-potato-fries", "onion-rings", "tempura-onion", "friends-mix"],
+  side: ["fries", "waffle-fries", "onion-rings", "tempura-onion", "friends-mix"],
   drink: [
     "drink-cola", "drink-zero", "drink-fanta", "drink-fanta-grape", "drink-fanta-exotic",
     "drink-sprite", "drink-sprite-zero", "drink-blu", "drink-blu-mojito", "drink-blu-day",

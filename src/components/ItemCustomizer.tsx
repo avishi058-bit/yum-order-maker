@@ -374,7 +374,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
   const sideToAvailability: Record<string, string> = {
     "side-fries": "fries",
-    "side-sweet-potato": "sweet-potato-fries",
+    "side-waffle": "waffle-fries",
     "side-onion-rings": "onion-rings",
     "side-tempura": "tempura-onion",
   };

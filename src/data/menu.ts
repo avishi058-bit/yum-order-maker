@@ -200,9 +200,9 @@ export const menuItems: MenuItem[] = [
     category: "side",
   },
   {
-    id: "sweet-potato-fries",
-    name: "צ׳יפס בטטה",
-    description: "צ׳יפס בטטה פריך",
+    id: "waffle-fries",
+    name: "וופל צ׳יפס",
+    description: "צ׳יפס וופל פריך",
     price: 25,
     category: "side",
   },
@@ -274,7 +274,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "friends-mix",
     name: "מיקס חברים",
-    description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה",
+    description: "ערימת צ׳יפסים: רגיל, טבעות בצל, וופל צ׳יפס",
     price: 59,
     category: "side",
   },
@@ -393,7 +393,7 @@ export const mealUpgrade = {
 
 export const mealSideOptions: Upgrade[] = [
   { id: "side-fries", name: "צ׳יפס רגיל", price: 0 },
-  { id: "side-sweet-potato", name: "צ׳יפס בטטה", price: 5 },
+  { id: "side-waffle", name: "וופל צ׳יפס", price: 5 },
   { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
   { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
 ];
