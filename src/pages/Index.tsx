@@ -71,6 +71,8 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
+  const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
