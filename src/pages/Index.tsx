@@ -116,9 +116,11 @@ const Index = () => {
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
-  // Auto-prompt unauthenticated visitors to log in (once per session, never on the kiosk station).
+  // Auto-prompt unauthenticated visitors to log in — ONLY inside the installed PWA (standalone),
+  // never on the regular website and never on the kiosk station. Stops once the user is logged in.
   useEffect(() => {
     if (isStation) return;
+    if (!isInstalled) return;
     if (authLoading) return;
     if (isLoggedIn) return;
     try {
@@ -129,7 +131,7 @@ const Index = () => {
       try { sessionStorage.setItem("habakta_login_prompted", "1"); } catch {}
     }, 1500);
     return () => clearTimeout(t);
-  }, [authLoading, isLoggedIn, isStation]);
+  }, [authLoading, isLoggedIn, isStation, isInstalled]);
 
   // Re-register the cart target whenever the button mounts/unmounts.
   // The button only renders once the cart has items, so on the very first
