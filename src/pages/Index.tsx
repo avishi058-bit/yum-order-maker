@@ -90,6 +90,7 @@ const Index = () => {
   const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
   
   const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [postInstallInstructionsOpen, setPostInstallInstructionsOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
   // iOS partitions PWA storage from Safari (iOS 17.4+), so auto-login from a Safari order
   // does NOT carry into the installed PWA. Only on iOS PWA we must prompt the user once.
@@ -111,6 +112,13 @@ const Index = () => {
     // Fallback (desktop / browser hasn't fired the event yet): show instructions.
     setInstallModalOpen(true);
   }, [isIosDevice, canNativeInstall, promptInstall]);
+
+  useEffect(() => {
+    const openPostInstallInstructions = () => setPostInstallInstructionsOpen(true);
+    window.addEventListener("open-post-install-instructions", openPostInstallInstructions);
+    return () => window.removeEventListener("open-post-install-instructions", openPostInstallInstructions);
+  }, []);
+
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
   /**
    * When set, the next ItemCustomizer confirm/close resolves this promise
@@ -738,6 +746,11 @@ const Index = () => {
         )}
 
         <IosInstallModal open={installModalOpen} onClose={() => setInstallModalOpen(false)} />
+        <IosInstallModal
+          open={postInstallInstructionsOpen}
+          postInstallOpen
+          onClose={() => setPostInstallInstructionsOpen(false)}
+        />
 
         <FavoriteOrderModal
           open={favoriteModalOpen}
