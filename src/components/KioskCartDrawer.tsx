@@ -420,7 +420,7 @@ const KioskCartDrawer = ({
 
             {/* Sticky bottom bar */}
             {items.length > 0 && (
-              <div className={`flex-none ${sz.bottomPad} bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)]`}>
+              <div className={`flex-none ${sz.bottomPad} bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pwa-safe-bottom`}>
                 <div className="flex items-center justify-between mb-1">
                   <div>
                     <p className={`${sz.bottomCount} text-muted-foreground`}>{totalCount} פריטים</p>

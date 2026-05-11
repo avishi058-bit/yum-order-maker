@@ -225,9 +225,12 @@ html.pwa-installed body {
 /* Full-screen overlays (cart drawers, modals, sheets) are `position: fixed`
    so body padding does NOT push them down. Mark those containers with
    `pwa-safe-screen` and they'll respect the safe areas internally. */
+/* Full-screen overlays (cart drawers, modals, sheets) are `position: fixed`
+   so body padding does NOT push them down. Mark those containers with
+   `pwa-safe-screen` and they'll respect the top safe area internally.
+   Bottom is handled directly on the footer bar (smaller gap). */
 html.pwa-installed .pwa-safe-screen {
   padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* For elements that are themselves fixed to the top/bottom of the viewport
@@ -236,5 +239,5 @@ html.pwa-installed .pwa-safe-top {
   padding-top: calc(env(safe-area-inset-top) + 0.5rem);
 }
 html.pwa-installed .pwa-safe-bottom {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  padding-bottom: env(safe-area-inset-bottom);
 }
