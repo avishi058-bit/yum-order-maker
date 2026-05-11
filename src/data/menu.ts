@@ -200,9 +200,9 @@ export const menuItems: MenuItem[] = [
     category: "side",
   },
   {
-    id: "waffle-fries",
-    name: "וופל צ׳יפס",
-    description: "צ׳יפס וופל פריך",
+    id: "sweet-potato-fries",
+    name: "צ׳יפס בטטה",
+    description: "צ׳יפס בטטה פריך",
     price: 25,
     category: "side",
   },
