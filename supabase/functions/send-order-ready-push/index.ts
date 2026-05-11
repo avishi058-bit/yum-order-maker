@@ -23,13 +23,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { order_id } = await req.json();
+    const { order_id, type } = await req.json();
     if (!order_id || typeof order_id !== "string") {
       return new Response(JSON.stringify({ error: "order_id required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const notifType: "ready" | "preparing" | "almost_ready" =
+      type === "preparing" || type === "almost_ready" ? type : "ready";
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -82,10 +84,22 @@ Deno.serve(async (req) => {
     }
 
     const trackUrl = `/track?order=${order.order_number}&phone=${encodeURIComponent(order.customer_phone)}`;
+
+    const titles = {
+      ready: "ההזמנה שלך מוכנה! 🎉",
+      preparing: "ההזמנה התקבלה במטבח 👨‍🍳",
+      almost_ready: "עוד 5 דקות וההזמנה מוכנה! ⏰",
+    } as const;
+    const bodies = {
+      ready: `הזמנה #${order.order_number} מוכנה לאיסוף`,
+      preparing: `הזמנה #${order.order_number} בהכנה — נעדכן אותך כשתהיה מוכנה`,
+      almost_ready: `הזמנה #${order.order_number} כמעט מוכנה — תתחיל להתקדם 😋`,
+    } as const;
+
     const payload = JSON.stringify({
-      title: "ההזמנה שלך מוכנה! 🎉",
-      body: `הזמנה #${order.order_number} מוכנה לאיסוף`,
-      tag: `order-ready-${order.order_number}`,
+      title: titles[notifType],
+      body: bodies[notifType],
+      tag: `order-${notifType}-${order.order_number}`,
       url: trackUrl,
       order_number: order.order_number,
     });

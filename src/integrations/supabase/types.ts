@@ -171,6 +171,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          almost_ready_notified_at: string | null
           created_at: string
           customer_address: string | null
           customer_name: string
@@ -187,6 +188,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          almost_ready_notified_at?: string | null
           created_at?: string
           customer_address?: string | null
           customer_name: string
@@ -203,6 +205,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          almost_ready_notified_at?: string | null
           created_at?: string
           customer_address?: string | null
           customer_name?: string
@@ -510,6 +513,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      notify_orders_almost_ready: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "kitchen"
