@@ -1057,6 +1057,60 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
               </div>
             </motion.div>
           )}
+
+          {/* Required-name prompt for additional favorite dishes */}
+          {pendingNameDish && !visuallyHidden && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+              onClick={cancelPendingName}
+              dir="rtl"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm bg-card border border-green-500/40 rounded-2xl shadow-[0_25px_60px_-15px_rgba(34,197,94,0.5)] p-5 space-y-4"
+              >
+                <div className="space-y-1">
+                  <h3 className="font-bold text-foreground text-base">למי המנה הזאת?</h3>
+                  <p className="text-xs text-muted-foreground">
+                    כדי להבדיל בין המנות בקבוע — חובה להוסיף שם למנה הנוספת ({pendingNameDish.item.name}).
+                  </p>
+                </div>
+                <input
+                  type="text"
+                  autoFocus
+                  value={pendingNameValue}
+                  onChange={(e) => setPendingNameValue(e.target.value.slice(0, 30))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && pendingNameValue.trim()) confirmPendingName();
+                    if (e.key === "Escape") cancelPendingName();
+                  }}
+                  placeholder="לדוגמה: של אבא, של דנה..."
+                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={confirmPendingName}
+                    disabled={!pendingNameValue.trim()}
+                    className="flex-1 px-4 py-2.5 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    הוסף לקבוע
+                  </button>
+                  <button
+                    onClick={cancelPendingName}
+                    className="px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted text-sm font-semibold"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </>
       )}
     </AnimatePresence>
