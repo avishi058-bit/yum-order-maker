@@ -95,21 +95,6 @@ const Install = () => {
           </motion.div>
         </motion.div>
 
-        {/* Why install */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="rounded-2xl bg-gradient-to-br from-amber-500/15 via-primary/10 to-amber-500/5 border-2 border-amber-500/50 p-4 text-right shadow-lg"
-        >
-          <p className="text-sm font-bold text-foreground leading-relaxed">
-            ⚡ גישה מהירה ממסך הבית
-            <br />
-            🔔 התראה רגעית כשההזמנה מוכנה
-            <br />
-            🍔 שמירת מועדפים והזמנה בלחיצה
-          </p>
-        </motion.div>
 
         {/* Instructions per platform */}
         {iOS ? (
