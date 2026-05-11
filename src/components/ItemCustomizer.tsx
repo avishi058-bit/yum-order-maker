@@ -402,6 +402,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       // touch events), just keep feeding position into it — do NOT call
       // beginDrag again or we would overwrite its pointerId and lock the drag.
       if (dragState.current.active) {
+        // Only consume the gesture for DOWNWARD drags (drag-to-close).
+        // Upward swipes must be allowed through so the browser can scroll
+        // the content natively — otherwise the modal feels frozen.
+        if (dy <= 0) return;
         if (e.cancelable) e.preventDefault();
         applyDragPosition(touch.clientY);
         claimed = true;
