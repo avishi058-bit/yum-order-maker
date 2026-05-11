@@ -87,7 +87,14 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
             </div>
 
             <div className="p-5 space-y-4">
-              <p className="text-sm text-muted-foreground">הכנס מספר טלפון ושם כדי להיכנס ולצפות בהיסטוריית ההזמנות שלך</p>
+              <div className="space-y-2">
+                <p className="text-sm text-foreground font-medium">
+                  כדי שנוכל לעדכן אותך מתי ההמבורגר מוכן 🍔
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  הכנס/י את מספר הטלפון והשם שאיתם הזמנת — זה חד-פעמי, אחרי זה תיכנס/י אוטומטית תמיד :)
+                </p>
+              </div>
 
               <div className="relative">
                 <Phone size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
