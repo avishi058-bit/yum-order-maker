@@ -177,23 +177,37 @@ export const donenessOptions: DonenessOption[] = [
 
 export const DEFAULT_DONENESS = "doneness-mw";
 
-export const toppings: Topping[] = [
-  { id: "onion-jam", name: "ריבת בצל של סבתא דינה", price: 9, recommended: true, image: "onion-jam" },
-  { id: "garlic-confit", name: "קונפי שום", price: 7, image: "garlic-confit" },
-  { id: "roastbeef", name: "רוסטביף 🥓", price: 20 },
-  { id: "egg", name: "ביצת עין 🍳", price: 8 },
-  { id: "vegan-cheddar", name: "צ׳דר טבעוני", price: 7, image: "cheddar" },
-  { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית", price: 15, image: "blue-cheese" },
-  { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים 🌶️", price: 9 },
-  { id: "fried-onion", name: "בצל מטוגן", price: 7, image: "fried-onion" },
-  { id: "crispy-onion-chips", name: "שבבי בצל קריספי", price: 6 },
-  { id: "peanut-butter", name: "חמאת בוטנים 🥜", price: 8, recommended: true },
-  { id: "maple", name: "סירופ בטעם מייפל", price: 5, image: "maple" },
-  { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25, image: "extra-patty" },
-  { id: "extra-smash-patty", name: "זוג קציצות סמאש 110 גרם כל אחת", price: 29, image: "extra-patty" },
-  { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8, image: "onion-rings" },
-  { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים) 🌾", price: 4 },
-];
+// ===== Toppings: pricing comes from shared file; UI overlay (image, recommended, display name with emoji) here =====
+interface ToppingUIOverlay {
+  displayName?: string; // overrides bare name (e.g. adds emoji)
+  recommended?: boolean;
+  image?: string;
+}
+
+const TOPPING_UI: Record<string, ToppingUIOverlay> = {
+  "onion-jam": { recommended: true, image: "onion-jam" },
+  "garlic-confit": { image: "garlic-confit" },
+  roastbeef: { displayName: "רוסטביף 🥓" },
+  egg: { displayName: "ביצת עין 🍳" },
+  "vegan-cheddar": { image: "cheddar" },
+  "vegan-blue-cheese": { image: "blue-cheese" },
+  "hot-pepper-jam": { displayName: "ריבת פלפלים חריפים 🌶️" },
+  "fried-onion": { image: "fried-onion" },
+  "peanut-butter": { displayName: "חמאת בוטנים 🥜", recommended: true },
+  maple: { image: "maple" },
+  "extra-patty": { image: "extra-patty" },
+  "extra-smash-patty": { image: "extra-patty" },
+  "onion-rings-topping": { image: "onion-rings" },
+  "gluten-free-bun": { displayName: "לחמנייה ללא גלוטן (מיוחדים) 🌾" },
+};
+
+export const toppings: Topping[] = TOPPINGS_PRICING_SHARED.map((t) => ({
+  id: t.id,
+  name: TOPPING_UI[t.id]?.displayName ?? t.name,
+  price: t.price,
+  recommended: TOPPING_UI[t.id]?.recommended,
+  image: TOPPING_UI[t.id]?.image,
+}));
 
 /** Toppings to hide entirely from the customizer for specific burger items.
  *  Keyed by burger id (the meal variant inherits via baseBurgerId). */
@@ -206,15 +220,10 @@ export const excludedToppingsByItem: Record<string, string[]> = {
 
 export const mealUpgrade = {
   name: "שדרוג לארוחה עסקית (המבורגר+צ׳יפס+שתייה)",
-  price: 23,
+  price: MEAL_UPGRADE_PRICE,
 };
 
-export const mealSideOptions: Upgrade[] = [
-  { id: "side-fries", name: "צ׳יפס רגיל", price: 0 },
-  { id: "side-sweet-potato", name: "צ׳יפס בטטה", price: 5 },
-  { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
-  { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
-];
+export const mealSideOptions: Upgrade[] = MEAL_SIDES_PRICING.map((s) => ({ ...s }));
 
 export interface DrinkOption {
   id: string;
