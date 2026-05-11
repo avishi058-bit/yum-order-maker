@@ -706,9 +706,14 @@ const Index = () => {
           currentCart={cart}
           startInSetup={favoriteStartInSetup}
           customizeMenuItem={customizeMenuItem}
-          onUseFavorite={(items) => {
+          onUseFavorite={(items, mode) => {
             setCart((prev) => [...prev, ...items]);
-            setCartOpen(true);
+            if (mode === "checkout") {
+              setCartOpen(false);
+              setCheckoutOpen(true);
+            } else {
+              setCartOpen(true);
+            }
           }}
         />
       </Suspense>
