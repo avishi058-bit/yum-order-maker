@@ -1,10 +1,16 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { removals, drinkToAvailabilityId } from "@/data/menu";
+import { drinkToAvailabilityId } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import BurgerIngredientChecklist, {
+  IngredientState,
+  defaultRegularIngredientState,
+  ingredientStateToRemovals,
+} from "@/components/BurgerIngredientChecklist";
 
 interface FamilyDealCustomizerProps {
   open: boolean;
