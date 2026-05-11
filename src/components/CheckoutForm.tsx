@@ -428,6 +428,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       if (!isLoggedIn && form.phone && form.name) {
         await linkFromOrder(form.phone, form.name).catch(() => {});
       }
+      // Persist last-order details on this device (localStorage + cookie) so that if the
+      // user later installs the PWA, the standalone app can auto-link them on first open.
+      if (form.phone && form.name) {
+        rememberLastOrderCustomer(form.phone, form.name);
+      }
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.orderNumber}`,
