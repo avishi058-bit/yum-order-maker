@@ -261,7 +261,7 @@ Deno.serve(async (req) => {
       // Look for existing customer
       const { data: existing } = await supabase
         .from('customers')
-        .select('id, name, phone, marketing_consent, login_count, terms_accepted_at')
+        .select('id, name, phone, marketing_consent, login_count, terms_accepted_at, favorite_items')
         .eq('phone', phone)
         .maybeSingle()
 
@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
             terms_accepted_at: existing.terms_accepted_at || now,
           })
           .eq('id', existing.id)
-          .select('id, name, phone, marketing_consent, login_count')
+          .select('id, name, phone, marketing_consent, login_count, favorite_items')
           .single()
         if (error) {
           console.error('link-from-order update error:', error)
@@ -296,7 +296,7 @@ Deno.serve(async (req) => {
             login_count: 1,
             device_token: deviceToken,
           })
-          .select('id, name, phone, marketing_consent, login_count')
+          .select('id, name, phone, marketing_consent, login_count, favorite_items')
           .single()
         if (error) {
           console.error('link-from-order insert error:', error)
@@ -313,6 +313,7 @@ Deno.serve(async (req) => {
           phone: customer.phone,
           isReturning: !!existing,
           loginCount: customer.login_count,
+          favoriteItems: customer.favorite_items ?? null,
         },
       })
     }
