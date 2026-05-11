@@ -702,11 +702,11 @@ const Index = () => {
 
         <FavoriteOrderModal
           open={favoriteModalOpen}
-          onClose={() => setFavoriteModalOpen(false)}
+          onClose={() => { setFavoriteModalOpen(false); setFavoriteStartInSetup(false); }}
           currentCart={cart}
           startInSetup={favoriteStartInSetup}
+          customizeMenuItem={customizeMenuItem}
           onUseFavorite={(items) => {
-            // Append the favorite to whatever the user already has in the cart.
             setCart((prev) => [...prev, ...items]);
             setCartOpen(true);
           }}
