@@ -243,7 +243,14 @@ html.pwa-installed .pwa-safe-screen {
 }
 
 html.pwa-installed .pwa-checkout-bar {
-  padding-bottom: max(env(safe-area-inset-bottom), 1rem) !important;
+  /* Override the inner p-4/p-5 bottom padding so the bar sits as low as
+     possible — just clearing the iOS Home Indicator with a small gap. */
+  padding-bottom: max(env(safe-area-inset-bottom), 8px) !important;
+}
+@media (display-mode: standalone) {
+  .pwa-checkout-bar {
+    padding-bottom: max(env(safe-area-inset-bottom), 8px) !important;
+  }
 }
 
 /* For elements that are themselves fixed to the top/bottom of the viewport
