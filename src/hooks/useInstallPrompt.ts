@@ -24,10 +24,8 @@ export const useInstallPrompt = () => {
     const installedHandler = () => {
       setDeferredPrompt(null);
       try { localStorage.setItem("habakta_pwa_installed", "1"); } catch {}
-      toast.success("הבקתה נוספה למסך הבית 🎉", {
-        description: "מעכשיו עדיף להיכנס דרך האייקון של הבקתה — ככה תקבל התראה ברגע שההזמנה שלך מוכנה 🔔",
-        duration: 9000,
-      });
+      // Open the post-install instructions modal (notifications guidance)
+      window.dispatchEvent(new CustomEvent("open-post-install-instructions"));
     };
     window.addEventListener("appinstalled", installedHandler);
     return () => {

@@ -48,7 +48,7 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                 <X size={16} />
               </button>
               <h3 className="text-base font-black text-foreground">
-                {step === 1 ? "הוספה למסך הבית 📲" : "כמעט סיימנו! 🔔"}
+                {step === 1 ? "הוספה למסך הבית 📲" : "מעולה! היישום הותקן ✅"}
               </h3>
               <div className="w-8" />
             </div>
@@ -108,17 +108,17 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                       <Bell className="text-amber-500" size={28} />
                     </div>
                     <p className="text-lg font-black text-foreground leading-tight mb-3 text-center">
-                      לאחר שהוספתם את הבקתה למסך הבית 🏡
+                      מעולה! היישום הותקן במסך הבית ✅
                     </p>
-                    <p className="text-base font-extrabold text-foreground leading-relaxed bg-amber-500/20 rounded-xl p-3">
-                      👉 <u className="decoration-2 decoration-primary">היכנסו דווקא דרך האייקון החדש</u> במסך הבית
+                    <p className="text-base font-extrabold text-foreground leading-relaxed bg-amber-500/20 rounded-xl p-3 text-center">
+                      עכשיו <u className="decoration-2 decoration-primary">היכנס/י ליישום דרך מסך הבית</u>
                       <br />
                       <span className="block mt-2">
-                        ✅ ו<span className="text-primary">אשרו את ההתראות</span> כשנשאלים!
+                        ואשר/י <span className="text-primary">קבלת התראות</span> 🥰
                       </span>
                     </p>
                     <p className="text-sm font-bold text-foreground leading-relaxed mt-3 text-center">
-                      וכך תוכלו להתעדכן <span className="text-primary">בזמן אמת</span> מה קורה עם ההזמנה שלכם 🍔⏱️
+                      כך תוכל/י להיות מעודכן <span className="text-primary">מתי ההמבורגר שלך מוכן!</span> 🍔🔔
                     </p>
                   </motion.div>
                 </div>
