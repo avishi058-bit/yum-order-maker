@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import addToHomeImg from "@/assets/add-to-home-screen-ios.png";
+import addToHomeImg from "@/assets/add-to-home-screen-ios.jpeg";
 
 interface Props {
   open: boolean;
