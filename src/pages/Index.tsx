@@ -91,6 +91,9 @@ const Index = () => {
   
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
+  // iOS partitions PWA storage from Safari (iOS 17.4+), so auto-login from a Safari order
+  // does NOT carry into the installed PWA. Only on iOS PWA we must prompt the user once.
+  const needsManualLogin = typeof window !== "undefined" ? isInstalled && isIos() : false;
   const isIosDevice = typeof window !== "undefined" ? isIos() : false;
   const { canPrompt: canNativeInstall, promptInstall } = useInstallPrompt();
   const handleInstallClick = useCallback(async () => {
