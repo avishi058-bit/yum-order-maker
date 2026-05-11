@@ -283,7 +283,7 @@ const EditableList = ({
 /** Map mealSide id → menu_availability item_id (mirrors ItemCustomizer). */
 const sideToAvailability: Record<string, string> = {
   "side-fries": "fries",
-  "side-waffle": "waffle-fries",
+  "side-sweet-potato": "sweet-potato-fries",
   "side-onion-rings": "onion-rings",
   "side-tempura": "tempura-onion",
 };
