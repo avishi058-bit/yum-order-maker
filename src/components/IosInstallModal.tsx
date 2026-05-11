@@ -34,29 +34,41 @@ const IosInstallModal = ({ open, onClose }: Props) => {
               >
                 <X size={16} />
               </button>
-              <h3 className="text-base font-black text-foreground">הוספה למסך הבית</h3>
+              <h3 className="text-base font-black text-foreground">הוספה למסך הבית 📲</h3>
               <div className="w-8" />
             </div>
-            <div className="overflow-y-auto p-2 bg-white">
-              <img
-                src={addToHomeImg}
-                alt="הוראות להוספת הבקתה למסך הבית באייפון"
-                className="w-full h-auto rounded-2xl"
-              />
-            </div>
-            <div className="px-4 py-3 border-t border-border space-y-3">
-              <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-right">
-                <p className="text-sm font-bold text-foreground">💡 טיפ קטן</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  אחרי שתוסיף — בפעם הבאה היכנס דרך האייקון של <b>הבקתה</b> במסך הבית.
-                  ככה תקבל התראה ברגע שההזמנה שלך מוכנה לאיסוף 🔔
+
+            <div className="overflow-y-auto">
+              {/* Why explanation — visible immediately */}
+              <div className="px-4 pt-4 pb-3 bg-gradient-to-b from-primary/10 to-transparent space-y-2 text-right">
+                <p className="text-sm font-bold text-foreground">
+                  למה כדאי להוסיף למסך הבית? 🤔
                 </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  באייפון, התראות יגיעו אליך <b>רק</b> אם פתחת את הבקתה דרך האייקון במסך הבית 📱
+                  אחרת, לא תדע מתי ההמבורגר שלך מוכן לאיסוף 🍔🔔
+                </p>
+                <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 mt-2">
+                  <p className="text-xs text-foreground leading-relaxed">
+                    ⚠️ <b>חשוב:</b> אחרי ההוספה — היכנס בפעם הבאה דרך האייקון של <b>הבקתה</b> במסך הבית, ולא דרך הדפדפן.
+                  </p>
+                </div>
               </div>
+
+              <div className="p-2 bg-white">
+                <img
+                  src={addToHomeImg}
+                  alt="הוראות להוספת הבקתה למסך הבית באייפון"
+                  className="w-full h-auto rounded-2xl"
+                />
+              </div>
+            </div>
+            <div className="px-4 py-3 border-t border-border">
               <button
                 onClick={onClose}
                 className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm"
               >
-                הבנתי
+                הבנתי, אוסיף עכשיו
               </button>
             </div>
           </motion.div>
