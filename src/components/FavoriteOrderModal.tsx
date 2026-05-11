@@ -955,7 +955,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?
+                      {usingDraft.length > 1
+                        ? "סמן רק את המנות שתרצה להמשיך איתן עכשיו (מסגרת ירוקה = נבחר)."
+                        : "רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?"}
                     </p>
                     {usingDraft.length === 0 ? (
                       <div className="text-center text-muted-foreground py-6 text-sm border border-dashed border-border rounded-xl">
@@ -966,6 +968,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                         items={usingDraft}
                         onEdit={handleEditUsing}
                         onRemove={handleRemoveUsing}
+                        selectable={usingDraft.length > 1}
+                        selectedIds={selectedIds}
+                        onToggleSelect={toggleSelected}
                       />
                     )}
                     <button
