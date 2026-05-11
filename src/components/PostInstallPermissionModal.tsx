@@ -207,8 +207,8 @@ const PostInstallPermissionModal = () => {
                 >
                   <Bell size={30} />
                 </motion.div>
-                <h2 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
-                  {variant === "order" ? <>רוצה להתעדכן בזמן אמת?</> : <>הבקתה מותקנת! <Sparkles size={18} className="text-primary" /></>}
+                <h2 className={`font-black flex items-center justify-center gap-2 ${variant === "order" ? "text-2xl text-green-500 drop-shadow-[0_0_12px_rgba(34,197,94,0.4)]" : "text-xl text-foreground"}`}>
+                  {variant === "order" ? <>לעדכן אותך כשההמבורגר שלך מוכן? ✅🍔</> : <>הבקתה מותקנת! <Sparkles size={18} className="text-primary" /></>}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   {variant === "order" ? "מתי ההמבורגר שלך מוכן 🍔" : "רק עוד אישור קטן ואתה מסודר"}
