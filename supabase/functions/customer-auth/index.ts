@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase()
       if (existing && existing.name && norm(existing.name) !== norm(name)) {
         return json({
-          error: `המספר הזה כבר רשום על שם ${existing.name}. אם זה שלך, היכנס עם השם שלך.`,
+          error: 'מספר הטלפון הזה רשום על שם אחר',
           code: 'PHONE_TAKEN',
         }, 409)
       }
@@ -342,6 +342,35 @@ Deno.serve(async (req) => {
         return json({ error: 'שגיאה בשמירה' }, 500)
       }
       return json({ success: true })
+    }
+
+    // ─── Update name: change the logged-in customer's display name ───
+    if (action === 'update-name') {
+      const UpdateNameSchema = z.object({
+        deviceToken: z.string().min(32).max(128),
+        name: z.string().min(1).max(100),
+      })
+      const parsed = UpdateNameSchema.safeParse(body)
+      if (!parsed.success) return json({ error: 'נתונים לא תקינים' }, 400)
+
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('device_token', parsed.data.deviceToken)
+        .maybeSingle()
+      if (!customer) return json({ error: 'לא מורשה' }, 401)
+
+      const { data: updated, error } = await supabase
+        .from('customers')
+        .update({ name: parsed.data.name.trim() })
+        .eq('id', customer.id)
+        .select('name, phone')
+        .single()
+      if (error) {
+        console.error('update-name error:', error)
+        return json({ error: 'שגיאה בעדכון השם' }, 500)
+      }
+      return json({ success: true, name: updated.name })
     }
 
     return json({ error: 'Invalid action' }, 400)

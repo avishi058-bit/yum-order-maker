@@ -68,6 +68,8 @@ interface CustomerAuthContextType {
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   linkFromOrder: (phone: string, name: string) => Promise<void>;
+  /** Update the display name of the currently logged-in customer. */
+  updateName: (newName: string) => Promise<void>;
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | null>(null);
@@ -224,11 +226,27 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(FAVORITE_KEY);
   }, []);
 
+  const updateName = useCallback(async (newName: string) => {
+    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
+    if (!token) throw new Error("not_logged_in");
+    const trimmed = newName.trim();
+    if (!trimmed) throw new Error("שם לא יכול להיות ריק");
+    const data = await callAuth("update-name", { deviceToken: token, name: trimmed });
+    setCustomer((prev) => (prev ? { ...prev, name: data.name } : prev));
+    try {
+      const cached = localStorage.getItem(CUSTOMER_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ ...parsed, name: data.name }));
+      }
+    } catch {}
+  }, []);
+
   return (
     <CustomerAuthContext.Provider value={{
       customer, loading, isLoggedIn: !!customer,
       favoriteItems, setFavoriteItems,
-      register, login, logout, logoutAll, linkFromOrder,
+      register, login, logout, logoutAll, linkFromOrder, updateName,
     }}>
       {children}
     </CustomerAuthContext.Provider>
