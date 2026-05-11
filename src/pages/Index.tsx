@@ -61,7 +61,7 @@ const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
   const { status: businessStatus } = useBusinessHours();
-  const { isLoggedIn, customer } = useCustomerAuth();
+  const { isLoggedIn, customer, loading: authLoading } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   // Manual closure = admin closed website while business hours say we should be open
