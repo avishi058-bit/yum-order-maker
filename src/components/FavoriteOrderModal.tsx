@@ -323,6 +323,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [customizing, setCustomizing] = useState(false);
   /** Picker for "add new dish": which menu item to customize. */
   const [pickerOpen, setPickerOpen] = useState(false);
+  /** Pending dish awaiting a required owner name (for additional favorite dishes). */
+  const [pendingNameDish, setPendingNameDish] = useState<{ item: CartItem; target: "draft" | "using" } | null>(null);
+  const [pendingNameValue, setPendingNameValue] = useState("");
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -560,7 +563,13 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const handleAddOnceForOrder = async (menuItem: MenuItem) => {
     setPickerOpen(false);
     const added = await runCustomizer(menuItem);
-    if (added) setUsingDraft((prev) => [...prev, added]);
+    if (!added) return;
+    if (usingDraft.length >= 1 && !added.ownerName?.trim()) {
+      setPendingNameValue("");
+      setPendingNameDish({ item: added, target: "using" });
+      return;
+    }
+    setUsingDraft((prev) => [...prev, added]);
   };
 
   const handleConfirmUse = (mode: "cart" | "checkout") => {
@@ -599,7 +608,31 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const handleAddDishToDraft = async (menuItem: MenuItem) => {
     setPickerOpen(false);
     const added = await runCustomizer(menuItem);
-    if (added) setDraft((prev) => [...prev, added]);
+    if (!added) return;
+    if (draft.length >= 1 && !added.ownerName?.trim()) {
+      setPendingNameValue("");
+      setPendingNameDish({ item: added, target: "draft" });
+      return;
+    }
+    setDraft((prev) => [...prev, added]);
+  };
+
+  const confirmPendingName = () => {
+    const trimmed = pendingNameValue.trim();
+    if (!trimmed || !pendingNameDish) return;
+    const withName: CartItem = { ...pendingNameDish.item, ownerName: trimmed };
+    if (pendingNameDish.target === "draft") {
+      setDraft((prev) => [...prev, withName]);
+    } else {
+      setUsingDraft((prev) => [...prev, withName]);
+    }
+    setPendingNameDish(null);
+    setPendingNameValue("");
+  };
+
+  const cancelPendingName = () => {
+    setPendingNameDish(null);
+    setPendingNameValue("");
   };
 
   const handleSaveDraft = async () => {
@@ -1022,6 +1055,60 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                   </>
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {/* Required-name prompt for additional favorite dishes */}
+          {pendingNameDish && !visuallyHidden && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+              onClick={cancelPendingName}
+              dir="rtl"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm bg-card border border-green-500/40 rounded-2xl shadow-[0_25px_60px_-15px_rgba(34,197,94,0.5)] p-5 space-y-4"
+              >
+                <div className="space-y-1">
+                  <h3 className="font-bold text-foreground text-base">למי המנה הזאת?</h3>
+                  <p className="text-xs text-muted-foreground">
+                    כדי להבדיל בין המנות בקבוע — חובה להוסיף שם למנה הנוספת ({pendingNameDish.item.name}).
+                  </p>
+                </div>
+                <input
+                  type="text"
+                  autoFocus
+                  value={pendingNameValue}
+                  onChange={(e) => setPendingNameValue(e.target.value.slice(0, 30))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && pendingNameValue.trim()) confirmPendingName();
+                    if (e.key === "Escape") cancelPendingName();
+                  }}
+                  placeholder="לדוגמה: של אבא, של דנה..."
+                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={confirmPendingName}
+                    disabled={!pendingNameValue.trim()}
+                    className="flex-1 px-4 py-2.5 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    הוסף לקבוע
+                  </button>
+                  <button
+                    onClick={cancelPendingName}
+                    className="px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted text-sm font-semibold"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </>
