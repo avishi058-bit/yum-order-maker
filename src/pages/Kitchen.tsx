@@ -1272,6 +1272,9 @@ const Kitchen = () => {
                 <div className="px-4 py-3 space-y-2 max-h-60 overflow-y-auto">
                   {order.order_items.map((item) => (
                     <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
+                      {item.removals?.some(r => r === "__FAVORITE__") && (
+                        <p className="text-xs font-extrabold text-green-400 mb-0.5">⭐ הקבוע</p>
+                      )}
                       <div className="flex justify-between font-medium">
                         <span>{item.item_name} x{item.quantity}</span>
                         <span className="text-primary">₪{item.price * item.quantity}</span>
@@ -1279,7 +1282,7 @@ const Kitchen = () => {
                       {(() => {
                         const doneEntry = item.removals?.find(r => r.startsWith("doneness-"));
                         const doneLabel: Record<string, string> = { "doneness-m": "M — מדיום", "doneness-mw": "MW — מדיום וואל", "doneness-wd": "WD — וואל דאן" };
-                        const otherRemovals = item.removals?.filter(r => !r.startsWith("doneness-") && !r.startsWith("__OWNER__:")) || [];
+                        const otherRemovals = item.removals?.filter(r => !r.startsWith("doneness-") && !r.startsWith("__OWNER__:") && r !== "__FAVORITE__") || [];
                         return (
                           <>
                             {doneEntry && (
