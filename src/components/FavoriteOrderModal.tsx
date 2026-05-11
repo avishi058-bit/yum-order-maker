@@ -15,7 +15,6 @@ import {
   mealSideOptions,
   mealDrinkOptions,
   drinkToAvailabilityId,
-  toppings as staticToppings,
 } from "@/data/menu";
 import { findTopping, getAllToppings } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
