@@ -608,7 +608,31 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const handleAddDishToDraft = async (menuItem: MenuItem) => {
     setPickerOpen(false);
     const added = await runCustomizer(menuItem);
-    if (added) setDraft((prev) => [...prev, added]);
+    if (!added) return;
+    if (draft.length >= 1 && !added.ownerName?.trim()) {
+      setPendingNameValue("");
+      setPendingNameDish({ item: added, target: "draft" });
+      return;
+    }
+    setDraft((prev) => [...prev, added]);
+  };
+
+  const confirmPendingName = () => {
+    const trimmed = pendingNameValue.trim();
+    if (!trimmed || !pendingNameDish) return;
+    const withName: CartItem = { ...pendingNameDish.item, ownerName: trimmed };
+    if (pendingNameDish.target === "draft") {
+      setDraft((prev) => [...prev, withName]);
+    } else {
+      setUsingDraft((prev) => [...prev, withName]);
+    }
+    setPendingNameDish(null);
+    setPendingNameValue("");
+  };
+
+  const cancelPendingName = () => {
+    setPendingNameDish(null);
+    setPendingNameValue("");
   };
 
   const handleSaveDraft = async () => {
