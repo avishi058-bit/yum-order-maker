@@ -22,11 +22,11 @@ interface FamilyDealCustomizerProps {
 type Step = "burger-1" | "burger-2" | "burger-3" | "burger-4" | "burger-5" | "drinks-ask" | "drink-count" | `drink-${number}`;
 
 const burgerStepLabels: Record<string, string> = {
-  "burger-1": "המבורגר 1 מתוך 5",
-  "burger-2": "המבורגר 2 מתוך 5",
-  "burger-3": "המבורגר 3 מתוך 5",
-  "burger-4": "המבורגר 4 מתוך 5",
-  "burger-5": "המבורגר 5 מתוך 5",
+  "burger-1": "מנה ראשונה מתוך חמש",
+  "burger-2": "מנה שנייה מתוך חמש",
+  "burger-3": "מנה שלישית מתוך חמש",
+  "burger-4": "מנה רביעית מתוך חמש",
+  "burger-5": "מנה חמישית מתוך חמש",
   "drinks-ask": "רוצים להוסיף שתייה?",
   "drink-count": "כמה שתיות?",
 };
