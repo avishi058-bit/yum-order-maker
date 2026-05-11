@@ -1130,6 +1130,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                 )}
               </div>
             </motion.div>
+            </div>
           )}
 
           {/* Required-name prompt for additional favorite dishes */}
