@@ -587,7 +587,26 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   };
 
   const handleRemoveUsing = (idx: number) => {
-    setUsingDraft((prev) => prev.filter((_, i) => i !== idx));
+    setUsingDraft((prev) => {
+      const removed = prev[idx];
+      if (removed) {
+        setSelectedIds((s) => {
+          const next = new Set(s);
+          next.delete(removed.id);
+          return next;
+        });
+      }
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleAddOnceForOrder = async (menuItem: MenuItem) => {
@@ -600,14 +619,16 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       return;
     }
     setUsingDraft((prev) => [...prev, added]);
+    setSelectedIds((s) => new Set(s).add(added.id));
   };
 
   const handleConfirmUse = (mode: "cart" | "checkout") => {
-    if (usingDraft.length === 0) {
-      toast({ title: "אין מנות בקבוע", variant: "destructive" });
+    const chosen = usingDraft.filter((it) => selectedIds.has(it.id));
+    if (chosen.length === 0) {
+      toast({ title: "בחר לפחות מנה אחת להמשך", variant: "destructive" });
       return;
     }
-    onUseFavorite(refreshIds(usingDraft), mode);
+    onUseFavorite(refreshIds(chosen), mode);
     onClose();
     toast({
       title: mode === "checkout"
