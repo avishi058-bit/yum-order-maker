@@ -239,5 +239,5 @@ html.pwa-installed .pwa-safe-top {
   padding-top: calc(env(safe-area-inset-top) + 0.5rem);
 }
 html.pwa-installed .pwa-safe-bottom {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  padding-bottom: env(safe-area-inset-bottom);
 }
