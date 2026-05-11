@@ -361,6 +361,46 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     }
   }, [step, applyHeroTransform]);
 
+  // Native non-passive touch listeners on the scroll container so we can
+  // preventDefault on a downward drag while at scrollTop===0 — otherwise
+  // the browser's `touch-action: pan-y` claims the gesture (especially on
+  // kiosk touch devices) and the React pointer-based drag-to-close never
+  // gets a chance to fire.
+  useEffect(() => {
+    const sc = scrollRef.current;
+    if (!sc) return;
+    let startY = 0;
+    let claimed = false;
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      claimed = false;
+      startY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const dy = e.touches[0].clientY - startY;
+      if (!claimed) {
+        if (sc.scrollTop <= 0 && dy > 4) {
+          claimed = true;
+        } else {
+          return;
+        }
+      }
+      if (claimed && e.cancelable) e.preventDefault();
+    };
+    const onTouchEnd = () => { claimed = false; };
+    sc.addEventListener("touchstart", onTouchStart, { passive: true });
+    sc.addEventListener("touchmove", onTouchMove, { passive: false });
+    sc.addEventListener("touchend", onTouchEnd, { passive: true });
+    sc.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      sc.removeEventListener("touchstart", onTouchStart);
+      sc.removeEventListener("touchmove", onTouchMove);
+      sc.removeEventListener("touchend", onTouchEnd);
+      sc.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [step]);
+
   // Track whether the toppings section has been scrolled into view
   useEffect(() => {
     const el = toppingsRef.current;
