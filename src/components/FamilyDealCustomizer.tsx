@@ -53,6 +53,8 @@ const beerDrinks = familyDrinkOptions.filter((d) => d.category === "beer");
 
 const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyDealCustomizerProps) => {
   const alcoholConsent = useAlcoholConsent();
+  const location = useLocation();
+  const isKiosk = location.pathname === "/kiosk";
 
   const isDrinkUnavailable = (drinkId: string) => {
     const availId = drinkToAvailabilityId[drinkId];
@@ -61,8 +63,9 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   };
 
   const [step, setStep] = useState<string>("burger-1");
-  const [burgerConfigs, setBurgerConfigs] = useState<DealBurgerConfig[]>(
-    Array.from({ length: 5 }, () => ({ removals: ["no-changes"], name: "" }))
+  const [burgerNames, setBurgerNames] = useState<string[]>(Array.from({ length: 5 }, () => ""));
+  const [burgerIngredients, setBurgerIngredients] = useState<IngredientState[]>(
+    Array.from({ length: 5 }, () => defaultRegularIngredientState())
   );
   const [wantsDrinks, setWantsDrinks] = useState<boolean | null>(null);
   const [drinkCount, setDrinkCount] = useState(0);
@@ -100,7 +103,8 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const resetState = () => {
     setStep("burger-1");
-    setBurgerConfigs(Array.from({ length: 5 }, () => ({ removals: ["no-changes"], name: "" })));
+    setBurgerNames(Array.from({ length: 5 }, () => ""));
+    setBurgerIngredients(Array.from({ length: 5 }, () => defaultRegularIngredientState()));
     setWantsDrinks(null);
     setDrinkCount(0);
     setSelectedDrinks([]);
@@ -111,37 +115,25 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
     onClose();
   };
 
-  const toggleRemoval = (id: string) => {
+  const toggleIngredient = (ingId: string) => {
     const idx = currentBurgerIndex;
     if (idx < 0) return;
-    setBurgerConfigs((prev) => {
+    setBurgerIngredients((prev) => {
       const updated = [...prev];
-      const current = [...updated[idx].removals];
-      if (id === "no-changes") {
-        updated[idx] = { ...updated[idx], removals: current.includes("no-changes") ? [] : ["no-changes"] };
-      } else if (id === "dry") {
-        updated[idx] = { ...updated[idx], removals: current.includes("dry") ? ["no-changes"] : ["dry"] };
-      } else {
-        const filtered = current.filter((r) => r !== "no-changes" && r !== "dry");
-        if (filtered.includes(id)) {
-          const result = filtered.filter((r) => r !== id);
-          updated[idx] = { ...updated[idx], removals: result.length === 0 ? ["no-changes"] : result };
-        } else {
-          updated[idx] = { ...updated[idx], removals: [...filtered, id] };
-        }
-      }
+      updated[idx] = { ...updated[idx], [ingId]: !updated[idx][ingId] };
       return updated;
     });
   };
 
   const finishDeal = (drinks: DealDrinkChoice[]) => {
-    const cleanBurgers = burgerConfigs.map((b) => ({
-      removals: b.removals.filter((r) => r !== "no-changes"),
-      name: b.name?.trim() || undefined,
+    const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, i) => ({
+      removals: ingredientStateToRemovals(state),
+      name: burgerNames[i]?.trim() || undefined,
     }));
     onConfirm(cleanBurgers, drinks);
     resetState();
   };
+
 
   const handleNext = () => {
     if (burgerSteps.includes(step)) {
