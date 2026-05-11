@@ -703,7 +703,7 @@ const Index = () => {
 
         {/* SaveAsFavoriteModal moved into CheckoutForm (pre-payment). */}
 
-        {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && (
+        {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && savedCart.items.reduce((s, i) => s + (i.quantity || 0), 0) >= 3 && (
           <SavedCartModal
             open={true}
             savedCart={savedCart}
