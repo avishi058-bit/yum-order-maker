@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useAvailability } from "@/hooks/useAvailability";
 import {
   menuItems,
   type MenuItem,
@@ -13,8 +14,10 @@ import {
   smashBurgerIds,
   mealSideOptions,
   mealDrinkOptions,
+  drinkToAvailabilityId,
+  toppings as staticToppings,
 } from "@/data/menu";
-import { findTopping } from "@/lib/toppingsLookup";
+import { findTopping, getAllToppings } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import { toast } from "@/hooks/use-toast";
