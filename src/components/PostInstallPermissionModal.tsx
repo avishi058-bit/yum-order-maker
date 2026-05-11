@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Sparkles, X } from "lucide-react";
+import { Bell, Sparkles, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import IosInstallModal from "@/components/IosInstallModal";
+
+const isIos = () => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(ua) && "ontouchend" in document);
+};
 
 const SEEN_KEY = "habakta_post_install_perm_seen";
 const INSTALLED_KEY = "habakta_pwa_installed";
