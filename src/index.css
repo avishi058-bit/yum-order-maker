@@ -242,18 +242,17 @@ html.pwa-installed .pwa-safe-screen {
   overflow: hidden;
 }
 
-html.pwa-installed .pwa-checkout-bar,
+html.pwa-installed .pwa-checkout-bar {
+  /* Tighten the bar in PWA: small top padding, just enough bottom padding
+     to clear the iOS Home Indicator with a minimal gap. */
+  padding-top: 8px !important;
+  padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
+}
 @media (display-mode: standalone) {
   .pwa-checkout-bar {
-    /* Tighten the bar in PWA: small symmetric top padding, just enough
-       bottom padding to clear the Home Indicator. */
     padding-top: 8px !important;
     padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
   }
-}
-html.pwa-installed .pwa-checkout-bar {
-  padding-top: 8px !important;
-  padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
 }
 
 /* For elements that are themselves fixed to the top/bottom of the viewport
