@@ -230,17 +230,17 @@ html.pwa-installed body {
    `pwa-safe-screen` and they'll respect the top safe area internally.
    Bottom is handled directly on the footer bar (smaller gap). */
 html.pwa-installed .pwa-safe-screen {
-  /* Override Tailwind's h-full with the real visible app viewport.
-     Extending past the viewport pushes the footer under iOS' home indicator,
-     so keep the drawer inside 100dvh and let the footer own bottom safety. */
-  height: 100dvh !important;
-  max-height: 100dvh !important;
+  /* iOS standalone reports the usable viewport above the home indicator.
+     Extend fullscreen drawers by the bottom safe-area so their footer band
+     visually reaches the physical bottom of the installed app. */
+  height: calc(100dvh + env(safe-area-inset-bottom)) !important;
+  max-height: none !important;
   padding-top: env(safe-area-inset-top);
   overflow: hidden;
 }
 
 html.pwa-installed .pwa-checkout-bar {
-  padding-bottom: max(env(safe-area-inset-bottom), 1rem) !important;
+  padding-bottom: 1rem !important;
 }
 
 /* For elements that are themselves fixed to the top/bottom of the viewport
