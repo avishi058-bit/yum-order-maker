@@ -890,14 +890,20 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                       הוסף מנה לפעם הזאת
                     </button>
                     <div className="flex flex-col gap-2 pt-2">
-                      <button
+                      <motion.button
                         onClick={() => handleConfirmUse("checkout")}
                         disabled={hasAnyIssues}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                        animate={hasAnyIssues ? {} : {
+                          scale: [1, 1.04, 1, 1.04, 1],
+                          rotate: [0, -1.2, 0, 1.2, 0],
+                        }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                        whileTap={{ scale: 0.96 }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-l from-green-500 via-green-600 to-green-500 hover:from-green-600 hover:to-green-600 text-white font-bold text-base transition-colors shadow-[0_10px_30px_-5px_rgba(34,197,94,0.6)] ring-2 ring-green-400/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none"
                       >
-                        <Check size={18} />
-                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע"}
-                      </button>
+                        <Check size={20} />
+                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע שלי"}
+                      </motion.button>
                       <button
                         onClick={() => handleConfirmUse("cart")}
                         disabled={hasAnyIssues}
