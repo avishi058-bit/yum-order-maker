@@ -429,7 +429,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                 )}
               </AnimatePresence>
 
-              <div className="px-5 py-4 border-t border-border bg-card safe-bottom">
+              <div className="px-5 py-4 border-t border-gray-200 bg-white safe-bottom">
                 {isDrinkStep && selectedDrinks[currentDrinkIndex] === "" && (
                   <p className="text-sm text-destructive text-center mb-2">יש לבחור שתייה</p>
                 )}
