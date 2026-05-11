@@ -127,7 +127,11 @@ const PostInstallPermissionModal = () => {
     }
   };
 
-  if (!open) return null;
+  if (!open) {
+    return (
+      <IosInstallModal open={iosInstallOpen} onClose={() => setIosInstallOpen(false)} />
+    );
+  }
 
   return (
     <AnimatePresence>
