@@ -544,6 +544,10 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     const target = usingDraft[idx];
     const menuItem = menuItems.find((m) => m.id === target.menuItemId);
     if (!menuItem) return;
+    if (menuItem.category !== "burger" && menuItem.category !== "meal") {
+      toast({ title: "פריט זה לא ניתן לעריכה — אפשר להסיר ולהוסיף מחדש" });
+      return;
+    }
     const updated = await runCustomizer(menuItem, cartItemToInitial(target));
     if (!updated) return;
     setUsingDraft((prev) => prev.map((it, i) => (i === idx ? { ...updated, id: it.id } : it)));
