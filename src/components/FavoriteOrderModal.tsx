@@ -77,6 +77,20 @@ interface HistoryOrder {
 
 /** Items the customizer can handle: same rule used in Index.openItemFlow. */
 const CUSTOMIZABLE = menuItems.filter((m) => m.category === "burger" || m.category === "meal");
+/** Simple items that are added directly (no customization): sides + drinks. */
+const SIMPLE_ITEMS = menuItems.filter((m) => m.category === "side" || m.category === "drink");
+
+/** Build a CartItem for a simple (non-customizable) menu item. */
+const simpleToCartItem = (m: MenuItem): CartItem => ({
+  id: `${m.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  menuItemId: m.id,
+  name: m.name,
+  price: m.price,
+  quantity: 1,
+  toppings: [],
+  removals: [],
+  withMeal: false,
+});
 
 /** Convert a saved order's items into fresh CartItems. */
 const orderItemsToCart = (items: HistoryItem[]): CartItem[] => {
@@ -530,6 +544,10 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     const target = usingDraft[idx];
     const menuItem = menuItems.find((m) => m.id === target.menuItemId);
     if (!menuItem) return;
+    if (menuItem.category !== "burger" && menuItem.category !== "meal") {
+      toast({ title: "פריט זה לא ניתן לעריכה — אפשר להסיר ולהוסיף מחדש" });
+      return;
+    }
     const updated = await runCustomizer(menuItem, cartItemToInitial(target));
     if (!updated) return;
     setUsingDraft((prev) => prev.map((it, i) => (i === idx ? { ...updated, id: it.id } : it)));
@@ -565,6 +583,10 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     const target = draft[idx];
     const menuItem = menuItems.find((m) => m.id === target.menuItemId);
     if (!menuItem) return;
+    if (menuItem.category !== "burger" && menuItem.category !== "meal") {
+      toast({ title: "פריט זה לא ניתן לעריכה — אפשר להסיר ולהוסיף מחדש" });
+      return;
+    }
     const updated = await runCustomizer(menuItem, cartItemToInitial(target));
     if (!updated) return;
     setDraft((prev) => prev.map((it, i) => (i === idx ? { ...updated, id: it.id } : it)));
@@ -681,8 +703,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                 {pickerOpen && (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      בחר את המנה שתרצה להוסיף — לאחר מכן תוכל לבחור ירקות, מידת עשייה ותוספות.
+                      בחר מנה, צד או שתייה להוסיף לקבוע.
                     </p>
+                    <p className="text-xs font-bold text-foreground mt-2">המבורגרים ומנות</p>
                     <div className="grid grid-cols-1 gap-2">
                       {CUSTOMIZABLE.map((m) => (
                         <button
@@ -697,6 +720,28 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>
                           )}
                           <p className="text-xs text-primary font-bold mt-1">₪{m.price}</p>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs font-bold text-foreground mt-3">תוספות ושתייה</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SIMPLE_ITEMS.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            const ci = simpleToCartItem(m);
+                            if (view === "confirm") {
+                              setUsingDraft((prev) => [...prev, ci]);
+                            } else {
+                              setDraft((prev) => [...prev, ci]);
+                            }
+                            setPickerOpen(false);
+                            toast({ title: `${m.name} נוסף` });
+                          }}
+                          className="text-right border border-border rounded-xl p-2.5 hover:bg-muted/50 transition-colors"
+                        >
+                          <p className="font-bold text-foreground text-xs">{m.name}</p>
+                          <p className="text-xs text-primary font-bold mt-0.5">₪{m.price}</p>
                         </button>
                       ))}
                     </div>
