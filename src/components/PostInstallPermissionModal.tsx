@@ -11,8 +11,11 @@ const isIos = () => {
   return /iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(ua) && "ontouchend" in document);
 };
 
-const SEEN_KEY = "habakta_post_install_perm_seen";
+const SEEN_KEY = "habakta_post_install_perm_seen"; // set ONLY when permission granted/denied permanently
+const DISMISSED_AT_KEY = "habakta_post_install_perm_dismissed_at";
 const INSTALLED_KEY = "habakta_pwa_installed";
+// Re-ask cooldown after a "not now" dismissal (ms). Keep short so users get nudged again.
+const REASK_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 
 const isStandalone = () => {
   if (typeof window === "undefined") return false;
@@ -40,17 +43,28 @@ const PostInstallPermissionModal = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const alreadySeen = () => {
+    const permanentlySeen = () => {
       try { return localStorage.getItem(SEEN_KEY) === "1"; } catch { return false; }
     };
 
-    const maybeShow = (v: Variant, ignoreSeen = false) => {
-      if (!ignoreSeen && alreadySeen()) return;
-      // Don't ask if notifications already decided (granted or denied)
+    const inCooldown = () => {
+      try {
+        const v = localStorage.getItem(DISMISSED_AT_KEY);
+        if (!v) return false;
+        const ts = parseInt(v, 10);
+        if (!Number.isFinite(ts)) return false;
+        return Date.now() - ts < REASK_COOLDOWN_MS;
+      } catch { return false; }
+    };
+
+    const maybeShow = (v: Variant, ignoreCooldown = false) => {
+      // If permission already granted/denied, lock it in and stop asking.
       if (typeof Notification !== "undefined" && Notification.permission !== "default") {
         try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
         return;
       }
+      if (permanentlySeen()) return;
+      if (!ignoreCooldown && inCooldown()) return;
       setVariant(v);
       setOpen(true);
     };
@@ -58,7 +72,7 @@ const PostInstallPermissionModal = () => {
     // Case 1: Android — listen for installation event
     const onInstalled = () => {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
-      setTimeout(() => maybeShow("install"), 1500);
+      setTimeout(() => maybeShow("install", true), 1500);
     };
     window.addEventListener("appinstalled", onInstalled);
 
@@ -72,15 +86,30 @@ const PostInstallPermissionModal = () => {
     const onRequest = () => maybeShow("order", true);
     window.addEventListener("request-notify-permission", onRequest);
 
+    // Case 4: app re-focused / tab visible again — nudge again if still default
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (isStandalone()) maybeShow("install");
+    };
+    const onFocus = () => {
+      if (isStandalone()) maybeShow("install");
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+
     return () => {
       window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener("request-notify-permission", onRequest);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
 
   const dismiss = (markSeen = true) => {
     if (markSeen) {
-      try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
+      // Soft dismiss — only set a cooldown timestamp, do NOT lock permanently.
+      // We'll keep nudging until the user actually grants/denies permission.
+      try { localStorage.setItem(DISMISSED_AT_KEY, String(Date.now())); } catch {}
     }
     setOpen(false);
     setStep("ask");
@@ -100,6 +129,12 @@ const PostInstallPermissionModal = () => {
             icon: "/icon-192.png",
           });
         } catch {}
+      }
+    } catch {}
+    // Lock-in once user has actually responded to the OS prompt (granted OR denied) — stop nudging.
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission !== "default") {
+        localStorage.setItem(SEEN_KEY, "1");
       }
     } catch {}
     // After permission flow — if not installed yet, explain why to add to home screen
