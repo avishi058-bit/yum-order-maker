@@ -251,7 +251,7 @@ export type Database = {
           customer_phone: string | null
           endpoint: string
           id: string
-          order_id: string
+          order_id: string | null
           p256dh: string
         }
         Insert: {
@@ -260,7 +260,7 @@ export type Database = {
           customer_phone?: string | null
           endpoint: string
           id?: string
-          order_id: string
+          order_id?: string | null
           p256dh: string
         }
         Update: {
@@ -269,7 +269,7 @@ export type Database = {
           customer_phone?: string | null
           endpoint?: string
           id?: string
-          order_id?: string
+          order_id?: string | null
           p256dh?: string
         }
         Relationships: [
