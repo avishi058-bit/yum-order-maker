@@ -20,7 +20,7 @@ const generateToken = () => {
 
 // --- Schemas ---
 const RegisterSchema = z.object({
-  phone: z.string().min(9).max(15),
+  phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
   name: z.string().min(1).max(100),
   termsAccepted: z.literal(true),
   marketingConsent: z.boolean(),
