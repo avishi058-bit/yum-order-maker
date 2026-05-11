@@ -282,6 +282,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                           onToggle={toggleIngredient}
                           isAvailable={isAvailable}
                           isKiosk={isKiosk}
+                          title={`מה במנה ה${["ראשונה", "שנייה", "שלישית", "רביעית", "חמישית"][currentBurgerIndex]} שלך?`}
                         />
                       )}
                     </div>
