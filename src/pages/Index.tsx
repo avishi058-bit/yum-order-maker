@@ -72,6 +72,7 @@ const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutSkipDetails, setCheckoutSkipDetails] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
   // When set, the customizer is opened in EDIT mode for this cart item.
   // On confirm, we replace the cart entry instead of appending a new one.
