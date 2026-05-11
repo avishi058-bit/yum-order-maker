@@ -374,34 +374,46 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     }
   }, [step, applyHeroTransform]);
 
-  // Native non-passive touch listeners on the scroll container so we can
-  // preventDefault on a downward drag while at scrollTop===0 — otherwise
-  // the browser's `touch-action: pan-y` claims the gesture (especially on
-  // kiosk touch devices) and the React pointer-based drag-to-close never
-  // gets a chance to fire.
+  // Native non-passive touch listeners on the scroll container. Kiosk browsers
+  // often let the scrollable hero/content claim the gesture before React pointer
+  // events can move the sheet, so we directly drive the same drag-to-close flow
+  // once a downward pull reaches the top of the scroll area.
   useEffect(() => {
     const sc = scrollRef.current;
     if (!sc) return;
     let startY = 0;
+    let startX = 0;
     let claimed = false;
+    let blocked = false;
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
+      const target = e.target as HTMLElement | null;
       claimed = false;
+      blocked = isInteractiveDragTarget(target);
+      startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
     };
     const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      const dy = e.touches[0].clientY - startY;
+      if (blocked || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const dy = touch.clientY - startY;
+      const dx = Math.abs(touch.clientX - startX);
       if (!claimed) {
-        if (sc.scrollTop <= 0 && dy > 4) {
+        if (dy > 6 && dy > dx && sc.scrollTop <= 2) {
           claimed = true;
+          beginDrag(touch.clientY, -1);
         } else {
           return;
         }
       }
       if (claimed && e.cancelable) e.preventDefault();
+      applyDragPosition(touch.clientY);
     };
-    const onTouchEnd = () => { claimed = false; };
+    const onTouchEnd = () => {
+      if (claimed) finishDrag();
+      claimed = false;
+      blocked = false;
+    };
     sc.addEventListener("touchstart", onTouchStart, { passive: true });
     sc.addEventListener("touchmove", onTouchMove, { passive: false });
     sc.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -412,7 +424,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       sc.removeEventListener("touchend", onTouchEnd);
       sc.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [step]);
+  }, [step, beginDrag, applyDragPosition, finishDrag]);
 
   // Track whether the toppings section has been scrolled into view
   useEffect(() => {
