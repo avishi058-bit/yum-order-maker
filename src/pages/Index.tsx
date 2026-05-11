@@ -624,6 +624,9 @@ const Index = () => {
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
               onSuccess={(orderNumber, phone) => {
+                // Snapshot the cart BEFORE clearing — used for the
+                // "save as your regular" post-order prompt.
+                const orderedSnapshot = cart.slice();
                 setCheckoutOpen(false);
                 setCart([]);
                 if (isStation) {
@@ -644,6 +647,17 @@ const Index = () => {
                     setTimeout(() => {
                       window.dispatchEvent(new CustomEvent("request-notify-permission"));
                     }, 2500);
+                  }
+                  // Offer to save the just-ordered dishes as the customer's
+                  // "regular" — only when they don't already have one saved.
+                  // Slight delay so the success toast lands first.
+                  if (!favoriteItems || favoriteItems.length === 0) {
+                    const eligible = orderedSnapshot.filter(
+                      (it) => it.menuItemId && it.name !== "רטבים",
+                    );
+                    if (eligible.length > 0) {
+                      setTimeout(() => setSaveFavoritePrompt(eligible), 1500);
+                    }
                   }
                 }
               }}
