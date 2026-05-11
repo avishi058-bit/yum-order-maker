@@ -328,7 +328,10 @@ const Index = () => {
       {/* Top action row: hamburger menu + customer greeting / login */}
       {!isStation && (
         <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
-          <SideMenu onLoginClick={() => setAuthModalOpen(true)} />
+          <SideMenu
+            onLoginClick={() => setAuthModalOpen(true)}
+            onUpdateFavorite={() => { setFavoriteStartInSetup(true); setFavoriteModalOpen(true); }}
+          />
           <div className="flex items-center gap-2">
             {!isInstalled && (
               <button
