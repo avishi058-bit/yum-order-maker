@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Sparkles, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IosInstallModal from "@/components/IosInstallModal";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
 const isIos = () => {
   if (typeof navigator === "undefined") return false;
@@ -34,6 +35,7 @@ const PostInstallPermissionModal = () => {
   const [variant, setVariant] = useState<Variant>("install");
   const [step, setStep] = useState<"ask" | "explain">("ask");
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
+  const { canPrompt, promptInstall } = useInstallPrompt();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -102,13 +104,34 @@ const PostInstallPermissionModal = () => {
     } catch {}
     // After permission flow — if not installed yet, explain why to add to home screen
     if (!isStandalone()) {
-      setStep("explain");
+      if (isIos()) {
+        // On iOS: open the install instructions modal directly (it contains the why explanation)
+        setOpen(false);
+        setIosInstallOpen(true);
+        try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
+      } else {
+        setStep("explain");
+      }
       return;
     }
     dismiss();
   };
 
-  if (!open) return null;
+  const handleAndroidInstall = async () => {
+    const result = await promptInstall();
+    if (result === "accepted" || result === "dismissed") {
+      dismiss(true);
+    } else {
+      // Native prompt unavailable — keep modal open with the explanation
+      dismiss(true);
+    }
+  };
+
+  if (!open) {
+    return (
+      <IosInstallModal open={iosInstallOpen} onClose={() => setIosInstallOpen(false)} />
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -234,14 +257,14 @@ const PostInstallPermissionModal = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {isIos() ? (
+                  {canPrompt ? (
                     <Button
-                      onClick={() => setIosInstallOpen(true)}
+                      onClick={handleAndroidInstall}
                       className="w-full h-12 text-base font-bold rounded-xl"
                       size="lg"
                     >
                       <Home size={18} className="ml-2" />
-                      איך מוסיפים? תראו לי 👀
+                      הוסף עכשיו למסך הבית 📲
                     </Button>
                   ) : (
                     <Button
@@ -250,7 +273,7 @@ const PostInstallPermissionModal = () => {
                       size="lg"
                     >
                       <Home size={18} className="ml-2" />
-                      הבנתי, אוסיף למסך הבית
+                      הבנתי, אוסיף ידנית
                     </Button>
                   )}
                   <Button
