@@ -503,6 +503,11 @@ const Index = () => {
           <ItemCustomizer
             item={customizerItem}
             onClose={() => {
+              // If a favorite-modal flow is awaiting this customizer, cancel it.
+              if (customizerResolverRef.current) {
+                customizerResolverRef.current(null);
+                customizerResolverRef.current = null;
+              }
               setCustomizerItem(null);
               setEditingCartId(null);
               setCustomizerInitial(undefined);
