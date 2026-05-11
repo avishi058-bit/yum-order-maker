@@ -102,6 +102,24 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
         const cached = localStorage.getItem(CUSTOMER_KEY);
         if (cached) setCustomer(JSON.parse(cached));
       } catch {}
+
+      // PWA opened standalone without a session → try to recover from the last order on this device.
+      // This handles the flow: order on website → install to home screen → open app for the first time.
+      const recovery = isStandalone() ? readLastOrderCustomer() : null;
+      if (recovery) {
+        callAuth("link-from-order", { phone: recovery.phone, name: recovery.name })
+          .then((data) => {
+            saveSessionRef.current?.(data.deviceToken, data.customer);
+            // Immediately ask for notification permission so they get real-time order updates.
+            setTimeout(() => {
+              try { window.dispatchEvent(new CustomEvent("request-notify-permission")); } catch {}
+            }, 800);
+          })
+          .catch(() => {})
+          .finally(() => setLoading(false));
+        return;
+      }
+
       setLoading(false);
       return;
     }
