@@ -7,6 +7,7 @@ import { menuItems, type MenuItem } from "@/data/menu";
 import type { CartItem } from "@/components/CartDrawer";
 import { toast } from "@/hooks/use-toast";
 import IosInstallModal from "@/components/IosInstallModal";
+import { isStandalonePwa } from "@/lib/push";
 
 interface HistoryItem {
   item_id: string | null;
@@ -151,15 +152,17 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
               </button>
             </div>
 
-            <div className="px-4 py-3 border-b border-border bg-primary/5">
-              <button
-                onClick={() => setShowInstall(true)}
-                className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
-              >
-                <Smartphone size={16} />
-                הוסף את הבקתה למסך הבית
-              </button>
-            </div>
+            {!isStandalonePwa() && (
+              <div className="px-4 py-3 border-b border-border bg-primary/5">
+                <button
+                  onClick={() => setShowInstall(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  <Smartphone size={16} />
+                  הוסף את הבקתה למסך הבית
+                </button>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {loading && (
