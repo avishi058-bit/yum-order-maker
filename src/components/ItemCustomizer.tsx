@@ -1250,6 +1250,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     </div>
 
                     <button
+                      ref={drinkAddBtnRef}
                       onClick={() => {
                         if (isAlcoholDrinkId(selectedDrink)) {
                           alcoholConsent.guard(
