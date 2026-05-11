@@ -981,10 +981,11 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                       הוסף מנה לפעם הזאת
                     </button>
                     <div className="flex flex-col gap-2 pt-2">
+                      {(() => null)()}
                       <motion.button
                         onClick={() => handleConfirmUse("checkout")}
-                        disabled={hasAnyIssues}
-                        animate={hasAnyIssues ? {} : {
+                        disabled={hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0}
+                        animate={(hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0) ? {} : {
                           scale: [1, 1.04, 1, 1.04, 1],
                           rotate: [0, -1.2, 0, 1.2, 0],
                         }}
@@ -993,11 +994,19 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                         className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-l from-green-500 via-green-600 to-green-500 hover:from-green-600 hover:to-green-600 text-white font-bold text-base transition-colors shadow-[0_10px_30px_-5px_rgba(34,197,94,0.6)] ring-2 ring-green-400/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none"
                       >
                         <Check size={20} />
-                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע שלי"}
+                        {hasAnyIssues
+                          ? "פתור קודם את הפריטים החסרים"
+                          : (() => {
+                              const selectedCount = usingDraft.filter((it) => selectedIds.has(it.id)).length;
+                              if (selectedCount === 0) return "בחר לפחות מנה אחת";
+                              if (usingDraft.length > 1 && selectedCount < usingDraft.length)
+                                return `המשך לתשלום עם ${selectedCount} מנות נבחרות`;
+                              return "המשך לתשלום עם הקבוע שלי";
+                            })()}
                       </motion.button>
                       <button
                         onClick={() => handleConfirmUse("cart")}
-                        disabled={hasAnyIssues}
+                        disabled={hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShoppingBag size={15} />
