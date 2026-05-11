@@ -28,6 +28,8 @@ const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"
 const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
+import IosInstallModal from "@/components/IosInstallModal";
+import { isStandalonePwa } from "@/lib/push";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
