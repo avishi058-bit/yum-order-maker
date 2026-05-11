@@ -393,7 +393,7 @@ export const mealUpgrade = {
 
 export const mealSideOptions: Upgrade[] = [
   { id: "side-fries", name: "צ׳יפס רגיל", price: 0 },
-  { id: "side-waffle", name: "וופל צ׳יפס", price: 5 },
+  { id: "side-sweet-potato", name: "צ׳יפס בטטה", price: 5 },
   { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
   { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
 ];
