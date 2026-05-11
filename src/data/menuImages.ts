@@ -25,7 +25,7 @@ export const menuImages: Record<string, string> = {
   "crazy-smash": crazySmash,
   "special-hadegel": specialHadegel,
   fries: fries,
-  "waffle-fries": waffleFries,
+  "sweet-potato-fries": sweetPotatoFries,
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
   can: canDrink,
