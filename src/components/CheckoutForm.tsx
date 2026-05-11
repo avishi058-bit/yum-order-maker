@@ -216,15 +216,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // already iterates over). The receipt extracts and removes it before
     // rendering. Stored as text only — no DB schema change required.
     const ownerName = (item as CartItem & { ownerName?: string }).ownerName?.trim();
-    const removalNamesWithOwner = ownerName
-      ? [`__OWNER__:${ownerName}`, ...removalNames]
-      : removalNames;
+    const isFavorite = !!(item as CartItem & { isFavorite?: boolean }).isFavorite;
+    const removalNamesWithMeta = [
+      ...(isFavorite ? ["__FAVORITE__"] : []),
+      ...(ownerName ? [`__OWNER__:${ownerName}`] : []),
+      ...removalNames,
+    ];
     return {
       itemId: menuItemId,
       quantity: item.quantity,
       toppings: item.toppings,
       removals: item.removals,
-      removalNames: removalNamesWithOwner,
+      removalNames: removalNamesWithMeta,
       withMeal: item.withMeal,
       mealSideId: item.mealSideId ?? null,
       mealDrinkId: item.mealDrinkId ?? null,
