@@ -1184,7 +1184,8 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
           )}
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
 
