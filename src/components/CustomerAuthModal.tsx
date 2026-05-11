@@ -49,14 +49,10 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
 
     setLoading(true);
     try {
-      // Try login first (returning user); if not found, register
-      try {
-        await login(phone);
-        toast({ title: `ברוך הבא בחזרה! 😊` });
-      } catch {
-        await register(phone, name.trim(), termsAccepted, marketingConsent);
-        toast({ title: `ברוך הבא, ${name.trim().split(" ")[0]}! 🎉` });
-      }
+      // Always register — backend validates that phone matches the name
+      // (returning users with the same name are treated as login).
+      await register(phone, name.trim(), termsAccepted, marketingConsent);
+      toast({ title: `ברוך הבא, ${name.trim().split(" ")[0]}! 🎉` });
       handleClose();
       onSuccess?.();
     } catch (err: any) {

@@ -52,24 +52,62 @@ Deno.serve(async (req) => {
       const deviceToken = generateToken()
       const now = new Date().toISOString()
 
-      const { data: customer, error } = await supabase
+      // Check if phone already belongs to another name
+      const { data: existing } = await supabase
         .from('customers')
-        .upsert({
-          phone,
-          name,
-          terms_accepted_at: now,
-          marketing_consent: marketingConsent,
-          marketing_consent_at: marketingConsent ? now : null,
-          last_login_at: now,
-          login_count: 1,
-          device_token: deviceToken,
-        }, { onConflict: 'phone' })
-        .select('id, name, phone, marketing_consent, login_count')
-        .single()
+        .select('id, name, login_count')
+        .eq('phone', phone)
+        .maybeSingle()
 
-      if (error) {
-        console.error('Register error:', error)
-        return json({ error: 'שגיאה ברישום' }, 500)
+      const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase()
+      if (existing && existing.name && norm(existing.name) !== norm(name)) {
+        return json({
+          error: `המספר הזה כבר רשום על שם ${existing.name}. אם זה שלך, היכנס עם השם שלך.`,
+          code: 'PHONE_TAKEN',
+        }, 409)
+      }
+
+      let customer
+      if (existing) {
+        const { data: updated, error } = await supabase
+          .from('customers')
+          .update({
+            name: existing.name || name,
+            marketing_consent: marketingConsent,
+            marketing_consent_at: marketingConsent ? now : null,
+            terms_accepted_at: now,
+            last_login_at: now,
+            login_count: (existing.login_count || 0) + 1,
+            device_token: deviceToken,
+          })
+          .eq('id', existing.id)
+          .select('id, name, phone, marketing_consent, login_count')
+          .single()
+        if (error) {
+          console.error('Register update error:', error)
+          return json({ error: 'שגיאה ברישום' }, 500)
+        }
+        customer = updated
+      } else {
+        const { data: created, error } = await supabase
+          .from('customers')
+          .insert({
+            phone,
+            name,
+            terms_accepted_at: now,
+            marketing_consent: marketingConsent,
+            marketing_consent_at: marketingConsent ? now : null,
+            last_login_at: now,
+            login_count: 1,
+            device_token: deviceToken,
+          })
+          .select('id, name, phone, marketing_consent, login_count')
+          .single()
+        if (error) {
+          console.error('Register insert error:', error)
+          return json({ error: 'שגיאה ברישום' }, 500)
+        }
+        customer = created
       }
 
       return json({
@@ -78,13 +116,11 @@ Deno.serve(async (req) => {
         customer: {
           name: customer.name,
           phone: customer.phone,
-          isReturning: false,
+          isReturning: !!existing,
           loginCount: customer.login_count,
         },
       })
     }
-
-    // ─── Auto-login: validate device token ───
     if (action === 'auto-login') {
       const parsed = AutoLoginSchema.safeParse(body)
       if (!parsed.success) return json({ error: 'טוקן לא תקין' }, 400)
