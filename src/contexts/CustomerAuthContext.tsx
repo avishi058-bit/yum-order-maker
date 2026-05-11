@@ -90,10 +90,17 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const saveSession = useCallback((token: string, c: CustomerData) => {
+  const saveSession = useCallback((token: string, c: CustomerData & { favoriteItems?: CartItem[] | null }) => {
     localStorage.setItem(DEVICE_TOKEN_KEY, token);
     localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
-    setCustomer(c);
+    setCustomer({
+      name: c.name, phone: c.phone, isReturning: c.isReturning,
+      loginCount: c.loginCount, lastLoginAt: c.lastLoginAt,
+    });
+    const fav = c.favoriteItems ?? null;
+    setFavoriteState(fav);
+    if (fav) localStorage.setItem(FAVORITE_KEY, JSON.stringify(fav));
+    else localStorage.removeItem(FAVORITE_KEY);
   }, []);
 
   const register = useCallback(async (phone: string, name: string, termsAccepted: boolean, marketingConsent: boolean) => {
