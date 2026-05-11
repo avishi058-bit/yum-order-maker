@@ -849,6 +849,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
       <PrivacyModal open={privacyModalOpen} onClose={() => setPrivacyModalOpen(false)} isKiosk={isKiosk} />
+
+      {/* Save-as-favorite prompt — appears AFTER customer details, BEFORE payment.
+          Logged-in customers without a saved favorite get one chance to save the
+          dishes they're about to order as their "regular". */}
+      <SaveAsFavoriteModal
+        open={saveFavoritePromptOpen}
+        items={items}
+        onClose={() => setSaveFavoritePromptOpen(false)}
+        onDone={() => {
+          setSaveFavoritePromptOpen(false);
+          setStep("payment");
+        }}
+      />
     </motion.div>
   );
 });
