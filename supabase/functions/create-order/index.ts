@@ -8,6 +8,15 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
+import {
+  MENU_ITEMS_PRICING,
+  TOPPINGS_PRICING as TOPPINGS_LIST,
+  MEAL_SIDES_PRICING as MEAL_SIDES_LIST,
+  MEAL_DRINKS_PRICING as MEAL_DRINKS_LIST,
+  DEAL_DRINKS_PRICING as DEAL_DRINKS_LIST,
+  MEAL_UPGRADE_PRICE as SHARED_MEAL_UPGRADE_PRICE,
+  toLookup,
+} from "../_shared/menu-pricing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
