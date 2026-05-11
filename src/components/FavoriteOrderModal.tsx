@@ -742,7 +742,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   // While the parent customizer is open, hide our backdrop+sheet so it's on top.
   const visuallyHidden = customizing;
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
