@@ -199,7 +199,7 @@ const OrderTracking = () => {
 
         {order.status === "ready" && (
           <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 text-center">
-            <p className="text-2xl font-bold text-green-400">ההזמנה מוכנה! 🎉</p>
+            <p className="text-2xl font-bold text-green-400">ההזמנה מוכנה ✅🥳</p>
             <p className="text-sm text-muted-foreground mt-2">אפשר לאסוף</p>
           </div>
         )}
@@ -209,6 +209,19 @@ const OrderTracking = () => {
             <p className="text-lg text-foreground">ההזמנה הושלמה ✅</p>
             <p className="text-sm text-muted-foreground mt-2">בתיאבון!</p>
           </div>
+        )}
+
+        {/* Waze navigation — visible on the timer screen for all live statuses */}
+        {(order.status === "new" || order.status === "preparing" || order.status === "ready") && (
+          <a
+            href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-[#33ccff] text-white font-bold py-3 rounded-xl hover:opacity-90 transition shadow-md"
+          >
+            <Navigation size={18} />
+            נווט למסעדה עם Waze
+          </a>
         )}
 
         {/* Push notification opt-in — hidden when order is already done */}
