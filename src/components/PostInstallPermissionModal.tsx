@@ -20,8 +20,11 @@ const isStandalone = () => {
  * via browser notifications. Once approved, the OrderTopBar will surface
  * the live status / countdown until the order is marked completed.
  */
+type Variant = "install" | "order";
+
 const PostInstallPermissionModal = () => {
   const [open, setOpen] = useState(false);
+  const [variant, setVariant] = useState<Variant>("install");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -30,31 +33,38 @@ const PostInstallPermissionModal = () => {
       try { return localStorage.getItem(SEEN_KEY) === "1"; } catch { return false; }
     };
 
-    const maybeShow = () => {
-      if (alreadySeen()) return;
+    const maybeShow = (v: Variant, ignoreSeen = false) => {
+      if (!ignoreSeen && alreadySeen()) return;
       // Don't ask if notifications already decided (granted or denied)
       if (typeof Notification !== "undefined" && Notification.permission !== "default") {
         try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
         return;
       }
+      setVariant(v);
       setOpen(true);
     };
 
     // Case 1: Android — listen for installation event
     const onInstalled = () => {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
-      // Slight delay so the success toast appears first
-      setTimeout(maybeShow, 1500);
+      setTimeout(() => maybeShow("install"), 1500);
     };
     window.addEventListener("appinstalled", onInstalled);
 
     // Case 2: iOS / already installed — opened via home-screen icon
     if (isStandalone()) {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
-      setTimeout(maybeShow, 1200);
+      setTimeout(() => maybeShow("install"), 1200);
     }
 
-    return () => window.removeEventListener("appinstalled", onInstalled);
+    // Case 3: explicit request after a successful order
+    const onRequest = () => maybeShow("order", true);
+    window.addEventListener("request-notify-permission", onRequest);
+
+    return () => {
+      window.removeEventListener("appinstalled", onInstalled);
+      window.removeEventListener("request-notify-permission", onRequest);
+    };
   }, []);
 
   const dismiss = (markSeen = true) => {
