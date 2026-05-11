@@ -669,21 +669,26 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
           )}
           {!visuallyHidden && (
             <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.97 }}
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.97 }}
-              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              exit={{ opacity: 0, y: 40, scale: 0.92 }}
+              transition={{ type: "spring", damping: 22, stiffness: 260 }}
               dir="rtl"
-              className="fixed inset-x-2 top-4 bottom-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 sm:bottom-10 sm:w-full sm:max-w-lg bg-card border border-border rounded-2xl shadow-2xl z-[90] flex flex-col overflow-hidden"
+              className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md max-h-[88vh] bg-gradient-to-b from-card via-card to-card/95 border border-green-500/30 rounded-3xl shadow-[0_25px_60px_-15px_rgba(34,197,94,0.45),0_0_0_1px_rgba(34,197,94,0.1)] z-[90] flex flex-col overflow-hidden ring-1 ring-green-500/20"
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
+              <div className="relative flex items-center justify-between px-5 py-4 border-b border-border/60 bg-gradient-to-l from-green-500/10 via-transparent to-transparent">
                 <div className="flex items-center gap-2">
-                  <Heart size={20} className="text-green-500 fill-green-500" />
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Heart size={22} className="text-green-500 fill-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  </motion.div>
                   <h2 className="text-lg font-bold text-foreground">
                     {pickerOpen
                       ? "בחר מנה"
                       : view === "confirm"
-                      ? "ההזמנה הקבועה שלך"
+                      ? "המנה הקבועה שלך"
                       : hasFavorite
                       ? "עדכון הקבוע"
                       : "הגדרת הזמנה קבועה"}
