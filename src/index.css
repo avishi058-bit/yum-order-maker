@@ -242,17 +242,36 @@ html.pwa-installed .pwa-safe-screen {
   overflow: hidden;
 }
 
-html.pwa-installed .pwa-checkout-bar {
-  /* Tighten the bar in PWA: small top padding, just enough bottom padding
-     to clear the iOS Home Indicator with a minimal gap. */
+/* In PWA, anchor the checkout bar to the PHYSICAL bottom of the viewport
+   (iOS standalone shrinks `bottom:0` of fixed parents to the safe-area top
+   of the Home Indicator, leaving a black gap below the drawer). */
+html.pwa-installed .pwa-checkout-bar,
+html.pwa-installed .pwa-safe-screen .pwa-checkout-bar {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 60 !important;
   padding-top: 8px !important;
   padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
 }
 @media (display-mode: standalone) {
   .pwa-checkout-bar {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 60 !important;
     padding-top: 8px !important;
     padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
   }
+  /* Ensure scrollable cart content isn't hidden behind the fixed bar. */
+  .pwa-safe-screen .flex-1 {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+}
+html.pwa-installed .pwa-safe-screen .flex-1 {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
 }
 
 /* For elements that are themselves fixed to the top/bottom of the viewport
