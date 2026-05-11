@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Share, Plus, MoreVertical, Download, CheckCircle2, Smartphone } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
