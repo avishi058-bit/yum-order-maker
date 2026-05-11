@@ -47,9 +47,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // IMPORTANT: compute initial step synchronously so the OTP modal NEVER
   // flashes on first render in the kiosk.
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
-    if (isLoggedIn && customer) return "details";
-    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) return "details";
-    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) return "details";
+    const detailsOrPayment: "details" | "payment" = skipDetails ? "payment" : "details";
+    if (isLoggedIn && customer) return detailsOrPayment;
+    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) return detailsOrPayment;
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) return detailsOrPayment;
     return "phone";
   };
 
