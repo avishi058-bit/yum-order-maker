@@ -265,14 +265,18 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     if (added) setUsingDraft((prev) => [...prev, added]);
   };
 
-  const handleConfirmUse = () => {
+  const handleConfirmUse = (mode: "cart" | "checkout") => {
     if (usingDraft.length === 0) {
       toast({ title: "אין מנות בקבוע", variant: "destructive" });
       return;
     }
-    onUseFavorite(refreshIds(usingDraft));
+    onUseFavorite(refreshIds(usingDraft), mode);
     onClose();
-    toast({ title: "ההזמנה הקבועה שלך נוספה לעגלה ❤️" });
+    toast({
+      title: mode === "checkout"
+        ? "מעבירים אותך לתשלום ❤️"
+        : "ההזמנה הקבועה שלך נוספה לעגלה ❤️",
+    });
   };
 
   // ----- Setup-view actions (persists to favoriteItems) -----
