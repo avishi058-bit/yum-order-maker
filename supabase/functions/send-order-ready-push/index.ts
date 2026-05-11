@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, order_number, customer_name, customer_phone")
+      .select("id, order_number, customer_name, customer_phone, estimated_ready_at")
       .eq("id", order_id)
       .maybeSingle();
 
@@ -50,6 +50,17 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Compute minutes left until estimated ready time (best-effort static value;
+    // web push notifications cannot tick live like native iOS Live Activities).
+    let minutesLeft: number | null = null;
+    if (order.estimated_ready_at) {
+      const diffMs = new Date(order.estimated_ready_at).getTime() - Date.now();
+      minutesLeft = Math.max(0, Math.round(diffMs / 60000));
+    }
+    const etaSuffix = minutesLeft !== null && minutesLeft > 0
+      ? ` · מוכן בעוד ~${minutesLeft} דק׳ ⏱️`
+      : "";
 
     // Find subscriptions tied to this order OR matching the customer's phone
     // (covers customers who subscribed before the order existed, e.g. installed PWA earlier).
@@ -92,7 +103,7 @@ Deno.serve(async (req) => {
     } as const;
     const bodies = {
       ready: `הזמנה #${order.order_number} מוכנה לאיסוף`,
-      preparing: `הזמנה #${order.order_number} בהכנה — נעדכן אותך כשתהיה מוכנה`,
+      preparing: `הזמנה #${order.order_number} בהכנה${etaSuffix}`,
       almost_ready: `הזמנה #${order.order_number} כמעט מוכנה — תתחיל להתקדם 😋`,
     } as const;
 
