@@ -96,15 +96,19 @@ Deno.serve(async (req) => {
 
     const trackUrl = `/track?order=${order.order_number}&phone=${encodeURIComponent(order.customer_phone)}`;
 
+    const cta = "👇 לצפייה בטיימר בזמן אמת לחצו";
+
     const titles = {
       ready: "ההזמנה שלך מוכנה! 🎉",
       preparing: "ההזמנה התקבלה במטבח 👨‍🍳",
-      almost_ready: "עוד 5 דקות וההזמנה מוכנה! ⏰",
+      ten_minutes: "עוד כ־10 דק׳ וההמבורגר מוכן! ⏰",
+      almost_ready: "עוד כ־5 דק׳ וההמבורגר מוכן! 🔥",
     } as const;
     const bodies = {
       ready: `הזמנה #${order.order_number} מוכנה לאיסוף`,
-      preparing: `הזמנה #${order.order_number} בהכנה${etaSuffix}`,
-      almost_ready: `הזמנה #${order.order_number} כמעט מוכנה — תתחיל להתקדם 😋`,
+      preparing: `הזמנה #${order.order_number} בהכנה${etaSuffix}\n${cta}`,
+      ten_minutes: `הזמנה #${order.order_number} — עוד כ־10 דק׳\n${cta}`,
+      almost_ready: `הזמנה #${order.order_number} — עוד כ־5 דק׳\n${cta}`,
     } as const;
 
     const payload = JSON.stringify({
