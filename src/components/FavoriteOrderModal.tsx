@@ -313,8 +313,159 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { isAvailable } = useAvailability();
 
   const hasFavorite = !!(favoriteItems && favoriteItems.length > 0);
+
+  /** Compute availability issues for each line in usingDraft. */
+  const issuesByIndex = useMemo<Record<number, LineIssue[]>>(() => {
+    const out: Record<number, LineIssue[]> = {};
+    if (view !== "confirm") return out;
+    usingDraft.forEach((it, idx) => {
+      const lineIssues: LineIssue[] = [];
+      const mainId = it.menuItemId;
+      const mainMenu = menuItems.find((m) => m.id === mainId);
+      if (mainId && mainMenu && !isAvailable(mainId)) {
+        const alternatives = menuItems
+          .filter((m) => m.category === mainMenu.category && m.id !== mainId && isAvailable(m.id))
+          .slice(0, 6);
+        lineIssues.push({ kind: "main", missingId: mainId, missingName: mainMenu.name, alternatives });
+      }
+      it.toppings.forEach((tId) => {
+        if (!isAvailable(tId)) {
+          const t = findTopping(tId);
+          const alternatives = getAllToppings()
+            .filter((x) => x.id !== tId && isAvailable(x.id) && !it.toppings.includes(x.id))
+            .map((x) => ({ id: x.id, name: x.name, price: x.price }))
+            .slice(0, 8);
+          lineIssues.push({ kind: "topping", missingId: tId, missingName: t?.name ?? tId, alternatives });
+        }
+      });
+      if (it.withMeal && it.mealSideId) {
+        const availId = sideToAvailability[it.mealSideId];
+        if (availId && !isAvailable(availId)) {
+          const sideOpt = mealSideOptions.find((s) => s.id === it.mealSideId);
+          const alternatives = mealSideOptions.filter(
+            (s) => s.id !== it.mealSideId && isAvailable(sideToAvailability[s.id] ?? s.id),
+          );
+          const keepDrink = it.mealDrinkId ? mealDrinkToStandalone(it.mealDrinkId) : null;
+          lineIssues.push({
+            kind: "side",
+            missingId: it.mealSideId,
+            missingName: sideOpt?.name ?? it.mealSideId,
+            alternatives,
+            keepDrink,
+          });
+        }
+      }
+      if (it.withMeal && it.mealDrinkId) {
+        const availId = drinkToAvailabilityId[it.mealDrinkId];
+        if (availId && !isAvailable(availId)) {
+          const drinkOpt = mealDrinkOptions.find((d) => d.id === it.mealDrinkId);
+          const alternatives = mealDrinkOptions.filter(
+            (d) =>
+              d.id !== it.mealDrinkId &&
+              d.category === drinkOpt?.category &&
+              isAvailable(drinkToAvailabilityId[d.id] ?? d.id),
+          );
+          lineIssues.push({
+            kind: "drink",
+            missingId: it.mealDrinkId,
+            missingName: drinkOpt?.name ?? it.mealDrinkId,
+            alternatives,
+          });
+        }
+      }
+      if (lineIssues.length) out[idx] = lineIssues;
+    });
+    return out;
+  }, [usingDraft, isAvailable, view]);
+
+  const hasAnyIssues = Object.keys(issuesByIndex).length > 0;
+
+  // ---- Issue resolution helpers (operate on usingDraft) ----
+  const updateLine = (idx: number, updater: (it: CartItem) => CartItem) =>
+    setUsingDraft((prev) => prev.map((it, i) => (i === idx ? updater(it) : it)));
+
+  const replaceMain = (idx: number, newMenuItem: MenuItem) => {
+    updateLine(idx, (it) => ({
+      ...it,
+      menuItemId: newMenuItem.id,
+      name: newMenuItem.name,
+      price: newMenuItem.price,
+    }));
+    toast({ title: `הוחלף ל${newMenuItem.name}` });
+  };
+
+  const removeLine = (idx: number) => {
+    setUsingDraft((prev) => prev.filter((_, i) => i !== idx));
+    toast({ title: "המנה הוסרה מההזמנה הזאת" });
+  };
+
+  const replaceTopping = (idx: number, oldId: string, newId: string, newName: string) => {
+    updateLine(idx, (it) => ({
+      ...it,
+      toppings: it.toppings.map((t) => (t === oldId ? newId : t)),
+    }));
+    toast({ title: `הוחלף ל${newName}` });
+  };
+
+  const removeTopping = (idx: number, oldId: string) => {
+    updateLine(idx, (it) => ({ ...it, toppings: it.toppings.filter((t) => t !== oldId) }));
+    toast({ title: "התוספת הוסרה" });
+  };
+
+  const replaceSide = (idx: number, newSideId: string, newName: string) => {
+    updateLine(idx, (it) => ({ ...it, mealSideId: newSideId }));
+    toast({ title: `הצד הוחלף ל${newName}` });
+  };
+
+  /** Drop the meal-deal but keep the drink as a separate cart line (full price). */
+  const dropSideKeepDrink = (idx: number) => {
+    setUsingDraft((prev) => {
+      const target = prev[idx];
+      if (!target || !target.mealDrinkId) return prev;
+      const standalone = mealDrinkToStandalone(target.mealDrinkId);
+      const updatedTarget: CartItem = {
+        ...target,
+        withMeal: false,
+        mealSideId: undefined,
+        mealDrinkId: undefined,
+      };
+      const out = [...prev];
+      out[idx] = updatedTarget;
+      if (standalone) {
+        out.push({
+          id: `${standalone.menuItem.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          menuItemId: standalone.menuItem.id,
+          name: standalone.menuItem.name,
+          price: standalone.menuItem.price,
+          quantity: target.quantity,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+        });
+      }
+      return out;
+    });
+    toast({ title: "העסקית בוטלה — השתייה נשארה במחיר מלא" });
+  };
+
+  /** Drop the entire meal upgrade (no side, no drink). */
+  const dropMealEntirely = (idx: number) => {
+    updateLine(idx, (it) => ({
+      ...it,
+      withMeal: false,
+      mealSideId: undefined,
+      mealDrinkId: undefined,
+    }));
+    toast({ title: "השדרוג לעסקית בוטל" });
+  };
+
+  const replaceDrink = (idx: number, newDrinkId: string, newName: string) => {
+    updateLine(idx, (it) => ({ ...it, mealDrinkId: newDrinkId }));
+    toast({ title: `השתייה הוחלפה ל${newName}` });
+  };
 
   // Reset state every time the modal opens.
   useEffect(() => {
