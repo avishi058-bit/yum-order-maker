@@ -669,21 +669,26 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
           )}
           {!visuallyHidden && (
             <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.97 }}
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.97 }}
-              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              exit={{ opacity: 0, y: 40, scale: 0.92 }}
+              transition={{ type: "spring", damping: 22, stiffness: 260 }}
               dir="rtl"
-              className="fixed inset-x-2 top-4 bottom-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 sm:bottom-10 sm:w-full sm:max-w-lg bg-card border border-border rounded-2xl shadow-2xl z-[90] flex flex-col overflow-hidden"
+              className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md max-h-[88vh] bg-gradient-to-b from-card via-card to-card/95 border border-green-500/30 rounded-3xl shadow-[0_25px_60px_-15px_rgba(34,197,94,0.45),0_0_0_1px_rgba(34,197,94,0.1)] z-[90] flex flex-col overflow-hidden ring-1 ring-green-500/20"
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
+              <div className="relative flex items-center justify-between px-5 py-4 border-b border-border/60 bg-gradient-to-l from-green-500/10 via-transparent to-transparent">
                 <div className="flex items-center gap-2">
-                  <Heart size={20} className="text-green-500 fill-green-500" />
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <Heart size={22} className="text-green-500 fill-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  </motion.div>
                   <h2 className="text-lg font-bold text-foreground">
                     {pickerOpen
                       ? "בחר מנה"
                       : view === "confirm"
-                      ? "ההזמנה הקבועה שלך"
+                      ? "המנה הקבועה שלך"
                       : hasFavorite
                       ? "עדכון הקבוע"
                       : "הגדרת הזמנה קבועה"}
@@ -885,14 +890,20 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                       הוסף מנה לפעם הזאת
                     </button>
                     <div className="flex flex-col gap-2 pt-2">
-                      <button
+                      <motion.button
                         onClick={() => handleConfirmUse("checkout")}
                         disabled={hasAnyIssues}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                        animate={hasAnyIssues ? {} : {
+                          scale: [1, 1.04, 1, 1.04, 1],
+                          rotate: [0, -1.2, 0, 1.2, 0],
+                        }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                        whileTap={{ scale: 0.96 }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-l from-green-500 via-green-600 to-green-500 hover:from-green-600 hover:to-green-600 text-white font-bold text-base transition-colors shadow-[0_10px_30px_-5px_rgba(34,197,94,0.6)] ring-2 ring-green-400/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none"
                       >
-                        <Check size={18} />
-                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע"}
-                      </button>
+                        <Check size={20} />
+                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע שלי"}
+                      </motion.button>
                       <button
                         onClick={() => handleConfirmUse("cart")}
                         disabled={hasAnyIssues}
