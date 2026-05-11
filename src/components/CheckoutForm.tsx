@@ -7,7 +7,7 @@ import { shouldChargeMealUpgrade, MEAL_UPGRADE_PRICE } from "@/lib/cartPricing";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
-import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
