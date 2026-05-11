@@ -184,6 +184,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const scrollRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
+  // Lock the page-behind-the-modal so iOS doesn't rubber-band/scroll the
+  // background instead of the sheet content.
+  useBodyScrollLock(true);
+
   // Drag state (refs only — no re-render while dragging)
   const dragState = useRef({
     active: false,
