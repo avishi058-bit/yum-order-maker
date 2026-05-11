@@ -95,8 +95,15 @@ const Index = () => {
     setInstallModalOpen(true);
   }, [isIosDevice, canNativeInstall, promptInstall]);
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
+  /**
+   * When set, the next ItemCustomizer confirm/close resolves this promise
+   * INSTEAD of mutating the cart. Used by the favorite-order modal to let
+   * the user build/edit favorite items via the same UI as regular ordering.
+   */
+  const customizerResolverRef = useRef<((result: CustomizerResult | null) => void) | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
+
 
   // Re-register the cart target whenever the button mounts/unmounts.
   // The button only renders once the cart has items, so on the very first
