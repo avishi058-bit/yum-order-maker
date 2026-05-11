@@ -30,7 +30,8 @@ const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
 const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
 import IosInstallModal from "@/components/IosInstallModal";
-import { isStandalonePwa } from "@/lib/push";
+import { isStandalonePwa, isIos } from "@/lib/push";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -76,6 +77,23 @@ const Index = () => {
   const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
+  const isIosDevice = typeof window !== "undefined" ? isIos() : false;
+  const { canPrompt: canNativeInstall, promptInstall } = useInstallPrompt();
+  const handleInstallClick = useCallback(async () => {
+    // iPhone/iPad: Safari can't trigger install programmatically — show manual steps.
+    if (isIosDevice) {
+      setInstallModalOpen(true);
+      return;
+    }
+    // Android (Chrome/Edge): trigger the native install prompt if browser captured it.
+    if (canNativeInstall) {
+      const outcome = await promptInstall();
+      if (outcome === "unavailable") setInstallModalOpen(true);
+      return;
+    }
+    // Fallback (desktop / browser hasn't fired the event yet): show instructions.
+    setInstallModalOpen(true);
+  }, [isIosDevice, canNativeInstall, promptInstall]);
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
@@ -335,7 +353,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {!isInstalled && (
               <button
-                onClick={() => setInstallModalOpen(true)}
+                onClick={handleInstallClick}
                 className="animate-wiggle-dance flex items-center gap-1.5 px-3 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors text-xs font-bold shadow-lg shadow-green-600/40"
                 aria-label="הוסף למסך הבית"
               >
