@@ -331,11 +331,10 @@ const Index = () => {
               <button
                 onClick={() => setInstallModalOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-accent/15 text-accent-foreground hover:bg-accent/25 transition-colors text-xs font-bold border border-accent/30"
-                aria-label="הוסף את הבקתה למסך הבית"
+                aria-label="הוסף למסך הבית"
               >
-                <Smartphone size={14} />
-                <span className="hidden xs:inline sm:inline">הוסף למסך הבית</span>
-                <span className="xs:hidden sm:hidden">למסך הבית</span>
+                <span>הוסף למסך הבית</span>
+                <span aria-hidden>📲</span>
               </button>
             )}
             {isLoggedIn ? (
