@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Bell, Home } from "lucide-react";
+import { X, Bell, Home, Share, Plus, MoreVertical } from "lucide-react";
 import addToHomeImg from "@/assets/add-to-home-screen-ios.jpeg";
+import { isIos } from "@/lib/push";
 
 interface Props {
   open: boolean;
@@ -11,6 +12,7 @@ interface Props {
 
 const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
   const [step, setStep] = useState<1 | 2>(1);
+  const iOS = typeof window !== "undefined" ? isIos() : false;
 
   useEffect(() => {
     if (open) setStep(postInstallOpen ? 2 : 1);
@@ -48,7 +50,9 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                 <X size={16} />
               </button>
               <h3 className="text-base font-black text-foreground">
-                {step === 1 ? "הוספה למסך הבית 📲" : "מעולה! היישום הותקן ✅"}
+                {step === 1
+                  ? (iOS ? "הוספה למסך הבית 📲" : "התקנת היישום 📲")
+                  : "מעולה! היישום הותקן ✅"}
               </h3>
               <div className="w-8" />
             </div>
@@ -73,13 +77,47 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                     </p>
                   </motion.div>
 
-                  <div className="p-2 bg-white">
-                    <img
-                      src={addToHomeImg}
-                      alt="הוראות להוספת הבקתה למסך הבית באייפון"
-                      className="w-full h-auto rounded-2xl"
-                    />
-                  </div>
+                  {iOS ? (
+                    <div className="p-2 bg-white">
+                      <img
+                        src={addToHomeImg}
+                        alt="הוראות להוספת הבקתה למסך הבית באייפון"
+                        className="w-full h-auto rounded-2xl"
+                      />
+                    </div>
+                  ) : (
+                    <div className="px-4 pb-3 pt-1 space-y-3 text-right">
+                      <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm">1</div>
+                          <p className="text-sm font-bold text-foreground leading-relaxed flex-1 flex items-center gap-1 flex-wrap">
+                            לחצ/י על תפריט הדפדפן
+                            <MoreVertical size={16} className="inline text-primary" />
+                            (שלוש נקודות בפינה)
+                          </p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm">2</div>
+                          <p className="text-sm font-bold text-foreground leading-relaxed flex-1">
+                            בחר/י <span className="text-primary">"הוסף למסך הבית"</span>
+                            <span className="inline-flex items-center gap-1 mx-1">
+                              <Plus size={14} className="text-primary" />
+                            </span>
+                            ואשר/י את ההוספה
+                          </p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm">3</div>
+                          <p className="text-sm font-bold text-foreground leading-relaxed flex-1">
+                            סגר/י את הדפדפן וכנס/י ליישום דרך <span className="text-primary">האייקון במסך הבית</span> 🏠
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                        💡 רק דרך האייקון במסך הבית תוכל/י לאשר התראות ולקבל עדכון מתי ההזמנה מוכנה
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="px-4 py-3 border-t border-border">
                   <button
