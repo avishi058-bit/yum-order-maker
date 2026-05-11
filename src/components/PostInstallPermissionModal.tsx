@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Sparkles, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import IosInstallModal from "@/components/IosInstallModal";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
 const isIos = () => {
   if (typeof navigator === "undefined") return false;
