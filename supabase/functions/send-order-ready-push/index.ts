@@ -95,17 +95,18 @@ Deno.serve(async (req) => {
     }
 
     const trackUrl = `/track?order=${order.order_number}&phone=${encodeURIComponent(order.customer_phone)}`;
+    const wazeUrl = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה";
 
     const cta = "👇 לצפייה בטיימר בזמן אמת לחצו";
 
     const titles = {
-      ready: "ההזמנה שלך מוכנה! 🎉",
+      ready: "ההזמנה שלך מוכנה ✅🥳",
       preparing: "ההזמנה התקבלה במטבח 👨‍🍳",
       ten_minutes: "עוד כ־10 דק׳ וההמבורגר מוכן! ⏰",
       almost_ready: "עוד כ־5 דק׳ וההמבורגר מוכן! 🔥",
     } as const;
     const bodies = {
-      ready: `הזמנה #${order.order_number} מוכנה לאיסוף`,
+      ready: `הזמנה #${order.order_number} מוכנה לאיסוף\n👇 לניווט למסעדה לחץ`,
       preparing: `הזמנה #${order.order_number} בהכנה${etaSuffix}\n${cta}`,
       ten_minutes: `הזמנה #${order.order_number} — עוד כ־10 דק׳\n${cta}`,
       almost_ready: `הזמנה #${order.order_number} — עוד כ־5 דק׳\n${cta}`,
@@ -115,8 +116,16 @@ Deno.serve(async (req) => {
       title: titles[notifType],
       body: bodies[notifType],
       tag: `order-${notifType}-${order.order_number}`,
-      url: trackUrl,
+      url: notifType === "ready" ? wazeUrl : trackUrl,
+      waze_url: wazeUrl,
+      track_url: trackUrl,
       order_number: order.order_number,
+      actions: notifType === "ready"
+        ? [
+            { action: "waze", title: "🧭 נווט בוויז" },
+            { action: "track", title: "⏱ פתח טיימר" },
+          ]
+        : [{ action: "track", title: "⏱ פתח טיימר" }],
     });
 
     let sent = 0;

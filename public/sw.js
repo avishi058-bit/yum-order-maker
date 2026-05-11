@@ -36,8 +36,11 @@ self.addEventListener("push", (event) => {
     renotify: true,
     requireInteraction: true,
     vibrate: [200, 100, 200, 100, 200],
+    actions: Array.isArray(data.actions) ? data.actions : [],
     data: {
       url: data.url || "/",
+      waze_url: data.waze_url,
+      track_url: data.track_url,
       order_number: data.order_number,
     },
   };
@@ -47,12 +50,20 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/";
+  const d = event.notification.data || {};
+  let targetUrl = d.url || "/";
+  if (event.action === "waze" && d.waze_url) targetUrl = d.waze_url;
+  else if (event.action === "track" && d.track_url) targetUrl = d.track_url;
+
+  const isExternal = /^https?:\/\//i.test(targetUrl) && !targetUrl.startsWith(self.location.origin);
 
   event.waitUntil(
     (async () => {
+      if (isExternal) {
+        await self.clients.openWindow(targetUrl);
+        return;
+      }
       const allClients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      // If a window with our origin is open, focus it and navigate
       for (const client of allClients) {
         try {
           await client.focus();
