@@ -648,17 +648,8 @@ const Index = () => {
                       window.dispatchEvent(new CustomEvent("request-notify-permission"));
                     }, 2500);
                   }
-                  // Offer to save the just-ordered dishes as the customer's
-                  // "regular" — only when they don't already have one saved.
-                  // Slight delay so the success toast lands first.
-                  if (!favoriteItems || favoriteItems.length === 0) {
-                    const eligible = orderedSnapshot.filter(
-                      (it) => it.menuItemId && it.name !== "רטבים",
-                    );
-                    if (eligible.length > 0) {
-                      setTimeout(() => setSaveFavoritePrompt(eligible), 1500);
-                    }
-                  }
+                  // Save-as-favorite prompt is now shown BEFORE payment
+                  // (inside CheckoutForm), not after the order completes.
                 }
               }}
             />
@@ -706,13 +697,7 @@ const Index = () => {
           <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
         )}
 
-        {saveFavoritePrompt && (
-          <SaveAsFavoriteModal
-            open={!!saveFavoritePrompt}
-            items={saveFavoritePrompt}
-            onClose={() => setSaveFavoritePrompt(null)}
-          />
-        )}
+        {/* SaveAsFavoriteModal moved into CheckoutForm (pre-payment). */}
 
         {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && (
           <SavedCartModal
