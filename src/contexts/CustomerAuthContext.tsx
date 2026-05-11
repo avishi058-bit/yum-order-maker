@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import type { CartItem } from "@/components/CartDrawer";
 
 const DEVICE_TOKEN_KEY = "habakta_device_token";
 const CUSTOMER_KEY = "habakta_customer";
+const FAVORITE_KEY = "habakta_favorite";
 const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-auth`;
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
@@ -17,15 +19,14 @@ interface CustomerAuthContextType {
   customer: CustomerData | null;
   loading: boolean;
   isLoggedIn: boolean;
-  /** Register new customer after OTP */
+  /** The customer's saved "usual" order (favorite). null if not set. */
+  favoriteItems: CartItem[] | null;
+  /** Persist a new favorite for the current logged-in customer. */
+  setFavoriteItems: (items: CartItem[] | null) => Promise<void>;
   register: (phone: string, name: string, termsAccepted: boolean, marketingConsent: boolean) => Promise<void>;
-  /** Login returning customer after OTP */
   login: (phone: string) => Promise<void>;
-  /** Logout from this device */
   logout: () => Promise<void>;
-  /** Logout from all devices */
   logoutAll: () => Promise<void>;
-  /** Silently create or link a customer after a guest checkout, so future visits auto-login */
   linkFromOrder: (phone: string, name: string) => Promise<void>;
 }
 
@@ -44,13 +45,19 @@ async function callAuth(action: string, body: Record<string, unknown>) {
 
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
+  const [favoriteItems, setFavoriteState] = useState<CartItem[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Try auto-login on mount
   useEffect(() => {
+    // Restore cached favorite immediately so UI doesn't flash
+    try {
+      const cachedFav = localStorage.getItem(FAVORITE_KEY);
+      if (cachedFav) setFavoriteState(JSON.parse(cachedFav));
+    } catch {}
+
     const token = localStorage.getItem(DEVICE_TOKEN_KEY);
     if (!token) {
-      // Try loading cached customer data
       try {
         const cached = localStorage.getItem(CUSTOMER_KEY);
         if (cached) setCustomer(JSON.parse(cached));
@@ -61,14 +68,24 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
 
     callAuth("auto-login", { deviceToken: token })
       .then((data) => {
-        const c = data.customer as CustomerData;
-        setCustomer(c);
+        const c = data.customer as CustomerData & { favoriteItems?: CartItem[] | null };
+        setCustomer({
+          name: c.name,
+          phone: c.phone,
+          isReturning: c.isReturning,
+          loginCount: c.loginCount,
+          lastLoginAt: c.lastLoginAt,
+        });
         localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
+        const fav = c.favoriteItems ?? null;
+        setFavoriteState(fav);
+        if (fav) localStorage.setItem(FAVORITE_KEY, JSON.stringify(fav));
+        else localStorage.removeItem(FAVORITE_KEY);
       })
       .catch(() => {
-        // Token invalid, clear
         localStorage.removeItem(DEVICE_TOKEN_KEY);
         localStorage.removeItem(CUSTOMER_KEY);
+        localStorage.removeItem(FAVORITE_KEY);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -96,7 +113,9 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
     localStorage.removeItem(DEVICE_TOKEN_KEY);
     localStorage.removeItem(CUSTOMER_KEY);
+    localStorage.removeItem(FAVORITE_KEY);
     setCustomer(null);
+    setFavoriteState(null);
   }, []);
 
   const logoutAll = useCallback(async () => {
@@ -107,11 +126,12 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
     localStorage.removeItem(DEVICE_TOKEN_KEY);
     localStorage.removeItem(CUSTOMER_KEY);
+    localStorage.removeItem(FAVORITE_KEY);
     setCustomer(null);
+    setFavoriteState(null);
   }, [customer]);
 
   const linkFromOrder = useCallback(async (phone: string, name: string) => {
-    // Don't override an existing session
     if (localStorage.getItem(DEVICE_TOKEN_KEY)) return;
     try {
       const data = await callAuth("link-from-order", { phone, name });
@@ -121,8 +141,21 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [saveSession]);
 
+  const setFavoriteItems = useCallback(async (items: CartItem[] | null) => {
+    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
+    if (!token) throw new Error("not_logged_in");
+    await callAuth("set-favorite", { deviceToken: token, items });
+    setFavoriteState(items);
+    if (items) localStorage.setItem(FAVORITE_KEY, JSON.stringify(items));
+    else localStorage.removeItem(FAVORITE_KEY);
+  }, []);
+
   return (
-    <CustomerAuthContext.Provider value={{ customer, loading, isLoggedIn: !!customer, register, login, logout, logoutAll, linkFromOrder }}>
+    <CustomerAuthContext.Provider value={{
+      customer, loading, isLoggedIn: !!customer,
+      favoriteItems, setFavoriteItems,
+      register, login, logout, logoutAll, linkFromOrder,
+    }}>
       {children}
     </CustomerAuthContext.Provider>
   );

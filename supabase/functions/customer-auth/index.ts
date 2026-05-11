@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       // Find customer by device token
       const { data: customer, error: findError } = await supabase
         .from('customers')
-        .select('id, name, phone, marketing_consent, login_count, last_login_at')
+        .select('id, name, phone, marketing_consent, login_count, last_login_at, favorite_items')
         .eq('device_token', deviceToken)
         .maybeSingle()
 
@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
           isReturning: true,
           loginCount: (customer.login_count || 0) + 1,
           lastLoginAt: customer.last_login_at,
+          favoriteItems: customer.favorite_items ?? null,
         },
       })
     }
@@ -276,6 +277,33 @@ Deno.serve(async (req) => {
           loginCount: customer.login_count,
         },
       })
+    }
+
+    // ─── Set favorite order: store the customer's "usual" order ───
+    if (action === 'set-favorite') {
+      const SetFavSchema = z.object({
+        deviceToken: z.string().min(32).max(128),
+        items: z.array(z.any()).max(50).nullable(),
+      })
+      const parsed = SetFavSchema.safeParse(body)
+      if (!parsed.success) return json({ error: 'נתונים לא תקינים' }, 400)
+
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('device_token', parsed.data.deviceToken)
+        .maybeSingle()
+      if (!customer) return json({ error: 'לא מורשה' }, 401)
+
+      const { error } = await supabase
+        .from('customers')
+        .update({ favorite_items: parsed.data.items })
+        .eq('id', customer.id)
+      if (error) {
+        console.error('set-favorite error:', error)
+        return json({ error: 'שגיאה בשמירה' }, 500)
+      }
+      return json({ success: true })
     }
 
     return json({ error: 'Invalid action' }, 400)

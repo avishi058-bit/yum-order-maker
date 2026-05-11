@@ -28,6 +28,7 @@ const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"
 const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
+const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa } from "@/lib/push";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
@@ -71,6 +72,8 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
+  const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
@@ -325,7 +328,10 @@ const Index = () => {
       {/* Top action row: hamburger menu + customer greeting / login */}
       {!isStation && (
         <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
-          <SideMenu onLoginClick={() => setAuthModalOpen(true)} />
+          <SideMenu
+            onLoginClick={() => setAuthModalOpen(true)}
+            onUpdateFavorite={() => { setFavoriteStartInSetup(true); setFavoriteModalOpen(true); }}
+          />
           <div className="flex items-center gap-2">
             {!isInstalled && (
               <button
@@ -347,7 +353,26 @@ const Index = () => {
                 <LogIn size={16} />
                 התחברות
               </button>
-            )}
+      )}
+
+      {/* "Welcome back" hero strip + favorite-order CTA — logged-in customers only */}
+      {!isStation && isLoggedIn && customer && !isClosed && (
+        <div className="px-4 py-4 bg-gradient-to-l from-green-500/10 via-primary/5 to-transparent border-b border-border" dir="rtl">
+          <h2 className="text-xl sm:text-2xl font-black text-foreground leading-tight">
+            כיף שחזרת {customer.name.split(" ")[0]}🥰✨
+          </h2>
+          <button
+            onClick={() => {
+              setFavoriteStartInSetup(false);
+              setFavoriteModalOpen(true);
+            }}
+            className="mt-3 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-green-600/30 transition-colors"
+          >
+            <span aria-hidden>❤️</span>
+            אני רוצה את הקבוע שלי
+          </button>
+        </div>
+      )}
           </div>
         </div>
       )}
@@ -605,6 +630,18 @@ const Index = () => {
         )}
 
         <IosInstallModal open={installModalOpen} onClose={() => setInstallModalOpen(false)} />
+
+        <FavoriteOrderModal
+          open={favoriteModalOpen}
+          onClose={() => setFavoriteModalOpen(false)}
+          currentCart={cart}
+          startInSetup={favoriteStartInSetup}
+          onUseFavorite={(items) => {
+            // Append the favorite to whatever the user already has in the cart.
+            setCart((prev) => [...prev, ...items]);
+            setCartOpen(true);
+          }}
+        />
       </Suspense>
     </div>
   );
