@@ -238,10 +238,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   // Drag-to-close — pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const sc = scrollRef.current;
-    if (sc && sc.scrollTop > 0) return;
+    const target = e.target as HTMLElement | null;
+    // Only enforce the "scroll is at top" guard when the drag actually starts
+    // INSIDE the scrollable content. When the user grabs the header / pull-handle
+    // (outside the scroll container), allow drag-to-close regardless of scroll
+    // position — important for kiosk where content is often scrolled past hero.
+    const insideScroll = !!(sc && target && sc.contains(target));
+    if (insideScroll && sc && sc.scrollTop > 0) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
 
-    const target = e.target as HTMLElement | null;
     if (target?.closest("button, a, input, textarea, select, label")) return;
 
     dragState.current.active = true;
