@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Sparkles, X } from "lucide-react";
+import { Bell, Sparkles, X, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import IosInstallModal from "@/components/IosInstallModal";
+
+const isIos = () => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(ua) && "ontouchend" in document);
+};
 
 const SEEN_KEY = "habakta_post_install_perm_seen";
 const INSTALLED_KEY = "habakta_pwa_installed";
@@ -25,6 +32,8 @@ type Variant = "install" | "order";
 const PostInstallPermissionModal = () => {
   const [open, setOpen] = useState(false);
   const [variant, setVariant] = useState<Variant>("install");
+  const [step, setStep] = useState<"ask" | "explain">("ask");
+  const [iosInstallOpen, setIosInstallOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -72,6 +81,7 @@ const PostInstallPermissionModal = () => {
       try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
     }
     setOpen(false);
+    setStep("ask");
   };
 
   const handleEnable = async () => {
@@ -90,6 +100,11 @@ const PostInstallPermissionModal = () => {
         } catch {}
       }
     } catch {}
+    // After permission flow — if not installed yet, explain why to add to home screen
+    if (!isStandalone()) {
+      setStep("explain");
+      return;
+    }
     dismiss();
   };
 
@@ -121,66 +136,135 @@ const PostInstallPermissionModal = () => {
             <X size={16} />
           </button>
 
-          <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent px-6 pt-8 pb-4 text-center">
-            <motion.div
-              initial={{ scale: 0, rotate: -20 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.1 }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-lg mb-3"
-            >
-              <Bell size={30} />
-            </motion.div>
-            <h2 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
-              {variant === "order" ? <>רוצה להתעדכן בזמן אמת?</> : <>הבקתה מותקנת! <Sparkles size={18} className="text-primary" /></>}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {variant === "order" ? "מתי ההמבורגר שלך מוכן 🍔" : "רק עוד אישור קטן ואתה מסודר"}
-            </p>
-          </div>
+          {step === "ask" ? (
+            <>
+              <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent px-6 pt-8 pb-4 text-center">
+                <motion.div
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.1 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-lg mb-3"
+                >
+                  <Bell size={30} />
+                </motion.div>
+                <h2 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
+                  {variant === "order" ? <>רוצה להתעדכן בזמן אמת?</> : <>הבקתה מותקנת! <Sparkles size={18} className="text-primary" /></>}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {variant === "order" ? "מתי ההמבורגר שלך מוכן 🍔" : "רק עוד אישור קטן ואתה מסודר"}
+                </p>
+              </div>
 
-          <div className="px-6 pb-6 pt-2 space-y-4">
-            <p className="text-sm text-foreground leading-relaxed text-center">
-              {variant === "order" ? (
-                <>
-                  אשר התראות ונעדכן אותך ברגע שההזמנה שלך
-                  <br />
-                  <span className="font-bold">עוברת להכנה ומוכנה לאיסוף ⏱️</span>
-                  <br />
-                  <span className="text-muted-foreground text-xs">
-                    גם אם תסגור את הדפדפן — נשלח לך התראה
-                  </span>
-                </>
-              ) : (
-                <>
-                  אשר התראות כדי לראות בזמן אמת בחלון העליון
-                  <br />
-                  <span className="font-bold">עוד כמה זמן ההזמנה שלך מוכנה ⏱️</span>
-                  <br />
-                  <span className="text-muted-foreground text-xs">
-                    (החלון יעלם אוטומטית ברגע שההזמנה תושלם)
-                  </span>
-                </>
-              )}
-            </p>
+              <div className="px-6 pb-6 pt-2 space-y-4">
+                <p className="text-sm text-foreground leading-relaxed text-center">
+                  {variant === "order" ? (
+                    <>
+                      אשר התראות ונעדכן אותך ברגע שההזמנה שלך
+                      <br />
+                      <span className="font-bold">עוברת להכנה ומוכנה לאיסוף ⏱️</span>
+                      <br />
+                      <span className="text-muted-foreground text-xs">
+                        גם אם תסגור את הדפדפן — נשלח לך התראה
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      אשר התראות כדי לראות בזמן אמת בחלון העליון
+                      <br />
+                      <span className="font-bold">עוד כמה זמן ההזמנה שלך מוכנה ⏱️</span>
+                      <br />
+                      <span className="text-muted-foreground text-xs">
+                        (החלון יעלם אוטומטית ברגע שההזמנה תושלם)
+                      </span>
+                    </>
+                  )}
+                </p>
 
-            <div className="flex flex-col gap-2">
-              <Button
-                onClick={handleEnable}
-                className="w-full h-12 text-base font-bold rounded-xl"
-                size="lg"
-              >
-                <Bell size={18} className="ml-2" />
-                כן, הפעל התראות
-              </Button>
-              <Button
-                onClick={() => dismiss(true)}
-                variant="ghost"
-                className="w-full text-sm text-muted-foreground"
-              >
-                לא עכשיו
-              </Button>
-            </div>
-          </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handleEnable}
+                    className="w-full h-12 text-base font-bold rounded-xl"
+                    size="lg"
+                  >
+                    <Bell size={18} className="ml-2" />
+                    כן, הפעל התראות
+                  </Button>
+                  <Button
+                    onClick={() => dismiss(true)}
+                    variant="ghost"
+                    className="w-full text-sm text-muted-foreground"
+                  >
+                    לא עכשיו
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent px-6 pt-8 pb-4 text-center">
+                <motion.div
+                  initial={{ scale: 0, rotate: -10 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.1 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground shadow-lg mb-3"
+                >
+                  <Home size={30} />
+                </motion.div>
+                <h2 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
+                  עוד צעד קטן 📲
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  שההתראות באמת יגיעו אליך בזמן
+                </p>
+              </div>
+
+              <div className="px-6 pb-6 pt-2 space-y-4">
+                <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4 text-right space-y-2">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    הוסף את <b>הבקתה</b> למסך הבית של הטלפון 🏠✨
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    ככה ההתראה תקפוץ אצלך גם כשהדפדפן סגור — ותדע בדיוק
+                    מתי ההמבורגר חם ומוכן לאיסוף 🍔🔔
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    בלי האייקון במסך הבית — חלק מהטלפונים (במיוחד אייפון)
+                    פשוט לא יקפיצו לך התראה ⚠️
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {isIos() ? (
+                    <Button
+                      onClick={() => setIosInstallOpen(true)}
+                      className="w-full h-12 text-base font-bold rounded-xl"
+                      size="lg"
+                    >
+                      <Home size={18} className="ml-2" />
+                      איך מוסיפים? תראו לי 👀
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => dismiss(true)}
+                      className="w-full h-12 text-base font-bold rounded-xl"
+                      size="lg"
+                    >
+                      <Home size={18} className="ml-2" />
+                      הבנתי, אוסיף למסך הבית
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => dismiss(true)}
+                    variant="ghost"
+                    className="w-full text-sm text-muted-foreground"
+                  >
+                    אולי אחר כך
+                  </Button>
+                </div>
+              </div>
+              <IosInstallModal open={iosInstallOpen} onClose={() => { setIosInstallOpen(false); dismiss(true); }} />
+            </>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
