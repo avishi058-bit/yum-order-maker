@@ -29,9 +29,11 @@ interface CheckoutFormProps {
   freeSauces?: number;
   onClose: () => void;
   onSuccess: (orderNumber?: number, phone?: string) => void;
+  /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
+  skipDetails?: boolean;
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false }, ref) => {
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
   const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
