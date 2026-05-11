@@ -168,13 +168,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     return opt?.category === "beer";
   };
 
+  // After picking a drink, smoothly scroll the user down to the
+  // "add to order" button so it's clear what to do next.
+  const scrollToDrinkAddButton = () => {
+    requestAnimationFrame(() => {
+      drinkAddBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+  };
+
   const handleDrinkSelection = (drinkId: string) => {
     if (isAlcoholDrinkId(drinkId)) {
-      alcoholConsent.guard(buildAlcoholDrinkGateItem(drinkId), () => setSelectedDrink(drinkId));
+      alcoholConsent.guard(buildAlcoholDrinkGateItem(drinkId), () => {
+        setSelectedDrink(drinkId);
+        scrollToDrinkAddButton();
+      });
       return;
     }
 
     setSelectedDrink(drinkId);
+    scrollToDrinkAddButton();
   };
 
   // Refs for direct DOM transforms (no re-renders during drag/scroll)
@@ -183,6 +195,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImgRef = useRef<HTMLImageElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const drinkAddBtnRef = useRef<HTMLButtonElement>(null);
 
   // Lock the page-behind-the-modal so iOS doesn't rubber-band/scroll the
   // background instead of the sheet content.
@@ -1188,7 +1201,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           <button
                             key={drink.id}
                             disabled={unavailable}
-                            onClick={() => !unavailable && setSelectedDrink(drink.id)}
+                            onClick={() => { if (!unavailable) { setSelectedDrink(drink.id); scrollToDrinkAddButton(); } }}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
@@ -1237,6 +1250,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     </div>
 
                     <button
+                      ref={drinkAddBtnRef}
                       onClick={() => {
                         if (isAlcoholDrinkId(selectedDrink)) {
                           alcoholConsent.guard(
