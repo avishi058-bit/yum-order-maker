@@ -94,7 +94,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
                 <input
                   type="tel"
                   inputMode="tel"
-                  placeholder="050-1234567"
+                  placeholder="0501234567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-background text-foreground text-right"
