@@ -72,11 +72,34 @@ const Install = () => {
           </p>
         </motion.div>
 
+        {/* Fun Fact — bouncy & friendly */}
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 12, delay: 0.08 }}
+          className="rounded-2xl bg-gradient-to-br from-emerald-400/20 via-emerald-500/10 to-teal-400/5 border-2 border-emerald-500/60 p-4 text-right shadow-lg"
+        >
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <p className="text-sm font-black text-foreground leading-relaxed">
+              💡 הידעת? 🤯
+            </p>
+            <p className="text-sm font-bold text-foreground leading-relaxed mt-1">
+              היישומון של הבקתה שוקל בערך כמו תמונה אחת בגלריה שלך 📸
+            </p>
+            <p className="text-sm font-bold text-foreground leading-relaxed">
+              כך שהוא כמעט <span className="text-emerald-600 font-black">ולא</span> תופס מקום בטלפון 🍔
+            </p>
+          </motion.div>
+        </motion.div>
+
         {/* Why install */}
         <motion.div
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.15 }}
           className="rounded-2xl bg-gradient-to-br from-amber-500/15 via-primary/10 to-amber-500/5 border-2 border-amber-500/50 p-4 text-right shadow-lg"
         >
           <p className="text-sm font-bold text-foreground leading-relaxed">
