@@ -257,14 +257,14 @@ const PostInstallPermissionModal = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {isIos() ? (
+                  {canPrompt ? (
                     <Button
-                      onClick={() => setIosInstallOpen(true)}
+                      onClick={handleAndroidInstall}
                       className="w-full h-12 text-base font-bold rounded-xl"
                       size="lg"
                     >
                       <Home size={18} className="ml-2" />
-                      איך מוסיפים? תראו לי 👀
+                      הוסף עכשיו למסך הבית 📲
                     </Button>
                   ) : (
                     <Button
@@ -273,9 +273,17 @@ const PostInstallPermissionModal = () => {
                       size="lg"
                     >
                       <Home size={18} className="ml-2" />
-                      הבנתי, אוסיף למסך הבית
+                      הבנתי, אוסיף ידנית
                     </Button>
                   )}
+                  <Button
+                    onClick={() => dismiss(true)}
+                    variant="ghost"
+                    className="w-full text-sm text-muted-foreground"
+                  >
+                    אולי אחר כך
+                  </Button>
+                </div>
                   <Button
                     onClick={() => dismiss(true)}
                     variant="ghost"
