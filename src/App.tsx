@@ -89,6 +89,7 @@ const App = () => (
             </Routes>
           </Suspense>
           <CookieBanner />
+          <PostInstallPermissionModal />
         </BrowserRouter>
       </FlyToCartProvider>
       </CustomerAuthProvider>
