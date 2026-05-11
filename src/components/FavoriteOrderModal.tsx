@@ -4,7 +4,16 @@ import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight } 
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { menuItems, type MenuItem } from "@/data/menu";
+import {
+  menuItems,
+  type MenuItem,
+  ingredients as menuIngredients,
+  removalDisplayNames,
+  donenessOptions,
+  smashBurgerIds,
+  mealSideOptions,
+  mealDrinkOptions,
+} from "@/data/menu";
 import { findTopping } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
