@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
+import PostInstallPermissionModal from "@/components/PostInstallPermissionModal";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 
@@ -88,6 +89,7 @@ const App = () => (
             </Routes>
           </Suspense>
           <CookieBanner />
+          <PostInstallPermissionModal />
         </BrowserRouter>
       </FlyToCartProvider>
       </CustomerAuthProvider>
