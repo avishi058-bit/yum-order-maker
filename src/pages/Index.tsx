@@ -326,17 +326,30 @@ const Index = () => {
       {!isStation && (
         <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
           <SideMenu onLoginClick={() => setAuthModalOpen(true)} />
-          {isLoggedIn ? (
-            <CustomerGreeting onOpenHistory={() => setHistoryModalOpen(true)} />
-          ) : (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-semibold"
-            >
-              <LogIn size={16} />
-              התחברות
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!isInstalled && (
+              <button
+                onClick={() => setInstallModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-accent/15 text-accent-foreground hover:bg-accent/25 transition-colors text-xs font-bold border border-accent/30"
+                aria-label="הוסף את הבקתה למסך הבית"
+              >
+                <Smartphone size={14} />
+                <span className="hidden xs:inline sm:inline">הוסף למסך הבית</span>
+                <span className="xs:hidden sm:hidden">למסך הבית</span>
+              </button>
+            )}
+            {isLoggedIn ? (
+              <CustomerGreeting onOpenHistory={() => setHistoryModalOpen(true)} />
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-semibold"
+              >
+                <LogIn size={16} />
+                התחברות
+              </button>
+            )}
+          </div>
         </div>
       )}
 
