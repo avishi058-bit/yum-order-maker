@@ -34,9 +34,9 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
   };
 
   const handleSubmit = async () => {
-    const cleaned = phone.replace(/[-\s]/g, "");
-    if (cleaned.length < 9) {
-      toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+    const phoneCheck = validateIsraeliPhone(phone);
+    if (!phoneCheck.valid) {
+      toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
     if (!name.trim()) {
