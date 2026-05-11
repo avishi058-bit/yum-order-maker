@@ -80,14 +80,21 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
             className="relative bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h2 className="text-lg font-bold text-foreground">התחברות לאזור האישי</h2>
+              <h2 className="text-lg font-bold text-foreground">חיבור חד-פעמי לאפליקציה</h2>
               <button onClick={handleClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X size={16} />
               </button>
             </div>
 
             <div className="p-5 space-y-4">
-              <p className="text-sm text-muted-foreground">הכנס מספר טלפון ושם כדי להיכנס ולצפות בהיסטוריית ההזמנות שלך</p>
+              <div className="space-y-2">
+                <p className="text-sm text-foreground font-medium">
+                  כדי שנוכל לעדכן אותך מתי ההמבורגר מוכן 🍔
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  הכנס/י את מספר הטלפון והשם שאיתם הזמנת — זה חד-פעמי, אחרי זה תיכנס/י אוטומטית תמיד :)
+                </p>
+              </div>
 
               <div className="relative">
                 <Phone size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
