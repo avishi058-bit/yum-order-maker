@@ -80,7 +80,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
             className="relative bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h2 className="text-lg font-bold text-foreground">התחברות לאזור האישי</h2>
+              <h2 className="text-lg font-bold text-foreground">חיבור חד-פעמי לאפליקציה</h2>
               <button onClick={handleClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X size={16} />
               </button>
