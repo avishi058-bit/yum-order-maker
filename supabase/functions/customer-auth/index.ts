@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase()
       if (existing && existing.name && norm(existing.name) !== norm(name)) {
         return json({
-          error: `המספר הזה כבר רשום על שם ${existing.name}. אם זה שלך, היכנס עם השם שלך.`,
+          error: 'מספר הטלפון הזה רשום על שם אחר',
           code: 'PHONE_TAKEN',
         }, 409)
       }
