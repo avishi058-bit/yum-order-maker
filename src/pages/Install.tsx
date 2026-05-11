@@ -102,18 +102,18 @@ const Install = () => {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-card border-2 border-border rounded-2xl overflow-hidden shadow-lg"
+            className="-mx-2 bg-card border-2 border-border rounded-2xl overflow-hidden shadow-lg"
           >
             <div className="px-4 py-3 bg-primary/10 border-b border-border">
-              <h2 className="text-base font-black text-foreground text-right">
+              <h2 className="text-lg font-black text-foreground text-right">
                 הוספה למסך הבית (אייפון) 📲
               </h2>
             </div>
-            <div className="p-3 bg-white">
+            <div className="bg-white">
               <img
                 src={addToHomeImg}
                 alt="הוראות להוספת הבקתה למסך הבית באייפון"
-                className="w-full h-auto rounded-xl"
+                className="w-full h-auto block"
               />
             </div>
             <div className="p-4 space-y-2 text-right">
