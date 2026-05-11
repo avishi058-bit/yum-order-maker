@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     } as const;
     const bodies = {
       ready: `הזמנה #${order.order_number} מוכנה לאיסוף`,
-      preparing: `הזמנה #${order.order_number} בהכנה — נעדכן אותך כשתהיה מוכנה`,
+      preparing: `הזמנה #${order.order_number} בהכנה${etaSuffix}`,
       almost_ready: `הזמנה #${order.order_number} כמעט מוכנה — תתחיל להתקדם 😋`,
     } as const;
 
