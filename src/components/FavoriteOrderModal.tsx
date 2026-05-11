@@ -345,6 +345,8 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [draft, setDraft] = useState<CartItem[]>([]);
   /** Working copy used by confirm view (per-order tweaks; doesn't replace saved favorite). */
   const [usingDraft, setUsingDraft] = useState<CartItem[]>([]);
+  /** Selected line ids in confirm view — only these go to checkout/cart. */
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   /** True while the customizer is open in front of us. */
   const [customizing, setCustomizing] = useState(false);
   /** Picker for "add new dish": which menu item to customize. */
