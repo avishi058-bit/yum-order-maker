@@ -23,13 +23,15 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { order_id } = await req.json();
+    const { order_id, type } = await req.json();
     if (!order_id || typeof order_id !== "string") {
       return new Response(JSON.stringify({ error: "order_id required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const notifType: "ready" | "preparing" | "almost_ready" =
+      type === "preparing" || type === "almost_ready" ? type : "ready";
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
