@@ -5,6 +5,18 @@ import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
+
+/** Result handed back when the favorite modal awaits a customizer round-trip. */
+interface CustomizerResult {
+  item: MenuItem;
+  quantity: number;
+  selectedToppings: string[];
+  selectedRemovals: string[];
+  withMeal: boolean;
+  mealSideId?: string;
+  mealDrinkId?: string;
+  ownerName?: string;
+}
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import BusinessStatusBar from "@/components/BusinessStatusBar";
 import SideMenu from "@/components/SideMenu";
