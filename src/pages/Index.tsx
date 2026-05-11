@@ -41,7 +41,7 @@ const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
 const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
-const SaveAsFavoriteModal = lazy(() => import("@/components/SaveAsFavoriteModal"));
+
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa, isIos } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
@@ -88,7 +88,7 @@ const Index = () => {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
   const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
-  const [saveFavoritePrompt, setSaveFavoritePrompt] = useState<CartItem[] | null>(null);
+  
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
   const isIosDevice = typeof window !== "undefined" ? isIos() : false;
