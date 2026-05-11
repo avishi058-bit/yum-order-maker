@@ -230,8 +230,8 @@ html.pwa-installed body {
    `pwa-safe-screen` and they'll respect the top safe area internally.
    Bottom is handled directly on the footer bar (smaller gap). */
 html.pwa-installed .pwa-safe-screen {
-  height: auto;
-  bottom: calc(env(safe-area-inset-bottom) * -1);
+  /* Override Tailwind's h-full so the drawer extends past the home indicator */
+  height: calc(100% + env(safe-area-inset-bottom)) !important;
   padding-top: env(safe-area-inset-top);
 }
 
