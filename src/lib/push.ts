@@ -62,7 +62,7 @@ export const ensureServiceWorker = async (): Promise<ServiceWorkerRegistration |
 };
 
 export const subscribeToPush = async (params: {
-  orderId: string;
+  orderId?: string | null;
   customerPhone?: string;
 }): Promise<{ ok: boolean; reason?: string }> => {
   if (!isPushSupported()) return { ok: false, reason: "unsupported" };
@@ -71,7 +71,6 @@ export const subscribeToPush = async (params: {
   const reg = await ensureServiceWorker();
   if (!reg) return { ok: false, reason: "sw_failed" };
 
-  // Wait for ready (active worker)
   await navigator.serviceWorker.ready;
 
   const permission = await Notification.requestPermission();
@@ -90,9 +89,8 @@ export const subscribeToPush = async (params: {
   const p256dh = (json.keys && json.keys.p256dh) || "";
   const auth = (json.keys && json.keys.auth) || "";
 
-  // Upsert via insert with on-conflict ignored (unique on order_id+endpoint)
   const { error } = await supabase.from("push_subscriptions").insert({
-    order_id: params.orderId,
+    order_id: params.orderId ?? null,
     customer_phone: params.customerPhone ?? null,
     endpoint,
     p256dh,
