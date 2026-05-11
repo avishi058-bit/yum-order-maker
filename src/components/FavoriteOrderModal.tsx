@@ -758,13 +758,16 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
             />
           )}
           {!visuallyHidden && (
+            <div
+              dir="rtl"
+              className="fixed inset-0 z-[90] flex items-center justify-center p-3 pointer-events-none"
+            >
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.92 }}
               transition={{ type: "spring", damping: 22, stiffness: 260 }}
-              dir="rtl"
-              className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md max-h-[88vh] bg-gradient-to-b from-card via-card to-card/95 border border-green-500/30 rounded-3xl shadow-[0_25px_60px_-15px_rgba(34,197,94,0.45),0_0_0_1px_rgba(34,197,94,0.1)] z-[90] flex flex-col overflow-hidden ring-1 ring-green-500/20"
+              className="pointer-events-auto w-full max-w-md max-h-[88vh] bg-gradient-to-b from-card via-card to-card/95 border border-green-500/30 rounded-3xl shadow-[0_25px_60px_-15px_rgba(34,197,94,0.45),0_0_0_1px_rgba(34,197,94,0.1)] flex flex-col overflow-hidden ring-1 ring-green-500/20"
             >
               <div className="relative flex items-center justify-between px-5 py-4 border-b border-border/60 bg-gradient-to-l from-green-500/10 via-transparent to-transparent">
                 <div className="flex items-center gap-2">
@@ -1127,6 +1130,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                 )}
               </div>
             </motion.div>
+            </div>
           )}
 
           {/* Required-name prompt for additional favorite dishes */}
