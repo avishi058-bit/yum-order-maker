@@ -8,6 +8,7 @@ import { useCustomToppings } from "@/lib/customToppingsStore";
 import { findTopping } from "@/lib/toppingsLookup";
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import aioliImg from "@/assets/aioli-sauce.webp";
 import picklesImg from "@/assets/pickles.webp";
