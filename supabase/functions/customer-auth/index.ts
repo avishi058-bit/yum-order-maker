@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       // Find customer by device token
       const { data: customer, error: findError } = await supabase
         .from('customers')
-        .select('id, name, phone, marketing_consent, login_count, last_login_at')
+        .select('id, name, phone, marketing_consent, login_count, last_login_at, favorite_items')
         .eq('device_token', deviceToken)
         .maybeSingle()
 
@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
           isReturning: true,
           loginCount: (customer.login_count || 0) + 1,
           lastLoginAt: customer.last_login_at,
+          favoriteItems: customer.favorite_items ?? null,
         },
       })
     }
