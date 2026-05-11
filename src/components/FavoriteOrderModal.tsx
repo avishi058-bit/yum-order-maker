@@ -1,23 +1,46 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, Star, Trash2, RefreshCw, Pencil, Check, ShoppingBag } from "lucide-react";
+import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { menuItems, type MenuItem } from "@/data/menu";
 import { findTopping } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
+import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import { toast } from "@/hooks/use-toast";
+
+/** Result returned by the parent's customizer bridge. */
+interface CustomizerResult {
+  item: MenuItem;
+  quantity: number;
+  selectedToppings: string[];
+  selectedRemovals: string[];
+  withMeal: boolean;
+  mealSideId?: string;
+  mealDrinkId?: string;
+  ownerName?: string;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Adds items into the live cart (replacing or appending). Caller decides. */
+  /** Adds items into the live cart. */
   onUseFavorite: (items: CartItem[]) => void;
-  /** Snapshot of the current cart, so user can save it as their favorite. */
+  /** Snapshot of the current cart (used for "save current cart as favorite"). */
   currentCart: CartItem[];
-  /** Force the modal to open directly in the setup view (used by side-menu "update favorite"). */
+  /** Force the modal to open directly in setup mode. */
   startInSetup?: boolean;
+  /**
+   * Bridge: opens the parent's ItemCustomizer for `menuItem` and resolves with
+   * the user's selections (or null if cancelled). Reuses the same toppings /
+   * removals / meal UI as the regular ordering flow — so the user can pick
+   * vegetables, doneness, and extras when defining or tweaking the favorite.
+   */
+  customizeMenuItem: (
+    menuItem: MenuItem,
+    initialState?: ItemCustomizerInitialState,
+  ) => Promise<CustomizerResult | null>;
 }
 
 interface HistoryItem {
@@ -41,7 +64,10 @@ interface HistoryOrder {
   items: HistoryItem[];
 }
 
-/** Convert a saved order's items into fresh CartItems (new ids, ready to add). */
+/** Items the customizer can handle: same rule used in Index.openItemFlow. */
+const CUSTOMIZABLE = menuItems.filter((m) => m.category === "burger" || m.category === "meal");
+
+/** Convert a saved order's items into fresh CartItems. */
 const orderItemsToCart = (items: HistoryItem[]): CartItem[] => {
   const out: CartItem[] = [];
   for (const it of items) {
@@ -67,92 +93,219 @@ const orderItemsToCart = (items: HistoryItem[]): CartItem[] => {
   return out;
 };
 
-/** Re-issue fresh ids on a stored favorite before pushing into the live cart. */
+/** Re-issue fresh ids for a stored favorite before pushing into the live cart. */
 const refreshIds = (items: CartItem[]): CartItem[] =>
   items.map((it) => ({
     ...it,
     id: `${it.menuItemId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
   }));
 
-const FavoriteSummary = ({ items }: { items: CartItem[] }) => (
-  <ul className="space-y-1.5 text-sm">
-    {items.map((it) => {
-      const tNames = it.toppings
-        .map((tId) => findTopping(tId)?.name)
-        .filter(Boolean) as string[];
+/** Map a customizer result back into a CartItem entry. */
+const resultToCartItem = (r: CustomizerResult): CartItem => ({
+  id: `${r.item.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  menuItemId: r.item.id,
+  name: r.item.name,
+  price: r.item.price,
+  quantity: r.quantity,
+  toppings: r.selectedToppings,
+  removals: r.selectedRemovals,
+  withMeal: r.withMeal,
+  mealSideId: r.mealSideId,
+  mealDrinkId: r.mealDrinkId,
+  ownerName: r.ownerName,
+});
+
+/** Editable list with edit / remove buttons per row. */
+const EditableList = ({
+  items,
+  onEdit,
+  onRemove,
+}: {
+  items: CartItem[];
+  onEdit: (index: number) => void;
+  onRemove: (index: number) => void;
+}) => (
+  <ul className="space-y-2">
+    {items.map((it, idx) => {
+      const tNames = it.toppings.map((tId) => findTopping(tId)?.name).filter(Boolean) as string[];
+      const removed = it.removals.filter((r) => !r.startsWith("__OWNER__"));
       return (
-        <li key={it.id} className="flex justify-between gap-2 border-b border-border/50 pb-1.5">
-          <div className="text-right">
-            <span className="font-semibold text-foreground">
-              {it.quantity > 1 ? `${it.quantity}× ` : ""}{it.name}
-            </span>
-            {it.withMeal && <span className="text-xs text-muted-foreground"> (ארוחה)</span>}
-            {tNames.length > 0 && (
-              <p className="text-xs text-muted-foreground">תוספות: {tNames.join(", ")}</p>
-            )}
+        <li key={it.id} className="border border-border rounded-xl p-3 bg-card">
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-right flex-1 min-w-0">
+              <p className="font-bold text-foreground text-sm">
+                {it.quantity > 1 ? `${it.quantity}× ` : ""}
+                {it.name}
+                {it.withMeal && <span className="text-xs text-muted-foreground"> (ארוחה)</span>}
+              </p>
+              {tNames.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-0.5">תוספות: {tNames.join(", ")}</p>
+              )}
+              {removed.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-0.5">בלי: {removed.join(", ")}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1 shrink-0">
+              <button
+                onClick={() => onEdit(idx)}
+                className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20"
+                aria-label="ערוך"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={() => onRemove(idx)}
+                className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20"
+                aria-label="הסר"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
-          <span className="text-muted-foreground shrink-0">₪{(it.price * it.quantity).toFixed(0)}</span>
         </li>
       );
     })}
   </ul>
 );
 
-const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startInSetup }: Props) => {
+const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startInSetup, customizeMenuItem }: Props) => {
   useBodyScrollLock(open);
   const { favoriteItems, setFavoriteItems, isLoggedIn } = useCustomerAuth();
   const [view, setView] = useState<"confirm" | "setup">("confirm");
+  /** Working draft used by setup view (what we'll save as the favorite). */
+  const [draft, setDraft] = useState<CartItem[]>([]);
+  /** Working copy used by confirm view (per-order tweaks; doesn't replace saved favorite). */
+  const [usingDraft, setUsingDraft] = useState<CartItem[]>([]);
+  /** True while the customizer is open in front of us. */
+  const [customizing, setCustomizing] = useState(false);
+  /** Picker for "add new dish": which menu item to customize. */
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const hasFavorite = !!(favoriteItems && favoriteItems.length > 0);
 
+  // Reset state every time the modal opens.
   useEffect(() => {
     if (!open) return;
-    setView(startInSetup || !hasFavorite ? "setup" : "confirm");
-  }, [open, startInSetup, hasFavorite]);
+    const goSetup = startInSetup || !hasFavorite;
+    setView(goSetup ? "setup" : "confirm");
+    setDraft(hasFavorite ? refreshIds(favoriteItems!) : []);
+    setUsingDraft(hasFavorite ? refreshIds(favoriteItems!) : []);
+    setPickerOpen(false);
+  }, [open, startInSetup, hasFavorite, favoriteItems]);
 
-  // Fetch past orders only when entering the setup view
+  // Lazy-load past orders only the first time the user enters setup view.
   useEffect(() => {
-    if (!open || view !== "setup") return;
+    if (!open || view !== "setup" || orders !== null) return;
     const deviceToken = localStorage.getItem("habakta_device_token");
     if (!deviceToken) {
       setOrders([]);
       return;
     }
-    setLoading(true);
+    setLoadingOrders(true);
     supabase.functions
       .invoke("get-customer-orders", { body: { deviceToken } })
       .then(({ data, error }) => {
         if (error) setOrders([]);
         else setOrders((data?.orders as HistoryOrder[]) ?? []);
       })
-      .finally(() => setLoading(false));
-  }, [open, view]);
+      .finally(() => setLoadingOrders(false));
+  }, [open, view, orders]);
 
   const usableOrders = useMemo(
     () => (orders ?? []).filter((o) => orderItemsToCart(o.items).length > 0).slice(0, 10),
     [orders],
   );
 
-  const handleUseExisting = () => {
-    if (!favoriteItems) return;
-    onUseFavorite(refreshIds(favoriteItems));
+  /** Open the parent customizer; while open, hide our modal so the customizer is on top. */
+  const runCustomizer = async (
+    menuItem: MenuItem,
+    initialState?: ItemCustomizerInitialState,
+  ): Promise<CartItem | null> => {
+    setCustomizing(true);
+    try {
+      const result = await customizeMenuItem(menuItem, initialState);
+      if (!result) return null;
+      return resultToCartItem(result);
+    } finally {
+      setCustomizing(false);
+    }
+  };
+
+  const cartItemToInitial = (it: CartItem): ItemCustomizerInitialState => ({
+    quantity: it.quantity,
+    selectedToppings: it.toppings,
+    selectedRemovals: it.removals,
+    withMeal: it.withMeal,
+    mealSideId: it.mealSideId,
+    mealDrinkId: it.mealDrinkId,
+    ownerName: it.ownerName,
+  });
+
+  // ----- Confirm-view actions (per-order edits, not persisted) -----
+
+  const handleEditUsing = async (idx: number) => {
+    const target = usingDraft[idx];
+    const menuItem = menuItems.find((m) => m.id === target.menuItemId);
+    if (!menuItem) return;
+    const updated = await runCustomizer(menuItem, cartItemToInitial(target));
+    if (!updated) return;
+    setUsingDraft((prev) => prev.map((it, i) => (i === idx ? { ...updated, id: it.id } : it)));
+  };
+
+  const handleRemoveUsing = (idx: number) => {
+    setUsingDraft((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleAddOnceForOrder = async (menuItem: MenuItem) => {
+    setPickerOpen(false);
+    const added = await runCustomizer(menuItem);
+    if (added) setUsingDraft((prev) => [...prev, added]);
+  };
+
+  const handleConfirmUse = () => {
+    if (usingDraft.length === 0) {
+      toast({ title: "אין מנות בקבוע", variant: "destructive" });
+      return;
+    }
+    onUseFavorite(refreshIds(usingDraft));
     onClose();
     toast({ title: "ההזמנה הקבועה שלך נוספה לעגלה ❤️" });
   };
 
-  const handleSaveFromOrder = async (order: HistoryOrder) => {
-    const items = orderItemsToCart(order.items);
-    if (items.length === 0) {
-      toast({ title: "לא ניתן לשמור הזמנה זו", variant: "destructive" });
+  // ----- Setup-view actions (persists to favoriteItems) -----
+
+  const handleEditDraft = async (idx: number) => {
+    const target = draft[idx];
+    const menuItem = menuItems.find((m) => m.id === target.menuItemId);
+    if (!menuItem) return;
+    const updated = await runCustomizer(menuItem, cartItemToInitial(target));
+    if (!updated) return;
+    setDraft((prev) => prev.map((it, i) => (i === idx ? { ...updated, id: it.id } : it)));
+  };
+
+  const handleRemoveDraft = (idx: number) => {
+    setDraft((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleAddDishToDraft = async (menuItem: MenuItem) => {
+    setPickerOpen(false);
+    const added = await runCustomizer(menuItem);
+    if (added) setDraft((prev) => [...prev, added]);
+  };
+
+  const handleSaveDraft = async () => {
+    if (draft.length === 0) {
+      toast({ title: "צריך לבחור לפחות מנה אחת", variant: "destructive" });
       return;
     }
     setSaving(true);
     try {
-      await setFavoriteItems(items);
+      await setFavoriteItems(draft);
       toast({ title: "ההזמנה הקבועה נשמרה ⭐" });
+      setUsingDraft(refreshIds(draft));
       setView("confirm");
     } catch {
       toast({ title: "שגיאה בשמירה", variant: "destructive" });
@@ -161,24 +314,28 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     }
   };
 
-  const handleSaveFromCart = async () => {
+  const handleLoadFromOrder = (order: HistoryOrder) => {
+    const items = orderItemsToCart(order.items);
+    if (items.length === 0) {
+      toast({ title: "לא ניתן לטעון הזמנה זו", variant: "destructive" });
+      return;
+    }
+    setDraft(items);
+    toast({ title: "ההזמנה נטענה — אפשר לערוך לפני שמירה" });
+  };
+
+  const handleLoadFromCart = () => {
     if (currentCart.length === 0) return;
-    setSaving(true);
-    try {
-      await setFavoriteItems(currentCart);
-      toast({ title: "העגלה הנוכחית נשמרה כקבוע ⭐" });
-      setView("confirm");
-    } catch {
-      toast({ title: "שגיאה בשמירה", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
+    setDraft(refreshIds(currentCart));
+    toast({ title: "העגלה נטענה — אפשר לערוך לפני שמירה" });
   };
 
-  const handleClear = async () => {
+  const handleClearFavorite = async () => {
     setSaving(true);
     try {
       await setFavoriteItems(null);
+      setDraft([]);
+      setUsingDraft([]);
       toast({ title: "ההזמנה הקבועה נמחקה" });
       setView("setup");
     } finally {
@@ -188,144 +345,224 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
 
   if (!isLoggedIn) return null;
 
+  // While the parent customizer is open, hide our backdrop+sheet so it's on top.
+  const visuallyHidden = customizing;
+
   return (
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-[80]"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.97 }}
-            transition={{ type: "spring", damping: 25, stiffness: 280 }}
-            dir="rtl"
-            className="fixed inset-x-2 top-4 bottom-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 sm:bottom-10 sm:w-full sm:max-w-lg bg-card border border-border rounded-2xl shadow-2xl z-[90] flex flex-col overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
-              <div className="flex items-center gap-2">
-                <Heart size={20} className="text-green-500 fill-green-500" />
-                <h2 className="text-lg font-bold text-foreground">
-                  {view === "confirm" ? "ההזמנה הקבועה שלך" : hasFavorite ? "עדכון הקבוע" : "הגדרת הזמנה קבועה"}
-                </h2>
+          {!visuallyHidden && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-[80]"
+              onClick={onClose}
+            />
+          )}
+          {!visuallyHidden && (
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.97 }}
+              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              dir="rtl"
+              className="fixed inset-x-2 top-4 bottom-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-10 sm:bottom-10 sm:w-full sm:max-w-lg bg-card border border-border rounded-2xl shadow-2xl z-[90] flex flex-col overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
+                <div className="flex items-center gap-2">
+                  <Heart size={20} className="text-green-500 fill-green-500" />
+                  <h2 className="text-lg font-bold text-foreground">
+                    {pickerOpen
+                      ? "בחר מנה"
+                      : view === "confirm"
+                      ? "ההזמנה הקבועה שלך"
+                      : hasFavorite
+                      ? "עדכון הקבוע"
+                      : "הגדרת הזמנה קבועה"}
+                  </h2>
+                </div>
+                <button
+                  onClick={pickerOpen ? () => setPickerOpen(false) : onClose}
+                  className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
+                  aria-label="סגור"
+                >
+                  {pickerOpen ? <ArrowRight size={18} /> : <X size={18} />}
+                </button>
               </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground"
-                aria-label="סגור"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {view === "confirm" && hasFavorite && favoriteItems && (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    רוצה להמשיך עם ההזמנה הקבועה שלך, או לערוך אותה לפני שממשיכים?
-                  </p>
-                  <div className="bg-secondary/50 rounded-xl p-4">
-                    <FavoriteSummary items={favoriteItems} />
-                  </div>
-                  <div className="flex flex-col gap-2 pt-2">
-                    <button
-                      onClick={handleUseExisting}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30"
-                    >
-                      <Check size={18} />
-                      המשך עם הקבוע
-                    </button>
-                    <button
-                      onClick={() => setView("setup")}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-sm"
-                    >
-                      <Pencil size={16} />
-                      ערוך / החלף את הקבוע
-                    </button>
-                    <button
-                      onClick={handleClear}
-                      disabled={saving}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-destructive/80 hover:text-destructive transition-colors"
-                    >
-                      <Trash2 size={13} />
-                      מחק את ההזמנה הקבועה
-                    </button>
-                  </div>
-                </>
-              )}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {/* DISH PICKER (overlay-like view inside the sheet) */}
+                {pickerOpen && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      בחר את המנה שתרצה להוסיף — לאחר מכן תוכל לבחור ירקות, מידת עשייה ותוספות.
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {CUSTOMIZABLE.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() =>
+                            view === "confirm" ? handleAddOnceForOrder(m) : handleAddDishToDraft(m)
+                          }
+                          className="text-right border border-border rounded-xl p-3 hover:bg-muted/50 transition-colors"
+                        >
+                          <p className="font-bold text-foreground text-sm">{m.name}</p>
+                          {m.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>
+                          )}
+                          <p className="text-xs text-primary font-bold mt-1">₪{m.price}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
 
-              {view === "setup" && (
-                <>
-                  {currentCart.length > 0 && (
-                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <ShoppingBag size={16} className="text-primary" />
-                        <p className="text-sm font-bold text-foreground">העגלה הנוכחית שלך</p>
+                {/* CONFIRM view — use favorite, with per-order edits */}
+                {!pickerOpen && view === "confirm" && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?
+                    </p>
+                    {usingDraft.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-6 text-sm border border-dashed border-border rounded-xl">
+                        אין מנות בקבוע — הוסף מנה למטה.
                       </div>
-                      <FavoriteSummary items={currentCart} />
+                    ) : (
+                      <EditableList
+                        items={usingDraft}
+                        onEdit={handleEditUsing}
+                        onRemove={handleRemoveUsing}
+                      />
+                    )}
+                    <button
+                      onClick={() => setPickerOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-primary/40 text-primary hover:bg-primary/5 font-semibold text-sm"
+                    >
+                      <Plus size={16} />
+                      הוסף מנה לפעם הזאת
+                    </button>
+                    <div className="flex flex-col gap-2 pt-2">
                       <button
-                        onClick={handleSaveFromCart}
-                        disabled={saving}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+                        onClick={handleConfirmUse}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30"
                       >
-                        <Star size={15} />
-                        שמור כקבוע
+                        <Check size={18} />
+                        המשך עם הקבוע
+                      </button>
+                      <button
+                        onClick={() => setView("setup")}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-sm"
+                      >
+                        <Pencil size={16} />
+                        ערוך / שנה את הקבוע השמור
+                      </button>
+                      <button
+                        onClick={handleClearFavorite}
+                        disabled={saving}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-destructive/80 hover:text-destructive transition-colors"
+                      >
+                        <Trash2 size={13} />
+                        מחק את ההזמנה הקבועה
                       </button>
                     </div>
-                  )}
+                  </>
+                )}
 
-                  <div>
-                    <p className="text-sm font-bold text-foreground mb-2">או בחר מתוך הזמנות קודמות</p>
-                    {loading && (
-                      <div className="text-center text-muted-foreground py-6 text-sm">טוען…</div>
-                    )}
-                    {!loading && usableOrders.length === 0 && (
-                      <div className="text-center text-muted-foreground py-6 text-sm">
-                        אין הזמנות קודמות שניתן לשמור. הזמן קודם או שמור את העגלה הנוכחית.
+                {/* SETUP view — build/edit the saved favorite */}
+                {!pickerOpen && view === "setup" && (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      בנה את ההזמנה הקבועה שלך — לכל מנה אפשר לבחור ירקות, מידת עשייה ותוספות.
+                    </p>
+
+                    {draft.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-6 text-sm border border-dashed border-border rounded-xl">
+                        עדיין אין מנות בקבוע. הוסף מנה ראשונה למטה.
                       </div>
+                    ) : (
+                      <EditableList items={draft} onEdit={handleEditDraft} onRemove={handleRemoveDraft} />
                     )}
-                    <div className="space-y-2">
-                      {usableOrders.map((order) => {
-                        const items = orderItemsToCart(order.items);
-                        return (
-                          <button
-                            key={order.id}
-                            onClick={() => handleSaveFromOrder(order)}
-                            disabled={saving}
-                            className="w-full text-right border border-border rounded-xl p-3 hover:bg-muted/50 transition-colors disabled:opacity-60"
-                          >
-                            <div className="flex justify-between mb-1.5">
-                              <span className="text-sm font-bold text-foreground">#{order.order_number}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(order.created_at).toLocaleDateString("he-IL")} · ₪{Number(order.total).toFixed(0)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {items.map((i) => `${i.quantity > 1 ? i.quantity + "× " : ""}${i.name}`).join(" · ")}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
 
-                  {hasFavorite && (
                     <button
-                      onClick={() => setView("confirm")}
-                      className="w-full text-sm text-muted-foreground hover:text-foreground underline pt-2"
+                      onClick={() => setPickerOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-primary/40 text-primary hover:bg-primary/5 font-semibold text-sm"
                     >
-                      חזור לקבוע הנוכחי
+                      <Plus size={16} />
+                      הוסף מנה לקבוע
                     </button>
-                  )}
-                </>
-              )}
-            </div>
-          </motion.div>
+
+                    <button
+                      onClick={handleSaveDraft}
+                      disabled={saving || draft.length === 0}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30 disabled:opacity-60"
+                    >
+                      <Star size={16} />
+                      שמור כהזמנה הקבועה שלי
+                    </button>
+
+                    {/* Quick fill helpers */}
+                    <details className="group">
+                      <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground select-none flex items-center gap-1">
+                        <span>טעינה מהירה (אופציונלי)</span>
+                      </summary>
+                      <div className="mt-3 space-y-3">
+                        {currentCart.length > 0 && (
+                          <button
+                            onClick={handleLoadFromCart}
+                            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-border hover:bg-muted/50 text-sm"
+                          >
+                            <span className="flex items-center gap-2 text-foreground font-semibold">
+                              <ShoppingBag size={14} />
+                              טען מהעגלה הנוכחית
+                            </span>
+                            <span className="text-xs text-muted-foreground">{currentCart.length} פריטים</span>
+                          </button>
+                        )}
+                        <div className="space-y-1.5">
+                          <p className="text-xs text-muted-foreground">או מתוך הזמנות קודמות:</p>
+                          {loadingOrders && <p className="text-xs text-muted-foreground">טוען…</p>}
+                          {!loadingOrders && usableOrders.length === 0 && (
+                            <p className="text-xs text-muted-foreground">אין הזמנות קודמות.</p>
+                          )}
+                          {usableOrders.map((order) => {
+                            const items = orderItemsToCart(order.items);
+                            return (
+                              <button
+                                key={order.id}
+                                onClick={() => handleLoadFromOrder(order)}
+                                className="w-full text-right border border-border rounded-xl p-2.5 hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="flex justify-between mb-0.5">
+                                  <span className="text-xs font-bold text-foreground">#{order.order_number}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(order.created_at).toLocaleDateString("he-IL")} · ₪{Number(order.total).toFixed(0)}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {items.map((i) => `${i.quantity > 1 ? i.quantity + "× " : ""}${i.name}`).join(" · ")}
+                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </details>
+
+                    {hasFavorite && (
+                      <button
+                        onClick={() => setView("confirm")}
+                        className="w-full text-sm text-muted-foreground hover:text-foreground underline pt-2"
+                      >
+                        חזור לקבוע הנוכחי
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
         </>
       )}
     </AnimatePresence>

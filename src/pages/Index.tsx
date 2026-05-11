@@ -5,6 +5,18 @@ import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
+
+/** Result handed back when the favorite modal awaits a customizer round-trip. */
+interface CustomizerResult {
+  item: MenuItem;
+  quantity: number;
+  selectedToppings: string[];
+  selectedRemovals: string[];
+  withMeal: boolean;
+  mealSideId?: string;
+  mealDrinkId?: string;
+  ownerName?: string;
+}
 import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
 import BusinessStatusBar from "@/components/BusinessStatusBar";
 import SideMenu from "@/components/SideMenu";
@@ -95,8 +107,15 @@ const Index = () => {
     setInstallModalOpen(true);
   }, [isIosDevice, canNativeInstall, promptInstall]);
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
+  /**
+   * When set, the next ItemCustomizer confirm/close resolves this promise
+   * INSTEAD of mutating the cart. Used by the favorite-order modal to let
+   * the user build/edit favorite items via the same UI as regular ordering.
+   */
+  const customizerResolverRef = useRef<((result: CustomizerResult | null) => void) | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
+
 
   // Re-register the cart target whenever the button mounts/unmounts.
   // The button only renders once the cart has items, so on the very first
@@ -151,6 +170,16 @@ const Index = () => {
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
+      // BRIDGE mode: a caller (e.g. favorite modal) is awaiting the result —
+      // hand it back instead of touching the cart.
+      if (customizerResolverRef.current) {
+        customizerResolverRef.current({ item, quantity, selectedToppings, selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName });
+        customizerResolverRef.current = null;
+        setCustomizerItem(null);
+        setEditingCartId(null);
+        setCustomizerInitial(undefined);
+        return;
+      }
       setCart((prev) => {
         // EDIT mode: replace the existing cart entry in-place (preserve order + id).
         if (editingCartId) {
@@ -176,6 +205,23 @@ const Index = () => {
     },
     [editingCartId, flyFromCenter]
   );
+
+  /**
+   * Opens the existing ItemCustomizer for a given menu item and resolves with
+   * the user's selections (or null if they closed the customizer). Lets the
+   * favorite-order modal reuse the full toppings/removals/meal UI.
+   */
+  const customizeMenuItem = useCallback(
+    (menuItem: MenuItem, initialState?: ItemCustomizerInitialState) =>
+      new Promise<CustomizerResult | null>((resolve) => {
+        customizerResolverRef.current = resolve;
+        setCustomizerInitial(initialState);
+        setEditingCartId(null);
+        setCustomizerItem(menuItem);
+      }),
+    []
+  );
+
 
   const handleEditCartItem = useCallback((cartId: string) => {
     const cartItem = cart.find((c) => c.id === cartId);
@@ -457,6 +503,11 @@ const Index = () => {
           <ItemCustomizer
             item={customizerItem}
             onClose={() => {
+              // If a favorite-modal flow is awaiting this customizer, cancel it.
+              if (customizerResolverRef.current) {
+                customizerResolverRef.current(null);
+                customizerResolverRef.current = null;
+              }
               setCustomizerItem(null);
               setEditingCartId(null);
               setCustomizerInitial(undefined);
@@ -651,11 +702,11 @@ const Index = () => {
 
         <FavoriteOrderModal
           open={favoriteModalOpen}
-          onClose={() => setFavoriteModalOpen(false)}
+          onClose={() => { setFavoriteModalOpen(false); setFavoriteStartInSetup(false); }}
           currentCart={cart}
           startInSetup={favoriteStartInSetup}
+          customizeMenuItem={customizeMenuItem}
           onUseFavorite={(items) => {
-            // Append the favorite to whatever the user already has in the cart.
             setCart((prev) => [...prev, ...items]);
             setCartOpen(true);
           }}
