@@ -131,22 +131,36 @@ const PostInstallPermissionModal = () => {
               <Bell size={30} />
             </motion.div>
             <h2 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
-              הבקתה מותקנת! <Sparkles size={18} className="text-primary" />
+              {variant === "order" ? <>רוצה להתעדכן בזמן אמת?</> : <>הבקתה מותקנת! <Sparkles size={18} className="text-primary" /></>}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              רק עוד אישור קטן ואתה מסודר
+              {variant === "order" ? "מתי ההמבורגר שלך מוכן 🍔" : "רק עוד אישור קטן ואתה מסודר"}
             </p>
           </div>
 
           <div className="px-6 pb-6 pt-2 space-y-4">
             <p className="text-sm text-foreground leading-relaxed text-center">
-              אשר התראות כדי לראות בזמן אמת בחלון העליון
-              <br />
-              <span className="font-bold">עוד כמה זמן ההזמנה שלך מוכנה ⏱️</span>
-              <br />
-              <span className="text-muted-foreground text-xs">
-                (החלון יעלם אוטומטית ברגע שההזמנה תושלם)
-              </span>
+              {variant === "order" ? (
+                <>
+                  אשר התראות ונעדכן אותך ברגע שההזמנה שלך
+                  <br />
+                  <span className="font-bold">עוברת להכנה ומוכנה לאיסוף ⏱️</span>
+                  <br />
+                  <span className="text-muted-foreground text-xs">
+                    גם אם תסגור את הדפדפן — נשלח לך התראה
+                  </span>
+                </>
+              ) : (
+                <>
+                  אשר התראות כדי לראות בזמן אמת בחלון העליון
+                  <br />
+                  <span className="font-bold">עוד כמה זמן ההזמנה שלך מוכנה ⏱️</span>
+                  <br />
+                  <span className="text-muted-foreground text-xs">
+                    (החלון יעלם אוטומטית ברגע שההזמנה תושלם)
+                  </span>
+                </>
+              )}
             </p>
 
             <div className="flex flex-col gap-2">
