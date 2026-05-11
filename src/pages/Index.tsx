@@ -765,6 +765,7 @@ const Index = () => {
             setCart((prev) => [...prev, ...items]);
             if (mode === "checkout") {
               setCartOpen(false);
+              setCheckoutSkipDetails(true);
               setCheckoutOpen(true);
             } else {
               setCartOpen(true);
