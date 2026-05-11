@@ -676,6 +676,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       setDraft((prev) => [...prev, withName]);
     } else {
       setUsingDraft((prev) => [...prev, withName]);
+      setSelectedIds((s) => new Set(s).add(withName.id));
     }
     setPendingNameDish(null);
     setPendingNameValue("");
