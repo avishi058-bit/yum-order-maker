@@ -22,9 +22,9 @@ interface DealCustomizerProps {
 type Step = "burger-1" | "burger-2" | "burger-3" | "drink-1" | "drink-2" | "drink-3";
 
 const stepLabels: Record<Step, string> = {
-  "burger-1": "המבורגר 1 מתוך 3",
-  "burger-2": "המבורגר 2 מתוך 3",
-  "burger-3": "המבורגר 3 מתוך 3",
+  "burger-1": "מנה ראשונה מתוך שלוש",
+  "burger-2": "מנה שנייה מתוך שלוש",
+  "burger-3": "מנה שלישית מתוך שלוש",
   "drink-1": "שתייה 1 מתוך 3",
   "drink-2": "שתייה 2 מתוך 3",
   "drink-3": "שתייה 3 מתוך 3",
