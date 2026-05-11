@@ -54,7 +54,7 @@ interface MenuItemUIOverlay {
 
 const MENU_UI: Record<string, MenuItemUIOverlay> = {
   classic: { description: "בצל, עגבנייה, חסה, חמוצים ואיולי הבית", weight: "220 גרם" },
-  "smash-moshavnikim": { description: "חמוצים, חסה, איולי הבית, שתי קציצות של 110 גרם מעוכות מרוסלות וקריספיות", weight: "220 גרם" },
+  "smash-moshavnikim": { description: "חמוצים, חסה, איולי הבית, שתי קציצות של 110 גרם מעוכות מרושלות וקריספיות", weight: "220 גרם" },
   avishai: { description: "חסה, עגבנייה, בצל, חמוצים, קציצת בקר, רצועות רוסטביף מעושן, ביצת עין ואיולי הבית", weight: "220 גרם", popular: true },
   double: { description: "שתי קציצות של 220, בצל, עגבנייה, חסה, חמוצים ואיולי הבית", weight: "440 גרם" },
   "crazy-smash": { description: "שתי קציצות סמאש, איולי, ריבת פלפלים חריפים, חמוצים ומייפל", weight: "220 גרם", badge: "🌶️" },
