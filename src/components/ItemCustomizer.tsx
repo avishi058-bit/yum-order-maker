@@ -235,38 +235,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     });
   }, [applyHeroTransform]);
 
-  // Drag-to-close — pointer events + RAF + transform on the sheet root
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const sc = scrollRef.current;
-    const target = e.target as HTMLElement | null;
-    // Only enforce the "scroll is at top" guard when the drag actually starts
-    // INSIDE the scrollable content. When the user grabs the header / pull-handle
-    // (outside the scroll container), allow drag-to-close regardless of scroll
-    // position — important for kiosk where content is often scrolled past hero.
-    const insideScroll = !!(sc && target && sc.contains(target));
-    if (insideScroll && sc && sc.scrollTop > 0) return;
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+  const isInteractiveDragTarget = (target: HTMLElement | null) =>
+    !!target?.closest("button, a, input, textarea, select, label, [role='button']");
 
-    if (target?.closest("button, a, input, textarea, select, label")) return;
-
+  const beginDrag = useCallback((clientY: number, pointerId: number) => {
     dragState.current.active = true;
-    dragState.current.startY = e.clientY;
-    dragState.current.currentY = e.clientY;
-    dragState.current.pointerId = e.pointerId;
+    dragState.current.startY = clientY;
+    dragState.current.currentY = clientY;
+    dragState.current.pointerId = pointerId;
 
     const sheet = sheetRef.current;
     const backdrop = backdropRef.current;
     if (sheet) sheet.style.transition = "none";
     if (backdrop) backdrop.style.transition = "none";
-
-    e.currentTarget.setPointerCapture?.(e.pointerId);
   }, []);
 
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  const applyDragPosition = useCallback((clientY: number) => {
     const ds = dragState.current;
-    if (!ds.active || e.pointerId !== ds.pointerId) return;
+    if (!ds.active) return;
 
-    const dy = e.clientY - ds.startY;
+    const dy = clientY - ds.startY;
 
     // Only react to downward drags
     if (dy <= 0) {
@@ -274,12 +262,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       const backdrop = backdropRef.current;
       if (sheet) sheet.style.transform = "translate3d(0,0,0)";
       if (backdrop) backdrop.style.opacity = "0.5";
-      ds.currentY = e.clientY;
+      ds.currentY = clientY;
       return;
     }
 
-    e.preventDefault();
-    ds.currentY = e.clientY;
+    ds.currentY = clientY;
     if (ds.rafId) return;
 
     ds.rafId = requestAnimationFrame(() => {
@@ -300,6 +287,32 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       }
     });
   }, []);
+
+  // Drag-to-close — pointer events + RAF + transform on the sheet root
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const sc = scrollRef.current;
+    const target = e.target as HTMLElement | null;
+    // Only enforce the "scroll is at top" guard when the drag actually starts
+    // INSIDE the scrollable content. When the user grabs the header / pull-handle
+    // (outside the scroll container), allow drag-to-close regardless of scroll
+    // position — important for kiosk where content is often scrolled past hero.
+    const insideScroll = !!(sc && target && sc.contains(target));
+    if (insideScroll && sc && sc.scrollTop > 0) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    if (isInteractiveDragTarget(target)) return;
+
+    beginDrag(e.clientY, e.pointerId);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  }, [beginDrag]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const ds = dragState.current;
+    if (!ds.active || e.pointerId !== ds.pointerId) return;
+
+    if (e.clientY > ds.startY) e.preventDefault();
+    applyDragPosition(e.clientY);
+  }, [applyDragPosition]);
 
   const finishDrag = useCallback(() => {
     const ds = dragState.current;
