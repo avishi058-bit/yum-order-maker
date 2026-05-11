@@ -516,8 +516,10 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     if (!open) return;
     const goSetup = startInSetup || !hasFavorite;
     setView(goSetup ? "setup" : "confirm");
-    setDraft(hasFavorite ? refreshIds(favoriteItems!) : []);
-    setUsingDraft(hasFavorite ? refreshIds(favoriteItems!) : []);
+    const refreshed = hasFavorite ? refreshIds(favoriteItems!) : [];
+    setDraft(refreshed);
+    setUsingDraft(refreshed);
+    setSelectedIds(new Set(refreshed.map((i) => i.id)));
     setPickerOpen(false);
   }, [open, startInSetup, hasFavorite, favoriteItems]);
 
