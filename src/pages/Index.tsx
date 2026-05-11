@@ -353,7 +353,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {!isInstalled && (
               <button
-                onClick={() => setInstallModalOpen(true)}
+                onClick={handleInstallClick}
                 className="animate-wiggle-dance flex items-center gap-1.5 px-3 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors text-xs font-bold shadow-lg shadow-green-600/40"
                 aria-label="הוסף למסך הבית"
               >
