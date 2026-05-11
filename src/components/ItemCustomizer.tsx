@@ -1201,7 +1201,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           <button
                             key={drink.id}
                             disabled={unavailable}
-                            onClick={() => !unavailable && setSelectedDrink(drink.id)}
+                            onClick={() => { if (!unavailable) { setSelectedDrink(drink.id); scrollToDrinkAddButton(); } }}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
