@@ -28,6 +28,7 @@ const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"
 const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
+const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa } from "@/lib/push";
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
@@ -71,6 +72,8 @@ const Index = () => {
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
+  const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
