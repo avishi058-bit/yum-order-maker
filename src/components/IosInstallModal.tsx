@@ -44,7 +44,14 @@ const IosInstallModal = ({ open, onClose }: Props) => {
                 className="w-full h-auto rounded-2xl"
               />
             </div>
-            <div className="px-4 py-3 border-t border-border">
+            <div className="px-4 py-3 border-t border-border space-y-3">
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-right">
+                <p className="text-sm font-bold text-foreground">💡 טיפ קטן</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  אחרי שתוסיף — בפעם הבאה היכנס דרך האייקון של <b>הבקתה</b> במסך הבית.
+                  ככה תקבל התראה ברגע שההזמנה שלך מוכנה לאיסוף 🔔
+                </p>
+              </div>
               <button
                 onClick={onClose}
                 className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm"
