@@ -180,3 +180,16 @@ body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
+/* Wiggle/dance animation for attention-grabbing buttons (plays a few times then stops) */
+@keyframes wiggle-dance {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(-8deg) scale(1.05); }
+  30% { transform: rotate(8deg) scale(1.05); }
+  45% { transform: rotate(-6deg) scale(1.04); }
+  60% { transform: rotate(6deg) scale(1.04); }
+  75% { transform: rotate(-3deg) scale(1.02); }
+}
+.animate-wiggle-dance {
+  animation: wiggle-dance 1.2s ease-in-out 5;
+  transform-origin: center center;
+}
