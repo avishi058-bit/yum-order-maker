@@ -232,27 +232,13 @@ export interface DrinkOption {
   category: "soft" | "beer";
 }
 
-export const mealDrinkOptions: DrinkOption[] = [
-  { id: "drink-cola", name: "קולה", price: 0, category: "soft" },
-  { id: "drink-zero", name: "זירו", price: 0, category: "soft" },
-  { id: "drink-fanta", name: "פאנטה", price: 0, category: "soft" },
-  { id: "drink-fanta-grape", name: "פאנטה ענבים", price: 0, category: "soft" },
-  { id: "drink-fanta-exotic", name: "פאנטה אקזוטי", price: 0, category: "soft" },
-  { id: "drink-sprite", name: "ספרייט", price: 0, category: "soft" },
-  { id: "drink-sprite-zero", name: "ספרייט זירו", price: 0, category: "soft" },
-  { id: "drink-blu", name: "בלו", price: 0, category: "soft" },
-  { id: "drink-blu-mojito", name: "בלו מוחיטו", price: 0, category: "soft" },
-  { id: "drink-blu-day", name: "בלו דיי", price: 0, category: "soft" },
-  { id: "drink-goldstar", name: "גולדסטאר", price: 8, category: "beer" },
-  { id: "drink-heineken", name: "הייניקן", price: 8, category: "beer" },
-  { id: "drink-corona", name: "קורונה", price: 8, category: "beer" },
-  { id: "drink-carlsberg", name: "קאלסברג", price: 8, category: "beer" },
-  { id: "drink-laffe", name: "לאפ בראון", price: 12, category: "beer" },
-  { id: "drink-unfiltered", name: "גולדסטאר אנפילטר", price: 12, category: "beer" },
-  { id: "drink-paulaner", name: "פאולנר", price: 12, category: "beer" },
-  { id: "drink-hoegaarden", name: "הוגרדן", price: 12, category: "beer" },
-  { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15, category: "beer" },
-];
+const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness"];
+const isBeerId = (id: string) => BEER_SUFFIXES.some((s) => id.endsWith(s));
+
+export const mealDrinkOptions: DrinkOption[] = MEAL_DRINKS_PRICING.map((d) => ({
+  ...d,
+  category: isBeerId(d.id) ? "beer" : "soft",
+}));
 
 // Sub-options for standalone drink menu items
 export interface DrinkSubOption {
