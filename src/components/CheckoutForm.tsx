@@ -32,7 +32,7 @@ interface CheckoutFormProps {
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
-  const { customer, isLoggedIn } = useCustomerAuth();
+  const { customer, isLoggedIn, linkFromOrder } = useCustomerAuth();
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
@@ -416,6 +416,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     setSubmitting(true);
     try {
       const order = await callCreateOrder(method, "new");
+      // Silently link/create customer from the order details so the next visit
+      // auto-logs in (no OTP needed).
+      if (!isLoggedIn && form.phone && form.name) {
+        await linkFromOrder(form.phone, form.name).catch(() => {});
+      }
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.orderNumber}`,

@@ -203,6 +203,81 @@ Deno.serve(async (req) => {
       return json({ success: true })
     }
 
+    // ─── Link from order: silent customer creation/login during checkout ───
+    // Used when a guest places an order. Upserts a customer record by phone
+    // (preserving existing terms/marketing consent), issues a device token,
+    // and returns it so the client auto-logs in for future visits.
+    if (action === 'link-from-order') {
+      const LinkSchema = z.object({
+        phone: z.string().min(9).max(15),
+        name: z.string().min(1).max(100),
+      })
+      const parsed = LinkSchema.safeParse(body)
+      if (!parsed.success) return json({ error: 'נתונים לא תקינים' }, 400)
+
+      const { phone, name } = parsed.data
+      const deviceToken = generateToken()
+      const now = new Date().toISOString()
+
+      // Look for existing customer
+      const { data: existing } = await supabase
+        .from('customers')
+        .select('id, name, phone, marketing_consent, login_count, terms_accepted_at')
+        .eq('phone', phone)
+        .maybeSingle()
+
+      let customer
+      if (existing) {
+        const { data: updated, error } = await supabase
+          .from('customers')
+          .update({
+            name: existing.name || name,
+            device_token: deviceToken,
+            last_login_at: now,
+            login_count: (existing.login_count || 0) + 1,
+            terms_accepted_at: existing.terms_accepted_at || now,
+          })
+          .eq('id', existing.id)
+          .select('id, name, phone, marketing_consent, login_count')
+          .single()
+        if (error) {
+          console.error('link-from-order update error:', error)
+          return json({ error: 'שגיאה בשמירה' }, 500)
+        }
+        customer = updated
+      } else {
+        const { data: created, error } = await supabase
+          .from('customers')
+          .insert({
+            phone,
+            name,
+            terms_accepted_at: now,
+            marketing_consent: false,
+            last_login_at: now,
+            login_count: 1,
+            device_token: deviceToken,
+          })
+          .select('id, name, phone, marketing_consent, login_count')
+          .single()
+        if (error) {
+          console.error('link-from-order insert error:', error)
+          return json({ error: 'שגיאה ביצירה' }, 500)
+        }
+        customer = created
+      }
+
+      return json({
+        success: true,
+        deviceToken,
+        customer: {
+          name: customer.name,
+          phone: customer.phone,
+          isReturning: !!existing,
+          loginCount: customer.login_count,
+        },
+      })
+    }
+
     return json({ error: 'Invalid action' }, 400)
   } catch (err) {
     console.error('customer-auth error:', err)
