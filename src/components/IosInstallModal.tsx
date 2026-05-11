@@ -6,14 +6,15 @@ import addToHomeImg from "@/assets/add-to-home-screen-ios.jpeg";
 interface Props {
   open: boolean;
   onClose: () => void;
+  postInstallOpen?: boolean;
 }
 
-const IosInstallModal = ({ open, onClose }: Props) => {
+const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
   const [step, setStep] = useState<1 | 2>(1);
 
   useEffect(() => {
-    if (open) setStep(1);
-  }, [open]);
+    if (open) setStep(postInstallOpen ? 2 : 1);
+  }, [open, postInstallOpen]);
 
   const handleClose = () => {
     onClose();
@@ -82,7 +83,12 @@ const IosInstallModal = ({ open, onClose }: Props) => {
                 </div>
                 <div className="px-4 py-3 border-t border-border">
                   <button
-                    onClick={() => setStep(2)}
+                    onClick={() => {
+                      onClose();
+                      window.setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent("open-post-install-instructions"));
+                      }, 120);
+                    }}
                     className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm"
                   >
                     הבנתי, אוסיף עכשיו
