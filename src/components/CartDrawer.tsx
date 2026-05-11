@@ -93,7 +93,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`fixed top-0 right-0 h-full ${isKiosk ? 'w-full' : 'w-full max-w-md'} bg-card z-50 shadow-2xl flex flex-col pwa-safe-screen`}
+            className={`fixed top-0 right-0 h-full ${isKiosk ? 'w-full' : 'w-full max-w-md'} bg-card z-50 shadow-2xl flex flex-col`}
             dir="rtl"
           >
             <div className={`flex items-center justify-between ${isKiosk ? 'p-6' : 'p-5'} border-b border-border`}>
@@ -226,7 +226,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
             </div>
 
             {items.length > 0 && (
-              <div className={`${isKiosk ? 'p-6' : 'p-5'} border-t border-border pwa-checkout-bar`}>
+              <div className={`${isKiosk ? 'p-6' : 'p-5'} border-t border-border`}>
                 <div className="flex justify-between items-center mb-4">
                   <span className={`${isKiosk ? 'text-2xl' : 'text-lg'} font-black`}>סה״כ</span>
                   <span className={`${isKiosk ? 'text-4xl' : 'text-2xl'} font-black text-primary`}>₪{total}</span>

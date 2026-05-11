@@ -215,44 +215,20 @@ body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
    (Add to Home Screen on iOS, installed PWA on Android/Desktop).
    Use the .pwa-installed class on <html> to scope adjustments.
    =================================================================== */
+html.pwa-installed {
+  /* Slightly smaller base font so the layout fits better in the
+     standalone window without browser chrome. Tweak as needed. */
+  font-size: 94%;
+}
+
 html.pwa-installed body {
-  /* Push regular page content below the iOS status bar / notch
-     and above the home-indicator. No scaling — only translation. */
+  /* Respect device safe-area insets (iPhone notch / home-indicator). */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Full-screen overlays (cart drawers, modals, sheets) are `position: fixed`
-   so body padding does NOT push them down. Mark those containers with
-   `pwa-safe-screen` and they'll respect the safe areas internally. */
-/* Full-screen overlays (cart drawers, modals, sheets) are `position: fixed`
-   so body padding does NOT push them down. Mark those containers with
-   `pwa-safe-screen` and they'll respect the top safe area internally.
-   Bottom is handled directly on the footer bar (smaller gap). */
-html.pwa-installed .pwa-safe-screen {
-  /* In iOS standalone, 100dvh can resolve to only the safe viewport above
-     the Home Indicator. Full-screen drawers need the layout viewport instead,
-     then inner padding decides what stays above the indicator. */
-  height: 100vh !important;
-  min-height: -webkit-fill-available;
-  max-height: none !important;
-  padding-top: env(safe-area-inset-top);
-  overflow: visible;
-}
-
-html.pwa-installed .pwa-checkout-bar {
-  padding-bottom: max(env(safe-area-inset-bottom), 1rem) !important;
-}
-
-/* For elements that are themselves fixed to the top/bottom of the viewport
-   (sticky headers, bottom action bars), use these helpers. */
-html.pwa-installed .pwa-safe-top {
-  padding-top: calc(env(safe-area-inset-top) + 0.5rem);
-}
-html.pwa-installed .pwa-safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-html.pwa-installed .pwa-safe-absolute-bottom {
-  bottom: calc(env(safe-area-inset-bottom) + 1rem) !important;
+/* Example: tighten hero spacing only inside the installed app. */
+html.pwa-installed .hero-section {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
