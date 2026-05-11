@@ -9,6 +9,7 @@ import {
   Wheat,
   AlertTriangle,
   ChevronLeft,
+  Heart,
 } from "lucide-react";
 import {
   Sheet,
@@ -29,11 +30,12 @@ import { useBusinessHours, DAY_NAMES_HE } from "@/hooks/useBusinessHours";
 
 interface SideMenuProps {
   onLoginClick: () => void;
+  onUpdateFavorite?: () => void;
 }
 
 type ModalKey = null | "hours" | "address" | "menu" | "gluten" | "allergens";
 
-const SideMenu = ({ onLoginClick }: SideMenuProps) => {
+const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
   const [open, setOpen] = useState(false);
   const [modal, setModal] = useState<ModalKey>(null);
   const { isLoggedIn, customer, logout } = useCustomerAuth();
@@ -66,12 +68,20 @@ const SideMenu = ({ onLoginClick }: SideMenuProps) => {
     }, 200);
   };
 
-  const items: { label: string; icon: React.ElementType; onClick: () => void }[] = [
+  const items: { label: string; icon: React.ElementType; onClick: () => void; highlight?: boolean }[] = [
     {
       label: isLoggedIn ? `התנתק${customer?.name ? ` (${customer.name})` : ""}` : "התחבר לאתר",
       icon: isLoggedIn ? LogOut : LogIn,
       onClick: handleAuthClick,
     },
+    ...(isLoggedIn && onUpdateFavorite
+      ? [{
+          label: "עדכן את הקבוע שלי",
+          icon: Heart,
+          onClick: () => { setOpen(false); onUpdateFavorite(); },
+          highlight: true,
+        }]
+      : []),
     { label: "שעות פעילות", icon: Clock, onClick: () => openModal("hours") },
     { label: "כתובת", icon: MapPin, onClick: () => openModal("address") },
     { label: "תפריט", icon: UtensilsCrossed, onClick: scrollToMenu },
@@ -108,11 +118,17 @@ const SideMenu = ({ onLoginClick }: SideMenuProps) => {
                   <button
                     type="button"
                     onClick={item.onClick}
-                    className="flex items-center justify-between gap-3 px-5 py-3.5 text-right transition-colors hover:bg-accent/60 active:bg-accent"
+                    className={`flex items-center justify-between gap-3 px-5 py-3.5 text-right transition-colors ${
+                      item.highlight
+                        ? "bg-green-500/10 hover:bg-green-500/20 active:bg-green-500/30"
+                        : "hover:bg-accent/60 active:bg-accent"
+                    }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon size={18} className="text-primary" />
-                      <span className="text-sm font-semibold text-foreground">{item.label}</span>
+                      <Icon size={18} className={item.highlight ? "text-green-600 fill-green-600" : "text-primary"} />
+                      <span className={`text-sm font-semibold ${item.highlight ? "text-green-700 dark:text-green-400" : "text-foreground"}`}>
+                        {item.label}
+                      </span>
                     </div>
                     <ChevronLeft size={16} className="text-muted-foreground" />
                   </button>
