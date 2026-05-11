@@ -42,6 +42,7 @@ export type Database = {
         Row: {
           created_at: string
           device_token: string | null
+          favorite_items: Json | null
           id: string
           last_login_at: string | null
           login_count: number
@@ -55,6 +56,7 @@ export type Database = {
         Insert: {
           created_at?: string
           device_token?: string | null
+          favorite_items?: Json | null
           id?: string
           last_login_at?: string | null
           login_count?: number
@@ -68,6 +70,7 @@ export type Database = {
         Update: {
           created_at?: string
           device_token?: string | null
+          favorite_items?: Json | null
           id?: string
           last_login_at?: string | null
           login_count?: number
