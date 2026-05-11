@@ -707,6 +707,118 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                 {/* CONFIRM view — use favorite, with per-order edits */}
                 {!pickerOpen && view === "confirm" && (
                   <>
+                    {hasAnyIssues && (
+                      <div className="rounded-xl border-2 border-amber-500/60 bg-amber-50 dark:bg-amber-950/30 p-3 space-y-3">
+                        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                          <AlertTriangle size={18} />
+                          <p className="font-bold text-sm">חלק מהפריטים בקבוע לא זמינים כעת</p>
+                        </div>
+                        <p className="text-xs text-amber-700/90 dark:text-amber-200/90">
+                          בחר חלופה או הסר לפני שממשיכים:
+                        </p>
+                        <div className="space-y-3">
+                          {Object.entries(issuesByIndex).map(([idxStr, lineIssues]) => {
+                            const idx = Number(idxStr);
+                            const it = usingDraft[idx];
+                            return (
+                              <div key={idx} className="bg-card border border-border rounded-lg p-2.5 space-y-2.5">
+                                <p className="text-xs font-bold text-foreground">
+                                  במנה: {it?.name}
+                                </p>
+                                {lineIssues.map((iss, j) => (
+                                  <div key={j} className="space-y-1.5 border-r-2 border-amber-400 pr-2">
+                                    <p className="text-xs text-foreground">
+                                      {iss.kind === "main" && <>חסר במלאי: <b>{iss.missingName}</b> (המנה הראשית)</>}
+                                      {iss.kind === "topping" && <>תוספת חסרה: <b>{iss.missingName}</b></>}
+                                      {iss.kind === "side" && <>הצד חסר: <b>{iss.missingName}</b></>}
+                                      {iss.kind === "drink" && <>השתייה חסרה: <b>{iss.missingName}</b></>}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {iss.kind === "main" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceMain(idx, alt)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name} (₪{alt.price})
+                                        </button>
+                                      ))}
+                                      {iss.kind === "main" && (
+                                        <button
+                                          onClick={() => removeLine(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold"
+                                        >
+                                          הסר מההזמנה
+                                        </button>
+                                      )}
+                                      {iss.kind === "topping" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceTopping(idx, iss.missingId, alt.id, alt.name)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name}{alt.price ? ` (+₪${alt.price})` : ""}
+                                        </button>
+                                      ))}
+                                      {iss.kind === "topping" && (
+                                        <button
+                                          onClick={() => removeTopping(idx, iss.missingId)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 font-semibold"
+                                        >
+                                          לא צריך את {iss.missingName}
+                                        </button>
+                                      )}
+                                      {iss.kind === "side" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceSide(idx, alt.id, alt.name)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name}{alt.price ? ` (+₪${alt.price})` : ""}
+                                        </button>
+                                      ))}
+                                      {iss.kind === "side" && iss.keepDrink && (
+                                        <button
+                                          onClick={() => dropSideKeepDrink(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/25 font-semibold"
+                                        >
+                                          בטל עסקית, השאר שתייה: {iss.keepDrink.label}
+                                        </button>
+                                      )}
+                                      {iss.kind === "side" && (
+                                        <button
+                                          onClick={() => dropMealEntirely(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 font-semibold"
+                                        >
+                                          לא צריך צד, גם בלי שתייה
+                                        </button>
+                                      )}
+                                      {iss.kind === "drink" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceDrink(idx, alt.id, alt.name)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name}{alt.price ? ` (+₪${alt.price})` : ""}
+                                        </button>
+                                      ))}
+                                      {iss.kind === "drink" && (
+                                        <button
+                                          onClick={() => dropMealEntirely(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 font-semibold"
+                                        >
+                                          בטל את שדרוג העסקית
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     <p className="text-sm text-muted-foreground">
                       רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?
                     </p>
@@ -731,14 +843,16 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                     <div className="flex flex-col gap-2 pt-2">
                       <button
                         onClick={() => handleConfirmUse("checkout")}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30"
+                        disabled={hasAnyIssues}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Check size={18} />
-                        המשך לתשלום עם הקבוע
+                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע"}
                       </button>
                       <button
                         onClick={() => handleConfirmUse("cart")}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm"
+                        disabled={hasAnyIssues}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShoppingBag size={15} />
                         הוסף לעגלה והמשך לקנות
