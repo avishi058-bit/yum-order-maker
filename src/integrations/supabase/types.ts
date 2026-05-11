@@ -186,6 +186,7 @@ export type Database = {
           order_source: string
           payment_method: string | null
           status: string
+          ten_min_notified_at: string | null
           terms_accepted_at: string | null
           total: number
           updated_at: string
@@ -203,6 +204,7 @@ export type Database = {
           order_source?: string
           payment_method?: string | null
           status?: string
+          ten_min_notified_at?: string | null
           terms_accepted_at?: string | null
           total: number
           updated_at?: string
@@ -220,6 +222,7 @@ export type Database = {
           order_source?: string
           payment_method?: string | null
           status?: string
+          ten_min_notified_at?: string | null
           terms_accepted_at?: string | null
           total?: number
           updated_at?: string
