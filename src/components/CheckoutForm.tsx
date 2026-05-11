@@ -50,8 +50,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // kiosk mode). Per product decision: skip it entirely in those cases and
   // jump straight to payment-method selection. Only keep details when we
   // genuinely need to collect name/phone (website + not logged in).
-  const detailsCollectsRequiredFields = !isLoggedIn && !isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP;
-  const effectiveSkipDetails = skipDetails || !detailsCollectsRequiredFields;
+  // Details step removed entirely — always skip straight to payment.
+  const effectiveSkipDetails = true;
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
     const detailsOrPayment: "details" | "payment" = effectiveSkipDetails ? "payment" : "details";
     if (isLoggedIn && customer) return detailsOrPayment;
