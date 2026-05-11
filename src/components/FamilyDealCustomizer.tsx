@@ -263,45 +263,27 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                         <input
                           type="text"
                           placeholder="שם (לא חובה)"
-                          value={burgerConfigs[currentBurgerIndex]?.name || ""}
+                          value={burgerNames[currentBurgerIndex] || ""}
                           onChange={(e) => {
                             const idx = currentBurgerIndex;
-                            setBurgerConfigs((prev) => {
+                            const value = e.target.value;
+                            setBurgerNames((prev) => {
                               const updated = [...prev];
-                              updated[idx] = { ...updated[idx], name: e.target.value };
+                              updated[idx] = value;
                               return updated;
                             });
                           }}
                           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
-                      <div className="space-y-0">
-                        {removals.map((r) => {
-                          const active = currentRemovals.includes(r.id);
-                          return (
-                            <button
-                              key={r.id}
-                              onClick={() => toggleRemoval(r.id)}
-                              className="w-full flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
-                            >
-                              <div
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                }`}
-                              >
-                                {active && (
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="w-2.5 h-2.5 rounded-full bg-primary-foreground"
-                                  />
-                                )}
-                              </div>
-                              <span className="font-medium text-base">{r.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {currentBurgerIndex >= 0 && (
+                        <BurgerIngredientChecklist
+                          state={burgerIngredients[currentBurgerIndex]}
+                          onToggle={toggleIngredient}
+                          isAvailable={isAvailable}
+                          isKiosk={isKiosk}
+                        />
+                      )}
                     </div>
                   </motion.div>
                 )}
