@@ -77,6 +77,20 @@ interface HistoryOrder {
 
 /** Items the customizer can handle: same rule used in Index.openItemFlow. */
 const CUSTOMIZABLE = menuItems.filter((m) => m.category === "burger" || m.category === "meal");
+/** Simple items that are added directly (no customization): sides + drinks. */
+const SIMPLE_ITEMS = menuItems.filter((m) => m.category === "side" || m.category === "drink");
+
+/** Build a CartItem for a simple (non-customizable) menu item. */
+const simpleToCartItem = (m: MenuItem): CartItem => ({
+  id: `${m.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  menuItemId: m.id,
+  name: m.name,
+  price: m.price,
+  quantity: 1,
+  toppings: [],
+  removals: [],
+  withMeal: false,
+});
 
 /** Convert a saved order's items into fresh CartItems. */
 const orderItemsToCart = (items: HistoryItem[]): CartItem[] => {
