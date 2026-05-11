@@ -102,7 +102,7 @@ const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
           </button>
         </SheetTrigger>
 
-        <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0" dir="rtl">
+        <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0 pwa-safe-screen" dir="rtl">
           <SheetHeader className="border-b border-border px-5 py-4 text-right">
             <SheetTitle className="text-lg font-black text-primary">הבקתה 🐄</SheetTitle>
             {isLoggedIn && customer?.name && (
@@ -137,7 +137,7 @@ const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
             })}
           </nav>
 
-          <div className="absolute bottom-4 left-0 right-0 px-5 text-center text-xs text-muted-foreground">
+          <div className="absolute bottom-4 left-0 right-0 px-5 text-center text-xs text-muted-foreground pwa-safe-absolute-bottom">
             <p>058-4633-555</p>
           </div>
         </SheetContent>

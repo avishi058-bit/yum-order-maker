@@ -22,7 +22,7 @@ export const uiPositions = {
 
   /** Cookie consent banner */
   cookieBanner: {
-    position: "fixed bottom-0 inset-x-0 z-[100] p-4",
+    position: "fixed bottom-0 inset-x-0 z-40 p-4 pwa-safe-bottom",
   },
 
   /** Order tracking top bar */
