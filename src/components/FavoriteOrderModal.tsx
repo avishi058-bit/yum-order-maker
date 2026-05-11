@@ -26,7 +26,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   /** Adds items into the live cart. */
-  onUseFavorite: (items: CartItem[]) => void;
+  onUseFavorite: (items: CartItem[], mode: "cart" | "checkout") => void;
   /** Snapshot of the current cart (used for "save current cart as favorite"). */
   currentCart: CartItem[];
   /** Force the modal to open directly in setup mode. */
