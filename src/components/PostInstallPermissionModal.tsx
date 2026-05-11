@@ -81,6 +81,7 @@ const PostInstallPermissionModal = () => {
       try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
     }
     setOpen(false);
+    setStep("ask");
   };
 
   const handleEnable = async () => {
@@ -99,6 +100,11 @@ const PostInstallPermissionModal = () => {
         } catch {}
       }
     } catch {}
+    // After permission flow — if not installed yet, explain why to add to home screen
+    if (!isStandalone()) {
+      setStep("explain");
+      return;
+    }
     dismiss();
   };
 
