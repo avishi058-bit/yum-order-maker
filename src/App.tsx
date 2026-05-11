@@ -14,6 +14,7 @@ import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Install from "./pages/Install";
 
 // Lazy load admin/staff pages
 const Kitchen = lazy(() => import("./pages/Kitchen"));
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/index" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/install" element={<Install />} />
               <Route path="/track" element={<OrderTracking />} />
               <Route path="/kiosk" element={<Kiosk />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
