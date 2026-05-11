@@ -158,6 +158,16 @@ const Index = () => {
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
+      // BRIDGE mode: a caller (e.g. favorite modal) is awaiting the result —
+      // hand it back instead of touching the cart.
+      if (customizerResolverRef.current) {
+        customizerResolverRef.current({ item, quantity, selectedToppings, selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName });
+        customizerResolverRef.current = null;
+        setCustomizerItem(null);
+        setEditingCartId(null);
+        setCustomizerInitial(undefined);
+        return;
+      }
       setCart((prev) => {
         // EDIT mode: replace the existing cart entry in-place (preserve order + id).
         if (editingCartId) {
@@ -183,6 +193,23 @@ const Index = () => {
     },
     [editingCartId, flyFromCenter]
   );
+
+  /**
+   * Opens the existing ItemCustomizer for a given menu item and resolves with
+   * the user's selections (or null if they closed the customizer). Lets the
+   * favorite-order modal reuse the full toppings/removals/meal UI.
+   */
+  const customizeMenuItem = useCallback(
+    (menuItem: MenuItem, initialState?: ItemCustomizerInitialState) =>
+      new Promise<CustomizerResult | null>((resolve) => {
+        customizerResolverRef.current = resolve;
+        setCustomizerInitial(initialState);
+        setEditingCartId(null);
+        setCustomizerItem(menuItem);
+      }),
+    []
+  );
+
 
   const handleEditCartItem = useCallback((cartId: string) => {
     const cartItem = cart.find((c) => c.id === cartId);
