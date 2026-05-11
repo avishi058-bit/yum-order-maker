@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Share, Plus, MoreVertical, Download, CheckCircle2, Smartphone } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
@@ -26,8 +27,16 @@ const Install = () => {
     if (result === "accepted") setInstalled(true);
   };
 
-  // Already installed — direct user to open from home screen
-  if (standalone || installed) {
+  // If we're already running as the installed PWA (opened from the home-screen
+  // icon on Android/iOS), the user landed on /install by accident — push them
+  // to the actual app home so they don't get stuck on a dead-end screen.
+  if (standalone) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Just installed from this very page (browser tab) — guide them to open
+  // it via the new home-screen icon.
+  if (installed) {
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
