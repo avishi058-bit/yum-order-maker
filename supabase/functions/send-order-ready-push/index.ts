@@ -49,10 +49,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: subs, error: subsErr } = await supabase
+    // Find subscriptions tied to this order OR matching the customer's phone
+    // (covers customers who subscribed before the order existed, e.g. installed PWA earlier).
+    const orFilter = order.customer_phone
+      ? `order_id.eq.${order_id},customer_phone.eq.${order.customer_phone}`
+      : `order_id.eq.${order_id}`;
+
+    const { data: subsRaw, error: subsErr } = await supabase
       .from("push_subscriptions")
       .select("id, endpoint, p256dh, auth")
-      .eq("order_id", order_id);
+      .or(orFilter);
 
     if (subsErr) {
       return new Response(JSON.stringify({ error: subsErr.message }), {
@@ -61,7 +67,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!subs || subs.length === 0) {
+    // Dedupe by endpoint (a phone may have multiple rows from different orders)
+    const seen = new Set<string>();
+    const subs = (subsRaw ?? []).filter((s) => {
+      if (seen.has(s.endpoint)) return false;
+      seen.add(s.endpoint);
+      return true;
+    });
+
+    if (subs.length === 0) {
       return new Response(JSON.stringify({ ok: true, sent: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
