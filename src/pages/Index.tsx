@@ -706,6 +706,14 @@ const Index = () => {
           <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
         )}
 
+        {saveFavoritePrompt && (
+          <SaveAsFavoriteModal
+            open={!!saveFavoritePrompt}
+            items={saveFavoritePrompt}
+            onClose={() => setSaveFavoritePrompt(null)}
+          />
+        )}
+
         {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && (
           <SavedCartModal
             open={true}
