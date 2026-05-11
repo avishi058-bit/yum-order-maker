@@ -71,7 +71,7 @@ export interface ChefSummary {
   glutenFreeBuns: number;
   // Fried sides (sources kept separate)
   fries: number;
-  waffleFries: number;
+  sweetPotatoFries: number;
   onionRings: number;          //טבעות בצל (מנה בצד)
   tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
   tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
@@ -328,7 +328,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let regularBuns = 0;
   let glutenFreeBuns = 0;
   let fries = 0;
-  let waffleFries = 0;
+  let sweetPotatoFries = 0;
   let onionRings = 0;
   let tempuraOnionSide = 0;
   let tempuraOnionTopping = 0;
@@ -448,7 +448,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     regularBuns,
     glutenFreeBuns,
     fries,
-    waffleFries,
+    sweetPotatoFries,
     onionRings,
     tempuraOnionSide,
     tempuraOnionTopping,
