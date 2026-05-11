@@ -88,8 +88,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   }, [isLoggedIn, customer, isKiosk]);
 
   const handleSendOtp = async () => {
-    if (!form.phone || form.phone.replace(/[-\s]/g, '').length < 9) {
-      toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+    const phoneCheck = validateIsraeliPhone(form.phone);
+    if (!phoneCheck.valid) {
+      toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
 
@@ -171,9 +172,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // Website (no logged-in user, OTP skipped) → phone is required.
     // Kiosk → phone field is hidden, no validation.
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && !isLoggedIn) {
-      const cleaned = form.phone.replace(/[-\s]/g, "");
-      if (cleaned.length < 9) {
-        toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+      const phoneCheck = validateIsraeliPhone(form.phone);
+      if (!phoneCheck.valid) {
+        toast({ title: phoneCheck.error, variant: "destructive" });
         return;
       }
     }
