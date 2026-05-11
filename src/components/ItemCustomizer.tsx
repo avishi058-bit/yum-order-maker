@@ -183,6 +183,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImgRef = useRef<HTMLImageElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+  const drinkAddBtnRef = useRef<HTMLButtonElement>(null);
 
   // Lock the page-behind-the-modal so iOS doesn't rubber-band/scroll the
   // background instead of the sheet content.
