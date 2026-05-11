@@ -417,12 +417,15 @@ const Index = () => {
                 <LogIn size={16} />
                 התחברות
               </button>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* "Welcome back" hero strip + favorite-order CTA — logged-in customers only */}
+      {/* "Welcome back" hero strip + favorite-order CTA — full-width row, logged-in customers only */}
       {!isStation && isLoggedIn && customer && !isClosed && (
-        <div className="px-4 py-4 bg-gradient-to-l from-green-500/10 via-primary/5 to-transparent border-b border-border" dir="rtl">
-          <h2 className="text-xl sm:text-2xl font-black text-foreground leading-tight">
+        <div className="w-full px-4 py-3 bg-gradient-to-l from-green-500/10 via-primary/5 to-transparent border-b border-border" dir="rtl">
+          <h2 className="text-lg sm:text-2xl font-black text-foreground leading-tight text-center sm:text-right">
             כיף שחזרת {customer.name.split(" ")[0]}🥰✨
           </h2>
           <button
@@ -430,14 +433,11 @@ const Index = () => {
               setFavoriteStartInSetup(false);
               setFavoriteModalOpen(true);
             }}
-            className="mt-3 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-green-600/30 transition-colors"
+            className="animate-dance-loop mt-2 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-green-600/40 transition-colors"
           >
             <span aria-hidden>❤️</span>
             אני רוצה את הקבוע שלי
           </button>
-        </div>
-      )}
-          </div>
         </div>
       )}
 
