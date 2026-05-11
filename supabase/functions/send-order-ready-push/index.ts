@@ -100,16 +100,16 @@ Deno.serve(async (req) => {
     const cta = "👇 לצפייה בטיימר בזמן אמת לחצו";
 
     const titles = {
-      ready: "ההזמנה שלך מוכנה ✅🥳",
-      preparing: "ההזמנה התקבלה במטבח 👨‍🍳",
-      ten_minutes: "עוד כ־10 דק׳ וההמבורגר מוכן! ⏰",
-      almost_ready: "עוד כ־5 דק׳ וההמבורגר מוכן! 🔥",
+      ready: "ההזמנה שלך מוכנה לאיסוף ✅🥳",
+      preparing: "ההזמנה שלך התקבלה במטבח 👨‍🍳",
+      ten_minutes: "ההזמנה שלך — עוד כ־10 דק׳ ומוכנה ⏰",
+      almost_ready: "ההזמנה שלך — עוד כ־5 דק׳ ומוכנה 🔥",
     } as const;
     const bodies = {
-      ready: `הזמנה #${order.order_number} מוכנה לאיסוף\n👇 לניווט למסעדה לחץ`,
-      preparing: `הזמנה #${order.order_number} בהכנה${etaSuffix}\n${cta}`,
-      ten_minutes: `הזמנה #${order.order_number} — עוד כ־10 דק׳\n${cta}`,
-      almost_ready: `הזמנה #${order.order_number} — עוד כ־5 דק׳\n${cta}`,
+      ready: `👇 לניווט למסעדה לחץ`,
+      preparing: `נעדכן אותך ברגע שתהיה מוכנה${etaSuffix}\n${cta}`,
+      ten_minutes: `כדאי להתחיל להתקדם 😋\n${cta}`,
+      almost_ready: `המבורגר חם מחכה לך 🍔\n${cta}`,
     } as const;
 
     const payload = JSON.stringify({
