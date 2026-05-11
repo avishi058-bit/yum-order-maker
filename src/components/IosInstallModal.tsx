@@ -162,13 +162,10 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                 </div>
                 <div className="px-4 py-3 border-t border-border space-y-2">
                   <button
-                    onClick={() => {
-                      handleClose();
-                      try { window.close(); } catch {}
-                    }}
+                    onClick={handleClose}
                     className="w-full bg-primary text-primary-foreground font-black py-3.5 rounded-xl text-sm shadow-lg shadow-primary/30"
                   >
-                    הבנתי, קח/י אותי ליישום 🚀
+                    הבנתי 👍
                   </button>
                   <p className="text-[11px] text-muted-foreground text-center leading-relaxed px-2">
                     💡 צא/י מהדפדפן ולחצ/י על האייקון של <span className="font-bold text-foreground">הבקתה</span> במסך הבית
