@@ -398,6 +398,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       const touch = e.touches[0];
       const dy = touch.clientY - startY;
       const dx = Math.abs(touch.clientX - startX);
+      // If a pointer-driven drag is already active (kiosks fire both pointer +
+      // touch events), just keep feeding position into it — do NOT call
+      // beginDrag again or we would overwrite its pointerId and lock the drag.
+      if (dragState.current.active) {
+        if (e.cancelable) e.preventDefault();
+        applyDragPosition(touch.clientY);
+        claimed = true;
+        return;
+      }
       if (!claimed) {
         if (dy > 6 && dy > dx && sc.scrollTop <= 2) {
           claimed = true;
@@ -410,7 +419,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       applyDragPosition(touch.clientY);
     };
     const onTouchEnd = () => {
-      if (claimed) finishDrag();
+      // Only finish here if this touch handler started the drag (pointerId -1).
+      // Otherwise let the pointerup/pointercancel handler finalize it, so we
+      // don't double-finish and snap the sheet back unexpectedly.
+      if (claimed && dragState.current.active && dragState.current.pointerId === -1) {
+        finishDrag();
+      }
       claimed = false;
       blocked = false;
     };
