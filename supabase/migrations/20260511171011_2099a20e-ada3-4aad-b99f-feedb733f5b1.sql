@@ -1,0 +1,2 @@
+DELETE FROM public.customers WHERE id IN ('145b3d70-7e6c-458c-9b42-6a37300eb5da','e6666f89-fbb2-4351-8f07-478b0d8374a4');
+DELETE FROM public.verification_codes WHERE phone IN ('0584633555','05846335555','+972584633555','972584633555');
