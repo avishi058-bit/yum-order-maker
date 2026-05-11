@@ -193,3 +193,18 @@ body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
   animation: wiggle-dance 1.2s ease-in-out 5;
   transform-origin: center center;
 }
+
+/* Continuous, attention-grabbing dance for primary CTA buttons */
+@keyframes dance-loop {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  10% { transform: rotate(-3deg) scale(1.04); }
+  20% { transform: rotate(3deg) scale(1.04); }
+  30% { transform: rotate(-2deg) scale(1.02); }
+  40% { transform: rotate(2deg) scale(1.02); }
+  50% { transform: rotate(0deg) scale(1.06); }
+  60%, 100% { transform: rotate(0deg) scale(1); }
+}
+.animate-dance-loop {
+  animation: dance-loop 2.4s ease-in-out infinite;
+  transform-origin: center center;
+}
