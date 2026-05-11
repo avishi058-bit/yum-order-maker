@@ -109,7 +109,16 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
       if (recovery) {
         callAuth("link-from-order", { phone: recovery.phone, name: recovery.name })
           .then((data) => {
-            saveSessionRef.current?.(data.deviceToken, data.customer);
+            const c = data.customer as CustomerData & { favoriteItems?: CartItem[] | null };
+            localStorage.setItem(DEVICE_TOKEN_KEY, data.deviceToken);
+            localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
+            setCustomer({
+              name: c.name, phone: c.phone, isReturning: c.isReturning,
+              loginCount: c.loginCount, lastLoginAt: c.lastLoginAt,
+            });
+            const fav = c.favoriteItems ?? null;
+            setFavoriteState(fav);
+            if (fav) localStorage.setItem(FAVORITE_KEY, JSON.stringify(fav));
             // Immediately ask for notification permission so they get real-time order updates.
             setTimeout(() => {
               try { window.dispatchEvent(new CustomEvent("request-notify-permission")); } catch {}
