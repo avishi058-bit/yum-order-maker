@@ -633,6 +633,10 @@ const Index = () => {
                 const orderedSnapshot = cart.slice();
                 setCheckoutOpen(false);
                 setCart([]);
+                // Order was placed — discard any saved cart so the
+                // "continue previous order" modal doesn't pop up later.
+                suppressNextSave();
+                void discardSaved();
                 if (isStation) {
                   setShowKioskWelcome(true);
                 } else if (orderNumber) {
