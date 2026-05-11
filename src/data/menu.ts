@@ -276,28 +276,10 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
   ],
 };
 
-export const dealDrinkOptions: DrinkOption[] = [
-  { id: "deal-cola", name: "קולה", price: 0, category: "soft" },
-  { id: "deal-zero", name: "זירו", price: 0, category: "soft" },
-  { id: "deal-fanta", name: "פאנטה", price: 0, category: "soft" },
-  { id: "deal-fanta-grape", name: "פאנטה ענבים", price: 0, category: "soft" },
-  { id: "deal-fanta-exotic", name: "פאנטה אקזוטי", price: 0, category: "soft" },
-  { id: "deal-sprite", name: "ספרייט", price: 0, category: "soft" },
-  { id: "deal-sprite-zero", name: "ספרייט זירו", price: 0, category: "soft" },
-  { id: "deal-blu", name: "בלו", price: 0, category: "soft" },
-  { id: "deal-blu-mojito", name: "בלו מוחיטו", price: 0, category: "soft" },
-  { id: "deal-blu-day", name: "בלו דיי", price: 0, category: "soft" },
-  { id: "deal-grapes", name: "ענבים (בקבוק)", price: 2, category: "soft" },
-  { id: "deal-oranges", name: "תפוזים (בקבוק)", price: 2, category: "soft" },
-  { id: "deal-flavored-water", name: "מים בטעמים (בקבוק)", price: 2, category: "soft" },
-  { id: "deal-goldstar", name: "גולדסטאר", price: 8, category: "beer" },
-  { id: "deal-heineken", name: "הייניקן", price: 8, category: "beer" },
-  { id: "deal-corona", name: "קורונה", price: 8, category: "beer" },
-  { id: "deal-carlsberg", name: "קאלסברג", price: 8, category: "beer" },
-  { id: "deal-laffe", name: "לאפ בראון", price: 12, category: "beer" },
-  { id: "deal-unfiltered", name: "גולדסטאר אנפילטר", price: 12, category: "beer" },
-  { id: "deal-guinness", name: "גינס", price: 12, category: "beer" },
-];
+// Deal drinks (friends-deal "deal-*" + family-deal "fam-*"). Frontend uses only the deal-* prefix here.
+export const dealDrinkOptions: DrinkOption[] = DEAL_DRINKS_PRICING
+  .filter((d) => d.id.startsWith("deal-"))
+  .map((d) => ({ ...d, category: isBeerId(d.id) ? "beer" : "soft" }));
 
 export interface SauceOption {
   id: string;
