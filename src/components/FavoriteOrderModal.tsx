@@ -981,7 +981,6 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                       הוסף מנה לפעם הזאת
                     </button>
                     <div className="flex flex-col gap-2 pt-2">
-                      {(() => null)()}
                       <motion.button
                         onClick={() => handleConfirmUse("checkout")}
                         disabled={hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0}
