@@ -186,7 +186,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const progressSteps = getProgressSteps();
   const currentProgressIndex = progressSteps.indexOf(step);
-  const currentRemovals = currentBurgerIndex >= 0 ? burgerConfigs[currentBurgerIndex].removals : [];
+  
 
   if (!open) return null;
 
