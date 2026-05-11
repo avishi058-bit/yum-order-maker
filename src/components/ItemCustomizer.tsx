@@ -235,8 +235,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     });
   }, [applyHeroTransform]);
 
-  const isInteractiveDragTarget = (target: HTMLElement | null) =>
-    !!target?.closest("button, a, input, textarea, select, label, [role='button']");
+  const isInteractiveDragTarget = useCallback((target: HTMLElement | null) =>
+    !!target?.closest("button, a, input, textarea, select, label, [role='button']"), []);
 
   const beginDrag = useCallback((clientY: number, pointerId: number) => {
     dragState.current.active = true;
@@ -401,7 +401,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       if (!claimed) {
         if (dy > 6 && dy > dx && sc.scrollTop <= 2) {
           claimed = true;
-          beginDrag(touch.clientY, -1);
+          beginDrag(startY, -1);
         } else {
           return;
         }
@@ -424,7 +424,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       sc.removeEventListener("touchend", onTouchEnd);
       sc.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [step, beginDrag, applyDragPosition, finishDrag]);
+  }, [step, isInteractiveDragTarget, beginDrag, applyDragPosition, finishDrag]);
 
   // Track whether the toppings section has been scrolled into view
   useEffect(() => {
