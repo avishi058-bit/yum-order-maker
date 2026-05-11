@@ -41,6 +41,7 @@ const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
 const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
+const SaveAsFavoriteModal = lazy(() => import("@/components/SaveAsFavoriteModal"));
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa, isIos } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
@@ -61,7 +62,7 @@ const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
   const { status: businessStatus } = useBusinessHours();
-  const { isLoggedIn, customer, loading: authLoading } = useCustomerAuth();
+  const { isLoggedIn, customer, loading: authLoading, favoriteItems } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   // Manual closure = admin closed website while business hours say we should be open
@@ -87,6 +88,7 @@ const Index = () => {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
   const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
+  const [saveFavoritePrompt, setSaveFavoritePrompt] = useState<CartItem[] | null>(null);
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
   const isIosDevice = typeof window !== "undefined" ? isIos() : false;
@@ -622,6 +624,9 @@ const Index = () => {
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
               onSuccess={(orderNumber, phone) => {
+                // Snapshot the cart BEFORE clearing — used for the
+                // "save as your regular" post-order prompt.
+                const orderedSnapshot = cart.slice();
                 setCheckoutOpen(false);
                 setCart([]);
                 if (isStation) {
@@ -642,6 +647,17 @@ const Index = () => {
                     setTimeout(() => {
                       window.dispatchEvent(new CustomEvent("request-notify-permission"));
                     }, 2500);
+                  }
+                  // Offer to save the just-ordered dishes as the customer's
+                  // "regular" — only when they don't already have one saved.
+                  // Slight delay so the success toast lands first.
+                  if (!favoriteItems || favoriteItems.length === 0) {
+                    const eligible = orderedSnapshot.filter(
+                      (it) => it.menuItemId && it.name !== "רטבים",
+                    );
+                    if (eligible.length > 0) {
+                      setTimeout(() => setSaveFavoritePrompt(eligible), 1500);
+                    }
                   }
                 }
               }}
@@ -688,6 +704,14 @@ const Index = () => {
 
         {reopenModalOpen && (
           <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+        )}
+
+        {saveFavoritePrompt && (
+          <SaveAsFavoriteModal
+            open={!!saveFavoritePrompt}
+            items={saveFavoritePrompt}
+            onClose={() => setSaveFavoritePrompt(null)}
+          />
         )}
 
         {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && (
