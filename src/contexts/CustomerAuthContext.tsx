@@ -25,6 +25,8 @@ interface CustomerAuthContextType {
   logout: () => Promise<void>;
   /** Logout from all devices */
   logoutAll: () => Promise<void>;
+  /** Silently create or link a customer after a guest checkout, so future visits auto-login */
+  linkFromOrder: (phone: string, name: string) => Promise<void>;
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | null>(null);
@@ -108,8 +110,19 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     setCustomer(null);
   }, [customer]);
 
+  const linkFromOrder = useCallback(async (phone: string, name: string) => {
+    // Don't override an existing session
+    if (localStorage.getItem(DEVICE_TOKEN_KEY)) return;
+    try {
+      const data = await callAuth("link-from-order", { phone, name });
+      saveSession(data.deviceToken, data.customer);
+    } catch (e) {
+      console.warn("[auth] linkFromOrder failed", e);
+    }
+  }, [saveSession]);
+
   return (
-    <CustomerAuthContext.Provider value={{ customer, loading, isLoggedIn: !!customer, register, login, logout, logoutAll }}>
+    <CustomerAuthContext.Provider value={{ customer, loading, isLoggedIn: !!customer, register, login, logout, logoutAll, linkFromOrder }}>
       {children}
     </CustomerAuthContext.Provider>
   );
