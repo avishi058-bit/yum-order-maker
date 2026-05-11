@@ -274,7 +274,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "friends-mix",
     name: "מיקס חברים",
-    description: "ערימת צ׳יפסים: רגיל, טבעות בצל, וופל צ׳יפס",
+    description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה",
     price: 59,
     category: "side",
   },
