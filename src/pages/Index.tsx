@@ -642,6 +642,7 @@ const Index = () => {
                 // "save as your regular" post-order prompt.
                 const orderedSnapshot = cart.slice();
                 setCheckoutOpen(false);
+                setCheckoutSkipDetails(false);
                 setCart([]);
                 // Order was placed — discard any saved cart so the
                 // "continue previous order" modal doesn't pop up later.
