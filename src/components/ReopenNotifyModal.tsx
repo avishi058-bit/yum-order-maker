@@ -4,6 +4,7 @@ import { Bell, X, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { validateIsraeliPhone } from "@/lib/utils";
 
 interface ReopenNotifyModalProps {
   open: boolean;
@@ -18,11 +19,13 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
   const [done, setDone] = useState(false);
 
   const handleSubmit = async () => {
-    const cleaned = phone.replace(/[\s-]/g, "");
-    if (!/^0\d{8,9}$/.test(cleaned) && !/^\+?\d{9,15}$/.test(cleaned)) {
-      toast.error("מספר טלפון לא תקין");
+    const phoneCheck = validateIsraeliPhone(phone);
+    if (!phoneCheck.valid) {
+      toast.error(phoneCheck.error);
       return;
     }
+    const cleaned = phone.replace(/[\s-]/g, "");
+    setSubmitting(true);
     setSubmitting(true);
     const { error } = await supabase.from("reopen_notifications").insert({
       phone: cleaned,
@@ -110,7 +113,7 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
                     <input
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="050-1234567"
+                      placeholder="0501234567"
                       type="tel"
                       dir="ltr"
                       className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-right"
