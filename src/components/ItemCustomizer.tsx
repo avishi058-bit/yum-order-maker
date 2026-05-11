@@ -198,8 +198,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const drinkAddBtnRef = useRef<HTMLButtonElement>(null);
 
   // Lock the page-behind-the-modal so iOS doesn't rubber-band/scroll the
-  // background instead of the sheet content.
-  useBodyScrollLock(true);
+  // background instead of the sheet content. MUST be conditional on `item`
+  // because Kiosk renders this component permanently with item=null.
+  useBodyScrollLock(!!item);
 
   // Drag state (refs only — no re-render while dragging)
   const dragState = useRef({
