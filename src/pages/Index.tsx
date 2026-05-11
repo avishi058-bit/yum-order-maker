@@ -72,6 +72,7 @@ const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutSkipDetails, setCheckoutSkipDetails] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
   // When set, the customizer is opened in EDIT mode for this cart item.
   // On confirm, we replace the cart entry instead of appending a new one.
@@ -634,12 +635,14 @@ const Index = () => {
               total={getTotal()}
               sauces={selectedSauces}
               freeSauces={freeSauces}
-              onClose={() => setCheckoutOpen(false)}
+              skipDetails={checkoutSkipDetails}
+              onClose={() => { setCheckoutOpen(false); setCheckoutSkipDetails(false); }}
               onSuccess={(orderNumber, phone) => {
                 // Snapshot the cart BEFORE clearing — used for the
                 // "save as your regular" post-order prompt.
                 const orderedSnapshot = cart.slice();
                 setCheckoutOpen(false);
+                setCheckoutSkipDetails(false);
                 setCart([]);
                 // Order was placed — discard any saved cart so the
                 // "continue previous order" modal doesn't pop up later.
@@ -762,6 +765,7 @@ const Index = () => {
             setCart((prev) => [...prev, ...items]);
             if (mode === "checkout") {
               setCartOpen(false);
+              setCheckoutSkipDetails(true);
               setCheckoutOpen(true);
             } else {
               setCartOpen(true);

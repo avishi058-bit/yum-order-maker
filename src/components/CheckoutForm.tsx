@@ -29,9 +29,11 @@ interface CheckoutFormProps {
   freeSauces?: number;
   onClose: () => void;
   onSuccess: (orderNumber?: number, phone?: string) => void;
+  /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
+  skipDetails?: boolean;
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false }, ref) => {
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
   const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
@@ -45,9 +47,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // IMPORTANT: compute initial step synchronously so the OTP modal NEVER
   // flashes on first render in the kiosk.
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
-    if (isLoggedIn && customer) return "details";
-    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) return "details";
-    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) return "details";
+    const detailsOrPayment: "details" | "payment" = skipDetails ? "payment" : "details";
+    if (isLoggedIn && customer) return detailsOrPayment;
+    if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) return detailsOrPayment;
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) return detailsOrPayment;
     return "phone";
   };
 
@@ -73,18 +76,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
+    const target: "details" | "payment" = skipDetails ? "payment" : "details";
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
-      if (step === "phone" || step === "otp") setStep("details");
+      if (step === "phone" || step === "otp") setStep(target);
       return;
     }
     if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE && (step === "phone" || step === "otp")) {
-      setStep("details");
+      setStep(target);
       return;
     }
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && step === "otp") {
-      setStep("details");
+      setStep(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, customer, isKiosk]);
