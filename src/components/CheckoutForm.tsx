@@ -46,8 +46,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Logged-in customers always skip straight to details.
   // IMPORTANT: compute initial step synchronously so the OTP modal NEVER
   // flashes on first render in the kiosk.
+  // The "details" step only collects optional notes (when logged in or in
+  // kiosk mode). Per product decision: skip it entirely in those cases and
+  // jump straight to payment-method selection. Only keep details when we
+  // genuinely need to collect name/phone (website + not logged in).
+  const detailsCollectsRequiredFields = !isLoggedIn && !isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP;
+  const effectiveSkipDetails = skipDetails || !detailsCollectsRequiredFields;
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
-    const detailsOrPayment: "details" | "payment" = skipDetails ? "payment" : "details";
+    const detailsOrPayment: "details" | "payment" = effectiveSkipDetails ? "payment" : "details";
     if (isLoggedIn && customer) return detailsOrPayment;
     if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) return detailsOrPayment;
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP) return detailsOrPayment;
@@ -76,7 +82,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
-    const target: "details" | "payment" = skipDetails ? "payment" : "details";
+    const target: "details" | "payment" = effectiveSkipDetails ? "payment" : "details";
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
