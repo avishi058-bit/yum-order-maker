@@ -621,6 +621,12 @@ const Index = () => {
                       "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
                     duration: 10000,
                   });
+                  // Offer push notifications to users who haven't decided yet
+                  if (typeof Notification !== "undefined" && Notification.permission === "default") {
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent("request-notify-permission"));
+                    }, 2500);
+                  }
                 }
               }}
             />

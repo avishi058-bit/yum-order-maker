@@ -20,8 +20,11 @@ const isStandalone = () => {
  * via browser notifications. Once approved, the OrderTopBar will surface
  * the live status / countdown until the order is marked completed.
  */
+type Variant = "install" | "order";
+
 const PostInstallPermissionModal = () => {
   const [open, setOpen] = useState(false);
+  const [variant, setVariant] = useState<Variant>("install");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -30,31 +33,38 @@ const PostInstallPermissionModal = () => {
       try { return localStorage.getItem(SEEN_KEY) === "1"; } catch { return false; }
     };
 
-    const maybeShow = () => {
-      if (alreadySeen()) return;
+    const maybeShow = (v: Variant, ignoreSeen = false) => {
+      if (!ignoreSeen && alreadySeen()) return;
       // Don't ask if notifications already decided (granted or denied)
       if (typeof Notification !== "undefined" && Notification.permission !== "default") {
         try { localStorage.setItem(SEEN_KEY, "1"); } catch {}
         return;
       }
+      setVariant(v);
       setOpen(true);
     };
 
     // Case 1: Android — listen for installation event
     const onInstalled = () => {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
-      // Slight delay so the success toast appears first
-      setTimeout(maybeShow, 1500);
+      setTimeout(() => maybeShow("install"), 1500);
     };
     window.addEventListener("appinstalled", onInstalled);
 
     // Case 2: iOS / already installed — opened via home-screen icon
     if (isStandalone()) {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
-      setTimeout(maybeShow, 1200);
+      setTimeout(() => maybeShow("install"), 1200);
     }
 
-    return () => window.removeEventListener("appinstalled", onInstalled);
+    // Case 3: explicit request after a successful order
+    const onRequest = () => maybeShow("order", true);
+    window.addEventListener("request-notify-permission", onRequest);
+
+    return () => {
+      window.removeEventListener("appinstalled", onInstalled);
+      window.removeEventListener("request-notify-permission", onRequest);
+    };
   }, []);
 
   const dismiss = (markSeen = true) => {
@@ -121,22 +131,36 @@ const PostInstallPermissionModal = () => {
               <Bell size={30} />
             </motion.div>
             <h2 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
-              הבקתה מותקנת! <Sparkles size={18} className="text-primary" />
+              {variant === "order" ? <>רוצה להתעדכן בזמן אמת?</> : <>הבקתה מותקנת! <Sparkles size={18} className="text-primary" /></>}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              רק עוד אישור קטן ואתה מסודר
+              {variant === "order" ? "מתי ההמבורגר שלך מוכן 🍔" : "רק עוד אישור קטן ואתה מסודר"}
             </p>
           </div>
 
           <div className="px-6 pb-6 pt-2 space-y-4">
             <p className="text-sm text-foreground leading-relaxed text-center">
-              אשר התראות כדי לראות בזמן אמת בחלון העליון
-              <br />
-              <span className="font-bold">עוד כמה זמן ההזמנה שלך מוכנה ⏱️</span>
-              <br />
-              <span className="text-muted-foreground text-xs">
-                (החלון יעלם אוטומטית ברגע שההזמנה תושלם)
-              </span>
+              {variant === "order" ? (
+                <>
+                  אשר התראות ונעדכן אותך ברגע שההזמנה שלך
+                  <br />
+                  <span className="font-bold">עוברת להכנה ומוכנה לאיסוף ⏱️</span>
+                  <br />
+                  <span className="text-muted-foreground text-xs">
+                    גם אם תסגור את הדפדפן — נשלח לך התראה
+                  </span>
+                </>
+              ) : (
+                <>
+                  אשר התראות כדי לראות בזמן אמת בחלון העליון
+                  <br />
+                  <span className="font-bold">עוד כמה זמן ההזמנה שלך מוכנה ⏱️</span>
+                  <br />
+                  <span className="text-muted-foreground text-xs">
+                    (החלון יעלם אוטומטית ברגע שההזמנה תושלם)
+                  </span>
+                </>
+              )}
             </p>
 
             <div className="flex flex-col gap-2">
