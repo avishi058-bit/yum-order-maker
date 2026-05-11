@@ -323,6 +323,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [customizing, setCustomizing] = useState(false);
   /** Picker for "add new dish": which menu item to customize. */
   const [pickerOpen, setPickerOpen] = useState(false);
+  /** Pending dish awaiting a required owner name (for additional favorite dishes). */
+  const [pendingNameDish, setPendingNameDish] = useState<{ item: CartItem; target: "draft" | "using" } | null>(null);
+  const [pendingNameValue, setPendingNameValue] = useState("");
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [saving, setSaving] = useState(false);
