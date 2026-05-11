@@ -284,14 +284,6 @@ const PostInstallPermissionModal = () => {
                     אולי אחר כך
                   </Button>
                 </div>
-                  <Button
-                    onClick={() => dismiss(true)}
-                    variant="ghost"
-                    className="w-full text-sm text-muted-foreground"
-                  >
-                    אולי אחר כך
-                  </Button>
-                </div>
               </div>
               <IosInstallModal open={iosInstallOpen} onClose={() => { setIosInstallOpen(false); dismiss(true); }} />
             </>
