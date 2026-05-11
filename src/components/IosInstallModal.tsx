@@ -122,19 +122,19 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                     </p>
                   </motion.div>
                 </div>
-                <div className="px-4 py-3 border-t border-border flex gap-2">
+                <div className="px-4 py-3 border-t border-border space-y-2">
                   <button
-                    onClick={() => setStep(1)}
-                    className="px-4 bg-muted text-foreground font-bold py-3 rounded-xl text-sm"
+                    onClick={() => {
+                      handleClose();
+                      try { window.close(); } catch {}
+                    }}
+                    className="w-full bg-primary text-primary-foreground font-black py-3.5 rounded-xl text-sm shadow-lg shadow-primary/30"
                   >
-                    חזרה
+                    הבנתי, קח/י אותי ליישום 🚀
                   </button>
-                  <button
-                    onClick={handleClose}
-                    className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-xl text-sm"
-                  >
-                    הבנתי, תודה! 🙌
-                  </button>
+                  <p className="text-[11px] text-muted-foreground text-center leading-relaxed px-2">
+                    💡 צא/י מהדפדפן ולחצ/י על האייקון של <span className="font-bold text-foreground">הבקתה</span> במסך הבית
+                  </p>
                 </div>
               </>
             )}
