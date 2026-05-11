@@ -168,13 +168,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     return opt?.category === "beer";
   };
 
+  // After picking a drink, smoothly scroll the user down to the
+  // "add to order" button so it's clear what to do next.
+  const scrollToDrinkAddButton = () => {
+    requestAnimationFrame(() => {
+      drinkAddBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+  };
+
   const handleDrinkSelection = (drinkId: string) => {
     if (isAlcoholDrinkId(drinkId)) {
-      alcoholConsent.guard(buildAlcoholDrinkGateItem(drinkId), () => setSelectedDrink(drinkId));
+      alcoholConsent.guard(buildAlcoholDrinkGateItem(drinkId), () => {
+        setSelectedDrink(drinkId);
+        scrollToDrinkAddButton();
+      });
       return;
     }
 
     setSelectedDrink(drinkId);
+    scrollToDrinkAddButton();
   };
 
   // Refs for direct DOM transforms (no re-renders during drag/scroll)
