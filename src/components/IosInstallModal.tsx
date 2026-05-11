@@ -50,7 +50,9 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                 <X size={16} />
               </button>
               <h3 className="text-base font-black text-foreground">
-                {step === 1 ? "הוספה למסך הבית 📲" : "מעולה! היישום הותקן ✅"}
+                {step === 1
+                  ? (iOS ? "הוספה למסך הבית 📲" : "התקנת היישום 📲")
+                  : "מעולה! היישום הותקן ✅"}
               </h3>
               <div className="w-8" />
             </div>
