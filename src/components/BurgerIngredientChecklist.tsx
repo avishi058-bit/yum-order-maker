@@ -39,12 +39,13 @@ interface Props {
   onToggle: (id: string) => void;
   isAvailable?: (id: string) => boolean;
   isKiosk?: boolean;
+  title?: string;
 }
 
-const BurgerIngredientChecklist = ({ state, onToggle, isAvailable, isKiosk }: Props) => {
+const BurgerIngredientChecklist = ({ state, onToggle, isAvailable, isKiosk, title }: Props) => {
   return (
     <div className={`border-b border-gray-200 ${isKiosk ? "py-6" : "py-4"}`}>
-      <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>מה במנה שלך</h3>
+      <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>{title || "מה במנה שלך"}</h3>
       <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>לחץ כדי להוסיף או להוריד</p>
       <div className="space-y-0">
         {ingredients.map((ing) => {
