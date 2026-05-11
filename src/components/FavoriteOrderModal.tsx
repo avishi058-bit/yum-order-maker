@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useAvailability } from "@/hooks/useAvailability";
 import {
   menuItems,
   type MenuItem,
@@ -13,8 +14,9 @@ import {
   smashBurgerIds,
   mealSideOptions,
   mealDrinkOptions,
+  drinkToAvailabilityId,
 } from "@/data/menu";
-import { findTopping } from "@/lib/toppingsLookup";
+import { findTopping, getAllToppings } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import { toast } from "@/hooks/use-toast";
@@ -264,6 +266,37 @@ const EditableList = ({
 );
 
 
+/** Map mealSide id → menu_availability item_id (mirrors ItemCustomizer). */
+const sideToAvailability: Record<string, string> = {
+  "side-fries": "fries",
+  "side-waffle": "waffle-fries",
+  "side-onion-rings": "onion-rings",
+  "side-tempura": "tempura-onion",
+};
+
+/** Convert a meal-drink id to a standalone drink menuItem (used when the meal
+ *  upgrade is broken because the side is gone — we keep the drink at full
+ *  price as a separate cart line). */
+const mealDrinkToStandalone = (drinkId: string): { menuItem: MenuItem; label: string } | null => {
+  const drink = mealDrinkOptions.find((d) => d.id === drinkId);
+  if (!drink) return null;
+  let standaloneId: string;
+  if (drink.category === "soft") standaloneId = "can";
+  else if (drink.price >= 15) standaloneId = "beer-weiss";
+  else if (drink.price >= 12) standaloneId = "beer-premium";
+  else standaloneId = "beer-regular";
+  const menuItem = menuItems.find((m) => m.id === standaloneId);
+  if (!menuItem) return null;
+  return { menuItem, label: `${menuItem.name} (${drink.name}) — ₪${menuItem.price}` };
+};
+
+/** What's broken in a single line item right now. */
+type LineIssue =
+  | { kind: "main"; missingId: string; missingName: string; alternatives: MenuItem[] }
+  | { kind: "topping"; missingId: string; missingName: string; alternatives: { id: string; name: string; price: number }[] }
+  | { kind: "side"; missingId: string; missingName: string; alternatives: typeof mealSideOptions; keepDrink?: { menuItem: MenuItem; label: string } | null }
+  | { kind: "drink"; missingId: string; missingName: string; alternatives: typeof mealDrinkOptions };
+
 const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startInSetup, customizeMenuItem }: Props) => {
   useBodyScrollLock(open);
   const { favoriteItems, setFavoriteItems, isLoggedIn } = useCustomerAuth();
@@ -279,8 +312,159 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [orders, setOrders] = useState<HistoryOrder[] | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { isAvailable } = useAvailability();
 
   const hasFavorite = !!(favoriteItems && favoriteItems.length > 0);
+
+  /** Compute availability issues for each line in usingDraft. */
+  const issuesByIndex = useMemo<Record<number, LineIssue[]>>(() => {
+    const out: Record<number, LineIssue[]> = {};
+    if (view !== "confirm") return out;
+    usingDraft.forEach((it, idx) => {
+      const lineIssues: LineIssue[] = [];
+      const mainId = it.menuItemId;
+      const mainMenu = menuItems.find((m) => m.id === mainId);
+      if (mainId && mainMenu && !isAvailable(mainId)) {
+        const alternatives = menuItems
+          .filter((m) => m.category === mainMenu.category && m.id !== mainId && isAvailable(m.id))
+          .slice(0, 6);
+        lineIssues.push({ kind: "main", missingId: mainId, missingName: mainMenu.name, alternatives });
+      }
+      it.toppings.forEach((tId) => {
+        if (!isAvailable(tId)) {
+          const t = findTopping(tId);
+          const alternatives = getAllToppings()
+            .filter((x) => x.id !== tId && isAvailable(x.id) && !it.toppings.includes(x.id))
+            .map((x) => ({ id: x.id, name: x.name, price: x.price }))
+            .slice(0, 8);
+          lineIssues.push({ kind: "topping", missingId: tId, missingName: t?.name ?? tId, alternatives });
+        }
+      });
+      if (it.withMeal && it.mealSideId) {
+        const availId = sideToAvailability[it.mealSideId];
+        if (availId && !isAvailable(availId)) {
+          const sideOpt = mealSideOptions.find((s) => s.id === it.mealSideId);
+          const alternatives = mealSideOptions.filter(
+            (s) => s.id !== it.mealSideId && isAvailable(sideToAvailability[s.id] ?? s.id),
+          );
+          const keepDrink = it.mealDrinkId ? mealDrinkToStandalone(it.mealDrinkId) : null;
+          lineIssues.push({
+            kind: "side",
+            missingId: it.mealSideId,
+            missingName: sideOpt?.name ?? it.mealSideId,
+            alternatives,
+            keepDrink,
+          });
+        }
+      }
+      if (it.withMeal && it.mealDrinkId) {
+        const availId = drinkToAvailabilityId[it.mealDrinkId];
+        if (availId && !isAvailable(availId)) {
+          const drinkOpt = mealDrinkOptions.find((d) => d.id === it.mealDrinkId);
+          const alternatives = mealDrinkOptions.filter(
+            (d) =>
+              d.id !== it.mealDrinkId &&
+              d.category === drinkOpt?.category &&
+              isAvailable(drinkToAvailabilityId[d.id] ?? d.id),
+          );
+          lineIssues.push({
+            kind: "drink",
+            missingId: it.mealDrinkId,
+            missingName: drinkOpt?.name ?? it.mealDrinkId,
+            alternatives,
+          });
+        }
+      }
+      if (lineIssues.length) out[idx] = lineIssues;
+    });
+    return out;
+  }, [usingDraft, isAvailable, view]);
+
+  const hasAnyIssues = Object.keys(issuesByIndex).length > 0;
+
+  // ---- Issue resolution helpers (operate on usingDraft) ----
+  const updateLine = (idx: number, updater: (it: CartItem) => CartItem) =>
+    setUsingDraft((prev) => prev.map((it, i) => (i === idx ? updater(it) : it)));
+
+  const replaceMain = (idx: number, newMenuItem: MenuItem) => {
+    updateLine(idx, (it) => ({
+      ...it,
+      menuItemId: newMenuItem.id,
+      name: newMenuItem.name,
+      price: newMenuItem.price,
+    }));
+    toast({ title: `הוחלף ל${newMenuItem.name}` });
+  };
+
+  const removeLine = (idx: number) => {
+    setUsingDraft((prev) => prev.filter((_, i) => i !== idx));
+    toast({ title: "המנה הוסרה מההזמנה הזאת" });
+  };
+
+  const replaceTopping = (idx: number, oldId: string, newId: string, newName: string) => {
+    updateLine(idx, (it) => ({
+      ...it,
+      toppings: it.toppings.map((t) => (t === oldId ? newId : t)),
+    }));
+    toast({ title: `הוחלף ל${newName}` });
+  };
+
+  const removeTopping = (idx: number, oldId: string) => {
+    updateLine(idx, (it) => ({ ...it, toppings: it.toppings.filter((t) => t !== oldId) }));
+    toast({ title: "התוספת הוסרה" });
+  };
+
+  const replaceSide = (idx: number, newSideId: string, newName: string) => {
+    updateLine(idx, (it) => ({ ...it, mealSideId: newSideId }));
+    toast({ title: `הצד הוחלף ל${newName}` });
+  };
+
+  /** Drop the meal-deal but keep the drink as a separate cart line (full price). */
+  const dropSideKeepDrink = (idx: number) => {
+    setUsingDraft((prev) => {
+      const target = prev[idx];
+      if (!target || !target.mealDrinkId) return prev;
+      const standalone = mealDrinkToStandalone(target.mealDrinkId);
+      const updatedTarget: CartItem = {
+        ...target,
+        withMeal: false,
+        mealSideId: undefined,
+        mealDrinkId: undefined,
+      };
+      const out = [...prev];
+      out[idx] = updatedTarget;
+      if (standalone) {
+        out.push({
+          id: `${standalone.menuItem.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          menuItemId: standalone.menuItem.id,
+          name: standalone.menuItem.name,
+          price: standalone.menuItem.price,
+          quantity: target.quantity,
+          toppings: [],
+          removals: [],
+          withMeal: false,
+        });
+      }
+      return out;
+    });
+    toast({ title: "העסקית בוטלה — השתייה נשארה במחיר מלא" });
+  };
+
+  /** Drop the entire meal upgrade (no side, no drink). */
+  const dropMealEntirely = (idx: number) => {
+    updateLine(idx, (it) => ({
+      ...it,
+      withMeal: false,
+      mealSideId: undefined,
+      mealDrinkId: undefined,
+    }));
+    toast({ title: "השדרוג לעסקית בוטל" });
+  };
+
+  const replaceDrink = (idx: number, newDrinkId: string, newName: string) => {
+    updateLine(idx, (it) => ({ ...it, mealDrinkId: newDrinkId }));
+    toast({ title: `השתייה הוחלפה ל${newName}` });
+  };
 
   // Reset state every time the modal opens.
   useEffect(() => {
@@ -522,6 +706,118 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                 {/* CONFIRM view — use favorite, with per-order edits */}
                 {!pickerOpen && view === "confirm" && (
                   <>
+                    {hasAnyIssues && (
+                      <div className="rounded-xl border-2 border-amber-500/60 bg-amber-50 dark:bg-amber-950/30 p-3 space-y-3">
+                        <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                          <AlertTriangle size={18} />
+                          <p className="font-bold text-sm">חלק מהפריטים בקבוע לא זמינים כעת</p>
+                        </div>
+                        <p className="text-xs text-amber-700/90 dark:text-amber-200/90">
+                          בחר חלופה או הסר לפני שממשיכים:
+                        </p>
+                        <div className="space-y-3">
+                          {Object.entries(issuesByIndex).map(([idxStr, lineIssues]) => {
+                            const idx = Number(idxStr);
+                            const it = usingDraft[idx];
+                            return (
+                              <div key={idx} className="bg-card border border-border rounded-lg p-2.5 space-y-2.5">
+                                <p className="text-xs font-bold text-foreground">
+                                  במנה: {it?.name}
+                                </p>
+                                {lineIssues.map((iss, j) => (
+                                  <div key={j} className="space-y-1.5 border-r-2 border-amber-400 pr-2">
+                                    <p className="text-xs text-foreground">
+                                      {iss.kind === "main" && <>חסר במלאי: <b>{iss.missingName}</b> (המנה הראשית)</>}
+                                      {iss.kind === "topping" && <>תוספת חסרה: <b>{iss.missingName}</b></>}
+                                      {iss.kind === "side" && <>הצד חסר: <b>{iss.missingName}</b></>}
+                                      {iss.kind === "drink" && <>השתייה חסרה: <b>{iss.missingName}</b></>}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {iss.kind === "main" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceMain(idx, alt)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name} (₪{alt.price})
+                                        </button>
+                                      ))}
+                                      {iss.kind === "main" && (
+                                        <button
+                                          onClick={() => removeLine(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 font-semibold"
+                                        >
+                                          הסר מההזמנה
+                                        </button>
+                                      )}
+                                      {iss.kind === "topping" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceTopping(idx, iss.missingId, alt.id, alt.name)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name}{alt.price ? ` (+₪${alt.price})` : ""}
+                                        </button>
+                                      ))}
+                                      {iss.kind === "topping" && (
+                                        <button
+                                          onClick={() => removeTopping(idx, iss.missingId)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 font-semibold"
+                                        >
+                                          לא צריך את {iss.missingName}
+                                        </button>
+                                      )}
+                                      {iss.kind === "side" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceSide(idx, alt.id, alt.name)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name}{alt.price ? ` (+₪${alt.price})` : ""}
+                                        </button>
+                                      ))}
+                                      {iss.kind === "side" && iss.keepDrink && (
+                                        <button
+                                          onClick={() => dropSideKeepDrink(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-200 hover:bg-amber-500/25 font-semibold"
+                                        >
+                                          בטל עסקית, השאר שתייה: {iss.keepDrink.label}
+                                        </button>
+                                      )}
+                                      {iss.kind === "side" && (
+                                        <button
+                                          onClick={() => dropMealEntirely(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 font-semibold"
+                                        >
+                                          לא צריך צד, גם בלי שתייה
+                                        </button>
+                                      )}
+                                      {iss.kind === "drink" && iss.alternatives.map((alt) => (
+                                        <button
+                                          key={alt.id}
+                                          onClick={() => replaceDrink(idx, alt.id, alt.name)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                                        >
+                                          החלף ל{alt.name}{alt.price ? ` (+₪${alt.price})` : ""}
+                                        </button>
+                                      ))}
+                                      {iss.kind === "drink" && (
+                                        <button
+                                          onClick={() => dropMealEntirely(idx)}
+                                          className="text-[11px] px-2 py-1 rounded-full bg-muted text-foreground hover:bg-muted/70 font-semibold"
+                                        >
+                                          בטל את שדרוג העסקית
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     <p className="text-sm text-muted-foreground">
                       רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?
                     </p>
@@ -546,14 +842,16 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                     <div className="flex flex-col gap-2 pt-2">
                       <button
                         onClick={() => handleConfirmUse("checkout")}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30"
+                        disabled={hasAnyIssues}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Check size={18} />
-                        המשך לתשלום עם הקבוע
+                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע"}
                       </button>
                       <button
                         onClick={() => handleConfirmUse("cart")}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm"
+                        disabled={hasAnyIssues}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShoppingBag size={15} />
                         הוסף לעגלה והמשך לקנות
