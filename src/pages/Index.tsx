@@ -604,6 +604,8 @@ const Index = () => {
             onClose={() => setLiveTrackerOrder(null)}
           />
         )}
+
+        <IosInstallModal open={installModalOpen} onClose={() => setInstallModalOpen(false)} />
       </Suspense>
     </div>
   );
