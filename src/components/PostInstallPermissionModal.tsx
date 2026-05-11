@@ -11,8 +11,11 @@ const isIos = () => {
   return /iPhone|iPad|iPod/i.test(ua) || (/Mac/.test(ua) && "ontouchend" in document);
 };
 
-const SEEN_KEY = "habakta_post_install_perm_seen";
+const SEEN_KEY = "habakta_post_install_perm_seen"; // set ONLY when permission granted/denied permanently
+const DISMISSED_AT_KEY = "habakta_post_install_perm_dismissed_at";
 const INSTALLED_KEY = "habakta_pwa_installed";
+// Re-ask cooldown after a "not now" dismissal (ms). Keep short so users get nudged again.
+const REASK_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 
 const isStandalone = () => {
   if (typeof window === "undefined") return false;
