@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ShoppingBag, Phone, LogIn } from "lucide-react";
+import { ShoppingBag, Phone, LogIn, Smartphone } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
