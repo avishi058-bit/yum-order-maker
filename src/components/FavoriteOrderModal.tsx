@@ -26,7 +26,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   /** Adds items into the live cart. */
-  onUseFavorite: (items: CartItem[]) => void;
+  onUseFavorite: (items: CartItem[], mode: "cart" | "checkout") => void;
   /** Snapshot of the current cart (used for "save current cart as favorite"). */
   currentCart: CartItem[];
   /** Force the modal to open directly in setup mode. */
@@ -265,14 +265,18 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     if (added) setUsingDraft((prev) => [...prev, added]);
   };
 
-  const handleConfirmUse = () => {
+  const handleConfirmUse = (mode: "cart" | "checkout") => {
     if (usingDraft.length === 0) {
       toast({ title: "אין מנות בקבוע", variant: "destructive" });
       return;
     }
-    onUseFavorite(refreshIds(usingDraft));
+    onUseFavorite(refreshIds(usingDraft), mode);
     onClose();
-    toast({ title: "ההזמנה הקבועה שלך נוספה לעגלה ❤️" });
+    toast({
+      title: mode === "checkout"
+        ? "מעבירים אותך לתשלום ❤️"
+        : "ההזמנה הקבועה שלך נוספה לעגלה ❤️",
+    });
   };
 
   // ----- Setup-view actions (persists to favoriteItems) -----
@@ -445,17 +449,24 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                     </button>
                     <div className="flex flex-col gap-2 pt-2">
                       <button
-                        onClick={handleConfirmUse}
+                        onClick={() => handleConfirmUse("checkout")}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold text-base transition-colors shadow-lg shadow-green-600/30"
                       >
                         <Check size={18} />
-                        המשך עם הקבוע
+                        המשך לתשלום עם הקבוע
+                      </button>
+                      <button
+                        onClick={() => handleConfirmUse("cart")}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm"
+                      >
+                        <ShoppingBag size={15} />
+                        הוסף לעגלה והמשך לקנות
                       </button>
                       <button
                         onClick={() => setView("setup")}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-sm"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-border text-foreground hover:bg-muted font-semibold text-sm"
                       >
-                        <Pencil size={16} />
+                        <Pencil size={15} />
                         ערוך / שנה את הקבוע השמור
                       </button>
                       <button
