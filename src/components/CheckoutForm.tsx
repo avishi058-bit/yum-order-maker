@@ -13,6 +13,7 @@ import { validateIsraeliPhone } from "@/lib/utils";
 import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
+import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 
 export interface CheckoutSauce {
@@ -33,7 +34,7 @@ interface CheckoutFormProps {
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess }, ref) => {
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
-  const { customer, isLoggedIn, linkFromOrder } = useCustomerAuth();
+  const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
@@ -67,6 +68,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const [saveFavoritePromptOpen, setSaveFavoritePromptOpen] = useState(false);
   const { status: restaurantStatus } = useRestaurantStatus();
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
@@ -177,6 +179,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         toast({ title: phoneCheck.error, variant: "destructive" });
         return;
       }
+    }
+    // Logged-in customer with no saved favorite → offer to save before payment.
+    const eligibleForFavorite = items.filter(
+      (it) => (it as CartItem & { menuItemId?: string }).menuItemId && it.name !== "רטבים",
+    );
+    if (
+      !isKiosk &&
+      isLoggedIn &&
+      (!favoriteItems || favoriteItems.length === 0) &&
+      eligibleForFavorite.length > 0 &&
+      !saveFavoritePromptOpen
+    ) {
+      setSaveFavoritePromptOpen(true);
+      return;
     }
     setStep("payment");
   };
@@ -833,6 +849,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
       <PrivacyModal open={privacyModalOpen} onClose={() => setPrivacyModalOpen(false)} isKiosk={isKiosk} />
+
+      {/* Save-as-favorite prompt — appears AFTER customer details, BEFORE payment.
+          Logged-in customers without a saved favorite get one chance to save the
+          dishes they're about to order as their "regular". */}
+      <SaveAsFavoriteModal
+        open={saveFavoritePromptOpen}
+        items={items}
+        onClose={() => setSaveFavoritePromptOpen(false)}
+        onDone={() => {
+          setSaveFavoritePromptOpen(false);
+          setStep("payment");
+        }}
+      />
     </motion.div>
   );
 });
