@@ -116,6 +116,20 @@ const Index = () => {
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
+  // Auto-prompt unauthenticated visitors to log in (once per session, never on the kiosk station).
+  useEffect(() => {
+    if (isStation) return;
+    if (authLoading) return;
+    if (isLoggedIn) return;
+    try {
+      if (sessionStorage.getItem("habakta_login_prompted") === "1") return;
+    } catch {}
+    const t = setTimeout(() => {
+      setAuthModalOpen(true);
+      try { sessionStorage.setItem("habakta_login_prompted", "1"); } catch {}
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [authLoading, isLoggedIn, isStation]);
 
   // Re-register the cart target whenever the button mounts/unmounts.
   // The button only renders once the cart has items, so on the very first
