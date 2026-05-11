@@ -65,15 +65,6 @@ const IosInstallModal = ({ open, onClose }: Props) => {
                 />
               </div>
             </div>
-
-              <div className="p-2 bg-white">
-                <img
-                  src={addToHomeImg}
-                  alt="הוראות להוספת הבקתה למסך הבית באייפון"
-                  className="w-full h-auto rounded-2xl"
-                />
-              </div>
-            </div>
             <div className="px-4 py-3 border-t border-border">
               <button
                 onClick={onClose}
