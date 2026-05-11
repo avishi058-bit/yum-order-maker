@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
-import { isPushSupported, iosNeedsInstall, isIos, subscribeToPush, getExistingSubscription } from "@/lib/push";
+import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPush, getExistingSubscription } from "@/lib/push";
 import IosInstallModal from "@/components/IosInstallModal";
 
 interface OrderLiveTrackerProps {
@@ -241,16 +241,18 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </div>
           </div>
 
-          {/* Add to home screen button */}
-          <div className="px-4 py-2 border-b border-border bg-primary/5">
-            <button
-              onClick={() => setShowIosInstallModal(true)}
-              className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
-            >
-              <Smartphone size={16} />
-              הוסף את הבקתה למסך הבית
-            </button>
-          </div>
+          {/* Add to home screen button — hidden once installed as PWA */}
+          {!isStandalonePwa() && (
+            <div className="px-4 py-2 border-b border-border bg-primary/5">
+              <button
+                onClick={() => setShowIosInstallModal(true)}
+                className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                <Smartphone size={16} />
+                הוסף את הבקתה למסך הבית
+              </button>
+            </div>
+          )}
 
           <AnimatePresence>
             {showPermissionPrompt && (
