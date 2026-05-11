@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
           device_token: newToken,
         })
         .eq('phone', phone.data)
-        .select('id, name, phone, marketing_consent, login_count')
+        .select('id, name, phone, marketing_consent, login_count, last_login_at, favorite_items')
         .single()
 
       if (error || !customer) {
@@ -163,6 +163,8 @@ Deno.serve(async (req) => {
           phone: customer.phone,
           isReturning: true,
           loginCount: (customer.login_count || 0) + 1,
+          lastLoginAt: customer.last_login_at,
+          favoriteItems: customer.favorite_items ?? null,
         },
       })
     }
