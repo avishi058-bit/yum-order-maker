@@ -822,6 +822,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                             const ci = simpleToCartItem(m);
                             if (view === "confirm") {
                               setUsingDraft((prev) => [...prev, ci]);
+                              setSelectedIds((s) => new Set(s).add(ci.id));
                             } else {
                               setDraft((prev) => [...prev, ci]);
                             }
