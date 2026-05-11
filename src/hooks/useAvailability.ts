@@ -28,7 +28,7 @@ export const useAvailability = () => {
 
     // Subscribe to realtime changes
     const channel = supabase
-      .channel("menu-availability")
+      .channel(`menu-availability-${Math.random().toString(36).slice(2, 10)}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "menu_availability" },
