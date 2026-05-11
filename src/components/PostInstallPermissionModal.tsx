@@ -35,6 +35,7 @@ const PostInstallPermissionModal = () => {
   const [variant, setVariant] = useState<Variant>("install");
   const [step, setStep] = useState<"ask" | "explain">("ask");
   const [iosInstallOpen, setIosInstallOpen] = useState(false);
+  const { canPrompt, promptInstall } = useInstallPrompt();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
