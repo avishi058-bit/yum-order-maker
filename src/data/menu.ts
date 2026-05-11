@@ -1,10 +1,27 @@
+// Frontend menu definitions.
+// Pricing (id/name/price/category) is the SINGLE SOURCE OF TRUTH at:
+//   supabase/functions/_shared/menu-pricing.ts
+// This file overlays UI-only metadata (description, image, badge, etc.)
+// on top of those bare records. To add/remove an item or option, edit the
+// shared pricing file ONCE — both the frontend and the order server pick it up.
+
+import {
+  MENU_ITEMS_PRICING,
+  TOPPINGS_PRICING as TOPPINGS_PRICING_SHARED,
+  MEAL_SIDES_PRICING,
+  MEAL_DRINKS_PRICING,
+  DEAL_DRINKS_PRICING,
+  MEAL_UPGRADE_PRICE,
+  type MenuCategory,
+} from "../../supabase/functions/_shared/menu-pricing";
+
 export interface MenuItem {
   id: string;
   name: string;
   description: string;
   price: number;
   weight?: string;
-  category: "burger" | "side" | "drink" | "deal" | "meal";
+  category: MenuCategory;
   badge?: string;
   baseBurgerId?: string;
   popular?: boolean;
@@ -24,6 +41,61 @@ export interface Upgrade {
   name: string;
   price: number;
 }
+
+// ===== UI-only overlays for menu items =====
+interface MenuItemUIOverlay {
+  description: string;
+  weight?: string;
+  badge?: string;
+  baseBurgerId?: string;
+  popular?: boolean;
+  specialOfMonth?: boolean;
+}
+
+const MENU_UI: Record<string, MenuItemUIOverlay> = {
+  classic: { description: "בצל, עגבנייה, חסה, חמוצים ואיולי הבית", weight: "220 גרם" },
+  "smash-moshavnikim": { description: "חמוצים, חסה, איולי הבית, שתי קציצות של 110 גרם מעוכות מרוסלות וקריספיות", weight: "220 גרם" },
+  avishai: { description: "חסה, עגבנייה, בצל, חמוצים, קציצת בקר, רצועות רוסטביף מעושן, ביצת עין ואיולי הבית", weight: "220 גרם", popular: true },
+  double: { description: "שתי קציצות של 220, בצל, עגבנייה, חסה, חמוצים ואיולי הבית", weight: "440 גרם" },
+  "crazy-smash": { description: "שתי קציצות סמאש, איולי, ריבת פלפלים חריפים, חמוצים ומייפל", weight: "220 גרם", badge: "🌶️" },
+  "smash-double-cheese": { description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני (הולך טוב עם ריבת בצל או חמאת בוטנים)", weight: "220 גרם", badge: "🧀", popular: true },
+  "special-hadegel": { description: "קציצת בקר, כל הירקות, איולי הבית, שתי טבעות בצל ביתיות, ריבת בצל ביין וקונפי שום", weight: "220 גרם" },
+  napoleon: { description: "קציצת בקר 220, גבינה כחולה טבעונית, ריבת בצל ביין, חסה, עגבנייה, בצל, חמוצים", weight: "220 גרם", specialOfMonth: true },
+  "haf-mifsha": { description: "המבורגר צמחוני - חסה, עגבנייה, בצל, חמוצים ואיולי (מבושל באיזור בשרי, אין הפרדה מוחלטת)", weight: "", badge: "🌱" },
+  "meal-classic": { description: "קלאסי + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "classic" },
+  "meal-smash-moshavnikim": { description: "סמאש של מושבניקים + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "smash-moshavnikim" },
+  "meal-avishai": { description: "אבישי + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "avishai" },
+  "meal-double": { description: "כפולה + צ׳יפס + שתייה", weight: "440 גרם", baseBurgerId: "double" },
+  "meal-crazy-smash": { description: "קרייזי סמאש + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "crazy-smash", badge: "🌶️" },
+  "meal-smash-double-cheese": { description: "סמאש דאבל צ׳יז + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "smash-double-cheese", badge: "🧀" },
+  "meal-special-hadegel": { description: "ספיישל הדגל + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "special-hadegel" },
+  "meal-napoleon": { description: "נפוליאון + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "napoleon", specialOfMonth: true },
+  "meal-haf-mifsha": { description: "חף מפשע (צמחוני) + צ׳יפס + שתייה", weight: "", baseBurgerId: "haf-mifsha", badge: "🌱" },
+  fries: { description: "צ׳יפס פריך" },
+  "sweet-potato-fries": { description: "צ׳יפס בטטה פריך" },
+  "onion-rings": { description: "טבעות בצל מטוגנות" },
+  "tempura-onion": { description: "טבעות בצל ביתיות בציפוי טמפורה" },
+  "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה" },
+  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, הגל, מוחיטו, אבטיח, ד״י" },
+  bottle: { description: "ענבים / תפוזים" },
+  "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
+  "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
+  "beer-weiss": { description: "בירת חיטה גרמנית" },
+  "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
+  "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
+};
+
+export const menuItems: MenuItem[] = MENU_ITEMS_PRICING.map((m) => ({
+  ...m,
+  description: MENU_UI[m.id]?.description ?? "",
+  weight: MENU_UI[m.id]?.weight,
+  badge: MENU_UI[m.id]?.badge,
+  baseBurgerId: MENU_UI[m.id]?.baseBurgerId,
+  popular: MENU_UI[m.id]?.popular,
+  specialOfMonth: MENU_UI[m.id]?.specialOfMonth,
+}));
+
+export { MEAL_UPGRADE_PRICE };
 
 export const menuItems: MenuItem[] = [
   // המבורגרים
