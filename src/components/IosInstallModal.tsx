@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Bell, Home } from "lucide-react";
+import { X, Bell, Home, Share, Plus, MoreVertical } from "lucide-react";
 import addToHomeImg from "@/assets/add-to-home-screen-ios.jpeg";
+import { isIos } from "@/lib/push";
 
 interface Props {
   open: boolean;
@@ -11,6 +12,7 @@ interface Props {
 
 const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
   const [step, setStep] = useState<1 | 2>(1);
+  const iOS = typeof window !== "undefined" ? isIos() : false;
 
   useEffect(() => {
     if (open) setStep(postInstallOpen ? 2 : 1);
