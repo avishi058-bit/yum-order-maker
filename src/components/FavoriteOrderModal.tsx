@@ -4,7 +4,16 @@ import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight } 
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { menuItems, type MenuItem } from "@/data/menu";
+import {
+  menuItems,
+  type MenuItem,
+  ingredients as menuIngredients,
+  removalDisplayNames,
+  donenessOptions,
+  smashBurgerIds,
+  mealSideOptions,
+  mealDrinkOptions,
+} from "@/data/menu";
 import { findTopping } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
@@ -115,6 +124,85 @@ const resultToCartItem = (r: CustomizerResult): CartItem => ({
   ownerName: r.ownerName,
 });
 
+/** Build a detailed, human-readable summary of a CartItem (doneness, vegetables,
+ *  bun, toppings, meal upgrade, owner name) — so the customer sees exactly
+ *  what's in their favorite. */
+const describeCartItem = (it: CartItem): {
+  donenessLabel?: string;
+  vegetablesLine: string;
+  toppingsLine?: string;
+  mealLine?: string;
+  ownerLine?: string;
+} => {
+  const menuItem = menuItems.find((m) => m.id === it.menuItemId);
+  const isBurger = menuItem?.category === "burger" || menuItem?.category === "meal";
+  const isSmash = it.menuItemId ? smashBurgerIds.includes(it.menuItemId) : false;
+
+  // Doneness
+  const donenessId = it.removals.find((r) => r.startsWith("doneness-"));
+  const donenessLabel = donenessId
+    ? donenessOptions.find((d) => d.id === donenessId)?.label
+    : undefined;
+
+  // Vegetables / sauces (ingredients): figure out the final ON list based on defaults +/- removals/adds.
+  const removalsClean = it.removals.filter((r) => !r.startsWith("doneness-") && !r.startsWith("__OWNER__"));
+  let vegetablesLine = "";
+  if (isBurger) {
+    const present: string[] = [];
+    const removed: string[] = [];
+    for (const ing of menuIngredients) {
+      const defaultOn = isSmash ? ing.defaultSmash : ing.defaultRegular;
+      const wasRemoved = removalsClean.includes(ing.removalId);
+      const wasAdded = ing.addId ? removalsClean.includes(ing.addId) : false;
+      const finalOn = (defaultOn && !wasRemoved) || (!defaultOn && wasAdded);
+      if (finalOn) present.push(ing.name);
+      else if (defaultOn && wasRemoved) removed.push(ing.name);
+    }
+    if (removalsClean.includes("dry")) {
+      vegetablesLine = "יבש — ללא ירקות ורטבים";
+    } else if (removed.length === 0) {
+      vegetablesLine = present.length ? `כל הירקות (${present.join(", ")})` : "ללא ירקות";
+    } else {
+      const parts: string[] = [];
+      parts.push(`בלי: ${removed.join(", ")}`);
+      if (present.length) parts.push(`עם: ${present.join(", ")}`);
+      vegetablesLine = parts.join(" · ");
+    }
+  }
+
+  // Toppings (paid extras + special bun)
+  const toppingNames = it.toppings
+    .map((tId) => {
+      if (tId === "gluten-free-bun") return "לחמנייה ללא גלוטן";
+      return findTopping(tId)?.name;
+    })
+    .filter(Boolean) as string[];
+  // Other "add" removals not part of ingredients defaults (e.g., add-tomato when not default)
+  const extraAdditions = removalsClean
+    .filter((r) => r.startsWith("add-"))
+    .map((r) => removalDisplayNames[r])
+    .filter(Boolean);
+  const allExtras = [...toppingNames, ...extraAdditions];
+  const toppingsLine = allExtras.length ? `תוספות: ${allExtras.join(", ")}` : undefined;
+
+  // Meal upgrade
+  let mealLine: string | undefined;
+  if (it.withMeal) {
+    const sideName = it.mealSideId
+      ? mealSideOptions.find((s) => s.id === it.mealSideId)?.name
+      : undefined;
+    const drinkName = it.mealDrinkId
+      ? mealDrinkOptions.find((d) => d.id === it.mealDrinkId)?.name
+      : undefined;
+    const parts = [sideName, drinkName].filter(Boolean) as string[];
+    mealLine = parts.length ? `שדרוג עסקית: ${parts.join(" + ")}` : "שדרוג עסקית";
+  }
+
+  const ownerLine = it.ownerName ? `על השם: ${it.ownerName}` : undefined;
+
+  return { donenessLabel, vegetablesLine, toppingsLine, mealLine, ownerLine };
+};
+
 /** Editable list with edit / remove buttons per row. */
 const EditableList = ({
   items,
@@ -127,22 +215,29 @@ const EditableList = ({
 }) => (
   <ul className="space-y-2">
     {items.map((it, idx) => {
-      const tNames = it.toppings.map((tId) => findTopping(tId)?.name).filter(Boolean) as string[];
-      const removed = it.removals.filter((r) => !r.startsWith("__OWNER__"));
+      const desc = describeCartItem(it);
       return (
         <li key={it.id} className="border border-border rounded-xl p-3 bg-card">
           <div className="flex items-start justify-between gap-2">
-            <div className="text-right flex-1 min-w-0">
+            <div className="text-right flex-1 min-w-0 space-y-0.5">
               <p className="font-bold text-foreground text-sm">
                 {it.quantity > 1 ? `${it.quantity}× ` : ""}
                 {it.name}
-                {it.withMeal && <span className="text-xs text-muted-foreground"> (ארוחה)</span>}
               </p>
-              {tNames.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-0.5">תוספות: {tNames.join(", ")}</p>
+              {desc.donenessLabel && (
+                <p className="text-xs text-muted-foreground">מידת עשייה: {desc.donenessLabel}</p>
               )}
-              {removed.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-0.5">בלי: {removed.join(", ")}</p>
+              {desc.vegetablesLine && (
+                <p className="text-xs text-muted-foreground">{desc.vegetablesLine}</p>
+              )}
+              {desc.toppingsLine && (
+                <p className="text-xs text-muted-foreground">{desc.toppingsLine}</p>
+              )}
+              {desc.mealLine && (
+                <p className="text-xs text-primary font-semibold">{desc.mealLine}</p>
+              )}
+              {desc.ownerLine && (
+                <p className="text-xs text-muted-foreground">{desc.ownerLine}</p>
               )}
             </div>
             <div className="flex flex-col gap-1 shrink-0">
@@ -167,6 +262,7 @@ const EditableList = ({
     })}
   </ul>
 );
+
 
 const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startInSetup, customizeMenuItem }: Props) => {
   useBodyScrollLock(open);
