@@ -224,17 +224,43 @@ const EditableList = ({
   items,
   onEdit,
   onRemove,
+  selectable,
+  selectedIds,
+  onToggleSelect,
 }: {
   items: CartItem[];
   onEdit: (index: number) => void;
   onRemove: (index: number) => void;
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }) => (
   <ul className="space-y-2">
     {items.map((it, idx) => {
       const desc = describeCartItem(it);
+      const isSelected = selectable ? selectedIds?.has(it.id) ?? false : false;
       return (
-        <li key={it.id} className="border border-border rounded-xl p-3 bg-card">
-          <div className="flex items-start justify-between gap-2">
+        <li
+          key={it.id}
+          onClick={selectable ? () => onToggleSelect?.(it.id) : undefined}
+          className={`relative rounded-xl p-3 bg-card transition-all ${
+            selectable
+              ? isSelected
+                ? "border-2 border-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.2)] cursor-pointer"
+                : "border border-border opacity-60 cursor-pointer hover:opacity-80"
+              : "border border-border"
+          }`}
+        >
+          {selectable && (
+            <div
+              className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-white ${
+                isSelected ? "bg-green-500" : "bg-muted border border-border"
+              }`}
+            >
+              {isSelected && <Check size={12} strokeWidth={3} />}
+            </div>
+          )}
+          <div className={`flex items-start justify-between gap-2 ${selectable ? "pr-6" : ""}`}>
             <div className="text-right flex-1 min-w-0 space-y-0.5">
               <p className="font-bold text-foreground text-sm">
                 {it.quantity > 1 ? `${it.quantity}× ` : ""}
@@ -256,7 +282,7 @@ const EditableList = ({
                 <p className="text-xs text-muted-foreground">{desc.ownerLine}</p>
               )}
             </div>
-            <div className="flex flex-col gap-1 shrink-0">
+            <div className="flex flex-col gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => onEdit(idx)}
                 className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20"
