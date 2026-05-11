@@ -304,7 +304,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
     beginDrag(e.clientY, e.pointerId);
     e.currentTarget.setPointerCapture?.(e.pointerId);
-  }, [beginDrag]);
+  }, [isInteractiveDragTarget, beginDrag]);
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const ds = dragState.current;
@@ -781,9 +781,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               e.preventDefault();
                               const el = ownerInputRef.current;
                               if (el) {
-                                el.focus({ preventScroll: true } as any);
+                                el.focus({ preventScroll: true });
                                 // Some Android/Chromium kiosks need a click too
-                                try { el.click(); } catch {}
+                                try { el.click(); } catch { /* ignore focus fallback failures */ }
                               }
                               setOwnerNameEnabled(true);
                             }}
