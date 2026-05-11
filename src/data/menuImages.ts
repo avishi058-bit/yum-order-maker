@@ -6,7 +6,7 @@ import avishai from "@/assets/menu/avishai.webp";
 import crazySmash from "@/assets/menu/crazy-smash.webp";
 import specialHadegel from "@/assets/menu/special-hadegel.webp";
 import fries from "@/assets/menu/fries.webp";
-import waffleFries from "@/assets/menu/waffle-fries.webp";
+import sweetPotatoFries from "@/assets/menu/sweet-potato-fries.webp";
 import tempuraOnion from "@/assets/menu/tempura-onion.webp";
 import friendsMix from "@/assets/menu/friends-mix.webp";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
