@@ -101,7 +101,7 @@ const isDrinkOrMisc = (name: string): boolean =>
   /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
 // Detect fried-side items by name. Order matters.
-type FriedKind = "friendsMix" | "tempuraOnionSide" | "waffleFries" | "onionRings" | "fries" | null;
+type FriedKind = "friendsMix" | "tempuraOnionSide" | "sweetPotatoFries" | "onionRings" | "fries" | null;
 const detectFried = (name: string): FriedKind => {
   if (!name) return null;
   if (isFriendsMix(name)) return "friendsMix";
