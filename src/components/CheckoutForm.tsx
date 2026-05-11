@@ -302,6 +302,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       if (!isLoggedIn && form.phone && form.name) {
         await linkFromOrder(form.phone, form.name).catch(() => {});
       }
+      // Persist for cross-context recovery (PWA install after the order).
+      if (form.phone && form.name) {
+        rememberLastOrderCustomer(form.phone, form.name);
+      }
 
       // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
       const zcreditItems = items.map((item) => {
