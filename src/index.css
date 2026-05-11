@@ -208,3 +208,62 @@ body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
   animation: dance-loop 2.4s ease-in-out infinite;
   transform-origin: center center;
 }
+
+/* ===================================================================
+   PWA / Installed-app overrides
+   Active only when the app runs as an installed standalone app
+   (Add to Home Screen on iOS, installed PWA on Android/Desktop).
+   Use the .pwa-installed class on <html> to scope adjustments.
+   =================================================================== */
+html.pwa-installed body {
+  /* Push regular page content below the iOS status bar / notch
+     and above the home-indicator. No scaling — only translation. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Full-screen overlays (cart drawers, modals, sheets) are `position: fixed`
+   so body padding does NOT push them down. Mark those containers with
+   `pwa-safe-screen` and they'll respect the safe areas internally. */
+/* Full-screen overlays (cart drawers, modals, sheets) are `position: fixed`
+   so body padding does NOT push them down. Mark those containers with
+   `pwa-safe-screen` and they'll respect the top safe area internally.
+   Bottom is handled directly on the footer bar (smaller gap). */
+html.pwa-installed .pwa-safe-screen {
+  /* Anchor to BOTH top and bottom of the viewport instead of relying on
+     100vh / 100dvh, which are unreliable in iOS standalone (they may exclude
+     or include the Home Indicator inconsistently). With top:0 + bottom:0 the
+     fixed drawer is always exactly as tall as the visual viewport. */
+  top: 0 !important;
+  bottom: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  padding-top: env(safe-area-inset-top);
+  overflow: hidden;
+}
+
+html.pwa-installed .pwa-checkout-bar {
+  /* Tighten the bar in PWA: small top padding, just enough bottom padding
+     to clear the iOS Home Indicator with a minimal gap. */
+  padding-top: 8px !important;
+  padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
+}
+@media (display-mode: standalone) {
+  .pwa-checkout-bar {
+    padding-top: 8px !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 4px) !important;
+  }
+}
+
+/* For elements that are themselves fixed to the top/bottom of the viewport
+   (sticky headers, bottom action bars), use these helpers. */
+html.pwa-installed .pwa-safe-top {
+  padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+}
+html.pwa-installed .pwa-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+html.pwa-installed .pwa-safe-absolute-bottom {
+  bottom: calc(env(safe-area-inset-bottom) + 1rem) !important;
+}

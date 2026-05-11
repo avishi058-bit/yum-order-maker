@@ -199,7 +199,7 @@ const KioskCartDrawer = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`fixed top-0 right-0 h-full ${drawerWidth} bg-background z-50 shadow-2xl flex flex-col`}
+            className={`fixed top-0 right-0 h-full ${drawerWidth} bg-background z-50 shadow-2xl flex flex-col pwa-safe-screen`}
             dir="rtl"
           >
             {/* Header */}
@@ -420,7 +420,7 @@ const KioskCartDrawer = ({
 
             {/* Sticky bottom bar */}
             {items.length > 0 && (
-              <div className={`flex-none ${sz.bottomPad} bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)]`}>
+              <div className={`flex-none ${sz.bottomPad} bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pwa-checkout-bar`}>
                 <div className="flex items-center justify-between mb-1">
                   <div>
                     <p className={`${sz.bottomCount} text-muted-foreground`}>{totalCount} פריטים</p>

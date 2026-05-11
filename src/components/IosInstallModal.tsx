@@ -39,21 +39,23 @@ const IosInstallModal = ({ open, onClose }: Props) => {
             </div>
 
             <div className="overflow-y-auto">
-              {/* Why explanation — visible immediately */}
-              <div className="px-4 pt-4 pb-3 bg-gradient-to-b from-primary/10 to-transparent space-y-2 text-right">
-                <p className="text-sm font-bold text-foreground">
-                  למה כדאי להוסיף למסך הבית? 🤔
+              {/* Why explanation — bold, prominent, with subtle wiggle */}
+              <motion.div
+                animate={{ rotate: [0, -1.2, 1.2, -1, 1, 0], scale: [1, 1.015, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 2.5, ease: "easeInOut" }}
+                className="mx-3 mt-3 mb-2 rounded-2xl bg-gradient-to-br from-amber-500/20 via-primary/15 to-amber-500/10 border-2 border-amber-500/60 p-4 text-right shadow-lg"
+              >
+                <p className="text-base font-black text-foreground leading-tight mb-2">
+                  ⚠️ חשוב שתדע! 👇
                 </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  באייפון, התראות יגיעו אליך <b>רק</b> אם פתחת את הבקתה דרך האייקון במסך הבית 📱
-                  אחרת, לא תדע מתי ההמבורגר שלך מוכן לאיסוף 🍔🔔
+                <p className="text-sm font-bold text-foreground leading-relaxed">
+                  בלי להוסיף את <span className="text-primary">הבקתה</span> למסך הבית —
+                  <span className="underline decoration-2 decoration-amber-500"> לא יגיעו אליך התראות</span> כשההזמנה מוכנה! 🍔🔔
                 </p>
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 mt-2">
-                  <p className="text-xs text-foreground leading-relaxed">
-                    ⚠️ <b>חשוב:</b> אחרי ההוספה — היכנס בפעם הבאה דרך האייקון של <b>הבקתה</b> במסך הבית, ולא דרך הדפדפן.
-                  </p>
-                </div>
-              </div>
+                <p className="text-sm font-bold text-foreground leading-relaxed mt-2 bg-amber-500/20 rounded-lg p-2">
+                  📲 ואחרי ההוספה — <u>חובה להיכנס דרך האייקון</u> במסך הבית, ולא דרך הדפדפן!
+                </p>
+              </motion.div>
 
               <div className="p-2 bg-white">
                 <img

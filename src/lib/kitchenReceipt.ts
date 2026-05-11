@@ -71,7 +71,7 @@ export interface ChefSummary {
   glutenFreeBuns: number;
   // Fried sides (sources kept separate)
   fries: number;
-  waffleFries: number;
+  sweetPotatoFries: number;
   onionRings: number;          //טבעות בצל (מנה בצד)
   tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
   tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
@@ -101,13 +101,13 @@ const isDrinkOrMisc = (name: string): boolean =>
   /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
 // Detect fried-side items by name. Order matters.
-type FriedKind = "friendsMix" | "tempuraOnionSide" | "waffleFries" | "onionRings" | "fries" | null;
+type FriedKind = "friendsMix" | "tempuraOnionSide" | "sweetPotatoFries" | "onionRings" | "fries" | null;
 const detectFried = (name: string): FriedKind => {
   if (!name) return null;
   if (isFriendsMix(name)) return "friendsMix";
   // "טבעות בצל בטמפורה" / "טבעות בצל ביתיות בטמפורה" / "טמפורה"
   if (/טבעות.*טמפורה|טמפורה/.test(name)) return "tempuraOnionSide";
-  if (/וופל/.test(name)) return "waffleFries";
+  if (/בטטה/.test(name)) return "sweetPotatoFries";
   if (/טבעות\s*בצל/.test(name)) return "onionRings";
   if (/צ['׳]?יפס/.test(name)) return "fries";
   return null;
@@ -328,7 +328,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let regularBuns = 0;
   let glutenFreeBuns = 0;
   let fries = 0;
-  let waffleFries = 0;
+  let sweetPotatoFries = 0;
   let onionRings = 0;
   let tempuraOnionSide = 0;
   let tempuraOnionTopping = 0;
@@ -339,7 +339,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     if (!kind) return;
     if (kind === "friendsMix") friendsMix += qty;
     else if (kind === "tempuraOnionSide") tempuraOnionSide += qty;
-    else if (kind === "waffleFries") waffleFries += qty;
+    else if (kind === "sweetPotatoFries") sweetPotatoFries += qty;
     else if (kind === "onionRings") onionRings += qty;
     else if (kind === "fries") fries += qty;
   };
@@ -448,7 +448,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     regularBuns,
     glutenFreeBuns,
     fries,
-    waffleFries,
+    sweetPotatoFries,
     onionRings,
     tempuraOnionSide,
     tempuraOnionTopping,
@@ -604,7 +604,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   // Fried sides — keep types separate
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(row("צ׳יפס", summary.fries));
-  if (summary.waffleFries > 0) friedRows.push(row("וופל צ׳יפס", summary.waffleFries));
+  if (summary.sweetPotatoFries > 0) friedRows.push(row("צ׳יפס בטטה", summary.sweetPotatoFries));
   if (summary.onionRings > 0) friedRows.push(row("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(row("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
@@ -1031,7 +1031,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
 
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
-  if (summary.waffleFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.waffleFries));
+  if (summary.sweetPotatoFries > 0) friedRows.push(sumRow("צ׳יפס בטטה", summary.sweetPotatoFries));
   if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
@@ -1308,7 +1308,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
 
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
-  if (summary.waffleFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.waffleFries));
+  if (summary.sweetPotatoFries > 0) friedRows.push(sumRow("צ׳יפס בטטה", summary.sweetPotatoFries));
   if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
