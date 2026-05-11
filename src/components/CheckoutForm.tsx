@@ -7,7 +7,7 @@ import { shouldChargeMealUpgrade, MEAL_UPGRADE_PRICE } from "@/lib/cartPricing";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
-import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
@@ -302,6 +302,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       if (!isLoggedIn && form.phone && form.name) {
         await linkFromOrder(form.phone, form.name).catch(() => {});
       }
+      // Persist for cross-context recovery (PWA install after the order).
+      if (form.phone && form.name) {
+        rememberLastOrderCustomer(form.phone, form.name);
+      }
 
       // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
       const zcreditItems = items.map((item) => {
@@ -427,6 +431,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       // auto-logs in (no OTP needed).
       if (!isLoggedIn && form.phone && form.name) {
         await linkFromOrder(form.phone, form.name).catch(() => {});
+      }
+      // Persist last-order details on this device (localStorage + cookie) so that if the
+      // user later installs the PWA, the standalone app can auto-link them on first open.
+      if (form.phone && form.name) {
+        rememberLastOrderCustomer(form.phone, form.name);
       }
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
