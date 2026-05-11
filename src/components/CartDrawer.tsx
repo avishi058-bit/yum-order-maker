@@ -226,7 +226,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
             </div>
 
             {items.length > 0 && (
-              <div className={`${isKiosk ? 'p-6' : 'p-5'} border-t border-border`}>
+              <div className={`${isKiosk ? 'p-6' : 'p-5'} border-t border-border pwa-checkout-bar`}>
                 <div className="flex justify-between items-center mb-4">
                   <span className={`${isKiosk ? 'text-2xl' : 'text-lg'} font-black`}>סה״כ</span>
                   <span className={`${isKiosk ? 'text-4xl' : 'text-2xl'} font-black text-primary`}>₪{total}</span>
