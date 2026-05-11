@@ -32,6 +32,8 @@ type Variant = "install" | "order";
 const PostInstallPermissionModal = () => {
   const [open, setOpen] = useState(false);
   const [variant, setVariant] = useState<Variant>("install");
+  const [step, setStep] = useState<"ask" | "explain">("ask");
+  const [iosInstallOpen, setIosInstallOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
