@@ -230,17 +230,18 @@ html.pwa-installed body {
    `pwa-safe-screen` and they'll respect the top safe area internally.
    Bottom is handled directly on the footer bar (smaller gap). */
 html.pwa-installed .pwa-safe-screen {
-  /* iOS standalone reports the usable viewport above the home indicator.
-     Extend fullscreen drawers by the bottom safe-area so their footer band
-     visually reaches the physical bottom of the installed app. */
-  height: calc(100dvh + env(safe-area-inset-bottom)) !important;
-  max-height: none !important;
+  /* iOS standalone treats the home-indicator as an excluded safe area.
+     Keep drawers sized to the usable viewport, but allow their footer band
+     to visually bleed into the excluded area instead of being clipped. */
+  height: 100dvh !important;
+  max-height: 100dvh !important;
   padding-top: env(safe-area-inset-top);
-  overflow: hidden;
+  overflow: visible;
 }
 
 html.pwa-installed .pwa-checkout-bar {
-  padding-bottom: 1rem !important;
+  margin-bottom: calc(env(safe-area-inset-bottom) * -1) !important;
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem) !important;
 }
 
 /* For elements that are themselves fixed to the top/bottom of the viewport
