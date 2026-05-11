@@ -76,18 +76,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
+    const target: "details" | "payment" = skipDetails ? "payment" : "details";
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
-      if (step === "phone" || step === "otp") setStep("details");
+      if (step === "phone" || step === "otp") setStep(target);
       return;
     }
     if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE && (step === "phone" || step === "otp")) {
-      setStep("details");
+      setStep(target);
       return;
     }
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && step === "otp") {
-      setStep("details");
+      setStep(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, customer, isKiosk]);
