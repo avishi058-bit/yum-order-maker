@@ -8,6 +8,7 @@ import { useCustomToppings } from "@/lib/customToppingsStore";
 import { findTopping } from "@/lib/toppingsLookup";
 import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import aioliImg from "@/assets/aioli-sauce.webp";
 import picklesImg from "@/assets/pickles.webp";
@@ -182,6 +183,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const heroImgRef = useRef<HTMLImageElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  // Lock the page-behind-the-modal so iOS doesn't rubber-band/scroll the
+  // background instead of the sheet content.
+  useBodyScrollLock(true);
 
   // Drag state (refs only — no re-render while dragging)
   const dragState = useRef({
