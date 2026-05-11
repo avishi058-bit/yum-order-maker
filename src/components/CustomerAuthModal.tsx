@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, UserPlus, Loader2 } from "lucide-react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { toast } from "@/hooks/use-toast";
+import { validateIsraeliPhone } from "@/lib/utils";
 import { modalAnimations } from "@/config/uiConfig";
 
 interface CustomerAuthModalProps {
