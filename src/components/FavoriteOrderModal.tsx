@@ -224,17 +224,43 @@ const EditableList = ({
   items,
   onEdit,
   onRemove,
+  selectable,
+  selectedIds,
+  onToggleSelect,
 }: {
   items: CartItem[];
   onEdit: (index: number) => void;
   onRemove: (index: number) => void;
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }) => (
   <ul className="space-y-2">
     {items.map((it, idx) => {
       const desc = describeCartItem(it);
+      const isSelected = selectable ? selectedIds?.has(it.id) ?? false : false;
       return (
-        <li key={it.id} className="border border-border rounded-xl p-3 bg-card">
-          <div className="flex items-start justify-between gap-2">
+        <li
+          key={it.id}
+          onClick={selectable ? () => onToggleSelect?.(it.id) : undefined}
+          className={`relative rounded-xl p-3 bg-card transition-all ${
+            selectable
+              ? isSelected
+                ? "border-2 border-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.2)] cursor-pointer"
+                : "border border-border opacity-60 cursor-pointer hover:opacity-80"
+              : "border border-border"
+          }`}
+        >
+          {selectable && (
+            <div
+              className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-white ${
+                isSelected ? "bg-green-500" : "bg-muted border border-border"
+              }`}
+            >
+              {isSelected && <Check size={12} strokeWidth={3} />}
+            </div>
+          )}
+          <div className={`flex items-start justify-between gap-2 ${selectable ? "pr-6" : ""}`}>
             <div className="text-right flex-1 min-w-0 space-y-0.5">
               <p className="font-bold text-foreground text-sm">
                 {it.quantity > 1 ? `${it.quantity}× ` : ""}
@@ -256,7 +282,7 @@ const EditableList = ({
                 <p className="text-xs text-muted-foreground">{desc.ownerLine}</p>
               )}
             </div>
-            <div className="flex flex-col gap-1 shrink-0">
+            <div className="flex flex-col gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => onEdit(idx)}
                 className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20"
@@ -319,6 +345,8 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [draft, setDraft] = useState<CartItem[]>([]);
   /** Working copy used by confirm view (per-order tweaks; doesn't replace saved favorite). */
   const [usingDraft, setUsingDraft] = useState<CartItem[]>([]);
+  /** Selected line ids in confirm view — only these go to checkout/cart. */
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   /** True while the customizer is open in front of us. */
   const [customizing, setCustomizing] = useState(false);
   /** Picker for "add new dish": which menu item to customize. */
@@ -488,8 +516,10 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     if (!open) return;
     const goSetup = startInSetup || !hasFavorite;
     setView(goSetup ? "setup" : "confirm");
-    setDraft(hasFavorite ? refreshIds(favoriteItems!) : []);
-    setUsingDraft(hasFavorite ? refreshIds(favoriteItems!) : []);
+    const refreshed = hasFavorite ? refreshIds(favoriteItems!) : [];
+    setDraft(refreshed);
+    setUsingDraft(refreshed);
+    setSelectedIds(new Set(refreshed.map((i) => i.id)));
     setPickerOpen(false);
   }, [open, startInSetup, hasFavorite, favoriteItems]);
 
@@ -557,7 +587,26 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   };
 
   const handleRemoveUsing = (idx: number) => {
-    setUsingDraft((prev) => prev.filter((_, i) => i !== idx));
+    setUsingDraft((prev) => {
+      const removed = prev[idx];
+      if (removed) {
+        setSelectedIds((s) => {
+          const next = new Set(s);
+          next.delete(removed.id);
+          return next;
+        });
+      }
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleAddOnceForOrder = async (menuItem: MenuItem) => {
@@ -570,14 +619,16 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       return;
     }
     setUsingDraft((prev) => [...prev, added]);
+    setSelectedIds((s) => new Set(s).add(added.id));
   };
 
   const handleConfirmUse = (mode: "cart" | "checkout") => {
-    if (usingDraft.length === 0) {
-      toast({ title: "אין מנות בקבוע", variant: "destructive" });
+    const chosen = usingDraft.filter((it) => selectedIds.has(it.id));
+    if (chosen.length === 0) {
+      toast({ title: "בחר לפחות מנה אחת להמשך", variant: "destructive" });
       return;
     }
-    onUseFavorite(refreshIds(usingDraft), mode);
+    onUseFavorite(refreshIds(chosen), mode);
     onClose();
     toast({
       title: mode === "checkout"
@@ -625,6 +676,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       setDraft((prev) => [...prev, withName]);
     } else {
       setUsingDraft((prev) => [...prev, withName]);
+      setSelectedIds((s) => new Set(s).add(withName.id));
     }
     setPendingNameDish(null);
     setPendingNameValue("");
@@ -770,6 +822,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                             const ci = simpleToCartItem(m);
                             if (view === "confirm") {
                               setUsingDraft((prev) => [...prev, ci]);
+                              setSelectedIds((s) => new Set(s).add(ci.id));
                             } else {
                               setDraft((prev) => [...prev, ci]);
                             }
@@ -902,7 +955,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?
+                      {usingDraft.length > 1
+                        ? "סמן רק את המנות שתרצה להמשיך איתן עכשיו (מסגרת ירוקה = נבחר)."
+                        : "רוצה לערוך משהו רק להזמנה הזאת לפני שממשיכים?"}
                     </p>
                     {usingDraft.length === 0 ? (
                       <div className="text-center text-muted-foreground py-6 text-sm border border-dashed border-border rounded-xl">
@@ -913,6 +968,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                         items={usingDraft}
                         onEdit={handleEditUsing}
                         onRemove={handleRemoveUsing}
+                        selectable={usingDraft.length > 1}
+                        selectedIds={selectedIds}
+                        onToggleSelect={toggleSelected}
                       />
                     )}
                     <button
@@ -925,8 +983,8 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                     <div className="flex flex-col gap-2 pt-2">
                       <motion.button
                         onClick={() => handleConfirmUse("checkout")}
-                        disabled={hasAnyIssues}
-                        animate={hasAnyIssues ? {} : {
+                        disabled={hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0}
+                        animate={(hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0) ? {} : {
                           scale: [1, 1.04, 1, 1.04, 1],
                           rotate: [0, -1.2, 0, 1.2, 0],
                         }}
@@ -935,11 +993,19 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                         className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-l from-green-500 via-green-600 to-green-500 hover:from-green-600 hover:to-green-600 text-white font-bold text-base transition-colors shadow-[0_10px_30px_-5px_rgba(34,197,94,0.6)] ring-2 ring-green-400/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none"
                       >
                         <Check size={20} />
-                        {hasAnyIssues ? "פתור קודם את הפריטים החסרים" : "המשך לתשלום עם הקבוע שלי"}
+                        {hasAnyIssues
+                          ? "פתור קודם את הפריטים החסרים"
+                          : (() => {
+                              const selectedCount = usingDraft.filter((it) => selectedIds.has(it.id)).length;
+                              if (selectedCount === 0) return "בחר לפחות מנה אחת";
+                              if (usingDraft.length > 1 && selectedCount < usingDraft.length)
+                                return `המשך לתשלום עם ${selectedCount} מנות נבחרות`;
+                              return "המשך לתשלום עם הקבוע שלי";
+                            })()}
                       </motion.button>
                       <button
                         onClick={() => handleConfirmUse("cart")}
-                        disabled={hasAnyIssues}
+                        disabled={hasAnyIssues || usingDraft.filter((it) => selectedIds.has(it.id)).length === 0}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShoppingBag size={15} />
