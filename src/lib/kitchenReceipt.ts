@@ -127,6 +127,7 @@ const DONENESS_LABELS: Record<string, string> = {
   "doneness-mw": "MW — מדיום וואל",
   "doneness-wd": "WD — וואל דאן",
 };
+const FAVORITE_MARKER = "__FAVORITE__";
 const extractOwnerName = (
   removals: string[] | null | undefined,
 ): { ownerName: string | null; doneness: string | null; cleanedRemovals: string[] } => {
@@ -135,7 +136,10 @@ const extractOwnerName = (
   let doneness: string | null = null;
   const cleaned: string[] = [];
   for (const r of removals) {
-    if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
+    if (typeof r === "string" && r === FAVORITE_MARKER) {
+      // Intentionally NOT shown on the printed kitchen receipt/bon — only on the kitchen display.
+      continue;
+    } else if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
       ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
     } else if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
       doneness = DONENESS_LABELS[r] || r;

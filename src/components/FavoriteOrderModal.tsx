@@ -628,7 +628,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       toast({ title: "בחר לפחות מנה אחת להמשך", variant: "destructive" });
       return;
     }
-    onUseFavorite(refreshIds(chosen), mode);
+    // Tag each line as "favorite" so the kitchen display can highlight it in green.
+    const tagged = refreshIds(chosen).map((it) => ({ ...it, isFavorite: true }));
+    onUseFavorite(tagged, mode);
     onClose();
     toast({
       title: mode === "checkout"
