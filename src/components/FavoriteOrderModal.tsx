@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -741,7 +742,9 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   // While the parent customizer is open, hide our backdrop+sheet so it's on top.
   const visuallyHidden = customizing;
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <>
@@ -1181,7 +1184,8 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
           )}
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };
 
