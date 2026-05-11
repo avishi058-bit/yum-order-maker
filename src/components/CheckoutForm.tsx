@@ -295,6 +295,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     setSubmitting(true);
     try {
       const order = await callCreateOrder("credit", "pending_payment");
+      // Silently link/create customer so the next visit auto-logs in.
+      if (!isLoggedIn && form.phone && form.name) {
+        await linkFromOrder(form.phone, form.name).catch(() => {});
+      }
 
       // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
       const zcreditItems = items.map((item) => {
