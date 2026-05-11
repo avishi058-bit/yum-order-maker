@@ -77,6 +77,23 @@ const Index = () => {
   const [favoriteStartInSetup, setFavoriteStartInSetup] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
   const isInstalled = typeof window !== "undefined" ? isStandalonePwa() : false;
+  const isIosDevice = typeof window !== "undefined" ? isIos() : false;
+  const { canPrompt: canNativeInstall, promptInstall } = useInstallPrompt();
+  const handleInstallClick = useCallback(async () => {
+    // iPhone/iPad: Safari can't trigger install programmatically — show manual steps.
+    if (isIosDevice) {
+      setInstallModalOpen(true);
+      return;
+    }
+    // Android (Chrome/Edge): trigger the native install prompt if browser captured it.
+    if (canNativeInstall) {
+      const outcome = await promptInstall();
+      if (outcome === "unavailable") setInstallModalOpen(true);
+      return;
+    }
+    // Fallback (desktop / browser hasn't fired the event yet): show instructions.
+    setInstallModalOpen(true);
+  }, [isIosDevice, canNativeInstall, promptInstall]);
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
