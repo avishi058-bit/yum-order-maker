@@ -24,7 +24,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ===== Pricing data (sync with src/data/menu.ts) =====
+// ===== Pricing data (single source of truth: supabase/functions/_shared/menu-pricing.ts) =====
 
 interface MenuItemPricing {
   id: string;
