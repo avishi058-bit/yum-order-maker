@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, UserPlus, Loader2 } from "lucide-react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { toast } from "@/hooks/use-toast";
+import { validateIsraeliPhone } from "@/lib/utils";
 import { modalAnimations } from "@/config/uiConfig";
 
 interface CustomerAuthModalProps {
@@ -33,9 +34,9 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
   };
 
   const handleSubmit = async () => {
-    const cleaned = phone.replace(/[-\s]/g, "");
-    if (cleaned.length < 9) {
-      toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+    const phoneCheck = validateIsraeliPhone(phone);
+    if (!phoneCheck.valid) {
+      toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
     if (!name.trim()) {
@@ -93,7 +94,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
                 <input
                   type="tel"
                   inputMode="tel"
-                  placeholder="050-1234567"
+                  placeholder="0501234567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-background text-foreground text-right"

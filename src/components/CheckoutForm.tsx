@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { validateIsraeliPhone } from "@/lib/utils";
 import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
@@ -87,8 +88,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   }, [isLoggedIn, customer, isKiosk]);
 
   const handleSendOtp = async () => {
-    if (!form.phone || form.phone.replace(/[-\s]/g, '').length < 9) {
-      toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+    const phoneCheck = validateIsraeliPhone(form.phone);
+    if (!phoneCheck.valid) {
+      toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
 
@@ -170,9 +172,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // Website (no logged-in user, OTP skipped) → phone is required.
     // Kiosk → phone field is hidden, no validation.
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && !isLoggedIn) {
-      const cleaned = form.phone.replace(/[-\s]/g, "");
-      if (cleaned.length < 9) {
-        toast({ title: "אנא הכנס מספר טלפון תקין", variant: "destructive" });
+      const phoneCheck = validateIsraeliPhone(form.phone);
+      if (!phoneCheck.valid) {
+        toast({ title: phoneCheck.error, variant: "destructive" });
         return;
       }
     }
@@ -498,7 +500,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                placeholder="050-1234567"
+                placeholder="0501234567"
                 dir="ltr"
               />
             </div>
@@ -646,7 +648,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder="050-1234567"
+                    placeholder="0501234567"
                     dir="ltr"
                   />
                 </div>

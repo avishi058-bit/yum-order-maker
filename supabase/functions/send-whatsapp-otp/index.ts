@@ -34,11 +34,11 @@ const normalizePhoneNumber = (value: string) => {
 }
 
 const SendSchema = z.object({
-  phone: z.string().min(9).max(15),
+  phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
 })
 
 const VerifySchema = z.object({
-  phone: z.string().min(9).max(15),
+  phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
   code: z.string().length(4),
 })
 

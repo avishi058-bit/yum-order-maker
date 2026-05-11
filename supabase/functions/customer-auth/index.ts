@@ -20,7 +20,7 @@ const generateToken = () => {
 
 // --- Schemas ---
 const RegisterSchema = z.object({
-  phone: z.string().min(9).max(15),
+  phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
   name: z.string().min(1).max(100),
   termsAccepted: z.literal(true),
   marketingConsent: z.boolean(),
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
 
     // ─── Login: returning user with phone (after OTP) ───
     if (action === 'login') {
-      const phone = z.string().min(9).max(15).safeParse(body.phone)
+      const phone = z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות').safeParse(body.phone)
       if (!phone.success) return json({ error: 'מספר לא תקין' }, 400)
 
       const now = new Date().toISOString()
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
 
     // ─── Logout all: clear token by phone ───
     if (action === 'logout-all') {
-      const phone = z.string().min(9).max(15).safeParse(body.phone)
+      const phone = z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות').safeParse(body.phone)
       const token = z.string().min(32).safeParse(body.deviceToken)
       if (!phone.success || !token.success) return json({ error: 'נתונים לא תקינים' }, 400)
 
@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
     // and returns it so the client auto-logs in for future visits.
     if (action === 'link-from-order') {
       const LinkSchema = z.object({
-        phone: z.string().min(9).max(15),
+        phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
         name: z.string().min(1).max(100),
       })
       const parsed = LinkSchema.safeParse(body)
