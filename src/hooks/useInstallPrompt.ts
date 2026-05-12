@@ -13,16 +13,29 @@ interface BeforeInstallPromptEvent extends Event {
  * the manual "Add to Home Screen" instructions.
  */
 export const useInstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    // Pick up an event that was already captured in main.tsx before React mounted.
+    const w = typeof window !== "undefined" ? (window as unknown as { __deferredInstallPrompt?: Event }) : undefined;
+    return (w?.__deferredInstallPrompt as BeforeInstallPromptEvent) ?? null;
+  });
 
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
+    const earlyReady = () => {
+      const w = window as unknown as { __deferredInstallPrompt?: Event };
+      if (w.__deferredInstallPrompt) {
+        setDeferredPrompt(w.__deferredInstallPrompt as BeforeInstallPromptEvent);
+      }
+    };
     window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("deferred-install-prompt-ready", earlyReady);
     const installedHandler = () => {
       setDeferredPrompt(null);
+      const w = window as unknown as { __deferredInstallPrompt?: Event };
+      delete w.__deferredInstallPrompt;
       try { localStorage.setItem("habakta_pwa_installed", "1"); } catch {}
       // Open the post-install instructions modal (notifications guidance)
       window.dispatchEvent(new CustomEvent("open-post-install-instructions"));
@@ -30,6 +43,7 @@ export const useInstallPrompt = () => {
     window.addEventListener("appinstalled", installedHandler);
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("deferred-install-prompt-ready", earlyReady);
       window.removeEventListener("appinstalled", installedHandler);
     };
   }, []);
