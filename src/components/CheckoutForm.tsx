@@ -50,8 +50,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // kiosk mode). Per product decision: skip it entirely in those cases and
   // jump straight to payment-method selection. Only keep details when we
   // genuinely need to collect name/phone (website + not logged in).
-  // Details step removed entirely — always skip straight to payment.
-  const effectiveSkipDetails = true;
+  // Skip the details step only when we already have everything we need:
+  // logged-in customers (we have their saved name + phone). Otherwise we MUST
+  // collect at least a name (kiosk) or name + phone (website without OTP).
+  // Without this step, create-order rejects the request because customerName
+  // would be an empty string and Zod validation fails — exactly the bug that
+  // caused "שגיאה" when tapping payment in the kiosk.
+  const effectiveSkipDetails = skipDetails || isLoggedIn;
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
     const detailsOrPayment: "details" | "payment" = effectiveSkipDetails ? "payment" : "details";
     if (isLoggedIn && customer) return detailsOrPayment;
