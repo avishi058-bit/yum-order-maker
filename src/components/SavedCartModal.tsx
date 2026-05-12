@@ -136,23 +136,6 @@ const SavedCartModal = ({
                     להתחיל מחדש
                   </button>
                 </div>
-
-                {/* Actions */}
-                <div className="space-y-2">
-                  <button
-                    onClick={onResume}
-                    className="w-full bg-primary text-primary-foreground rounded-2xl py-4 font-black text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
-                  >
-                    להמשיך להזמנה
-                  </button>
-                  <button
-                    onClick={onStartOver}
-                    className="w-full bg-muted text-muted-foreground rounded-2xl py-3 font-bold text-sm hover:bg-muted/70 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    <RotateCcw size={14} />
-                    להתחיל מחדש
-                  </button>
-                </div>
               </div>
             </div>
           </motion.div>
