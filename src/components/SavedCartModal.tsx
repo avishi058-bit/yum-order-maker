@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, ShoppingBag } from "lucide-react";
+import { X, RotateCcw } from "lucide-react";
 import type { SavedCart } from "@/hooks/useSavedCart";
+import cartBurgerIcon from "@/assets/cart-burger-icon.png";
 
 interface SavedCartModalProps {
   open: boolean;
@@ -68,18 +69,23 @@ const SavedCartModal = ({
 
               <div className="px-6 pb-6 text-center">
                 {/* Icon */}
-                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <ShoppingBag size={28} className="text-primary" />
+                <div className="mx-auto w-20 h-20 rounded-full overflow-hidden mb-4 flex items-center justify-center">
+                  <img src={cartBurgerIcon} alt="עגלה" className="w-full h-full object-cover" />
                 </div>
 
-                {/* Personal greeting */}
-                <h2 className="text-2xl font-black mb-2">
-                  {displayName ? `שלום ${displayName} 👋` : "ברוך שובך! 👋"}
+                {/* Personal greeting — glowing green */}
+                <h2
+                  className="text-2xl font-black mb-2"
+                  style={{
+                    color: "hsl(142 76% 55%)",
+                    textShadow:
+                      "0 0 12px hsl(142 76% 55% / 0.65), 0 0 24px hsl(142 76% 45% / 0.45)",
+                  }}
+                >
+                  {displayName ? `${displayName.split(" ")[0]} רוצה להמשיך מאיפה שהפסקת?` : "רוצה להמשיך מאיפה שהפסקת?"}
                 </h2>
                 <p className="text-muted-foreground mb-5">
-                  שמנו לב שהתחלת הזמנה קודם.
-                  <br />
-                  רוצה להמשיך מאיפה שהפסקת?
+                  שמנו לב שיש לך פריטים שכבר הוספת לעגלה
                 </p>
 
                 {/* Cart preview */}
@@ -110,17 +116,21 @@ const SavedCartModal = ({
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="space-y-2">
+                {/* Actions — two equal buttons side by side */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={onResume}
-                    className="w-full bg-primary text-primary-foreground rounded-2xl py-4 font-black text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
+                    className="rounded-2xl py-3 font-black text-sm shadow-lg active:scale-[0.98] transition-all text-white"
+                    style={{
+                      background: "hsl(142 76% 42%)",
+                      boxShadow: "0 6px 20px hsl(142 76% 42% / 0.35)",
+                    }}
                   >
-                    להמשיך להזמנה
+                    להמשיך בהזמנה
                   </button>
                   <button
                     onClick={onStartOver}
-                    className="w-full bg-muted text-muted-foreground rounded-2xl py-3 font-bold text-sm hover:bg-muted/70 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    className="rounded-2xl py-3 font-bold text-sm bg-muted text-muted-foreground hover:bg-muted/70 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
                   >
                     <RotateCcw size={14} />
                     להתחיל מחדש
