@@ -244,7 +244,7 @@ html.pwa-installed .pwa-safe-screen {
   bottom: 0 !important;
   height: auto !important;
   max-height: none !important;
-  padding-top: env(safe-area-inset-top);
+  padding-top: 0;
   overflow: hidden;
 }
 
