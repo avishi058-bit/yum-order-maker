@@ -215,6 +215,12 @@ body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
    (Add to Home Screen on iOS, installed PWA on Android/Desktop).
    Use the .pwa-installed class on <html> to scope adjustments.
    =================================================================== */
+html.pwa-installed,
+html.pwa-installed body {
+  /* Make the safe-area regions (notch, home-indicator) match the app
+     surface instead of showing the dark <html> background as black bars. */
+  background-color: #ffffff !important;
+}
 html.pwa-installed body {
   /* Push regular page content below the iOS status bar / notch
      and above the home-indicator. No scaling — only translation. */
