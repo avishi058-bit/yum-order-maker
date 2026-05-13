@@ -686,7 +686,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 32, stiffness: 320, mass: 0.9 }}
               className={`fixed left-0 right-0 z-50 bg-white text-black flex flex-col rounded-t-3xl shadow-2xl overflow-hidden ${
-                isKiosk ? "bottom-0" : "inset-0"
+                isKiosk ? "bottom-0" : "inset-0 pwa-safe-screen"
               }`}
               style={{
                 willChange: "transform",
@@ -1273,7 +1273,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
               {/* Bottom bar - only on customize step */}
               {step === "customize" && (
-                <div className={`border-t border-gray-200 flex items-center gap-3 bg-white safe-bottom ${isKiosk ? "px-8 py-6" : "px-5 py-4"}`}>
+                <div className={`border-t border-gray-200 flex items-center gap-3 bg-white pwa-safe-bottom ${isKiosk ? "px-8 py-6" : "px-5 py-4"}`}>
                   <button
                     onClick={handleNext}
                     className={`flex-1 bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
