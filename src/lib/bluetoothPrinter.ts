@@ -703,8 +703,8 @@ function _canvasToCroppedMono(
   while (top < h && rowBlank(top)) top++;
   while (bot > top && rowBlank(bot)) bot--;
   if (top >= bot) return { bytes: new Uint8Array(1), widthBytes: 1, height: 1, offsetX: 0 };
-  const padT = Math.max(0, top - 5);
-  const padB = Math.min(h - 1, bot + 5);
+  const padT = Math.max(0, top - 2);
+  const padB = Math.min(h - 1, bot + 2);
   const newH = padB - padT + 1;
   if (!cropX) {
     const out = bytes.slice(padT * widthBytes, (padB + 1) * widthBytes);
