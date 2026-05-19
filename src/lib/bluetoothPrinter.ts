@@ -884,36 +884,20 @@ export async function printOps(ops: FastOp[]): Promise<void> {
   const width = getPaperWidthDots();
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
-  // Xprinter / generic ESC/POS: set max print speed + lower density.
-  // Lower density = faster head movement, less heating dwell. Visually still
-  // crisp for 1-bit raster text. GS ( K fn=50 m n: speed (n=0..15, 0=fastest).
-  // fn=49 m n: density (n=0..15, lower=lighter+faster).
-  buf.pushArr([GS, 0x28, 0x4b, 0x02, 0x00, 0x32, 0x00]); // speed = 0 (fastest)
-  buf.pushArr([GS, 0x28, 0x4b, 0x02, 0x00, 0x31, 0x06]); // density = 6 (medium-light)
-  // Legacy ESC 7 fallback (max dots, min heating time, min interval).
-  buf.pushArr([ESC, 0x37, 0x07, 0x50, 0x02]);
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
 
-  // Coalesce only when it reduces bytes. BLE is usually the bottleneck, so a
-  // narrow cropped raster per line is faster than expanding every line to full
-  // paper width when the byte saving is meaningful. Visual layout stays the
-  // same because each cropped line keeps its ESC/POS absolute X offset.
+  // Always combine pending monos into one full-width raster — safest across
+  // printer firmwares (some don't honor ESC $ before GS v 0 and print garbage).
   let pending: Mono[] = [];
   const flush = () => {
     if (pending.length === 0) return;
     buf.pushArr(_align("L"));
-    const totalH = pending.reduce((sum, m) => sum + m.height, 0);
-    const combinedBytes = _estimateRasterBytes({ widthBytes: width / 8, height: totalH });
-    const narrowBytes = pending.reduce((sum, m) => sum + 4 + _estimateRasterBytes(m), 0);
-    if (narrowBytes < combinedBytes * 0.85) {
-      for (const m of pending) _emitNarrowRasterInto(buf, m);
-    } else {
-      _emitRasterInto(buf, _combineMonos(pending, width));
-    }
+    _emitRasterInto(buf, _combineMonos(pending, width));
     pending = [];
   };
+
 
   for (const op of ops) {
     switch (op.kind) {
