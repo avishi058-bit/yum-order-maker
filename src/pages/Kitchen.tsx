@@ -15,6 +15,10 @@ import {
   tryAutoReconnect,
   printBluetoothReceipt,
   printTest,
+  printTestCycle,
+  getEncoding,
+  setEncoding,
+  type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 
 interface OrderItem {
