@@ -897,7 +897,10 @@ export async function printOps(ops: FastOp[]): Promise<void> {
   const char = await ensureConnected();
   const width = getPaperWidthDots();
   const buf = new ByteBuf(8192);
-  buf.pushArr(CMD_INIT);
+  // Reset + Hebrew code page (CP862 = 15) + right-align (RTL)
+  buf.pushArr([ESC, 0x40]);
+  buf.pushArr([ESC, 0x74, 0x0F]);
+  buf.pushArr([ESC, 0x61, 0x02]);
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
