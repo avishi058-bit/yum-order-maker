@@ -997,7 +997,15 @@ const Kitchen = () => {
           <button
             onClick={() => {
               if (activeRoundOrders.length === 0) return;
-              printRoundChefSummary(activeRoundOrders);
+              if (isPrinterConnected()) {
+                printBluetoothRoundChef(activeRoundOrders).catch((err) => {
+                  console.warn("[Kitchen] BT chef print failed, falling back", err);
+                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
+                  printRoundChefSummary(activeRoundOrders);
+                });
+              } else {
+                printRoundChefSummary(activeRoundOrders);
+              }
             }}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
