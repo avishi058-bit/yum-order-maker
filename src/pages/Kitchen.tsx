@@ -684,6 +684,27 @@ const Kitchen = () => {
     }
   };
 
+  const [encoding, setEncodingState] = useState<EncodingProfile>(() => getEncoding());
+
+  const handleEncodingChange = (p: EncodingProfile) => {
+    setEncoding(p);
+    setEncodingState(p);
+    toast.success(`קידוד נשמר: ${p}`);
+  };
+
+  const handleTestCycle = async () => {
+    if (!isPrinterConnected()) {
+      toast.error("חבר תחילה את המדפסת");
+      return;
+    }
+    try {
+      await printTestCycle();
+      toast.success("הודפסו 3 בדיקות (A/B/C) — בחר את הקריאה ושמור");
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בהדפסה");
+    }
+  };
+
   // Adjust ETA by +/- N minutes for an in-progress order
   const adjustEta = async (order: Order, deltaMinutes: number) => {
     const base = order.estimated_ready_at
