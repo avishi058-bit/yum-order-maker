@@ -567,7 +567,7 @@ function _renderHebToMono(
   measure.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
   const lines = _wrapText(measure, text, width - 4);
 
-  const lineH = Math.ceil(px * 1.25);
+  const lineH = Math.ceil(px * 1.15);
   const h = lineH * lines.length + 2;
   const canvas = document.createElement("canvas");
   canvas.width = width;
