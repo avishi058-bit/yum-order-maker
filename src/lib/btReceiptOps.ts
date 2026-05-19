@@ -248,8 +248,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ops.push(asLine("שולם באשראי", { align: "C", bold: true, size: 20 }));
   }
 
-  // Total — ASCII fast path
-  ops.push({ kind: "text", text: `Total: ${order.total} NIS`, align: "C", size: 1, bold: true });
+  // Total — Hebrew bitmap so the ₪ sign renders correctly.
+  ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 28 }));
+
 
   ops.push(feed(2));
   ops.push({ kind: "cut" });
