@@ -630,9 +630,9 @@ function _renderHebToMono(
   while (left < width && colBlank(left)) left++;
   while (right > left && colBlank(right)) right--;
 
-  // Tiny padding so letters don't kiss each other vertically/horizontally.
-  const padT = Math.max(0, top - 1);
-  const padB = Math.min(h - 1, bot + 1);
+  // Extra vertical padding so lines have breathing room between them.
+  const padT = Math.max(0, top - 5);
+  const padB = Math.min(h - 1, bot + 5);
   const padL = Math.max(0, left - 2);
   const padR = Math.min(width - 1, right + 2);
   const newH = padB - padT + 1;
@@ -694,8 +694,8 @@ function _canvasToCroppedMono(
   while (top < h && rowBlank(top)) top++;
   while (bot > top && rowBlank(bot)) bot--;
   if (top >= bot) return { bytes: new Uint8Array(1), widthBytes: 1, height: 1, offsetX: 0 };
-  const padT = Math.max(0, top - 1);
-  const padB = Math.min(h - 1, bot + 1);
+  const padT = Math.max(0, top - 5);
+  const padB = Math.min(h - 1, bot + 5);
   const newH = padB - padT + 1;
   if (!cropX) {
     const out = bytes.slice(padT * widthBytes, (padB + 1) * widthBytes);
