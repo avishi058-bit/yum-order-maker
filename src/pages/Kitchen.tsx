@@ -869,6 +869,27 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
+          {/* Bluetooth printer connect/disconnect */}
+          <button
+            onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
+            className={`p-2 rounded-lg transition-colors ${
+              btConnected ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+            title={btConnected ? "מדפסת בלוטות׳ מחוברת — לחץ לניתוק" : "חיבור מדפסת בלוטות׳"}
+          >
+            {btConnected ? <BluetoothConnected size={20} /> : <Bluetooth size={20} />}
+          </button>
+          {/* Test print */}
+          <button
+            onClick={handleTestPrint}
+            disabled={!btConnected}
+            className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
+              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+            }`}
+            title="בדיקת הדפסה"
+          >
+            בדיקה
+          </button>
           {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
