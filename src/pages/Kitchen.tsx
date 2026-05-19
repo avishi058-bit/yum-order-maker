@@ -17,7 +17,7 @@ import {
   printBluetoothRoundSummary,
   printBluetoothRoundChef,
   printTest,
-  printTestCycle,
+  printHybridDiagnostic,
   getEncoding,
   setEncoding,
   getPaperWidthDots,
@@ -703,14 +703,14 @@ const Kitchen = () => {
     toast.success(`רוחב נייר: ${dots} נק׳`);
   };
 
-  const handleTestCycle = async () => {
+  const handleHybridDiagnostic = async () => {
     if (!isPrinterConnected()) {
       toast.error("חבר תחילה את המדפסת");
       return;
     }
     try {
-      await printTestCycle();
-      toast.success("הודפסו 3 בדיקות (A/B/C) — בחר את הקריאה ושמור");
+      await printHybridDiagnostic();
+      toast.success("נשלחה בדיקת Hybrid מהירה");
     } catch (e: any) {
       toast.error(e?.message || "שגיאה בהדפסה");
     }
