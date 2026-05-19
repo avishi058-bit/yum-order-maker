@@ -98,18 +98,18 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       kind: "header",
       name: order.customer_name || "",
       phone: order.customer_phone || undefined,
-      namePx: 34,
-      phonePx: 18,
+      namePx: 42,
+      phonePx: 22,
     });
   }
   ops.push(sep());
 
   // 2) Order type
-  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 24 }));
+  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 30 }));
 
   // Optional note right under the order type
   if (order.notes) {
-    ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 22 }));
+    ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 28 }));
   }
   ops.push(feed(1));
 
