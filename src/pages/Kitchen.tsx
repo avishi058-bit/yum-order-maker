@@ -14,10 +14,14 @@ import {
   disconnectPrinter,
   tryAutoReconnect,
   printBluetoothReceipt,
+  printBluetoothRoundSummary,
+  printBluetoothRoundChef,
   printTest,
   printTestCycle,
   getEncoding,
   setEncoding,
+  getPaperWidthDots,
+  setPaperWidthDots,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 
@@ -685,11 +689,18 @@ const Kitchen = () => {
   };
 
   const [encoding, setEncodingState] = useState<EncodingProfile>(() => getEncoding());
+  const [paperWidth, setPaperWidthState] = useState<number>(() => getPaperWidthDots());
 
   const handleEncodingChange = (p: EncodingProfile) => {
     setEncoding(p);
     setEncodingState(p);
     toast.success(`קידוד נשמר: ${p}`);
+  };
+
+  const handlePaperWidthChange = (dots: number) => {
+    setPaperWidthDots(dots);
+    setPaperWidthState(getPaperWidthDots());
+    toast.success(`רוחב נייר: ${dots} נק׳`);
   };
 
   const handleTestCycle = async () => {
@@ -940,6 +951,21 @@ const Kitchen = () => {
             <option value="cp862-15">B · CP862 n=15</option>
             <option value="cp1255-33">C · CP1255 n=33</option>
           </select>
+          {/* Paper width selector (for raster bitmap printing) */}
+          <select
+            value={paperWidth}
+            onChange={(e) => handlePaperWidthChange(parseInt(e.target.value, 10))}
+            disabled={!btConnected}
+            className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
+              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            title="רוחב נייר בנקודות (40מ״מ=320, 58מ״מ=384, 80מ״מ=576)"
+          >
+            <option value={256}>32מ״מ · 256</option>
+            <option value={320}>40מ״מ · 320</option>
+            <option value={384}>58מ״מ · 384</option>
+            <option value={576}>80מ״מ · 576</option>
+          </select>
           {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
@@ -957,7 +983,15 @@ const Kitchen = () => {
           <button
             onClick={() => {
               if (activeRoundOrders.length === 0) return;
-              printRoundSummary(activeRoundOrders);
+              if (isPrinterConnected()) {
+                printBluetoothRoundSummary(activeRoundOrders).catch((err) => {
+                  console.warn("[Kitchen] BT round print failed, falling back", err);
+                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
+                  printRoundSummary(activeRoundOrders);
+                });
+              } else {
+                printRoundSummary(activeRoundOrders);
+              }
             }}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
@@ -985,7 +1019,15 @@ const Kitchen = () => {
           <button
             onClick={() => {
               if (activeRoundOrders.length === 0) return;
-              printRoundChefSummary(activeRoundOrders);
+              if (isPrinterConnected()) {
+                printBluetoothRoundChef(activeRoundOrders).catch((err) => {
+                  console.warn("[Kitchen] BT chef print failed, falling back", err);
+                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
+                  printRoundChefSummary(activeRoundOrders);
+                });
+              } else {
+                printRoundChefSummary(activeRoundOrders);
+              }
             }}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
@@ -1635,7 +1677,13 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => printRoundSummary(activeRoundOrders)}
+                  onClick={() => {
+                    if (isPrinterConnected()) {
+                      printBluetoothRoundSummary(activeRoundOrders).catch(() => printRoundSummary(activeRoundOrders));
+                    } else {
+                      printRoundSummary(activeRoundOrders);
+                    }
+                  }}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
@@ -1680,7 +1728,13 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => printRoundChefSummary(activeRoundOrders)}
+                  onClick={() => {
+                    if (isPrinterConnected()) {
+                      printBluetoothRoundChef(activeRoundOrders).catch(() => printRoundChefSummary(activeRoundOrders));
+                    } else {
+                      printRoundChefSummary(activeRoundOrders);
+                    }
+                  }}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
