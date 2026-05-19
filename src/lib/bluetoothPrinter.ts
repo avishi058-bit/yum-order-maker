@@ -298,25 +298,33 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
-  // bitmap header is dropped, the printer prints the raw bytes as gibberish.
-  // Tuned for max throughput. CHUNK=240 stays under typical ATT MTU (247-3).
-  // Using subarray (zero-copy) instead of slice (copy) saves allocations on
-  // large raster payloads.
+  // CHUNK=240 stays under typical ATT MTU (247-3). subarray = zero-copy.
+  // Pipelining: writeWithoutResponse in Chrome buffers locally. Firing several
+  // chunks before awaiting lets the BLE stack keep the radio busy instead of
+  // waiting RTT between every chunk. PIPELINE=4 is safe across most adapters.
   const useNoResp = !!char.properties.writeWithoutResponse;
   const CHUNK = useNoResp ? 240 : 180;
   const DELAY_MS = useNoResp ? 0 : 4;
+  const PIPELINE = useNoResp ? 4 : 1;
+  const writeOne = (slice: Uint8Array): Promise<void> => {
+    if (useNoResp) {
+      // @ts-ignore
+      return char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice);
+    }
+    return char.writeValue(slice);
+  };
+  let inflight: Promise<void>[] = [];
   for (let i = 0; i < data.length; i += CHUNK) {
     const end = Math.min(i + CHUNK, data.length);
     const slice = data.subarray(i, end);
-    if (useNoResp) {
-      // @ts-ignore
-      await (char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice));
-    } else {
-      await char.writeValue(slice);
+    inflight.push(writeOne(slice).catch(() => {}));
+    if (inflight.length >= PIPELINE) {
+      await Promise.all(inflight);
+      inflight = [];
+      if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
     }
-    if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
   }
+  if (inflight.length) await Promise.all(inflight);
 }
 
 export async function printLines(lines: PrintLine[], profile: EncodingProfile = getEncoding()): Promise<void> {
@@ -631,9 +639,9 @@ function _renderHebToMono(
   while (left < width && colBlank(left)) left++;
   while (right > left && colBlank(right)) right--;
 
-  // Extra vertical padding so lines have breathing room between them.
-  const padT = Math.max(0, top - 5);
-  const padB = Math.min(h - 1, bot + 5);
+  // Tight vertical padding — keeps line spacing but skips wasted blank rows.
+  const padT = Math.max(0, top - 2);
+  const padB = Math.min(h - 1, bot + 2);
   const padL = Math.max(0, left - 2);
   const padR = Math.min(width - 1, right + 2);
   const newH = padB - padT + 1;
@@ -695,8 +703,8 @@ function _canvasToCroppedMono(
   while (top < h && rowBlank(top)) top++;
   while (bot > top && rowBlank(bot)) bot--;
   if (top >= bot) return { bytes: new Uint8Array(1), widthBytes: 1, height: 1, offsetX: 0 };
-  const padT = Math.max(0, top - 5);
-  const padB = Math.min(h - 1, bot + 5);
+  const padT = Math.max(0, top - 2);
+  const padB = Math.min(h - 1, bot + 2);
   const newH = padB - padT + 1;
   if (!cropX) {
     const out = bytes.slice(padT * widthBytes, (padB + 1) * widthBytes);
@@ -876,6 +884,14 @@ export async function printOps(ops: FastOp[]): Promise<void> {
   const width = getPaperWidthDots();
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
+  // Xprinter / generic ESC/POS: set max print speed + lower density.
+  // Lower density = faster head movement, less heating dwell. Visually still
+  // crisp for 1-bit raster text. GS ( K fn=50 m n: speed (n=0..15, 0=fastest).
+  // fn=49 m n: density (n=0..15, lower=lighter+faster).
+  buf.pushArr([GS, 0x28, 0x4b, 0x02, 0x00, 0x32, 0x00]); // speed = 0 (fastest)
+  buf.pushArr([GS, 0x28, 0x4b, 0x02, 0x00, 0x31, 0x06]); // density = 6 (medium-light)
+  // Legacy ESC 7 fallback (max dots, min heating time, min interval).
+  buf.pushArr([ESC, 0x37, 0x07, 0x50, 0x02]);
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
