@@ -855,6 +855,22 @@ function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   }
 }
 
+function _estimateRasterBytes(mono: Pick<Mono, "widthBytes" | "height">): number {
+  let total = 0;
+  const ROWS = 255;
+  for (let y = 0; y < mono.height; y += ROWS) {
+    const rows = Math.min(ROWS, mono.height - y);
+    total += 8 + rows * mono.widthBytes;
+  }
+  return total;
+}
+
+function _emitNarrowRasterInto(buf: ByteBuf, mono: Mono) {
+  const offsetDots = Math.max(0, Math.floor(mono.offsetX / 8) * 8);
+  buf.pushArr([ESC, 0x24, offsetDots & 0xff, (offsetDots >> 8) & 0xff]);
+  _emitRasterInto(buf, mono);
+}
+
 export async function printOps(ops: FastOp[]): Promise<void> {
   const char = await ensureConnected();
   const width = getPaperWidthDots();
@@ -864,12 +880,22 @@ export async function printOps(ops: FastOp[]): Promise<void> {
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
 
-  // Coalesce consecutive raster ops (heb/header/twoCol) into one big bitmap.
+  // Coalesce only when it reduces bytes. BLE is usually the bottleneck, so a
+  // narrow cropped raster per line is faster than expanding every line to full
+  // paper width when the byte saving is meaningful. Visual layout stays the
+  // same because each cropped line keeps its ESC/POS absolute X offset.
   let pending: Mono[] = [];
   const flush = () => {
     if (pending.length === 0) return;
     buf.pushArr(_align("L"));
-    _emitRasterInto(buf, _combineMonos(pending, width));
+    const totalH = pending.reduce((sum, m) => sum + m.height, 0);
+    const combinedBytes = _estimateRasterBytes({ widthBytes: width / 8, height: totalH });
+    const narrowBytes = pending.reduce((sum, m) => sum + 4 + _estimateRasterBytes(m), 0);
+    if (narrowBytes < combinedBytes * 0.85) {
+      for (const m of pending) _emitNarrowRasterInto(buf, m);
+    } else {
+      _emitRasterInto(buf, _combineMonos(pending, width));
+    }
     pending = [];
   };
 
