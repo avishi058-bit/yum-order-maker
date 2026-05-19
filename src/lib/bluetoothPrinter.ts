@@ -5,7 +5,13 @@
 // Persists last device id in localStorage so we can try to reconnect silently
 // via navigator.bluetooth.getDevices() (supported on Chrome/Edge on Android).
 
-import type { ReceiptOrder, ReceiptOrderItem } from "./kitchenReceipt";
+import type { ReceiptOrder } from "./kitchenReceipt";
+
+// Minimal Web Bluetooth types (avoid pulling in @types/web-bluetooth)
+type BluetoothServiceUUID = number | string;
+type BluetoothDevice = any;
+type BluetoothRemoteGATTServer = any;
+type BluetoothRemoteGATTCharacteristic = any;
 
 // ---------- ESC/POS constants ----------
 const ESC = 0x1b;
