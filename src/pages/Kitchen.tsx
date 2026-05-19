@@ -1706,7 +1706,13 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => printRoundChefSummary(activeRoundOrders)}
+                  onClick={() => {
+                    if (isPrinterConnected()) {
+                      printBluetoothRoundChef(activeRoundOrders).catch(() => printRoundChefSummary(activeRoundOrders));
+                    } else {
+                      printRoundChefSummary(activeRoundOrders);
+                    }
+                  }}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
