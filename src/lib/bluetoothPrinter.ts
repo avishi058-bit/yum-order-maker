@@ -318,26 +318,179 @@ export async function printLines(lines: PrintLine[], profile: EncodingProfile = 
   await writeBytes(char, bytes);
 }
 
+// =====================================================================
+// RASTER BITMAP PRINTING (recommended path — bypasses Hebrew codepage)
+// Renders existing HTML receipt via html2canvas, converts to 1-bit
+// monochrome bitmap, and sends as ESC/POS GS v 0 raster command.
+// =====================================================================
+
+// Paper width in dots. 40mm thermal @ 203 dpi ≈ 320 dots (multiple of 8).
+// Stored in localStorage so user can adjust per printer if needed.
+const WIDTH_KEY = "bt-printer-width-dots";
+export function getPaperWidthDots(): number {
+  try {
+    const v = parseInt(localStorage.getItem(WIDTH_KEY) || "", 10);
+    if (v >= 64 && v <= 832 && v % 8 === 0) return v;
+  } catch {}
+  return 320;
+}
+export function setPaperWidthDots(dots: number) {
+  const clamped = Math.max(64, Math.min(832, Math.floor(dots / 8) * 8));
+  try { localStorage.setItem(WIDTH_KEY, String(clamped)); } catch {}
+}
+
+// Render arbitrary HTML inside a hidden offscreen iframe to a canvas.
+async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTMLCanvasElement> {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.left = "-10000px";
+  iframe.style.top = "0";
+  iframe.style.width = widthCssPx + "px";
+  iframe.style.height = "10px";
+  iframe.style.border = "0";
+  iframe.setAttribute("aria-hidden", "true");
+  document.body.appendChild(iframe);
+  try {
+    const doc = iframe.contentDocument!;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    // Force narrow paper width on the printed body regardless of original CSS.
+    const style = doc.createElement("style");
+    style.textContent = `
+      html, body { width: ${widthCssPx}px !important; margin: 0 !important; padding: 4px !important; background: #fff !important; color: #000 !important; direction: rtl; }
+      * { max-width: 100% !important; box-sizing: border-box !important; color: #000 !important; }
+      img, svg { max-width: 100% !important; height: auto !important; }
+    `;
+    doc.head.appendChild(style);
+    // Wait for fonts/images
+    await new Promise<void>((resolve) => {
+      const done = () => resolve();
+      if (doc.readyState === "complete") {
+        (doc as any).fonts?.ready?.then(done, done) ?? done();
+      } else {
+        iframe.addEventListener("load", () => {
+          (doc as any).fonts?.ready?.then(done, done) ?? done();
+        }, { once: true });
+      }
+    });
+    await new Promise((r) => setTimeout(r, 80));
+    const target = doc.body;
+    // Match iframe height to content so html2canvas captures everything.
+    iframe.style.height = target.scrollHeight + 20 + "px";
+    await new Promise((r) => setTimeout(r, 30));
+    const canvas = await html2canvas(target, {
+      width: widthCssPx,
+      windowWidth: widthCssPx,
+      backgroundColor: "#ffffff",
+      scale: 1,
+      useCORS: true,
+      logging: false,
+    });
+    return canvas;
+  } finally {
+    document.body.removeChild(iframe);
+  }
+}
+
+// Convert canvas to 1-bit monochrome bytes (MSB-first, row-major).
+function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): { bytes: Uint8Array; widthBytes: number; height: number } {
+  // Scale canvas to exact target width.
+  const scale = targetWidthDots / canvas.width;
+  const outW = targetWidthDots;
+  const outH = Math.max(1, Math.round(canvas.height * scale));
+  const off = document.createElement("canvas");
+  off.width = outW;
+  off.height = outH;
+  const ctx = off.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, outW, outH);
+  ctx.drawImage(canvas, 0, 0, outW, outH);
+  const { data } = ctx.getImageData(0, 0, outW, outH);
+  const widthBytes = outW / 8;
+  const bytes = new Uint8Array(widthBytes * outH);
+  // Floyd–Steinberg-ish simple threshold with luminance.
+  for (let y = 0; y < outH; y++) {
+    for (let x = 0; x < outW; x++) {
+      const i = (y * outW + x) * 4;
+      const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+      // Treat transparent as white.
+      const lum = a < 128 ? 255 : 0.299 * r + 0.587 * g + 0.114 * b;
+      if (lum < 160) {
+        const byteIdx = y * widthBytes + (x >> 3);
+        bytes[byteIdx] |= 0x80 >> (x & 7);
+      }
+    }
+  }
+  return { bytes, widthBytes, height: outH };
+}
+
+// Build ESC/POS bytes for a raster bitmap. Splits into chunks of N rows so
+// large receipts don't overflow printer buffer.
+function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; height: number }): Uint8Array {
+  const { bytes, widthBytes, height } = mono;
+  const ROWS_PER_CHUNK = 128;
+  const out: number[] = [];
+  out.push(...CMD_INIT, ...CMD_ALIGN_LEFT);
+  for (let yStart = 0; yStart < height; yStart += ROWS_PER_CHUNK) {
+    const rows = Math.min(ROWS_PER_CHUNK, height - yStart);
+    // GS v 0 m xL xH yL yH
+    out.push(GS, 0x76, 0x30, 0x00,
+      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+      rows & 0xff, (rows >> 8) & 0xff);
+    const sliceStart = yStart * widthBytes;
+    const sliceEnd = sliceStart + rows * widthBytes;
+    for (let i = sliceStart; i < sliceEnd; i++) out.push(bytes[i]);
+  }
+  out.push(...CMD_FEED_3, ...CMD_CUT);
+  return new Uint8Array(out);
+}
+
+export async function printHtmlBluetooth(html: string): Promise<void> {
+  const widthDots = getPaperWidthDots();
+  const char = await ensureConnected();
+  // Render at the same CSS pixel width as the printer dot width (1:1).
+  const canvas = await renderHtmlToCanvas(html, widthDots);
+  const mono = canvasToMonoBytes(canvas, widthDots);
+  const bytes = buildRasterCommands(mono);
+  await writeBytes(char, bytes);
+}
+
 export async function printBluetoothReceipt(order: ReceiptOrder): Promise<void> {
-  await printLines(buildKitchenBonLines(order));
+  const html = await buildReceiptHtml(order);
+  await printHtmlBluetooth(html);
 }
 
-// Test print using the currently selected encoding profile.
+export async function printBluetoothRoundSummary(orders: RoundOrder[]): Promise<void> {
+  await printHtmlBluetooth(buildRoundSummaryHtml(orders));
+}
+
+export async function printBluetoothRoundChef(orders: RoundOrder[]): Promise<void> {
+  await printHtmlBluetooth(buildRoundChefSummaryHtml(orders));
+}
+
+// Test print: tiny HTML with the requested Hebrew sample, via raster.
 export async function printTest(): Promise<void> {
-  const profile = getEncoding();
-  await printLines([
-    { text: "הבקתה", align: "center", size: "double", bold: true },
-    { text: SEP, align: "center" },
-    { text: "שלום מהבקתה", align: "right", size: "doubleH", bold: true },
-    { text: "בדיקת עברית 123", align: "right" },
-    { text: SEP, align: "center" },
-    { text: `Profile: ${profile}`, align: "left" },
-  ], profile);
+  const html = `
+    <!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8">
+    <style>
+      body { font-family: Arial, "Heebo", sans-serif; color: #000; }
+      .big { font-size: 28px; font-weight: 900; text-align: center; }
+      .h { font-size: 22px; font-weight: 800; text-align: right; }
+      .l { font-size: 18px; text-align: right; }
+      hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
+    </style></head><body>
+      <div class="big">הבקתה</div>
+      <hr>
+      <div class="h">שלום מהבקתה</div>
+      <div class="l">בדיקת עברית 123</div>
+      <hr>
+      <div class="l">${new Date().toLocaleString("he-IL")}</div>
+    </body></html>`;
+  await printHtmlBluetooth(html);
 }
 
-// Cycle test: prints the same Hebrew text three times with different
-// encoding profiles, each labeled A/B/C, so the user can see which is
-// readable on their Xprinter and lock it.
+// Encoding cycle test — still useful for diagnostics on text-mode printing.
 export async function printTestCycle(): Promise<void> {
   const profiles: EncodingProfile[] = ["cp862-21", "cp862-15", "cp1255-33"];
   const tags = ["A", "B", "C"];
