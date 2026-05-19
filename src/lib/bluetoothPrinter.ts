@@ -246,17 +246,6 @@ async function connectDevice(device: BluetoothDevice): Promise<BluetoothRemoteGA
   const char = await findWritableCharacteristic(server);
   cachedDevice = device;
   cachedChar = char;
-  try {
-    const mtu = (char as any).maximumWriteValueLength;
-    console.log('[PRINTER] MTU / maximumWriteValueLength:', mtu);
-    console.log('[PRINTER] Device name:', device.name, '| id:', device.id);
-    console.log('[PRINTER] Characteristic UUID:', char.uuid, '| service:', char.service?.uuid);
-    console.log('[PRINTER] Properties:', {
-      write: char.properties?.write,
-      writeWithoutResponse: char.properties?.writeWithoutResponse,
-      notify: char.properties?.notify,
-    });
-  } catch (e) { console.warn('[PRINTER] could not read MTU', e); }
   try { localStorage.setItem(STORAGE_KEY, device.id); } catch {}
   notify(true);
   return char;
@@ -316,7 +305,7 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   const useNoResp = !!char.properties.writeWithoutResponse;
   const CHUNK = useNoResp ? 240 : 180;
   const DELAY_MS = useNoResp ? 0 : 4;
-  const PIPELINE = useNoResp ? 8 : 1;
+  const PIPELINE = useNoResp ? 4 : 1;
   const writeOne = (slice: Uint8Array): Promise<void> => {
     if (useNoResp) {
       // @ts-ignore
@@ -894,10 +883,7 @@ export async function printOps(ops: FastOp[]): Promise<void> {
   const char = await ensureConnected();
   const width = getPaperWidthDots();
   const buf = new ByteBuf(8192);
-  // Reset + Hebrew code page (CP862 = 15) + right-align (RTL)
-  buf.pushArr([ESC, 0x40]);
-  buf.pushArr([ESC, 0x74, 0x0F]);
-  buf.pushArr([ESC, 0x61, 0x02]);
+  buf.pushArr(CMD_INIT);
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
