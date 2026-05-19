@@ -298,13 +298,12 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // Larger chunks dramatically reduce total round-trips on BLE.
-  // Most ESC/POS BLE printers tolerate 500+ byte writes; we cap at 512.
+  // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
+  // bitmap header is dropped, the printer prints the raw bytes as gibberish.
+  // Keep chunks modest and paced; the hybrid payload is already small enough.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 512 : 256;
-  // With writeWithoutResponse we don't need an artificial delay — the BLE
-  // stack already paces frames. With ack writes we keep a tiny gap.
-  const DELAY_MS = useNoResp ? 0 : 8;
+  const CHUNK = useNoResp ? 128 : 96;
+  const DELAY_MS = useNoResp ? 6 : 12;
   for (let i = 0; i < data.length; i += CHUNK) {
     const slice = data.slice(i, Math.min(i + CHUNK, data.length));
     if (useNoResp) {
