@@ -14,10 +14,14 @@ import {
   disconnectPrinter,
   tryAutoReconnect,
   printBluetoothReceipt,
+  printBluetoothRoundSummary,
+  printBluetoothRoundChef,
   printTest,
   printTestCycle,
   getEncoding,
   setEncoding,
+  getPaperWidthDots,
+  setPaperWidthDots,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 
