@@ -951,6 +951,21 @@ const Kitchen = () => {
             <option value="cp862-15">B · CP862 n=15</option>
             <option value="cp1255-33">C · CP1255 n=33</option>
           </select>
+          {/* Paper width selector (for raster bitmap printing) */}
+          <select
+            value={paperWidth}
+            onChange={(e) => handlePaperWidthChange(parseInt(e.target.value, 10))}
+            disabled={!btConnected}
+            className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
+              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            title="רוחב נייר בנקודות (40מ״מ=320, 58מ״מ=384, 80מ״מ=576)"
+          >
+            <option value={256}>32מ״מ · 256</option>
+            <option value={320}>40מ״מ · 320</option>
+            <option value={384}>58מ״מ · 384</option>
+            <option value={576}>80מ״מ · 576</option>
+          </select>
           {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
