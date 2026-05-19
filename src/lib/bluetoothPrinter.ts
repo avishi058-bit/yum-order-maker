@@ -302,8 +302,8 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   // bitmap header is dropped, the printer prints the raw bytes as gibberish.
   // Keep chunks modest and paced; the hybrid payload is already small enough.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 128 : 96;
-  const DELAY_MS = useNoResp ? 6 : 12;
+  const CHUNK = useNoResp ? 192 : 128;
+  const DELAY_MS = useNoResp ? 2 : 6;
   for (let i = 0; i < data.length; i += CHUNK) {
     const slice = data.slice(i, Math.min(i + CHUNK, data.length));
     if (useNoResp) {
@@ -554,7 +554,7 @@ function _wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
 function _renderHebToMono(
   text: string,
   opts: { width: number; px: number; bold: boolean; align: "L" | "C" | "R" },
-): { bytes: Uint8Array; widthBytes: number; height: number } {
+): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
   const { width, px, bold, align } = opts;
   const tmp = document.createElement("canvas");
   tmp.width = 10;
@@ -614,14 +614,38 @@ function _renderHebToMono(
   while (bot > top && rowBlank(bot)) bot--;
   if (top >= bot) {
     // All blank — emit one feed row.
-    return { bytes: new Uint8Array(widthBytes), widthBytes, height: 1 };
+    return { bytes: new Uint8Array(1), widthBytes: 1, height: 1, offsetX: 0 };
   }
-  // Tiny padding so letters don't kiss each other vertically.
+
+  const colBlank = (c: number) => {
+    for (let r = top; r <= bot; r++) if (bytes[r * widthBytes + (c >> 3)] & (0x80 >> (c & 7))) return false;
+    return true;
+  };
+  let left = 0;
+  let right = width - 1;
+  while (left < width && colBlank(left)) left++;
+  while (right > left && colBlank(right)) right--;
+
+  // Tiny padding so letters don't kiss each other vertically/horizontally.
   const padT = Math.max(0, top - 1);
   const padB = Math.min(h - 1, bot + 1);
+  const padL = Math.max(0, left - 2);
+  const padR = Math.min(width - 1, right + 2);
   const newH = padB - padT + 1;
-  const cropped = bytes.slice(padT * widthBytes, (padB + 1) * widthBytes);
-  return { bytes: cropped, widthBytes, height: newH };
+  const croppedW = Math.max(8, Math.ceil((padR - padL + 1) / 8) * 8);
+  const croppedWidthBytes = croppedW / 8;
+  const cropped = new Uint8Array(croppedWidthBytes * newH);
+  for (let y = 0; y < newH; y++) {
+    for (let x = 0; x < croppedW && padL + x < width; x++) {
+      const srcX = padL + x;
+      const srcY = padT + y;
+      if (bytes[srcY * widthBytes + (srcX >> 3)] & (0x80 >> (srcX & 7))) {
+        cropped[y * croppedWidthBytes + (x >> 3)] |= 0x80 >> (x & 7);
+      }
+    }
+  }
+  const offsetX = align === "R" ? Math.max(0, width - croppedW) : align === "C" ? Math.max(0, Math.floor((width - croppedW) / 2)) : 0;
+  return { bytes: cropped, widthBytes: croppedWidthBytes, height: newH, offsetX };
 }
 
 function _rasterEscPos(mono: { bytes: Uint8Array; widthBytes: number; height: number }): number[] {
@@ -683,6 +707,7 @@ export async function printOps(ops: FastOp[]): Promise<void> {
           bold: !!op.bold,
           align: op.align ?? "R",
         });
+        out.push(..._align("L"), ESC, 0x24, mono.offsetX & 0xff, (mono.offsetX >> 8) & 0xff);
         out.push(..._rasterEscPos(mono));
         break;
       }
