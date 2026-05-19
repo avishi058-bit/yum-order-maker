@@ -222,6 +222,7 @@ const Kitchen = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
+  const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
     return (localStorage.getItem("kitchen-ringtone") as RingtoneId) || "gentle-chime";
