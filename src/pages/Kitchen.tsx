@@ -17,7 +17,7 @@ import {
   printBluetoothRoundSummary,
   printBluetoothRoundChef,
   printTest,
-  printTestCycle,
+  printHybridDiagnostic,
   getEncoding,
   setEncoding,
   getPaperWidthDots,
@@ -703,14 +703,14 @@ const Kitchen = () => {
     toast.success(`רוחב נייר: ${dots} נק׳`);
   };
 
-  const handleTestCycle = async () => {
+  const handleHybridDiagnostic = async () => {
     if (!isPrinterConnected()) {
       toast.error("חבר תחילה את המדפסת");
       return;
     }
     try {
-      await printTestCycle();
-      toast.success("הודפסו 3 בדיקות (A/B/C) — בחר את הקריאה ושמור");
+      await printHybridDiagnostic();
+      toast.success("נשלחה בדיקת Hybrid מהירה");
     } catch (e: any) {
       toast.error(e?.message || "שגיאה בהדפסה");
     }
@@ -926,18 +926,18 @@ const Kitchen = () => {
           >
             בדיקה
           </button>
-          {/* Encoding cycle test (A/B/C) */}
+          {/* Hybrid diagnostic test */}
           <button
-            onClick={handleTestCycle}
+            onClick={handleHybridDiagnostic}
             disabled={!btConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
               btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
             }`}
-            title="הדפס 3 בדיקות עברית עם קידודים שונים (A/B/C) ובחר את הקריא"
+            title="בדיקת Hybrid: עברית כ-bitmap קטן וטקסט מהיר"
           >
-            A/B/C
+            HYB
           </button>
-          {/* Encoding picker */}
+          {/* Width selector */}
           <select
             value={encoding}
             onChange={(e) => handleEncodingChange(e.target.value as EncodingProfile)}
@@ -945,7 +945,7 @@ const Kitchen = () => {
             className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
               !btConnected ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            title="קידוד עברית למדפסת"
+            title="מצב טקסט ישן מנוטרל; עברית מודפסת Hybrid"
           >
             <option value="cp862-21">A · CP862 n=21</option>
             <option value="cp862-15">B · CP862 n=15</option>

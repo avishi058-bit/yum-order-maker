@@ -298,13 +298,12 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // Larger chunks dramatically reduce total round-trips on BLE.
-  // Most ESC/POS BLE printers tolerate 500+ byte writes; we cap at 512.
+  // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
+  // bitmap header is dropped, the printer prints the raw bytes as gibberish.
+  // Keep chunks modest and paced; the hybrid payload is already small enough.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 512 : 256;
-  // With writeWithoutResponse we don't need an artificial delay — the BLE
-  // stack already paces frames. With ack writes we keep a tiny gap.
-  const DELAY_MS = useNoResp ? 0 : 8;
+  const CHUNK = useNoResp ? 128 : 96;
+  const DELAY_MS = useNoResp ? 6 : 12;
   for (let i = 0; i < data.length; i += CHUNK) {
     const slice = data.slice(i, Math.min(i + CHUNK, data.length));
     if (useNoResp) {
@@ -724,6 +723,20 @@ export async function printTest(): Promise<void> {
   await printOps(buildTestOps());
 }
 
+export async function printHybridDiagnostic(): Promise<void> {
+  await printOps([
+    { kind: "text", text: "HYBRID MODE", align: "C", size: 1, bold: true },
+    { kind: "sep" },
+    { kind: "heb", text: "הבקתה", align: "C", size: 32, bold: true },
+    { kind: "heb", text: "שלום מהבקתה", align: "R", size: 26, bold: true },
+    { kind: "heb", text: "בדיקת עברית 123", align: "R", size: 22 },
+    { kind: "sep" },
+    { kind: "text", text: `${getPaperWidthDots()} dots`, align: "C", size: 1 },
+    { kind: "feed", n: 2 },
+    { kind: "cut" },
+  ]);
+}
+
 // Legacy slow path kept for diagnostics — prints full HTML via raster.
 // Not used by default anymore. Exported so callers that explicitly want the
 // pixel-perfect HTML rendering can still reach for it.
@@ -737,19 +750,10 @@ export async function printHtmlBluetoothSlow(html: string): Promise<void> {
 }
 
 
-// Encoding cycle test — still useful for diagnostics on text-mode printing.
+// Encoding cycle test — kept as a non-Hebrew diagnostic only. Hebrew text-mode
+// is disabled because this printer prints CP862/CP1255 bytes as gibberish.
 export async function printTestCycle(): Promise<void> {
-  const profiles: EncodingProfile[] = ["cp862-21", "cp862-15", "cp1255-33"];
-  const tags = ["A", "B", "C"];
-  for (let i = 0; i < profiles.length; i++) {
-    const p = profiles[i];
-    await printLines([
-      { text: `=== TEST ${tags[i]} : ${p} ===`, align: "center", bold: true },
-      { text: "שלום מהבקתה", align: "right", size: "doubleH", bold: true },
-      { text: "בדיקת עברית 123", align: "right" },
-      { text: SEP, align: "center" },
-    ], p);
-  }
+  await printHybridDiagnostic();
 }
 
 export async function printReceiptAuto(
