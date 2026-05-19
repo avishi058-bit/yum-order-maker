@@ -298,25 +298,33 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
-  // bitmap header is dropped, the printer prints the raw bytes as gibberish.
-  // Tuned for max throughput. CHUNK=240 stays under typical ATT MTU (247-3).
-  // Using subarray (zero-copy) instead of slice (copy) saves allocations on
-  // large raster payloads.
+  // CHUNK=240 stays under typical ATT MTU (247-3). subarray = zero-copy.
+  // Pipelining: writeWithoutResponse in Chrome buffers locally. Firing several
+  // chunks before awaiting lets the BLE stack keep the radio busy instead of
+  // waiting RTT between every chunk. PIPELINE=4 is safe across most adapters.
   const useNoResp = !!char.properties.writeWithoutResponse;
   const CHUNK = useNoResp ? 240 : 180;
   const DELAY_MS = useNoResp ? 0 : 4;
+  const PIPELINE = useNoResp ? 4 : 1;
+  const writeOne = (slice: Uint8Array): Promise<void> => {
+    if (useNoResp) {
+      // @ts-ignore
+      return char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice);
+    }
+    return char.writeValue(slice);
+  };
+  let inflight: Promise<void>[] = [];
   for (let i = 0; i < data.length; i += CHUNK) {
     const end = Math.min(i + CHUNK, data.length);
     const slice = data.subarray(i, end);
-    if (useNoResp) {
-      // @ts-ignore
-      await (char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice));
-    } else {
-      await char.writeValue(slice);
+    inflight.push(writeOne(slice).catch(() => {}));
+    if (inflight.length >= PIPELINE) {
+      await Promise.all(inflight);
+      inflight = [];
+      if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
     }
-    if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
   }
+  if (inflight.length) await Promise.all(inflight);
 }
 
 export async function printLines(lines: PrintLine[], profile: EncodingProfile = getEncoding()): Promise<void> {
