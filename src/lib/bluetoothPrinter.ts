@@ -314,9 +314,12 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   // chunks before awaiting lets the BLE stack keep the radio busy instead of
   // waiting RTT between every chunk. PIPELINE=4 is safe across most adapters.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 240 : 180;
+  const detectedMtu = (char as any).maximumWriteValueLength ?? 0;
+  const CHUNK = detectedMtu > 64
+    ? Math.min(detectedMtu - 3, 505)
+    : (useNoResp ? 240 : 180);
   const DELAY_MS = useNoResp ? 0 : 4;
-  const PIPELINE = useNoResp ? 4 : 1;
+  const PIPELINE = useNoResp ? 8 : 1;
   const writeOne = (slice: Uint8Array): Promise<void> => {
     if (useNoResp) {
       // @ts-ignore
