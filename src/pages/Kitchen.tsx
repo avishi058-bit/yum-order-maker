@@ -1,11 +1,21 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary } from "@/lib/kitchenReceipt";
+import {
+  isWebBluetoothSupported,
+  isPrinterConnected,
+  onPrinterStatusChange,
+  pairPrinter,
+  disconnectPrinter,
+  tryAutoReconnect,
+  printBluetoothReceipt,
+  printTest,
+} from "@/lib/bluetoothPrinter";
 
 interface OrderItem {
   id: string;
@@ -212,6 +222,7 @@ const Kitchen = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
+  const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
     return (localStorage.getItem("kitchen-ringtone") as RingtoneId) || "gentle-chime";
@@ -607,7 +618,7 @@ const Kitchen = () => {
   };
 
   const printOrder = (order: Order) => {
-    printReceipt({
+    const payload = {
       order_number: order.order_number,
       customer_name: order.customer_name,
       customer_phone: order.customer_phone,
@@ -617,7 +628,56 @@ const Kitchen = () => {
       payment_method: order.payment_method,
       order_source: order.order_source,
       order_items: order.order_items,
-    });
+    };
+    if (isPrinterConnected()) {
+      printBluetoothReceipt(payload).catch((err) => {
+        console.warn("[Kitchen] BT print failed, falling back", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
+        printReceipt(payload);
+      });
+      return;
+    }
+    printReceipt(payload);
+  };
+
+  // Try silent reconnect once on mount, and subscribe to BT status changes.
+  useEffect(() => {
+    const unsub = onPrinterStatusChange(setBtConnected);
+    tryAutoReconnect().then((ok) => { if (ok) setBtConnected(true); });
+    return () => { unsub(); };
+  }, []);
+
+  const handleConnectPrinter = async () => {
+    if (!isWebBluetoothSupported()) {
+      toast.error("הדפדפן הזה לא תומך ב-Web Bluetooth. השתמש ב-Chrome על אנדרואיד.");
+      return;
+    }
+    try {
+      await pairPrinter();
+      toast.success("המדפסת חוברה בהצלחה");
+    } catch (e: any) {
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message || "שגיאה בחיבור המדפסת");
+      }
+    }
+  };
+
+  const handleDisconnectPrinter = async () => {
+    await disconnectPrinter();
+    toast.success("המדפסת נותקה");
+  };
+
+  const handleTestPrint = async () => {
+    if (!isPrinterConnected()) {
+      toast.error("חבר תחילה את המדפסת");
+      return;
+    }
+    try {
+      await printTest();
+      toast.success("נשלחה בדיקת הדפסה");
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בהדפסה");
+    }
   };
 
   // Adjust ETA by +/- N minutes for an in-progress order
@@ -808,6 +868,27 @@ const Kitchen = () => {
             title={autoPrint ? "כבה הדפסה אוטומטית" : "הפעל הדפסה אוטומטית"}
           >
             <Printer size={20} />
+          </button>
+          {/* Bluetooth printer connect/disconnect */}
+          <button
+            onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
+            className={`p-2 rounded-lg transition-colors ${
+              btConnected ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+            title={btConnected ? "מדפסת בלוטות׳ מחוברת — לחץ לניתוק" : "חיבור מדפסת בלוטות׳"}
+          >
+            {btConnected ? <BluetoothConnected size={20} /> : <Bluetooth size={20} />}
+          </button>
+          {/* Test print */}
+          <button
+            onClick={handleTestPrint}
+            disabled={!btConnected}
+            className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
+              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+            }`}
+            title="בדיקת הדפסה"
+          >
+            בדיקה
           </button>
           {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
