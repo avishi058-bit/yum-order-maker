@@ -246,6 +246,17 @@ async function connectDevice(device: BluetoothDevice): Promise<BluetoothRemoteGA
   const char = await findWritableCharacteristic(server);
   cachedDevice = device;
   cachedChar = char;
+  try {
+    const mtu = (char as any).maximumWriteValueLength;
+    console.log('[PRINTER] MTU / maximumWriteValueLength:', mtu);
+    console.log('[PRINTER] Device name:', device.name, '| id:', device.id);
+    console.log('[PRINTER] Characteristic UUID:', char.uuid, '| service:', char.service?.uuid);
+    console.log('[PRINTER] Properties:', {
+      write: char.properties?.write,
+      writeWithoutResponse: char.properties?.writeWithoutResponse,
+      notify: char.properties?.notify,
+    });
+  } catch (e) { console.warn('[PRINTER] could not read MTU', e); }
   try { localStorage.setItem(STORAGE_KEY, device.id); } catch {}
   notify(true);
   return char;
