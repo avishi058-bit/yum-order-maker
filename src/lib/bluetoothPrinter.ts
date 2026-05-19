@@ -298,8 +298,13 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  const CHUNK = 180;
+  // Larger chunks dramatically reduce total round-trips on BLE.
+  // Most ESC/POS BLE printers tolerate 500+ byte writes; we cap at 512.
   const useNoResp = !!char.properties.writeWithoutResponse;
+  const CHUNK = useNoResp ? 512 : 256;
+  // With writeWithoutResponse we don't need an artificial delay — the BLE
+  // stack already paces frames. With ack writes we keep a tiny gap.
+  const DELAY_MS = useNoResp ? 0 : 8;
   for (let i = 0; i < data.length; i += CHUNK) {
     const slice = data.slice(i, Math.min(i + CHUNK, data.length));
     if (useNoResp) {
@@ -308,7 +313,7 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
     } else {
       await char.writeValue(slice);
     }
-    await new Promise((r) => setTimeout(r, 20));
+    if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
   }
 }
 
@@ -422,7 +427,19 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
       }
     }
   }
-  return { bytes, widthBytes, height: outH };
+  // Trim trailing all-white rows to avoid printing blank tape.
+  let trimmedHeight = outH;
+  while (trimmedHeight > 1) {
+    const rowStart = (trimmedHeight - 1) * widthBytes;
+    let blank = true;
+    for (let i = 0; i < widthBytes; i++) {
+      if (bytes[rowStart + i] !== 0) { blank = false; break; }
+    }
+    if (!blank) break;
+    trimmedHeight--;
+  }
+  const trimmed = trimmedHeight === outH ? bytes : bytes.slice(0, trimmedHeight * widthBytes);
+  return { bytes: trimmed, widthBytes, height: trimmedHeight };
 }
 
 // Build ESC/POS bytes for a raster bitmap. Splits into chunks of N rows so
@@ -442,7 +459,9 @@ function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; heig
     const sliceEnd = sliceStart + rows * widthBytes;
     for (let i = sliceStart; i < sliceEnd; i++) out.push(bytes[i]);
   }
-  out.push(...CMD_FEED_3, ...CMD_CUT);
+  // Smaller paper feed before cut — saves time and tape.
+  out.push(ESC, 0x64, 2);
+  out.push(...CMD_CUT);
   return new Uint8Array(out);
 }
 
