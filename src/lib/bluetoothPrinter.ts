@@ -508,49 +508,234 @@ function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; heig
   return new Uint8Array(out);
 }
 
-export async function printHtmlBluetooth(html: string): Promise<void> {
+// =====================================================================
+// HYBRID FAST PRINTING — ESC/POS text + per-line Hebrew bitmaps.
+// 10-30x faster than full-page raster, and avoids dense black areas
+// that bog down thermal printers.
+// =====================================================================
+
+export type FastOp =
+  | { kind: "init" }
+  | { kind: "text"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: 1 | 2 }
+  | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
+  | { kind: "sep" }
+  | { kind: "feed"; n: number }
+  | { kind: "cut" };
+
+function _align(a: "L" | "C" | "R" = "L"): number[] {
+  return [ESC, 0x61, a === "L" ? 0 : a === "C" ? 1 : 2];
+}
+function _size(s: 1 | 2 = 1): number[] {
+  return [GS, 0x21, s === 2 ? 0x11 : 0x00];
+}
+function _bold(b: boolean): number[] {
+  return [ESC, 0x45, b ? 1 : 0];
+}
+
+// Wrap a long Hebrew/Unicode line into multiple sublines that fit the canvas.
+function _wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  if (ctx.measureText(text).width <= maxWidth) return [text];
+  const parts = text.split(/(\s+)/);
+  const out: string[] = [];
+  let cur = "";
+  for (const p of parts) {
+    const test = cur + p;
+    if (ctx.measureText(test).width <= maxWidth) cur = test;
+    else {
+      if (cur.trim()) out.push(cur.trim());
+      cur = p.trim();
+    }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out.length ? out : [text];
+}
+
+// Render one Hebrew/Unicode line to a tightly-cropped 1-bit bitmap.
+// No background fill, no padding boxes — just the letter ink.
+function _renderHebToMono(
+  text: string,
+  opts: { width: number; px: number; bold: boolean; align: "L" | "C" | "R" },
+): { bytes: Uint8Array; widthBytes: number; height: number } {
+  const { width, px, bold, align } = opts;
+  const tmp = document.createElement("canvas");
+  tmp.width = 10;
+  tmp.height = 10;
+  const measure = tmp.getContext("2d")!;
+  measure.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
+  const lines = _wrapText(measure, text, width - 4);
+
+  const lineH = Math.ceil(px * 1.25);
+  const h = lineH * lines.length + 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, h);
+  ctx.fillStyle = "#000";
+  ctx.font = measure.font;
+  // RTL so Hebrew flows visually correct on a regular browser canvas.
+  (ctx as unknown as { direction: string }).direction = "rtl";
+  ctx.textBaseline = "middle";
+
+  let x: number;
+  if (align === "R") {
+    ctx.textAlign = "right";
+    x = width - 2;
+  } else if (align === "C") {
+    ctx.textAlign = "center";
+    x = width / 2;
+  } else {
+    ctx.textAlign = "left";
+    x = 2;
+  }
+  lines.forEach((ln, i) => ctx.fillText(ln, x, lineH * i + lineH / 2 + 1));
+
+  // Convert to 1-bit MSB-first, pad width to multiple of 8.
+  const padW = Math.ceil(width / 8) * 8;
+  const widthBytes = padW / 8;
+  const { data } = ctx.getImageData(0, 0, width, h);
+  const bytes = new Uint8Array(widthBytes * h);
+  for (let y = 0; y < h; y++) {
+    for (let xp = 0; xp < width; xp++) {
+      const i = (y * width + xp) * 4;
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum < 140) bytes[y * widthBytes + (xp >> 3)] |= 0x80 >> (xp & 7);
+    }
+  }
+
+  // Crop blank rows top + bottom — tight letter band only, no wasted feed.
+  const rowBlank = (r: number) => {
+    for (let i = 0; i < widthBytes; i++) if (bytes[r * widthBytes + i] !== 0) return false;
+    return true;
+  };
+  let top = 0;
+  let bot = h - 1;
+  while (top < h && rowBlank(top)) top++;
+  while (bot > top && rowBlank(bot)) bot--;
+  if (top >= bot) {
+    // All blank — emit one feed row.
+    return { bytes: new Uint8Array(widthBytes), widthBytes, height: 1 };
+  }
+  // Tiny padding so letters don't kiss each other vertically.
+  const padT = Math.max(0, top - 1);
+  const padB = Math.min(h - 1, bot + 1);
+  const newH = padB - padT + 1;
+  const cropped = bytes.slice(padT * widthBytes, (padB + 1) * widthBytes);
+  return { bytes: cropped, widthBytes, height: newH };
+}
+
+function _rasterEscPos(mono: { bytes: Uint8Array; widthBytes: number; height: number }): number[] {
+  const out: number[] = [];
+  const { bytes, widthBytes, height } = mono;
+  const ROWS = 255;
+  for (let y = 0; y < height; y += ROWS) {
+    const rows = Math.min(ROWS, height - y);
+    out.push(
+      GS,
+      0x76,
+      0x30,
+      0x00,
+      widthBytes & 0xff,
+      (widthBytes >> 8) & 0xff,
+      rows & 0xff,
+      (rows >> 8) & 0xff,
+    );
+    for (let i = y * widthBytes; i < (y + rows) * widthBytes; i++) out.push(bytes[i]);
+  }
+  return out;
+}
+
+export async function printOps(ops: FastOp[]): Promise<void> {
+  const char = await ensureConnected();
+  const width = getPaperWidthDots();
+  const out: number[] = [];
+  out.push(...CMD_INIT);
+
+  // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
+  const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
+
+  for (const op of ops) {
+    switch (op.kind) {
+      case "init":
+        out.push(...CMD_INIT);
+        break;
+      case "sep":
+        out.push(..._align("L"), ..._size(1), ..._bold(false));
+        for (let i = 0; i < cols; i++) out.push(0x2d);
+        out.push(0x0a);
+        break;
+      case "feed":
+        for (let i = 0; i < Math.max(1, op.n); i++) out.push(0x0a);
+        break;
+      case "text": {
+        out.push(..._align(op.align ?? "L"), ..._size(op.size ?? 1), ..._bold(!!op.bold));
+        for (const c of op.text) {
+          const code = c.charCodeAt(0);
+          out.push(code >= 0x20 && code < 0x80 ? code : 0x3f);
+        }
+        out.push(0x0a);
+        break;
+      }
+      case "heb": {
+        const mono = _renderHebToMono(op.text, {
+          width,
+          px: op.size ?? 22,
+          bold: !!op.bold,
+          align: op.align ?? "R",
+        });
+        out.push(..._rasterEscPos(mono));
+        break;
+      }
+      case "cut":
+        out.push(ESC, 0x64, 2);
+        out.push(...CMD_CUT);
+        break;
+    }
+  }
+  await writeBytes(char, new Uint8Array(out));
+}
+
+// ---- Public printing API — now backed by the fast hybrid pipeline ----
+
+// Lazy import to avoid the circular-import warning (btReceiptOps imports types
+// from this module).
+async function _ops() {
+  return await import("./btReceiptOps");
+}
+
+export async function printBluetoothReceipt(order: ReceiptOrder): Promise<void> {
+  const { buildKitchenBonOps } = await _ops();
+  await printOps(buildKitchenBonOps(order));
+}
+
+export async function printBluetoothRoundSummary(orders: RoundOrder[]): Promise<void> {
+  const { buildRoundSummaryOps } = await _ops();
+  await printOps(buildRoundSummaryOps(orders));
+}
+
+export async function printBluetoothRoundChef(orders: RoundOrder[]): Promise<void> {
+  const { buildRoundChefOps } = await _ops();
+  await printOps(buildRoundChefOps(orders));
+}
+
+export async function printTest(): Promise<void> {
+  const { buildTestOps } = await _ops();
+  await printOps(buildTestOps());
+}
+
+// Legacy slow path kept for diagnostics — prints full HTML via raster.
+// Not used by default anymore. Exported so callers that explicitly want the
+// pixel-perfect HTML rendering can still reach for it.
+export async function printHtmlBluetoothSlow(html: string): Promise<void> {
   const widthDots = getPaperWidthDots();
   const char = await ensureConnected();
-  // Render at the same CSS pixel width as the printer dot width (1:1).
   const canvas = await renderHtmlToCanvas(html, widthDots);
   const mono = canvasToMonoBytes(canvas, widthDots);
   const bytes = buildRasterCommands(mono);
   await writeBytes(char, bytes);
 }
 
-export async function printBluetoothReceipt(order: ReceiptOrder): Promise<void> {
-  const html = await buildReceiptHtml(order);
-  await printHtmlBluetooth(html);
-}
-
-export async function printBluetoothRoundSummary(orders: RoundOrder[]): Promise<void> {
-  await printHtmlBluetooth(buildRoundSummaryHtml(orders));
-}
-
-export async function printBluetoothRoundChef(orders: RoundOrder[]): Promise<void> {
-  await printHtmlBluetooth(buildRoundChefSummaryHtml(orders));
-}
-
-// Test print: tiny HTML with the requested Hebrew sample, via raster.
-export async function printTest(): Promise<void> {
-  const html = `
-    <!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8">
-    <style>
-      body { font-family: Arial, "Heebo", sans-serif; color: #000; }
-      .big { font-size: 28px; font-weight: 900; text-align: center; }
-      .h { font-size: 22px; font-weight: 800; text-align: right; }
-      .l { font-size: 18px; text-align: right; }
-      hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
-    </style></head><body>
-      <div class="big">הבקתה</div>
-      <hr>
-      <div class="h">שלום מהבקתה</div>
-      <div class="l">בדיקת עברית 123</div>
-      <hr>
-      <div class="l">${new Date().toLocaleString("he-IL")}</div>
-    </body></html>`;
-  await printHtmlBluetooth(html);
-}
 
 // Encoding cycle test — still useful for diagnostics on text-mode printing.
 export async function printTestCycle(): Promise<void> {

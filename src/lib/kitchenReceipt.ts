@@ -128,7 +128,7 @@ const DONENESS_LABELS: Record<string, string> = {
   "doneness-wd": "WD — וואל דאן",
 };
 const FAVORITE_MARKER = "__FAVORITE__";
-const extractOwnerName = (
+export const extractOwnerName = (
   removals: string[] | null | undefined,
 ): { ownerName: string | null; doneness: string | null; cleanedRemovals: string[] } => {
   if (!removals || removals.length === 0) return { ownerName: null, doneness: null, cleanedRemovals: [] };
