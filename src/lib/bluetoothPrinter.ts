@@ -300,14 +300,15 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
   // bitmap header is dropped, the printer prints the raw bytes as gibberish.
-  // Tuned for max throughput while still leaving the printer enough breathing
-  // room: writeWithoutResponse uses bigger chunks + zero delay, ack writes use
-  // a small delay because they round-trip per chunk anyway.
+  // Tuned for max throughput. CHUNK=240 stays under typical ATT MTU (247-3).
+  // Using subarray (zero-copy) instead of slice (copy) saves allocations on
+  // large raster payloads.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 220 : 160;
+  const CHUNK = useNoResp ? 240 : 180;
   const DELAY_MS = useNoResp ? 0 : 4;
   for (let i = 0; i < data.length; i += CHUNK) {
-    const slice = data.slice(i, Math.min(i + CHUNK, data.length));
+    const end = Math.min(i + CHUNK, data.length);
+    const slice = data.subarray(i, end);
     if (useNoResp) {
       // @ts-ignore
       await (char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice));
@@ -787,73 +788,145 @@ function _renderTwoColToMono(
   return _canvasToCroppedMono(canvas, width, false);
 }
 
+// Growing Uint8Array buffer. Faster than number[] + push(...) for large payloads.
+class ByteBuf {
+  buf: Uint8Array;
+  len: number;
+  constructor(cap = 4096) { this.buf = new Uint8Array(cap); this.len = 0; }
+  private grow(min: number) {
+    let cap = this.buf.length;
+    while (cap < min) cap *= 2;
+    const nb = new Uint8Array(cap);
+    nb.set(this.buf.subarray(0, this.len));
+    this.buf = nb;
+  }
+  pushByte(b: number) {
+    if (this.len + 1 > this.buf.length) this.grow(this.len + 1);
+    this.buf[this.len++] = b;
+  }
+  pushArr(a: ArrayLike<number>) {
+    const n = a.length;
+    if (this.len + n > this.buf.length) this.grow(this.len + n);
+    for (let i = 0; i < n; i++) this.buf[this.len++] = a[i] as number;
+  }
+  pushBytes(a: Uint8Array) {
+    if (this.len + a.length > this.buf.length) this.grow(this.len + a.length);
+    this.buf.set(a, this.len);
+    this.len += a.length;
+  }
+  toUint8(): Uint8Array { return this.buf.subarray(0, this.len); }
+}
+
+type Mono = { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number };
+
+// Combine several per-line monos into one full-width bitmap so the whole block
+// is sent as ONE GS v 0 raster command instead of N separate commands.
+// offsetX from each mono is honoured by placing it at the right byte offset
+// (offsetX is always a multiple of 8 because both paper width and crop width
+// are 8-aligned). Visually identical to emitting each line separately.
+function _combineMonos(monos: Mono[], paperWidth: number): Mono {
+  const widthBytes = paperWidth / 8;
+  let totalH = 0;
+  for (const m of monos) totalH += m.height;
+  const out = new Uint8Array(widthBytes * totalH);
+  let y = 0;
+  for (const m of monos) {
+    const byteOff = m.offsetX >> 3;
+    for (let r = 0; r < m.height; r++) {
+      out.set(
+        m.bytes.subarray(r * m.widthBytes, (r + 1) * m.widthBytes),
+        (y + r) * widthBytes + byteOff,
+      );
+    }
+    y += m.height;
+  }
+  return { bytes: out, widthBytes, height: totalH, offsetX: 0 };
+}
+
+function _emitRasterInto(buf: ByteBuf, mono: Mono) {
+  const { bytes, widthBytes, height } = mono;
+  const ROWS = 255;
+  for (let y = 0; y < height; y += ROWS) {
+    const rows = Math.min(ROWS, height - y);
+    buf.pushArr([GS, 0x76, 0x30, 0x00,
+      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+      rows & 0xff, (rows >> 8) & 0xff]);
+    buf.pushBytes(bytes.subarray(y * widthBytes, (y + rows) * widthBytes));
+  }
+}
+
 export async function printOps(ops: FastOp[]): Promise<void> {
   const char = await ensureConnected();
   const width = getPaperWidthDots();
-  const out: number[] = [];
-  out.push(...CMD_INIT);
+  const buf = new ByteBuf(8192);
+  buf.pushArr(CMD_INIT);
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
 
+  // Coalesce consecutive raster ops (heb/header/twoCol) into one big bitmap.
+  let pending: Mono[] = [];
+  const flush = () => {
+    if (pending.length === 0) return;
+    buf.pushArr(_align("L"));
+    _emitRasterInto(buf, _combineMonos(pending, width));
+    pending = [];
+  };
+
   for (const op of ops) {
     switch (op.kind) {
       case "init":
-        out.push(...CMD_INIT);
+        flush();
+        buf.pushArr(CMD_INIT);
         break;
       case "sep":
-        out.push(..._align("L"), ..._size(1), ..._bold(false));
-        for (let i = 0; i < cols; i++) out.push(0x2d);
-        out.push(0x0a);
+        flush();
+        buf.pushArr(_align("L")); buf.pushArr(_size(1)); buf.pushArr(_bold(false));
+        for (let i = 0; i < cols; i++) buf.pushByte(0x2d);
+        buf.pushByte(0x0a);
         break;
       case "feed":
-        for (let i = 0; i < Math.max(1, op.n); i++) out.push(0x0a);
+        flush();
+        for (let i = 0; i < Math.max(1, op.n); i++) buf.pushByte(0x0a);
         break;
       case "text": {
-        out.push(..._align(op.align ?? "L"), ..._size(op.size ?? 1), ..._bold(!!op.bold));
+        flush();
+        buf.pushArr(_align(op.align ?? "L")); buf.pushArr(_size(op.size ?? 1)); buf.pushArr(_bold(!!op.bold));
         for (const c of op.text) {
           const code = c.charCodeAt(0);
-          out.push(code >= 0x20 && code < 0x80 ? code : 0x3f);
+          buf.pushByte(code >= 0x20 && code < 0x80 ? code : 0x3f);
         }
-        out.push(0x0a);
+        buf.pushByte(0x0a);
         break;
       }
       case "heb": {
-        const mono = _renderHebToMono(op.text, {
+        pending.push(_renderHebToMono(op.text, {
           width,
           px: op.size ?? 22,
           bold: !!op.bold,
           align: op.align ?? "R",
-        });
-        out.push(..._align("L"), ESC, 0x24, mono.offsetX & 0xff, (mono.offsetX >> 8) & 0xff);
-        out.push(..._rasterEscPos(mono));
+        }));
         break;
       }
       case "header": {
-        const mono = _renderHeaderToMono(
-          op.name,
-          op.phone,
-          op.namePx ?? 32,
-          op.phonePx ?? 18,
-          width,
-        );
-        out.push(..._align("L"));
-        out.push(..._rasterEscPos(mono));
+        pending.push(_renderHeaderToMono(
+          op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width,
+        ));
         break;
       }
       case "twoCol": {
-        const mono = _renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width);
-        out.push(..._align("L"));
-        out.push(..._rasterEscPos(mono));
+        pending.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
         break;
       }
       case "cut":
-        out.push(ESC, 0x64, 2);
-        out.push(...CMD_CUT);
+        flush();
+        buf.pushArr([ESC, 0x64, 2]);
+        buf.pushArr(CMD_CUT);
         break;
     }
   }
-  await writeBytes(char, new Uint8Array(out));
+  flush();
+  await writeBytes(char, buf.toUint8());
 }
 
 // ---- Public printing API — now backed by the fast hybrid pipeline ----
