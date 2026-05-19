@@ -91,14 +91,11 @@ const orderTypeLabel = (source: string): string =>
 // ============================================================
 export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const ops: FastOp[] = [];
-  const time = new Date(order.created_at).toLocaleTimeString("he-IL", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 
-  // Time only — order number intentionally omitted from the bon.
-  ops.push({ kind: "text", text: time, align: "C", size: 1, bold: false });
-  ops.push(sep());
+  // Order type (no order number, no time at the top — kept clean)
+  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
+  ops.push(feed(1));
+
 
   // Order type
   ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
