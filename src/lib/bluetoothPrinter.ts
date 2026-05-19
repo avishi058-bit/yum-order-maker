@@ -630,9 +630,9 @@ function _renderHebToMono(
   while (left < width && colBlank(left)) left++;
   while (right > left && colBlank(right)) right--;
 
-  // Tiny padding so letters don't kiss each other vertically/horizontally.
-  const padT = Math.max(0, top - 1);
-  const padB = Math.min(h - 1, bot + 1);
+  // Extra vertical padding so lines have breathing room between them.
+  const padT = Math.max(0, top - 5);
+  const padB = Math.min(h - 1, bot + 5);
   const padL = Math.max(0, left - 2);
   const padR = Math.min(width - 1, right + 2);
   const newH = padB - padT + 1;
