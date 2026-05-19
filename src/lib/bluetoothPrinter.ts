@@ -300,14 +300,15 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
   // bitmap header is dropped, the printer prints the raw bytes as gibberish.
-  // Tuned for max throughput while still leaving the printer enough breathing
-  // room: writeWithoutResponse uses bigger chunks + zero delay, ack writes use
-  // a small delay because they round-trip per chunk anyway.
+  // Tuned for max throughput. CHUNK=240 stays under typical ATT MTU (247-3).
+  // Using subarray (zero-copy) instead of slice (copy) saves allocations on
+  // large raster payloads.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 220 : 160;
+  const CHUNK = useNoResp ? 240 : 180;
   const DELAY_MS = useNoResp ? 0 : 4;
   for (let i = 0; i < data.length; i += CHUNK) {
-    const slice = data.slice(i, Math.min(i + CHUNK, data.length));
+    const end = Math.min(i + CHUNK, data.length);
+    const slice = data.subarray(i, end);
     if (useNoResp) {
       // @ts-ignore
       await (char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice));
