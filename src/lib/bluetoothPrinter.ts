@@ -6,6 +6,8 @@
 // persisted in localStorage; the user picks via a "cycle test print" that
 // prints the same Hebrew text under all three profiles labeled A/B/C.
 
+import html2canvas from "html2canvas";
+import { buildReceiptHtml, type RoundOrder, buildRoundSummaryHtml, buildRoundChefSummaryHtml } from "./kitchenReceipt";
 import type { ReceiptOrder } from "./kitchenReceipt";
 
 type BluetoothServiceUUID = number | string;
