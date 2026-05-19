@@ -884,6 +884,14 @@ export async function printOps(ops: FastOp[]): Promise<void> {
   const width = getPaperWidthDots();
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
+  // Xprinter / generic ESC/POS: set max print speed + lower density.
+  // Lower density = faster head movement, less heating dwell. Visually still
+  // crisp for 1-bit raster text. GS ( K fn=50 m n: speed (n=0..15, 0=fastest).
+  // fn=49 m n: density (n=0..15, lower=lighter+faster).
+  buf.pushArr([GS, 0x28, 0x4b, 0x02, 0x00, 0x32, 0x00]); // speed = 0 (fastest)
+  buf.pushArr([GS, 0x28, 0x4b, 0x02, 0x00, 0x31, 0x06]); // density = 6 (medium-light)
+  // Legacy ESC 7 fallback (max dots, min heating time, min interval).
+  buf.pushArr([ESC, 0x37, 0x07, 0x50, 0x02]);
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
