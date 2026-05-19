@@ -360,11 +360,54 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
     doc.open();
     doc.write(html);
     doc.close();
-    // Force narrow paper width on the printed body regardless of original CSS.
+    const isNarrow40mm = widthCssPx <= 320;
+    // Force thermal paper width on the printed body regardless of the browser-print CSS.
+    // The original bons are designed for preview/window.print (80mm). For Bluetooth
+    // raster we need a true dot-width layout so Xprinter does not print a tiny 80mm
+    // page squeezed into a 40mm image.
     const style = doc.createElement("style");
     style.textContent = `
-      html, body { width: ${widthCssPx}px !important; margin: 0 !important; padding: 4px !important; background: #fff !important; color: #000 !important; direction: rtl; }
-      * { max-width: 100% !important; box-sizing: border-box !important; color: #000 !important; }
+      @page { size: ${widthCssPx}px auto !important; margin: 0 !important; }
+      html, body {
+        width: ${widthCssPx}px !important;
+        min-width: ${widthCssPx}px !important;
+        max-width: ${widthCssPx}px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+        direction: rtl !important;
+        overflow: hidden visible !important;
+      }
+      body {
+        padding: ${isNarrow40mm ? "2px 4px 8px" : "4px 6px 10px"} !important;
+        font-family: Arial, "Heebo", sans-serif !important;
+        font-size: ${isNarrow40mm ? "15px" : "17px"} !important;
+        line-height: 1.22 !important;
+        text-align: right !important;
+      }
+      * { max-width: 100% !important; box-sizing: border-box !important; }
+      a { color: #000 !important; text-decoration: none !important; }
+      .order-num { font-size: ${isNarrow40mm ? "32px" : "38px"} !important; line-height: 1 !important; margin: 0 0 6px !important; }
+      .order-num small, .head small { font-size: ${isNarrow40mm ? "13px" : "15px"} !important; margin-top: 2px !important; }
+      .head { font-size: ${isNarrow40mm ? "23px" : "27px"} !important; margin: 0 0 4px !important; }
+      .type, .order-num, .head, .meta, .summary-title, .sum-section-title, .footer, .warn, .paid { text-align: center !important; }
+      .type, .order-head .order-num, .owner { padding: ${isNarrow40mm ? "5px 4px" : "7px 6px"} !important; margin-bottom: 6px !important; }
+      .customer, .meta { font-size: ${isNarrow40mm ? "14px" : "16px"} !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
+      .customer .name { font-size: ${isNarrow40mm ? "18px" : "21px"} !important; }
+      .customer .phone-row { gap: 6px !important; margin-top: 4px !important; }
+      .customer .phone-qr { width: ${isNarrow40mm ? "52px" : "62px"} !important; height: ${isNarrow40mm ? "52px" : "62px"} !important; padding: 2px !important; }
+      .notes, .warn { padding: ${isNarrow40mm ? "7px" : "9px"} !important; margin: 7px 0 !important; font-size: ${isNarrow40mm ? "17px" : "19px"} !important; }
+      .line { padding: ${isNarrow40mm ? "7px 0" : "9px 0"} !important; }
+      .line-name { font-size: ${isNarrow40mm ? "21px" : "24px"} !important; line-height: 1.15 !important; }
+      .sub { font-size: ${isNarrow40mm ? "16px" : "18px"} !important; padding-right: ${isNarrow40mm ? "10px" : "14px"} !important; line-height: 1.2 !important; margin-top: 3px !important; }
+      .summary { margin-top: 9px !important; padding: ${isNarrow40mm ? "7px" : "9px"} !important; border: 3px solid #000 !important; }
+      .summary-title { font-size: ${isNarrow40mm ? "20px" : "23px"} !important; padding-bottom: 5px !important; margin-bottom: 7px !important; }
+      .sum-section { margin-top: 7px !important; padding-top: 5px !important; }
+      .sum-section-title { font-size: ${isNarrow40mm ? "16px" : "18px"} !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
+      .sum-row { font-size: ${isNarrow40mm ? "18px" : "21px"} !important; padding: 4px 0 !important; gap: 8px !important; }
+      .sum-num { font-size: ${isNarrow40mm ? "22px" : "25px"} !important; min-width: ${isNarrow40mm ? "34px" : "40px"} !important; padding: 0 6px !important; }
+      .footer { font-size: ${isNarrow40mm ? "15px" : "17px"} !important; margin-top: 8px !important; padding: 6px 0 10px !important; }
       img, svg { max-width: 100% !important; height: auto !important; }
     `;
     doc.head.appendChild(style);
