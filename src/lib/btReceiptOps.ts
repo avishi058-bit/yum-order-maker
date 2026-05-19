@@ -96,31 +96,29 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     minute: "2-digit",
   });
 
-  // Header: order number as big native ASCII (fast, no bitmap).
-  ops.push({ kind: "text", text: `#${order.order_number}`, align: "C", size: 2, bold: true });
+  // Time only — order number intentionally omitted from the bon.
   ops.push({ kind: "text", text: time, align: "C", size: 1, bold: false });
   ops.push(sep());
 
-  // Order type (Hebrew → bitmap, larger)
+  // Order type
   ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
+  ops.push(feed(1));
 
-  // Customer info
+  // Customer info — name large/bold
   if (order.customer_name) {
-    ops.push(asLine(order.customer_name, { align: "R", bold: true, size: 24 }));
+    ops.push(asLine(order.customer_name, { align: "R", bold: true, size: 34 }));
   }
   if (order.customer_phone) {
-    // Phone is ASCII → fast text rail, no QR (QR is a huge black block).
     ops.push({ kind: "text", text: order.customer_phone, align: "R", size: 1, bold: true });
   }
   ops.push(sep());
 
-  // Notes
   if (order.notes) {
     ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 22 }));
     ops.push(sep());
   }
 
-  // Items
+  // Items — with extra breathing room between each item.
   for (const it of order.order_items) {
     if (it.item_name === "רטבים") continue;
     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
@@ -130,17 +128,37 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
     const qtyStr = it.quantity > 1 ? ` x${it.quantity}` : "";
-    ops.push(asLine(`${it.item_name}${qtyStr}`, { align: "R", bold: true, size: 24 }));
+    ops.push(asLine(`${it.item_name}${qtyStr}`, { align: "R", bold: true, size: 26 }));
 
     if (doneness) {
       ops.push(asLine(`עשייה: ${doneness}`, { align: "R", bold: true, size: 20 }));
     }
-    if (cleanedRemovals.length > 0) {
-      ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", size: 18 }));
+
+    // Ingredient changes — show as "ללא X" / "להוסיף Y"; otherwise "ללא שינויים".
+    const isDeal = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
+    if (!isDeal && isCustomizableBurger(it.item_name)) {
+      const { removes, adds, others } = classifyIngredientChanges(cleanedRemovals);
+      const hasToppings = it.toppings && it.toppings.length > 0;
+      if (removes.length === 0 && adds.length === 0 && others.length === 0 && !hasToppings) {
+        ops.push(asLine("ללא שינויים", { align: "R", size: 20 }));
+      } else {
+        for (const r of removes) ops.push(asLine(`ללא ${r}`, { align: "R", size: 20 }));
+        for (const a of adds) ops.push(asLine(`להוסיף ${a}`, { align: "R", size: 20 }));
+        for (const o of others) ops.push(asLine(o, { align: "R", size: 18 }));
+        if (hasToppings) {
+          for (const t of it.toppings!) ops.push(asLine(`+ ${t}`, { align: "R", size: 20 }));
+        }
+      }
+    } else {
+      // Non-burger / deal: keep old compact format.
+      if (cleanedRemovals.length > 0) {
+        ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", size: 18 }));
+      }
+      if (it.toppings && it.toppings.length > 0) {
+        ops.push(asLine(`+ ${it.toppings.join(", ")}`, { align: "R", size: 18 }));
+      }
     }
-    if (it.toppings && it.toppings.length > 0) {
-      ops.push(asLine(`+ ${it.toppings.join(", ")}`, { align: "R", size: 18 }));
-    }
+
     if (it.with_meal) {
       let m = "ארוחה";
       if (it.meal_side) m += ` - ${it.meal_side}`;
@@ -149,20 +167,34 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
     if (Array.isArray(it.deal_burgers)) {
       it.deal_burgers.forEach((b: { name?: string; removals?: string[] }, i: number) => {
-        ops.push(asLine(`${i + 1}. ${b.name || ""}`, { align: "R", size: 18 }));
-        if (b.removals && b.removals.length > 0) {
-          ops.push(asLine(`- ${b.removals.join(", ")}`, { align: "R", size: 16 }));
+        ops.push(asLine(`${i + 1}. ${b.name || ""}`, { align: "R", size: 20 }));
+        const bRem = b.removals || [];
+        if (isCustomizableBurger(b.name || "")) {
+          const { removes, adds, others } = classifyIngredientChanges(
+            extractOwnerName(bRem).cleanedRemovals,
+          );
+          if (removes.length === 0 && adds.length === 0 && others.length === 0) {
+            ops.push(asLine("ללא שינויים", { align: "R", size: 18 }));
+          } else {
+            for (const r of removes) ops.push(asLine(`ללא ${r}`, { align: "R", size: 18 }));
+            for (const a of adds) ops.push(asLine(`להוסיף ${a}`, { align: "R", size: 18 }));
+            for (const o of others) ops.push(asLine(o, { align: "R", size: 16 }));
+          }
+        } else if (bRem.length > 0) {
+          ops.push(asLine(`- ${bRem.join(", ")}`, { align: "R", size: 16 }));
         }
       });
-      ops.push(asLine(`+ צ'יפס ענק`, { align: "R", size: 16 }));
+      ops.push(asLine(`+ צ'יפס ענק`, { align: "R", size: 18 }));
     }
     if (Array.isArray(it.deal_drinks)) {
       it.deal_drinks.forEach((d: { name?: string }) => {
-        ops.push(asLine(`+ ${d.name || ""}`, { align: "R", size: 16 }));
+        ops.push(asLine(`+ ${d.name || ""}`, { align: "R", size: 18 }));
       });
     }
+    ops.push(feed(1));
   }
   ops.push(sep());
+
 
   // Chef summary (compact, no inverted block, no heavy fills)
   const summary = computeChefSummary(order.order_items);
