@@ -20,6 +20,45 @@ import {
   type ReceiptOrderItem,
   type RoundOrder,
 } from "./kitchenReceipt";
+import { ingredients } from "@/data/menu";
+
+// ---- Ingredient diff (matches the customizer view) ----
+// Translates the opaque removalId / addId tokens stored on order items into
+// human-readable Hebrew changes — exactly what the kitchen sees in the bun
+// preview in the app: "ללא בצל", "להוסיף עגבנייה", or "ללא שינויים".
+const ING_LOOKUP: Record<string, { label: string; kind: "remove" | "add" }> = (() => {
+  const m: Record<string, { label: string; kind: "remove" | "add" }> = {};
+  for (const ing of ingredients) {
+    const clean = ing.name.replace(/🥬/g, "").trim();
+    m[ing.removalId] = { label: clean, kind: "remove" };
+    if (ing.addId) m[ing.addId] = { label: clean, kind: "add" };
+  }
+  return m;
+})();
+
+const FRIED_RX = /צ['׳]?יפס|בטטה|טבעות|טמפורה|מיקס\s*חברים/;
+const DRINK_RX = /פחית|בקבוק|בירה|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|מים|מוחיטו|אבטיח|ויינשטפאן|לאף|לאפ|גינס|הוגרדן|קאלסברג|קלסטברג|אנפילטר/;
+function isCustomizableBurger(name: string): boolean {
+  if (!name || name === "רטבים") return false;
+  if (FRIED_RX.test(name) || DRINK_RX.test(name)) return false;
+  return true;
+}
+
+function classifyIngredientChanges(removals: string[]): {
+  removes: string[];
+  adds: string[];
+  others: string[];
+} {
+  const removes: string[] = [];
+  const adds: string[] = [];
+  const others: string[] = [];
+  for (const r of removals) {
+    const m = ING_LOOKUP[r];
+    if (m) (m.kind === "remove" ? removes : adds).push(m.label);
+    else others.push(r);
+  }
+  return { removes, adds, others };
+}
 
 const HEB = /[\u0590-\u05FF]/;
 const NON_ASCII = /[^\x20-\x7E]/;
