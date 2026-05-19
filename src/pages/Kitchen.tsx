@@ -940,7 +940,6 @@ const Kitchen = () => {
             <option value="cp862-15">B · CP862 n=15</option>
             <option value="cp1255-33">C · CP1255 n=33</option>
           </select>
-          </button>
           {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
