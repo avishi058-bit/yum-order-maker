@@ -427,7 +427,19 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
       }
     }
   }
-  return { bytes, widthBytes, height: outH };
+  // Trim trailing all-white rows to avoid printing blank tape.
+  let trimmedHeight = outH;
+  while (trimmedHeight > 1) {
+    const rowStart = (trimmedHeight - 1) * widthBytes;
+    let blank = true;
+    for (let i = 0; i < widthBytes; i++) {
+      if (bytes[rowStart + i] !== 0) { blank = false; break; }
+    }
+    if (!blank) break;
+    trimmedHeight--;
+  }
+  const trimmed = trimmedHeight === outH ? bytes : bytes.slice(0, trimmedHeight * widthBytes);
+  return { bytes: trimmed, widthBytes, height: trimmedHeight };
 }
 
 // Build ESC/POS bytes for a raster bitmap. Splits into chunks of N rows so
@@ -447,7 +459,9 @@ function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; heig
     const sliceEnd = sliceStart + rows * widthBytes;
     for (let i = sliceStart; i < sliceEnd; i++) out.push(bytes[i]);
   }
-  out.push(...CMD_FEED_3, ...CMD_CUT);
+  // Smaller paper feed before cut — saves time and tape.
+  out.push(ESC, 0x64, 2);
+  out.push(...CMD_CUT);
   return new Uint8Array(out);
 }
 
