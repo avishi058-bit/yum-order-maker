@@ -298,8 +298,13 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  const CHUNK = 180;
+  // Larger chunks dramatically reduce total round-trips on BLE.
+  // Most ESC/POS BLE printers tolerate 500+ byte writes; we cap at 512.
   const useNoResp = !!char.properties.writeWithoutResponse;
+  const CHUNK = useNoResp ? 512 : 256;
+  // With writeWithoutResponse we don't need an artificial delay — the BLE
+  // stack already paces frames. With ack writes we keep a tiny gap.
+  const DELAY_MS = useNoResp ? 0 : 8;
   for (let i = 0; i < data.length; i += CHUNK) {
     const slice = data.slice(i, Math.min(i + CHUNK, data.length));
     if (useNoResp) {
@@ -308,7 +313,7 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
     } else {
       await char.writeValue(slice);
     }
-    await new Promise((r) => setTimeout(r, 20));
+    if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
   }
 }
 
