@@ -300,10 +300,12 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // BLE thermal printers are very sensitive to over-large writes: if the ESC/GS
   // bitmap header is dropped, the printer prints the raw bytes as gibberish.
-  // Keep chunks modest and paced; the hybrid payload is already small enough.
+  // Tuned for max throughput while still leaving the printer enough breathing
+  // room: writeWithoutResponse uses bigger chunks + zero delay, ack writes use
+  // a small delay because they round-trip per chunk anyway.
   const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 192 : 128;
-  const DELAY_MS = useNoResp ? 2 : 6;
+  const CHUNK = useNoResp ? 220 : 160;
+  const DELAY_MS = useNoResp ? 0 : 4;
   for (let i = 0; i < data.length; i += CHUNK) {
     const slice = data.slice(i, Math.min(i + CHUNK, data.length));
     if (useNoResp) {
@@ -517,6 +519,8 @@ export type FastOp =
   | { kind: "init" }
   | { kind: "text"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: 1 | 2 }
   | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
+  | { kind: "header"; name: string; phone?: string; namePx?: number; phonePx?: number }
+  | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean }
   | { kind: "sep" }
   | { kind: "feed"; n: number }
   | { kind: "cut" };
@@ -563,7 +567,7 @@ function _renderHebToMono(
   measure.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
   const lines = _wrapText(measure, text, width - 4);
 
-  const lineH = Math.ceil(px * 1.25);
+  const lineH = Math.ceil(px * 1.15);
   const h = lineH * lines.length + 2;
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -654,19 +658,133 @@ function _rasterEscPos(mono: { bytes: Uint8Array; widthBytes: number; height: nu
   const ROWS = 255;
   for (let y = 0; y < height; y += ROWS) {
     const rows = Math.min(ROWS, height - y);
-    out.push(
-      GS,
-      0x76,
-      0x30,
-      0x00,
-      widthBytes & 0xff,
-      (widthBytes >> 8) & 0xff,
-      rows & 0xff,
-      (rows >> 8) & 0xff,
-    );
+    out.push(GS, 0x76, 0x30, 0x00,
+      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+      rows & 0xff, (rows >> 8) & 0xff);
     for (let i = y * widthBytes; i < (y + rows) * widthBytes; i++) out.push(bytes[i]);
   }
   return out;
+}
+
+// Shared: convert a canvas to 1-bit MSB-first bytes and crop top/bottom (and
+// optionally left/right) blank rows. Used by header/twoCol renderers below.
+function _canvasToCroppedMono(
+  canvas: HTMLCanvasElement,
+  width: number,
+  cropX: boolean,
+): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
+  const h = canvas.height;
+  const ctx = canvas.getContext("2d")!;
+  const padW = Math.ceil(width / 8) * 8;
+  const widthBytes = padW / 8;
+  const { data } = ctx.getImageData(0, 0, width, h);
+  const bytes = new Uint8Array(widthBytes * h);
+  for (let y = 0; y < h; y++) {
+    for (let xp = 0; xp < width; xp++) {
+      const i = (y * width + xp) * 4;
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum < 140) bytes[y * widthBytes + (xp >> 3)] |= 0x80 >> (xp & 7);
+    }
+  }
+  const rowBlank = (r: number) => {
+    for (let i = 0; i < widthBytes; i++) if (bytes[r * widthBytes + i] !== 0) return false;
+    return true;
+  };
+  let top = 0, bot = h - 1;
+  while (top < h && rowBlank(top)) top++;
+  while (bot > top && rowBlank(bot)) bot--;
+  if (top >= bot) return { bytes: new Uint8Array(1), widthBytes: 1, height: 1, offsetX: 0 };
+  const padT = Math.max(0, top - 1);
+  const padB = Math.min(h - 1, bot + 1);
+  const newH = padB - padT + 1;
+  if (!cropX) {
+    const out = bytes.slice(padT * widthBytes, (padB + 1) * widthBytes);
+    return { bytes: out, widthBytes, height: newH, offsetX: 0 };
+  }
+  // also crop x
+  const colBlank = (c: number) => {
+    for (let r = padT; r <= padB; r++) if (bytes[r * widthBytes + (c >> 3)] & (0x80 >> (c & 7))) return false;
+    return true;
+  };
+  let left = 0, right = width - 1;
+  while (left < width && colBlank(left)) left++;
+  while (right > left && colBlank(right)) right--;
+  const padL = Math.max(0, left - 2);
+  const padR = Math.min(width - 1, right + 2);
+  const croppedW = Math.max(8, Math.ceil((padR - padL + 1) / 8) * 8);
+  const cBytes = croppedW / 8;
+  const cropped = new Uint8Array(cBytes * newH);
+  for (let y = 0; y < newH; y++) {
+    for (let x = 0; x < croppedW && padL + x < width; x++) {
+      const sx = padL + x, sy = padT + y;
+      if (bytes[sy * widthBytes + (sx >> 3)] & (0x80 >> (sx & 7))) {
+        cropped[y * cBytes + (x >> 3)] |= 0x80 >> (x & 7);
+      }
+    }
+  }
+  const offsetX = Math.max(0, width - croppedW);
+  return { bytes: cropped, widthBytes: cBytes, height: newH, offsetX };
+}
+
+// Customer name (big bold) + (phone) inline at smaller size on the same line.
+function _renderHeaderToMono(
+  name: string,
+  phone: string | undefined,
+  namePx: number,
+  phonePx: number,
+  width: number,
+): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
+  const lineH = Math.ceil(namePx * 1.15);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = lineH + 4;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, canvas.height);
+  ctx.fillStyle = "#000";
+  (ctx as unknown as { direction: string }).direction = "rtl";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "right";
+  const y = lineH / 2 + 2;
+  ctx.font = `900 ${namePx}px Arial, "Heebo", sans-serif`;
+  ctx.fillText(name, width - 2, y);
+  if (phone) {
+    const nameW = ctx.measureText(name).width;
+    ctx.font = `500 ${phonePx}px Arial, "Heebo", sans-serif`;
+    ctx.fillText(`(${phone})`, width - 2 - nameW - 8, y);
+  }
+  return _canvasToCroppedMono(canvas, width, false);
+}
+
+// Two-column row: right text right-aligned, left text left-aligned.
+function _renderTwoColToMono(
+  right: string,
+  left: string,
+  px: number,
+  bold: boolean,
+  width: number,
+): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
+  const lineH = Math.ceil(px * 1.15);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = lineH + 4;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, canvas.height);
+  ctx.fillStyle = "#000";
+  (ctx as unknown as { direction: string }).direction = "rtl";
+  ctx.textBaseline = "middle";
+  ctx.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
+  const y = lineH / 2 + 2;
+  if (right) {
+    ctx.textAlign = "right";
+    ctx.fillText(right, width - 2, y);
+  }
+  if (left) {
+    ctx.textAlign = "left";
+    ctx.fillText(left, 2, y);
+  }
+  return _canvasToCroppedMono(canvas, width, false);
 }
 
 export async function printOps(ops: FastOp[]): Promise<void> {
@@ -708,6 +826,24 @@ export async function printOps(ops: FastOp[]): Promise<void> {
           align: op.align ?? "R",
         });
         out.push(..._align("L"), ESC, 0x24, mono.offsetX & 0xff, (mono.offsetX >> 8) & 0xff);
+        out.push(..._rasterEscPos(mono));
+        break;
+      }
+      case "header": {
+        const mono = _renderHeaderToMono(
+          op.name,
+          op.phone,
+          op.namePx ?? 32,
+          op.phonePx ?? 18,
+          width,
+        );
+        out.push(..._align("L"));
+        out.push(..._rasterEscPos(mono));
+        break;
+      }
+      case "twoCol": {
+        const mono = _renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width);
+        out.push(..._align("L"));
         out.push(..._rasterEscPos(mono));
         break;
       }
