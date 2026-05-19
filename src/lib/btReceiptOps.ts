@@ -211,18 +211,17 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }
 
   if (chefRows.length > 0 || sauceRows.length > 0) {
-    ops.push(asLine("== סיכום לטבח ==", { align: "C", bold: true, size: 22 }));
+    ops.push(asLine("== סיכום לטבח ==", { align: "C", bold: true, size: 28 }));
     const rowsCount = Math.max(chefRows.length, sauceRows.length);
     for (let i = 0; i < rowsCount; i++) {
       const r = chefRows[i] || "";
       const l = sauceRows[i] || "";
       if (r && !l) {
-        ops.push(asLine(r, { align: "R", bold: true, size: 20 }));
+        ops.push(asLine(r, { align: "R", bold: true, size: 26 }));
       } else if (!r && l) {
-        // sauces-only row: keep on the left as the user requested
-        ops.push({ kind: "twoCol", right: "", left: l, size: 20, bold: true });
+        ops.push({ kind: "twoCol", right: "", left: l, size: 26, bold: true });
       } else {
-        ops.push({ kind: "twoCol", right: r, left: l, size: 20, bold: true });
+        ops.push({ kind: "twoCol", right: r, left: l, size: 26, bold: true });
       }
     }
   }
@@ -235,9 +234,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     for (const [name, qty] of drinks.entries()) if (qty > 0) drinkRows.push([name, qty]);
     if (drinkRows.length > 0) {
       ops.push(sep());
-      ops.push(asLine("== שתייה ==", { align: "C", bold: true, size: 22 }));
+      ops.push(asLine("== שתייה ==", { align: "C", bold: true, size: 28 }));
       for (const [label, n] of drinkRows) {
-        ops.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 20 }));
+        ops.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 26 }));
       }
     }
   }
@@ -245,12 +244,12 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   // 5) Payment block — only show when relevant
   if (order.payment_method === "counter") {
     ops.push(sep());
-    ops.push(asLine("לתשלום בקופה", { align: "C", bold: true, size: 26 }));
-    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 30 }));
+    ops.push(asLine("לתשלום בקופה", { align: "C", bold: true, size: 32 }));
+    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 36 }));
   } else if (order.payment_method === "cash") {
     ops.push(sep());
-    ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 22 }));
-    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 28 }));
+    ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 28 }));
+    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 34 }));
   }
   // credit/online: paid → no payment block
 
