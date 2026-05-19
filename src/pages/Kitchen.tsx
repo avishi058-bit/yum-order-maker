@@ -689,11 +689,18 @@ const Kitchen = () => {
   };
 
   const [encoding, setEncodingState] = useState<EncodingProfile>(() => getEncoding());
+  const [paperWidth, setPaperWidthState] = useState<number>(() => getPaperWidthDots());
 
   const handleEncodingChange = (p: EncodingProfile) => {
     setEncoding(p);
     setEncodingState(p);
     toast.success(`קידוד נשמר: ${p}`);
+  };
+
+  const handlePaperWidthChange = (dots: number) => {
+    setPaperWidthDots(dots);
+    setPaperWidthState(getPaperWidthDots());
+    toast.success(`רוחב נייר: ${dots} נק׳`);
   };
 
   const handleTestCycle = async () => {
