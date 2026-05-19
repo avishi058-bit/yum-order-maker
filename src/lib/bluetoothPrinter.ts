@@ -519,6 +519,8 @@ export type FastOp =
   | { kind: "init" }
   | { kind: "text"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: 1 | 2 }
   | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
+  | { kind: "header"; name: string; phone?: string; namePx?: number; phonePx?: number }
+  | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean }
   | { kind: "sep" }
   | { kind: "feed"; n: number }
   | { kind: "cut" };
