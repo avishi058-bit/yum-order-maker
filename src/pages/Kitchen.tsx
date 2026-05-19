@@ -618,7 +618,7 @@ const Kitchen = () => {
   };
 
   const printOrder = (order: Order) => {
-    printReceipt({
+    const payload = {
       order_number: order.order_number,
       customer_name: order.customer_name,
       customer_phone: order.customer_phone,
@@ -628,7 +628,56 @@ const Kitchen = () => {
       payment_method: order.payment_method,
       order_source: order.order_source,
       order_items: order.order_items,
-    });
+    };
+    if (isPrinterConnected()) {
+      printBluetoothReceipt(payload).catch((err) => {
+        console.warn("[Kitchen] BT print failed, falling back", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
+        printReceipt(payload);
+      });
+      return;
+    }
+    printReceipt(payload);
+  };
+
+  // Try silent reconnect once on mount, and subscribe to BT status changes.
+  useEffect(() => {
+    const unsub = onPrinterStatusChange(setBtConnected);
+    tryAutoReconnect().then((ok) => { if (ok) setBtConnected(true); });
+    return () => { unsub(); };
+  }, []);
+
+  const handleConnectPrinter = async () => {
+    if (!isWebBluetoothSupported()) {
+      toast.error("הדפדפן הזה לא תומך ב-Web Bluetooth. השתמש ב-Chrome על אנדרואיד.");
+      return;
+    }
+    try {
+      await pairPrinter();
+      toast.success("המדפסת חוברה בהצלחה");
+    } catch (e: any) {
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message || "שגיאה בחיבור המדפסת");
+      }
+    }
+  };
+
+  const handleDisconnectPrinter = async () => {
+    await disconnectPrinter();
+    toast.success("המדפסת נותקה");
+  };
+
+  const handleTestPrint = async () => {
+    if (!isPrinterConnected()) {
+      toast.error("חבר תחילה את המדפסת");
+      return;
+    }
+    try {
+      await printTest();
+      toast.success("נשלחה בדיקת הדפסה");
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בהדפסה");
+    }
   };
 
   // Adjust ETA by +/- N minutes for an in-progress order
