@@ -96,11 +96,6 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
   ops.push(feed(1));
 
-
-  // Order type
-  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
-  ops.push(feed(1));
-
   // Customer info — name large/bold
   if (order.customer_name) {
     ops.push(asLine(order.customer_name, { align: "R", bold: true, size: 34 }));
