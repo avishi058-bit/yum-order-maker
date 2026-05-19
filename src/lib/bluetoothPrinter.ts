@@ -652,6 +652,20 @@ function _renderHebToMono(
   return { bytes: cropped, widthBytes: croppedWidthBytes, height: newH, offsetX };
 }
 
+function _rasterEscPos(mono: { bytes: Uint8Array; widthBytes: number; height: number }): number[] {
+  const out: number[] = [];
+  const { bytes, widthBytes, height } = mono;
+  const ROWS = 255;
+  for (let y = 0; y < height; y += ROWS) {
+    const rows = Math.min(ROWS, height - y);
+    out.push(GS, 0x76, 0x30, 0x00,
+      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+      rows & 0xff, (rows >> 8) & 0xff);
+    for (let i = y * widthBytes; i < (y + rows) * widthBytes; i++) out.push(bytes[i]);
+  }
+  return out;
+}
+
 // Shared: convert a canvas to 1-bit MSB-first bytes and crop top/bottom (and
 // optionally left/right) blank rows. Used by header/twoCol renderers below.
 function _canvasToCroppedMono(
