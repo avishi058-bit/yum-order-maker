@@ -915,6 +915,32 @@ const Kitchen = () => {
           >
             בדיקה
           </button>
+          {/* Encoding cycle test (A/B/C) */}
+          <button
+            onClick={handleTestCycle}
+            disabled={!btConnected}
+            className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
+              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+            }`}
+            title="הדפס 3 בדיקות עברית עם קידודים שונים (A/B/C) ובחר את הקריא"
+          >
+            A/B/C
+          </button>
+          {/* Encoding picker */}
+          <select
+            value={encoding}
+            onChange={(e) => handleEncodingChange(e.target.value as EncodingProfile)}
+            disabled={!btConnected}
+            className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
+              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            title="קידוד עברית למדפסת"
+          >
+            <option value="cp862-21">A · CP862 n=21</option>
+            <option value="cp862-15">B · CP862 n=15</option>
+            <option value="cp1255-33">C · CP1255 n=33</option>
+          </select>
+          </button>
           {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
           <button
             onClick={() => setShowRoundSummary(true)}
