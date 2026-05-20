@@ -24,6 +24,14 @@ import {
   setPaperWidthDots,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
+import {
+  isWebUsbSupported,
+  isUsbPrinterConnected,
+  pairUsbPrinter,
+  disconnectUsbPrinter,
+  tryAutoReconnectUsb,
+  onUsbStatusChange,
+} from "@/lib/usbPrinter";
 
 interface OrderItem {
   id: string;
