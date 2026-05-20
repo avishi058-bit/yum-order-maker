@@ -960,9 +960,9 @@ const Kitchen = () => {
           {/* Test print */}
           <button
             onClick={handleTestPrint}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+              (btConnected || usbConnected) ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
             }`}
             title="בדיקת הדפסה"
           >
@@ -971,9 +971,9 @@ const Kitchen = () => {
           {/* Hybrid diagnostic test */}
           <button
             onClick={handleHybridDiagnostic}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+              (btConnected || usbConnected) ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
             }`}
             title="בדיקת Hybrid: עברית כ-bitmap קטן וטקסט מהיר"
           >
@@ -983,9 +983,9 @@ const Kitchen = () => {
           <select
             value={encoding}
             onChange={(e) => handleEncodingChange(e.target.value as EncodingProfile)}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
-              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+              (!btConnected && !usbConnected) ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="מצב טקסט ישן מנוטרל; עברית מודפסת Hybrid"
           >
@@ -997,9 +997,9 @@ const Kitchen = () => {
           <select
             value={paperWidth}
             onChange={(e) => handlePaperWidthChange(parseInt(e.target.value, 10))}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
-              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+              (!btConnected && !usbConnected) ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="רוחב נייר בנקודות (40מ״מ=320, 58מ״מ=384, 80מ״מ=576)"
           >
