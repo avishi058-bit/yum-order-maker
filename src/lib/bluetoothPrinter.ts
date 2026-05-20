@@ -480,18 +480,22 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
       }
     }
   }
-  // Trim trailing all-white rows to avoid printing blank tape.
-  let trimmedHeight = outH;
-  while (trimmedHeight > 1) {
-    const rowStart = (trimmedHeight - 1) * widthBytes;
-    let blank = true;
+  // Trim trailing AND leading all-white rows to avoid printing blank tape.
+  const isBlankRow = (row: number) => {
+    const rowStart = row * widthBytes;
     for (let i = 0; i < widthBytes; i++) {
-      if (bytes[rowStart + i] !== 0) { blank = false; break; }
+      if (bytes[rowStart + i] !== 0) return false;
     }
-    if (!blank) break;
-    trimmedHeight--;
-  }
-  const trimmed = trimmedHeight === outH ? bytes : bytes.slice(0, trimmedHeight * widthBytes);
+    return true;
+  };
+  let topTrim = 0;
+  while (topTrim < outH - 1 && isBlankRow(topTrim)) topTrim++;
+  let bottomTrim = outH;
+  while (bottomTrim > topTrim + 1 && isBlankRow(bottomTrim - 1)) bottomTrim--;
+  const trimmedHeight = bottomTrim - topTrim;
+  const trimmed = (topTrim === 0 && bottomTrim === outH)
+    ? bytes
+    : bytes.slice(topTrim * widthBytes, bottomTrim * widthBytes);
   return { bytes: trimmed, widthBytes, height: trimmedHeight };
 }
 
