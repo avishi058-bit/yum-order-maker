@@ -657,12 +657,35 @@ const Kitchen = () => {
     printReceipt(payload);
   };
 
-  // Try silent reconnect once on mount, and subscribe to BT status changes.
+  // Try silent reconnect once on mount, and subscribe to BT + USB status changes.
   useEffect(() => {
     const unsub = onPrinterStatusChange(setBtConnected);
+    const unsubUsb = onUsbStatusChange(setUsbConnected);
     tryAutoReconnect().then((ok) => { if (ok) setBtConnected(true); });
-    return () => { unsub(); };
+    tryAutoReconnectUsb().then((ok) => { if (ok) setUsbConnected(true); });
+    return () => { unsub(); unsubUsb(); };
   }, []);
+
+  const handleConnectUsb = async () => {
+    if (!isWebUsbSupported()) {
+      toast.error("הדפדפן הזה לא תומך ב-WebUSB. השתמש ב-Chrome / Edge.");
+      return;
+    }
+    try {
+      await pairUsbPrinter();
+      toast.success("מדפסת USB חוברה בהצלחה");
+    } catch (e: any) {
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message || "שגיאה בחיבור מדפסת USB");
+      }
+    }
+  };
+
+  const handleDisconnectUsb = async () => {
+    await disconnectUsbPrinter();
+    toast.success("מדפסת USB נותקה");
+  };
+
 
   const handleConnectPrinter = async () => {
     if (!isWebBluetoothSupported()) {
