@@ -435,7 +435,7 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
     await new Promise((r) => setTimeout(r, 80));
     const target = doc.body;
     // Match iframe height to content so html2canvas captures everything.
-    iframe.style.height = target.scrollHeight + 4 + "px";
+    iframe.style.height = target.scrollHeight + 20 + "px";
     await new Promise((r) => setTimeout(r, 30));
     const canvas = await html2canvas(target, {
       width: widthCssPx,
