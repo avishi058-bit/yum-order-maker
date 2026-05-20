@@ -390,7 +390,7 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
         overflow: hidden visible !important;
       }
       body {
-        padding: ${isNarrow40mm ? "2px 4px 2px" : "4px 6px 3px"} !important;
+        padding: ${isNarrow40mm ? "8px" : "10px"} !important;
         font-family: Arial, "Heebo", sans-serif !important;
         font-size: ${isNarrow40mm ? "15px" : "17px"} !important;
         line-height: 1.22 !important;
