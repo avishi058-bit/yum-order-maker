@@ -213,10 +213,13 @@ function notify(connected: boolean) {
 
 export function onPrinterStatusChange(fn: (connected: boolean) => void): () => void {
   listeners.add(fn);
-  return () => { listeners.delete(fn); };
+  // Also forward USB connection state — UI shows "connected" for either transport.
+  const unsubUsb = onUsbStatusChange(() => fn(isPrinterConnected()));
+  return () => { listeners.delete(fn); unsubUsb(); };
 }
 
 export function isPrinterConnected(): boolean {
+  if (isUsbPrinterConnected()) return true;
   return !!(cachedDevice?.gatt?.connected && cachedChar);
 }
 
