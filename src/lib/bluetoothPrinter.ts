@@ -390,7 +390,7 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
         overflow: hidden visible !important;
       }
       body {
-        padding: ${isNarrow40mm ? "2px 4px 2px" : "4px 6px 3px"} !important;
+        padding: ${isNarrow40mm ? "8px" : "10px"} !important;
         font-family: Arial, "Heebo", sans-serif !important;
         font-size: ${isNarrow40mm ? "15px" : "17px"} !important;
         line-height: 1.22 !important;
@@ -417,7 +417,7 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
       .sum-section-title { font-size: ${isNarrow40mm ? "16px" : "18px"} !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
       .sum-row { font-size: ${isNarrow40mm ? "18px" : "21px"} !important; padding: 4px 0 !important; gap: 8px !important; }
       .sum-num { font-size: ${isNarrow40mm ? "22px" : "25px"} !important; min-width: ${isNarrow40mm ? "34px" : "40px"} !important; padding: 0 6px !important; }
-      .footer { font-size: ${isNarrow40mm ? "15px" : "17px"} !important; margin-top: 4px !important; padding: 2px 0 2px !important; }
+      .footer { font-size: ${isNarrow40mm ? "15px" : "17px"} !important; margin-top: 4px !important; padding: ${isNarrow40mm ? "6px 0 10px" : "6px 0 10px"} !important; }
       img, svg { max-width: 100% !important; height: auto !important; }
     `;
     doc.head.appendChild(style);
@@ -435,7 +435,7 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
     await new Promise((r) => setTimeout(r, 80));
     const target = doc.body;
     // Match iframe height to content so html2canvas captures everything.
-    iframe.style.height = target.scrollHeight + 4 + "px";
+    iframe.style.height = target.scrollHeight + 20 + "px";
     await new Promise((r) => setTimeout(r, 30));
     const canvas = await html2canvas(target, {
       width: widthCssPx,
@@ -480,23 +480,7 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
       }
     }
   }
-  // Trim trailing AND leading all-white rows to avoid printing blank tape.
-  const isBlankRow = (row: number) => {
-    const rowStart = row * widthBytes;
-    for (let i = 0; i < widthBytes; i++) {
-      if (bytes[rowStart + i] !== 0) return false;
-    }
-    return true;
-  };
-  let topTrim = 0;
-  while (topTrim < outH - 1 && isBlankRow(topTrim)) topTrim++;
-  let bottomTrim = outH;
-  while (bottomTrim > topTrim + 1 && isBlankRow(bottomTrim - 1)) bottomTrim--;
-  const trimmedHeight = bottomTrim - topTrim;
-  const trimmed = (topTrim === 0 && bottomTrim === outH)
-    ? bytes
-    : bytes.slice(topTrim * widthBytes, bottomTrim * widthBytes);
-  return { bytes: trimmed, widthBytes, height: trimmedHeight };
+  return { bytes, widthBytes, height: outH };
 }
 
 // Build ESC/POS bytes for a raster bitmap. Splits into chunks of N rows so
