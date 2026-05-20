@@ -947,6 +947,16 @@ const Kitchen = () => {
           >
             {btConnected ? <BluetoothConnected size={20} /> : <Bluetooth size={20} />}
           </button>
+          {/* USB printer connect/disconnect — faster than BLE when available */}
+          <button
+            onClick={usbConnected ? handleDisconnectUsb : handleConnectUsb}
+            className={`p-2 rounded-lg transition-colors ${
+              usbConnected ? "bg-emerald-500/20 text-emerald-300" : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+            title={usbConnected ? "מדפסת USB מחוברת — לחץ לניתוק" : "חיבור מדפסת USB (מהיר פי 10 מבלוטות׳)"}
+          >
+            <Usb size={20} />
+          </button>
           {/* Test print */}
           <button
             onClick={handleTestPrint}
