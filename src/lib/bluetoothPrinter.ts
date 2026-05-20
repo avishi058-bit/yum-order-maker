@@ -480,23 +480,7 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
       }
     }
   }
-  // Trim trailing AND leading all-white rows to avoid printing blank tape.
-  const isBlankRow = (row: number) => {
-    const rowStart = row * widthBytes;
-    for (let i = 0; i < widthBytes; i++) {
-      if (bytes[rowStart + i] !== 0) return false;
-    }
-    return true;
-  };
-  let topTrim = 0;
-  while (topTrim < outH - 1 && isBlankRow(topTrim)) topTrim++;
-  let bottomTrim = outH;
-  while (bottomTrim > topTrim + 1 && isBlankRow(bottomTrim - 1)) bottomTrim--;
-  const trimmedHeight = bottomTrim - topTrim;
-  const trimmed = (topTrim === 0 && bottomTrim === outH)
-    ? bytes
-    : bytes.slice(topTrim * widthBytes, bottomTrim * widthBytes);
-  return { bytes: trimmed, widthBytes, height: trimmedHeight };
+  return { bytes, widthBytes, height: outH };
 }
 
 // Build ESC/POS bytes for a raster bitmap. Splits into chunks of N rows so
