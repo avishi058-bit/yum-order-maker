@@ -9,7 +9,6 @@
 import html2canvas from "html2canvas";
 import { buildReceiptHtml, type RoundOrder, buildRoundSummaryHtml, buildRoundChefSummaryHtml } from "./kitchenReceipt";
 import type { ReceiptOrder } from "./kitchenReceipt";
-import { isUsbPrinterConnected, writeBytesUsb, onUsbStatusChange } from "./usbPrinter";
 
 type BluetoothServiceUUID = number | string;
 type BluetoothDevice = any;
@@ -213,13 +212,10 @@ function notify(connected: boolean) {
 
 export function onPrinterStatusChange(fn: (connected: boolean) => void): () => void {
   listeners.add(fn);
-  // Also forward USB connection state — UI shows "connected" for either transport.
-  const unsubUsb = onUsbStatusChange(() => fn(isPrinterConnected()));
-  return () => { listeners.delete(fn); unsubUsb(); };
+  return () => { listeners.delete(fn); };
 }
 
 export function isPrinterConnected(): boolean {
-  if (isUsbPrinterConnected()) return true;
   return !!(cachedDevice?.gatt?.connected && cachedChar);
 }
 
@@ -291,12 +287,7 @@ export async function disconnectPrinter(): Promise<void> {
   notify(false);
 }
 
-// Sentinel returned when USB transport is active — writeBytes detects it
-// and routes via WebUSB instead of GATT.
-const USB_CHAR_SENTINEL: any = { __usb: true, properties: { writeWithoutResponse: true, write: true } };
-
 async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
-  if (isUsbPrinterConnected()) return USB_CHAR_SENTINEL;
   if (cachedChar && cachedDevice?.gatt?.connected) return cachedChar;
   if (cachedDevice) {
     try { return await connectDevice(cachedDevice); } catch {}
@@ -307,12 +298,7 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // USB route — fast bulk transfer, no chunking concerns.
-  if ((char as any)?.__usb || isUsbPrinterConnected()) {
-    await writeBytesUsb(data);
-    return;
-  }
-  // BLE route — CHUNK=240 stays under typical ATT MTU (247-3). subarray = zero-copy.
+  // CHUNK=240 stays under typical ATT MTU (247-3). subarray = zero-copy.
   // Pipelining: writeWithoutResponse in Chrome buffers locally. Firing several
   // chunks before awaiting lets the BLE stack keep the radio busy instead of
   // waiting RTT between every chunk. PIPELINE=4 is safe across most adapters.
