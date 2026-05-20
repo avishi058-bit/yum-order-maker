@@ -9,6 +9,7 @@
 import html2canvas from "html2canvas";
 import { buildReceiptHtml, type RoundOrder, buildRoundSummaryHtml, buildRoundChefSummaryHtml } from "./kitchenReceipt";
 import type { ReceiptOrder } from "./kitchenReceipt";
+import { isUsbPrinterConnected, writeBytesUsb, onUsbStatusChange } from "./usbPrinter";
 
 type BluetoothServiceUUID = number | string;
 type BluetoothDevice = any;
