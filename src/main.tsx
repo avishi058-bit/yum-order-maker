@@ -3,6 +3,19 @@ import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 import "./index.css";
 
+// Swap manifest + apple title when on the /kitchen route so installing from
+// /kitchen creates a separate "Kitchen" PWA, while / stays the customer app.
+(function applyKitchenManifest() {
+  if (!window.location.pathname.startsWith("/kitchen")) return;
+  const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+  if (link) link.href = "/kitchen.webmanifest";
+  const appleTitle = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-title"]');
+  if (appleTitle) appleTitle.content = "מטבח";
+  const appName = document.querySelector<HTMLMetaElement>('meta[name="application-name"]');
+  if (appName) appName.content = "מטבח - הבקתה";
+  document.title = "מטבח - הבקתה";
+})();
+
 // Detect standalone (installed PWA) mode and tag <html> so CSS can target it.
 (function tagStandaloneMode() {
   const apply = () => {
