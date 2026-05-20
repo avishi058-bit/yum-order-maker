@@ -417,7 +417,7 @@ async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTM
       .sum-section-title { font-size: ${isNarrow40mm ? "16px" : "18px"} !important; padding: 4px 2px !important; margin-bottom: 4px !important; }
       .sum-row { font-size: ${isNarrow40mm ? "18px" : "21px"} !important; padding: 4px 0 !important; gap: 8px !important; }
       .sum-num { font-size: ${isNarrow40mm ? "22px" : "25px"} !important; min-width: ${isNarrow40mm ? "34px" : "40px"} !important; padding: 0 6px !important; }
-      .footer { font-size: ${isNarrow40mm ? "15px" : "17px"} !important; margin-top: 8px !important; padding: 6px 0 10px !important; }
+      .footer { font-size: ${isNarrow40mm ? "15px" : "17px"} !important; margin-top: 4px !important; padding: 2px 0 2px !important; }
       img, svg { max-width: 100% !important; height: auto !important; }
     `;
     doc.head.appendChild(style);
