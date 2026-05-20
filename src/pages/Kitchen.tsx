@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, Usb } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { motion } from "framer-motion";
@@ -24,6 +24,14 @@ import {
   setPaperWidthDots,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
+import {
+  isWebUsbSupported,
+  isUsbPrinterConnected,
+  pairUsbPrinter,
+  disconnectUsbPrinter,
+  tryAutoReconnectUsb,
+  onUsbStatusChange,
+} from "@/lib/usbPrinter";
 
 interface OrderItem {
   id: string;
@@ -231,6 +239,7 @@ const Kitchen = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
+  const [usbConnected, setUsbConnected] = useState<boolean>(() => isUsbPrinterConnected());
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
     return (localStorage.getItem("kitchen-ringtone") as RingtoneId) || "gentle-chime";
@@ -648,12 +657,35 @@ const Kitchen = () => {
     printReceipt(payload);
   };
 
-  // Try silent reconnect once on mount, and subscribe to BT status changes.
+  // Try silent reconnect once on mount, and subscribe to BT + USB status changes.
   useEffect(() => {
     const unsub = onPrinterStatusChange(setBtConnected);
+    const unsubUsb = onUsbStatusChange(setUsbConnected);
     tryAutoReconnect().then((ok) => { if (ok) setBtConnected(true); });
-    return () => { unsub(); };
+    tryAutoReconnectUsb().then((ok) => { if (ok) setUsbConnected(true); });
+    return () => { unsub(); unsubUsb(); };
   }, []);
+
+  const handleConnectUsb = async () => {
+    if (!isWebUsbSupported()) {
+      toast.error("הדפדפן הזה לא תומך ב-WebUSB. השתמש ב-Chrome / Edge.");
+      return;
+    }
+    try {
+      await pairUsbPrinter();
+      toast.success("מדפסת USB חוברה בהצלחה");
+    } catch (e: any) {
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message || "שגיאה בחיבור מדפסת USB");
+      }
+    }
+  };
+
+  const handleDisconnectUsb = async () => {
+    await disconnectUsbPrinter();
+    toast.success("מדפסת USB נותקה");
+  };
+
 
   const handleConnectPrinter = async () => {
     if (!isWebBluetoothSupported()) {
@@ -915,12 +947,22 @@ const Kitchen = () => {
           >
             {btConnected ? <BluetoothConnected size={20} /> : <Bluetooth size={20} />}
           </button>
+          {/* USB printer connect/disconnect — faster than BLE when available */}
+          <button
+            onClick={usbConnected ? handleDisconnectUsb : handleConnectUsb}
+            className={`p-2 rounded-lg transition-colors ${
+              usbConnected ? "bg-emerald-500/20 text-emerald-300" : "bg-muted text-muted-foreground hover:bg-secondary"
+            }`}
+            title={usbConnected ? "מדפסת USB מחוברת — לחץ לניתוק" : "חיבור מדפסת USB (מהיר פי 10 מבלוטות׳)"}
+          >
+            <Usb size={20} />
+          </button>
           {/* Test print */}
           <button
             onClick={handleTestPrint}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+              (btConnected || usbConnected) ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
             }`}
             title="בדיקת הדפסה"
           >
@@ -929,9 +971,9 @@ const Kitchen = () => {
           {/* Hybrid diagnostic test */}
           <button
             onClick={handleHybridDiagnostic}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+              (btConnected || usbConnected) ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
             }`}
             title="בדיקת Hybrid: עברית כ-bitmap קטן וטקסט מהיר"
           >
@@ -941,9 +983,9 @@ const Kitchen = () => {
           <select
             value={encoding}
             onChange={(e) => handleEncodingChange(e.target.value as EncodingProfile)}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
-              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+              (!btConnected && !usbConnected) ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="מצב טקסט ישן מנוטרל; עברית מודפסת Hybrid"
           >
@@ -955,9 +997,9 @@ const Kitchen = () => {
           <select
             value={paperWidth}
             onChange={(e) => handlePaperWidthChange(parseInt(e.target.value, 10))}
-            disabled={!btConnected}
+            disabled={!btConnected && !usbConnected}
             className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
-              !btConnected ? "opacity-50 cursor-not-allowed" : ""
+              (!btConnected && !usbConnected) ? "opacity-50 cursor-not-allowed" : ""
             }`}
             title="רוחב נייר בנקודות (40מ״מ=320, 58מ״מ=384, 80מ״מ=576)"
           >
