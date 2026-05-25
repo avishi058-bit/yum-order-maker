@@ -646,7 +646,16 @@ const Kitchen = () => {
       order_source: order.order_source,
       order_items: order.order_items,
     };
-    if (isPrinterConnected()) {
+    // RawBT: send ESC/POS bytes via the RawBT Android app over Bluetooth.
+    // No window.print(), no browser print dialog.
+    if (printMode === "rawbt") {
+      printRawBTReceipt(payload).catch((err) => {
+        console.warn("[Kitchen] RawBT print failed", err);
+        toast.error("שגיאה בשליחה ל-RawBT");
+      });
+      return;
+    }
+    if (printMode === "bt" && isPrinterConnected()) {
       printBluetoothReceipt(payload).catch((err) => {
         console.warn("[Kitchen] BT print failed, falling back", err);
         toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
@@ -656,6 +665,13 @@ const Kitchen = () => {
     }
     printReceipt(payload);
   };
+
+  // Manual reprint: bypasses the once-per-order dedup guard.
+  const reprintOrder = (order: Order) => {
+    printedOrdersRef.current.add(order.id);
+    printOrder(order);
+  };
+
 
   // Try silent reconnect once on mount, and subscribe to BT status changes.
   useEffect(() => {
