@@ -87,30 +87,34 @@ function sendViaIframe(intentUrl: string): void {
   iframe.src = intentUrl;
 }
 
+// Loads a URI in the hidden iframe. Android Chrome / Fully Kiosk will
+// resolve registered scheme handlers (rawbt:, intent:) to the appropriate
+// app without navigating the host page away.
 export function sendBytesToRawBT(bytes: Uint8Array): void {
   if (!bytes || bytes.length === 0) {
     console.error("[RawBT] refusing to send empty payload");
     return;
   }
   const b64 = bytesToBase64(bytes);
-  const dataPart = "base64," + b64;
 
-  // FORCED transport: iframe-intent only. Fully broadcastIntent is unreliable
-  // on this tablet — skip auto-detect entirely. RawBT must have
-  // "Background print" / "Silent" enabled in its settings.
-  const intentUrl =
-    "intent:" +
-    dataPart +
-    "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+  // PRIMARY format: direct rawbt: scheme. RawBT registers ACTION_VIEW for
+  // scheme "rawbt", and parses the URI body as "base64,<payload>" or as
+  // plain text. This avoids the Android intent: wrapper entirely — which
+  // was the cause of PRINT staying disabled: `intent:base64,...` (without
+  // the required `//`) is parsed by Android as an opaque URI, so when it
+  // rebuilds the inner intent with `scheme=rawbt;end`, getData() arrives
+  // empty/malformed at RawBT's MainActivity and the print job is never
+  // queued (button stays grey).
+  const uri = "rawbt:base64," + b64;
 
-  console.log("[RawBT] transport forced: iframe-intent", {
+  console.log("[RawBT] transport: iframe + rawbt: scheme (direct)", {
     bytesLen: bytes.length,
     b64Len: b64.length,
-    urlPreview: intentUrl.slice(0, 120) + (intentUrl.length > 120 ? "…" : ""),
-    urlLen: intentUrl.length,
+    urlPreview: uri.slice(0, 120) + (uri.length > 120 ? "…" : ""),
+    urlLen: uri.length,
   });
 
-  sendViaIframe(intentUrl);
+  sendViaIframe(uri);
 }
 
 // ---- Public print helpers (mirror bluetoothPrinter.ts API) ----
@@ -139,41 +143,98 @@ export async function printRawBTTest(): Promise<void> {
   sendBytesToRawBT(buildOpsBytes(buildTestOps()));
 }
 
-// Diagnostic: send a plain ASCII string + LF + cut. No CP862/CP1255, no
-// raster, no Hebrew. If this prints but real receipts don't, the bug is in
-// buildOpsBytes / ESC-POS. If this also fails, the bug is in the RawBT
-// intent URL or RawBT app settings.
+// ---- Diagnostics ----
+
 export interface RawBTDebugInfo {
   bytesLen: number;
   b64Len: number;
   urlPreview: string;
-  transport: "fully-broadcast" | "iframe-intent";
+  transport: string;
 }
 
+// Test #1: ASCII text + ESC/POS (init + text + cut), wrapped as base64 and
+// sent via the same `rawbt:base64,...` path used by real receipts. If this
+// prints but real receipts don't → bug is in raster/CP862 generation.
+// If this ALSO leaves PRINT grey → the rawbt: scheme itself isn't being
+// resolved (RawBT not installed as scheme handler, or Fully blocking it).
 export function printRawBTPlainText(text: string): RawBTDebugInfo {
-  // Use Android ACTION_SEND with type=text/plain targeting RawBT package.
-  // This is the share-intent path that RawBT exposes for plain text — no
-  // base64, no ESC/POS. If this prints, the issue with the main flow is the
-  // intent:base64,... URI format not being accepted by this RawBT build.
-  const encoded = encodeURIComponent(text);
-  const intentUrl =
-    "intent:#Intent;action=android.intent.action.SEND;type=text/plain;" +
-    "package=ru.a402d.rawbtprinter;" +
-    "S.android.intent.extra.TEXT=" + encoded + ";end";
+  const ascii = new TextEncoder().encode(text + "\n\n\n\n");
+  const bytes = new Uint8Array(2 + ascii.length + 3);
+  bytes[0] = 0x1b; bytes[1] = 0x40;                     // ESC @ init
+  bytes.set(ascii, 2);
+  bytes[2 + ascii.length] = 0x1d;                       // GS
+  bytes[2 + ascii.length + 1] = 0x56;                   // V
+  bytes[2 + ascii.length + 2] = 0x00;                   // 0 — full cut
 
-  console.log("[RawBT] plain-text via ACTION_SEND", {
-    textLen: text.length,
-    urlPreview: intentUrl.slice(0, 160),
-    urlLen: intentUrl.length,
+  const b64 = bytesToBase64(bytes);
+  const uri = "rawbt:base64," + b64;
+
+  console.log("[RawBT] test #1: rawbt:base64,<escpos-ascii>", {
+    bytesLen: bytes.length,
+    b64Len: b64.length,
+    urlPreview: uri.slice(0, 120),
   });
 
-  sendViaIframe(intentUrl);
+  sendViaIframe(uri);
+
+  return {
+    bytesLen: bytes.length,
+    b64Len: b64.length,
+    urlPreview: uri.slice(0, 100),
+    transport: "rawbt:base64",
+  };
+}
+
+// Test #2: bypass base64 entirely. RawBT's URI parser also accepts plain
+// text after the scheme: `rawbt:<utf8-text>`. No ESC/POS, no encoding.
+// This is the simplest possible payload — if PRINT activates here, the
+// rawbt: scheme works and the issue is purely in how we build the binary
+// payload. If PRINT still stays grey, RawBT isn't receiving any data via
+// the rawbt: scheme on this device (try ACTION_SEND fallback below).
+export function printRawBTPlainTextDirect(text: string): RawBTDebugInfo {
+  const uri = "rawbt:" + encodeURIComponent(text);
+
+  console.log("[RawBT] test #2: rawbt:<plain text> (no base64)", {
+    textLen: text.length,
+    urlPreview: uri.slice(0, 120),
+  });
+
+  sendViaIframe(uri);
 
   return {
     bytesLen: text.length,
     b64Len: 0,
-    urlPreview: intentUrl.slice(0, 100),
-    transport: "iframe-intent",
+    urlPreview: uri.slice(0, 100),
+    transport: "rawbt:plain",
+  };
+}
+
+// Test #3: ACTION_SEND share intent with type=text/plain targeted at RawBT.
+// This is a completely different code path inside RawBT (ShareActivity vs
+// MainActivity). If tests #1 and #2 fail but this one works, the rawbt:
+// scheme isn't registered on this RawBT build — we'd switch the main
+// transport to this share-intent format.
+export function printRawBTPlainTextShare(text: string): RawBTDebugInfo {
+  const encoded = encodeURIComponent(text);
+  const uri =
+    "intent://send/#Intent;" +
+    "action=android.intent.action.SEND;" +
+    "type=text/plain;" +
+    "package=ru.a402d.rawbtprinter;" +
+    "S.android.intent.extra.TEXT=" + encoded + ";end";
+
+  console.log("[RawBT] test #3: ACTION_SEND text/plain → RawBT", {
+    textLen: text.length,
+    urlPreview: uri.slice(0, 160),
+  });
+
+  sendViaIframe(uri);
+
+  return {
+    bytesLen: text.length,
+    b64Len: 0,
+    urlPreview: uri.slice(0, 100),
+    transport: "ACTION_SEND/text",
   };
 }
 
