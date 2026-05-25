@@ -29,6 +29,8 @@ import {
   setPrintMode,
   printRawBTReceipt,
   printRawBTPlainText,
+  printRawBTPlainTextDirect,
+  printRawBTPlainTextShare,
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
@@ -986,22 +988,55 @@ const Kitchen = () => {
           >
             HYB
           </button>
-          {/* RawBT plain-text diagnostic */}
+          {/* RawBT diagnostics: 3 transports — to identify which one
+              activates the PRINT button inside RawBT. */}
           <button
             onClick={() => {
               try {
                 const info = printRawBTPlainText("TEST PRINT FROM KITCHEN");
                 setRawbtDebug(info);
-                toast.success(`RawBT test נשלח (${info.transport})`);
+                toast.success(`T1 נשלח (${info.transport})`);
               } catch (e) {
-                console.error("[RawBT test] failed", e);
-                toast.error("RawBT test נכשל - ראה קונסול");
+                console.error("[RawBT T1] failed", e);
+                toast.error("T1 נכשל - ראה קונסול");
               }
             }}
             className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
-            title="שולח 'TEST PRINT FROM KITCHEN' ב-ASCII דרך RawBT"
+            title="T1: rawbt:base64,<ESC/POS ASCII + cut>"
           >
-            RawBT Test
+            T1 b64
+          </button>
+          <button
+            onClick={() => {
+              try {
+                const info = printRawBTPlainTextDirect("TEST PRINT FROM KITCHEN");
+                setRawbtDebug(info);
+                toast.success(`T2 נשלח (${info.transport})`);
+              } catch (e) {
+                console.error("[RawBT T2] failed", e);
+                toast.error("T2 נכשל - ראה קונסול");
+              }
+            }}
+            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
+            title="T2: rawbt:<plain text> (no base64, no ESC/POS)"
+          >
+            T2 plain
+          </button>
+          <button
+            onClick={() => {
+              try {
+                const info = printRawBTPlainTextShare("TEST PRINT FROM KITCHEN");
+                setRawbtDebug(info);
+                toast.success(`T3 נשלח (${info.transport})`);
+              } catch (e) {
+                console.error("[RawBT T3] failed", e);
+                toast.error("T3 נכשל - ראה קונסול");
+              }
+            }}
+            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
+            title="T3: ACTION_SEND text/plain → RawBT ShareActivity"
+          >
+            T3 share
           </button>
           {/* Width selector */}
           <select
