@@ -47,20 +47,69 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(bin);
 }
 
-// Open a RawBT intent: URL. Uses the Android Intent scheme so Chrome on
-// Android hands the payload off to RawBT without any visible UI.
+// Silent / background RawBT printing.
+//
+// Strategy (in priority order):
+//   1. Fully Kiosk Browser exposes window.fully with broadcastIntent() —
+//      we send RawBT's broadcast action which the app handles in the
+//      background (no UI, no app switch, no return-to-browser flicker).
+//      This is the recommended mode for the kitchen tablet.
+//   2. Fallback to a hidden iframe loading an intent: URL. The iframe keeps
+//      the main page from navigating away. RawBT must be configured with
+//      "Background print" / "Silent" enabled in its settings for this to
+//      avoid showing its UI.
+//
+// RawBT broadcast contract:
+//   action: ru.a402d.rawbtprinter.action.PRINT_RAWBT
+//   extra : msg = "base64,<payload>"  (string)
+declare global {
+  interface Window {
+    fully?: {
+      broadcastIntent?: (action: string, extras?: string) => void;
+      startIntent?: (url: string) => void;
+    };
+  }
+}
+
+const RAWBT_BROADCAST_ACTION = "ru.a402d.rawbtprinter.action.PRINT_RAWBT";
+
+function sendViaIframe(intentUrl: string): void {
+  let iframe = document.getElementById(
+    "rawbt-bridge",
+  ) as HTMLIFrameElement | null;
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.id = "rawbt-bridge";
+    iframe.style.display = "none";
+    iframe.setAttribute("aria-hidden", "true");
+    document.body.appendChild(iframe);
+  }
+  iframe.src = intentUrl;
+}
+
 export function sendBytesToRawBT(bytes: Uint8Array): void {
   const b64 = bytesToBase64(bytes);
-  // RawBT accepts both `rawbt:base64,<b64>` and a full intent URL. The intent
-  // form is the most reliable across Chrome versions on Android.
-  const url =
-    "intent:base64," +
-    encodeURIComponent(b64) +
+  const payload = "base64," + b64;
+
+  // 1) Fully Kiosk Browser — true background print, no UI switch.
+  const fully = window.fully;
+  if (fully && typeof fully.broadcastIntent === "function") {
+    try {
+      // extras format used by Fully Kiosk: "key=value"
+      fully.broadcastIntent(RAWBT_BROADCAST_ACTION, "msg=" + payload);
+      return;
+    } catch (e) {
+      console.warn("Fully broadcastIntent failed, falling back to iframe", e);
+    }
+  }
+
+  // 2) Hidden-iframe intent URL. Keeps the main page from navigating.
+  //    RawBT must have "Background print" enabled to stay silent.
+  const intentUrl =
+    "intent:" +
+    encodeURIComponent(payload) +
     "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
-  // Navigating top.location keeps it silent (no popup blocker, no new tab).
-  // Chrome on Android resolves the intent: URL to RawBT and returns to the
-  // current page when done.
-  window.location.href = url;
+  sendViaIframe(intentUrl);
 }
 
 // ---- Public print helpers (mirror bluetoothPrinter.ts API) ----
