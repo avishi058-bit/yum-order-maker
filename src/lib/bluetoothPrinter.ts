@@ -867,8 +867,7 @@ function _emitNarrowRasterInto(buf: ByteBuf, mono: Mono) {
   _emitRasterInto(buf, mono);
 }
 
-export async function printOps(ops: FastOp[]): Promise<void> {
-  const char = await ensureConnected();
+export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   const width = getPaperWidthDots();
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
@@ -940,8 +939,15 @@ export async function printOps(ops: FastOp[]): Promise<void> {
     }
   }
   flush();
-  await writeBytes(char, buf.toUint8());
+  return buf.toUint8();
 }
+
+export async function printOps(ops: FastOp[]): Promise<void> {
+  const char = await ensureConnected();
+  const bytes = buildOpsBytes(ops);
+  await writeBytes(char, bytes);
+}
+
 
 // ---- Public printing API — now backed by the fast hybrid pipeline ----
 
