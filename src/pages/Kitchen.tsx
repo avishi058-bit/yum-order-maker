@@ -95,11 +95,13 @@ const itemOrder: Record<string, string[]> = {
   drink: [
     "drink-cola", "drink-zero", "drink-fanta", "drink-fanta-grape", "drink-fanta-exotic",
     "drink-sprite", "drink-sprite-zero", "drink-blu", "drink-blu-mojito", "drink-blu-day",
-    "drink-wave", "drink-watermelon",
+    "drink-watermelon",
     "drink-grapes", "drink-apples", "drink-flavored-water",
+    "water", "soda",
     "drink-carlsberg", "drink-goldstar", "drink-heineken", "drink-corona",
     "drink-hoegaarden", "drink-laffe", "drink-unfiltered", "drink-guinness", "drink-weiss",
   ],
+
   deal: ["family-deal", "friends-deal"],
   topping: ["onion-jam", "peanut-butter", "fried-onion", "garlic-confit", "egg", "vegan-cheddar", "vegan-blue-cheese", "roastbeef", "extra-patty", "extra-smash-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
   sauce: ["ketchup", "mayo", "chili", "plum"],
