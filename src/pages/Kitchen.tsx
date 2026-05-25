@@ -1222,6 +1222,18 @@ const Kitchen = () => {
               ✕
             </button>
           </div>
+          {rawbtDebug.orderNumber !== undefined && (
+            <div>order #: {rawbtDebug.orderNumber}</div>
+          )}
+          {rawbtDebug.status && (
+            <div>
+              status: <span className={rawbtDebug.status === "error" ? "text-red-300 font-bold" : "text-emerald-300 font-bold"}>{rawbtDebug.status}</span>
+            </div>
+          )}
+          {rawbtDebug.error && (
+            <div className="text-red-300">error: {rawbtDebug.error}</div>
+          )}
+          {rawbtDebug.at && <div>at: {rawbtDebug.at}</div>}
           <div>transport: {rawbtDebug.transport}</div>
           <div>bytes length: {rawbtDebug.bytesLen}</div>
           <div>base64 length: {rawbtDebug.b64Len}</div>
