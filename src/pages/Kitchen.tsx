@@ -24,6 +24,13 @@ import {
   setPaperWidthDots,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
+import {
+  getPrintMode,
+  setPrintMode,
+  printRawBTReceipt,
+  type PrintMode,
+} from "@/lib/rawbtPrinter";
+
 
 interface OrderItem {
   id: string;
