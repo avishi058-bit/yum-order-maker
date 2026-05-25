@@ -52,9 +52,12 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   // Drinks
   { id: "can", name: "פחית", price: 10, category: "drink" },
   { id: "bottle", name: "בקבוק", price: 12, category: "drink" },
+  { id: "water", name: "מים (בקבוק)", price: 10, category: "drink" },
+  { id: "soda", name: "סודה (בקבוק)", price: 10, category: "drink" },
   { id: "beer-regular", name: "בירה", price: 18, category: "drink" },
   { id: "beer-premium", name: "בירה פרימיום", price: 23, category: "drink" },
   { id: "beer-weiss", name: "ויינשטפאן (חצי)", price: 25, category: "drink" },
+
   // Deals
   { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
   { id: "friends-deal", name: "דיל חברים", price: 216, category: "deal" },
