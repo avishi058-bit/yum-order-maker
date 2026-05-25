@@ -11,9 +11,9 @@
 import {
   buildOpsBytes,
   getPaperWidthDots,
-  type ReceiptOrder,
 } from "./bluetoothPrinter";
-import type { RoundOrder } from "./kitchenReceipt";
+import type { ReceiptOrder, RoundOrder } from "./kitchenReceipt";
+
 
 const MODE_KEY = "kitchen-print-mode"; // "rawbt" | "bt" | "browser"
 export type PrintMode = "rawbt" | "bt" | "browser";
