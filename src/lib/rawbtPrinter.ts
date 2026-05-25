@@ -93,36 +93,17 @@ export function sendBytesToRawBT(bytes: Uint8Array): void {
     return;
   }
   const b64 = bytesToBase64(bytes);
-
-  // RawBT expects the data part of the intent URI to be literally
-  //   base64,<standard-base64-payload>
-  // We must NOT percent-encode the comma (RawBT parses the "base64," prefix
-  // verbatim). Base64 characters A-Z a-z 0-9 + / = are all valid in the
-  // opaque part of an intent: URI on Android, so no encoding is needed.
   const dataPart = "base64," + b64;
 
-  // 1) Fully Kiosk Browser — true background print, no UI switch.
-  const fully = window.fully;
-  if (fully && typeof fully.broadcastIntent === "function") {
-    try {
-      console.log("[RawBT] via Fully broadcastIntent", {
-        bytesLen: bytes.length,
-        b64Len: b64.length,
-      });
-      fully.broadcastIntent(RAWBT_BROADCAST_ACTION, "msg=" + dataPart);
-      return;
-    } catch (e) {
-      console.warn("Fully broadcastIntent failed, falling back to iframe", e);
-    }
-  }
-
-  // 2) Hidden-iframe intent URL. Keeps the main page from navigating.
+  // FORCED transport: iframe-intent only. Fully broadcastIntent is unreliable
+  // on this tablet — skip auto-detect entirely. RawBT must have
+  // "Background print" / "Silent" enabled in its settings.
   const intentUrl =
     "intent:" +
     dataPart +
     "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
 
-  console.log("[RawBT] via iframe intent", {
+  console.log("[RawBT] transport forced: iframe-intent", {
     bytesLen: bytes.length,
     b64Len: b64.length,
     urlPreview: intentUrl.slice(0, 120) + (intentUrl.length > 120 ? "…" : ""),
