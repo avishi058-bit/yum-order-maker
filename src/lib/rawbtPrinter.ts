@@ -90,6 +90,11 @@ function sendViaIframe(intentUrl: string): void {
 // Loads a URI in the hidden iframe. Android Chrome / Fully Kiosk will
 // resolve registered scheme handlers (rawbt:, intent:) to the appropriate
 // app without navigating the host page away.
+// Uses ACTION_SEND/text/plain → RawBT ShareActivity (the T3 path the user
+// confirmed works on this device). The payload is sent as the text extra in
+// RawBT's documented "base64,<...>" format, which ShareActivity decodes to
+// raw ESC/POS bytes. Enable "Background print" / "Silent" in RawBT settings
+// to avoid the RawBT window appearing on each print.
 export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
   if (!bytes || bytes.length === 0) {
     console.error("[RawBT] refusing to send empty payload");
@@ -97,19 +102,26 @@ export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
       bytesLen: 0,
       b64Len: 0,
       urlPreview: "",
-      transport: "rawbt:base64",
+      transport: "ACTION_SEND/base64",
       status: "error",
       error: "empty payload",
       at: new Date().toISOString(),
     };
   }
   const b64 = bytesToBase64(bytes);
-  const uri = "rawbt:base64," + b64;
+  const text = "base64," + b64;
+  const encoded = encodeURIComponent(text);
+  const uri =
+    "intent://send/#Intent;" +
+    "action=android.intent.action.SEND;" +
+    "type=text/plain;" +
+    "package=ru.a402d.rawbtprinter;" +
+    "S.android.intent.extra.TEXT=" + encoded + ";end";
 
-  console.log("[RawBT] transport: iframe + rawbt: scheme (direct)", {
+  console.log("[RawBT] transport: ACTION_SEND/text → RawBT (base64 payload)", {
     bytesLen: bytes.length,
     b64Len: b64.length,
-    urlPreview: uri.slice(0, 120) + (uri.length > 120 ? "…" : ""),
+    urlPreview: uri.slice(0, 160),
     urlLen: uri.length,
   });
 
@@ -119,7 +131,7 @@ export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
       bytesLen: bytes.length,
       b64Len: b64.length,
       urlPreview: uri.slice(0, 100),
-      transport: "rawbt:base64",
+      transport: "ACTION_SEND/base64",
       status: "sent",
       at: new Date().toISOString(),
     };
@@ -128,7 +140,7 @@ export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
       bytesLen: bytes.length,
       b64Len: b64.length,
       urlPreview: uri.slice(0, 100),
-      transport: "rawbt:base64",
+      transport: "ACTION_SEND/base64",
       status: "error",
       error: String(e?.message ?? e),
       at: new Date().toISOString(),
