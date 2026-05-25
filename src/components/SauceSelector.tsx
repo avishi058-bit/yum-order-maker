@@ -95,7 +95,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <div className="space-y-0">
-                {sauceOptions.map((sauce: SauceOption) => {
+                {visibleSauces.map((sauce: SauceOption) => {
                   const qty = sauces[sauce.id] || 0;
                   return (
                     <div
