@@ -163,11 +163,7 @@ export function printRawBTPlainText(text: string): RawBTDebugInfo {
   const intentUrl =
     "intent:base64," + b64 +
     "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
-  const fully = window.fully;
-  const transport: RawBTDebugInfo["transport"] =
-    fully && typeof fully.broadcastIntent === "function"
-      ? "fully-broadcast"
-      : "iframe-intent";
+  const transport: RawBTDebugInfo["transport"] = "iframe-intent";
 
   sendBytesToRawBT(bytes);
 
