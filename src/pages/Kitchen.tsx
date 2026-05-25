@@ -654,12 +654,30 @@ const Kitchen = () => {
       order_items: order.order_items,
     };
     // RawBT: send ESC/POS bytes via the RawBT Android app over Bluetooth.
-    // No window.print(), no browser print dialog.
+    // No window.print(), no browser print dialog. Silent/background via
+    // hidden-iframe rawbt: scheme — Kitchen stays visible.
     if (printMode === "rawbt") {
-      printRawBTReceipt(payload).catch((err) => {
-        console.warn("[Kitchen] RawBT print failed", err);
-        toast.error("שגיאה בשליחה ל-RawBT");
-      });
+      printRawBTReceipt(payload)
+        .then((info) => {
+          setRawbtDebug(info);
+          if (info.status === "error") {
+            toast.error(`שגיאה ב-RawBT: ${info.error ?? "לא ידוע"}`);
+          }
+        })
+        .catch((err) => {
+          console.warn("[Kitchen] RawBT print failed", err);
+          setRawbtDebug({
+            bytesLen: 0,
+            b64Len: 0,
+            urlPreview: "",
+            transport: "rawbt:base64",
+            status: "error",
+            error: String(err?.message ?? err),
+            at: new Date().toISOString(),
+            orderNumber: order.order_number,
+          });
+          toast.error("שגיאה בשליחה ל-RawBT");
+        });
       return;
     }
     if (printMode === "bt" && isPrinterConnected()) {
@@ -1204,6 +1222,18 @@ const Kitchen = () => {
               ✕
             </button>
           </div>
+          {rawbtDebug.orderNumber !== undefined && (
+            <div>order #: {rawbtDebug.orderNumber}</div>
+          )}
+          {rawbtDebug.status && (
+            <div>
+              status: <span className={rawbtDebug.status === "error" ? "text-red-300 font-bold" : "text-emerald-300 font-bold"}>{rawbtDebug.status}</span>
+            </div>
+          )}
+          {rawbtDebug.error && (
+            <div className="text-red-300">error: {rawbtDebug.error}</div>
+          )}
+          {rawbtDebug.at && <div>at: {rawbtDebug.at}</div>}
           <div>transport: {rawbtDebug.transport}</div>
           <div>bytes length: {rawbtDebug.bytesLen}</div>
           <div>base64 length: {rawbtDebug.b64Len}</div>

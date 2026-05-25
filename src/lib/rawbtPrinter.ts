@@ -90,21 +90,20 @@ function sendViaIframe(intentUrl: string): void {
 // Loads a URI in the hidden iframe. Android Chrome / Fully Kiosk will
 // resolve registered scheme handlers (rawbt:, intent:) to the appropriate
 // app without navigating the host page away.
-export function sendBytesToRawBT(bytes: Uint8Array): void {
+export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
   if (!bytes || bytes.length === 0) {
     console.error("[RawBT] refusing to send empty payload");
-    return;
+    return {
+      bytesLen: 0,
+      b64Len: 0,
+      urlPreview: "",
+      transport: "rawbt:base64",
+      status: "error",
+      error: "empty payload",
+      at: new Date().toISOString(),
+    };
   }
   const b64 = bytesToBase64(bytes);
-
-  // PRIMARY format: direct rawbt: scheme. RawBT registers ACTION_VIEW for
-  // scheme "rawbt", and parses the URI body as "base64,<payload>" or as
-  // plain text. This avoids the Android intent: wrapper entirely — which
-  // was the cause of PRINT staying disabled: `intent:base64,...` (without
-  // the required `//`) is parsed by Android as an opaque URI, so when it
-  // rebuilds the inner intent with `scheme=rawbt;end`, getData() arrives
-  // empty/malformed at RawBT's MainActivity and the print job is never
-  // queued (button stays grey).
   const uri = "rawbt:base64," + b64;
 
   console.log("[RawBT] transport: iframe + rawbt: scheme (direct)", {
@@ -114,33 +113,57 @@ export function sendBytesToRawBT(bytes: Uint8Array): void {
     urlLen: uri.length,
   });
 
-  sendViaIframe(uri);
+  try {
+    sendViaIframe(uri);
+    return {
+      bytesLen: bytes.length,
+      b64Len: b64.length,
+      urlPreview: uri.slice(0, 100),
+      transport: "rawbt:base64",
+      status: "sent",
+      at: new Date().toISOString(),
+    };
+  } catch (e: any) {
+    return {
+      bytesLen: bytes.length,
+      b64Len: b64.length,
+      urlPreview: uri.slice(0, 100),
+      transport: "rawbt:base64",
+      status: "error",
+      error: String(e?.message ?? e),
+      at: new Date().toISOString(),
+    };
+  }
 }
 
 // ---- Public print helpers (mirror bluetoothPrinter.ts API) ----
 
-export async function printRawBTReceipt(order: ReceiptOrder): Promise<void> {
+export async function printRawBTReceipt(
+  order: ReceiptOrder,
+): Promise<RawBTDebugInfo> {
   const { buildKitchenBonOps } = await import("./btReceiptOps");
-  sendBytesToRawBT(buildOpsBytes(buildKitchenBonOps(order)));
+  const info = sendBytesToRawBT(buildOpsBytes(buildKitchenBonOps(order)));
+  info.orderNumber = (order as any).order_number;
+  return info;
 }
 
 export async function printRawBTRoundSummary(
   orders: RoundOrder[],
-): Promise<void> {
+): Promise<RawBTDebugInfo> {
   const { buildRoundSummaryOps } = await import("./btReceiptOps");
-  sendBytesToRawBT(buildOpsBytes(buildRoundSummaryOps(orders)));
+  return sendBytesToRawBT(buildOpsBytes(buildRoundSummaryOps(orders)));
 }
 
 export async function printRawBTRoundChef(
   orders: RoundOrder[],
-): Promise<void> {
+): Promise<RawBTDebugInfo> {
   const { buildRoundChefOps } = await import("./btReceiptOps");
-  sendBytesToRawBT(buildOpsBytes(buildRoundChefOps(orders)));
+  return sendBytesToRawBT(buildOpsBytes(buildRoundChefOps(orders)));
 }
 
-export async function printRawBTTest(): Promise<void> {
+export async function printRawBTTest(): Promise<RawBTDebugInfo> {
   const { buildTestOps } = await import("./btReceiptOps");
-  sendBytesToRawBT(buildOpsBytes(buildTestOps()));
+  return sendBytesToRawBT(buildOpsBytes(buildTestOps()));
 }
 
 // ---- Diagnostics ----
@@ -150,6 +173,10 @@ export interface RawBTDebugInfo {
   b64Len: number;
   urlPreview: string;
   transport: string;
+  status?: "sent" | "error";
+  error?: string;
+  at?: string;
+  orderNumber?: number;
 }
 
 // Test #1: ASCII text + ESC/POS (init + text + cut), wrapped as base64 and
