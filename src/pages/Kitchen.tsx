@@ -28,7 +28,9 @@ import {
   getPrintMode,
   setPrintMode,
   printRawBTReceipt,
+  printRawBTPlainText,
   type PrintMode,
+  type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
 
 
