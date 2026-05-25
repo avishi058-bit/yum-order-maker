@@ -90,11 +90,17 @@ function sendViaIframe(intentUrl: string): void {
 // Loads a URI in the hidden iframe. Android Chrome / Fully Kiosk will
 // resolve registered scheme handlers (rawbt:, intent:) to the appropriate
 // app without navigating the host page away.
-// Uses ACTION_SEND/text/plain → RawBT ShareActivity (the T3 path the user
-// confirmed works on this device). The payload is sent as the text extra in
-// RawBT's documented "base64,<...>" format, which ShareActivity decodes to
-// raw ESC/POS bytes. Enable "Background print" / "Silent" in RawBT settings
-// to avoid the RawBT window appearing on each print.
+// Silent / background RawBT printing.
+//
+// Priority order:
+//   1. Fully Kiosk broadcastIntent → RawBT's PRINT_RAWBT broadcast receiver.
+//      Completely silent: no window, no app switch, no PRINT button to tap.
+//      Requires "Background print" enabled in RawBT settings.
+//   2. Fallback: hidden iframe with `rawbt:base64,<...>` URI (ACTION_VIEW).
+//      RawBT window opens; with "Background print" enabled it auto-prints
+//      and closes. NOTE: ACTION_SEND/text path was tried but RawBT's
+//      ShareActivity prints the literal "base64,..." string instead of
+//      decoding it — do not use it for real receipts.
 export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
   if (!bytes || bytes.length === 0) {
     console.error("[RawBT] refusing to send empty payload");
@@ -102,36 +108,56 @@ export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
       bytesLen: 0,
       b64Len: 0,
       urlPreview: "",
-      transport: "ACTION_SEND/base64",
+      transport: "none",
       status: "error",
       error: "empty payload",
       at: new Date().toISOString(),
     };
   }
   const b64 = bytesToBase64(bytes);
-  const text = "base64," + b64;
-  const encoded = encodeURIComponent(text);
-  const uri =
-    "intent://send/#Intent;" +
-    "action=android.intent.action.SEND;" +
-    "type=text/plain;" +
-    "package=ru.a402d.rawbtprinter;" +
-    "S.android.intent.extra.TEXT=" + encoded + ";end";
+  const msg = "base64," + b64;
 
-  console.log("[RawBT] transport: ACTION_SEND/text → RawBT (base64 payload)", {
+  // Path 1: Fully Kiosk broadcast — fully silent, no UI.
+  const fully = (typeof window !== "undefined" ? window.fully : undefined);
+  if (fully && typeof fully.broadcastIntent === "function") {
+    try {
+      // Fully's broadcastIntent signature: (action, extras) where extras is
+      // a JSON string of key/value pairs.
+      fully.broadcastIntent(
+        RAWBT_BROADCAST_ACTION,
+        JSON.stringify({ msg }),
+      );
+      console.log("[RawBT] transport: fully.broadcastIntent (silent)", {
+        bytesLen: bytes.length,
+        b64Len: b64.length,
+      });
+      return {
+        bytesLen: bytes.length,
+        b64Len: b64.length,
+        urlPreview: "broadcast:" + RAWBT_BROADCAST_ACTION,
+        transport: "fully-broadcast",
+        status: "sent",
+        at: new Date().toISOString(),
+      };
+    } catch (e: any) {
+      console.warn("[RawBT] fully.broadcastIntent failed, falling back", e);
+    }
+  }
+
+  // Path 2: rawbt: scheme via hidden iframe (ACTION_VIEW).
+  const uri = "rawbt:" + msg;
+  console.log("[RawBT] transport: iframe + rawbt:base64 (fallback)", {
     bytesLen: bytes.length,
     b64Len: b64.length,
-    urlPreview: uri.slice(0, 160),
     urlLen: uri.length,
   });
-
   try {
     sendViaIframe(uri);
     return {
       bytesLen: bytes.length,
       b64Len: b64.length,
       urlPreview: uri.slice(0, 100),
-      transport: "ACTION_SEND/base64",
+      transport: "rawbt:base64",
       status: "sent",
       at: new Date().toISOString(),
     };
@@ -140,7 +166,7 @@ export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
       bytesLen: bytes.length,
       b64Len: b64.length,
       urlPreview: uri.slice(0, 100),
-      transport: "ACTION_SEND/base64",
+      transport: "rawbt:base64",
       status: "error",
       error: String(e?.message ?? e),
       at: new Date().toISOString(),
