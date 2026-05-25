@@ -8,9 +8,15 @@ interface SauceSelectorProps {
   freeSauces: number;
   onClose: () => void;
   onConfirm: (sauces: { id: string; name: string; quantity: number }[]) => void;
+  isAvailable?: (id: string) => boolean;
 }
 
-const SauceSelector = ({ open, freeSauces, onClose, onConfirm }: SauceSelectorProps) => {
+const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: SauceSelectorProps) => {
+  // Hide sauces the kitchen has marked out-of-stock so customers can't pick them.
+  const visibleSauces = sauceOptions.filter((s) =>
+    isAvailable ? isAvailable(s.id) : true,
+  );
+
   const [sauces, setSauces] = useState<Record<string, number>>({});
 
   const totalSelected = Object.values(sauces).reduce((sum, q) => sum + q, 0);
