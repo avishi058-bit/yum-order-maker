@@ -151,27 +151,29 @@ export interface RawBTDebugInfo {
 }
 
 export function printRawBTPlainText(text: string): RawBTDebugInfo {
-  const ascii = new TextEncoder().encode(text + "\n\n\n\n");
-  const bytes = new Uint8Array(2 + ascii.length + 3);
-  bytes[0] = 0x1b; bytes[1] = 0x40; // ESC @ init
-  bytes.set(ascii, 2);
-  bytes[2 + ascii.length] = 0x1d;     // GS
-  bytes[2 + ascii.length + 1] = 0x56; // V
-  bytes[2 + ascii.length + 2] = 0x00; // 0 — full cut
-
-  const b64 = bytesToBase64(bytes);
+  // Use Android ACTION_SEND with type=text/plain targeting RawBT package.
+  // This is the share-intent path that RawBT exposes for plain text — no
+  // base64, no ESC/POS. If this prints, the issue with the main flow is the
+  // intent:base64,... URI format not being accepted by this RawBT build.
+  const encoded = encodeURIComponent(text);
   const intentUrl =
-    "intent:base64," + b64 +
-    "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
-  const transport: RawBTDebugInfo["transport"] = "iframe-intent";
+    "intent:#Intent;action=android.intent.action.SEND;type=text/plain;" +
+    "package=ru.a402d.rawbtprinter;" +
+    "S.android.intent.extra.TEXT=" + encoded + ";end";
 
-  sendBytesToRawBT(bytes);
+  console.log("[RawBT] plain-text via ACTION_SEND", {
+    textLen: text.length,
+    urlPreview: intentUrl.slice(0, 160),
+    urlLen: intentUrl.length,
+  });
+
+  sendViaIframe(intentUrl);
 
   return {
-    bytesLen: bytes.length,
-    b64Len: b64.length,
+    bytesLen: text.length,
+    b64Len: 0,
     urlPreview: intentUrl.slice(0, 100),
-    transport,
+    transport: "iframe-intent",
   };
 }
 
