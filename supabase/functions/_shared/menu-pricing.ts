@@ -143,6 +143,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-laffe", name: "לאפ בראון", price: 12 },
   { id: "deal-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "deal-guinness", name: "גינס", price: 12 },
+  { id: "deal-water", name: "מים (בקבוק)", price: 0 },
+  { id: "deal-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-cola", name: "קולה", price: 0 },
   { id: "fam-zero", name: "זירו", price: 0 },
   { id: "fam-fanta", name: "פאנטה", price: 0 },
@@ -150,6 +152,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-blu", name: "בלו", price: 0 },
   { id: "fam-grapes", name: "ענבים", price: 0 },
   { id: "fam-apples", name: "תפוזים", price: 0 },
+  { id: "fam-water", name: "מים (בקבוק)", price: 0 },
+  { id: "fam-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-goldstar", name: "גולדסטאר", price: 8 },
   { id: "fam-heineken", name: "הייניקן", price: 8 },
   { id: "fam-corona", name: "קורונה", price: 8 },
@@ -158,6 +162,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "fam-guinness", name: "גינס", price: 12 },
 ];
+
 
 // ===== Lookup map helpers =====
 export const toLookup = <T extends { id: string }>(arr: T[]): Record<string, T> =>
