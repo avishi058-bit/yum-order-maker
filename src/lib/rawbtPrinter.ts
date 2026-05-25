@@ -173,6 +173,10 @@ export interface RawBTDebugInfo {
   b64Len: number;
   urlPreview: string;
   transport: string;
+  status?: "sent" | "error";
+  error?: string;
+  at?: string;
+  orderNumber?: number;
 }
 
 // Test #1: ASCII text + ESC/POS (init + text + cut), wrapped as base64 and
