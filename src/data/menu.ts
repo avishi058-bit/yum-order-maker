@@ -76,11 +76,14 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "onion-rings": { description: "טבעות בצל מטוגנות" },
   "tempura-onion": { description: "טבעות בצל ביתיות בציפוי טמפורה" },
   "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה" },
-  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, הגל, מוחיטו, אבטיח, ד״י" },
+  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י" },
   bottle: { description: "ענבים / תפוזים" },
+  water: { description: "בקבוק מים מינרליים" },
+  soda: { description: "בקבוק סודה" },
   "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
   "beer-weiss": { description: "בירת חיטה גרמנית" },
+
   "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
   "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
 };
