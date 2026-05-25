@@ -243,6 +243,7 @@ const Kitchen = () => {
   const [autoPrint, setAutoPrint] = useState(true);
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
+  const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
 
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
