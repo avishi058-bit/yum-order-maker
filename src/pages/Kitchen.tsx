@@ -1432,9 +1432,10 @@ const Kitchen = () => {
                       <Eye size={16} />
                     </button>
                     <button
-                      onClick={() => printOrder(order)}
+                      onClick={() => reprintOrder(order)}
                       className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                      title="הדפסת בון"
+                      title="הדפס שוב"
+
                     >
                       <Printer size={16} />
                     </button>
