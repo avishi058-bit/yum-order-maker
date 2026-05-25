@@ -256,11 +256,11 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "can-fanta", name: "פאנטה" },
     { id: "can-sprite", name: "ספרייט" },
     { id: "can-blu", name: "בלו" },
-    { id: "can-wave", name: "הגל" },
     { id: "can-mojito", name: "מוחיטו" },
     { id: "can-watermelon", name: "אבטיח" },
     { id: "can-day", name: "ד׳י" },
   ],
+
   bottle: [
     { id: "bottle-grapes", name: "ענבים" },
     { id: "bottle-apples", name: "תפוזים" },
