@@ -52,9 +52,12 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   // Drinks
   { id: "can", name: "פחית", price: 10, category: "drink" },
   { id: "bottle", name: "בקבוק", price: 12, category: "drink" },
+  { id: "water", name: "מים (בקבוק)", price: 10, category: "drink" },
+  { id: "soda", name: "סודה (בקבוק)", price: 10, category: "drink" },
   { id: "beer-regular", name: "בירה", price: 18, category: "drink" },
   { id: "beer-premium", name: "בירה פרימיום", price: 23, category: "drink" },
   { id: "beer-weiss", name: "ויינשטפאן (חצי)", price: 25, category: "drink" },
+
   // Deals
   { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
   { id: "friends-deal", name: "דיל חברים", price: 216, category: "deal" },
@@ -113,7 +116,10 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-hoegaarden", name: "הוגרדן", price: 12 },
   { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15 },
   { id: "drink-guinness", name: "גינס", price: 12 },
+  { id: "drink-water", name: "מים (בקבוק)", price: 0 },
+  { id: "drink-soda", name: "סודה (בקבוק)", price: 0 },
 ];
+
 
 // ===== Deal drinks (friends deal + family deal) =====
 export const DEAL_DRINKS_PRICING: PricedOption[] = [
@@ -137,6 +143,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-laffe", name: "לאפ בראון", price: 12 },
   { id: "deal-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "deal-guinness", name: "גינס", price: 12 },
+  { id: "deal-water", name: "מים (בקבוק)", price: 0 },
+  { id: "deal-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-cola", name: "קולה", price: 0 },
   { id: "fam-zero", name: "זירו", price: 0 },
   { id: "fam-fanta", name: "פאנטה", price: 0 },
@@ -144,6 +152,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-blu", name: "בלו", price: 0 },
   { id: "fam-grapes", name: "ענבים", price: 0 },
   { id: "fam-apples", name: "תפוזים", price: 0 },
+  { id: "fam-water", name: "מים (בקבוק)", price: 0 },
+  { id: "fam-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-goldstar", name: "גולדסטאר", price: 8 },
   { id: "fam-heineken", name: "הייניקן", price: 8 },
   { id: "fam-corona", name: "קורונה", price: 8 },
@@ -152,6 +162,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "fam-guinness", name: "גינס", price: 12 },
 ];
+
 
 // ===== Lookup map helpers =====
 export const toLookup = <T extends { id: string }>(arr: T[]): Record<string, T> =>

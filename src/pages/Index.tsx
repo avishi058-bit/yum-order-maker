@@ -611,6 +611,7 @@ const Index = () => {
           <SauceSelector
             open={sauceSelectorOpen}
             freeSauces={freeSauces}
+            isAvailable={isAvailable}
             onClose={() => setSauceSelectorOpen(false)}
             onConfirm={(sauces) => {
               setSelectedSauces(sauces);
@@ -618,6 +619,7 @@ const Index = () => {
               setCheckoutOpen(true);
             }}
           />
+
         )}
       </Suspense>
       <ItemPreview

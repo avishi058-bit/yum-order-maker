@@ -76,11 +76,14 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "onion-rings": { description: "טבעות בצל מטוגנות" },
   "tempura-onion": { description: "טבעות בצל ביתיות בציפוי טמפורה" },
   "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה" },
-  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, הגל, מוחיטו, אבטיח, ד״י" },
+  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י" },
   bottle: { description: "ענבים / תפוזים" },
+  water: { description: "בקבוק מים מינרליים" },
+  soda: { description: "בקבוק סודה" },
   "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
   "beer-weiss": { description: "בירת חיטה גרמנית" },
+
   "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
   "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
 };
@@ -253,11 +256,11 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "can-fanta", name: "פאנטה" },
     { id: "can-sprite", name: "ספרייט" },
     { id: "can-blu", name: "בלו" },
-    { id: "can-wave", name: "הגל" },
     { id: "can-mojito", name: "מוחיטו" },
     { id: "can-watermelon", name: "אבטיח" },
     { id: "can-day", name: "ד׳י" },
   ],
+
   bottle: [
     { id: "bottle-grapes", name: "ענבים" },
     { id: "bottle-apples", name: "תפוזים" },
@@ -291,7 +294,7 @@ export interface SauceOption {
 export const drinkToAvailabilityId: Record<string, string> = {
   // can sub-options (DrinkSelector)
   "can-cola": "drink-cola", "can-zero": "drink-zero", "can-fanta": "drink-fanta",
-  "can-sprite": "drink-sprite", "can-blu": "drink-blu", "can-wave": "drink-wave",
+  "can-sprite": "drink-sprite", "can-blu": "drink-blu",
   "can-mojito": "drink-blu-mojito", "can-watermelon": "drink-watermelon", "can-day": "drink-blu-day",
   // bottle sub-options
   "bottle-grapes": "drink-grapes", "bottle-apples": "drink-apples",
@@ -307,12 +310,14 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "drink-goldstar": "drink-goldstar", "drink-heineken": "drink-heineken",
   "drink-corona": "drink-corona", "drink-carlsberg": "drink-carlsberg",
   "drink-laffe": "drink-laffe", "drink-unfiltered": "drink-unfiltered", "drink-guinness": "drink-guinness",
+  "drink-water": "water", "drink-soda": "soda",
   // deal drink options (DealCustomizer)
   "deal-cola": "drink-cola", "deal-zero": "drink-zero", "deal-fanta": "drink-fanta",
   "deal-fanta-grape": "drink-fanta-grape", "deal-fanta-exotic": "drink-fanta-exotic",
   "deal-sprite": "drink-sprite", "deal-sprite-zero": "drink-sprite-zero",
   "deal-blu": "drink-blu", "deal-blu-mojito": "drink-blu-mojito", "deal-blu-day": "drink-blu-day",
   "deal-grapes": "drink-grapes", "deal-oranges": "drink-grapes", "deal-flavored-water": "drink-flavored-water",
+  "deal-water": "water", "deal-soda": "soda",
   "deal-goldstar": "drink-goldstar", "deal-heineken": "drink-heineken",
   "deal-corona": "drink-corona", "deal-carlsberg": "drink-carlsberg",
   "deal-laffe": "drink-laffe", "deal-unfiltered": "drink-unfiltered", "deal-guinness": "drink-guinness",
@@ -320,10 +325,12 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "fam-cola": "drink-cola", "fam-zero": "drink-zero", "fam-fanta": "drink-fanta",
   "fam-sprite": "drink-sprite", "fam-blu": "drink-blu",
   "fam-grapes": "drink-grapes", "fam-apples": "drink-apples",
+  "fam-water": "water", "fam-soda": "soda",
   "fam-goldstar": "drink-goldstar", "fam-heineken": "drink-heineken",
   "fam-corona": "drink-corona", "fam-carlsberg": "drink-carlsberg",
   "fam-laffe": "drink-laffe", "fam-unfiltered": "drink-unfiltered", "fam-guinness": "drink-guinness",
 };
+
 
 export const sauceOptions: SauceOption[] = [
   { id: "ketchup", name: "קטשופ" },
