@@ -24,6 +24,13 @@ import {
   setPaperWidthDots,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
+import {
+  getPrintMode,
+  setPrintMode,
+  printRawBTReceipt,
+  type PrintMode,
+} from "@/lib/rawbtPrinter";
+
 
 interface OrderItem {
   id: string;
@@ -231,6 +238,8 @@ const Kitchen = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
+  const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
+
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
     return (localStorage.getItem("kitchen-ringtone") as RingtoneId) || "gentle-chime";
@@ -637,7 +646,16 @@ const Kitchen = () => {
       order_source: order.order_source,
       order_items: order.order_items,
     };
-    if (isPrinterConnected()) {
+    // RawBT: send ESC/POS bytes via the RawBT Android app over Bluetooth.
+    // No window.print(), no browser print dialog.
+    if (printMode === "rawbt") {
+      printRawBTReceipt(payload).catch((err) => {
+        console.warn("[Kitchen] RawBT print failed", err);
+        toast.error("שגיאה בשליחה ל-RawBT");
+      });
+      return;
+    }
+    if (printMode === "bt" && isPrinterConnected()) {
       printBluetoothReceipt(payload).catch((err) => {
         console.warn("[Kitchen] BT print failed, falling back", err);
         toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
@@ -647,6 +665,13 @@ const Kitchen = () => {
     }
     printReceipt(payload);
   };
+
+  // Manual reprint: bypasses the once-per-order dedup guard.
+  const reprintOrder = (order: Order) => {
+    printedOrdersRef.current.add(order.id);
+    printOrder(order);
+  };
+
 
   // Try silent reconnect once on mount, and subscribe to BT status changes.
   useEffect(() => {
@@ -905,6 +930,25 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
+          {/* Print mode selector — RawBT / Bluetooth / דפדפן */}
+          <select
+            value={printMode}
+            onChange={(e) => {
+              const m = e.target.value as PrintMode;
+              setPrintModeState(m);
+              setPrintMode(m);
+              toast.success(
+                m === "rawbt" ? "מצב הדפסה: RawBT" : m === "bt" ? "מצב הדפסה: בלוטות׳" : "מצב הדפסה: דפדפן",
+              );
+            }}
+            className="text-xs px-2 py-1.5 rounded-lg bg-muted text-muted-foreground border border-border"
+            title="מצב הדפסה"
+          >
+            <option value="rawbt">RawBT</option>
+            <option value="bt">בלוטות׳</option>
+            <option value="browser">דפדפן</option>
+          </select>
+
           {/* Bluetooth printer connect/disconnect */}
           <button
             onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
@@ -1407,9 +1451,10 @@ const Kitchen = () => {
                       <Eye size={16} />
                     </button>
                     <button
-                      onClick={() => printOrder(order)}
+                      onClick={() => reprintOrder(order)}
                       className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                      title="הדפסת בון"
+                      title="הדפס שוב"
+
                     >
                       <Printer size={16} />
                     </button>
