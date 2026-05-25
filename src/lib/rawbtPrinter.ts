@@ -90,17 +90,20 @@ function sendViaIframe(intentUrl: string): void {
 // Loads a URI in the hidden iframe. Android Chrome / Fully Kiosk will
 // resolve registered scheme handlers (rawbt:, intent:) to the appropriate
 // app without navigating the host page away.
-// Silent / background RawBT printing.
+// Silent RawBT printing for Hebrew receipts (rendered as raster images
+// because the printer doesn't support Hebrew code pages).
 //
 // Priority order:
-//   1. Fully Kiosk broadcastIntent → RawBT's PRINT_RAWBT broadcast receiver.
-//      Completely silent: no window, no app switch, no PRINT button to tap.
-//      Requires "Background print" enabled in RawBT settings.
-//   2. Fallback: hidden iframe with `rawbt:base64,<...>` URI (ACTION_VIEW).
-//      RawBT window opens; with "Background print" enabled it auto-prints
-//      and closes. NOTE: ACTION_SEND/text path was tried but RawBT's
-//      ShareActivity prints the literal "base64,..." string instead of
-//      decoding it — do not use it for real receipts.
+//   1. fully.startIntent("rawbt:base64,<...>") — Fully Kiosk forwards the
+//      URI to Android's Intent system directly. Handles the ~30KB raster
+//      payload (iframe has URL length limits). With "Background print"
+//      enabled in RawBT, no window appears.
+//   2. Hidden iframe fallback (may fail for large payloads).
+//
+// NOTE: fully.broadcastIntent was tested on this tablet and does not
+// trigger RawBT — do not use it. ACTION_SEND/text was also tested and
+// RawBT's ShareActivity printed the literal "base64,..." string instead
+// of decoding it — do not use it either.
 export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
   if (!bytes || bytes.length === 0) {
     console.error("[RawBT] refusing to send empty payload");
@@ -115,37 +118,32 @@ export function sendBytesToRawBT(bytes: Uint8Array): RawBTDebugInfo {
     };
   }
   const b64 = bytesToBase64(bytes);
-  const msg = "base64," + b64;
+  const uri = "rawbt:base64," + b64;
 
-  // Path 1: Fully Kiosk broadcast — fully silent, no UI.
+  // Path 1: Fully Kiosk startIntent — best for long raster payloads.
   const fully = (typeof window !== "undefined" ? window.fully : undefined);
-  if (fully && typeof fully.broadcastIntent === "function") {
+  if (fully && typeof fully.startIntent === "function") {
     try {
-      // Fully's broadcastIntent signature: (action, extras) where extras is
-      // a JSON string of key/value pairs.
-      fully.broadcastIntent(
-        RAWBT_BROADCAST_ACTION,
-        JSON.stringify({ msg }),
-      );
-      console.log("[RawBT] transport: fully.broadcastIntent (silent)", {
+      fully.startIntent(uri);
+      console.log("[RawBT] transport: fully.startIntent (rawbt:base64)", {
         bytesLen: bytes.length,
         b64Len: b64.length,
+        urlLen: uri.length,
       });
       return {
         bytesLen: bytes.length,
         b64Len: b64.length,
-        urlPreview: "broadcast:" + RAWBT_BROADCAST_ACTION,
-        transport: "fully-broadcast",
+        urlPreview: uri.slice(0, 100),
+        transport: "fully-startIntent",
         status: "sent",
         at: new Date().toISOString(),
       };
     } catch (e: any) {
-      console.warn("[RawBT] fully.broadcastIntent failed, falling back", e);
+      console.warn("[RawBT] fully.startIntent failed, falling back", e);
     }
   }
 
-  // Path 2: rawbt: scheme via hidden iframe (ACTION_VIEW).
-  const uri = "rawbt:" + msg;
+  // Path 2: hidden iframe fallback.
   console.log("[RawBT] transport: iframe + rawbt:base64 (fallback)", {
     bytesLen: bytes.length,
     b64Len: b64.length,
