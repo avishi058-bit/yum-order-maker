@@ -158,6 +158,46 @@ export async function printRawBTTest(): Promise<void> {
   sendBytesToRawBT(buildOpsBytes(buildTestOps()));
 }
 
+// Diagnostic: send a plain ASCII string + LF + cut. No CP862/CP1255, no
+// raster, no Hebrew. If this prints but real receipts don't, the bug is in
+// buildOpsBytes / ESC-POS. If this also fails, the bug is in the RawBT
+// intent URL or RawBT app settings.
+export interface RawBTDebugInfo {
+  bytesLen: number;
+  b64Len: number;
+  urlPreview: string;
+  transport: "fully-broadcast" | "iframe-intent";
+}
+
+export function printRawBTPlainText(text: string): RawBTDebugInfo {
+  const ascii = new TextEncoder().encode(text + "\n\n\n\n");
+  const bytes = new Uint8Array(2 + ascii.length + 3);
+  bytes[0] = 0x1b; bytes[1] = 0x40; // ESC @ init
+  bytes.set(ascii, 2);
+  bytes[2 + ascii.length] = 0x1d;     // GS
+  bytes[2 + ascii.length + 1] = 0x56; // V
+  bytes[2 + ascii.length + 2] = 0x00; // 0 — full cut
+
+  const b64 = bytesToBase64(bytes);
+  const intentUrl =
+    "intent:base64," + b64 +
+    "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+  const fully = window.fully;
+  const transport: RawBTDebugInfo["transport"] =
+    fully && typeof fully.broadcastIntent === "function"
+      ? "fully-broadcast"
+      : "iframe-intent";
+
+  sendBytesToRawBT(bytes);
+
+  return {
+    bytesLen: bytes.length,
+    b64Len: b64.length,
+    urlPreview: intentUrl.slice(0, 100),
+    transport,
+  };
+}
+
 // Paper width is shared with the BT driver via getPaperWidthDots(), so the
 // receipt layout is identical regardless of which transport is used.
 export { getPaperWidthDots };

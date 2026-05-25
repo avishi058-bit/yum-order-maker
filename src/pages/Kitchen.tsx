@@ -28,7 +28,9 @@ import {
   getPrintMode,
   setPrintMode,
   printRawBTReceipt,
+  printRawBTPlainText,
   type PrintMode,
+  type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
 
 
@@ -241,6 +243,7 @@ const Kitchen = () => {
   const [autoPrint, setAutoPrint] = useState(true);
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
+  const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
 
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
   const [selectedRingtone, setSelectedRingtone] = useState<RingtoneId>(() => {
@@ -983,6 +986,23 @@ const Kitchen = () => {
           >
             HYB
           </button>
+          {/* RawBT plain-text diagnostic */}
+          <button
+            onClick={() => {
+              try {
+                const info = printRawBTPlainText("TEST PRINT FROM KITCHEN");
+                setRawbtDebug(info);
+                toast.success(`RawBT test נשלח (${info.transport})`);
+              } catch (e) {
+                console.error("[RawBT test] failed", e);
+                toast.error("RawBT test נכשל - ראה קונסול");
+              }
+            }}
+            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
+            title="שולח 'TEST PRINT FROM KITCHEN' ב-ASCII דרך RawBT"
+          >
+            RawBT Test
+          </button>
           {/* Width selector */}
           <select
             value={encoding}
@@ -1136,6 +1156,29 @@ const Kitchen = () => {
           </div>
         </div>
       </div>
+
+      {/* RawBT debug panel */}
+      {rawbtDebug && (
+        <div className="mx-4 mt-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/40 text-xs font-mono text-amber-100" dir="ltr">
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-bold">RawBT debug</span>
+            <button
+              onClick={() => setRawbtDebug(null)}
+              className="text-amber-300 hover:text-amber-100"
+            >
+              ✕
+            </button>
+          </div>
+          <div>transport: {rawbtDebug.transport}</div>
+          <div>bytes length: {rawbtDebug.bytesLen}</div>
+          <div>base64 length: {rawbtDebug.b64Len}</div>
+          <div className="break-all">url start: {rawbtDebug.urlPreview}</div>
+          {rawbtDebug.bytesLen === 0 && (
+            <div className="text-red-300 font-bold mt-1">⚠ payload ריק!</div>
+          )}
+        </div>
+      )}
+
 
       {/* Restaurant Status Bar */}
       <div className="bg-card border-b border-border px-6 py-3 flex items-center justify-center gap-6 flex-wrap">
