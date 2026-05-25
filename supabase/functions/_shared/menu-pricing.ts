@@ -116,7 +116,10 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-hoegaarden", name: "הוגרדן", price: 12 },
   { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15 },
   { id: "drink-guinness", name: "גינס", price: 12 },
+  { id: "drink-water", name: "מים (בקבוק)", price: 0 },
+  { id: "drink-soda", name: "סודה (בקבוק)", price: 0 },
 ];
+
 
 // ===== Deal drinks (friends deal + family deal) =====
 export const DEAL_DRINKS_PRICING: PricedOption[] = [
