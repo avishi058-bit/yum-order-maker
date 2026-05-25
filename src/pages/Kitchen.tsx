@@ -986,6 +986,23 @@ const Kitchen = () => {
           >
             HYB
           </button>
+          {/* RawBT plain-text diagnostic */}
+          <button
+            onClick={() => {
+              try {
+                const info = printRawBTPlainText("TEST PRINT FROM KITCHEN");
+                setRawbtDebug(info);
+                toast.success(`RawBT test נשלח (${info.transport})`);
+              } catch (e) {
+                console.error("[RawBT test] failed", e);
+                toast.error("RawBT test נכשל - ראה קונסול");
+              }
+            }}
+            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
+            title="שולח 'TEST PRINT FROM KITCHEN' ב-ASCII דרך RawBT"
+          >
+            RawBT Test
+          </button>
           {/* Width selector */}
           <select
             value={encoding}
