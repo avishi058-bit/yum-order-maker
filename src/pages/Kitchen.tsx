@@ -930,6 +930,25 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
+          {/* Print mode selector — RawBT / Bluetooth / דפדפן */}
+          <select
+            value={printMode}
+            onChange={(e) => {
+              const m = e.target.value as PrintMode;
+              setPrintModeState(m);
+              setPrintMode(m);
+              toast.success(
+                m === "rawbt" ? "מצב הדפסה: RawBT" : m === "bt" ? "מצב הדפסה: בלוטות׳" : "מצב הדפסה: דפדפן",
+              );
+            }}
+            className="text-xs px-2 py-1.5 rounded-lg bg-muted text-muted-foreground border border-border"
+            title="מצב הדפסה"
+          >
+            <option value="rawbt">RawBT</option>
+            <option value="bt">בלוטות׳</option>
+            <option value="browser">דפדפן</option>
+          </select>
+
           {/* Bluetooth printer connect/disconnect */}
           <button
             onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
