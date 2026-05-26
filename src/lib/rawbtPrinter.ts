@@ -15,16 +15,17 @@ import {
 import type { ReceiptOrder, RoundOrder } from "./kitchenReceipt";
 
 
-const MODE_KEY = "kitchen-print-mode"; // "rawbt" | "bt" | "browser"
-export type PrintMode = "rawbt" | "bt" | "browser";
+const MODE_KEY = "kitchen-print-mode"; // "agent" | "rawbt" | "bt" | "browser"
+export type PrintMode = "agent" | "rawbt" | "bt" | "browser";
 
 export function getPrintMode(): PrintMode {
   try {
     const v = localStorage.getItem(MODE_KEY);
-    if (v === "rawbt" || v === "bt" || v === "browser") return v;
+    if (v === "agent" || v === "rawbt" || v === "bt" || v === "browser") return v;
   } catch {}
-  return "bt";
+  return "agent";
 }
+
 
 export function setPrintMode(mode: PrintMode) {
   try {

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">הבקתה — Print Agent</string>
+    <string name="agent_running">Print Agent פעיל — מאזין על 127.0.0.1:9100</string>
+    <string name="notif_channel">Print Agent</string>
+</resources>
