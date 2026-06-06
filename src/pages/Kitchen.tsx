@@ -1515,39 +1515,8 @@ const Kitchen = () => {
       </div>
 
 
-      {/* RawBT debug panel */}
-      {rawbtDebug && (
-        <div className="mx-4 mt-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/40 text-xs font-mono text-amber-100" dir="ltr">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-bold">RawBT debug</span>
-            <button
-              onClick={() => setRawbtDebug(null)}
-              className="text-amber-300 hover:text-amber-100"
-            >
-              ✕
-            </button>
-          </div>
-          {rawbtDebug.orderNumber !== undefined && (
-            <div>order #: {rawbtDebug.orderNumber}</div>
-          )}
-          {rawbtDebug.status && (
-            <div>
-              status: <span className={rawbtDebug.status === "error" ? "text-red-300 font-bold" : "text-emerald-300 font-bold"}>{rawbtDebug.status}</span>
-            </div>
-          )}
-          {rawbtDebug.error && (
-            <div className="text-red-300">error: {rawbtDebug.error}</div>
-          )}
-          {rawbtDebug.at && <div>at: {rawbtDebug.at}</div>}
-          <div>transport: {rawbtDebug.transport}</div>
-          <div>bytes length: {rawbtDebug.bytesLen}</div>
-          <div>base64 length: {rawbtDebug.b64Len}</div>
-          <div className="break-all">url start: {rawbtDebug.urlPreview}</div>
-          {rawbtDebug.bytesLen === 0 && (
-            <div className="text-red-300 font-bold mt-1">⚠ payload ריק!</div>
-          )}
-        </div>
-      )}
+      {/* RawBT debug panel removed */}
+
 
 
 
