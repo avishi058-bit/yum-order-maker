@@ -297,9 +297,10 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
   throw new Error("המדפסת לא מחוברת. לחץ על 'חיבור מדפסת' כדי לבחור אותה.");
 }
 
-// Adaptive WoR chunk size — start big, shrink on failure, remember the best.
-// Bigger chunks = fewer BLE packets = much faster, but some printers cap MTU.
-let _worChunkSize = 500;
+// WoR chunk size — BLE Web API does not expose negotiated MTU, and writing
+// larger than the link MTU silently truncates on some stacks → printer gets
+// a mangled byte stream and prints gibberish. 180 is the safe ESC/POS norm.
+let _worChunkSize = 180;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
