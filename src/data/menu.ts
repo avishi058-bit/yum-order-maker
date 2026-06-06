@@ -319,6 +319,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "drink-corona": "drink-corona", "drink-carlsberg": "drink-carlsberg",
   "drink-laffe": "drink-laffe", "drink-unfiltered": "drink-unfiltered", "drink-guinness": "drink-guinness",
   "drink-water": "water", "drink-soda": "soda",
+  "drink-flavored-water-apple": "drink-flavored-water-apple", "drink-flavored-water-grape": "drink-flavored-water-grape",
   // deal drink options (DealCustomizer)
   "deal-cola": "drink-cola", "deal-zero": "drink-zero", "deal-fanta": "drink-fanta",
   "deal-fanta-grape": "drink-fanta-grape", "deal-fanta-exotic": "drink-fanta-exotic",
