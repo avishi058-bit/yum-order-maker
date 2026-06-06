@@ -1526,18 +1526,7 @@ const Kitchen = () => {
             <span className="text-xs font-bold">{activeRoundOrders.length}</span>
           </button>
           <button
-            onClick={() => {
-              if (activeRoundOrders.length === 0) return;
-              if (isPrinterConnected()) {
-                printBluetoothRoundSummary(activeRoundOrders).catch((err) => {
-                  console.warn("[Kitchen] BT round print failed, falling back", err);
-                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
-                  printRoundSummary(activeRoundOrders);
-                });
-              } else {
-                printRoundSummary(activeRoundOrders);
-              }
-            }}
+            onClick={printRoundBon}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
               activeRoundOrders.length === 0
@@ -1562,18 +1551,7 @@ const Kitchen = () => {
             <ListChecks size={20} />
           </button>
           <button
-            onClick={() => {
-              if (activeRoundOrders.length === 0) return;
-              if (isPrinterConnected()) {
-                printBluetoothRoundChef(activeRoundOrders).catch((err) => {
-                  console.warn("[Kitchen] BT chef print failed, falling back", err);
-                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
-                  printRoundChefSummary(activeRoundOrders);
-                });
-              } else {
-                printRoundChefSummary(activeRoundOrders);
-              }
-            }}
+            onClick={printChefBon}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
               activeRoundOrders.length === 0
@@ -2085,13 +2063,7 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    if (isPrinterConnected()) {
-                      printBluetoothRoundSummary(activeRoundOrders).catch(() => printRoundSummary(activeRoundOrders));
-                    } else {
-                      printRoundSummary(activeRoundOrders);
-                    }
-                  }}
+                  onClick={printRoundBon}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
@@ -2136,13 +2108,7 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    if (isPrinterConnected()) {
-                      printBluetoothRoundChef(activeRoundOrders).catch(() => printRoundChefSummary(activeRoundOrders));
-                    } else {
-                      printRoundChefSummary(activeRoundOrders);
-                    }
-                  }}
+                  onClick={printChefBon}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
