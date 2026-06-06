@@ -298,9 +298,28 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // Sequential, with-response writes + retry. Critical for large raster payloads
-  // (kitchen bon) — any dropped chunk desyncs the stream and the printer reads
-  // raster bytes as ASCII text → gibberish output. Slightly slower but reliable.
+  // Prefer write-without-response when the printer supports it — typically 3-5x
+  // faster than write-with-response over BLE (no per-chunk ACK round-trip).
+  // Falls back to write-with-response + retry for printers that only expose it.
+  const supportsWoR = !!(char.properties as { writeWithoutResponse?: boolean }).writeWithoutResponse;
+
+  if (supportsWoR && (char as { writeValueWithoutResponse?: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse) {
+    const CHUNK = 240; // typical BLE MTU 247 - 3 ATT overhead
+    const writeWoR = (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse.bind(char);
+    for (let i = 0; i < data.length; i += CHUNK) {
+      const end = Math.min(i + CHUNK, data.length);
+      const slice = data.slice(i, end); // .slice() returns a fresh ArrayBuffer-backed Uint8Array
+      try {
+        await writeWoR(slice);
+      } catch (e) {
+        await new Promise((r) => setTimeout(r, 8));
+        await writeWoR(slice);
+      }
+    }
+    return;
+  }
+
+  // Fallback: with-response writes + retry.
   const CHUNK = 180;
   const writeOne = async (slice: Uint8Array): Promise<void> => {
     let lastErr: unknown = null;
@@ -310,7 +329,6 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
         return;
       } catch (e) {
         lastErr = e;
-        // small backoff and retry — BLE GATT busy errors are common
         await new Promise((r) => setTimeout(r, 30 + attempt * 50));
       }
     }
@@ -319,7 +337,6 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   for (let i = 0; i < data.length; i += CHUNK) {
     const end = Math.min(i + CHUNK, data.length);
     await writeOne(data.subarray(i, end));
-    // tiny pacing gap so the printer's buffer can drain on long raster streams
     if (i % (CHUNK * 8) === 0 && i > 0) {
       await new Promise((r) => setTimeout(r, 4));
     }
@@ -688,10 +705,10 @@ function _renderHebToMono(
   while (right > left && colBlank(right)) right--;
 
   // Tight vertical padding — keeps line spacing but skips wasted blank rows.
-  const padT = Math.max(0, top - 2);
-  const padB = Math.min(h - 1, bot + 2);
-  const padL = Math.max(0, left - 2);
-  const padR = Math.min(width - 1, right + 2);
+  const padT = Math.max(0, top - 1);
+  const padB = Math.min(h - 1, bot + 1);
+  const padL = Math.max(0, left - 1);
+  const padR = Math.min(width - 1, right + 1);
   const newH = padB - padT + 1;
   const croppedW = Math.max(8, Math.ceil((padR - padL + 1) / 8) * 8);
   const croppedWidthBytes = croppedW / 8;
@@ -975,7 +992,16 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         break;
       case "feed":
         flush();
-        for (let i = 0; i < Math.max(1, op.n); i++) buf.pushByte(0x0a);
+        {
+          // Convert n "lines" to dots and emit ESC J <dots> (motor feed) — far
+          // faster than printing n LFs (which scan blank rows). ~24 dots/line @ 203dpi.
+          let dots = Math.max(1, op.n) * 24;
+          while (dots > 0) {
+            const step = Math.min(255, dots);
+            buf.pushArr([ESC, 0x4a, step]);
+            dots -= step;
+          }
+        }
         break;
       case "text": {
         flush();
@@ -1032,7 +1058,7 @@ function enqueuePrint(job: () => Promise<void>): Promise<void> {
       await job();
       // Small breather so the printer can drain its buffer before the next
       // job slams in more bytes (helps the thermal head finish cleanly).
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, 60));
     } finally {
       _queueDepth--;
     }
