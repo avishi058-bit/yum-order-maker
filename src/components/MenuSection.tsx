@@ -11,9 +11,16 @@ const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
   { key: "meal" as const, label: "🍽️ ארוחות עסקיות" },
   { key: "side" as const, label: "🍟 צ׳יפס אחי!" },
-  { key: "drink" as const, label: "🍺 מה את שותה?" },
+  { key: "drink" as const, label: "🥤 שתיה" },
+  { key: "beer" as const, label: "🍺 בירות" },
   { key: "deal" as const, label: "🤝 עשינו עסק" },
 ];
+
+const matchesCategory = (item: MenuItem, key: typeof categories[number]["key"]) => {
+  if (key === "beer") return item.category === "drink" && item.id.startsWith("beer-");
+  if (key === "drink") return item.category === "drink" && !item.id.startsWith("beer-");
+  return item.category === key;
+};
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
