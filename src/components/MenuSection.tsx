@@ -11,9 +11,16 @@ const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
   { key: "meal" as const, label: "🍽️ ארוחות עסקיות" },
   { key: "side" as const, label: "🍟 צ׳יפס אחי!" },
-  { key: "drink" as const, label: "🍺 מה את שותה?" },
+  { key: "drink" as const, label: "🥤 שתיה" },
+  { key: "beer" as const, label: "🍺 בירות" },
   { key: "deal" as const, label: "🤝 עשינו עסק" },
 ];
+
+const matchesCategory = (item: MenuItem, key: typeof categories[number]["key"]) => {
+  if (key === "beer") return item.category === "drink" && item.id.startsWith("beer-");
+  if (key === "drink") return item.category === "drink" && !item.id.startsWith("beer-");
+  return item.category === key;
+};
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
@@ -214,7 +221,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
 
   // Filter categories that have available items
   const visibleCategories = categories.filter(
-    (cat) => menuItems.some((i) => i.category === cat.key && isAvailable(i.id))
+    (cat) => menuItems.some((i) => matchesCategory(i, cat.key) && isAvailable(i.id))
   );
 
   return (
@@ -256,7 +263,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       </div>
 
       {categories.map((cat) => {
-        let items = menuItems.filter((i) => i.category === cat.key && isAvailable(i.id));
+        let items = menuItems.filter((i) => matchesCategory(i, cat.key) && isAvailable(i.id));
         // Apply custom order if set
         if (settings.menu_order && settings.menu_order.length > 0) {
           items = [...items].sort((a, b) => {
