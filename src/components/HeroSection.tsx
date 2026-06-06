@@ -91,9 +91,13 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
             {...heroAnimations.cta}
             className="flex flex-col items-center gap-4"
           >
-            <p className="text-lg md:text-xl font-bold text-foreground">
+            <motion.p
+              className="text-lg md:text-xl font-bold text-foreground"
+              animate={dance ? { rotate: [0, -8, 8, -8, 8, 0], scale: [1, 1.1, 1.1, 1.1, 1.1, 1] } : { rotate: 0, scale: 1 }}
+              transition={dance ? { duration: 0.9, repeat: Infinity, repeatDelay: 0.6 } : { duration: 0.2 }}
+            >
               בחר כדי להתחיל בהזמנה👇🏽
-            </p>
+            </motion.p>
             <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
               <button
                 onClick={() => onDineInChoice(true)}
