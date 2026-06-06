@@ -877,7 +877,7 @@ const Kitchen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background overflow-x-hidden" dir="rtl">
       {/* Audio activation prompt */}
       {!audioActivated && soundEnabled && (
         <div
@@ -894,10 +894,10 @@ const Kitchen = () => {
         </div>
       )}
       {/* Header */}
-      <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-4">
+      <div className="bg-card border-b border-border px-4 py-3 flex flex-col gap-3 sticky top-0 z-10 overflow-x-hidden max-w-full">
+        <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-2xl font-black text-foreground">🍔 מטבח הבקתה</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setViewMode("active")}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
@@ -957,7 +957,7 @@ const Kitchen = () => {
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Realtime status indicator */}
           <div
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
