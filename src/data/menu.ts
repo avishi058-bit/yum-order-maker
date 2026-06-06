@@ -71,9 +71,10 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "meal-special-hadegel": { description: "ספיישל הדגל + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "special-hadegel" },
   "meal-napoleon": { description: "נפוליאון + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "napoleon", specialOfMonth: true },
   "meal-haf-mifsha": { description: "חף מפשע (צמחוני) + צ׳יפס + שתייה", weight: "", baseBurgerId: "haf-mifsha", badge: "🌱" },
-  fries: { description: "צ׳יפס פריך" },
-  "sweet-potato-fries": { description: "צ׳יפס בטטה פריך" },
-  "onion-rings": { description: "טבעות בצל מטוגנות" },
+  fries: { description: "" },
+  "sweet-potato-fries": { description: "" },
+  "onion-rings": { description: "" },
+
   "tempura-onion": { description: "טבעות בצל ביתיות בציפוי טמפורה" },
   "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה" },
   can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י" },
