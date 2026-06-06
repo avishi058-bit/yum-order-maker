@@ -22,6 +22,12 @@ const matchesCategory = (item: MenuItem, key: typeof categories[number]["key"]) 
   return item.category === key;
 };
 
+// Some menu items use a different ID than the availability row in the DB.
+const menuItemAvailabilityAlias: Record<string, string> = {
+  "beer-weiss": "drink-weiss",
+};
+const availabilityIdFor = (id: string) => menuItemAvailabilityAlias[id] ?? id;
+
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
@@ -221,7 +227,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
 
   // Filter categories that have available items
   const visibleCategories = categories.filter(
-    (cat) => menuItems.some((i) => matchesCategory(i, cat.key) && isAvailable(i.id))
+    (cat) => menuItems.some((i) => matchesCategory(i, cat.key) && isAvailable(availabilityIdFor(i.id)))
   );
 
   return (
@@ -264,7 +270,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       </div>
 
       {categories.map((cat) => {
-        let items = menuItems.filter((i) => matchesCategory(i, cat.key) && isAvailable(i.id));
+        let items = menuItems.filter((i) => matchesCategory(i, cat.key) && isAvailable(availabilityIdFor(i.id)));
         // Apply custom order if set
         if (settings.menu_order && settings.menu_order.length > 0) {
           items = [...items].sort((a, b) => {
