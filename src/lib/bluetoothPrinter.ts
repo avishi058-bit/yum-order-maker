@@ -297,6 +297,10 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
   throw new Error("המדפסת לא מחוברת. לחץ על 'חיבור מדפסת' כדי לבחור אותה.");
 }
 
+// Adaptive WoR chunk size — start big, shrink on failure, remember the best.
+// Bigger chunks = fewer BLE packets = much faster, but some printers cap MTU.
+let _worChunkSize = 500;
+
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
   // faster than write-with-response over BLE (no per-chunk ACK round-trip).
@@ -304,16 +308,24 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   const supportsWoR = !!(char.properties as { writeWithoutResponse?: boolean }).writeWithoutResponse;
 
   if (supportsWoR && (char as { writeValueWithoutResponse?: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse) {
-    const CHUNK = 240; // typical BLE MTU 247 - 3 ATT overhead
     const writeWoR = (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse.bind(char);
-    for (let i = 0; i < data.length; i += CHUNK) {
-      const end = Math.min(i + CHUNK, data.length);
-      const slice = data.slice(i, end); // .slice() returns a fresh ArrayBuffer-backed Uint8Array
+    let i = 0;
+    while (i < data.length) {
+      const end = Math.min(i + _worChunkSize, data.length);
+      const slice = data.slice(i, end);
       try {
         await writeWoR(slice);
+        i = end;
       } catch (e) {
+        // MTU likely too big — shrink and retry this slice.
+        if (_worChunkSize > 180) {
+          _worChunkSize = Math.max(180, Math.floor(_worChunkSize / 2));
+          continue;
+        }
+        // Already small — brief breather + one more try, then fall through.
         await new Promise((r) => setTimeout(r, 8));
-        await writeWoR(slice);
+        try { await writeWoR(slice); i = end; }
+        catch { throw e; }
       }
     }
     return;
@@ -934,12 +946,55 @@ function _combineMonos(monos: Mono[], paperWidth: number): Mono {
 function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   const { bytes, widthBytes, height } = mono;
   const ROWS = 255;
-  for (let y = 0; y < height; y += ROWS) {
-    const rows = Math.min(ROWS, height - y);
-    buf.pushArr([GS, 0x76, 0x30, 0x00,
-      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
-      rows & 0xff, (rows >> 8) & 0xff]);
-    buf.pushBytes(bytes.subarray(y * widthBytes, (y + rows) * widthBytes));
+  // Detect runs of all-blank rows and replace them with ESC J motor feed —
+  // ~5-10x faster than sending blank scan rows, and saves widthBytes per row.
+  const MIN_BLANK_RUN = 6;
+  const rowBlank = (y: number): boolean => {
+    const off = y * widthBytes;
+    for (let i = 0; i < widthBytes; i++) if (bytes[off + i] !== 0) return false;
+    return true;
+  };
+  let y = 0;
+  while (y < height) {
+    // Check for a blank run.
+    let blankStart = y;
+    while (y < height && rowBlank(y)) y++;
+    const blankRun = y - blankStart;
+    if (blankRun >= MIN_BLANK_RUN) {
+      let remaining = blankRun;
+      while (remaining > 0) {
+        const step = Math.min(255, remaining);
+        buf.pushArr([ESC, 0x4a, step]);
+        remaining -= step;
+      }
+    } else if (blankRun > 0) {
+      // Tiny blank run — raster it inline to preserve exact spacing.
+      buf.pushArr([GS, 0x76, 0x30, 0x00,
+        widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+        blankRun & 0xff, (blankRun >> 8) & 0xff]);
+      buf.pushBytes(bytes.subarray(blankStart * widthBytes, y * widthBytes));
+    }
+    if (y >= height) break;
+    // Ink band: scan until the next long blank run.
+    const inkStart = y;
+    while (y < height) {
+      if (rowBlank(y)) {
+        let k = y;
+        while (k < height && rowBlank(k)) k++;
+        if (k - y >= MIN_BLANK_RUN) break;
+        y = k;
+      } else {
+        y++;
+      }
+    }
+    const bandEnd = y;
+    for (let yc = inkStart; yc < bandEnd; yc += ROWS) {
+      const rows = Math.min(ROWS, bandEnd - yc);
+      buf.pushArr([GS, 0x76, 0x30, 0x00,
+        widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+        rows & 0xff, (rows >> 8) & 0xff]);
+      buf.pushBytes(bytes.subarray(yc * widthBytes, (yc + rows) * widthBytes));
+    }
   }
 }
 
@@ -1073,9 +1128,12 @@ export function getPrintQueueDepth(): number {
 }
 
 export async function printOps(ops: FastOp[]): Promise<void> {
+  // Build bytes BEFORE entering the queue — when several bons are queued, the
+  // next bon's rendering+raster work happens in parallel with the previous bon
+  // still transmitting over BLE. This eliminates dead time between jobs.
+  const bytes = buildOpsBytes(ops);
   return enqueuePrint(async () => {
     const char = await ensureConnected();
-    const bytes = buildOpsBytes(ops);
     await writeBytes(char, bytes);
   });
 }
