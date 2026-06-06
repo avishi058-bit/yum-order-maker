@@ -705,10 +705,10 @@ function _renderHebToMono(
   while (right > left && colBlank(right)) right--;
 
   // Tight vertical padding — keeps line spacing but skips wasted blank rows.
-  const padT = Math.max(0, top - 2);
-  const padB = Math.min(h - 1, bot + 2);
-  const padL = Math.max(0, left - 2);
-  const padR = Math.min(width - 1, right + 2);
+  const padT = Math.max(0, top - 1);
+  const padB = Math.min(h - 1, bot + 1);
+  const padL = Math.max(0, left - 1);
+  const padR = Math.min(width - 1, right + 1);
   const newH = padB - padT + 1;
   const croppedW = Math.max(8, Math.ceil((padR - padL + 1) / 8) * 8);
   const croppedWidthBytes = croppedW / 8;
