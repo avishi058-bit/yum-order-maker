@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
@@ -1089,7 +1090,8 @@ const Kitchen = () => {
               <Bell size={16} />
               <span>התראות</span>
             </button>
-            {showNotifMenu && (
+            {showNotifMenu && createPortal(<>
+              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNotifMenu(false)} />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   התראות וצלצולים
@@ -1137,7 +1139,7 @@ const Kitchen = () => {
                   סגור
                 </button>
               </div>
-            )}
+            </>, document.body)}
           </div>
 
           {/* 🟢 Availability group */}
@@ -1154,7 +1156,8 @@ const Kitchen = () => {
               <Globe size={16} />
               <span>זמינות</span>
             </button>
-            {showAvailMenu && (
+            {showAvailMenu && createPortal(<>
+              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAvailMenu(false)} />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   זמינות הזמנות ותשלום
@@ -1225,7 +1228,7 @@ const Kitchen = () => {
                   סגור
                 </button>
               </div>
-            )}
+            </>, document.body)}
           </div>
 
 
@@ -1244,7 +1247,8 @@ const Kitchen = () => {
               <Printer size={16} />
               <span>הדפסה</span>
             </button>
-            {showPrintMenu && (
+            {showPrintMenu && createPortal(<>
+              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowPrintMenu(false)} />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   הגדרות הדפסה ובדיקות
@@ -1427,7 +1431,7 @@ const Kitchen = () => {
                   סגור
                 </button>
               </div>
-            )}
+            </>, document.body)}
           </div>
 
           {/* Round bon (per-order detail) — preview + print */}
