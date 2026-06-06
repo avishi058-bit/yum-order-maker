@@ -1090,7 +1090,8 @@ const Kitchen = () => {
               <Bell size={16} />
               <span>התראות</span>
             </button>
-            {showNotifMenu && (
+            {showNotifMenu && createPortal(<>
+              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNotifMenu(false)} />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   התראות וצלצולים
@@ -1138,7 +1139,7 @@ const Kitchen = () => {
                   סגור
                 </button>
               </div>
-            )}
+            </>, document.body)}
           </div>
 
           {/* 🟢 Availability group */}
@@ -1155,7 +1156,8 @@ const Kitchen = () => {
               <Globe size={16} />
               <span>זמינות</span>
             </button>
-            {showAvailMenu && (
+            {showAvailMenu && createPortal(<>
+              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAvailMenu(false)} />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   זמינות הזמנות ותשלום
@@ -1226,7 +1228,7 @@ const Kitchen = () => {
                   סגור
                 </button>
               </div>
-            )}
+            </>, document.body)}
           </div>
 
 
@@ -1245,7 +1247,8 @@ const Kitchen = () => {
               <Printer size={16} />
               <span>הדפסה</span>
             </button>
-            {showPrintMenu && (
+            {showPrintMenu && createPortal(<>
+              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowPrintMenu(false)} />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   הגדרות הדפסה ובדיקות
@@ -1428,7 +1431,7 @@ const Kitchen = () => {
                   סגור
                 </button>
               </div>
-            )}
+            </>, document.body)}
           </div>
 
           {/* Round bon (per-order detail) — preview + print */}
