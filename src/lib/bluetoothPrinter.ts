@@ -484,23 +484,82 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
   return { bytes, widthBytes, height: outH };
 }
 
-// Build ESC/POS bytes for a raster bitmap. Splits into chunks of N rows so
-// large receipts don't overflow printer buffer.
+// Build ESC/POS bytes for a raster bitmap. Optimizations:
+//  - Crops leading/trailing all-white rows entirely.
+//  - Collapses any run of >=8 all-white rows in the middle into a single
+//    ESC J n motor-feed (printer advances paper without scanning) — this is
+//    ~5-10x faster than rastering blank rows and saves a lot of bytes.
+//  - Splits ink bands into chunks <=128 rows for safe printer buffering.
 function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; height: number }): Uint8Array {
   const { bytes, widthBytes, height } = mono;
-  const ROWS_PER_CHUNK = 128;
+  const rowBlank = (y: number): boolean => {
+    const off = y * widthBytes;
+    for (let i = 0; i < widthBytes; i++) if (bytes[off + i] !== 0) return false;
+    return true;
+  };
+  // Crop top/bottom blank rows.
+  let top = 0;
+  while (top < height && rowBlank(top)) top++;
+  let bottom = height - 1;
+  while (bottom > top && rowBlank(bottom)) bottom--;
+
   const out: number[] = [];
   out.push(...CMD_INIT, ...CMD_ALIGN_LEFT);
-  for (let yStart = 0; yStart < height; yStart += ROWS_PER_CHUNK) {
-    const rows = Math.min(ROWS_PER_CHUNK, height - yStart);
-    // GS v 0 m xL xH yL yH
-    out.push(GS, 0x76, 0x30, 0x00,
-      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
-      rows & 0xff, (rows >> 8) & 0xff);
-    const sliceStart = yStart * widthBytes;
-    const sliceEnd = sliceStart + rows * widthBytes;
-    for (let i = sliceStart; i < sliceEnd; i++) out.push(bytes[i]);
+
+  const ROWS_PER_CHUNK = 128;
+  const MIN_BLANK_RUN = 8; // below this it's cheaper to keep rastering
+  let y = top;
+  while (y <= bottom) {
+    // Detect a run of blank rows.
+    let blankStart = y;
+    while (y <= bottom && rowBlank(y)) y++;
+    const blankRun = y - blankStart;
+    if (blankRun >= MIN_BLANK_RUN) {
+      // ESC J n: feed n/203 inch (0..255). Split if longer.
+      let remaining = blankRun;
+      while (remaining > 0) {
+        const n = Math.min(255, remaining);
+        out.push(ESC, 0x4a, n);
+        remaining -= n;
+      }
+    } else if (blankRun > 0) {
+      // Tiny blank run — raster it inline to preserve spacing.
+      const rows = blankRun;
+      out.push(GS, 0x76, 0x30, 0x00,
+        widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+        rows & 0xff, (rows >> 8) & 0xff);
+      const start = blankStart * widthBytes;
+      const end = start + rows * widthBytes;
+      for (let i = start; i < end; i++) out.push(bytes[i]);
+    }
+    if (y > bottom) break;
+
+    // Find next blank run (>=MIN_BLANK_RUN) to bound this ink band.
+    let inkStart = y;
+    while (y <= bottom) {
+      // Look ahead for a long blank run.
+      if (rowBlank(y)) {
+        let k = y;
+        while (k <= bottom && rowBlank(k)) k++;
+        if (k - y >= MIN_BLANK_RUN) break;
+        y = k;
+      } else {
+        y++;
+      }
+    }
+    // Emit inkStart..y-1 as raster, chunked.
+    const bandEnd = y;
+    for (let yc = inkStart; yc < bandEnd; yc += ROWS_PER_CHUNK) {
+      const rows = Math.min(ROWS_PER_CHUNK, bandEnd - yc);
+      out.push(GS, 0x76, 0x30, 0x00,
+        widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+        rows & 0xff, (rows >> 8) & 0xff);
+      const start = yc * widthBytes;
+      const end = start + rows * widthBytes;
+      for (let i = start; i < end; i++) out.push(bytes[i]);
+    }
   }
+
   // Smaller paper feed before cut — saves time and tape.
   out.push(ESC, 0x64, 2);
   out.push(...CMD_CUT);
