@@ -298,9 +298,29 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // Sequential, with-response writes + retry. Critical for large raster payloads
-  // (kitchen bon) — any dropped chunk desyncs the stream and the printer reads
-  // raster bytes as ASCII text → gibberish output. Slightly slower but reliable.
+  // Prefer write-without-response when the printer supports it — typically 3-5x
+  // faster than write-with-response over BLE (no per-chunk ACK round-trip).
+  // Falls back to write-with-response + retry for printers that only expose it.
+  const supportsWoR = !!(char.properties as { writeWithoutResponse?: boolean }).writeWithoutResponse;
+
+  if (supportsWoR && (char as { writeValueWithoutResponse?: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse) {
+    const CHUNK = 240; // typical BLE MTU 247 - 3 ATT overhead
+    for (let i = 0; i < data.length; i += CHUNK) {
+      const end = Math.min(i + CHUNK, data.length);
+      try {
+        await (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> })
+          .writeValueWithoutResponse(data.subarray(i, end));
+      } catch (e) {
+        // GATT busy — tiny backoff and retry once
+        await new Promise((r) => setTimeout(r, 8));
+        await (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> })
+          .writeValueWithoutResponse(data.subarray(i, end));
+      }
+    }
+    return;
+  }
+
+  // Fallback: with-response writes + retry.
   const CHUNK = 180;
   const writeOne = async (slice: Uint8Array): Promise<void> => {
     let lastErr: unknown = null;
@@ -310,7 +330,6 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
         return;
       } catch (e) {
         lastErr = e;
-        // small backoff and retry — BLE GATT busy errors are common
         await new Promise((r) => setTimeout(r, 30 + attempt * 50));
       }
     }
@@ -319,7 +338,6 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   for (let i = 0; i < data.length; i += CHUNK) {
     const end = Math.min(i + CHUNK, data.length);
     await writeOne(data.subarray(i, end));
-    // tiny pacing gap so the printer's buffer can drain on long raster streams
     if (i % (CHUNK * 8) === 0 && i > 0) {
       await new Promise((r) => setTimeout(r, 4));
     }
