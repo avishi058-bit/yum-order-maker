@@ -1051,7 +1051,7 @@ const Kitchen = () => {
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Realtime status indicator */}
           <div
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
@@ -1062,7 +1062,8 @@ const Kitchen = () => {
             {realtimeConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
             <span>{realtimeConnected ? "Live" : "Polling"}</span>
           </div>
-          {/* Settings button */}
+
+          {/* Settings */}
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={`p-2 rounded-lg transition-colors ${
@@ -1072,178 +1073,273 @@ const Kitchen = () => {
           >
             <Settings size={20} />
           </button>
-          <button
-            onClick={() => setAutoPrint(!autoPrint)}
-            className={`p-2 rounded-lg transition-colors ${
-              autoPrint ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-            }`}
-            title={autoPrint ? "כבה הדפסה אוטומטית" : "הפעל הדפסה אוטומטית"}
-          >
-            <Printer size={20} />
-          </button>
-          {/* Print mode selector — Agent / RawBT / Bluetooth / דפדפן */}
-          <select
-            value={printMode}
-            onChange={(e) => {
-              const m = e.target.value as PrintMode;
-              setPrintModeState(m);
-              setPrintMode(m);
-              toast.success(
-                m === "agent" ? "מצב הדפסה: Agent מקומי"
-                  : m === "rawbt" ? "מצב הדפסה: RawBT"
-                  : m === "bt" ? "מצב הדפסה: בלוטות׳"
-                  : "מצב הדפסה: דפדפן",
-              );
-            }}
-            className="text-xs px-2 py-1.5 rounded-lg bg-muted text-muted-foreground border border-border"
-            title="מצב הדפסה"
-          >
-            <option value="agent">Agent</option>
-            <option value="rawbt">RawBT</option>
-            <option value="bt">בלוטות׳</option>
-            <option value="browser">דפדפן</option>
-          </select>
 
-          {/* Agent health indicator (visible only in Agent mode) */}
-          {printMode === "agent" && (
-            <div
-              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium ${
-                agentHealth?.ok
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : agentHealth?.reachable
-                  ? "bg-amber-500/20 text-amber-300"
-                  : "bg-red-500/20 text-red-300"
+          {/* 🔔 Notifications group */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowNotifMenu(!showNotifMenu); setShowPrintMenu(false); }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                pushEnabled && soundEnabled
+                  ? "bg-green-500/20 text-green-300"
+                  : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
               }`}
-              title={
-                agentHealth
-                  ? agentHealth.ok
-                    ? `Agent + מדפסת מחוברים${agentHealth.printer ? ` (${agentHealth.printer})` : ""}`
-                    : agentHealth.reachable
-                    ? `Agent זמין אבל המדפסת לא מחוברת`
-                    : `Agent לא זמין: ${agentHealth.error ?? "לא נמצא"}`
-                  : "בודק..."
-              }
+              title="התראות וצלצולים"
             >
-              {agentHealth?.ok ? <BluetoothConnected size={14} /> : <WifiOff size={14} />}
-              <span className="hidden sm:inline">
-                {agentHealth?.ok ? "Agent ✓" : agentHealth?.reachable ? "ללא מדפסת" : "Agent ✗"}
-              </span>
-            </div>
-          )}
+              <Bell size={16} />
+              <span>התראות</span>
+            </button>
+            {showNotifMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-64 p-3 space-y-2">
+                <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
+                  התראות וצלצולים
+                </div>
+                <button
+                  onClick={handleEnableKitchenPush}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    pushEnabled ? "bg-green-500/20 text-green-300" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Bell size={14} /> Push להזמנות חדשות</span>
+                  <span>{pushEnabled ? "✓ פעיל" : "הפעל"}</span>
+                </button>
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    soundEnabled ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">{soundEnabled ? <Bell size={14} /> : <BellOff size={14} />} צלצול בתוך האפליקציה</span>
+                  <span>{soundEnabled ? "מופעל" : "כבוי"}</span>
+                </button>
+                <div className="pt-1 border-t border-border">
+                  <div className="text-xs font-bold text-muted-foreground px-1 py-1">בחר צלצול</div>
+                  {RINGTONES.map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => {
+                        setSelectedRingtone(r.id);
+                        playRingtone(r.id);
+                      }}
+                      className={`w-full text-right px-3 py-1.5 rounded-lg text-sm flex items-center justify-between ${
+                        selectedRingtone === r.id ? "bg-primary/20 text-primary font-bold" : "hover:bg-muted text-foreground"
+                      }`}
+                    >
+                      <span>{r.label}</span>
+                      {selectedRingtone === r.id && <span>✓</span>}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowNotifMenu(false)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg text-xs bg-muted hover:bg-secondary text-foreground"
+                >
+                  סגור
+                </button>
+              </div>
+            )}
+          </div>
 
+          {/* 🖨️ Print & Diagnostics group */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowPrintMenu(!showPrintMenu); setShowNotifMenu(false); }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                btConnected || (printMode === "agent" && agentHealth?.ok)
+                  ? "bg-blue-500/20 text-blue-300"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+              title="הגדרות הדפסה ובדיקות"
+            >
+              <Printer size={16} />
+              <span>הדפסה</span>
+            </button>
+            {showPrintMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-72 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
+                <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
+                  הגדרות הדפסה ובדיקות
+                </div>
 
-          {/* Bluetooth printer connect/disconnect */}
-          <button
-            onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
-            className={`p-2 rounded-lg transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground hover:bg-secondary"
-            }`}
-            title={btConnected ? "מדפסת בלוטות׳ מחוברת — לחץ לניתוק" : "חיבור מדפסת בלוטות׳"}
-          >
-            {btConnected ? <BluetoothConnected size={20} /> : <Bluetooth size={20} />}
-          </button>
-          {/* Test print */}
-          <button
-            onClick={handleTestPrint}
-            disabled={!btConnected}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-            }`}
-            title="בדיקת הדפסה"
-          >
-            בדיקה
-          </button>
-          {/* Hybrid diagnostic test */}
-          <button
-            onClick={handleHybridDiagnostic}
-            disabled={!btConnected}
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-              btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-            }`}
-            title="בדיקת Hybrid: עברית כ-bitmap קטן וטקסט מהיר"
-          >
-            HYB
-          </button>
-          {/* RawBT diagnostics: 3 transports — to identify which one
-              activates the PRINT button inside RawBT. */}
-          <button
-            onClick={() => {
-              try {
-                const info = printRawBTPlainText("TEST PRINT FROM KITCHEN");
-                setRawbtDebug(info);
-                toast.success(`T1 נשלח (${info.transport})`);
-              } catch (e) {
-                console.error("[RawBT T1] failed", e);
-                toast.error("T1 נכשל - ראה קונסול");
-              }
-            }}
-            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
-            title="T1: rawbt:base64,<ESC/POS ASCII + cut>"
-          >
-            T1 b64
-          </button>
-          <button
-            onClick={() => {
-              try {
-                const info = printRawBTPlainTextDirect("TEST PRINT FROM KITCHEN");
-                setRawbtDebug(info);
-                toast.success(`T2 נשלח (${info.transport})`);
-              } catch (e) {
-                console.error("[RawBT T2] failed", e);
-                toast.error("T2 נכשל - ראה קונסול");
-              }
-            }}
-            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
-            title="T2: rawbt:<plain text> (no base64, no ESC/POS)"
-          >
-            T2 plain
-          </button>
-          <button
-            onClick={() => {
-              try {
-                const info = printRawBTPlainTextShare("TEST PRINT FROM KITCHEN");
-                setRawbtDebug(info);
-                toast.success(`T3 נשלח (${info.transport})`);
-              } catch (e) {
-                console.error("[RawBT T3] failed", e);
-                toast.error("T3 נכשל - ראה קונסול");
-              }
-            }}
-            className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 transition-colors"
-            title="T3: ACTION_SEND text/plain → RawBT ShareActivity"
-          >
-            T3 share
-          </button>
-          {/* Width selector */}
-          <select
-            value={encoding}
-            onChange={(e) => handleEncodingChange(e.target.value as EncodingProfile)}
-            disabled={!btConnected}
-            className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
-              !btConnected ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            title="מצב טקסט ישן מנוטרל; עברית מודפסת Hybrid"
-          >
-            <option value="cp862-21">A · CP862 n=21</option>
-            <option value="cp862-15">B · CP862 n=15</option>
-            <option value="cp1255-33">C · CP1255 n=33</option>
-          </select>
-          {/* Paper width selector (for raster bitmap printing) */}
-          <select
-            value={paperWidth}
-            onChange={(e) => handlePaperWidthChange(parseInt(e.target.value, 10))}
-            disabled={!btConnected}
-            className={`px-2 py-1 rounded-lg text-xs font-bold bg-muted text-foreground border border-border ${
-              !btConnected ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            title="רוחב נייר בנקודות (40מ״מ=320, 58מ״מ=384, 80מ״מ=576)"
-          >
-            <option value={256}>32מ״מ · 256</option>
-            <option value={320}>40מ״מ · 320</option>
-            <option value={384}>58מ״מ · 384</option>
-            <option value={576}>80מ״מ · 576</option>
-          </select>
-          {/* Round bon (per-order detail) — preview (clipboard) + print (purple). */}
+                {/* Auto print */}
+                <button
+                  onClick={() => setAutoPrint(!autoPrint)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                    autoPrint ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Printer size={14} /> הדפסה אוטומטית</span>
+                  <span>{autoPrint ? "מופעל" : "כבוי"}</span>
+                </button>
+
+                {/* Print mode */}
+                <div>
+                  <div className="text-xs text-muted-foreground px-1 pb-1">מצב הדפסה</div>
+                  <select
+                    value={printMode}
+                    onChange={(e) => {
+                      const m = e.target.value as PrintMode;
+                      setPrintModeState(m);
+                      setPrintMode(m);
+                      toast.success(
+                        m === "agent" ? "מצב הדפסה: Agent מקומי"
+                          : m === "rawbt" ? "מצב הדפסה: RawBT"
+                          : m === "bt" ? "מצב הדפסה: בלוטות׳"
+                          : "מצב הדפסה: דפדפן",
+                      );
+                    }}
+                    className="w-full text-sm px-2 py-2 rounded-lg bg-muted text-foreground border border-border"
+                  >
+                    <option value="agent">Agent (מקומי)</option>
+                    <option value="rawbt">RawBT</option>
+                    <option value="bt">בלוטות׳</option>
+                    <option value="browser">דפדפן</option>
+                  </select>
+                </div>
+
+                {/* Agent health */}
+                {printMode === "agent" && (
+                  <div
+                    className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-medium ${
+                      agentHealth?.ok
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : agentHealth?.reachable
+                        ? "bg-amber-500/20 text-amber-300"
+                        : "bg-red-500/20 text-red-300"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {agentHealth?.ok ? <BluetoothConnected size={14} /> : <WifiOff size={14} />}
+                      סטטוס Agent
+                    </span>
+                    <span>{agentHealth?.ok ? "✓ מחובר" : agentHealth?.reachable ? "ללא מדפסת" : "לא זמין"}</span>
+                  </div>
+                )}
+
+                {/* Bluetooth connect */}
+                <button
+                  onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                    btConnected ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {btConnected ? <BluetoothConnected size={14} /> : <Bluetooth size={14} />}
+                    מדפסת בלוטות׳
+                  </span>
+                  <span>{btConnected ? "✓ מחוברת" : "חבר"}</span>
+                </button>
+
+                {/* Encoding & paper width (only if BT connected) */}
+                {btConnected && (
+                  <>
+                    <div>
+                      <div className="text-xs text-muted-foreground px-1 pb-1">קידוד</div>
+                      <select
+                        value={encoding}
+                        onChange={(e) => handleEncodingChange(e.target.value as EncodingProfile)}
+                        className="w-full text-sm px-2 py-2 rounded-lg bg-muted text-foreground border border-border"
+                      >
+                        <option value="cp862-21">A · CP862 n=21</option>
+                        <option value="cp862-15">B · CP862 n=15</option>
+                        <option value="cp1255-33">C · CP1255 n=33</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground px-1 pb-1">רוחב נייר</div>
+                      <select
+                        value={paperWidth}
+                        onChange={(e) => handlePaperWidthChange(parseInt(e.target.value, 10))}
+                        className="w-full text-sm px-2 py-2 rounded-lg bg-muted text-foreground border border-border"
+                      >
+                        <option value={256}>32מ״מ · 256</option>
+                        <option value={320}>40מ״מ · 320</option>
+                        <option value={384}>58מ״מ · 384</option>
+                        <option value={576}>80מ״מ · 576</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {/* Tests section */}
+                <div className="pt-2 border-t border-border">
+                  <div className="text-xs font-bold text-muted-foreground px-1 pb-1">בדיקות הדפסה</div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={handleTestPrint}
+                      disabled={!btConnected}
+                      className={`px-2 py-2 rounded-lg text-xs font-bold ${
+                        btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                      }`}
+                    >
+                      בדיקה
+                    </button>
+                    <button
+                      onClick={handleHybridDiagnostic}
+                      disabled={!btConnected}
+                      className={`px-2 py-2 rounded-lg text-xs font-bold ${
+                        btConnected ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30" : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
+                      }`}
+                    >
+                      HYB
+                    </button>
+                    <button
+                      onClick={() => {
+                        try {
+                          const info = printRawBTPlainText("TEST PRINT FROM KITCHEN");
+                          setRawbtDebug(info);
+                          toast.success(`T1 נשלח (${info.transport})`);
+                        } catch (e) {
+                          console.error("[RawBT T1] failed", e);
+                          toast.error("T1 נכשל");
+                        }
+                      }}
+                      className="px-2 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                    >
+                      T1 b64
+                    </button>
+                    <button
+                      onClick={() => {
+                        try {
+                          const info = printRawBTPlainTextDirect("TEST PRINT FROM KITCHEN");
+                          setRawbtDebug(info);
+                          toast.success(`T2 נשלח (${info.transport})`);
+                        } catch (e) {
+                          console.error("[RawBT T2] failed", e);
+                          toast.error("T2 נכשל");
+                        }
+                      }}
+                      className="px-2 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                    >
+                      T2 plain
+                    </button>
+                    <button
+                      onClick={() => {
+                        try {
+                          const info = printRawBTPlainTextShare("TEST PRINT FROM KITCHEN");
+                          setRawbtDebug(info);
+                          toast.success(`T3 נשלח (${info.transport})`);
+                        } catch (e) {
+                          console.error("[RawBT T3] failed", e);
+                          toast.error("T3 נכשל");
+                        }
+                      }}
+                      className="col-span-2 px-2 py-2 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                    >
+                      T3 share
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowPrintMenu(false)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg text-xs bg-muted hover:bg-secondary text-foreground"
+                >
+                  סגור
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Round bon (per-order detail) — preview + print */}
           <button
             onClick={() => setShowRoundSummary(true)}
             disabled={activeRoundOrders.length === 0}
@@ -1280,7 +1376,7 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
-          {/* Round CHEF summary (aggregated only) — preview (list) + print (orange). */}
+          {/* Round CHEF summary */}
           <button
             onClick={() => setShowRoundChefSummary(true)}
             disabled={activeRoundOrders.length === 0}
@@ -1316,68 +1412,13 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
-          {/* Enable push notifications for THIS device (kitchen) */}
-          <button
-            onClick={handleEnableKitchenPush}
-            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-              pushEnabled ? "bg-green-500/20 text-green-300" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-            }`}
-            title={pushEnabled ? "התראות מופעלות במכשיר הזה" : "הפעל התראות push להזמנות חדשות"}
-          >
-            <Bell size={16} />
-            <span>{pushEnabled ? "התראות פעילות" : "הפעל התראות"}</span>
-          </button>
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2 rounded-lg transition-colors ${
-              soundEnabled ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground"
-            }`}
-            title={soundEnabled ? "כבה צלצול" : "הפעל צלצול"}
-          >
-            {soundEnabled ? <Bell size={20} /> : <BellOff size={20} />}
-          </button>
-          <div className="relative">
-            <button
-              onClick={() => setShowRingtoneMenu(!showRingtoneMenu)}
-              className="p-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-secondary"
-              title="בחר צלצול"
-            >
-              <Music size={20} />
-            </button>
-            {showRingtoneMenu && (
-              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-xl z-50 min-w-[200px] p-2">
-                <div className="text-xs font-bold text-muted-foreground px-3 py-1 mb-1">בחר צלצול</div>
-                {RINGTONES.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => {
-                      setSelectedRingtone(r.id);
-                      playRingtone(r.id);
-                    }}
-                    className={`w-full text-right px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
-                      selectedRingtone === r.id
-                        ? "bg-primary/20 text-primary font-bold"
-                        : "hover:bg-muted text-foreground"
-                    }`}
-                  >
-                    <span>{r.label}</span>
-                    {selectedRingtone === r.id && <span className="text-primary">✓</span>}
-                  </button>
-                ))}
-                <button
-                  onClick={() => playRingtone(selectedRingtone)}
-                  className="w-full mt-1 px-3 py-2 rounded-lg text-sm bg-muted hover:bg-secondary text-foreground transition-colors"
-                >
-                  ▶ נגן דוגמה
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="text-sm text-muted-foreground">
+
+          <div className="text-sm text-muted-foreground ml-auto">
             {new Date().toLocaleDateString("he-IL")}
           </div>
         </div>
       </div>
+
 
       {/* RawBT debug panel */}
       {rawbtDebug && (
