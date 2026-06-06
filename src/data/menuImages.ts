@@ -33,6 +33,9 @@ export const menuImages: Record<string, string> = {
   "friends-mix": friendsMix,
   can: canDrink,
   bottle: bottleImg,
+  water: waterAsset.url,
+  "flavored-water": waterAsset.url,
+
   "beer-regular": beerImg,
   "beer-premium": beerPremiumImg,
   "beer-weiss": beerWeissImg,
