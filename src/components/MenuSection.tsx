@@ -246,7 +246,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
               ref={(el) => { tabRefs.current[cat.key] = el; }}
               onClick={() => scrollToCategory(cat.key)}
               className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
-                isKiosk ? "px-9 py-5 text-2xl" : "px-4 py-1.5 text-sm"
+                isKiosk ? "px-9 py-5 text-2xl" : "px-5 py-2.5 text-base"
               } ${
                 activeCategory === cat.key
                   ? "text-primary-foreground"
