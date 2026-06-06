@@ -17,6 +17,8 @@ import beerWeissImg from "@/assets/menu/beer-weihenstephaner.webp";
 import hafMifsha from "@/assets/menu/haf-mifsha.webp";
 import napoleon from "@/assets/menu/napoleon.jpg";
 import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
+import sodaTempoAsset from "@/assets/menu/soda-tempo.webp.asset.json";
+import flavoredWaterAsset from "@/assets/menu/flavored-water-grape.png.asset.json";
 
 
 
@@ -34,7 +36,9 @@ export const menuImages: Record<string, string> = {
   can: canDrink,
   bottle: bottleImg,
   water: waterAsset.url,
-  "flavored-water": waterAsset.url,
+  "flavored-water": flavoredWaterAsset.url,
+  soda: sodaTempoAsset.url,
+
 
   "beer-regular": beerImg,
   "beer-premium": beerPremiumImg,
