@@ -298,33 +298,32 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // CHUNK=240 stays under typical ATT MTU (247-3). subarray = zero-copy.
-  // Pipelining: writeWithoutResponse in Chrome buffers locally. Firing several
-  // chunks before awaiting lets the BLE stack keep the radio busy instead of
-  // waiting RTT between every chunk. PIPELINE=4 is safe across most adapters.
-  const useNoResp = !!char.properties.writeWithoutResponse;
-  const CHUNK = useNoResp ? 240 : 180;
-  const DELAY_MS = useNoResp ? 0 : 4;
-  const PIPELINE = useNoResp ? 4 : 1;
-  const writeOne = (slice: Uint8Array): Promise<void> => {
-    if (useNoResp) {
-      // @ts-ignore
-      return char.writeValueWithoutResponse ? char.writeValueWithoutResponse(slice) : char.writeValue(slice);
+  // Sequential, with-response writes + retry. Critical for large raster payloads
+  // (kitchen bon) — any dropped chunk desyncs the stream and the printer reads
+  // raster bytes as ASCII text → gibberish output. Slightly slower but reliable.
+  const CHUNK = 180;
+  const writeOne = async (slice: Uint8Array): Promise<void> => {
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await char.writeValue(slice);
+        return;
+      } catch (e) {
+        lastErr = e;
+        // small backoff and retry — BLE GATT busy errors are common
+        await new Promise((r) => setTimeout(r, 30 + attempt * 50));
+      }
     }
-    return char.writeValue(slice);
+    throw lastErr instanceof Error ? lastErr : new Error("BLE write failed");
   };
-  let inflight: Promise<void>[] = [];
   for (let i = 0; i < data.length; i += CHUNK) {
     const end = Math.min(i + CHUNK, data.length);
-    const slice = data.subarray(i, end);
-    inflight.push(writeOne(slice).catch(() => {}));
-    if (inflight.length >= PIPELINE) {
-      await Promise.all(inflight);
-      inflight = [];
-      if (DELAY_MS > 0) await new Promise((r) => setTimeout(r, DELAY_MS));
+    await writeOne(data.subarray(i, end));
+    // tiny pacing gap so the printer's buffer can drain on long raster streams
+    if (i % (CHUNK * 8) === 0 && i > 0) {
+      await new Promise((r) => setTimeout(r, 4));
     }
   }
-  if (inflight.length) await Promise.all(inflight);
 }
 
 export async function printLines(lines: PrintLine[], profile: EncodingProfile = getEncoding()): Promise<void> {
