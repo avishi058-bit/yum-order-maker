@@ -141,14 +141,29 @@ export const subscribeKitchenToPush = async (): Promise<{ ok: boolean; reason?: 
   const p256dh = (json.keys && json.keys.p256dh) || "";
   const auth = (json.keys && json.keys.auth) || "";
 
-  // Upsert by endpoint so re-subscribing the same device just flips the flag.
-  const { error } = await supabase.from("push_subscriptions").upsert(
-    { endpoint, p256dh, auth, is_kitchen: true },
-    { onConflict: "endpoint" } as any,
-  );
+  // Manual upsert by endpoint: try update first, then insert if nothing matched.
+  const { data: existing } = await supabase
+    .from("push_subscriptions")
+    .select("id")
+    .eq("endpoint", endpoint)
+    .limit(1);
 
-  if (error && (error as any).code !== "23505") {
-    console.error("[push] save kitchen subscription failed", error);
+  let err: any = null;
+  if (existing && existing.length > 0) {
+    const { error } = await supabase
+      .from("push_subscriptions")
+      .update({ p256dh, auth, is_kitchen: true })
+      .eq("id", existing[0].id);
+    err = error;
+  } else {
+    const { error } = await supabase
+      .from("push_subscriptions")
+      .insert({ endpoint, p256dh, auth, is_kitchen: true });
+    err = error;
+  }
+
+  if (err && (err as any).code !== "23505") {
+    console.error("[push] save kitchen subscription failed", err);
     return { ok: false, reason: "save_failed" };
   }
   return { ok: true };
