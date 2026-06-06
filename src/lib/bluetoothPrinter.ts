@@ -783,7 +783,7 @@ function _canvasToCroppedMono(
   return { bytes: cropped, widthBytes: cBytes, height: newH, offsetX };
 }
 
-// Customer name (big bold) + (phone) inline at smaller size on the same line.
+// Customer name (big bold) + phone next to it (large, thin) — centered.
 function _renderHeaderToMono(
   name: string,
   phone: string | undefined,
@@ -791,24 +791,39 @@ function _renderHeaderToMono(
   phonePx: number,
   width: number,
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
-  const lineH = Math.ceil(namePx * 1.15);
+  const lineH = Math.ceil(namePx * 1.2);
   const canvas = document.createElement("canvas");
   canvas.width = width;
-  canvas.height = lineH + 4;
+  canvas.height = lineH + 6;
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, width, canvas.height);
   ctx.fillStyle = "#000";
   (ctx as unknown as { direction: string }).direction = "rtl";
   ctx.textBaseline = "middle";
-  ctx.textAlign = "right";
-  const y = lineH / 2 + 2;
+  const y = lineH / 2 + 3;
+  const gap = 16;
+
   ctx.font = `900 ${namePx}px Arial, "Heebo", sans-serif`;
-  ctx.fillText(name, width - 2, y);
+  const nameW = name ? ctx.measureText(name).width : 0;
+  let phoneW = 0;
   if (phone) {
-    const nameW = ctx.measureText(name).width;
-    ctx.font = `500 ${phonePx}px Arial, "Heebo", sans-serif`;
-    ctx.fillText(`(${phone})`, width - 2 - nameW - 8, y);
+    ctx.font = `300 ${phonePx}px Arial, "Heebo", sans-serif`;
+    phoneW = ctx.measureText(phone).width;
+  }
+  const totalW = nameW + (phone ? gap + phoneW : 0);
+  // Center the whole group. In RTL visual order: [name][gap][phone]
+  // We draw using textAlign=right per segment, anchored from the right edge of each box.
+  const startRight = (width + totalW) / 2;
+
+  ctx.textAlign = "right";
+  if (name) {
+    ctx.font = `900 ${namePx}px Arial, "Heebo", sans-serif`;
+    ctx.fillText(name, startRight, y);
+  }
+  if (phone) {
+    ctx.font = `300 ${phonePx}px Arial, "Heebo", sans-serif`;
+    ctx.fillText(phone, startRight - nameW - gap, y);
   }
   return _canvasToCroppedMono(canvas, width, false);
 }

@@ -86,77 +86,91 @@ function feed(n = 1): FastOp {
 const orderTypeLabel = (source: string): string =>
   source === "kiosk" || source === "station" ? "ישיבה במקום" : "איסוף עצמי";
 
+// Map doneness label like "M — מדיום" / "MW — מדיום וואל" to short "M"/"MW"/"WD".
+function shortDoneness(label: string | null): string | null {
+  if (!label) return null;
+  const m = label.match(/\b(MW|WD|M)\b/);
+  return m ? m[1] : label;
+}
+
+// Normalize drink name from meal/standalone "פחית — קולה" → "קולה"
+function cleanDrinkName(s: string): string {
+  return s.replace(/^.*?[—\-–]\s*/, "").trim();
+}
+
 // ============================================================
 // SINGLE KITCHEN BON
 // ============================================================
 export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const ops: FastOp[] = [];
 
-  // 1) TOP: customer name (big, bold) + (phone) inline smaller — single bitmap.
+  // 1) TOP: customer name (big bold) + phone next to it (large, thin), centered.
   if (order.customer_name || order.customer_phone) {
     ops.push({
       kind: "header",
       name: order.customer_name || "",
       phone: order.customer_phone || undefined,
-      namePx: 42,
-      phonePx: 22,
+      namePx: 48,
+      phonePx: 32,
     });
   }
   ops.push(sep());
 
-  // 2) Order type
-  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 30 }));
-
-  // Optional note right under the order type
+  // 2) Order type (small) + optional note
+  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
   if (order.notes) {
-    ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 28 }));
+    ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 26 }));
   }
   ops.push(feed(1));
 
-  // 3) Items + changes (changes are now BOLD like the name)
+  // Count "real" food items (excluding the synthetic sauces line) to decide
+  // whether to aggregate drinks at the bottom for multi-item orders.
+  const realItems = order.order_items.filter((it) => it.item_name !== "רטבים");
+  const isMultiItem = realItems.length > 1;
+
+  // 3) Items
   for (const it of order.order_items) {
     if (it.item_name === "רטבים") continue;
     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
+    const donShort = shortDoneness(doneness);
 
     if (ownerName) {
-      ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 26 }));
+      ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 24 }));
     }
 
+    // Item name (big, bold)
     const qtyStr = it.quantity > 1 ? ` x${it.quantity}` : "";
-    ops.push(asLine(`${it.item_name}${qtyStr}`, { align: "R", bold: true, size: 32 }));
+    ops.push(asLine(`${it.item_name}${qtyStr}`, { align: "R", bold: true, size: 34 }));
 
-    if (doneness) {
-      ops.push(asLine(`עשייה: ${doneness}`, { align: "R", bold: true, size: 28 }));
+    // Doneness — short code only (M / MW / WD)
+    if (donShort) {
+      ops.push(asLine(donShort, { align: "R", bold: true, size: 30 }));
     }
 
+    // Changes
     const isDeal = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
     if (!isDeal && isCustomizableBurger(it.item_name)) {
       const { removes, adds, others } = classifyIngredientChanges(cleanedRemovals);
-      const hasToppings = it.toppings && it.toppings.length > 0;
-      if (removes.length === 0 && adds.length === 0 && others.length === 0 && !hasToppings) {
-        ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 28 }));
+      if (removes.length === 0 && adds.length === 0 && others.length === 0) {
+        ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 26 }));
       } else {
         for (const r of removes) ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 28 }));
         for (const a of adds) ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 28 }));
         for (const o of others) ops.push(asLine(o, { align: "R", bold: true, size: 26 }));
-        if (hasToppings) {
-          for (const t of it.toppings!) ops.push(asLine(`+ ${t}`, { align: "R", bold: true, size: 28 }));
-        }
       }
-    } else {
-      if (cleanedRemovals.length > 0) {
-        ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", bold: true, size: 26 }));
-      }
-      if (it.toppings && it.toppings.length > 0) {
-        ops.push(asLine(`+ ${it.toppings.join(", ")}`, { align: "R", bold: true, size: 26 }));
-      }
+    } else if (cleanedRemovals.length > 0) {
+      ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", bold: true, size: 26 }));
     }
 
+    // Spacing before meal / drink / toppings line
+    ops.push(feed(1));
+
+    // Per-item drinks (meal drink / deal drinks)
     if (it.with_meal) {
       let m = "ארוחה";
       if (it.meal_side) m += ` - ${it.meal_side}`;
-      if (it.meal_drink) m += `, ${it.meal_drink}`;
-      ops.push(asLine(`-> ${m}`, { align: "R", bold: true, size: 26 }));
+      if (it.meal_drink) m += `, ${cleanDrinkName(it.meal_drink)}`;
+      ops.push(asLine(m, { align: "R", bold: true, size: 26 }));
     }
     if (Array.isArray(it.deal_burgers)) {
       it.deal_burgers.forEach((b: { name?: string; removals?: string[] }, i: number) => {
@@ -167,7 +181,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
             extractOwnerName(bRem).cleanedRemovals,
           );
           if (removes.length === 0 && adds.length === 0 && others.length === 0) {
-            ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 26 }));
+            ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 24 }));
           } else {
             for (const r of removes) ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 26 }));
             for (const a of adds) ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 26 }));
@@ -177,81 +191,54 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           ops.push(asLine(`- ${bRem.join(", ")}`, { align: "R", bold: true, size: 24 }));
         }
       });
-      ops.push(asLine(`+ צ'יפס ענק`, { align: "R", bold: true, size: 26 }));
+      ops.push(asLine(`צ'יפס ענק`, { align: "R", bold: true, size: 26 }));
     }
     if (Array.isArray(it.deal_drinks)) {
       it.deal_drinks.forEach((d: { name?: string }) => {
-        ops.push(asLine(`+ ${d.name || ""}`, { align: "R", bold: true, size: 26 }));
+        if (d.name) ops.push(asLine(cleanDrinkName(d.name), { align: "R", bold: true, size: 26 }));
       });
     }
+
+    // Toppings (only show per-item when single-item order; otherwise aggregate below)
+    if (it.toppings && it.toppings.length > 0) {
+      for (const t of it.toppings) ops.push(asLine(t, { align: "R", bold: true, size: 26 }));
+    }
+
     ops.push(feed(1));
   }
-  ops.push(sep());
 
-  // 4) Chef summary (right column) + side sauces (left column)
-  const summary = computeChefSummary(order.order_items);
-  const chefRows: string[] = [];
-  if (summary.regularPatties > 0) chefRows.push(`קציצה רגיל: ${summary.regularPatties}`);
-  if (summary.smashPatties > 0) chefRows.push(`קציצה סמאש: ${summary.smashPatties}`);
-  if (summary.veganPatties > 0) chefRows.push(`קציצה טבעוני: ${summary.veganPatties}`);
-  if (summary.regularBuns > 0) chefRows.push(`לחמנייה רגילה: ${summary.regularBuns}`);
-  if (summary.glutenFreeBuns > 0) chefRows.push(`לחמנייה ל"ג: ${summary.glutenFreeBuns}`);
-  if (summary.fries > 0) chefRows.push(`צ'יפס: ${summary.fries}`);
-  if (summary.sweetPotatoFries > 0) chefRows.push(`צ'יפס בטטה: ${summary.sweetPotatoFries}`);
-  if (summary.onionRings > 0) chefRows.push(`טבעות בצל: ${summary.onionRings}`);
-  if (summary.tempuraOnionSide > 0) chefRows.push(`טמפורה (מנה): ${summary.tempuraOnionSide}`);
-  if (summary.tempuraOnionTopping > 0) chefRows.push(`טמפורה (יח'): ${summary.tempuraOnionTopping}`);
-  if (summary.friendsMix > 0) chefRows.push(`מיקס חברים: ${summary.friendsMix}`);
-  if (summary.eggs > 0) chefRows.push(`ביצי עין: ${summary.eggs}`);
-  if (summary.roastbeef > 0) chefRows.push(`רוסטביף: ${summary.roastbeef}`);
-
-  const sauceRows: string[] = [];
-  for (const [name, qty] of summary.sauces.entries()) {
-    if (qty > 0) sauceRows.push(`${name}: ${qty}`);
-  }
-
-  if (chefRows.length > 0 || sauceRows.length > 0) {
-    ops.push(asLine("== סיכום לטבח ==", { align: "C", bold: true, size: 28 }));
-    const rowsCount = Math.max(chefRows.length, sauceRows.length);
-    for (let i = 0; i < rowsCount; i++) {
-      const r = chefRows[i] || "";
-      const l = sauceRows[i] || "";
-      if (r && !l) {
-        ops.push(asLine(r, { align: "R", bold: true, size: 26 }));
-      } else if (!r && l) {
-        ops.push({ kind: "twoCol", right: "", left: l, size: 26, bold: true });
-      } else {
-        ops.push({ kind: "twoCol", right: r, left: l, size: 26, bold: true });
-      }
+  // 4) Order-level sauces (synthetic "רטבים" line) — always at bottom, no title
+  const sauceItem = order.order_items.find((it) => it.item_name === "רטבים");
+  if (sauceItem && sauceItem.toppings && sauceItem.toppings.length > 0) {
+    ops.push(sep());
+    for (const t of sauceItem.toppings) {
+      ops.push(asLine(t, { align: "R", bold: true, size: 26 }));
     }
   }
 
-  // Drink summary (takeaway only) — keep, but small
-  const isTakeaway = order.order_source !== "kiosk" && order.order_source !== "station";
-  if (isTakeaway) {
+  // 5) Multi-item: aggregated drinks summary at the bottom (no title)
+  if (isMultiItem) {
     const drinks = computeDrinkSummary(order.order_items).drinks;
-    const drinkRows: Array<[string, number]> = [];
-    for (const [name, qty] of drinks.entries()) if (qty > 0) drinkRows.push([name, qty]);
-    if (drinkRows.length > 0) {
+    const rows: Array<[string, number]> = [];
+    for (const [name, qty] of drinks.entries()) if (qty > 0) rows.push([name, qty]);
+    if (rows.length > 0) {
       ops.push(sep());
-      ops.push(asLine("== שתייה ==", { align: "C", bold: true, size: 28 }));
-      for (const [label, n] of drinkRows) {
-        ops.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 26 }));
+      for (const [label, n] of rows) {
+        ops.push(asLine(`${label} x${n}`, { align: "R", bold: true, size: 26 }));
       }
     }
   }
 
-  // 5) Payment block — only show when relevant
+  // 6) Payment block — only when relevant
   if (order.payment_method === "counter") {
     ops.push(sep());
-    ops.push(asLine("לתשלום בקופה", { align: "C", bold: true, size: 32 }));
-    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 36 }));
+    ops.push(asLine("לתשלום בקופה", { align: "C", bold: true, size: 30 }));
+    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 34 }));
   } else if (order.payment_method === "cash") {
     ops.push(sep());
-    ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 28 }));
-    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 34 }));
+    ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 26 }));
+    ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
   }
-  // credit/online: paid → no payment block
 
   ops.push(feed(2));
   ops.push({ kind: "cut" });
