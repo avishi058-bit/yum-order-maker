@@ -267,8 +267,8 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "bottle-apples", name: "תפוזים" },
   ],
   "flavored-water": [
-    { id: "flavored-water-apple", name: "מים בטעם תפוח" },
-    { id: "flavored-water-grape", name: "מים בטעם ענבים" },
+    { id: "flavored-water-apple", name: "תפוח" },
+    { id: "flavored-water-grape", name: "ענבים" },
   ],
   "beer-regular": [
     { id: "beer-carlsberg", name: "קלסטברג" },
