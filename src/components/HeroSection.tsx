@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
@@ -13,6 +13,15 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
+  const [dance, setDance] = useState(false);
+  useEffect(() => {
+    if (dineIn !== null) {
+      setDance(false);
+      return;
+    }
+    const t = window.setTimeout(() => setDance(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [dineIn]);
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
@@ -82,9 +91,13 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
             {...heroAnimations.cta}
             className="flex flex-col items-center gap-4"
           >
-            <p className="text-lg md:text-xl font-bold text-foreground">
+            <motion.p
+              className="text-lg md:text-xl font-bold text-foreground"
+              animate={dance ? { rotate: [0, -8, 8, -8, 8, 0], scale: [1, 1.1, 1.1, 1.1, 1.1, 1] } : { rotate: 0, scale: 1 }}
+              transition={dance ? { duration: 0.9, repeat: Infinity, repeatDelay: 0.6 } : { duration: 0.2 }}
+            >
               בחר כדי להתחיל בהזמנה👇🏽
-            </p>
+            </motion.p>
             <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
               <button
                 onClick={() => onDineInChoice(true)}
