@@ -957,7 +957,7 @@ const Kitchen = () => {
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Realtime status indicator */}
           <div
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
