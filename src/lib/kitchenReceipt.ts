@@ -1097,7 +1097,8 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     print-color-adjust: exact;
   }
   body {
-    width: 72mm;
+    width: ${interactive ? "100%" : "72mm"};
+    max-width: 100%;
     padding: 2mm;
     font-size: 12pt;
     line-height: 1.3;
