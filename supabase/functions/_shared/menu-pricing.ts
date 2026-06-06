@@ -53,6 +53,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "can", name: "פחית", price: 10, category: "drink" },
   { id: "bottle", name: "בקבוק", price: 12, category: "drink" },
   { id: "water", name: "מים (בקבוק)", price: 10, category: "drink" },
+  { id: "flavored-water", name: "מים בטעמים", price: 12, category: "drink" },
   { id: "soda", name: "סודה (בקבוק)", price: 10, category: "drink" },
   { id: "beer-regular", name: "בירה", price: 18, category: "drink" },
   { id: "beer-premium", name: "בירה פרימיום", price: 23, category: "drink" },
