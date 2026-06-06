@@ -992,7 +992,16 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         break;
       case "feed":
         flush();
-        for (let i = 0; i < Math.max(1, op.n); i++) buf.pushByte(0x0a);
+        {
+          // Convert n "lines" to dots and emit ESC J <dots> (motor feed) — far
+          // faster than printing n LFs (which scan blank rows). ~24 dots/line @ 203dpi.
+          let dots = Math.max(1, op.n) * 24;
+          while (dots > 0) {
+            const step = Math.min(255, dots);
+            buf.pushArr([ESC, 0x4a, step]);
+            dots -= step;
+          }
+        }
         break;
       case "text": {
         flush();
