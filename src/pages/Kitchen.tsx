@@ -934,6 +934,7 @@ const Kitchen = () => {
       orders
         .filter((o) => ["new", "preparing"].includes(o.status))
         .map((o) => ({
+          id: o.id,
           order_number: o.order_number,
           customer_name: o.customer_name,
           created_at: o.created_at,
@@ -947,7 +948,7 @@ const Kitchen = () => {
     [orders],
   );
   const roundSummaryHtml = useMemo(
-    () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders) : ""),
+    () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders, { interactive: true }) : ""),
     [showRoundSummary, activeRoundOrders],
   );
   const roundChefSummaryHtml = useMemo(
