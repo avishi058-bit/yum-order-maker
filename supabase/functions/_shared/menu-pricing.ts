@@ -139,6 +139,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-grapes", name: "ענבים (בקבוק)", price: 2 },
   { id: "deal-oranges", name: "תפוזים (בקבוק)", price: 2 },
   { id: "deal-flavored-water", name: "מים בטעמים (בקבוק)", price: 2 },
+  { id: "deal-flavored-water-apple", name: "מים בטעם תפוח", price: 0 },
+  { id: "deal-flavored-water-grape", name: "מים בטעם ענבים", price: 0 },
   { id: "deal-goldstar", name: "גולדסטאר", price: 8 },
   { id: "deal-heineken", name: "הייניקן", price: 8 },
   { id: "deal-corona", name: "קורונה", price: 8 },
