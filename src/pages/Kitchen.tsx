@@ -1795,7 +1795,7 @@ const Kitchen = () => {
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
-                        className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm hover:bg-secondary transition-colors"
+                        className="px-4 py-3 rounded-lg bg-muted text-foreground text-base font-bold hover:bg-secondary transition-colors active:scale-95"
                         title="החזר להכנה"
                       >
                         ↩ חזור להכנה
@@ -1806,14 +1806,14 @@ const Kitchen = () => {
                         order.order_source === "kiosk" ? (
                           <button
                             onClick={() => updateStatus(order.id, "preparing")}
-                            className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
                           >
                             קבל הזמנה ✅
                           </button>
                         ) : (
                           <button
                             onClick={() => setShowTimePicker(order.id)}
-                            className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
                           >
                             התחל הכנה 👨‍🍳
                           </button>
@@ -1821,9 +1821,9 @@ const Kitchen = () => {
                       ) : (
                         <button
                           onClick={() => updateStatus(order.id, next)}
-                          className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
                         >
-                          {next === "ready" ? "מוכנה ✅" : "הושלמה"}
+                          {next === "ready" ? "מוכנה ✅" : "הושלמה ✅"}
                         </button>
                       )
                     )}
