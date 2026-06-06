@@ -946,12 +946,55 @@ function _combineMonos(monos: Mono[], paperWidth: number): Mono {
 function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   const { bytes, widthBytes, height } = mono;
   const ROWS = 255;
-  for (let y = 0; y < height; y += ROWS) {
-    const rows = Math.min(ROWS, height - y);
-    buf.pushArr([GS, 0x76, 0x30, 0x00,
-      widthBytes & 0xff, (widthBytes >> 8) & 0xff,
-      rows & 0xff, (rows >> 8) & 0xff]);
-    buf.pushBytes(bytes.subarray(y * widthBytes, (y + rows) * widthBytes));
+  // Detect runs of all-blank rows and replace them with ESC J motor feed —
+  // ~5-10x faster than sending blank scan rows, and saves widthBytes per row.
+  const MIN_BLANK_RUN = 6;
+  const rowBlank = (y: number): boolean => {
+    const off = y * widthBytes;
+    for (let i = 0; i < widthBytes; i++) if (bytes[off + i] !== 0) return false;
+    return true;
+  };
+  let y = 0;
+  while (y < height) {
+    // Check for a blank run.
+    let blankStart = y;
+    while (y < height && rowBlank(y)) y++;
+    const blankRun = y - blankStart;
+    if (blankRun >= MIN_BLANK_RUN) {
+      let remaining = blankRun;
+      while (remaining > 0) {
+        const step = Math.min(255, remaining);
+        buf.pushArr([ESC, 0x4a, step]);
+        remaining -= step;
+      }
+    } else if (blankRun > 0) {
+      // Tiny blank run — raster it inline to preserve exact spacing.
+      buf.pushArr([GS, 0x76, 0x30, 0x00,
+        widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+        blankRun & 0xff, (blankRun >> 8) & 0xff]);
+      buf.pushBytes(bytes.subarray(blankStart * widthBytes, y * widthBytes));
+    }
+    if (y >= height) break;
+    // Ink band: scan until the next long blank run.
+    const inkStart = y;
+    while (y < height) {
+      if (rowBlank(y)) {
+        let k = y;
+        while (k < height && rowBlank(k)) k++;
+        if (k - y >= MIN_BLANK_RUN) break;
+        y = k;
+      } else {
+        y++;
+      }
+    }
+    const bandEnd = y;
+    for (let yc = inkStart; yc < bandEnd; yc += ROWS) {
+      const rows = Math.min(ROWS, bandEnd - yc);
+      buf.pushArr([GS, 0x76, 0x30, 0x00,
+        widthBytes & 0xff, (widthBytes >> 8) & 0xff,
+        rows & 0xff, (rows >> 8) & 0xff]);
+      buf.pushBytes(bytes.subarray(yc * widthBytes, (yc + rows) * widthBytes));
+    }
   }
 }
 
