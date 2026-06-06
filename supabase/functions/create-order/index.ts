@@ -58,6 +58,10 @@ function getEffectivePrice(
 const CartItemSchema = z.object({
   itemId: z.string().min(1).max(64),
   quantity: z.number().int().min(1).max(50),
+  // Optional friendly name override (e.g. "פחית — קולה") — used as item_name on
+  // order_items so the kitchen sees the chosen sub-variant. Server still uses
+  // the canonical menu item for pricing.
+  nameOverride: z.string().trim().max(160).optional(),
   toppings: z.array(z.string().max(64)).max(20).optional(),
   removals: z.array(z.string().max(64)).max(20).optional(),
   removalNames: z.array(z.string().max(120)).max(20).optional(),
