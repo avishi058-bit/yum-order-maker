@@ -908,6 +908,7 @@ export async function printReceipt(order: ReceiptOrder) {
 // every item with its toppings/changes/meal/deal details. NO aggregated chef
 // summary, NO drinks summary — pure per-order list for the kitchen.
 export interface RoundOrder {
+  id?: string;
   order_number: number;
   customer_name?: string | null;
   created_at?: string | null;
@@ -922,7 +923,7 @@ const statusLabel = (s?: string | null): string => {
   return "";
 };
 
-function buildOrderBlockHtml(order: RoundOrder, index: number): string {
+function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = false): string {
   const merged = mergeItems(order.order_items);
 
   const time = order.created_at
@@ -979,6 +980,9 @@ function buildOrderBlockHtml(order: RoundOrder, index: number): string {
     .join("");
 
   const status = statusLabel(order.status);
+  const readyBtn = interactive && order.id
+    ? `<button type="button" class="ready-btn no-print" data-ready-id="${escapeHtml(order.id)}">✓ מוכנה</button>`
+    : "";
 
   return `<div class="order-block">
     <div class="order-head">
@@ -990,10 +994,12 @@ function buildOrderBlockHtml(order: RoundOrder, index: number): string {
       </div>
     </div>
     <div class="order-items">${itemsHtml || '<div class="sub">— אין פריטים —</div>'}</div>
+    ${readyBtn}
   </div>`;
 }
 
-export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
+export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interactive?: boolean } = {}): string {
+  const interactive = !!options.interactive;
   // Sort oldest → newest so first orderer is served first.
   const sorted = [...orders].sort((a, b) => {
     const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -1007,7 +1013,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   });
 
   const blocksHtml = sorted.length
-    ? sorted.map((o, i) => buildOrderBlockHtml(o, i)).join("")
+    ? sorted.map((o, i) => buildOrderBlockHtml(o, i, interactive)).join("")
     : `<div class="empty">אין הזמנות פעילות</div>`;
 
   // ---- Aggregated chef summary across ALL active orders ----
@@ -1247,8 +1253,25 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
     border-top: 2px solid #000;
     padding-top: 2mm;
   }
+  .ready-btn {
+    display: block;
+    width: 100%;
+    margin-top: 2mm;
+    padding: 3mm 2mm;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14pt;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .ready-btn:active { transform: scale(0.97); background: #15803d; }
   @media print {
     body { width: auto; padding: 1mm 2mm; }
+    .no-print { display: none !important; }
   }
 </style>
 </head>
@@ -1259,6 +1282,17 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   <!-- Chef summary intentionally omitted from active-orders bon — only per-order summaries are shown -->
 
   <div class="footer">המנה הראשונה ברשימה — להכין ראשונה</div>
+  ${interactive ? `<script>
+    document.addEventListener('click', function(e) {
+      var t = e.target;
+      if (t && t.classList && t.classList.contains('ready-btn')) {
+        var id = t.getAttribute('data-ready-id');
+        if (id && window.parent) {
+          window.parent.postMessage({ type: 'kitchen:order-ready', id: id }, '*');
+        }
+      }
+    });
+  </script>` : ""}
 </body>
 </html>`;
 }
