@@ -82,7 +82,9 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
             {...heroAnimations.cta}
             className="flex flex-col items-center gap-4"
           >
-            
+            <p className="text-lg md:text-xl font-bold text-foreground">
+              כדי להתחיל הזמנה בחר 👇🏽
+            </p>
             <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
               <button
                 onClick={() => onDineInChoice(true)}
