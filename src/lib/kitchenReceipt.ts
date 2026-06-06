@@ -980,6 +980,9 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
     .join("");
 
   const status = statusLabel(order.status);
+  const readyBtn = interactive && order.id
+    ? `<button type="button" class="ready-btn no-print" data-ready-id="${escapeHtml(order.id)}">✓ מוכנה</button>`
+    : "";
 
   return `<div class="order-block">
     <div class="order-head">
@@ -991,6 +994,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
       </div>
     </div>
     <div class="order-items">${itemsHtml || '<div class="sub">— אין פריטים —</div>'}</div>
+    ${readyBtn}
   </div>`;
 }
 
