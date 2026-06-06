@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
