@@ -118,6 +118,8 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15 },
   { id: "drink-guinness", name: "גינס", price: 12 },
   { id: "drink-water", name: "מים (בקבוק)", price: 0 },
+  { id: "drink-flavored-water-apple", name: "מים בטעם תפוח", price: 0 },
+  { id: "drink-flavored-water-grape", name: "מים בטעם ענבים", price: 0 },
   { id: "drink-soda", name: "סודה (בקבוק)", price: 0 },
 ];
 
