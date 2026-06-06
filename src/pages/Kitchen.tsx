@@ -477,6 +477,17 @@ const Kitchen = () => {
       setOrders(fetched);
     }
   }, []);
+  fetchOrdersRef.current = fetchOrders;
+
+  // Auto-refresh variant: skipped while a modal/bon is open, and queues a
+  // single catch-up fetch for when the user closes the modal.
+  const fetchOrdersAuto = useCallback(() => {
+    if (pauseRefreshRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    void fetchOrders();
+  }, [fetchOrders]);
 
   useEffect(() => {
     fetchOrders();
