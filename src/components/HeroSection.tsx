@@ -93,8 +93,8 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
           >
             <motion.p
               className="text-lg md:text-xl font-bold text-foreground"
-              animate={dance ? { rotate: [0, -8, 8, -8, 8, 0], scale: [1, 1.1, 1.1, 1.1, 1.1, 1] } : { rotate: 0, scale: 1 }}
-              transition={dance ? { duration: 0.9, repeat: Infinity, repeatDelay: 0.6 } : { duration: 0.2 }}
+              animate={dance ? { rotate: [0, -3, 3, -3, 3, 0], scale: [1, 1.03, 1.03, 1.03, 1.03, 1] } : { rotate: 0, scale: 1 }}
+              transition={dance ? { duration: 1.4, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
             >
               בחר כדי להתחיל בהזמנה👇🏽
             </motion.p>
