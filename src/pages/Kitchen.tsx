@@ -1090,7 +1090,7 @@ const Kitchen = () => {
               <span>התראות</span>
             </button>
             {showNotifMenu && (
-              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-64 p-3 space-y-2">
+              <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   התראות וצלצולים
                 </div>
@@ -1155,7 +1155,7 @@ const Kitchen = () => {
               <span>זמינות</span>
             </button>
             {showAvailMenu && (
-              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-72 p-3 space-y-2">
+              <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   זמינות הזמנות ותשלום
                 </div>
@@ -1245,7 +1245,7 @@ const Kitchen = () => {
               <span>הדפסה</span>
             </button>
             {showPrintMenu && (
-              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-72 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
+              <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   הגדרות הדפסה ובדיקות
                 </div>
