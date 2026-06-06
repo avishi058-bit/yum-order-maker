@@ -628,16 +628,20 @@ const Kitchen = () => {
       toast.info("אין הזמנות מוכנות");
       return;
     }
+    const prevOrders = orders;
+    setOrders((curr) =>
+      curr.map((o) => (readyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
+    );
     const { error } = await supabase
       .from("orders")
       .update({ status: "completed" })
       .in("id", readyIds);
     if (error) {
       toast.error(`שגיאה: ${error.message}`);
+      setOrders(prevOrders);
       return;
     }
     toast.success(`${readyIds.length} הזמנות הושלמו`);
-    fetchOrders();
   };
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
