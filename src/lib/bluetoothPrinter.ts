@@ -1058,7 +1058,7 @@ function enqueuePrint(job: () => Promise<void>): Promise<void> {
       await job();
       // Small breather so the printer can drain its buffer before the next
       // job slams in more bytes (helps the thermal head finish cleanly).
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, 60));
     } finally {
       _queueDepth--;
     }
