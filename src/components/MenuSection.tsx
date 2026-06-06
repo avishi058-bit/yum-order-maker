@@ -69,7 +69,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
     >
       {/* Text content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-nowrap">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           {item.badge && <span className={`flex-shrink-0 ${isKiosk ? "text-3xl" : "text-lg"}`}>{item.badge}</span>}
           {(item.id === "napoleon" || item.id === "meal-napoleon") && (
             <img src={napoleonIcon} alt="" className={`flex-shrink-0 object-contain ${isKiosk ? "w-14 h-14" : "w-10 h-10"}`} />
