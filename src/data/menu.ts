@@ -303,6 +303,8 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "can-mojito": "drink-blu-mojito", "can-watermelon": "drink-watermelon", "can-day": "drink-blu-day",
   // bottle sub-options
   "bottle-grapes": "drink-grapes", "bottle-apples": "drink-apples",
+  // flavored water sub-options (DrinkSelector)
+  "flavored-water-apple": "drink-flavored-water-apple", "flavored-water-grape": "drink-flavored-water-grape",
   // beer sub-options
   "beer-carlsberg": "drink-carlsberg", "beer-goldstar": "drink-goldstar",
   "beer-heineken": "drink-heineken", "beer-corona": "drink-corona",
