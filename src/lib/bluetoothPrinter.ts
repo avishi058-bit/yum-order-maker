@@ -1105,12 +1105,14 @@ export async function printHybridDiagnostic(): Promise<void> {
 // Not used by default anymore. Exported so callers that explicitly want the
 // pixel-perfect HTML rendering can still reach for it.
 export async function printHtmlBluetoothSlow(html: string): Promise<void> {
-  const widthDots = getPaperWidthDots();
-  const char = await ensureConnected();
-  const canvas = await renderHtmlToCanvas(html, widthDots);
-  const mono = canvasToMonoBytes(canvas, widthDots);
-  const bytes = buildRasterCommands(mono);
-  await writeBytes(char, bytes);
+  return enqueuePrint(async () => {
+    const widthDots = getPaperWidthDots();
+    const char = await ensureConnected();
+    const canvas = await renderHtmlToCanvas(html, widthDots);
+    const mono = canvasToMonoBytes(canvas, widthDots);
+    const bytes = buildRasterCommands(mono);
+    await writeBytes(char, bytes);
+  });
 }
 
 
