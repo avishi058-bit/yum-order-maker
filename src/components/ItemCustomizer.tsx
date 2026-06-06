@@ -1201,6 +1201,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       {softDrinks.map((drink) => {
                         const active = selectedDrink === drink.id;
                         const unavailable = isDrinkUnavailable(drink.id);
+                        // Hide out-of-stock BLU variants entirely instead of showing "אזל"
+                        if (unavailable && drink.id.startsWith("drink-blu")) return null;
+
                         return (
                           <button
                             key={drink.id}

@@ -106,7 +106,10 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-blu", name: "בלו", price: 0 },
   { id: "drink-blu-mojito", name: "בלו מוחיטו", price: 0 },
   { id: "drink-blu-day", name: "בלו דיי", price: 0 },
+  { id: "drink-blu-watermelon", name: "בלו אבטיח", price: 0 },
   { id: "drink-grapes", name: "ענבים (בקבוק)", price: 0 },
+  { id: "drink-oranges", name: "תפוזים (בקבוק)", price: 0 },
+
   { id: "drink-goldstar", name: "גולדסטאר", price: 8 },
   { id: "drink-heineken", name: "הייניקן", price: 8 },
   { id: "drink-corona", name: "קורונה", price: 8 },
@@ -136,6 +139,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-blu", name: "בלו", price: 0 },
   { id: "deal-blu-mojito", name: "בלו מוחיטו", price: 0 },
   { id: "deal-blu-day", name: "בלו דיי", price: 0 },
+  { id: "deal-blu-watermelon", name: "בלו אבטיח", price: 0 },
+
   { id: "deal-grapes", name: "ענבים (בקבוק)", price: 2 },
   { id: "deal-oranges", name: "תפוזים (בקבוק)", price: 2 },
   { id: "deal-flavored-water", name: "מים בטעמים (בקבוק)", price: 2 },
