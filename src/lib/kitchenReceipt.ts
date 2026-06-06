@@ -685,7 +685,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     print-color-adjust: exact;
   }
   body {
-    width: 72mm;
+    width: 100%;
+    max-width: 100%;
     padding: 2mm;
     font-size: 12pt;
     line-height: 1.3;
