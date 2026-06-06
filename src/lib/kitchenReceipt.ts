@@ -1253,8 +1253,25 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     border-top: 2px solid #000;
     padding-top: 2mm;
   }
+  .ready-btn {
+    display: block;
+    width: 100%;
+    margin-top: 2mm;
+    padding: 3mm 2mm;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14pt;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .ready-btn:active { transform: scale(0.97); background: #15803d; }
   @media print {
     body { width: auto; padding: 1mm 2mm; }
+    .no-print { display: none !important; }
   }
 </style>
 </head>
@@ -1265,6 +1282,17 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   <!-- Chef summary intentionally omitted from active-orders bon — only per-order summaries are shown -->
 
   <div class="footer">המנה הראשונה ברשימה — להכין ראשונה</div>
+  ${interactive ? `<script>
+    document.addEventListener('click', function(e) {
+      var t = e.target;
+      if (t && t.classList && t.classList.contains('ready-btn')) {
+        var id = t.getAttribute('data-ready-id');
+        if (id && window.parent) {
+          window.parent.postMessage({ type: 'kitchen:order-ready', id: id }, '*');
+        }
+      }
+    });
+  </script>` : ""}
 </body>
 </html>`;
 }
