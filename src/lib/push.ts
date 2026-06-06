@@ -112,3 +112,57 @@ export const getExistingSubscription = async (): Promise<PushSubscription | null
   if (!reg) return null;
   return await reg.pushManager.getSubscription();
 };
+
+/**
+ * Subscribe THIS device as a kitchen device — it will receive a push every time
+ * a new order is created (via DB trigger → notify-kitchen-new-order edge fn).
+ */
+export const subscribeKitchenToPush = async (): Promise<{ ok: boolean; reason?: string }> => {
+  if (!isPushSupported()) return { ok: false, reason: "unsupported" };
+  if (iosNeedsInstall()) return { ok: false, reason: "ios_needs_install" };
+
+  const reg = await ensureServiceWorker();
+  if (!reg) return { ok: false, reason: "sw_failed" };
+  await navigator.serviceWorker.ready;
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return { ok: false, reason: "denied" };
+
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+    });
+  }
+
+  const json = sub.toJSON();
+  const endpoint = sub.endpoint;
+  const p256dh = (json.keys && json.keys.p256dh) || "";
+  const auth = (json.keys && json.keys.auth) || "";
+
+  // Upsert by endpoint so re-subscribing the same device just flips the flag.
+  const { error } = await supabase.from("push_subscriptions").upsert(
+    { endpoint, p256dh, auth, is_kitchen: true },
+    { onConflict: "endpoint" } as any,
+  );
+
+  if (error && (error as any).code !== "23505") {
+    console.error("[push] save kitchen subscription failed", error);
+    return { ok: false, reason: "save_failed" };
+  }
+  return { ok: true };
+};
+
+export const isKitchenSubscribed = async (): Promise<boolean> => {
+  const sub = await getExistingSubscription();
+  if (!sub) return false;
+  const { data } = await supabase
+    .from("push_subscriptions")
+    .select("id")
+    .eq("endpoint", sub.endpoint)
+    .eq("is_kitchen", true)
+    .maybeSingle();
+  return !!data;
+};
+
