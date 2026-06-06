@@ -10,7 +10,7 @@ import { useFlyToCart } from "@/contexts/FlyToCartContext";
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
   { key: "meal" as const, label: "🍽️ ארוחות עסקיות" },
-  { key: "side" as const, label: "🍟 צ׳יפס אחי!" },
+  { key: "side" as const, label: "🍟 צ׳יפס אחי?" },
   { key: "drink" as const, label: "🥤 שתיה" },
   { key: "beer" as const, label: "🍺 בירות" },
   { key: "deal" as const, label: "🤝 עשינו עסק" },
