@@ -958,6 +958,59 @@ const Kitchen = () => {
         ),
     [orders],
   );
+
+  const printRoundBon = () => {
+    if (activeRoundOrders.length === 0) return;
+    if (isPrinterConnected()) {
+      printBluetoothRoundSummary(activeRoundOrders).catch((err) => {
+        console.warn("[Kitchen] BT round print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      return;
+    }
+    if (printMode === "agent") {
+      printAgentRoundSummary(activeRoundOrders).then((info) => {
+        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+      });
+      return;
+    }
+    if (printMode === "rawbt") {
+      printRawBTRoundSummary(activeRoundOrders).then((info) => setRawbtDebug(info));
+      return;
+    }
+    printRoundSummary(activeRoundOrders);
+  };
+
+  const printChefBon = () => {
+    if (activeRoundOrders.length === 0) return;
+    if (isPrinterConnected()) {
+      printBluetoothRoundChef(activeRoundOrders).catch((err) => {
+        console.warn("[Kitchen] BT chef print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      return;
+    }
+    if (printMode === "agent") {
+      printAgentRoundChef(activeRoundOrders).then((info) => {
+        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+      });
+      return;
+    }
+    if (printMode === "rawbt") {
+      printRawBTRoundChef(activeRoundOrders).then((info) => setRawbtDebug(info));
+      return;
+    }
+    printRoundChefSummary(activeRoundOrders);
+  };
+
   const roundSummaryHtml = useMemo(
     () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders, { interactive: true }) : ""),
     [showRoundSummary, activeRoundOrders],
