@@ -2029,11 +2029,44 @@ const Kitchen = () => {
                 </button>
               </div>
             </div>
+            {/* Per-order checklist — mark an order complete straight from the round bon.
+                NOT included in the printed receipt (the print uses activeRoundOrders directly). */}
+            {(() => {
+              const checklistOrders = orders
+                .filter((o) => ["new", "preparing"].includes(o.status))
+                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+              if (checklistOrders.length === 0) return null;
+              return (
+                <div className="border-b border-border bg-muted/30 px-3 py-2 max-h-[28vh] overflow-y-auto shrink-0">
+                  <p className="text-[11px] text-muted-foreground mb-1.5 font-bold">סמן ✓ להשלמת הזמנה</p>
+                  <div className="space-y-1">
+                    {checklistOrders.map((o) => (
+                      <label
+                        key={o.id}
+                        className="flex items-center gap-2 px-2 py-2 rounded-lg bg-card hover:bg-secondary cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 accent-green-500 cursor-pointer"
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              updateStatus(o.id, "completed");
+                            }
+                          }}
+                        />
+                        <span className="font-bold text-foreground text-sm">#{o.order_number}</span>
+                        <span className="text-sm text-muted-foreground truncate flex-1">{o.customer_name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
             <iframe
               title="round-summary-preview"
               srcDoc={roundSummaryHtml}
               className="flex-1 w-full bg-white"
-              style={{ minHeight: "60vh" }}
+              style={{ minHeight: "40vh" }}
             />
           </div>
         </div>
