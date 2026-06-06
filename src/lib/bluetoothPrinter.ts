@@ -297,6 +297,10 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
   throw new Error("המדפסת לא מחוברת. לחץ על 'חיבור מדפסת' כדי לבחור אותה.");
 }
 
+// Adaptive WoR chunk size — start big, shrink on failure, remember the best.
+// Bigger chunks = fewer BLE packets = much faster, but some printers cap MTU.
+let _worChunkSize = 500;
+
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
   // faster than write-with-response over BLE (no per-chunk ACK round-trip).
@@ -304,16 +308,24 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
   const supportsWoR = !!(char.properties as { writeWithoutResponse?: boolean }).writeWithoutResponse;
 
   if (supportsWoR && (char as { writeValueWithoutResponse?: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse) {
-    const CHUNK = 240; // typical BLE MTU 247 - 3 ATT overhead
     const writeWoR = (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse.bind(char);
-    for (let i = 0; i < data.length; i += CHUNK) {
-      const end = Math.min(i + CHUNK, data.length);
-      const slice = data.slice(i, end); // .slice() returns a fresh ArrayBuffer-backed Uint8Array
+    let i = 0;
+    while (i < data.length) {
+      const end = Math.min(i + _worChunkSize, data.length);
+      const slice = data.slice(i, end);
       try {
         await writeWoR(slice);
+        i = end;
       } catch (e) {
+        // MTU likely too big — shrink and retry this slice.
+        if (_worChunkSize > 180) {
+          _worChunkSize = Math.max(180, Math.floor(_worChunkSize / 2));
+          continue;
+        }
+        // Already small — brief breather + one more try, then fall through.
         await new Promise((r) => setTimeout(r, 8));
-        await writeWoR(slice);
+        try { await writeWoR(slice); i = end; }
+        catch { throw e; }
       }
     }
     return;
