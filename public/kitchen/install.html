@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>התקנת מטבח הבקתה</title>
+    <meta name="description" content="קישור התקנה למסך המטבח של הבקתה" />
+    <link rel="manifest" href="/kitchen.webmanifest" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="application-name" content="מטבח הבקתה" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="מטבח" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Heebo, Arial, sans-serif;
+        color: #fff;
+        background: radial-gradient(circle at top, #2a2117 0, #0b0b0b 42%, #000 100%);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      main {
+        width: min(100%, 460px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(0, 0, 0, 0.62);
+        border-radius: 24px;
+        padding: 28px 22px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+        text-align: center;
+      }
+      .icon {
+        width: 82px;
+        height: 82px;
+        margin: 0 auto 14px;
+        border-radius: 24px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        font-size: 42px;
+      }
+      h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
+      p { margin: 0; color: rgba(255,255,255,.82); font-size: 17px; line-height: 1.65; font-weight: 700; }
+      ol { margin: 22px 0; padding: 0 22px 0 0; text-align: right; color: rgba(255,255,255,.92); font-size: 17px; line-height: 1.8; font-weight: 800; }
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 58px;
+        border-radius: 16px;
+        background: #f59e0b;
+        color: #111;
+        text-decoration: none;
+        font-size: 19px;
+        font-weight: 900;
+        margin-top: 8px;
+      }
+      .note { margin-top: 14px; font-size: 14px; color: rgba(255,255,255,.62); }
+    </style>
+    <script>
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (isStandalone) window.location.replace('/kitchen');
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="icon" aria-hidden="true">🍔</div>
+      <h1>התקנת מטבח הבקתה</h1>
+      <p>פתח את הקישור הזה בטלפון, ואז הוסף למסך הבית. האייקון שיתווסף יפתח ישר את מסך המטבח.</p>
+      <ol>
+        <li>לחץ על שיתוף / שלוש נקודות בדפדפן</li>
+        <li>בחר “הוסף למסך הבית”</li>
+        <li>פתח את האייקון החדש בשם “מטבח”</li>
+      </ol>
+      <a href="/kitchen">כניסה למטבח</a>
+      <p class="note">אם כבר התקנת אייקון קודם — מחק אותו והתקן מחדש מהקישור הזה.</p>
+    </main>
+  </body>
+</html>
