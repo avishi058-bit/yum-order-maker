@@ -1017,10 +1017,41 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   return buf.toUint8();
 }
 
+// ---- Print job queue ----
+// Multiple callers (e.g. several bons issued back-to-back) must NOT interleave
+// their byte streams onto the printer. We serialize all print jobs through a
+// single promise chain so the next job only starts after the previous one
+// fully finished writing.
+let _printQueue: Promise<void> = Promise.resolve();
+let _queueDepth = 0;
+
+function enqueuePrint(job: () => Promise<void>): Promise<void> {
+  _queueDepth++;
+  const run = _printQueue.then(async () => {
+    try {
+      await job();
+      // Small breather so the printer can drain its buffer before the next
+      // job slams in more bytes (helps the thermal head finish cleanly).
+      await new Promise((r) => setTimeout(r, 250));
+    } finally {
+      _queueDepth--;
+    }
+  });
+  // Swallow rejections on the chain so one failing job doesn't poison the queue.
+  _printQueue = run.catch(() => {});
+  return run;
+}
+
+export function getPrintQueueDepth(): number {
+  return _queueDepth;
+}
+
 export async function printOps(ops: FastOp[]): Promise<void> {
-  const char = await ensureConnected();
-  const bytes = buildOpsBytes(ops);
-  await writeBytes(char, bytes);
+  return enqueuePrint(async () => {
+    const char = await ensureConnected();
+    const bytes = buildOpsBytes(ops);
+    await writeBytes(char, bytes);
+  });
 }
 
 
@@ -1074,12 +1105,14 @@ export async function printHybridDiagnostic(): Promise<void> {
 // Not used by default anymore. Exported so callers that explicitly want the
 // pixel-perfect HTML rendering can still reach for it.
 export async function printHtmlBluetoothSlow(html: string): Promise<void> {
-  const widthDots = getPaperWidthDots();
-  const char = await ensureConnected();
-  const canvas = await renderHtmlToCanvas(html, widthDots);
-  const mono = canvasToMonoBytes(canvas, widthDots);
-  const bytes = buildRasterCommands(mono);
-  await writeBytes(char, bytes);
+  return enqueuePrint(async () => {
+    const widthDots = getPaperWidthDots();
+    const char = await ensureConnected();
+    const canvas = await renderHtmlToCanvas(html, widthDots);
+    const mono = canvasToMonoBytes(canvas, widthDots);
+    const bytes = buildRasterCommands(mono);
+    await writeBytes(char, bytes);
+  });
 }
 
 
