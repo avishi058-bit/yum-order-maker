@@ -359,6 +359,44 @@ const Kitchen = () => {
     return () => clearInterval(i);
   }, []);
 
+  // Swap the document <link rel="manifest"> to the kitchen manifest so the
+  // browser offers "install" with the kitchen icon/name/start_url=/kitchen.
+  useEffect(() => {
+    const link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+    const prevHref = link?.getAttribute("href") ?? null;
+    if (link) link.setAttribute("href", "/kitchen.webmanifest");
+    const theme = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    const prevTheme = theme?.getAttribute("content") ?? null;
+    if (theme) theme.setAttribute("content", "#000000");
+    return () => {
+      if (link && prevHref) link.setAttribute("href", prevHref);
+      if (theme && prevTheme) theme.setAttribute("content", prevTheme);
+    };
+  }, []);
+
+  // Push notifications — subscribe THIS device as a kitchen device so it
+  // receives a push every time a new order is created.
+  const [pushEnabled, setPushEnabled] = useState(false);
+  useEffect(() => {
+    isKitchenSubscribed().then(setPushEnabled);
+  }, []);
+  const handleEnableKitchenPush = async () => {
+    const res = await subscribeKitchenToPush();
+    if (res.ok) {
+      setPushEnabled(true);
+      toast.success("התראות הופעלו ✅ — תקבל push בכל הזמנה חדשה");
+    } else {
+      const msg: Record<string, string> = {
+        unsupported: "הדפדפן לא תומך בהתראות",
+        ios_needs_install: "ב-iOS צריך קודם להוסיף למסך הבית ואז להפעיל",
+        denied: "ההרשאה נדחתה — אפשר להפעיל מהגדרות הדפדפן",
+        sw_failed: "טעינת ה-Service Worker נכשלה",
+        save_failed: "שמירת המנוי נכשלה",
+      };
+      toast.error(msg[res.reason ?? ""] ?? "נכשל להפעיל התראות");
+    }
+  };
+
   // Activate audio on first interaction
   useEffect(() => {
     const activate = () => {
