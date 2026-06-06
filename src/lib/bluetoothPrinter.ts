@@ -957,18 +957,23 @@ async function _ops() {
 }
 
 export async function printBluetoothReceipt(order: ReceiptOrder): Promise<void> {
-  const { buildKitchenBonOps } = await _ops();
-  await printOps(buildKitchenBonOps(order));
+  // Render full receipt HTML → one image → raster. Most reliable Hebrew path
+  // for printers that don't support Hebrew codepages.
+  const { buildReceiptHtml } = await import("./kitchenReceipt");
+  const html = await buildReceiptHtml(order);
+  await printHtmlBluetoothSlow(html);
 }
 
 export async function printBluetoothRoundSummary(orders: RoundOrder[]): Promise<void> {
-  const { buildRoundSummaryOps } = await _ops();
-  await printOps(buildRoundSummaryOps(orders));
+  const { buildRoundSummaryHtml } = await import("./kitchenReceipt");
+  const html = buildRoundSummaryHtml(orders);
+  await printHtmlBluetoothSlow(html);
 }
 
 export async function printBluetoothRoundChef(orders: RoundOrder[]): Promise<void> {
-  const { buildRoundChefOps } = await _ops();
-  await printOps(buildRoundChefOps(orders));
+  const { buildRoundChefSummaryHtml } = await import("./kitchenReceipt");
+  const html = buildRoundChefSummaryHtml(orders);
+  await printHtmlBluetoothSlow(html);
 }
 
 export async function printTest(): Promise<void> {
