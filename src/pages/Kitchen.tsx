@@ -261,6 +261,7 @@ const Kitchen = () => {
   const [showRingtoneMenu, setShowRingtoneMenu] = useState(false);
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showAvailMenu, setShowAvailMenu] = useState(false);
   const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
