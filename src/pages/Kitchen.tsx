@@ -496,7 +496,7 @@ const Kitchen = () => {
 
     const channel = supabase
       .channel("orders-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrdersAuto())
       .subscribe((status) => {
         setRealtimeConnected(status === "SUBSCRIBED");
       });
@@ -517,12 +517,12 @@ const Kitchen = () => {
 
     // Polling fallback — runs every 3s as a safety net even if realtime drops
     const pollInterval = setInterval(() => {
-      fetchOrders();
+      fetchOrdersAuto();
     }, POLLING_FALLBACK_MS);
 
     // Refetch on tab visibility (handles long-idle tablets)
     const onVisible = () => {
-      if (document.visibilityState === "visible") fetchOrders();
+      if (document.visibilityState === "visible") fetchOrdersAuto();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
