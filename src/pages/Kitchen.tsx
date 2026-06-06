@@ -1140,6 +1140,96 @@ const Kitchen = () => {
             )}
           </div>
 
+          {/* 🟢 Availability group */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowAvailMenu(!showAvailMenu); setShowNotifMenu(false); setShowPrintMenu(false); }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                restaurantStatus.website_open || restaurantStatus.station_open
+                  ? "bg-green-500/20 text-green-300"
+                  : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+              }`}
+              title="זמינות הזמנות ותשלום"
+            >
+              <Globe size={16} />
+              <span>זמינות</span>
+            </button>
+            {showAvailMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-72 p-3 space-y-2">
+                <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
+                  זמינות הזמנות ותשלום
+                </div>
+
+                <button
+                  onClick={() => toggleWebsite(!restaurantStatus.website_open)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.website_open ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Globe size={14} /> אתר הזמנות</span>
+                  <span>{restaurantStatus.website_open ? "פתוח" : "סגור"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleStation(!restaurantStatus.station_open)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.station_open ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Monitor size={14} /> עמדת הזמנות</span>
+                  <span>{restaurantStatus.station_open ? "פתוח" : "סגור"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleCash(!restaurantStatus.cash_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.cash_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן</span>
+                  <span>{restaurantStatus.cash_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleCredit(!restaurantStatus.credit_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.credit_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי</span>
+                  <span>{restaurantStatus.credit_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <div className="pt-1 border-t border-border">
+                  {restaurantStatus.website_open || restaurantStatus.station_open ? (
+                    <button
+                      onClick={closeAll}
+                      className="w-full px-3 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90"
+                    >
+                      סגור הכל
+                    </button>
+                  ) : (
+                    <button
+                      onClick={openAll}
+                      className="w-full px-3 py-2 rounded-lg bg-green-500 text-white text-sm font-bold hover:bg-green-600"
+                    >
+                      פתח הכל
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowAvailMenu(false)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg text-xs bg-muted hover:bg-secondary text-foreground"
+                >
+                  סגור
+                </button>
+              </div>
+            )}
+          </div>
+
+
+
           {/* 🖨️ Print & Diagnostics group */}
           <div className="relative">
             <button
