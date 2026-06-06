@@ -745,6 +745,17 @@ const Kitchen = () => {
       order_source: order.order_source,
       order_items: order.order_items,
     };
+    // If the direct Bluetooth connection is active, always use it first.
+    // The test print uses this same path, so a working test means bons should
+    // never be routed to the old Android print app / browser fallback.
+    if (isPrinterConnected()) {
+      printBluetoothReceipt(payload).catch((err) => {
+        console.warn("[Kitchen] BT print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+
     // Local Print Agent (preferred): tiny Android app on the same tablet
     // holds an open BT socket and writes ESC/POS bytes directly. Completely
     // silent — Kitchen stays visible. Falls back to RawBT if the agent is
@@ -797,12 +808,8 @@ const Kitchen = () => {
         });
       return;
     }
-    if (printMode === "bt" && isPrinterConnected()) {
-      printBluetoothReceipt(payload).catch((err) => {
-        console.warn("[Kitchen] BT print failed, falling back", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
-        printReceipt(payload);
-      });
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
 
@@ -830,6 +837,8 @@ const Kitchen = () => {
     }
     try {
       await pairPrinter();
+      setPrintModeState("bt");
+      setPrintMode("bt");
       toast.success("המדפסת חוברה בהצלחה");
     } catch (e: any) {
       if (e?.name !== "NotFoundError") {
