@@ -29,13 +29,15 @@ import {
   getPrintMode,
   setPrintMode,
   printRawBTReceipt,
+  printRawBTRoundSummary,
+  printRawBTRoundChef,
   printRawBTPlainText,
   printRawBTPlainTextDirect,
   printRawBTPlainTextShare,
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentTest } from "@/lib/localPrintAgent";
+import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed } from "@/lib/push";
 
@@ -745,6 +747,17 @@ const Kitchen = () => {
       order_source: order.order_source,
       order_items: order.order_items,
     };
+    // If the direct Bluetooth connection is active, always use it first.
+    // The test print uses this same path, so a working test means bons should
+    // never be routed to the old Android print app / browser fallback.
+    if (isPrinterConnected()) {
+      printBluetoothReceipt(payload).catch((err) => {
+        console.warn("[Kitchen] BT print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+
     // Local Print Agent (preferred): tiny Android app on the same tablet
     // holds an open BT socket and writes ESC/POS bytes directly. Completely
     // silent — Kitchen stays visible. Falls back to RawBT if the agent is
@@ -797,12 +810,8 @@ const Kitchen = () => {
         });
       return;
     }
-    if (printMode === "bt" && isPrinterConnected()) {
-      printBluetoothReceipt(payload).catch((err) => {
-        console.warn("[Kitchen] BT print failed, falling back", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
-        printReceipt(payload);
-      });
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
 
@@ -830,6 +839,8 @@ const Kitchen = () => {
     }
     try {
       await pairPrinter();
+      setPrintModeState("bt");
+      setPrintMode("bt");
       toast.success("המדפסת חוברה בהצלחה");
     } catch (e: any) {
       if (e?.name !== "NotFoundError") {
@@ -947,6 +958,59 @@ const Kitchen = () => {
         ),
     [orders],
   );
+
+  const printRoundBon = () => {
+    if (activeRoundOrders.length === 0) return;
+    if (isPrinterConnected()) {
+      printBluetoothRoundSummary(activeRoundOrders).catch((err) => {
+        console.warn("[Kitchen] BT round print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      return;
+    }
+    if (printMode === "agent") {
+      printAgentRoundSummary(activeRoundOrders).then((info) => {
+        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+      });
+      return;
+    }
+    if (printMode === "rawbt") {
+      printRawBTRoundSummary(activeRoundOrders).then((info) => setRawbtDebug(info));
+      return;
+    }
+    printRoundSummary(activeRoundOrders);
+  };
+
+  const printChefBon = () => {
+    if (activeRoundOrders.length === 0) return;
+    if (isPrinterConnected()) {
+      printBluetoothRoundChef(activeRoundOrders).catch((err) => {
+        console.warn("[Kitchen] BT chef print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      return;
+    }
+    if (printMode === "agent") {
+      printAgentRoundChef(activeRoundOrders).then((info) => {
+        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+      });
+      return;
+    }
+    if (printMode === "rawbt") {
+      printRawBTRoundChef(activeRoundOrders).then((info) => setRawbtDebug(info));
+      return;
+    }
+    printRoundChefSummary(activeRoundOrders);
+  };
+
   const roundSummaryHtml = useMemo(
     () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders, { interactive: true }) : ""),
     [showRoundSummary, activeRoundOrders],
@@ -1462,18 +1526,7 @@ const Kitchen = () => {
             <span className="text-xs font-bold">{activeRoundOrders.length}</span>
           </button>
           <button
-            onClick={() => {
-              if (activeRoundOrders.length === 0) return;
-              if (isPrinterConnected()) {
-                printBluetoothRoundSummary(activeRoundOrders).catch((err) => {
-                  console.warn("[Kitchen] BT round print failed, falling back", err);
-                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
-                  printRoundSummary(activeRoundOrders);
-                });
-              } else {
-                printRoundSummary(activeRoundOrders);
-              }
-            }}
+            onClick={printRoundBon}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
               activeRoundOrders.length === 0
@@ -1498,18 +1551,7 @@ const Kitchen = () => {
             <ListChecks size={20} />
           </button>
           <button
-            onClick={() => {
-              if (activeRoundOrders.length === 0) return;
-              if (isPrinterConnected()) {
-                printBluetoothRoundChef(activeRoundOrders).catch((err) => {
-                  console.warn("[Kitchen] BT chef print failed, falling back", err);
-                  toast.error("שגיאה בהדפסה בלוטות׳ — חוזר להדפסת דפדפן");
-                  printRoundChefSummary(activeRoundOrders);
-                });
-              } else {
-                printRoundChefSummary(activeRoundOrders);
-              }
-            }}
+            onClick={printChefBon}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
               activeRoundOrders.length === 0
@@ -2021,13 +2063,7 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    if (isPrinterConnected()) {
-                      printBluetoothRoundSummary(activeRoundOrders).catch(() => printRoundSummary(activeRoundOrders));
-                    } else {
-                      printRoundSummary(activeRoundOrders);
-                    }
-                  }}
+                  onClick={printRoundBon}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
@@ -2072,13 +2108,7 @@ const Kitchen = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    if (isPrinterConnected()) {
-                      printBluetoothRoundChef(activeRoundOrders).catch(() => printRoundChefSummary(activeRoundOrders));
-                    } else {
-                      printRoundChefSummary(activeRoundOrders);
-                    }
-                  }}
+                  onClick={printChefBon}
                   disabled={activeRoundOrders.length === 0}
                   className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold flex items-center gap-1 disabled:opacity-50"
                 >
