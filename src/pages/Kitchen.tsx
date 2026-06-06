@@ -277,6 +277,21 @@ const Kitchen = () => {
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
 
+  // Pause auto-refresh (polling/realtime) while a modal/bon is open so the
+  // kitchen view doesn't re-render and scroll-jump under the user.
+  const pauseRefreshRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  useEffect(() => {
+    const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
+    pauseRefreshRef.current = open;
+    if (!open && pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      // fire a single catch-up fetch after modal closes
+      void fetchOrdersRef.current?.();
+    }
+  }, [showRoundSummary, showRoundChefSummary, previewOrder]);
+  const fetchOrdersRef = useRef<(() => Promise<void>) | null>(null);
+
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
     if (!previewOrder) {
