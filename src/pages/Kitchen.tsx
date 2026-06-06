@@ -535,7 +535,7 @@ const Kitchen = () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [fetchOrders, fetchAvailability, fetchCustomToppings]);
+  }, [fetchOrders, fetchOrdersAuto, fetchAvailability, fetchCustomToppings]);
 
   // Auto-print new orders
   useEffect(() => {
