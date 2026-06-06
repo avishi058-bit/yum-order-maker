@@ -2042,42 +2042,11 @@ const Kitchen = () => {
                 </button>
               </div>
             </div>
-            {/* Per-order checklist — mark an order complete straight from the round bon.
-                NOT included in the printed receipt (the print uses activeRoundOrders directly). */}
-            {(() => {
-              const checklistOrders = orders
-                .filter((o) => ["new", "preparing"].includes(o.status))
-                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-              if (checklistOrders.length === 0) return null;
-              return (
-                <div className="border-b border-border bg-muted/30 px-3 py-2 max-h-[28vh] overflow-y-auto shrink-0">
-                  <p className="text-[11px] text-muted-foreground mb-1.5 font-bold">סמן הזמנה כמוכנה</p>
-                  <div className="space-y-1.5">
-                    {checklistOrders.map((o) => (
-                      <div
-                        key={o.id}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-card"
-                      >
-                        <span className="font-bold text-foreground text-sm">#{o.order_number}</span>
-                        <span className="text-sm text-muted-foreground truncate flex-1">{o.customer_name}</span>
-                        <button
-                          type="button"
-                          onClick={() => updateStatus(o.id, "completed")}
-                          className="bg-green-600 hover:bg-green-700 active:scale-95 text-white text-xs font-black px-3 py-1.5 rounded-md shadow transition-all"
-                        >
-                          ✓ מוכנה
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
             <iframe
               title="round-summary-preview"
               srcDoc={roundSummaryHtml}
               className="flex-1 w-full bg-white"
-              style={{ minHeight: "40vh" }}
+              style={{ minHeight: "60vh" }}
             />
           </div>
         </div>
