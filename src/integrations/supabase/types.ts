@@ -523,6 +523,7 @@ export type Database = {
         Returns: boolean
       }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
+      reping_kitchen_for_pending_orders: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "kitchen"
