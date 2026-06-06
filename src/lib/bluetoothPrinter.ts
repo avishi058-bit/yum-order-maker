@@ -344,6 +344,8 @@ const WIDTH_KEY = "bt-printer-width-dots";
 export function getPaperWidthDots(): number {
   try {
     const v = parseInt(localStorage.getItem(WIDTH_KEY) || "", 10);
+    // Migrate legacy 40mm default (320) to 80mm (576) automatically.
+    if (v === 320) { localStorage.setItem(WIDTH_KEY, "576"); return 576; }
     if (v >= 64 && v <= 832 && v % 8 === 0) return v;
   } catch {}
   return 576;
