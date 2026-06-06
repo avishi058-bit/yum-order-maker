@@ -1137,7 +1137,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     <div className="space-y-0">
                       {mealSideOptions.map((side) => {
                         const unavailable = isSideUnavailable(side.id);
+                        // Hide tempura onion rings entirely when out of stock; other sides still show "אזל"
+                        if (unavailable && side.id === "tempura-onion") return null;
                         const active = selectedSide === side.id && !unavailable;
+
                         return (
                           <button
                             key={side.id}
