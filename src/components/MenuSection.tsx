@@ -221,7 +221,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
 
   // Filter categories that have available items
   const visibleCategories = categories.filter(
-    (cat) => menuItems.some((i) => i.category === cat.key && isAvailable(i.id))
+    (cat) => menuItems.some((i) => matchesCategory(i, cat.key) && isAvailable(i.id))
   );
 
   return (
