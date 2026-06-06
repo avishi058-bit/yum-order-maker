@@ -204,7 +204,7 @@ function priceCart(
     total += unit * item.quantity;
     lines.push({
       itemId: item.itemId,
-      name: menuItem.name,
+      name: item.nameOverride && item.nameOverride.length > 0 ? item.nameOverride : menuItem.name,
       unitPrice: unit,
       quantity: item.quantity,
       toppingNames,
