@@ -422,7 +422,7 @@ const Index = () => {
 
       {/* Top action row: hamburger menu + customer greeting / login */}
       {!isStation && (
-        <div className="flex items-center justify-between px-3 py-2 bg-card border-b border-border" dir="rtl">
+        <div className="sticky top-0 z-40 flex items-center justify-between px-3 py-2 bg-card border-b border-border shadow-sm" dir="rtl">
           <SideMenu
             onLoginClick={() => setAuthModalOpen(true)}
             onUpdateFavorite={() => { setFavoriteStartInSetup(true); setFavoriteModalOpen(true); }}
