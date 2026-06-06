@@ -158,6 +158,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-grapes", name: "ענבים", price: 0 },
   { id: "fam-apples", name: "תפוזים", price: 0 },
   { id: "fam-water", name: "מים (בקבוק)", price: 0 },
+  { id: "fam-flavored-water-apple", name: "מים בטעם תפוח", price: 0 },
+  { id: "fam-flavored-water-grape", name: "מים בטעם ענבים", price: 0 },
   { id: "fam-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-goldstar", name: "גולדסטאר", price: 8 },
   { id: "fam-heineken", name: "הייניקן", price: 8 },
