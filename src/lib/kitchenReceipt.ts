@@ -923,7 +923,7 @@ const statusLabel = (s?: string | null): string => {
   return "";
 };
 
-function buildOrderBlockHtml(order: RoundOrder, index: number): string {
+function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = false): string {
   const merged = mergeItems(order.order_items);
 
   const time = order.created_at
