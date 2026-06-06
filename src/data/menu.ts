@@ -79,6 +79,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י" },
   bottle: { description: "ענבים / תפוזים" },
   water: { description: "בקבוק מים מינרליים" },
+  "flavored-water": { description: "מים בטעם תפוח / ענבים" },
   soda: { description: "בקבוק סודה" },
   "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
