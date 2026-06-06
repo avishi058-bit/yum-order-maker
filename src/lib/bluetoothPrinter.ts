@@ -338,15 +338,17 @@ export async function printLines(lines: PrintLine[], profile: EncodingProfile = 
 // monochrome bitmap, and sends as ESC/POS GS v 0 raster command.
 // =====================================================================
 
-// Paper width in dots. 40mm thermal @ 203 dpi ≈ 320 dots (multiple of 8).
+// Paper width in dots. 80mm thermal @ 203 dpi ≈ 576 dots (multiple of 8).
 // Stored in localStorage so user can adjust per printer if needed.
 const WIDTH_KEY = "bt-printer-width-dots";
 export function getPaperWidthDots(): number {
   try {
     const v = parseInt(localStorage.getItem(WIDTH_KEY) || "", 10);
+    // Migrate legacy 40mm default (320) to 80mm (576) automatically.
+    if (v === 320) { localStorage.setItem(WIDTH_KEY, "576"); return 576; }
     if (v >= 64 && v <= 832 && v % 8 === 0) return v;
   } catch {}
-  return 320;
+  return 576;
 }
 export function setPaperWidthDots(dots: number) {
   const clamped = Math.max(64, Math.min(832, Math.floor(dots / 8) * 8));
