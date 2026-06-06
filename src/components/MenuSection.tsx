@@ -270,7 +270,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       </div>
 
       {categories.map((cat) => {
-        let items = menuItems.filter((i) => matchesCategory(i, cat.key) && isAvailable(i.id));
+        let items = menuItems.filter((i) => matchesCategory(i, cat.key) && isAvailable(availabilityIdFor(i.id)));
         // Apply custom order if set
         if (settings.menu_order && settings.menu_order.length > 0) {
           items = [...items].sort((a, b) => {
