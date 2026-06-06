@@ -628,16 +628,20 @@ const Kitchen = () => {
       toast.info("אין הזמנות מוכנות");
       return;
     }
+    const prevOrders = orders;
+    setOrders((curr) =>
+      curr.map((o) => (readyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
+    );
     const { error } = await supabase
       .from("orders")
       .update({ status: "completed" })
       .in("id", readyIds);
     if (error) {
       toast.error(`שגיאה: ${error.message}`);
+      setOrders(prevOrders);
       return;
     }
     toast.success(`${readyIds.length} הזמנות הושלמו`);
-    fetchOrders();
   };
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
@@ -645,6 +649,19 @@ const Kitchen = () => {
     if (newStatus === "preparing" && prepMinutes) {
       updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
     }
+
+    // Optimistic update — flip the card immediately so the user sees instant
+    // feedback. We snapshot the prior state so we can roll back on error.
+    const prevOrders = orders;
+    setOrders((curr) =>
+      curr.map((o) =>
+        o.id === orderId
+          ? { ...o, status: newStatus as Order["status"], ...(updateData.estimated_ready_at ? { estimated_ready_at: updateData.estimated_ready_at } : {}) }
+          : o,
+      ),
+    );
+    setShowTimePicker(null);
+
     const { data, error } = await supabase
       .from("orders")
       .update(updateData)
@@ -654,15 +671,15 @@ const Kitchen = () => {
     if (error) {
       console.error("[Kitchen] Failed to update order status:", error);
       toast.error(`שגיאה בעדכון סטטוס: ${error.message}`);
+      setOrders(prevOrders); // rollback
       return;
     }
     if (!data || data.length === 0) {
       console.warn("[Kitchen] Update returned no rows — likely RLS or session issue", { orderId, newStatus });
       toast.error("העדכון לא בוצע — בדוק הרשאות / התחברות מחדש");
+      setOrders(prevOrders); // rollback
       return;
     }
-    setShowTimePicker(null);
-    fetchOrders();
 
     // Fire push notification when order becomes ready (non-blocking)
     if (newStatus === "ready") {
@@ -1778,7 +1795,7 @@ const Kitchen = () => {
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
-                        className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm hover:bg-secondary transition-colors"
+                        className="px-4 py-3 rounded-lg bg-muted text-foreground text-base font-bold hover:bg-secondary transition-colors active:scale-95"
                         title="החזר להכנה"
                       >
                         ↩ חזור להכנה
@@ -1789,14 +1806,14 @@ const Kitchen = () => {
                         order.order_source === "kiosk" ? (
                           <button
                             onClick={() => updateStatus(order.id, "preparing")}
-                            className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
                           >
                             קבל הזמנה ✅
                           </button>
                         ) : (
                           <button
                             onClick={() => setShowTimePicker(order.id)}
-                            className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
                           >
                             התחל הכנה 👨‍🍳
                           </button>
@@ -1804,9 +1821,9 @@ const Kitchen = () => {
                       ) : (
                         <button
                           onClick={() => updateStatus(order.id, next)}
-                          className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
                         >
-                          {next === "ready" ? "מוכנה ✅" : "הושלמה"}
+                          {next === "ready" ? "מוכנה ✅" : "הושלמה ✅"}
                         </button>
                       )
                     )}
