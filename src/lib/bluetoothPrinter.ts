@@ -305,16 +305,15 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
 
   if (supportsWoR && (char as { writeValueWithoutResponse?: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse) {
     const CHUNK = 240; // typical BLE MTU 247 - 3 ATT overhead
+    const writeWoR = (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse.bind(char);
     for (let i = 0; i < data.length; i += CHUNK) {
       const end = Math.min(i + CHUNK, data.length);
+      const slice = data.slice(i, end); // .slice() returns a fresh ArrayBuffer-backed Uint8Array
       try {
-        await (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> })
-          .writeValueWithoutResponse(data.subarray(i, end));
+        await writeWoR(slice);
       } catch (e) {
-        // GATT busy — tiny backoff and retry once
         await new Promise((r) => setTimeout(r, 8));
-        await (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> })
-          .writeValueWithoutResponse(data.subarray(i, end));
+        await writeWoR(slice);
       }
     }
     return;
