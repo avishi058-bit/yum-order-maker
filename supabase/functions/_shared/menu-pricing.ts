@@ -74,7 +74,7 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית", price: 15 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים חריפים", price: 9 },
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
-  { id: "crispy-onion-chips", name: "שבבי בצל קריספי", price: 6 },
+  { id: "crispy-onion-chips", name: "שבבי בצל קריספי", price: 4 },
   { id: "peanut-butter", name: "חמאת בוטנים", price: 8 },
   { id: "maple", name: "סירופ בטעם מייפל", price: 5 },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25 },
