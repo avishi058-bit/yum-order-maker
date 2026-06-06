@@ -36,6 +36,7 @@ import {
 } from "@/lib/rawbtPrinter";
 import { printAgentReceipt, printAgentTest } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
+import { subscribeKitchenToPush, isKitchenSubscribed } from "@/lib/push";
 
 
 
@@ -358,6 +359,44 @@ const Kitchen = () => {
     const i = setInterval(() => setTick((t) => (t + 1) % 1000000), 1000);
     return () => clearInterval(i);
   }, []);
+
+  // Swap the document <link rel="manifest"> to the kitchen manifest so the
+  // browser offers "install" with the kitchen icon/name/start_url=/kitchen.
+  useEffect(() => {
+    const link = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+    const prevHref = link?.getAttribute("href") ?? null;
+    if (link) link.setAttribute("href", "/kitchen.webmanifest");
+    const theme = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    const prevTheme = theme?.getAttribute("content") ?? null;
+    if (theme) theme.setAttribute("content", "#000000");
+    return () => {
+      if (link && prevHref) link.setAttribute("href", prevHref);
+      if (theme && prevTheme) theme.setAttribute("content", prevTheme);
+    };
+  }, []);
+
+  // Push notifications — subscribe THIS device as a kitchen device so it
+  // receives a push every time a new order is created.
+  const [pushEnabled, setPushEnabled] = useState(false);
+  useEffect(() => {
+    isKitchenSubscribed().then(setPushEnabled);
+  }, []);
+  const handleEnableKitchenPush = async () => {
+    const res = await subscribeKitchenToPush();
+    if (res.ok) {
+      setPushEnabled(true);
+      toast.success("התראות הופעלו ✅ — תקבל push בכל הזמנה חדשה");
+    } else {
+      const msg: Record<string, string> = {
+        unsupported: "הדפדפן לא תומך בהתראות",
+        ios_needs_install: "ב-iOS צריך קודם להוסיף למסך הבית ואז להפעיל",
+        denied: "ההרשאה נדחתה — אפשר להפעיל מהגדרות הדפדפן",
+        sw_failed: "טעינת ה-Service Worker נכשלה",
+        save_failed: "שמירת המנוי נכשלה",
+      };
+      toast.error(msg[res.reason ?? ""] ?? "נכשל להפעיל התראות");
+    }
+  };
 
   // Activate audio on first interaction
   useEffect(() => {
@@ -1264,6 +1303,17 @@ const Kitchen = () => {
             title="הדפס סיכום סבב לטבח"
           >
             <Printer size={20} />
+          </button>
+          {/* Enable push notifications for THIS device (kitchen) */}
+          <button
+            onClick={handleEnableKitchenPush}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              pushEnabled ? "bg-green-500/20 text-green-300" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+            }`}
+            title={pushEnabled ? "התראות מופעלות במכשיר הזה" : "הפעל התראות push להזמנות חדשות"}
+          >
+            <Bell size={16} />
+            <span>{pushEnabled ? "התראות פעילות" : "הפעל התראות"}</span>
           </button>
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
