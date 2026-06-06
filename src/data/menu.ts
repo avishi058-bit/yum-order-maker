@@ -79,6 +79,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י" },
   bottle: { description: "ענבים / תפוזים" },
   water: { description: "בקבוק מים מינרליים" },
+  "flavored-water": { description: "מים בטעם תפוח / ענבים" },
   soda: { description: "בקבוק סודה" },
   "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
@@ -265,6 +266,10 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "bottle-grapes", name: "ענבים" },
     { id: "bottle-apples", name: "תפוזים" },
   ],
+  "flavored-water": [
+    { id: "flavored-water-apple", name: "תפוח" },
+    { id: "flavored-water-grape", name: "ענבים" },
+  ],
   "beer-regular": [
     { id: "beer-carlsberg", name: "קלסטברג" },
     { id: "beer-goldstar", name: "גולדסטאר" },
@@ -298,6 +303,8 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "can-mojito": "drink-blu-mojito", "can-watermelon": "drink-watermelon", "can-day": "drink-blu-day",
   // bottle sub-options
   "bottle-grapes": "drink-grapes", "bottle-apples": "drink-apples",
+  // flavored water sub-options (DrinkSelector)
+  "flavored-water-apple": "drink-flavored-water-apple", "flavored-water-grape": "drink-flavored-water-grape",
   // beer sub-options
   "beer-carlsberg": "drink-carlsberg", "beer-goldstar": "drink-goldstar",
   "beer-heineken": "drink-heineken", "beer-corona": "drink-corona",
@@ -312,12 +319,14 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "drink-corona": "drink-corona", "drink-carlsberg": "drink-carlsberg",
   "drink-laffe": "drink-laffe", "drink-unfiltered": "drink-unfiltered", "drink-guinness": "drink-guinness",
   "drink-water": "water", "drink-soda": "soda",
+  "drink-flavored-water-apple": "drink-flavored-water-apple", "drink-flavored-water-grape": "drink-flavored-water-grape",
   // deal drink options (DealCustomizer)
   "deal-cola": "drink-cola", "deal-zero": "drink-zero", "deal-fanta": "drink-fanta",
   "deal-fanta-grape": "drink-fanta-grape", "deal-fanta-exotic": "drink-fanta-exotic",
   "deal-sprite": "drink-sprite", "deal-sprite-zero": "drink-sprite-zero",
   "deal-blu": "drink-blu", "deal-blu-mojito": "drink-blu-mojito", "deal-blu-day": "drink-blu-day",
   "deal-grapes": "drink-grapes", "deal-oranges": "drink-grapes", "deal-flavored-water": "drink-flavored-water",
+  "deal-flavored-water-apple": "drink-flavored-water-apple", "deal-flavored-water-grape": "drink-flavored-water-grape",
   "deal-water": "water", "deal-soda": "soda",
   "deal-goldstar": "drink-goldstar", "deal-heineken": "drink-heineken",
   "deal-corona": "drink-corona", "deal-carlsberg": "drink-carlsberg",
@@ -326,6 +335,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "fam-cola": "drink-cola", "fam-zero": "drink-zero", "fam-fanta": "drink-fanta",
   "fam-sprite": "drink-sprite", "fam-blu": "drink-blu",
   "fam-grapes": "drink-grapes", "fam-apples": "drink-apples",
+  "fam-flavored-water-apple": "drink-flavored-water-apple", "fam-flavored-water-grape": "drink-flavored-water-grape",
   "fam-water": "water", "fam-soda": "soda",
   "fam-goldstar": "drink-goldstar", "fam-heineken": "drink-heineken",
   "fam-corona": "drink-corona", "fam-carlsberg": "drink-carlsberg",

@@ -179,6 +179,9 @@ const normaliseDrinkLabel = (raw: string): string | null => {
   if (/הוגרדן/.test(s)) return "הוגרדן";
   if (/מוחיטו/.test(s)) return "מוחיטו";
   if (/אבטיח/.test(s)) return "מים אבטיח";
+  if (/מים\s*בטעם\s*תפוח/.test(s)) return "מים בטעם תפוח";
+  if (/מים\s*בטעם\s*ענבים/.test(s)) return "מים בטעם ענבים";
+  if (/מים\s*בטעמים/.test(s)) return "מים בטעמים";
   if (/ענבים/.test(s)) return "ענבים";
   if (/תפוזים/.test(s)) return "תפוזים";
   if (/תפוחים/.test(s)) return "תפוחים";
