@@ -83,7 +83,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
             className="flex flex-col items-center gap-4"
           >
             <p className="text-lg md:text-xl font-bold text-foreground">
-              כדי להתחיל הזמנה בחר 👇🏽
+              בחר כדי להתחיל בהזמנה👇🏽
             </p>
             <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
               <button
