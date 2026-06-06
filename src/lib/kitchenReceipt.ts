@@ -908,6 +908,7 @@ export async function printReceipt(order: ReceiptOrder) {
 // every item with its toppings/changes/meal/deal details. NO aggregated chef
 // summary, NO drinks summary — pure per-order list for the kitchen.
 export interface RoundOrder {
+  id?: string;
   order_number: number;
   customer_name?: string | null;
   created_at?: string | null;
