@@ -29,13 +29,15 @@ import {
   getPrintMode,
   setPrintMode,
   printRawBTReceipt,
+  printRawBTRoundSummary,
+  printRawBTRoundChef,
   printRawBTPlainText,
   printRawBTPlainTextDirect,
   printRawBTPlainTextShare,
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentTest } from "@/lib/localPrintAgent";
+import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed } from "@/lib/push";
 
