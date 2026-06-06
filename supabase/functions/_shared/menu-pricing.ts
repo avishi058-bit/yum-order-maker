@@ -80,7 +80,6 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "extra-smash-patty", name: "זוג קציצות סמאש 110 גרם כל אחת", price: 29 },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8 },
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים)", price: 4 },
-  { id: "vegan-busha", name: "גבינת בושה טבעונית", price: 9 },
 ];
 
 // ===== Meal upgrade =====
