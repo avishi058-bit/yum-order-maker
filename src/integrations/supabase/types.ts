@@ -260,6 +260,7 @@ export type Database = {
           customer_phone: string | null
           endpoint: string
           id: string
+          is_kitchen: boolean
           order_id: string | null
           p256dh: string
         }
@@ -269,6 +270,7 @@ export type Database = {
           customer_phone?: string | null
           endpoint: string
           id?: string
+          is_kitchen?: boolean
           order_id?: string | null
           p256dh: string
         }
@@ -278,6 +280,7 @@ export type Database = {
           customer_phone?: string | null
           endpoint?: string
           id?: string
+          is_kitchen?: boolean
           order_id?: string | null
           p256dh?: string
         }
