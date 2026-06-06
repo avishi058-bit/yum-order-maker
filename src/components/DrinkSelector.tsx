@@ -88,6 +88,9 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
               <div className="space-y-2">
                 {options.map((opt) => {
                   const unavailable = isDrinkUnavailable(opt.id);
+                  // Hide out-of-stock BLU variants entirely instead of showing "אזל"
+                  if (unavailable && opt.id.startsWith("can-")) return null;
+
                   return (
                     <button
                       key={opt.id}
