@@ -956,6 +956,18 @@ const Kitchen = () => {
     [showRoundChefSummary, activeRoundOrders],
   );
 
+  // Listen for "ready" clicks from inside the active-orders bon iframe.
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      const data = e.data as { type?: string; id?: string } | undefined;
+      if (data?.type === "kitchen:order-ready" && data.id) {
+        updateStatus(data.id, "completed");
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
   const timeSince = (dateStr: string) => {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
     if (diff < 60) return `${diff} שניות`;
