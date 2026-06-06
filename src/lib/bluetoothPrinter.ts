@@ -1017,24 +1017,23 @@ async function _ops() {
   return await import("./btReceiptOps");
 }
 
+// Hybrid fast path: ESC/POS text + small per-line Hebrew bitmaps. Much faster
+// and lighter than rastering the whole HTML page (no large black blocks that
+// bog the thermal head down, no CJK-looking gibberish from misinterpreted
+// raster bytes if the printer was left in text mode by a previous job).
 export async function printBluetoothReceipt(order: ReceiptOrder): Promise<void> {
-  // Render full receipt HTML → one image → raster. Most reliable Hebrew path
-  // for printers that don't support Hebrew codepages.
-  const { buildReceiptHtml } = await import("./kitchenReceipt");
-  const html = await buildReceiptHtml(order);
-  await printHtmlBluetoothSlow(html);
+  const { buildKitchenBonOps } = await _ops();
+  await printOps(buildKitchenBonOps(order));
 }
 
 export async function printBluetoothRoundSummary(orders: RoundOrder[]): Promise<void> {
-  const { buildRoundSummaryHtml } = await import("./kitchenReceipt");
-  const html = buildRoundSummaryHtml(orders);
-  await printHtmlBluetoothSlow(html);
+  const { buildRoundSummaryOps } = await _ops();
+  await printOps(buildRoundSummaryOps(orders));
 }
 
 export async function printBluetoothRoundChef(orders: RoundOrder[]): Promise<void> {
-  const { buildRoundChefSummaryHtml } = await import("./kitchenReceipt");
-  const html = buildRoundChefSummaryHtml(orders);
-  await printHtmlBluetoothSlow(html);
+  const { buildRoundChefOps } = await _ops();
+  await printOps(buildRoundChefOps(orders));
 }
 
 export async function printTest(): Promise<void> {
