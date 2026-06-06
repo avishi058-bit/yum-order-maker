@@ -257,6 +257,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     ];
     return {
       itemId: menuItemId,
+      // Send the cart's display name (e.g. "פחית — קולה") so the kitchen sees
+      // the selected sub-variant instead of the canonical menu name.
+      nameOverride: item.name,
       quantity: item.quantity,
       toppings: item.toppings,
       removals: item.removals,
