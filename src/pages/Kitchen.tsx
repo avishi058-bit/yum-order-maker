@@ -261,6 +261,7 @@ const Kitchen = () => {
   const [showRingtoneMenu, setShowRingtoneMenu] = useState(false);
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showAvailMenu, setShowAvailMenu] = useState(false);
   const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const printedOrdersRef = useRef<Set<string>>(new Set());
@@ -1139,6 +1140,96 @@ const Kitchen = () => {
             )}
           </div>
 
+          {/* 🟢 Availability group */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowAvailMenu(!showAvailMenu); setShowNotifMenu(false); setShowPrintMenu(false); }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                restaurantStatus.website_open || restaurantStatus.station_open
+                  ? "bg-green-500/20 text-green-300"
+                  : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+              }`}
+              title="זמינות הזמנות ותשלום"
+            >
+              <Globe size={16} />
+              <span>זמינות</span>
+            </button>
+            {showAvailMenu && (
+              <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 w-72 p-3 space-y-2">
+                <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
+                  זמינות הזמנות ותשלום
+                </div>
+
+                <button
+                  onClick={() => toggleWebsite(!restaurantStatus.website_open)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.website_open ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Globe size={14} /> אתר הזמנות</span>
+                  <span>{restaurantStatus.website_open ? "פתוח" : "סגור"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleStation(!restaurantStatus.station_open)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.station_open ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Monitor size={14} /> עמדת הזמנות</span>
+                  <span>{restaurantStatus.station_open ? "פתוח" : "סגור"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleCash(!restaurantStatus.cash_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.cash_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן</span>
+                  <span>{restaurantStatus.cash_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleCredit(!restaurantStatus.credit_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.credit_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי</span>
+                  <span>{restaurantStatus.credit_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <div className="pt-1 border-t border-border">
+                  {restaurantStatus.website_open || restaurantStatus.station_open ? (
+                    <button
+                      onClick={closeAll}
+                      className="w-full px-3 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90"
+                    >
+                      סגור הכל
+                    </button>
+                  ) : (
+                    <button
+                      onClick={openAll}
+                      className="w-full px-3 py-2 rounded-lg bg-green-500 text-white text-sm font-bold hover:bg-green-600"
+                    >
+                      פתח הכל
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowAvailMenu(false)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg text-xs bg-muted hover:bg-secondary text-foreground"
+                >
+                  סגור
+                </button>
+              </div>
+            )}
+          </div>
+
+
+
           {/* 🖨️ Print & Diagnostics group */}
           <div className="relative">
             <button
@@ -1455,104 +1546,6 @@ const Kitchen = () => {
       )}
 
 
-      {/* Restaurant Status Bar */}
-      <div className="bg-card border-b border-border px-6 py-3 flex items-center justify-center gap-6 flex-wrap">
-        <div className="flex items-center gap-3">
-          <Globe size={16} className={restaurantStatus.website_open ? "text-green-400" : "text-destructive"} />
-          <span className="text-sm font-medium text-foreground">אתר הזמנות</span>
-          <button
-            onClick={() => toggleWebsite(!restaurantStatus.website_open)}
-            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
-              restaurantStatus.website_open ? "bg-green-500" : "bg-destructive"
-            }`}
-          >
-            <motion.div
-              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
-              animate={{ left: restaurantStatus.website_open ? "1.5rem" : "0.125rem" }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          </button>
-          <span className={`text-xs font-bold ${restaurantStatus.website_open ? "text-green-400" : "text-destructive"}`}>
-            {restaurantStatus.website_open ? "פתוח" : "סגור"}
-          </span>
-        </div>
-
-        <div className="w-px h-6 bg-border" />
-
-        <div className="flex items-center gap-3">
-          <Monitor size={16} className={restaurantStatus.station_open ? "text-green-400" : "text-destructive"} />
-          <span className="text-sm font-medium text-foreground">עמדת הזמנות</span>
-          <button
-            onClick={() => toggleStation(!restaurantStatus.station_open)}
-            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
-              restaurantStatus.station_open ? "bg-green-500" : "bg-destructive"
-            }`}
-          >
-            <motion.div
-              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
-              animate={{ left: restaurantStatus.station_open ? "1.5rem" : "0.125rem" }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          </button>
-          <span className={`text-xs font-bold ${restaurantStatus.station_open ? "text-green-400" : "text-destructive"}`}>
-            {restaurantStatus.station_open ? "פתוח" : "סגור"}
-          </span>
-        </div>
-
-        <div className="w-px h-6 bg-border" />
-
-        <div className="flex items-center gap-3">
-          <Banknote size={16} className={restaurantStatus.cash_enabled ? "text-green-400" : "text-destructive"} />
-          <span className="text-sm font-medium text-foreground">מזומן</span>
-          <button
-            onClick={() => toggleCash(!restaurantStatus.cash_enabled)}
-            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
-              restaurantStatus.cash_enabled ? "bg-green-500" : "bg-destructive"
-            }`}
-          >
-            <motion.div
-              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
-              animate={{ left: restaurantStatus.cash_enabled ? "1.5rem" : "0.125rem" }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <CreditCard size={16} className={restaurantStatus.credit_enabled ? "text-green-400" : "text-destructive"} />
-          <span className="text-sm font-medium text-foreground">אשראי</span>
-          <button
-            onClick={() => toggleCredit(!restaurantStatus.credit_enabled)}
-            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${
-              restaurantStatus.credit_enabled ? "bg-green-500" : "bg-destructive"
-            }`}
-          >
-            <motion.div
-              className="absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md"
-              animate={{ left: restaurantStatus.credit_enabled ? "1.5rem" : "0.125rem" }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-border" />
-
-        {restaurantStatus.website_open || restaurantStatus.station_open ? (
-          <button
-            onClick={closeAll}
-            className="px-4 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90 transition-colors"
-          >
-            סגור הכל
-          </button>
-        ) : (
-          <button
-            onClick={openAll}
-            className="px-4 py-1.5 rounded-lg bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-colors"
-          >
-            פתח הכל
-          </button>
-        )}
-      </div>
 
       {/* Escalation settings panel */}
       {showSettings && (
