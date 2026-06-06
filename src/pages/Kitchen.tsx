@@ -277,6 +277,21 @@ const Kitchen = () => {
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
 
+  // Pause auto-refresh (polling/realtime) while a modal/bon is open so the
+  // kitchen view doesn't re-render and scroll-jump under the user.
+  const pauseRefreshRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  useEffect(() => {
+    const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
+    pauseRefreshRef.current = open;
+    if (!open && pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      // fire a single catch-up fetch after modal closes
+      void fetchOrdersRef.current?.();
+    }
+  }, [showRoundSummary, showRoundChefSummary, previewOrder]);
+  const fetchOrdersRef = useRef<(() => Promise<void>) | null>(null);
+
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
     if (!previewOrder) {
@@ -462,6 +477,17 @@ const Kitchen = () => {
       setOrders(fetched);
     }
   }, []);
+  fetchOrdersRef.current = fetchOrders;
+
+  // Auto-refresh variant: skipped while a modal/bon is open, and queues a
+  // single catch-up fetch for when the user closes the modal.
+  const fetchOrdersAuto = useCallback(() => {
+    if (pauseRefreshRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    void fetchOrders();
+  }, [fetchOrders]);
 
   useEffect(() => {
     fetchOrders();
@@ -470,7 +496,7 @@ const Kitchen = () => {
 
     const channel = supabase
       .channel("orders-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrders())
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => fetchOrdersAuto())
       .subscribe((status) => {
         setRealtimeConnected(status === "SUBSCRIBED");
       });
@@ -491,12 +517,12 @@ const Kitchen = () => {
 
     // Polling fallback — runs every 3s as a safety net even if realtime drops
     const pollInterval = setInterval(() => {
-      fetchOrders();
+      fetchOrdersAuto();
     }, POLLING_FALLBACK_MS);
 
     // Refetch on tab visibility (handles long-idle tablets)
     const onVisible = () => {
-      if (document.visibilityState === "visible") fetchOrders();
+      if (document.visibilityState === "visible") fetchOrdersAuto();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
@@ -509,7 +535,7 @@ const Kitchen = () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [fetchOrders, fetchAvailability, fetchCustomToppings]);
+  }, [fetchOrders, fetchOrdersAuto, fetchAvailability, fetchCustomToppings]);
 
   // Auto-print new orders
   useEffect(() => {
