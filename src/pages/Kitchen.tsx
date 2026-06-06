@@ -104,6 +104,7 @@ const itemOrder: Record<string, string[]> = {
     "drink-sprite", "drink-sprite-zero", "drink-blu", "drink-blu-mojito", "drink-blu-day",
     "drink-watermelon",
     "drink-grapes", "drink-apples", "drink-flavored-water",
+    "drink-flavored-water-apple", "drink-flavored-water-grape",
     "water", "soda",
     "drink-carlsberg", "drink-goldstar", "drink-heineken", "drink-corona",
     "drink-hoegaarden", "drink-laffe", "drink-unfiltered", "drink-guinness", "drink-weiss",
