@@ -998,7 +998,8 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
   </div>`;
 }
 
-export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
+export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interactive?: boolean } = {}): string {
+  const interactive = !!options.interactive;
   // Sort oldest → newest so first orderer is served first.
   const sorted = [...orders].sort((a, b) => {
     const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -1012,7 +1013,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[]): string {
   });
 
   const blocksHtml = sorted.length
-    ? sorted.map((o, i) => buildOrderBlockHtml(o, i)).join("")
+    ? sorted.map((o, i) => buildOrderBlockHtml(o, i, interactive)).join("")
     : `<div class="empty">אין הזמנות פעילות</div>`;
 
   // ---- Aggregated chef summary across ALL active orders ----
