@@ -139,6 +139,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-blu", name: "בלו", price: 0 },
   { id: "deal-blu-mojito", name: "בלו מוחיטו", price: 0 },
   { id: "deal-blu-day", name: "בלו דיי", price: 0 },
+  { id: "deal-blu-watermelon", name: "בלו אבטיח", price: 0 },
+
   { id: "deal-grapes", name: "ענבים (בקבוק)", price: 2 },
   { id: "deal-oranges", name: "תפוזים (בקבוק)", price: 2 },
   { id: "deal-flavored-water", name: "מים בטעמים (בקבוק)", price: 2 },
