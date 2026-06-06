@@ -1304,6 +1304,17 @@ const Kitchen = () => {
           >
             <Printer size={20} />
           </button>
+          {/* Enable push notifications for THIS device (kitchen) */}
+          <button
+            onClick={handleEnableKitchenPush}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              pushEnabled ? "bg-green-500/20 text-green-300" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+            }`}
+            title={pushEnabled ? "התראות מופעלות במכשיר הזה" : "הפעל התראות push להזמנות חדשות"}
+          >
+            <Bell size={16} />
+            <span>{pushEnabled ? "התראות פעילות" : "הפעל התראות"}</span>
+          </button>
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`p-2 rounded-lg transition-colors ${
