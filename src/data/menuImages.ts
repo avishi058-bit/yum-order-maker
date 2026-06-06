@@ -16,6 +16,9 @@ import beerPremiumImg from "@/assets/menu/beer-leffe.webp";
 import beerWeissImg from "@/assets/menu/beer-weihenstephaner.webp";
 import hafMifsha from "@/assets/menu/haf-mifsha.webp";
 import napoleon from "@/assets/menu/napoleon.jpg";
+import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
+
+
 
 export const menuImages: Record<string, string> = {
   classic: classicImg,
