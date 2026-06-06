@@ -1128,9 +1128,12 @@ export function getPrintQueueDepth(): number {
 }
 
 export async function printOps(ops: FastOp[]): Promise<void> {
+  // Build bytes BEFORE entering the queue — when several bons are queued, the
+  // next bon's rendering+raster work happens in parallel with the previous bon
+  // still transmitting over BLE. This eliminates dead time between jobs.
+  const bytes = buildOpsBytes(ops);
   return enqueuePrint(async () => {
     const char = await ensureConnected();
-    const bytes = buildOpsBytes(ops);
     await writeBytes(char, bytes);
   });
 }
