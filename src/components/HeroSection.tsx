@@ -13,6 +13,15 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
+  const [dance, setDance] = useState(false);
+  useEffect(() => {
+    if (dineIn !== null) {
+      setDance(false);
+      return;
+    }
+    const t = window.setTimeout(() => setDance(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [dineIn]);
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
