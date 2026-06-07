@@ -208,9 +208,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
     // Item name (big, bold) — qty only when >1, doneness inline at end
+    // If it's a meal (upgraded or originally a meal), prefix with "ארוחת"
     const qtyStr = totalQty > 1 ? ` x${totalQty}` : "";
     const donSuffix = donShort ? ` ${donShort}` : "";
-    ops.push(asLine(`${it.item_name}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
+    const displayName = it.with_meal && !it.item_name.startsWith("ארוחת")
+      ? `ארוחת ${it.item_name}`
+      : it.item_name;
+    ops.push(asLine(`${displayName}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
     ops.push(feed(LINE_GAP));
 
     // Changes
@@ -237,11 +241,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Per-item drinks (meal drink / deal drinks)
     if (it.with_meal) {
-      let m = "ארוחה";
-      if (it.meal_side) m += ` - ${it.meal_side}`;
-      if (it.meal_drink) m += `, ${cleanDrinkName(it.meal_drink)}`;
-      ops.push(asLine(m, { align: "R", bold: true, size: 26 }));
-      ops.push(feed(LINE_GAP));
+      const parts: string[] = [];
+      if (it.meal_side) parts.push(it.meal_side);
+      if (it.meal_drink) parts.push(cleanDrinkName(it.meal_drink));
+      if (parts.length > 0) {
+        ops.push(asLine(parts.join(", "), { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
+      }
     }
     if (Array.isArray(it.deal_burgers)) {
       it.deal_burgers.forEach((b: { name?: string; removals?: string[] }, i: number) => {
@@ -353,7 +359,10 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
       if (ownerName) ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 28 }));
       const qty = it.quantity > 1 ? ` x${it.quantity}` : "";
       const donSuffix = donShort ? ` ${donShort}` : "";
-      ops.push(asLine(`${it.item_name}${qty}${donSuffix}`, { align: "R", bold: true, size: 34 }));
+      const displayName = it.with_meal && !it.item_name.startsWith("ארוחת")
+        ? `ארוחת ${it.item_name}`
+        : it.item_name;
+      ops.push(asLine(`${displayName}${qty}${donSuffix}`, { align: "R", bold: true, size: 34 }));
       if (cleanedRemovals.length > 0) {
         ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", bold: true, size: 28 }));
       }
@@ -363,10 +372,12 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
         }
       }
       if (it.with_meal) {
-        let m = "ארוחה";
-        if (it.meal_side) m += ` - ${it.meal_side}`;
-        if (it.meal_drink) m += `, ${cleanDrinkName(it.meal_drink)}`;
-        ops.push(asLine(m, { align: "R", bold: true, size: 28 }));
+        const parts: string[] = [];
+        if (it.meal_side) parts.push(it.meal_side);
+        if (it.meal_drink) parts.push(cleanDrinkName(it.meal_drink));
+        if (parts.length > 0) {
+          ops.push(asLine(parts.join(", "), { align: "R", bold: true, size: 28 }));
+        }
       }
     }
     ops.push(sep());
