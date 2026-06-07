@@ -2,6 +2,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 import "./index.css";
+import { initIngredientAvailability } from "./lib/ingredientAvailability";
+
+initIngredientAvailability().catch(() => {});
 
 // Swap manifest + apple title when on the /kitchen route so installing from
 // /kitchen creates a separate "Kitchen" PWA, while / stays the customer app.
