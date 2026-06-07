@@ -252,8 +252,14 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       }
     }
     if (Array.isArray(it.deal_burgers)) {
+      ops.push(feed(1.2));
       it.deal_burgers.forEach((b: { name?: string; removals?: string[] }, i: number) => {
-        ops.push(asLine(`${i + 1}. ${b.name || ""}`, { align: "R", bold: true, size: 26 }));
+        if (i > 0) {
+          ops.push(feed(1.0));
+          ops.push(asLine("- - - - - - - - - - - - - -", { align: "C", bold: false, size: 22 }));
+          ops.push(feed(1.0));
+        }
+        ops.push(asLine(`מנה ${i + 1}: ${b.name || ""}`.trim(), { align: "R", bold: true, size: 28 }));
         ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
         if (isCustomizableBurger(b.name || "")) {
@@ -275,7 +281,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           ops.push(feed(LINE_GAP));
         }
       });
-      ops.push(asLine(`צ'יפס ענק`, { align: "R", bold: true, size: 26 }));
+      ops.push(feed(1.0));
+      ops.push(asLine("- - - - - - - - - - - - - -", { align: "C", bold: false, size: 22 }));
+      ops.push(feed(1.0));
+      ops.push(asLine(`צ'יפס ענק`, { align: "R", bold: true, size: 28 }));
       ops.push(feed(LINE_GAP));
     }
     if (Array.isArray(it.deal_drinks)) {
