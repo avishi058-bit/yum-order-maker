@@ -1073,7 +1073,7 @@ const Kitchen = () => {
           onClick={handleEnableKitchenPush}
         >
           <Bell size={22} />
-          🔔 לחץ כאן להפעיל התראות על הזמנות חדשות (חובה!)
+          🔔 לחץ כאן להפעיל "עדכן אותי" — התראות לטלפון על הזמנות חדשות
         </div>
       )}
       {/* Audio activation prompt */}
