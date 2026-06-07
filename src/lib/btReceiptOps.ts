@@ -21,6 +21,12 @@ import {
   type RoundOrder,
 } from "./kitchenReceipt";
 import { ingredients } from "@/data/menu";
+import {
+  getRemovalShortcut,
+  shortcutConsumedIds,
+  removalShortcutLabel,
+  type RemovalShortcut,
+} from "./ingredientShortcuts";
 
 // ---- Ingredient diff (matches the customizer view) ----
 // Translates the opaque removalId / addId tokens stored on order items into
@@ -48,16 +54,20 @@ function classifyIngredientChanges(removals: string[]): {
   removes: string[];
   adds: string[];
   others: string[];
+  shortcut: RemovalShortcut;
 } {
   const removes: string[] = [];
   const adds: string[] = [];
   const others: string[] = [];
+  const shortcut: RemovalShortcut = getRemovalShortcut(removals);
+  const skip = shortcutConsumedIds(shortcut);
   for (const r of removals) {
+    if (skip.has(r)) continue;
     const m = ING_LOOKUP[r];
     if (m) (m.kind === "remove" ? removes : adds).push(m.label);
     else others.push(r);
   }
-  return { removes, adds, others };
+  return { removes, adds, others, shortcut };
 }
 
 const HEB = /[\u0590-\u05FF]/;
@@ -191,11 +201,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     // Changes
     const isDeal = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
     if (!isDeal && isCustomizableBurger(it.item_name)) {
-      const { removes, adds, others } = classifyIngredientChanges(cleanedRemovals);
-      if (removes.length === 0 && adds.length === 0 && others.length === 0) {
+      const { removes, adds, others, shortcut } = classifyIngredientChanges(cleanedRemovals);
+      const shortcutLbl = removalShortcutLabel(shortcut);
+      if (!shortcutLbl && removes.length === 0 && adds.length === 0 && others.length === 0) {
         ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 26 }));
         ops.push(feed(LINE_GAP));
       } else {
+        if (shortcutLbl) { ops.push(asLine(shortcutLbl, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
         for (const r of removes) { ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
         for (const a of adds) { ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
         for (const o of others) { ops.push(asLine(o, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
@@ -222,13 +234,15 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
         ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
         if (isCustomizableBurger(b.name || "")) {
-          const { removes, adds, others } = classifyIngredientChanges(
+          const { removes, adds, others, shortcut } = classifyIngredientChanges(
             extractOwnerName(bRem).cleanedRemovals,
           );
-          if (removes.length === 0 && adds.length === 0 && others.length === 0) {
+          const shortcutLbl = removalShortcutLabel(shortcut);
+          if (!shortcutLbl && removes.length === 0 && adds.length === 0 && others.length === 0) {
             ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 24 }));
             ops.push(feed(LINE_GAP));
           } else {
+            if (shortcutLbl) { ops.push(asLine(shortcutLbl, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
             for (const r of removes) { ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
             for (const a of adds) { ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
             for (const o of others) { ops.push(asLine(o, { align: "R", bold: true, size: 24 })); ops.push(feed(LINE_GAP)); }
