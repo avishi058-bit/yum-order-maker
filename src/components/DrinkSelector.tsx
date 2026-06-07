@@ -60,17 +60,21 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
       <AnimatePresence>
         {item && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center"
+            className={`fixed inset-0 z-50 flex justify-center ${isKiosk ? "items-center p-6" : "items-end"}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
             <motion.div
-              className="relative w-full max-w-lg bg-card rounded-t-2xl p-6 pb-8 max-h-[70vh] overflow-y-auto"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
+              className={`relative w-full bg-card overflow-y-auto ${
+                isKiosk
+                  ? "max-w-3xl rounded-3xl p-10 pb-12 max-h-[85vh]"
+                  : "max-w-lg rounded-t-2xl p-6 pb-8 max-h-[70vh]"
+              }`}
+              initial={isKiosk ? { scale: 0.9, opacity: 0 } : { y: "100%" }}
+              animate={isKiosk ? { scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isKiosk ? { scale: 0.9, opacity: 0 } : { y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               dir="rtl"
             >
