@@ -58,12 +58,15 @@ function classifyIngredientChanges(removals: string[]): {
   const removes: string[] = [];
   const adds: string[] = [];
   const others: string[] = [];
+  const shortcut: RemovalShortcut = getRemovalShortcut(removals);
+  const skip = shortcutConsumedIds(shortcut);
   for (const r of removals) {
+    if (skip.has(r)) continue;
     const m = ING_LOOKUP[r];
     if (m) (m.kind === "remove" ? removes : adds).push(m.label);
     else others.push(r);
   }
-  return { removes, adds, others };
+  return { removes, adds, others, shortcut };
 }
 
 const HEB = /[\u0590-\u05FF]/;
