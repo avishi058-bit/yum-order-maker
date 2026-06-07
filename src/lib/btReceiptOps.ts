@@ -305,17 +305,12 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }
 
   // 5) Multi-item: aggregated drinks summary at the bottom (no title)
-  if (isMultiItem) {
-    const drinks = computeDrinkSummary(order.order_items).drinks;
-    const rows: Array<[string, number]> = [];
-    for (const [name, qty] of drinks.entries()) if (qty > 0) rows.push([name, qty]);
-    if (rows.length > 0) {
-      ops.push(sep());
-      for (const [label, n] of rows) {
-        const line = n > 1 ? `${label} x${n}` : label;
-        ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
-        ops.push(feed(LINE_GAP));
-      }
+  if (hasDrinksSummary) {
+    ops.push(sep());
+    for (const [label, n] of drinksSummaryEntries) {
+      const line = n > 1 ? `${label} x${n}` : label;
+      ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
+      ops.push(feed(LINE_GAP));
     }
   }
 
