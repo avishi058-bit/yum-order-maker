@@ -182,9 +182,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const LINE_GAP = 0.5; // breathing room between lines within an item
 
   // Pre-compute drinks summary so we can avoid duplicating standalone drinks
-  // both as a "dish" and in the bottom summary.
+  // both as a "dish" and in the bottom summary (takeaway only).
+  const isTakeawayPre = !(order.order_source === "kiosk" || order.order_source === "station");
   const drinksSummaryEntries: Array<[string, number]> = [];
-  if (isMultiItem) {
+  if (isMultiItem && isTakeawayPre) {
     const drinks = computeDrinkSummary(order.order_items).drinks;
     for (const [name, qty] of drinks.entries()) if (qty > 0) drinksSummaryEntries.push([name, qty]);
   }
@@ -194,6 +195,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const printedGroups = hasDrinksSummary
     ? groups.filter((g) => !isStandaloneDrinkItem(g.item))
     : groups;
+
 
   // 3) Items
   printedGroups.forEach((g, gi) => {
@@ -305,17 +307,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   }
 
-  // 5) Multi-item: aggregated drinks summary at the bottom (no title)
-  if (hasDrinksSummary) {
-    ops.push(sep());
-    for (const [label, n] of drinksSummaryEntries) {
-      const line = n > 1 ? `${label} x${n}` : label;
-      ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
-      ops.push(feed(LINE_GAP));
-    }
-  }
-
-  // 5b) Multi-item: aggregated sides summary at the bottom (takeaway only)
+  // 5) Multi-item takeaway: aggregated order summary (drinks + sides) under one title
   const isTakeaway = !(order.order_source === "kiosk" || order.order_source === "station");
   if (isMultiItem && isTakeaway) {
     const detectFriedKind = (name: string): string | null => {
@@ -350,17 +342,24 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       }
     }
     const sidesEntries = Array.from(sidesMap.entries()).filter(([, n]) => n > 0);
-    if (sidesEntries.length > 0) {
+    const hasAny = hasDrinksSummary || sidesEntries.length > 0;
+    if (hasAny) {
       ops.push(sep());
-      ops.push(asLine("סיכום מטוגנים", { align: "C", bold: true, size: 30 }));
+      ops.push(asLine("סיכום הזמנה", { align: "C", bold: true, size: 30 }));
       ops.push(feed(LINE_GAP));
       for (const [label, n] of sidesEntries) {
         const line = n > 1 ? `${label} x${n}` : label;
         ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
         ops.push(feed(LINE_GAP));
       }
+      for (const [label, n] of drinksSummaryEntries) {
+        const line = n > 1 ? `${label} x${n}` : label;
+        ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
+      }
     }
   }
+
 
 
   // 6) Payment block — only when relevant
