@@ -317,21 +317,18 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     // Changes
     const isDeal = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
     if (!isDeal && isCustomizableBurger(it.item_name)) {
-      const { removes, adds, others, shortcut } = classifyIngredientChanges(cleanedRemovals);
-      const shortcutLbl = removalShortcutLabel(shortcut);
-      if (!shortcutLbl && removes.length === 0 && adds.length === 0 && others.length === 0) {
-        ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 26 }));
+      const { veg, others } = buildVeggieSummary(it.item_name, cleanedRemovals);
+      ops.push(asLine(veg, { align: "R", bold: true, size: 28 }));
+      ops.push(feed(LINE_GAP));
+      for (const o of others) {
+        ops.push(asLine(o, { align: "R", bold: true, size: 26 }));
         ops.push(feed(LINE_GAP));
-      } else {
-        if (shortcutLbl) { ops.push(asLine(shortcutLbl, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
-        for (const r of removes) { ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
-        for (const a of adds) { ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
-        for (const o of others) { ops.push(asLine(o, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
       }
     } else if (cleanedRemovals.length > 0) {
       ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", bold: true, size: 26 }));
       ops.push(feed(LINE_GAP));
     }
+
 
     // Spacing before meal / drink / toppings line
     ops.push(feed(0.6));
