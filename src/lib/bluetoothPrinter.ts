@@ -1086,7 +1086,7 @@ function _renderNativeLineToMono(
 
 // Rotated path: rasterize EVERY op into monos, combine into one big bitmap,
 // rotate 180°, and emit as a single raster block. Native ESC/POS text is
-// rasterized via the Hebrew canvas renderer so it flips correctly too.
+// rasterized with a fixed native-like line box so it flips correctly too.
 function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
