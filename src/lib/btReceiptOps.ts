@@ -84,7 +84,21 @@ function feed(n = 1): FastOp {
 }
 
 const orderTypeLabel = (source: string): string =>
-  source === "kiosk" || source === "station" ? "ישיבה במקום" : "איסוף עצמי";
+  source === "kiosk" || source === "station" ? "לשבת" : "איסוף";
+
+// Normalize legacy stored topping names so old orders print the new labels too.
+function normalizeToppingName(s: string): string {
+  if (!s) return s;
+  let out = s;
+  out = out.replace(/ריבת פלפלים חריפים/g, "ריבת פלפלים");
+  out = out.replace(/זוג קציצות סמאש 110 גרם כל אחת/g, "+ קציצת סמאש");
+  return out;
+}
+
+// A thin dashed separator line between dishes.
+function dashSep(): FastOp {
+  return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
+}
 
 // Map doneness label like "M — מדיום" / "MW — מדיום וואל" to short "M"/"MW"/"WD".
 function shortDoneness(label: string | null): string | null {
@@ -201,10 +215,15 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Toppings (only show per-item when single-item order; otherwise aggregate below)
     if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) ops.push(asLine(t, { align: "R", bold: true, size: 26 }));
+      for (const t of it.toppings) ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 }));
     }
 
+    // Dashed separator between dishes (skip after the last one)
     ops.push(feed(1));
+    if (isMultiItem) {
+      ops.push(dashSep());
+      ops.push(feed(1));
+    }
   }
 
   // 4) Order-level sauces (synthetic "רטבים" line) — always at bottom, no title
@@ -212,7 +231,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   if (sauceItem && sauceItem.toppings && sauceItem.toppings.length > 0) {
     ops.push(sep());
     for (const t of sauceItem.toppings) {
-      ops.push(asLine(t, { align: "R", bold: true, size: 26 }));
+      ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 }));
     }
   }
 
