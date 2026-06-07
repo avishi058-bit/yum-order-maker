@@ -1046,6 +1046,44 @@ function _blankMono(width: number, rows: number): Mono {
   return { bytes: new Uint8Array(widthBytes * rows), widthBytes, height: rows, offsetX: 0 };
 }
 
+function _renderNativeLineToMono(
+  text: string,
+  opts: { width: number; px: number; lineHeight: number; bold: boolean; align: "L" | "C" | "R" },
+): Mono {
+  const { width, px, lineHeight, bold, align } = opts;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = lineHeight;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, lineHeight);
+  ctx.fillStyle = "#000";
+  ctx.font = `${bold ? "900" : "500"} ${px}px "Courier New", monospace`;
+  ctx.textBaseline = "middle";
+  if (align === "R") {
+    ctx.textAlign = "right";
+    ctx.fillText(text, width - 2, lineHeight / 2);
+  } else if (align === "C") {
+    ctx.textAlign = "center";
+    ctx.fillText(text, width / 2, lineHeight / 2);
+  } else {
+    ctx.textAlign = "left";
+    ctx.fillText(text, 2, lineHeight / 2);
+  }
+
+  const widthBytes = width / 8;
+  const { data } = ctx.getImageData(0, 0, width, lineHeight);
+  const bytes = new Uint8Array(widthBytes * lineHeight);
+  for (let y = 0; y < lineHeight; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum < 140) bytes[y * widthBytes + (x >> 3)] |= 0x80 >> (x & 7);
+    }
+  }
+  return { bytes, widthBytes, height: lineHeight, offsetX: 0 };
+}
+
 // Rotated path: rasterize EVERY op into monos, combine into one big bitmap,
 // rotate 180°, and emit as a single raster block. Native ESC/POS text is
 // rasterized via the Hebrew canvas renderer so it flips correctly too.
@@ -1059,9 +1097,9 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     switch (op.kind) {
       case "init": break;
       case "sep":
-        // Match native ESC/POS sep height (~24 dots for default size text line).
-        // Previously 18px → made the rotated bon noticeably more compact than the upright one.
-        monos.push(_renderHebToMono("-".repeat(cols), { width, px: 24, bold: false, align: "C" }));
+        monos.push(_renderNativeLineToMono("-".repeat(cols), {
+          width, px: 24, lineHeight: 30, bold: false, align: "C",
+        }));
         break;
       case "feed": {
         const dots = Math.max(1, Math.round((op.n ?? 1) * 24));
@@ -1069,11 +1107,13 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
         break;
       }
       case "text":
-        // Match native ESC/POS default font line height: size=1 ≈ 24 dots, size=2 ≈ 48 dots.
-        // Previously 20/32 — produced visibly tighter, smaller text vs upright bon.
-        monos.push(_renderHebToMono(op.text, {
+        // Keep native-text rows at the printer's real line advance. The Hebrew
+        // renderer crops vertically, which made rotated ASCII separators tighter
+        // than the upright ESC/POS output.
+        monos.push(_renderNativeLineToMono(op.text, {
           width,
           px: (op.size === 2 ? 48 : 24),
+          lineHeight: (op.size === 2 ? 60 : 30),
           bold: !!op.bold,
           align: op.align ?? "L",
         }));
