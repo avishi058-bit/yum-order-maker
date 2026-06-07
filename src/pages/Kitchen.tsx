@@ -23,6 +23,8 @@ import {
   setEncoding,
   getPaperWidthDots,
   setPaperWidthDots,
+  getPrintRotate180,
+  setPrintRotate180,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 import {
