@@ -84,7 +84,21 @@ function feed(n = 1): FastOp {
 }
 
 const orderTypeLabel = (source: string): string =>
-  source === "kiosk" || source === "station" ? "ישיבה במקום" : "איסוף עצמי";
+  source === "kiosk" || source === "station" ? "לשבת" : "איסוף";
+
+// Normalize legacy stored topping names so old orders print the new labels too.
+function normalizeToppingName(s: string): string {
+  if (!s) return s;
+  let out = s;
+  out = out.replace(/ריבת פלפלים חריפים/g, "ריבת פלפלים");
+  out = out.replace(/זוג קציצות סמאש 110 גרם כל אחת/g, "+ קציצת סמאש");
+  return out;
+}
+
+// A thin dashed separator line between dishes.
+function dashSep(): FastOp {
+  return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
+}
 
 // Map doneness label like "M — מדיום" / "MW — מדיום וואל" to short "M"/"MW"/"WD".
 function shortDoneness(label: string | null): string | null {
