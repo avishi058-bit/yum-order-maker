@@ -245,7 +245,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       if (it.meal_side) parts.push(it.meal_side);
       if (it.meal_drink) parts.push(cleanDrinkName(it.meal_drink));
       if (parts.length > 0) {
-        ops.push(asLine(parts.join(", "), { align: "R", bold: true, size: 26 }));
+        ops.push(asLine(parts.join(", "), { align: "R", bold: true, size: 28 }));
         ops.push(feed(LINE_GAP));
       }
     }
