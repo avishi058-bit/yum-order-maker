@@ -1046,9 +1046,47 @@ function _blankMono(width: number, rows: number): Mono {
   return { bytes: new Uint8Array(widthBytes * rows), widthBytes, height: rows, offsetX: 0 };
 }
 
+function _renderNativeLineToMono(
+  text: string,
+  opts: { width: number; px: number; lineHeight: number; bold: boolean; align: "L" | "C" | "R" },
+): Mono {
+  const { width, px, lineHeight, bold, align } = opts;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = lineHeight;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, width, lineHeight);
+  ctx.fillStyle = "#000";
+  ctx.font = `${bold ? "900" : "500"} ${px}px "Courier New", monospace`;
+  ctx.textBaseline = "middle";
+  if (align === "R") {
+    ctx.textAlign = "right";
+    ctx.fillText(text, width - 2, lineHeight / 2);
+  } else if (align === "C") {
+    ctx.textAlign = "center";
+    ctx.fillText(text, width / 2, lineHeight / 2);
+  } else {
+    ctx.textAlign = "left";
+    ctx.fillText(text, 2, lineHeight / 2);
+  }
+
+  const widthBytes = width / 8;
+  const { data } = ctx.getImageData(0, 0, width, lineHeight);
+  const bytes = new Uint8Array(widthBytes * lineHeight);
+  for (let y = 0; y < lineHeight; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum < 140) bytes[y * widthBytes + (x >> 3)] |= 0x80 >> (x & 7);
+    }
+  }
+  return { bytes, widthBytes, height: lineHeight, offsetX: 0 };
+}
+
 // Rotated path: rasterize EVERY op into monos, combine into one big bitmap,
 // rotate 180°, and emit as a single raster block. Native ESC/POS text is
-// rasterized via the Hebrew canvas renderer so it flips correctly too.
+// rasterized with a fixed native-like line box so it flips correctly too.
 function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
@@ -1059,9 +1097,9 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     switch (op.kind) {
       case "init": break;
       case "sep":
-        // Match native ESC/POS sep height (~24 dots for default size text line).
-        // Previously 18px → made the rotated bon noticeably more compact than the upright one.
-        monos.push(_renderHebToMono("-".repeat(cols), { width, px: 24, bold: false, align: "C" }));
+        monos.push(_renderNativeLineToMono("-".repeat(cols), {
+          width, px: 24, lineHeight: 30, bold: false, align: "C",
+        }));
         break;
       case "feed": {
         const dots = Math.max(1, Math.round((op.n ?? 1) * 24));
@@ -1069,11 +1107,13 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
         break;
       }
       case "text":
-        // Match native ESC/POS default font line height: size=1 ≈ 24 dots, size=2 ≈ 48 dots.
-        // Previously 20/32 — produced visibly tighter, smaller text vs upright bon.
-        monos.push(_renderHebToMono(op.text, {
+        // Keep native-text rows at the printer's real line advance. The Hebrew
+        // renderer crops vertically, which made rotated ASCII separators tighter
+        // than the upright ESC/POS output.
+        monos.push(_renderNativeLineToMono(op.text, {
           width,
           px: (op.size === 2 ? 48 : 24),
+          lineHeight: (op.size === 2 ? 60 : 30),
           bold: !!op.bold,
           align: op.align ?? "L",
         }));
@@ -1093,43 +1133,13 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     }
   }
   if (monos.length > 0) {
-    // Trim trailing blank rows from the combined bitmap BEFORE rotating —
-    // any trailing feed at the end of the ops list would, after 180° rotation,
-    // become a big empty band at the TOP of the printed bon. We instead want
-    // that breathing room to land BELOW the rotated content (i.e. between the
-    // bon and the cut), so we move it out of the bitmap and emit it as a
-    // motor feed after the raster. Result: rotated bon looks identical in
-    // density/spacing to the upright bon, with the gap at the top of the
-    // physical paper (which is what the user reads first on a 180° print).
     const combined = _combineMonos(monos, width);
-    const wb = combined.widthBytes;
-    let trailingBlank = 0;
-    for (let y = combined.height - 1; y >= 0; y--) {
-      let blank = true;
-      const off = y * wb;
-      for (let i = 0; i < wb; i++) {
-        if (combined.bytes[off + i] !== 0) { blank = false; break; }
-      }
-      if (!blank) break;
-      trailingBlank++;
-    }
-    const usefulH = combined.height - trailingBlank;
-    const trimmed: Mono = usefulH === combined.height
-      ? combined
-      : { bytes: combined.bytes.subarray(0, usefulH * wb), widthBytes: wb, height: usefulH, offsetX: 0 };
-    const rotated = _rotate180Mono(trimmed);
+    // Rotate the full bitmap including the final blank feed. That makes the
+    // readable top of the upside-down bon match the upright bon exactly: the
+    // end-of-bon gap becomes the lead-in gap instead of being left after text.
+    const rotated = _rotate180Mono(combined);
     buf.pushArr(_align("L"));
     _emitRasterInto(buf, rotated);
-    // Re-emit the trimmed trailing whitespace AFTER the rotated content so it
-    // physically prints below the bon (above it in the rotated reading order).
-    if (trailingBlank > 0) {
-      let remaining = trailingBlank;
-      while (remaining > 0) {
-        const step = Math.min(255, remaining);
-        buf.pushArr([ESC, 0x4a, step]);
-        remaining -= step;
-      }
-    }
   }
   if (cut) {
     buf.pushArr([ESC, 0x64, 2]);
