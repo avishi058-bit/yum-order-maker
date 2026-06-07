@@ -54,6 +54,7 @@ function classifyIngredientChanges(removals: string[]): {
   removes: string[];
   adds: string[];
   others: string[];
+  shortcut: RemovalShortcut;
 } {
   const removes: string[] = [];
   const adds: string[] = [];
