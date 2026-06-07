@@ -301,7 +301,7 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
     // "כפולה" = 2 patties → 2× the doneness count
     const multiplier = isDoubleName(name) ? 2 : 1;
     // Extra patty topping also adds another patty of the same doneness
-    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220"]);
+    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]);
     add(extractDonenessKey(it.removals), qty * (multiplier + extraPatties));
   }
 
@@ -416,7 +416,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
 
     // ---- topping-driven extras ----
     // Regular extra patty topping → +1 regular meat patty
-    regularPatties += includesAny(it.toppings, ["אקסטרה קציצה (220"]) * qty;
+    regularPatties += includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) * qty;
     // Smash extra patty topping ("אקסטרה קציצת סמאש") → +1 smash patty in
     // the chef summary (the customer-facing label may say "+זוג קציצות 110ג",
     // but the chef counts it as a single smash portion).

@@ -92,6 +92,7 @@ function normalizeToppingName(s: string): string {
   let out = s;
   out = out.replace(/ריבת פלפלים חריפים/g, "ריבת פלפלים");
   out = out.replace(/זוג קציצות סמאש 110 גרם כל אחת/g, "+ קציצת סמאש");
+  out = out.replace(/אקסטרה קציצה \(220 גרם\)/g, "תוספת קציצה");
   return out;
 }
 
