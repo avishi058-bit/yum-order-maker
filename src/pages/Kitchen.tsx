@@ -403,7 +403,7 @@ const Kitchen = () => {
     const res = await subscribeKitchenToPush();
     if (res.ok) {
       setPushEnabled(true);
-      toast.success("התראות הופעלו ✅ — תקבל push בכל הזמנה חדשה");
+      toast.success("עדכן אותי הופעל ✅ — תקבל התראה בטלפון על כל הזמנה חדשה");
     } else {
       const msg: Record<string, string> = {
         unsupported: "הדפדפן לא תומך בהתראות",
@@ -414,6 +414,19 @@ const Kitchen = () => {
       };
       toast.error(msg[res.reason ?? ""] ?? "נכשל להפעיל התראות");
     }
+  };
+  const handleDisableKitchenPush = async () => {
+    const res = await unsubscribeKitchenFromPush();
+    if (res.ok) {
+      setPushEnabled(false);
+      toast.success("עדכן אותי כובה — לא תקבל יותר התראות לטלפון");
+    } else {
+      toast.error("נכשל לכבות התראות");
+    }
+  };
+  const handleToggleKitchenPush = async () => {
+    if (pushEnabled) await handleDisableKitchenPush();
+    else await handleEnableKitchenPush();
   };
 
   // Activate audio on first interaction
