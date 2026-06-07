@@ -182,9 +182,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const LINE_GAP = 0.5; // breathing room between lines within an item
 
   // Pre-compute drinks summary so we can avoid duplicating standalone drinks
-  // both as a "dish" and in the bottom summary.
+  // both as a "dish" and in the bottom summary (takeaway only).
+  const isTakeawayPre = !(order.order_source === "kiosk" || order.order_source === "station");
   const drinksSummaryEntries: Array<[string, number]> = [];
-  if (isMultiItem) {
+  if (isMultiItem && isTakeawayPre) {
     const drinks = computeDrinkSummary(order.order_items).drinks;
     for (const [name, qty] of drinks.entries()) if (qty > 0) drinksSummaryEntries.push([name, qty]);
   }
@@ -194,6 +195,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const printedGroups = hasDrinksSummary
     ? groups.filter((g) => !isStandaloneDrinkItem(g.item))
     : groups;
+
 
   // 3) Items
   printedGroups.forEach((g, gi) => {
