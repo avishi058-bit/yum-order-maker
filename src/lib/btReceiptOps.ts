@@ -215,10 +215,15 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Toppings (only show per-item when single-item order; otherwise aggregate below)
     if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) ops.push(asLine(t, { align: "R", bold: true, size: 26 }));
+      for (const t of it.toppings) ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 }));
     }
 
+    // Dashed separator between dishes (skip after the last one)
     ops.push(feed(1));
+    if (isMultiItem) {
+      ops.push(dashSep());
+      ops.push(feed(1));
+    }
   }
 
   // 4) Order-level sauces (synthetic "רטבים" line) — always at bottom, no title
