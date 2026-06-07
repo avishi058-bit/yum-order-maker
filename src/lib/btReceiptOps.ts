@@ -21,6 +21,12 @@ import {
   type RoundOrder,
 } from "./kitchenReceipt";
 import { ingredients } from "@/data/menu";
+import {
+  getRemovalShortcut,
+  shortcutConsumedIds,
+  removalShortcutLabel,
+  type RemovalShortcut,
+} from "./ingredientShortcuts";
 
 // ---- Ingredient diff (matches the customizer view) ----
 // Translates the opaque removalId / addId tokens stored on order items into
