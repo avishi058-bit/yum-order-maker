@@ -163,6 +163,10 @@ function buildVeggieSummary(
   if (missing.length === 1 && addedExtras.length === 0) {
     return { veg: `ללא ${VEGGIE_HEBREW[missing[0]]}`, others };
   }
+  // Exactly one added to default, nothing removed → "להוסיף X"
+  if (addedExtras.length === 1 && missing.length === 0) {
+    return { veg: `להוסיף ${VEGGIE_HEBREW[addedExtras[0]]}`, others };
+  }
 
   // Default: list everything that ends up on the bun
   return {
