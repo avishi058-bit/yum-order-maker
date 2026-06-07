@@ -1026,6 +1026,7 @@ function _emitNarrowRasterInto(buf: ByteBuf, mono: Mono) {
 
 export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   const width = getPaperWidthDots();
+  if (getPrintRotate180()) return _buildOpsBytesRotated(ops, width);
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
 
