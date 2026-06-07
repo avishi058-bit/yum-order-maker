@@ -1024,6 +1024,83 @@ function _emitNarrowRasterInto(buf: ByteBuf, mono: Mono) {
   _emitRasterInto(buf, mono);
 }
 
+// Rotate a 1-bit MSB-first bitmap 180° in place into a new buffer.
+function _rotate180Mono(mono: Mono): Mono {
+  const { bytes, widthBytes, height } = mono;
+  const width = widthBytes * 8;
+  const out = new Uint8Array(bytes.length);
+  for (let y = 0; y < height; y++) {
+    const srcRow = (height - 1 - y) * widthBytes;
+    const dstRow = y * widthBytes;
+    for (let x = 0; x < width; x++) {
+      const srcX = width - 1 - x;
+      const bit = (bytes[srcRow + (srcX >> 3)] >> (7 - (srcX & 7))) & 1;
+      if (bit) out[dstRow + (x >> 3)] |= 0x80 >> (x & 7);
+    }
+  }
+  return { bytes: out, widthBytes, height, offsetX: 0 };
+}
+
+function _blankMono(width: number, rows: number): Mono {
+  const widthBytes = width / 8;
+  return { bytes: new Uint8Array(widthBytes * rows), widthBytes, height: rows, offsetX: 0 };
+}
+
+// Rotated path: rasterize EVERY op into monos, combine into one big bitmap,
+// rotate 180°, and emit as a single raster block. Native ESC/POS text is
+// rasterized via the Hebrew canvas renderer so it flips correctly too.
+function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
+  const buf = new ByteBuf(8192);
+  buf.pushArr(CMD_INIT);
+  const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
+  const monos: Mono[] = [];
+  let cut = false;
+  for (const op of ops) {
+    switch (op.kind) {
+      case "init": break;
+      case "sep":
+        monos.push(_renderHebToMono("-".repeat(cols), { width, px: 18, bold: false, align: "C" }));
+        break;
+      case "feed": {
+        const dots = Math.max(1, Math.round((op.n ?? 1) * 24));
+        monos.push(_blankMono(width, dots));
+        break;
+      }
+      case "text":
+        monos.push(_renderHebToMono(op.text, {
+          width,
+          px: (op.size === 2 ? 32 : 20),
+          bold: !!op.bold,
+          align: op.align ?? "L",
+        }));
+        break;
+      case "heb":
+        monos.push(_renderHebToMono(op.text, {
+          width, px: op.size ?? 22, bold: !!op.bold, align: op.align ?? "R",
+        }));
+        break;
+      case "header":
+        monos.push(_renderHeaderToMono(op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width));
+        break;
+      case "twoCol":
+        monos.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
+        break;
+      case "cut": cut = true; break;
+    }
+  }
+  if (monos.length > 0) {
+    const combined = _combineMonos(monos, width);
+    const rotated = _rotate180Mono(combined);
+    buf.pushArr(_align("L"));
+    _emitRasterInto(buf, rotated);
+  }
+  if (cut) {
+    buf.pushArr([ESC, 0x64, 2]);
+    buf.pushArr(CMD_CUT);
+  }
+  return buf.toUint8();
+}
+
 export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   const width = getPaperWidthDots();
   if (getPrintRotate180()) return _buildOpsBytesRotated(ops, width);
