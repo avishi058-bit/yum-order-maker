@@ -1059,7 +1059,9 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     switch (op.kind) {
       case "init": break;
       case "sep":
-        monos.push(_renderHebToMono("-".repeat(cols), { width, px: 18, bold: false, align: "C" }));
+        // Match native ESC/POS sep height (~24 dots for default size text line).
+        // Previously 18px → made the rotated bon noticeably more compact than the upright one.
+        monos.push(_renderHebToMono("-".repeat(cols), { width, px: 24, bold: false, align: "C" }));
         break;
       case "feed": {
         const dots = Math.max(1, Math.round((op.n ?? 1) * 24));
@@ -1067,9 +1069,11 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
         break;
       }
       case "text":
+        // Match native ESC/POS default font line height: size=1 ≈ 24 dots, size=2 ≈ 48 dots.
+        // Previously 20/32 — produced visibly tighter, smaller text vs upright bon.
         monos.push(_renderHebToMono(op.text, {
           width,
-          px: (op.size === 2 ? 32 : 20),
+          px: (op.size === 2 ? 48 : 24),
           bold: !!op.bold,
           align: op.align ?? "L",
         }));
