@@ -234,13 +234,15 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
         ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
         if (isCustomizableBurger(b.name || "")) {
-          const { removes, adds, others } = classifyIngredientChanges(
+          const { removes, adds, others, shortcut } = classifyIngredientChanges(
             extractOwnerName(bRem).cleanedRemovals,
           );
-          if (removes.length === 0 && adds.length === 0 && others.length === 0) {
+          const shortcutLbl = removalShortcutLabel(shortcut);
+          if (!shortcutLbl && removes.length === 0 && adds.length === 0 && others.length === 0) {
             ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 24 }));
             ops.push(feed(LINE_GAP));
           } else {
+            if (shortcutLbl) { ops.push(asLine(shortcutLbl, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
             for (const r of removes) { ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
             for (const a of adds) { ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
             for (const o of others) { ops.push(asLine(o, { align: "R", bold: true, size: 24 })); ops.push(feed(LINE_GAP)); }
