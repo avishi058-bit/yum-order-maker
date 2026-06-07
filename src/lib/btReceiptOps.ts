@@ -241,11 +241,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Per-item drinks (meal drink / deal drinks)
     if (it.with_meal) {
-      let m = "ארוחה";
-      if (it.meal_side) m += ` - ${it.meal_side}`;
-      if (it.meal_drink) m += `, ${cleanDrinkName(it.meal_drink)}`;
-      ops.push(asLine(m, { align: "R", bold: true, size: 26 }));
-      ops.push(feed(LINE_GAP));
+      const parts: string[] = [];
+      if (it.meal_side) parts.push(it.meal_side);
+      if (it.meal_drink) parts.push(cleanDrinkName(it.meal_drink));
+      if (parts.length > 0) {
+        ops.push(asLine(parts.join(", "), { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
+      }
     }
     if (Array.isArray(it.deal_burgers)) {
       it.deal_burgers.forEach((b: { name?: string; removals?: string[] }, i: number) => {
