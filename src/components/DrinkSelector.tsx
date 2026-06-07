@@ -10,9 +10,10 @@ interface DrinkSelectorProps {
   onClose: () => void;
   onConfirm: (item: MenuItem, selectedDrink: string) => void;
   isAvailable?: (id: string) => boolean;
+  isKiosk?: boolean;
 }
 
-const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorProps) => {
+const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false }: DrinkSelectorProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const alcoholConsent = useAlcoholConsent();
 
