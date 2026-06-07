@@ -315,8 +315,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   }
 
-  // 5b) Multi-item: aggregated sides summary at the bottom (no title)
-  if (isMultiItem) {
+  // 5b) Multi-item: aggregated sides summary at the bottom (takeaway only)
+  const isTakeaway = !(order.order_source === "kiosk" || order.order_source === "station");
+  if (isMultiItem && isTakeaway) {
     const detectFriedKind = (name: string): string | null => {
       if (!name) return null;
       if (/מיקס\s*חברים/.test(name)) return "מיקס חברים";
@@ -351,6 +352,8 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     const sidesEntries = Array.from(sidesMap.entries()).filter(([, n]) => n > 0);
     if (sidesEntries.length > 0) {
       ops.push(sep());
+      ops.push(asLine("סיכום מטוגנים", { align: "C", bold: true, size: 30 }));
+      ops.push(feed(LINE_GAP));
       for (const [label, n] of sidesEntries) {
         const line = n > 1 ? `${label} x${n}` : label;
         ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
@@ -358,6 +361,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       }
     }
   }
+
 
   // 6) Payment block — only when relevant
   if (order.payment_method === "counter") {
