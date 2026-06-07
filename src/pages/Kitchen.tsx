@@ -1199,13 +1199,13 @@ const Kitchen = () => {
                   התראות וצלצולים
                 </div>
                 <button
-                  onClick={handleEnableKitchenPush}
+                  onClick={handleToggleKitchenPush}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
-                    pushEnabled ? "bg-green-500/20 text-green-300" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                    pushEnabled ? "bg-green-500/20 text-green-300 hover:bg-green-500/30" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><Bell size={14} /> Push להזמנות חדשות</span>
-                  <span>{pushEnabled ? "✓ פעיל" : "הפעל"}</span>
+                  <span className="flex items-center gap-2"><Bell size={14} /> עדכן אותי (התראה לטלפון)</span>
+                  <span>{pushEnabled ? "✓ פעיל — לחץ לכיבוי" : "כבוי — לחץ להפעלה"}</span>
                 </button>
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
