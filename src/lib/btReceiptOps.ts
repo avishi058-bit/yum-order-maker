@@ -208,9 +208,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
     // Item name (big, bold) — qty only when >1, doneness inline at end
+    // If it's a meal (upgraded or originally a meal), prefix with "ארוחת"
     const qtyStr = totalQty > 1 ? ` x${totalQty}` : "";
     const donSuffix = donShort ? ` ${donShort}` : "";
-    ops.push(asLine(`${it.item_name}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
+    const displayName = it.with_meal && !it.item_name.startsWith("ארוחת")
+      ? `ארוחת ${it.item_name}`
+      : it.item_name;
+    ops.push(asLine(`${displayName}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
     ops.push(feed(LINE_GAP));
 
     // Changes
