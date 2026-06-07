@@ -106,6 +106,12 @@ function normalizeToppingName(s: string): string {
   return out;
 }
 
+// Format a topping line with a big "+" prefix (skip if the name already starts with +).
+function toppingLine(s: string): string {
+  const n = normalizeToppingName(s).trim();
+  return n.startsWith("+") ? n : `+ ${n}`;
+}
+
 // A thin dashed separator line between dishes.
 function dashSep(): FastOp {
   return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
@@ -263,7 +269,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Toppings
     if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) { ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
+      for (const t of it.toppings) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
     }
 
     // Dashed separator between distinct dishes (skip after last)
@@ -279,7 +285,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   if (sauceItem && sauceItem.toppings && sauceItem.toppings.length > 0) {
     ops.push(sep());
     for (const t of sauceItem.toppings) {
-      ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 }));
+      ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 }));
       ops.push(feed(LINE_GAP));
     }
   }
