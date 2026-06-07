@@ -196,7 +196,7 @@ const TOPPING_UI: Record<string, ToppingUIOverlay> = {
   egg: { displayName: "ביצת עין 🍳" },
   "vegan-cheddar": { image: "cheddar" },
   "vegan-blue-cheese": { image: "blue-cheese" },
-  "hot-pepper-jam": { displayName: "ריבת פלפלים חריפים 🌶️" },
+  "hot-pepper-jam": { displayName: "ריבת פלפלים 🌶️" },
   "fried-onion": { image: "fried-onion" },
   "peanut-butter": { displayName: "חמאת בוטנים 🥜", recommended: true },
   maple: { image: "maple" },
