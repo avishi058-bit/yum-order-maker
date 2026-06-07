@@ -173,7 +173,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   }
   const isMultiItem = groups.length > 1 || (groups.length === 1 && groups[0].qty > 1);
-  const LINE_GAP = 0.7; // breathing room between lines within an item
+  const LINE_GAP = 0.5; // breathing room between lines within an item
 
   // 3) Items
   groups.forEach((g, gi) => {
