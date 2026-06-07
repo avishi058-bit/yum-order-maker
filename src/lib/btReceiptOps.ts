@@ -123,12 +123,19 @@ function buildVeggieSummary(
   const finalArr = VEG_ORDER.filter((id) => final.has(id));
   const defArr = VEG_ORDER.filter((id) => def.has(id));
 
-  // Unchanged from default
+  // Unchanged from default — only if there are also no other (sauce/extra) changes
   if (
     finalArr.length === defArr.length &&
-    finalArr.every((x, i) => x === defArr[i])
+    finalArr.every((x, i) => x === defArr[i]) &&
+    others.length === 0
   ) {
     return { veg: "ללא שינויים", others };
+  }
+  // If veggies match default but there are other changes, list the actual veggies
+  const veggiesMatchDefault =
+    finalArr.length === defArr.length && finalArr.every((x, i) => x === defArr[i]);
+  if (veggiesMatchDefault) {
+    return { veg: finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "), others };
   }
   // Empty bun
   if (finalArr.length === 0) return { veg: "בלי כלום", others };
