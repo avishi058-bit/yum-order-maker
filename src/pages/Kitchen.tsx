@@ -39,7 +39,7 @@ import {
 } from "@/lib/rawbtPrinter";
 import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
-import { subscribeKitchenToPush, isKitchenSubscribed } from "@/lib/push";
+import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { ingredients } from "@/data/menu";
 import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
 
@@ -403,7 +403,7 @@ const Kitchen = () => {
     const res = await subscribeKitchenToPush();
     if (res.ok) {
       setPushEnabled(true);
-      toast.success("התראות הופעלו ✅ — תקבל push בכל הזמנה חדשה");
+      toast.success("עדכן אותי הופעל ✅ — תקבל התראה בטלפון על כל הזמנה חדשה");
     } else {
       const msg: Record<string, string> = {
         unsupported: "הדפדפן לא תומך בהתראות",
@@ -414,6 +414,19 @@ const Kitchen = () => {
       };
       toast.error(msg[res.reason ?? ""] ?? "נכשל להפעיל התראות");
     }
+  };
+  const handleDisableKitchenPush = async () => {
+    const res = await unsubscribeKitchenFromPush();
+    if (res.ok) {
+      setPushEnabled(false);
+      toast.success("עדכן אותי כובה — לא תקבל יותר התראות לטלפון");
+    } else {
+      toast.error("נכשל לכבות התראות");
+    }
+  };
+  const handleToggleKitchenPush = async () => {
+    if (pushEnabled) await handleDisableKitchenPush();
+    else await handleEnableKitchenPush();
   };
 
   // Activate audio on first interaction
@@ -1060,7 +1073,7 @@ const Kitchen = () => {
           onClick={handleEnableKitchenPush}
         >
           <Bell size={22} />
-          🔔 לחץ כאן להפעיל התראות על הזמנות חדשות (חובה!)
+          🔔 לחץ כאן להפעיל "עדכן אותי" — התראות לטלפון על הזמנות חדשות
         </div>
       )}
       {/* Audio activation prompt */}
@@ -1186,13 +1199,13 @@ const Kitchen = () => {
                   התראות וצלצולים
                 </div>
                 <button
-                  onClick={handleEnableKitchenPush}
+                  onClick={handleToggleKitchenPush}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
-                    pushEnabled ? "bg-green-500/20 text-green-300" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                    pushEnabled ? "bg-green-500/20 text-green-300 hover:bg-green-500/30" : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><Bell size={14} /> Push להזמנות חדשות</span>
-                  <span>{pushEnabled ? "✓ פעיל" : "הפעל"}</span>
+                  <span className="flex items-center gap-2"><Bell size={14} /> עדכן אותי (התראה לטלפון)</span>
+                  <span>{pushEnabled ? "✓ פעיל — לחץ לכיבוי" : "כבוי — לחץ להפעלה"}</span>
                 </button>
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}

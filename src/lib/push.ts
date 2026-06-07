@@ -181,3 +181,22 @@ export const isKitchenSubscribed = async (): Promise<boolean> => {
   return !!data;
 };
 
+/**
+ * Turn OFF kitchen push for THIS device — flips is_kitchen to false on the row
+ * matching this device's endpoint so the kitchen notifier skips it.
+ */
+export const unsubscribeKitchenFromPush = async (): Promise<{ ok: boolean; reason?: string }> => {
+  const sub = await getExistingSubscription();
+  if (!sub) return { ok: true };
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .update({ is_kitchen: false })
+    .eq("endpoint", sub.endpoint);
+  if (error) {
+    console.error("[push] unsubscribe kitchen failed", error);
+    return { ok: false, reason: "update_failed" };
+  }
+  return { ok: true };
+};
+
+
