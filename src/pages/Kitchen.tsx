@@ -1854,13 +1854,22 @@ const Kitchen = () => {
                         const doneEntry = item.removals?.find(r => r.startsWith("doneness-"));
                         const doneLabel: Record<string, string> = { "doneness-m": "M — מדיום", "doneness-mw": "MW — מדיום וואל", "doneness-wd": "WD — וואל דאן" };
                         const otherRemovals = item.removals?.filter(r => !r.startsWith("doneness-") && !r.startsWith("__OWNER__:") && r !== "__FAVORITE__") || [];
+                        const shortcut = getRemovalShortcut(otherRemovals);
+                        const skip = shortcutConsumedIds(shortcut);
+                        const shortcutLbl = removalShortcutLabel(shortcut);
+                        const visibleRemovals = otherRemovals
+                          .filter(r => !skip.has(r))
+                          .map(r => REMOVAL_LABELS[r] || r);
                         return (
                           <>
                             {doneEntry && (
                               <p className="text-xs font-bold text-orange-400">🔥 {doneLabel[doneEntry] || doneEntry}</p>
                             )}
-                            {otherRemovals.length > 0 && (
-                              <p className="text-xs text-red-400">ללא: {otherRemovals.join(", ")}</p>
+                            {shortcutLbl && (
+                              <p className="text-xs font-bold text-red-400">{shortcutLbl}</p>
+                            )}
+                            {visibleRemovals.length > 0 && (
+                              <p className="text-xs text-red-400">ללא: {visibleRemovals.join(", ")}</p>
                             )}
                           </>
                         );
