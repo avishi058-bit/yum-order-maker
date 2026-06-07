@@ -278,14 +278,14 @@ const Kiosk = () => {
 
   const handleDrinkConfirm = useCallback((item: MenuItem, selectedDrink: string) => {
     setDrinkItem(null);
-    // Show preview with the selected drink variant; preserve canonical menu id for server-side pricing.
-    setPreviewItem({
-      ...item,
-      id: `${item.id}-${selectedDrink}-${Date.now()}`,
-      name: `${item.name} — ${selectedDrink}`,
-      _menuItemId: item.id,
-    } as MenuItem);
-  }, []);
+    // Add directly to cart — no second confirmation preview on kiosk.
+    const cartItemId = `${item.id}-${selectedDrink}-${Date.now()}`;
+    setCart((prev) => [
+      ...prev,
+      { id: cartItemId, menuItemId: item.id, name: `${item.name} — ${selectedDrink}`, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false },
+    ]);
+    flyFromCenter();
+  }, [flyFromCenter]);
 
   const updateQuantity = useCallback((id: string, delta: number) => {
     setCart((prev) => prev.map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c)).filter((c) => c.quantity > 0));
