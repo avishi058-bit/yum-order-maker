@@ -78,7 +78,7 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "peanut-butter", name: "חמאת בוטנים", price: 8 },
   { id: "maple", name: "סירופ בטעם מייפל", price: 5 },
   { id: "extra-patty", name: "אקסטרה קציצה (220 גרם)", price: 25 },
-  { id: "extra-smash-patty", name: "זוג קציצות סמאש 110 גרם כל אחת", price: 29 },
+  { id: "extra-smash-patty", name: "+ קציצת סמאש", price: 29 },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8 },
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים)", price: 4 },
 ];
