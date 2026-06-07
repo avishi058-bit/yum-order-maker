@@ -207,16 +207,11 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       ops.push(feed(LINE_GAP));
     }
 
-    // Item name (big, bold) — qty only when >1
+    // Item name (big, bold) — qty only when >1, doneness inline at end
     const qtyStr = totalQty > 1 ? ` x${totalQty}` : "";
-    ops.push(asLine(`${it.item_name}${qtyStr}`, { align: "R", bold: true, size: 34 }));
+    const donSuffix = donShort ? ` ${donShort}` : "";
+    ops.push(asLine(`${it.item_name}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
     ops.push(feed(LINE_GAP));
-
-    // Doneness — short code only (M / MW / WD)
-    if (donShort) {
-      ops.push(asLine(donShort, { align: "R", bold: true, size: 30 }));
-      ops.push(feed(LINE_GAP));
-    }
 
     // Changes
     const isDeal = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
