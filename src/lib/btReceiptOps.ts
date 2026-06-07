@@ -196,7 +196,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     : groups;
 
   // 3) Items
-  groups.forEach((g, gi) => {
+  printedGroups.forEach((g, gi) => {
     const it = g.item;
     const totalQty = g.qty;
     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
