@@ -40,6 +40,18 @@ import {
 import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed } from "@/lib/push";
+import { ingredients } from "@/data/menu";
+import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
+
+const REMOVAL_LABELS: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const ing of ingredients) {
+    const clean = ing.name.replace(/🥬/g, "").trim();
+    m[ing.removalId] = clean;
+    if (ing.addId) m[ing.addId] = clean;
+  }
+  return m;
+})();
 
 
 
