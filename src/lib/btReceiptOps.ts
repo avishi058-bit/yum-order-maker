@@ -381,9 +381,7 @@ export function buildRoundChefOps(orders: RoundOrder[]): FastOp[] {
   const ops: FastOp[] = [];
   const time = new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 
-  ops.push(asLine("סיכום סבב לטבח", { align: "C", bold: true, size: 36 }));
-  ops.push({ kind: "text", text: time, align: "C", size: 2 });
-  ops.push({ kind: "text", text: `${orders.length} orders`, align: "C", size: 2 });
+  ops.push(asLine(`סיכום סבב ${time}`, { align: "C", bold: true, size: 36 }));
   ops.push(sep());
 
   const all: ReceiptOrderItem[] = orders.flatMap((o) => o.order_items || []);
