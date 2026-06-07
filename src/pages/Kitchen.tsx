@@ -896,6 +896,14 @@ const Kitchen = () => {
 
   const [encoding, setEncodingState] = useState<EncodingProfile>(() => getEncoding());
   const [paperWidth, setPaperWidthState] = useState<number>(() => getPaperWidthDots());
+  const [rotate180, setRotate180State] = useState<boolean>(() => getPrintRotate180());
+
+  const handleRotateToggle = () => {
+    const next = !rotate180;
+    setPrintRotate180(next);
+    setRotate180State(next);
+    toast.success(next ? "הדפסה הפוכה הופעלה (180°)" : "הדפסה רגילה");
+  };
 
   const handleEncodingChange = (p: EncodingProfile) => {
     setEncoding(p);
