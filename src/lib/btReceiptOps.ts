@@ -181,8 +181,22 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const isMultiItem = groups.length > 1 || (groups.length === 1 && groups[0].qty > 1);
   const LINE_GAP = 0.5; // breathing room between lines within an item
 
+  // Pre-compute drinks summary so we can avoid duplicating standalone drinks
+  // both as a "dish" and in the bottom summary.
+  const drinksSummaryEntries: Array<[string, number]> = [];
+  if (isMultiItem) {
+    const drinks = computeDrinkSummary(order.order_items).drinks;
+    for (const [name, qty] of drinks.entries()) if (qty > 0) drinksSummaryEntries.push([name, qty]);
+  }
+  const hasDrinksSummary = drinksSummaryEntries.length > 0;
+  const isStandaloneDrinkItem = (it: ReceiptOrderItem) =>
+    DRINK_RX.test(it.item_name) && !it.with_meal && !Array.isArray(it.deal_burgers);
+  const printedGroups = hasDrinksSummary
+    ? groups.filter((g) => !isStandaloneDrinkItem(g.item))
+    : groups;
+
   // 3) Items
-  groups.forEach((g, gi) => {
+  printedGroups.forEach((g, gi) => {
     const it = g.item;
     const totalQty = g.qty;
     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
@@ -273,7 +287,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
     // Dashed separator between distinct dishes (skip after last)
-    if (gi < groups.length - 1) {
+    if (gi < printedGroups.length - 1) {
       ops.push(feed(0.6));
       ops.push(dashSep());
       ops.push(feed(0.6));
@@ -291,17 +305,12 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }
 
   // 5) Multi-item: aggregated drinks summary at the bottom (no title)
-  if (isMultiItem) {
-    const drinks = computeDrinkSummary(order.order_items).drinks;
-    const rows: Array<[string, number]> = [];
-    for (const [name, qty] of drinks.entries()) if (qty > 0) rows.push([name, qty]);
-    if (rows.length > 0) {
-      ops.push(sep());
-      for (const [label, n] of rows) {
-        const line = n > 1 ? `${label} x${n}` : label;
-        ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
-        ops.push(feed(LINE_GAP));
-      }
+  if (hasDrinksSummary) {
+    ops.push(sep());
+    for (const [label, n] of drinksSummaryEntries) {
+      const line = n > 1 ? `${label} x${n}` : label;
+      ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
+      ops.push(feed(LINE_GAP));
     }
   }
 
