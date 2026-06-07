@@ -381,9 +381,9 @@ export function buildRoundChefOps(orders: RoundOrder[]): FastOp[] {
   const ops: FastOp[] = [];
   const time = new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 
-  ops.push(asLine("סיכום סבב לטבח", { align: "C", bold: true, size: 28 }));
-  ops.push({ kind: "text", text: time, align: "C", size: 1 });
-  ops.push({ kind: "text", text: `${orders.length} orders`, align: "C", size: 1 });
+  ops.push(asLine("סיכום סבב לטבח", { align: "C", bold: true, size: 36 }));
+  ops.push({ kind: "text", text: time, align: "C", size: 2 });
+  ops.push({ kind: "text", text: `${orders.length} orders`, align: "C", size: 2 });
   ops.push(sep());
 
   const all: ReceiptOrderItem[] = orders.flatMap((o) => o.order_items || []);
@@ -393,9 +393,9 @@ export function buildRoundChefOps(orders: RoundOrder[]): FastOp[] {
   const donenessRows = formatDonenessRows(computeDonenessSummary(all));
   if (donenessRows.length > 0) {
     ops.push(sep());
-    ops.push(asLine("== מידות עשייה ==", { align: "C", bold: true, size: 22 }));
+    ops.push(asLine("== מידות עשייה ==", { align: "C", bold: true, size: 32 }));
     for (const r of donenessRows) {
-      ops.push(asLine(`${r.label}: ${r.n}`, { align: "R", bold: true, size: 20 }));
+      ops.push(asLine(`${r.label}: ${r.n}`, { align: "R", bold: true, size: 34 }));
     }
   }
 
@@ -425,9 +425,9 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
 
   if (rows.length === 0) return out;
 
-  out.push(asLine(`== ${title} ==`, { align: "C", bold: true, size: 24 }));
+  out.push(asLine(`== ${title} ==`, { align: "C", bold: true, size: 32 }));
   for (const [label, n] of rows) {
-    out.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 22 }));
+    out.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 34 }));
   }
   return out;
 }
