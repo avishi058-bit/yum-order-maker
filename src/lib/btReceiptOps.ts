@@ -315,6 +315,50 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   }
 
+  // 5b) Multi-item: aggregated sides summary at the bottom (no title)
+  if (isMultiItem) {
+    const detectFriedKind = (name: string): string | null => {
+      if (!name) return null;
+      if (/מיקס\s*חברים/.test(name)) return "מיקס חברים";
+      if (/טבעות.*טמפורה|טמפורה/.test(name)) return "טבעות בצל בטמפורה";
+      if (/בטטה/.test(name)) return "צ'יפס בטטה";
+      if (/טבעות\s*בצל/.test(name)) return "טבעות בצל";
+      if (/צ['׳]?יפס\s*ענק/.test(name)) return "צ'יפס ענק";
+      if (/צ['׳]?יפס/.test(name)) return "צ'יפס רגיל";
+      return null;
+    };
+    const sidesMap = new Map<string, number>();
+    const addSide = (label: string | null, qty: number) => {
+      if (!label) return;
+      sidesMap.set(label, (sidesMap.get(label) || 0) + qty);
+    };
+    for (const it of order.order_items) {
+      if (it.item_name === "רטבים") continue;
+      const qty = it.quantity || 1;
+      if (Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0) {
+        addSide("צ'יפס ענק", qty);
+        continue;
+      }
+      const standalone = detectFriedKind(it.item_name);
+      if (standalone) {
+        addSide(standalone, qty);
+        continue;
+      }
+      if (it.with_meal && it.meal_side) {
+        addSide(detectFriedKind(it.meal_side) || it.meal_side, qty);
+      }
+    }
+    const sidesEntries = Array.from(sidesMap.entries()).filter(([, n]) => n > 0);
+    if (sidesEntries.length > 0) {
+      ops.push(sep());
+      for (const [label, n] of sidesEntries) {
+        const line = n > 1 ? `${label} x${n}` : label;
+        ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
+      }
+    }
+  }
+
   // 6) Payment block — only when relevant
   if (order.payment_method === "counter") {
     ops.push(sep());
