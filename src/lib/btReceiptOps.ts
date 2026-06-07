@@ -332,34 +332,41 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
   const ops: FastOp[] = [];
   const time = new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
 
-  ops.push(asLine("הזמנות פעילות", { align: "C", bold: true, size: 26 }));
-  ops.push({ kind: "text", text: time, align: "C", size: 1 });
-  ops.push({ kind: "text", text: `${orders.length} orders`, align: "C", size: 1 });
+  ops.push(asLine(`הזמנות פעילות ${time}`, { align: "C", bold: true, size: 36 }));
   ops.push(sep());
 
-  for (const o of orders) {
-    ops.push({ kind: "text", text: `#${o.order_number}`, align: "R", size: 2, bold: true });
+  const sorted = [...orders].sort((a, b) => {
+    const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return ta - tb;
+  });
+
+  for (const o of sorted) {
+    ops.push({ kind: "text", text: `#${o.order_number}`, align: "R", size: 1 });
     if (o.customer_name) {
-      ops.push(asLine(o.customer_name, { align: "R", bold: true, size: 20 }));
+      ops.push(asLine(o.customer_name, { align: "R", bold: true, size: 34 }));
     }
     for (const it of o.order_items || []) {
       if (it.item_name === "רטבים") continue;
       const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
-      if (ownerName) ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 18 }));
+      const donShort = shortDoneness(doneness);
+      if (ownerName) ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 28 }));
       const qty = it.quantity > 1 ? ` x${it.quantity}` : "";
-      ops.push(asLine(`${it.item_name}${qty}`, { align: "R", bold: true, size: 20 }));
-      if (doneness) ops.push(asLine(`עשייה: ${doneness}`, { align: "R", size: 16 }));
+      const donSuffix = donShort ? ` ${donShort}` : "";
+      ops.push(asLine(`${it.item_name}${qty}${donSuffix}`, { align: "R", bold: true, size: 34 }));
       if (cleanedRemovals.length > 0) {
-        ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", size: 16 }));
+        ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", bold: true, size: 28 }));
       }
       if (it.toppings && it.toppings.length > 0) {
-        ops.push(asLine(`+ ${it.toppings.join(", ")}`, { align: "R", size: 16 }));
+        for (const t of it.toppings) {
+          ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 }));
+        }
       }
       if (it.with_meal) {
         let m = "ארוחה";
         if (it.meal_side) m += ` - ${it.meal_side}`;
-        if (it.meal_drink) m += `, ${it.meal_drink}`;
-        ops.push(asLine(`-> ${m}`, { align: "R", size: 16 }));
+        if (it.meal_drink) m += `, ${cleanDrinkName(it.meal_drink)}`;
+        ops.push(asLine(m, { align: "R", bold: true, size: 28 }));
       }
     }
     ops.push(sep());
