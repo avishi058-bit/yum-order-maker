@@ -425,9 +425,9 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
 
   if (rows.length === 0) return out;
 
-  out.push(asLine(`== ${title} ==`, { align: "C", bold: true, size: 24 }));
+  out.push(asLine(`== ${title} ==`, { align: "C", bold: true, size: 32 }));
   for (const [label, n] of rows) {
-    out.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 22 }));
+    out.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 34 }));
   }
   return out;
 }
