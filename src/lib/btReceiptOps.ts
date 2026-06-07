@@ -269,7 +269,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Toppings
     if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) { ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
+      for (const t of it.toppings) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
     }
 
     // Dashed separator between distinct dishes (skip after last)
