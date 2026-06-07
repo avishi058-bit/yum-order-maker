@@ -301,7 +301,7 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
     // "כפולה" = 2 patties → 2× the doneness count
     const multiplier = isDoubleName(name) ? 2 : 1;
     // Extra patty topping also adds another patty of the same doneness
-    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220"]);
+    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]);
     add(extractDonenessKey(it.removals), qty * (multiplier + extraPatties));
   }
 
