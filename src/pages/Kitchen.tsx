@@ -1463,6 +1463,17 @@ const Kitchen = () => {
                         <option value={576}>80מ״מ · 576</option>
                       </select>
                     </div>
+                    <button
+                      onClick={handleRotateToggle}
+                      className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                        rotate180
+                          ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <span>הפוך הדפסה 180°</span>
+                      <span>{rotate180 ? "✓ פעיל" : "כבוי"}</span>
+                    </button>
                   </>
                 )}
 
