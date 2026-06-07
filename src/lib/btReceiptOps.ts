@@ -138,28 +138,54 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }
   ops.push(feed(1));
 
-  // Count "real" food items (excluding the synthetic sauces line) to decide
-  // whether to aggregate drinks at the bottom for multi-item orders.
+  // Group identical "real" items so two of the same exact dish print once as x2.
   const realItems = order.order_items.filter((it) => it.item_name !== "רטבים");
-  const isMultiItem = realItems.length > 1;
+  const groupKey = (it: ReceiptOrderItem): string => JSON.stringify({
+    n: it.item_name,
+    r: it.removals || [],
+    t: it.toppings || [],
+    m: !!it.with_meal,
+    ms: it.meal_side || null,
+    md: it.meal_drink || null,
+    db: it.deal_burgers || null,
+    dd: it.deal_drinks || null,
+  });
+  const groups: Array<{ item: ReceiptOrderItem; qty: number }> = [];
+  const idxByKey = new Map<string, number>();
+  for (const it of realItems) {
+    const k = groupKey(it);
+    const existing = idxByKey.get(k);
+    if (existing !== undefined) {
+      groups[existing].qty += it.quantity;
+    } else {
+      idxByKey.set(k, groups.length);
+      groups.push({ item: it, qty: it.quantity });
+    }
+  }
+  const isMultiItem = groups.length > 1 || (groups.length === 1 && groups[0].qty > 1);
+  const LINE_GAP = 0.35; // small breathing room between lines within an item
 
   // 3) Items
-  for (const it of order.order_items) {
-    if (it.item_name === "רטבים") continue;
+  groups.forEach((g, gi) => {
+    const it = g.item;
+    const totalQty = g.qty;
     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
     const donShort = shortDoneness(doneness);
 
     if (ownerName) {
       ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 24 }));
+      ops.push(feed(LINE_GAP));
     }
 
-    // Item name (big, bold)
-    const qtyStr = it.quantity > 1 ? ` x${it.quantity}` : "";
+    // Item name (big, bold) — qty only when >1
+    const qtyStr = totalQty > 1 ? ` x${totalQty}` : "";
     ops.push(asLine(`${it.item_name}${qtyStr}`, { align: "R", bold: true, size: 34 }));
+    ops.push(feed(LINE_GAP));
 
     // Doneness — short code only (M / MW / WD)
     if (donShort) {
       ops.push(asLine(donShort, { align: "R", bold: true, size: 30 }));
+      ops.push(feed(LINE_GAP));
     }
 
     // Changes
@@ -168,17 +194,19 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       const { removes, adds, others } = classifyIngredientChanges(cleanedRemovals);
       if (removes.length === 0 && adds.length === 0 && others.length === 0) {
         ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
       } else {
-        for (const r of removes) ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 28 }));
-        for (const a of adds) ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 28 }));
-        for (const o of others) ops.push(asLine(o, { align: "R", bold: true, size: 26 }));
+        for (const r of removes) { ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
+        for (const a of adds) { ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
+        for (const o of others) { ops.push(asLine(o, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
       }
     } else if (cleanedRemovals.length > 0) {
       ops.push(asLine(`- ${cleanedRemovals.join(", ")}`, { align: "R", bold: true, size: 26 }));
+      ops.push(feed(LINE_GAP));
     }
 
     // Spacing before meal / drink / toppings line
-    ops.push(feed(1));
+    ops.push(feed(0.6));
 
     // Per-item drinks (meal drink / deal drinks)
     if (it.with_meal) {
@@ -186,10 +214,12 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       if (it.meal_side) m += ` - ${it.meal_side}`;
       if (it.meal_drink) m += `, ${cleanDrinkName(it.meal_drink)}`;
       ops.push(asLine(m, { align: "R", bold: true, size: 26 }));
+      ops.push(feed(LINE_GAP));
     }
     if (Array.isArray(it.deal_burgers)) {
       it.deal_burgers.forEach((b: { name?: string; removals?: string[] }, i: number) => {
         ops.push(asLine(`${i + 1}. ${b.name || ""}`, { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
         if (isCustomizableBurger(b.name || "")) {
           const { removes, adds, others } = classifyIngredientChanges(
@@ -197,35 +227,38 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           );
           if (removes.length === 0 && adds.length === 0 && others.length === 0) {
             ops.push(asLine("ללא שינויים", { align: "R", bold: true, size: 24 }));
+            ops.push(feed(LINE_GAP));
           } else {
-            for (const r of removes) ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 26 }));
-            for (const a of adds) ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 26 }));
-            for (const o of others) ops.push(asLine(o, { align: "R", bold: true, size: 24 }));
+            for (const r of removes) { ops.push(asLine(`ללא ${r}`, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
+            for (const a of adds) { ops.push(asLine(`להוסיף ${a}`, { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
+            for (const o of others) { ops.push(asLine(o, { align: "R", bold: true, size: 24 })); ops.push(feed(LINE_GAP)); }
           }
         } else if (bRem.length > 0) {
           ops.push(asLine(`- ${bRem.join(", ")}`, { align: "R", bold: true, size: 24 }));
+          ops.push(feed(LINE_GAP));
         }
       });
       ops.push(asLine(`צ'יפס ענק`, { align: "R", bold: true, size: 26 }));
+      ops.push(feed(LINE_GAP));
     }
     if (Array.isArray(it.deal_drinks)) {
       it.deal_drinks.forEach((d: { name?: string }) => {
-        if (d.name) ops.push(asLine(cleanDrinkName(d.name), { align: "R", bold: true, size: 26 }));
+        if (d.name) { ops.push(asLine(cleanDrinkName(d.name), { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
       });
     }
 
-    // Toppings (only show per-item when single-item order; otherwise aggregate below)
+    // Toppings
     if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 }));
+      for (const t of it.toppings) { ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 })); ops.push(feed(LINE_GAP)); }
     }
 
-    // Dashed separator between dishes (skip after the last one)
-    ops.push(feed(1));
-    if (isMultiItem) {
+    // Dashed separator between distinct dishes (skip after last)
+    if (gi < groups.length - 1) {
+      ops.push(feed(0.6));
       ops.push(dashSep());
-      ops.push(feed(1));
+      ops.push(feed(0.6));
     }
-  }
+  });
 
   // 4) Order-level sauces (synthetic "רטבים" line) — always at bottom, no title
   const sauceItem = order.order_items.find((it) => it.item_name === "רטבים");
@@ -233,6 +266,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ops.push(sep());
     for (const t of sauceItem.toppings) {
       ops.push(asLine(normalizeToppingName(t), { align: "R", bold: true, size: 26 }));
+      ops.push(feed(LINE_GAP));
     }
   }
 
@@ -244,7 +278,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     if (rows.length > 0) {
       ops.push(sep());
       for (const [label, n] of rows) {
-        ops.push(asLine(`${label} x${n}`, { align: "R", bold: true, size: 26 }));
+        const line = n > 1 ? `${label} x${n}` : label;
+        ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
       }
     }
   }
