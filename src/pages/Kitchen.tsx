@@ -610,23 +610,45 @@ const Kitchen = () => {
   }, [fetchOrders, fetchOrdersAuto, fetchAvailability, fetchCustomToppings]);
 
   // Auto-print new orders.
-  // Guard: don't print until order_items are loaded — otherwise we'd print
-  // a bon with only header + payment (race with realtime: orders INSERT
-  // fires before order_items rows finish writing). If items aren't there
-  // yet, skip and let the next state update (next fetch/poll) retry.
+  // Race: orders INSERT realtime fires before order_items rows finish writing,
+  // so the first fetch may return an order with an empty order_items array.
+  // When that happens, fetch THIS order directly with its items (retrying a
+  // few times) and print as soon as items appear — no waiting for the next
+  // poll cycle or for a manual confirmation.
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
     if (autoPrint) {
       newOrders.forEach((order) => {
         if (printedOrdersRef.current.has(order.id)) return;
         const hasItems = Array.isArray(order.order_items) && order.order_items.length > 0;
-        if (!hasItems) {
-          // Trigger a quick refetch so the items show up on the next render.
-          setTimeout(() => fetchOrdersRef.current?.(), 600);
+        if (hasItems) {
+          printedOrdersRef.current.add(order.id);
+          setTimeout(() => printOrder(order), 200);
           return;
         }
+        // Reserve the slot immediately so we don't fire multiple fetch loops
+        // for the same order across re-renders.
         printedOrdersRef.current.add(order.id);
-        setTimeout(() => printOrder(order), 300);
+        (async () => {
+          for (let attempt = 0; attempt < 8; attempt++) {
+            await new Promise((r) => setTimeout(r, 250 + attempt * 150));
+            const { data, error } = await supabase
+              .from("orders")
+              .select("*, order_items(*)")
+              .eq("id", order.id)
+              .maybeSingle();
+            if (!error && data && Array.isArray((data as any).order_items) && (data as any).order_items.length > 0) {
+              const full = data as unknown as Order;
+              // Sync into local state so the UI shows the items too.
+              setOrders((prev) => prev.map((o) => (o.id === full.id ? full : o)));
+              printOrder(full);
+              return;
+            }
+          }
+          // Gave up: clear the reservation so a manual reprint can still work.
+          console.warn("[Kitchen] auto-print: order_items never arrived for", order.id);
+          printedOrdersRef.current.delete(order.id);
+        })();
       });
     }
     prevOrderCountRef.current = newOrders.length;
