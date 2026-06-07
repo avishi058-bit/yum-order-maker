@@ -106,6 +106,12 @@ function normalizeToppingName(s: string): string {
   return out;
 }
 
+// Format a topping line with a big "+" prefix (skip if the name already starts with +).
+function toppingLine(s: string): string {
+  const n = normalizeToppingName(s).trim();
+  return n.startsWith("+") ? n : `+ ${n}`;
+}
+
 // A thin dashed separator line between dishes.
 function dashSep(): FastOp {
   return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
