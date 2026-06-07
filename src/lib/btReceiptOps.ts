@@ -70,6 +70,100 @@ function classifyIngredientChanges(removals: string[]): {
   return { removes, adds, others, shortcut };
 }
 
+// ===== Veggie summary model (Habakta) =====
+// Concise kitchen-facing summary of what veggies/aioli end up on the bun.
+const VEGGIE_HEBREW: Record<string, string> = {
+  lettuce: "חסה",
+  tomato: "עגבנייה",
+  onion: "בצל",
+  pickles: "חמוצים",
+  aioli: "איולי",
+};
+const VEG_ORDER = ["lettuce", "tomato", "onion", "pickles", "aioli"] as const;
+const REM_TO_VEG: Record<string, string> = {
+  "no-lettuce": "lettuce",
+  "no-tomato": "tomato",
+  "no-onion": "onion",
+  "no-pickles": "pickles",
+  "no-aioli": "aioli",
+};
+const ADD_TO_VEG: Record<string, string> = {
+  "add-tomato": "tomato",
+  "add-onion": "onion",
+};
+
+function isSmashBurger(name: string): boolean {
+  return /סמאש|קרייזי/.test(name || "");
+}
+
+function defaultsForBurger(name: string): Set<string> {
+  return isSmashBurger(name)
+    ? new Set(["lettuce", "pickles", "aioli"])
+    : new Set(["lettuce", "tomato", "onion", "pickles", "aioli"]);
+}
+
+function buildVeggieSummary(
+  name: string,
+  removalsRaw: string[],
+): { veg: string; others: string[] } {
+  const def = defaultsForBurger(name);
+  const final = new Set(def);
+  const others: string[] = [];
+  for (const r of removalsRaw) {
+    if (REM_TO_VEG[r]) {
+      final.delete(REM_TO_VEG[r]);
+    } else if (ADD_TO_VEG[r]) {
+      final.add(ADD_TO_VEG[r]);
+    } else {
+      const m = ING_LOOKUP[r];
+      if (m) others.push(m.kind === "remove" ? `ללא ${m.label}` : `להוסיף ${m.label}`);
+      else others.push(r);
+    }
+  }
+  const finalArr = VEG_ORDER.filter((id) => final.has(id));
+  const defArr = VEG_ORDER.filter((id) => def.has(id));
+
+  // Unchanged from default
+  if (
+    finalArr.length === defArr.length &&
+    finalArr.every((x, i) => x === defArr[i])
+  ) {
+    return { veg: "ללא שינויים", others };
+  }
+  // Empty bun
+  if (finalArr.length === 0) return { veg: "בלי כלום", others };
+
+  // Smash special shortcuts
+  if (isSmashBurger(name)) {
+    const allVeg = ["lettuce", "tomato", "onion", "pickles"];
+    const hasAllVeg = allVeg.every((v) => final.has(v));
+    if (hasAllVeg && !final.has("aioli") && final.size === 4) {
+      return { veg: "כל הירקות", others };
+    }
+    if (hasAllVeg && final.has("aioli") && final.size === 5) {
+      return { veg: "כל הירקות ואיולי", others };
+    }
+  }
+
+  // Only one ingredient left
+  if (finalArr.length === 1) {
+    return { veg: `רק ${VEGGIE_HEBREW[finalArr[0]]}`, others };
+  }
+
+  // Exactly one removed from default, nothing added → "ללא X"
+  const missing = defArr.filter((id) => !final.has(id));
+  const addedExtras = finalArr.filter((id) => !def.has(id));
+  if (missing.length === 1 && addedExtras.length === 0) {
+    return { veg: `ללא ${VEGGIE_HEBREW[missing[0]]}`, others };
+  }
+
+  // Default: list everything that ends up on the bun
+  return {
+    veg: finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "),
+    others,
+  };
+}
+
 const HEB = /[\u0590-\u05FF]/;
 const NON_ASCII = /[^\x20-\x7E]/;
 
@@ -84,6 +178,7 @@ function asLine(
   }
   return { kind: "text", text, align: o.align ?? "L", bold: !!o.bold, size: 1 };
 }
+
 
 function sep(): FastOp {
   return { kind: "sep" };
