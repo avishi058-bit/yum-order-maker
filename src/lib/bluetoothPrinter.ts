@@ -1089,10 +1089,43 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     }
   }
   if (monos.length > 0) {
+    // Trim trailing blank rows from the combined bitmap BEFORE rotating —
+    // any trailing feed at the end of the ops list would, after 180° rotation,
+    // become a big empty band at the TOP of the printed bon. We instead want
+    // that breathing room to land BELOW the rotated content (i.e. between the
+    // bon and the cut), so we move it out of the bitmap and emit it as a
+    // motor feed after the raster. Result: rotated bon looks identical in
+    // density/spacing to the upright bon, with the gap at the top of the
+    // physical paper (which is what the user reads first on a 180° print).
     const combined = _combineMonos(monos, width);
-    const rotated = _rotate180Mono(combined);
+    const wb = combined.widthBytes;
+    let trailingBlank = 0;
+    for (let y = combined.height - 1; y >= 0; y--) {
+      let blank = true;
+      const off = y * wb;
+      for (let i = 0; i < wb; i++) {
+        if (combined.bytes[off + i] !== 0) { blank = false; break; }
+      }
+      if (!blank) break;
+      trailingBlank++;
+    }
+    const usefulH = combined.height - trailingBlank;
+    const trimmed: Mono = usefulH === combined.height
+      ? combined
+      : { bytes: combined.bytes.subarray(0, usefulH * wb), widthBytes: wb, height: usefulH, offsetX: 0 };
+    const rotated = _rotate180Mono(trimmed);
     buf.pushArr(_align("L"));
     _emitRasterInto(buf, rotated);
+    // Re-emit the trimmed trailing whitespace AFTER the rotated content so it
+    // physically prints below the bon (above it in the rotated reading order).
+    if (trailingBlank > 0) {
+      let remaining = trailingBlank;
+      while (remaining > 0) {
+        const step = Math.min(255, remaining);
+        buf.pushArr([ESC, 0x4a, step]);
+        remaining -= step;
+      }
+    }
   }
   if (cut) {
     buf.pushArr([ESC, 0x64, 2]);
