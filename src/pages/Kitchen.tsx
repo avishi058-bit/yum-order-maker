@@ -609,15 +609,24 @@ const Kitchen = () => {
     };
   }, [fetchOrders, fetchOrdersAuto, fetchAvailability, fetchCustomToppings]);
 
-  // Auto-print new orders
+  // Auto-print new orders.
+  // Guard: don't print until order_items are loaded — otherwise we'd print
+  // a bon with only header + payment (race with realtime: orders INSERT
+  // fires before order_items rows finish writing). If items aren't there
+  // yet, skip and let the next state update (next fetch/poll) retry.
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
     if (autoPrint) {
       newOrders.forEach((order) => {
-        if (!printedOrdersRef.current.has(order.id)) {
-          printedOrdersRef.current.add(order.id);
-          setTimeout(() => printOrder(order), 500);
+        if (printedOrdersRef.current.has(order.id)) return;
+        const hasItems = Array.isArray(order.order_items) && order.order_items.length > 0;
+        if (!hasItems) {
+          // Trigger a quick refetch so the items show up on the next render.
+          setTimeout(() => fetchOrdersRef.current?.(), 600);
+          return;
         }
+        printedOrdersRef.current.add(order.id);
+        setTimeout(() => printOrder(order), 300);
       });
     }
     prevOrderCountRef.current = newOrders.length;
