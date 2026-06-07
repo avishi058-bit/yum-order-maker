@@ -385,6 +385,15 @@ export function setPaperWidthDots(dots: number) {
   try { localStorage.setItem(WIDTH_KEY, String(clamped)); } catch {}
 }
 
+// Rotate the entire printed receipt 180° (when the printer is mounted upside-down).
+const ROTATE_KEY = "bt-printer-rotate-180";
+export function getPrintRotate180(): boolean {
+  try { return localStorage.getItem(ROTATE_KEY) === "1"; } catch { return false; }
+}
+export function setPrintRotate180(on: boolean) {
+  try { localStorage.setItem(ROTATE_KEY, on ? "1" : "0"); } catch {}
+}
+
 // Render arbitrary HTML inside a hidden offscreen iframe to a canvas.
 async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTMLCanvasElement> {
   const iframe = document.createElement("iframe");
