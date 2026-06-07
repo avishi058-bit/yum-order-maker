@@ -10,9 +10,10 @@ interface DrinkSelectorProps {
   onClose: () => void;
   onConfirm: (item: MenuItem, selectedDrink: string) => void;
   isAvailable?: (id: string) => boolean;
+  isKiosk?: boolean;
 }
 
-const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorProps) => {
+const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false }: DrinkSelectorProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const alcoholConsent = useAlcoholConsent();
 
@@ -59,17 +60,21 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
       <AnimatePresence>
         {item && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center"
+            className={`fixed inset-0 z-50 flex justify-center ${isKiosk ? "items-center p-6" : "items-end"}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
             <motion.div
-              className="relative w-full max-w-lg bg-card rounded-t-2xl p-6 pb-8 max-h-[70vh] overflow-y-auto"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
+              className={`relative w-full bg-card overflow-y-auto ${
+                isKiosk
+                  ? "max-w-3xl rounded-3xl p-10 pb-12 max-h-[85vh]"
+                  : "max-w-lg rounded-t-2xl p-6 pb-8 max-h-[70vh]"
+              }`}
+              initial={isKiosk ? { scale: 0.9, opacity: 0 } : { y: "100%" }}
+              animate={isKiosk ? { scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isKiosk ? { scale: 0.9, opacity: 0 } : { y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               dir="rtl"
             >
@@ -80,12 +85,12 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
                 <X size={16} />
               </button>
 
-              <h3 className="text-xl font-bold mb-1">{item.name}</h3>
-              <p className="text-muted-foreground text-sm mb-4">
+              <h3 className={`font-bold mb-1 ${isKiosk ? "text-4xl" : "text-xl"}`}>{item.name}</h3>
+              <p className={`text-muted-foreground ${isKiosk ? "text-xl mb-8" : "text-sm mb-4"}`}>
                 בחר/י איזה {item.name} — ₪{item.price}
               </p>
 
-              <div className="space-y-2">
+              <div className={isKiosk ? "space-y-4" : "space-y-2"}>
                 {options.map((opt) => {
                   const unavailable = isDrinkUnavailable(opt.id);
                   // Hide out-of-stock BLU variants entirely instead of showing "אזל"
@@ -96,7 +101,9 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
                       key={opt.id}
                       disabled={unavailable}
                       onClick={() => !unavailable && setSelected(opt.id)}
-                      className={`w-full text-right px-4 py-3 rounded-xl border transition-all ${
+                      className={`w-full text-right rounded-xl border transition-all ${
+                        isKiosk ? "px-6 py-5" : "px-4 py-3"
+                      } ${
                         unavailable
                           ? "border-border bg-muted/30 cursor-not-allowed opacity-60"
                           : selected === opt.id
@@ -105,10 +112,10 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`font-medium ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
+                        <span className={`font-medium ${isKiosk ? "text-2xl" : ""} ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
                         {unavailable && <span className="text-xs text-destructive">אזל</span>}
                         {!unavailable && selected === opt.id && (
-                          <Check size={18} className="text-primary" />
+                          <Check size={isKiosk ? 28 : 18} className="text-primary" />
                         )}
                       </div>
                     </button>
@@ -119,7 +126,9 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable }: DrinkSelectorP
               <button
                 onClick={handleConfirm}
                 disabled={!selected}
-                className={`w-full mt-6 py-3 rounded-xl font-bold text-lg transition-all ${
+                className={`w-full rounded-xl font-bold transition-all ${
+                  isKiosk ? "mt-10 py-5 text-2xl" : "mt-6 py-3 text-lg"
+                } ${
                   selected
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
