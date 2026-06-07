@@ -39,7 +39,7 @@ import {
 } from "@/lib/rawbtPrinter";
 import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
-import { subscribeKitchenToPush, isKitchenSubscribed } from "@/lib/push";
+import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { ingredients } from "@/data/menu";
 import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
 
