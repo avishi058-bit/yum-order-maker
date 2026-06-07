@@ -287,7 +287,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
     // Dashed separator between distinct dishes (skip after last)
-    if (gi < groups.length - 1) {
+    if (gi < printedGroups.length - 1) {
       ops.push(feed(0.6));
       ops.push(dashSep());
       ops.push(feed(0.6));
