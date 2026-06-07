@@ -68,9 +68,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const sourceLabel = order.order_source === "kiosk" ? "בקיוסק" : "באתר";
+    const customerName = (order.customer_name ?? "").trim() || "לקוח";
     const payload = JSON.stringify({
-      title: `🔔 הזמנה חדשה #${order.order_number}`,
-      body: `${order.customer_name ?? ""} • ₪${order.total ?? ""}${order.order_source === "kiosk" ? " • קיוסק" : ""}`,
+      title: `🔔 יש לך הזמנה חדשה ${sourceLabel}!`,
+      body: `מ${customerName} • הזמנה #${order.order_number} • ₪${order.total ?? ""}`,
       tag: `kitchen-new-${order.order_number}`,
       url: "/kitchen",
       order_number: order.order_number,
