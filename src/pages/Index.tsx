@@ -580,6 +580,31 @@ const Index = () => {
           />
         )}
 
+        {arayesItem && (
+          <ArayesCustomizer
+            item={arayesItem}
+            onClose={() => setArayesItem(null)}
+            onConfirm={(it, quantity, toppings) => {
+              setCart((prev) => [
+                ...prev,
+                {
+                  id: `${it.id}-${Date.now()}`,
+                  menuItemId: it.id,
+                  name: it.name,
+                  price: it.price,
+                  quantity,
+                  toppings,
+                  removals: [],
+                  withMeal: false,
+                },
+              ]);
+              setArayesItem(null);
+              flyFromCenter();
+            }}
+          />
+        )}
+
+
         {cartOpen && (
           <KioskCartDrawer
             open={cartOpen}
