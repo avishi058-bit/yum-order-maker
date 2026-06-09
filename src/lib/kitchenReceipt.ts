@@ -395,8 +395,17 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
       continue;
     }
 
+    // ---- Arayes special — count quarters (3 or 4 base) + "רבע עראיס נוסף" topping ----
+    if (/עראיס/.test(name)) {
+      const base = /4\s*רבעים/.test(name) ? 4 : 3;
+      const extras = includesAny(it.toppings, ["רבע עראיס נוסף"]);
+      arayesQuarters += (base + extras) * qty;
+      continue;
+    }
+
     // ---- pure drinks: skip ----
     if (isDrinkOrMisc(name)) continue;
+
 
     // ---- patties (by type) ----
     if (isVeganBurgerName(name)) veganPatties += qty;
