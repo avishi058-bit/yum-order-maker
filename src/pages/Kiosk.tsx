@@ -87,6 +87,7 @@ const Kiosk = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
+  const [arayesItem, setArayesItem] = useState<MenuItem | null>(null);
   const [dineIn, setDineIn] = useState<boolean | null>(null);
   const [dineInSelectorOpen, setDineInSelectorOpen] = useState(false);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
