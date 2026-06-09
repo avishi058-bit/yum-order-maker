@@ -13,6 +13,7 @@ import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/It
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
+import ArayesCustomizer from "@/components/ArayesCustomizer";
 import SauceSelector from "@/components/SauceSelector";
 import { menuImages } from "@/data/menuImages";
 // Inline DineInSelector - was a separate component but only used here
@@ -86,6 +87,7 @@ const Kiosk = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
+  const [arayesItem, setArayesItem] = useState<MenuItem | null>(null);
   const [dineIn, setDineIn] = useState<boolean | null>(null);
   const [dineInSelectorOpen, setDineInSelectorOpen] = useState(false);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
@@ -185,6 +187,8 @@ const Kiosk = () => {
       setDealOpen(true);
     } else if (item.id === "family-deal") {
       setFamilyDealOpen(true);
+    } else if (item.id === "arayes-special") {
+      setArayesItem(item);
     } else if (item.category === "burger" || item.category === "meal") {
       setCustomizerItem(item);
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
@@ -395,6 +399,28 @@ const Kiosk = () => {
       <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
       <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
       <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
+      <ArayesCustomizer
+        item={arayesItem}
+        isKiosk
+        onClose={() => setArayesItem(null)}
+        onConfirm={(it, quantity, toppings) => {
+          setCart((prev) => [
+            ...prev,
+            {
+              id: `${it.id}-${Date.now()}`,
+              menuItemId: it.id,
+              name: it.name,
+              price: it.price,
+              quantity,
+              toppings,
+              removals: [],
+              withMeal: false,
+            },
+          ]);
+          setArayesItem(null);
+          flyFromCenter();
+        }}
+      />
 
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}

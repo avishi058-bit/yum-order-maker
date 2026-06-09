@@ -19,6 +19,7 @@ import napoleon from "@/assets/menu/napoleon.jpg";
 import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
 import sodaTempoAsset from "@/assets/menu/soda-tempo.webp.asset.json";
 import flavoredWaterAsset from "@/assets/menu/flavored-water-grape.png.asset.json";
+import arayesSpecialAsset from "@/assets/menu/arayes-special.jpeg.asset.json";
 
 
 
@@ -33,6 +34,7 @@ export const menuImages: Record<string, string> = {
   "sweet-potato-fries": sweetPotatoFries,
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
+  "arayes-special": arayesSpecialAsset.url,
   can: canDrink,
   bottle: bottleImg,
   water: waterAsset.url,

@@ -49,6 +49,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "onion-rings", name: "טבעות בצל", price: 24, category: "side" },
   { id: "tempura-onion", name: "טבעות בצל ביתיות בטמפורה", price: 32, category: "side" },
   { id: "friends-mix", name: "מיקס חברים", price: 59, category: "side" },
+  { id: "arayes-special", name: "ספיישל עראיס הבית", price: 44, category: "side" },
   // Drinks
   { id: "can", name: "פחית", price: 10, category: "drink" },
   { id: "bottle", name: "בקבוק", price: 12, category: "drink" },
@@ -81,6 +82,7 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "extra-smash-patty", name: "+ קציצת סמאש", price: 29 },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל ביתיות", price: 8 },
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים)", price: 4 },
+  { id: "arayes-extra-quarter", name: "רבע עראיס נוסף", price: 15 },
 ];
 
 // ===== Meal upgrade =====

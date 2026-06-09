@@ -32,6 +32,7 @@ const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
 const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
 const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
 const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
+const ArayesCustomizer = lazy(() => import("@/components/ArayesCustomizer"));
 const SauceSelector = lazy(() => import("@/components/SauceSelector"));
 const AccessibilityWidget = lazy(() => import("@/components/AccessibilityWidget"));
 const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
@@ -81,6 +82,7 @@ const Index = () => {
   const [dealOpen, setDealOpen] = useState(false);
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
+  const [arayesItem, setArayesItem] = useState<MenuItem | null>(null);
   const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
@@ -186,6 +188,8 @@ const Index = () => {
       setDealOpen(true);
     } else if (item.id === "family-deal") {
       setFamilyDealOpen(true);
+    } else if (item.id === "arayes-special") {
+      setArayesItem(item);
     } else if (item.category === "burger" || item.category === "meal") {
       setCustomizerItem(item);
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
@@ -575,6 +579,31 @@ const Index = () => {
             isAvailable={isAvailable}
           />
         )}
+
+        {arayesItem && (
+          <ArayesCustomizer
+            item={arayesItem}
+            onClose={() => setArayesItem(null)}
+            onConfirm={(it, quantity, toppings) => {
+              setCart((prev) => [
+                ...prev,
+                {
+                  id: `${it.id}-${Date.now()}`,
+                  menuItemId: it.id,
+                  name: it.name,
+                  price: it.price,
+                  quantity,
+                  toppings,
+                  removals: [],
+                  withMeal: false,
+                },
+              ]);
+              setArayesItem(null);
+              flyFromCenter();
+            }}
+          />
+        )}
+
 
         {cartOpen && (
           <KioskCartDrawer
