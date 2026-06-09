@@ -152,7 +152,10 @@ function priceCart(
     let dealDrinkNames: Array<{ optionId: string; name: string }> | null = null;
 
     if (item.toppings?.length) {
-      if (menuItem.category !== "burger" && menuItem.category !== "meal") {
+      const isArayesExtras =
+        menuItem.id === "arayes-special" &&
+        item.toppings.every((t) => t === "arayes-extra-quarter");
+      if (menuItem.category !== "burger" && menuItem.category !== "meal" && !isArayesExtras) {
         return { ok: false, error: `תוספות לא מותרות על ${menuItem.name}` };
       }
       for (const tId of item.toppings) {
