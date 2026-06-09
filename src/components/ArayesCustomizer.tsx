@@ -63,7 +63,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
         <div className={`flex-1 overflow-y-auto ${isKiosk ? "p-6 space-y-6" : "p-5 space-y-5"}`}>
           {image && (
             <div className="w-full rounded-2xl overflow-hidden bg-muted">
-              <img src={image} alt={item.name} className="w-full h-56 object-cover" />
+              <img key={image} src={image} alt={item.name} className="w-full h-56 object-cover transition-opacity duration-300" />
             </div>
           )}
           <p className={`text-muted-foreground ${isKiosk ? "text-xl" : "text-base"} leading-relaxed`}>
