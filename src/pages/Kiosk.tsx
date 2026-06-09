@@ -439,6 +439,11 @@ const Kiosk = () => {
         isKiosk
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {
+          if (item.id === "arayes-special" || item.id === "arayes-special-4") {
+            setCartOpen(false);
+            openItemFlow(item);
+            return;
+          }
           // One-tap add for simple items (sides + simple drinks).
           handlePreviewAdd(item);
         }}
