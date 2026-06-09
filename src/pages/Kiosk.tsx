@@ -399,6 +399,28 @@ const Kiosk = () => {
       <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
       <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
       <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
+      <ArayesCustomizer
+        item={arayesItem}
+        isKiosk
+        onClose={() => setArayesItem(null)}
+        onConfirm={(it, quantity, toppings) => {
+          setCart((prev) => [
+            ...prev,
+            {
+              id: `${it.id}-${Date.now()}`,
+              menuItemId: it.id,
+              name: it.name,
+              price: it.price,
+              quantity,
+              toppings,
+              removals: [],
+              withMeal: false,
+            },
+          ]);
+          setArayesItem(null);
+          flyFromCenter();
+        }}
+      />
 
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}
