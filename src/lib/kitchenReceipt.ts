@@ -343,7 +343,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let tempuraOnionSide = 0;
   let tempuraOnionTopping = 0;
   let friendsMix = 0;
+  let arayesQuarters = 0;
   const sauces = new Map<string, number>();
+
 
   const addFried = (kind: FriedKind, qty: number) => {
     if (!kind) return;
