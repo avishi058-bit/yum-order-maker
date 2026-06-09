@@ -634,6 +634,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.tempuraOnionTopping > 0)
     friedRows.push(row("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(row("מיקס חברים", summary.friendsMix));
+  if (summary.arayesQuarters > 0) friedRows.push(row("רבעי עראיס", summary.arayesQuarters));
+
 
   // Toppings ON the burger (separate from sides)
   const toppingRows: string[] = [];
