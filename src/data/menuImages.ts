@@ -34,6 +34,7 @@ export const menuImages: Record<string, string> = {
   "sweet-potato-fries": sweetPotatoFries,
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
+  "arayes-special": arayesSpecialAsset.url,
   can: canDrink,
   bottle: bottleImg,
   water: waterAsset.url,
