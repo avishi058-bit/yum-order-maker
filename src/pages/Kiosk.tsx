@@ -13,6 +13,7 @@ import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/It
 import DealCustomizer from "@/components/DealCustomizer";
 import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
+import ArayesCustomizer from "@/components/ArayesCustomizer";
 import SauceSelector from "@/components/SauceSelector";
 import { menuImages } from "@/data/menuImages";
 // Inline DineInSelector - was a separate component but only used here
