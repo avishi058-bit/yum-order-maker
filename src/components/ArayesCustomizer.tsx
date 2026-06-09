@@ -26,7 +26,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
   if (!item) return null;
 
   const isFourPack = item.id === "arayes-special-4";
-  const allowRemove = !isFourPack;
+  const allowRemove = true;
   const swapImage = !isFourPack;
 
   const unit = item.price + extras * EXTRA_QUARTER_PRICE;
