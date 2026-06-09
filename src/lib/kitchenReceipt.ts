@@ -76,9 +76,12 @@ export interface ChefSummary {
   tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
   tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
   friendsMix: number;
+  // Arayes — total quarters to prepare (3 per ספיישל עראיס, 4 per ספיישל 4 רבעים, +1 per topping "רבע עראיס נוסף")
+  arayesQuarters: number;
   // Sauces — aggregated by name
   sauces: Map<string, number>;
 }
+
 
 // ---------- helpers ----------
 
