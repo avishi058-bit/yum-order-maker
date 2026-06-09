@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus } from "lucide-react";
 import { MenuItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import arayesExtraAsset from "@/assets/menu/arayes-special-extra.jpeg.asset.json";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 const EXTRA_QUARTER_PRICE = 15;
@@ -26,7 +27,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
 
   const unit = item.price + extras * EXTRA_QUARTER_PRICE;
   const total = unit * qty;
-  const image = menuImages[item.id];
+  const image = extras > 0 ? arayesExtraAsset.url : menuImages[item.id];
 
   const handleConfirm = () => {
     const toppings = Array(extras).fill(EXTRA_QUARTER_TOPPING_ID);
@@ -62,7 +63,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
         <div className={`flex-1 overflow-y-auto ${isKiosk ? "p-6 space-y-6" : "p-5 space-y-5"}`}>
           {image && (
             <div className="w-full rounded-2xl overflow-hidden bg-muted">
-              <img src={image} alt={item.name} className="w-full h-56 object-cover" />
+              <img key={image} src={image} alt={item.name} className="w-full h-56 object-cover transition-opacity duration-300" />
             </div>
           )}
           <p className={`text-muted-foreground ${isKiosk ? "text-xl" : "text-base"} leading-relaxed`}>
