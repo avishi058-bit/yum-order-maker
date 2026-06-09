@@ -76,9 +76,12 @@ export interface ChefSummary {
   tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
   tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
   friendsMix: number;
+  // Arayes — total quarters to prepare (3 per ספיישל עראיס, 4 per ספיישל 4 רבעים, +1 per topping "רבע עראיס נוסף")
+  arayesQuarters: number;
   // Sauces — aggregated by name
   sauces: Map<string, number>;
 }
+
 
 // ---------- helpers ----------
 
@@ -340,7 +343,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let tempuraOnionSide = 0;
   let tempuraOnionTopping = 0;
   let friendsMix = 0;
+  let arayesQuarters = 0;
   const sauces = new Map<string, number>();
+
 
   const addFried = (kind: FriedKind, qty: number) => {
     if (!kind) return;
@@ -390,8 +395,17 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
       continue;
     }
 
+    // ---- Arayes special — count quarters (3 or 4 base) + "רבע עראיס נוסף" topping ----
+    if (/עראיס/.test(name)) {
+      const base = /4\s*רבעים/.test(name) ? 4 : 3;
+      const extras = includesAny(it.toppings, ["רבע עראיס נוסף"]);
+      arayesQuarters += (base + extras) * qty;
+      continue;
+    }
+
     // ---- pure drinks: skip ----
     if (isDrinkOrMisc(name)) continue;
+
 
     // ---- patties (by type) ----
     if (isVeganBurgerName(name)) veganPatties += qty;
@@ -460,7 +474,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     tempuraOnionSide,
     tempuraOnionTopping,
     friendsMix,
+    arayesQuarters,
     sauces,
+
   };
 }
 
@@ -618,6 +634,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.tempuraOnionTopping > 0)
     friedRows.push(row("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(row("מיקס חברים", summary.friendsMix));
+  if (summary.arayesQuarters > 0) friedRows.push(row("רבעי עראיס", summary.arayesQuarters));
+
 
   // Toppings ON the burger (separate from sides)
   const toppingRows: string[] = [];
@@ -1052,6 +1070,8 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   if (summary.tempuraOnionTopping > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
+  if (summary.arayesQuarters > 0) friedRows.push(sumRow("רבעי עראיס", summary.arayesQuarters));
+
 
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
@@ -1358,6 +1378,8 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   if (summary.tempuraOnionTopping > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
+  if (summary.arayesQuarters > 0) friedRows.push(sumRow("רבעי עראיס", summary.arayesQuarters));
+
 
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
