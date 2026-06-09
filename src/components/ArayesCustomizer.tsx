@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus } from "lucide-react";
 import { MenuItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
+import arayesExtraAsset from "@/assets/menu/arayes-special-extra.jpeg.asset.json";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 const EXTRA_QUARTER_PRICE = 15;
