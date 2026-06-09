@@ -92,8 +92,10 @@ const KioskCartDrawer = ({
       if (m.category === "drink") return true;
       return false;
     });
-    // Pin friends-mix first
+    // Pin arayes-special first, then friends-mix
     return list.sort((a, b) => {
+      if (a.id === "arayes-special") return -1;
+      if (b.id === "arayes-special") return 1;
       if (a.id === "friends-mix") return -1;
       if (b.id === "friends-mix") return 1;
       return 0;
