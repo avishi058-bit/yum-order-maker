@@ -94,6 +94,12 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
               {item.specialOfMonth ? "ספיישל החודש" : "פופולארי"}
             </span>
           )}
+          {item.id === "arayes-special" && !image && (
+            <span className="flex-shrink-0 inline-flex items-center gap-1 text-[10px] font-bold bg-green-600 text-white px-2 py-0.5 rounded-full">
+              <Star size={9} fill="currentColor" />
+              מלאי מוגבל
+            </span>
+          )}
         </div>
         <p
           className="text-muted-foreground leading-relaxed line-clamp-2"
@@ -149,6 +155,12 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
           <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full shadow-md z-10">
             <Star size={9} fill="currentColor" />
             {item.specialOfMonth ? "ספיישל החודש" : "פופולארי"}
+          </span>
+        )}
+        {item.id === "arayes-special" && image && (
+          <span className="absolute -right-3 top-2 inline-flex items-center gap-1 text-[10px] font-bold bg-green-600 text-white px-2 py-0.5 rounded-full shadow-md z-10">
+            <Star size={9} fill="currentColor" />
+            מלאי מוגבל
           </span>
         )}
       </div>
