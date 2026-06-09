@@ -1378,6 +1378,8 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   if (summary.tempuraOnionTopping > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (יחידה)", summary.tempuraOnionTopping));
   if (summary.friendsMix > 0) friedRows.push(sumRow("מיקס חברים", summary.friendsMix));
+  if (summary.arayesQuarters > 0) friedRows.push(sumRow("רבעי עראיס", summary.arayesQuarters));
+
 
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
