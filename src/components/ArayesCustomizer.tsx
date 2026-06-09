@@ -25,9 +25,13 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
 
   if (!item) return null;
 
+  const isFourPack = item.id === "arayes-special-4";
+  const allowRemove = !isFourPack;
+  const swapImage = !isFourPack;
+
   const unit = item.price + extras * EXTRA_QUARTER_PRICE;
   const total = unit * qty;
-  const image = extras > 0 ? arayesExtraAsset.url : menuImages[item.id];
+  const image = swapImage && extras > 0 ? arayesExtraAsset.url : menuImages[item.id];
 
   const handleConfirm = () => {
     const toppings = Array(extras).fill(EXTRA_QUARTER_TOPPING_ID);
@@ -81,13 +85,15 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
               ניתן להוסיף כמה רבעים שתרצו
             </p>
             <div className="flex items-center justify-center gap-5">
-              <button
-                onClick={() => setExtras((v) => Math.max(0, v - 1))}
-                disabled={extras === 0}
-                className={`${isKiosk ? "w-14 h-14" : "w-10 h-10"} rounded-full bg-background border border-border flex items-center justify-center disabled:opacity-40`}
-              >
-                <Minus size={isKiosk ? 24 : 18} />
-              </button>
+              {allowRemove && (
+                <button
+                  onClick={() => setExtras((v) => Math.max(0, v - 1))}
+                  disabled={extras === 0}
+                  className={`${isKiosk ? "w-14 h-14" : "w-10 h-10"} rounded-full bg-background border border-border flex items-center justify-center disabled:opacity-40`}
+                >
+                  <Minus size={isKiosk ? 24 : 18} />
+                </button>
+              )}
               <span className={`font-black ${isKiosk ? "text-3xl w-12" : "text-2xl w-10"} text-center`}>
                 {extras}
               </span>

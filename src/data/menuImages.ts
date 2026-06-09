@@ -20,6 +20,7 @@ import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
 import sodaTempoAsset from "@/assets/menu/soda-tempo.webp.asset.json";
 import flavoredWaterAsset from "@/assets/menu/flavored-water-grape.png.asset.json";
 import arayesSpecialAsset from "@/assets/menu/arayes-special.jpeg.asset.json";
+import arayesSpecial4Asset from "@/assets/menu/arayes-special-4.jpeg.asset.json";
 
 
 
@@ -35,6 +36,7 @@ export const menuImages: Record<string, string> = {
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
   "arayes-special": arayesSpecialAsset.url,
+  "arayes-special-4": arayesSpecial4Asset.url,
   can: canDrink,
   bottle: bottleImg,
   water: waterAsset.url,
