@@ -474,7 +474,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     tempuraOnionSide,
     tempuraOnionTopping,
     friendsMix,
+    arayesQuarters,
     sauces,
+
   };
 }
 
