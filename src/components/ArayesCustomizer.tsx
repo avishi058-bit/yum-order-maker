@@ -27,7 +27,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
 
   const unit = item.price + extras * EXTRA_QUARTER_PRICE;
   const total = unit * qty;
-  const image = menuImages[item.id];
+  const image = extras > 0 ? arayesExtraAsset.url : menuImages[item.id];
 
   const handleConfirm = () => {
     const toppings = Array(extras).fill(EXTRA_QUARTER_TOPPING_ID);
