@@ -153,7 +153,7 @@ function priceCart(
 
     if (item.toppings?.length) {
       const isArayesExtras =
-        menuItem.id === "arayes-special" &&
+        (menuItem.id === "arayes-special" || menuItem.id === "arayes-special-4") &&
         item.toppings.every((t) => t === "arayes-extra-quarter");
       if (menuItem.category !== "burger" && menuItem.category !== "meal" && !isArayesExtras) {
         return { ok: false, error: `תוספות לא מותרות על ${menuItem.name}` };
