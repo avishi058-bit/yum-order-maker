@@ -619,7 +619,14 @@ const Index = () => {
                 setCheckoutOpen(true);
               }
             }}
-            onQuickAdd={(item) => addToCartDirect(item)}
+            onQuickAdd={(item) => {
+              if (item.id === "arayes-special" || item.id === "arayes-special-4") {
+                setCartOpen(false);
+                openItemFlow(item);
+                return;
+              }
+              addToCartDirect(item);
+            }}
             onSelectDrink={(item) => {
               setCartOpen(false);
               setDrinkItem(item);
