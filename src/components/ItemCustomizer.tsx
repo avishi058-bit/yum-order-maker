@@ -990,6 +990,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           <div className="space-y-0">
                             {toppings
+                              .filter((t: Topping) => t.id !== "arayes-extra-quarter")
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
                               .filter((t: Topping) => {
                                 // Per-item topping exclusions (e.g. don't offer onion jam on a burger that already has it)
