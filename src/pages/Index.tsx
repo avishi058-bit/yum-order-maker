@@ -32,6 +32,7 @@ const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
 const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
 const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
 const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
+const ArayesCustomizer = lazy(() => import("@/components/ArayesCustomizer"));
 const SauceSelector = lazy(() => import("@/components/SauceSelector"));
 const AccessibilityWidget = lazy(() => import("@/components/AccessibilityWidget"));
 const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
