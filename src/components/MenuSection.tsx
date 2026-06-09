@@ -19,6 +19,8 @@ const categories = [
 const matchesCategory = (item: MenuItem, key: typeof categories[number]["key"]) => {
   if (key === "beer") return item.category === "drink" && item.id.startsWith("beer-");
   if (key === "drink") return item.category === "drink" && !item.id.startsWith("beer-");
+  // Show the 3-quarters arayes also at the end of the burgers section.
+  if (key === "burger") return item.category === "burger" || item.id === "arayes-special";
   return item.category === key;
 };
 
@@ -279,6 +281,14 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
           });
         }
+        // Always pin arayes-special to the END of the burgers section.
+        if (cat.key === "burger") {
+          items = [...items].sort((a, b) => {
+            if (a.id === "arayes-special") return 1;
+            if (b.id === "arayes-special") return -1;
+            return 0;
+          });
+        }
         if (items.length === 0) return null;
         return (
           <div
@@ -291,7 +301,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             <div className="divide-y divide-border">
               {items.map((item) => (
                 <MenuCard
-                  key={item.id}
+                  key={`${cat.key}-${item.id}`}
                   item={item}
                   onAdd={onAddItem}
                   isKiosk={isKiosk}
