@@ -187,6 +187,8 @@ const Kiosk = () => {
       setDealOpen(true);
     } else if (item.id === "family-deal") {
       setFamilyDealOpen(true);
+    } else if (item.id === "arayes-special") {
+      setArayesItem(item);
     } else if (item.category === "burger" || item.category === "meal") {
       setCustomizerItem(item);
     } else if (item.category === "drink" && drinkSubOptions[item.id]) {
