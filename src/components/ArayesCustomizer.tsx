@@ -99,26 +99,8 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
             </div>
           </div>
 
-          <div className="flex items-center justify-between bg-secondary/50 rounded-2xl p-4">
-            <span className={`${isKiosk ? "text-2xl" : "text-lg"} font-black`}>כמות</span>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setQty((v) => Math.max(1, v - 1))}
-                className={`${isKiosk ? "w-12 h-12" : "w-9 h-9"} rounded-full bg-background border border-border flex items-center justify-center`}
-              >
-                <Minus size={isKiosk ? 20 : 16} />
-              </button>
-              <span className={`font-black ${isKiosk ? "text-2xl w-10" : "text-xl w-8"} text-center`}>
-                {qty}
-              </span>
-              <button
-                onClick={() => setQty((v) => v + 1)}
-                className={`${isKiosk ? "w-12 h-12" : "w-9 h-9"} rounded-full bg-primary text-primary-foreground flex items-center justify-center`}
-              >
-                <Plus size={isKiosk ? 20 : 16} />
-              </button>
-            </div>
-          </div>
+
+
         </div>
 
         <div className={`${isKiosk ? "p-6" : "p-5"} border-t border-border pwa-checkout-bar`}>
