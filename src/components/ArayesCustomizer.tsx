@@ -72,7 +72,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
 
           <div className="bg-secondary/50 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className={`${isKiosk ? "text-2xl" : "text-lg"} font-black`}>רבע עראיס נוסף</span>
+              <span className={`${isKiosk ? "text-2xl" : "text-lg"} font-black`}>רבע עראיס נוסף?</span>
               <span className={`${isKiosk ? "text-xl" : "text-base"} text-primary font-bold`}>
                 +₪{EXTRA_QUARTER_PRICE} ליחידה
               </span>
