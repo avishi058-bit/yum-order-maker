@@ -204,7 +204,7 @@ const Index = () => {
   }, [alcoholConsent, openItemFlow]);
 
   const handleCustomizerConfirm = useCallback(
-    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => {
+    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number }>) => {
       // BRIDGE mode: a caller (e.g. favorite modal) is awaiting the result —
       // hand it back instead of touching the cart.
       if (customizerResolverRef.current) {
@@ -226,10 +226,28 @@ const Index = () => {
         }
         // ADD mode: append a new entry.
         const cartItemId = `${item.id}-${Date.now()}`;
-        return [
+        const next = [
           ...prev,
           { id: cartItemId, menuItemId: item.id, name: item.name, price: item.price, quantity, toppings: selectedToppings, removals: selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName },
         ];
+        // Append optional side items (e.g. arayes 3/4 added from "תוספות צד")
+        if (sideItems && sideItems.length > 0) {
+          for (const s of sideItems) {
+            const m = menuItems.find((mi) => mi.id === s.itemId);
+            if (!m) continue;
+            next.push({
+              id: `${m.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              menuItemId: m.id,
+              name: m.name,
+              price: m.price,
+              quantity: s.qty,
+              toppings: [],
+              removals: [],
+              withMeal: false,
+            });
+          }
+        }
+        return next;
       });
       setCustomizerItem(null);
       setEditingCartId(null);
