@@ -1115,6 +1115,66 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                             })}
                           </div>
                         </div>
+
+                        {/* תוספות צד — שלח גם מנות עראיס (3 / 4 רבעים) יחד עם ההמבורגר */}
+                        {!editingCartId && item.id !== "arayes-special" && item.id !== "arayes-special-4" && (() => {
+                          const sideOptions = (["arayes-special", "arayes-special-4"] as const)
+                            .map((id) => menuItems.find((m) => m.id === id))
+                            .filter((m): m is MenuItem => !!m)
+                            .filter((m) => !isAvailable || isAvailable(m.id));
+                          if (sideOptions.length === 0) return null;
+                          return (
+                            <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`}>
+                              <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות צד</h3>
+                              <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>הוסף מנת עראיס יחד עם ההמבורגר</p>
+                              <div className="space-y-0">
+                                {sideOptions.map((side) => {
+                                  const count = sideItemCounts[side.id] || 0;
+                                  const setCount = (n: number) =>
+                                    setSideItemCounts((s) => ({ ...s, [side.id]: Math.max(0, n) }));
+                                  return (
+                                    <div
+                                      key={side.id}
+                                      className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        {count > 0 ? (
+                                          <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
+                                            <button
+                                              onClick={() => setCount(count - 1)}
+                                              className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                                              aria-label="הסר"
+                                            >
+                                              <Minus size={isKiosk ? 18 : 14} />
+                                            </button>
+                                            <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{count}</span>
+                                            <button
+                                              onClick={() => setCount(count + 1)}
+                                              className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                                              aria-label="הוסף"
+                                            >
+                                              <Plus size={isKiosk ? 18 : 14} />
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <button
+                                            onClick={() => setCount(1)}
+                                            className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
+                                          >
+                                            <Plus size={isKiosk ? 18 : 14} />
+                                            הוסף
+                                          </button>
+                                        )}
+                                        <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{side.price}</span>
+                                      </div>
+                                      <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"}`}>{side.name}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </>
                     )}
 
