@@ -1398,7 +1398,6 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
     sumSection("לחמניות", bunRows) +
     sumSection("מטוגנים", friedRows) +
     sumSection("תוספות מעל ההמבורגר", toppingRows) +
-    sumSection("רטבים", sauceRows) +
     sumSection("מידות עשייה", donenessRows);
 
   const bodyHtml = summaryBody
