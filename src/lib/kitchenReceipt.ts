@@ -173,34 +173,63 @@ const isVeggieRemoval = (s: string): string | null => {
   const name = m[1].trim();
   return VEGGIE_HE_SET.has(name) ? name : null;
 };
+// Detects smash-burger additions ("להוסיף בצל" → onion, "להוסיף עגבנייה" → tomato).
+const isVeggieAddition = (s: string): string | null => {
+  const m = s.match(/^להוסיף\s+(.+)$/);
+  if (!m) return null;
+  const name = m[1].trim();
+  // Map back to the canonical Hebrew veggie name used in VEGGIE_HE_ORDER.
+  if (name === "בצל") return "בצל";
+  if (name === "עגבנייה") return "עגבנייה";
+  return null;
+};
 export const applyVeggieShortcut = (
   cleanedRemovals: string[],
 ): { label: string | null; rest: string[] } => {
   const removedVeggies = new Set<string>();
+  const addedVeggies = new Set<string>();
   let aioliRemoved = false;
   const other: string[] = [];
   for (const r of cleanedRemovals) {
     const v = isVeggieRemoval(r);
     if (v) { removedVeggies.add(v); continue; }
     if (isAioliRemoval(r)) { aioliRemoved = true; continue; }
+    const a = isVeggieAddition(r);
+    if (a) { addedVeggies.add(a); continue; }
     other.push(r);
   }
   const vegCount = removedVeggies.size;
+
+  // ----- Addition shortcut (smash burgers default to no onion/tomato) -----
+  // Adding both onion + tomato (with no veggie or aioli removals) means the
+  // smash now has all 4 veggies + aioli — render as "כל הירקות + איולי".
+  if (
+    addedVeggies.has("בצל") &&
+    addedVeggies.has("עגבנייה") &&
+    vegCount === 0 &&
+    !aioliRemoved
+  ) {
+    return { label: "כל הירקות + איולי", rest: other };
+  }
+
+  // ----- Removal shortcuts -----
   if (vegCount === 4 && aioliRemoved) {
-    return { label: "יבש", rest: other };
+    return { label: "יבש", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
   }
   if (vegCount === 4) {
-    // Aioli kept — only veggies consumed; non-veg/non-aioli rest passes through.
-    return { label: "רק אאיולי", rest: other };
+    return { label: "רק אאיולי", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
   }
   if (vegCount === 2 || vegCount === 3) {
     const remaining = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
     const label = `${remaining.join(", ")} בלבד`;
-    // Aioli (if removed) is shown separately alongside the shortcut.
-    const rest = aioliRemoved ? ["ללא אאיולי", ...other] : other;
+    const rest: string[] = [];
+    if (aioliRemoved) rest.push("ללא אאיולי");
+    for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
+    rest.push(...other);
     return { label, rest };
   }
-  // 0-1 veggies — no shortcut, render everything as-is (including aioli).
+
+  // 0-1 veggies removed, or only one addition — no shortcut.
   return { label: null, rest: cleanedRemovals };
 };
 
