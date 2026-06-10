@@ -8,7 +8,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName } from "@/lib/kitchenReceipt";
 import {
   isWebBluetoothSupported,
   isPrinterConnected,
@@ -2035,6 +2035,8 @@ const Kitchen = () => {
                         )}
                         {(() => {
                           const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+                          const noToppings = !item.toppings || item.toppings.length === 0;
+                          const noChanges = !shortcutLbl && rest.length === 0 && noToppings && isBurgerItemName(item.item_name);
                           return (
                             <>
                               {shortcutLbl && (
@@ -2042,6 +2044,9 @@ const Kitchen = () => {
                               )}
                               {rest.length > 0 && (
                                 <p className="text-xs font-bold text-red-400">— שינויים: {rest.join(", ")}</p>
+                              )}
+                              {noChanges && (
+                                <p className="text-xs font-bold text-muted-foreground">— ללא שינויים</p>
                               )}
                             </>
                           );
