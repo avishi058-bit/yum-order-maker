@@ -123,7 +123,65 @@ function buildVeggieSummary(
   const finalArr = VEG_ORDER.filter((id) => final.has(id));
   const defArr = VEG_ORDER.filter((id) => def.has(id));
 
-  // Unchanged from default — only if there are also no other (sauce/extra) changes
+  // ===== Regular burger (4 veggies + aioli) — new spec =====
+  // Only applies when there are no add-ons that changed the default set
+  // (e.g. add-tomato on a smash) — and only for non-smash burgers.
+  if (!isSmashBurger(name)) {
+    const VEG4 = ["lettuce", "tomato", "onion", "pickles"] as const;
+    const removedVeg = VEG4.filter((id) => !final.has(id));
+    const addedVeg = (["tomato", "onion"] as const).filter((id) => final.has(id) && !def.has(id));
+    const aioliRemoved = def.has("aioli") && !final.has("aioli");
+    const aioliKept = final.has("aioli");
+    const vegCount = removedVeg.length;
+
+    // No customer-driven veg/aioli changes (and no add-ons) → default bun
+    if (vegCount === 0 && !aioliRemoved && addedVeg.length === 0) {
+      if (others.length === 0) return { veg: "ללא שינויים", others };
+      return { veg: "כל הירקות + אאיולי", others };
+    }
+
+    // Added veg (no removals) → "להוסיף X"
+    if (vegCount === 0 && addedVeg.length === 1 && !aioliRemoved) {
+      return { veg: `להוסיף ${VEGGIE_HEBREW[addedVeg[0]]}`, others };
+    }
+
+    // All 4 veggies + aioli removed → "יבש"
+    if (vegCount === 4 && aioliRemoved) return { veg: "יבש", others };
+
+    // All 4 veggies removed, aioli kept → "רק אאיולי"
+    if (vegCount === 4 && aioliKept) return { veg: "רק אאיולי", others };
+
+    // 2-3 veggies removed → list remaining + " בלבד" (aioli rendered separately)
+    if ((vegCount === 2 || vegCount === 3) && addedVeg.length === 0) {
+      const remaining = VEG4.filter((id) => final.has(id)).map((id) => VEGGIE_HEBREW[id]);
+      const line = `${remaining.join(", ")} בלבד`;
+      if (aioliRemoved) others.unshift("ללא אאיולי");
+      return { veg: line, others };
+    }
+
+    // 1 veggie removed only, aioli kept → "ללא X"
+    if (vegCount === 1 && !aioliRemoved && addedVeg.length === 0) {
+      return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}`, others };
+    }
+
+    // Aioli only removed → "ללא אאיולי"
+    if (vegCount === 0 && aioliRemoved && addedVeg.length === 0) {
+      return { veg: "ללא אאיולי", others };
+    }
+
+    // 1 veg + aioli removed → combined line
+    if (vegCount === 1 && aioliRemoved && addedVeg.length === 0) {
+      return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}, ללא אאיולי`, others };
+    }
+
+    // Fallback for unusual combinations (e.g. mixed add+remove) — list final state
+    return {
+      veg: finalArr.length === 0 ? "בלי כלום" : finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "),
+      others,
+    };
+  }
+
+  // ===== Smash burger — legacy logic =====
   if (
     finalArr.length === defArr.length &&
     finalArr.every((x, i) => x === defArr[i]) &&
@@ -131,49 +189,38 @@ function buildVeggieSummary(
   ) {
     return { veg: "ללא שינויים", others };
   }
-  // If veggies match default but there are other changes, list the actual veggies
   const veggiesMatchDefault =
     finalArr.length === defArr.length && finalArr.every((x, i) => x === defArr[i]);
   if (veggiesMatchDefault) {
     return { veg: finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "), others };
   }
-  // Empty bun
   if (finalArr.length === 0) return { veg: "בלי כלום", others };
 
-  // Smash special shortcuts
-  if (isSmashBurger(name)) {
-    const allVeg = ["lettuce", "tomato", "onion", "pickles"];
-    const hasAllVeg = allVeg.every((v) => final.has(v));
-    if (hasAllVeg && !final.has("aioli") && final.size === 4) {
-      return { veg: "כל הירקות", others };
-    }
-    if (hasAllVeg && final.has("aioli") && final.size === 5) {
-      return { veg: "כל הירקות ואיולי", others };
-    }
+  const allVeg = ["lettuce", "tomato", "onion", "pickles"];
+  const hasAllVeg = allVeg.every((v) => final.has(v));
+  if (hasAllVeg && !final.has("aioli") && final.size === 4) {
+    return { veg: "כל הירקות", others };
   }
-
-  // Only one ingredient left
+  if (hasAllVeg && final.has("aioli") && final.size === 5) {
+    return { veg: "כל הירקות ואיולי", others };
+  }
   if (finalArr.length === 1) {
     return { veg: `רק ${VEGGIE_HEBREW[finalArr[0]]}`, others };
   }
-
-  // Exactly one removed from default, nothing added → "ללא X"
   const missing = defArr.filter((id) => !final.has(id));
   const addedExtras = finalArr.filter((id) => !def.has(id));
   if (missing.length === 1 && addedExtras.length === 0) {
     return { veg: `ללא ${VEGGIE_HEBREW[missing[0]]}`, others };
   }
-  // Exactly one added to default, nothing removed → "להוסיף X"
   if (addedExtras.length === 1 && missing.length === 0) {
     return { veg: `להוסיף ${VEGGIE_HEBREW[addedExtras[0]]}`, others };
   }
-
-  // Default: list everything that ends up on the bun
   return {
     veg: finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "),
     others,
   };
 }
+
 
 const HEB = /[\u0590-\u05FF]/;
 const NON_ASCII = /[^\x20-\x7E]/;
