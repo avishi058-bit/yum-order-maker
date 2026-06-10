@@ -702,3 +702,32 @@ export function buildTestOps(): FastOp[] {
     { kind: "cut" },
   ];
 }
+
+// ============================================================
+// PHONE QR — standalone bon
+// ============================================================
+export function buildPhoneQrOps(order: ReceiptOrder): FastOp[] {
+  const phone = (order.customer_phone || "").trim();
+  const telDigits = phone.replace(/[^\d+]/g, "");
+  const ops: FastOp[] = [];
+  if (order.customer_name || phone) {
+    ops.push({
+      kind: "header",
+      name: order.customer_name || "",
+      phone: phone || undefined,
+      namePx: 44,
+      phonePx: 32,
+    });
+  }
+  if (telDigits) {
+    ops.push(feed(0.6));
+    ops.push({ kind: "qr", data: `tel:${telDigits}`, modulePx: 6, align: "C" });
+    ops.push(feed(0.6));
+  }
+  if ((order as any).order_number) {
+    ops.push(asLine(`הזמנה #${(order as any).order_number}`, { align: "C", bold: true, size: 26 }));
+  }
+  ops.push(feed(2));
+  ops.push({ kind: "cut" });
+  return ops;
+}
