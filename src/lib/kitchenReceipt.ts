@@ -1,6 +1,19 @@
 // Kitchen receipt builder + chef-summary calculator.
 // 80mm thermal printers (printable area ~72mm). Black & white only.
 import QRCode from "qrcode";
+import { menuItems } from "@/data/menu";
+
+// Burger/meal item names — used to decide whether to print "ללא שינויים" when
+// the item has no removals, no additions and no toppings.
+const BURGER_ITEM_NAMES: Set<string> = (() => {
+  const s = new Set<string>();
+  for (const m of menuItems) {
+    if (m.category === "burger" || m.category === "meal") s.add(m.name);
+  }
+  return s;
+})();
+export const isBurgerItemName = (name: string | undefined | null): boolean =>
+  !!name && BURGER_ITEM_NAMES.has(name.trim());
 //
 // CHEF SUMMARY RULES:
 //   Patties (split by type):
