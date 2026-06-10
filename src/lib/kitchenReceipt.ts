@@ -234,7 +234,7 @@ export const applyVeggieShortcut = (
   }
   if (vegCount === 2 || vegCount === 3) {
     const remaining = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
-    const label = `${remaining.join(", ")} בלבד`;
+    const label = remaining.join(", ");
     const rest: string[] = [];
     if (aioliRemoved) rest.push("ללא אאיולי");
     for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
