@@ -92,6 +92,20 @@ const ADD_TO_VEG: Record<string, string> = {
   "add-onion": "onion",
 };
 
+const HEBREW_REMOVE_TO_VEG: Record<string, string> = {
+  "ללא חסה": "lettuce",
+  "ללא עגבנייה": "tomato",
+  "ללא בצל": "onion",
+  "ללא חמוצים": "pickles",
+  "ללא איולי": "aioli",
+  "ללא אאיולי": "aioli",
+};
+
+const HEBREW_ADD_TO_VEG: Record<string, string> = {
+  "להוסיף עגבנייה": "tomato",
+  "להוסיף בצל": "onion",
+};
+
 function isSmashBurger(name: string): boolean {
   return /סמאש|קרייזי/.test(name || "");
 }
@@ -110,14 +124,17 @@ function buildVeggieSummary(
   const final = new Set(def);
   const others: string[] = [];
   for (const r of removalsRaw) {
-    if (REM_TO_VEG[r]) {
-      final.delete(REM_TO_VEG[r]);
-    } else if (ADD_TO_VEG[r]) {
-      final.add(ADD_TO_VEG[r]);
+    const normalized = String(r || "").trim();
+    const removeVeg = REM_TO_VEG[normalized] || HEBREW_REMOVE_TO_VEG[normalized];
+    const addVeg = ADD_TO_VEG[normalized] || HEBREW_ADD_TO_VEG[normalized];
+    if (removeVeg) {
+      final.delete(removeVeg);
+    } else if (addVeg) {
+      final.add(addVeg);
     } else {
-      const m = ING_LOOKUP[r];
+      const m = ING_LOOKUP[normalized];
       if (m) others.push(m.kind === "remove" ? `ללא ${m.label}` : `להוסיף ${m.label}`);
-      else others.push(r);
+      else others.push(normalized);
     }
   }
   const finalArr = VEG_ORDER.filter((id) => final.has(id));
@@ -151,14 +168,6 @@ function buildVeggieSummary(
     // All 4 veggies removed, aioli kept → "רק איולי"
     if (vegCount === 4 && aioliKept) return { veg: "רק איולי", others };
 
-    // 2-3 veggies removed → list remaining + " בלבד" (aioli rendered separately)
-    if ((vegCount === 2 || vegCount === 3) && addedVeg.length === 0) {
-      const remaining = VEG4.filter((id) => final.has(id)).map((id) => VEGGIE_HEBREW[id]);
-      const line = `${remaining.join(", ")} בלבד`;
-      if (aioliRemoved) others.unshift("ללא איולי");
-      return { veg: line, others };
-    }
-
     // 1 veggie removed only, aioli kept → "ללא X"
     if (vegCount === 1 && !aioliRemoved && addedVeg.length === 0) {
       return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}`, others };
@@ -169,9 +178,12 @@ function buildVeggieSummary(
       return { veg: "ללא איולי", others };
     }
 
-    // 1 veg + aioli removed → combined line
-    if (vegCount === 1 && aioliRemoved && addedVeg.length === 0) {
-      return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}, ללא איולי`, others };
+    // 2+ removals total → list what stays on the bun, not multiple "ללא" lines.
+    if (vegCount + (aioliRemoved ? 1 : 0) >= 2 && addedVeg.length === 0) {
+      const remaining = VEG_ORDER.filter((id) => final.has(id)).map((id) => VEGGIE_HEBREW[id]);
+      if (remaining.length === 0) return { veg: "יבש", others };
+      if (remaining.length === 1 && remaining[0] === "איולי") return { veg: "רק איולי", others };
+      return { veg: remaining.join(" "), others };
     }
 
     // Fallback for unusual combinations (e.g. mixed add+remove) — list final state
@@ -278,6 +290,10 @@ function normalizeToppingName(s: string): string {
 function toppingLine(s: string): string {
   const n = normalizeToppingName(s).trim();
   return n.startsWith("+") ? n : `+ ${n}`;
+}
+
+function printableToppings(toppings: string[] | null | undefined): string[] {
+  return (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 }
 
 // A thin dashed separator line between dishes.
@@ -405,8 +421,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Toppings — printed right after the burger preferences/changes, before
     // the meal side / drinks / deal extras.
-    if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
+    const toppingsToPrint = printableToppings(it.toppings);
+    if (toppingsToPrint.length > 0) {
+      for (const t of toppingsToPrint) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
     }
 
     // Spacing before meal / drink line

@@ -90,6 +90,9 @@ interface Order {
   order_items: OrderItem[];
 }
 
+const printableToppings = (toppings: string[] | null | undefined): string[] =>
+  (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
+
 type ViewMode = "active" | "history" | "availability" | "dashboard";
 
 interface AvailabilityItem {
@@ -2018,6 +2021,7 @@ const Kitchen = () => {
                     // and the rest as "— שינויים: a, b, c".
                     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(item.removals);
                     const isFavorite = item.removals?.some(r => r === "__FAVORITE__");
+                    const toppingsToPrint = printableToppings(item.toppings);
                     return (
                       <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
                         {isFavorite && (
@@ -2050,8 +2054,8 @@ const Kitchen = () => {
                             </>
                           );
                         })()}
-                        {item.toppings && item.toppings.length > 0 && (
-                          <p className="text-xs font-extrabold text-green-400">+ {item.toppings.join(", ")}</p>
+                        {toppingsToPrint.length > 0 && (
+                          <p className="text-xs font-extrabold text-green-400">+ {toppingsToPrint.join(", ")}</p>
                         )}
                         {item.with_meal && (
                           <p className="text-xs text-muted-foreground">
