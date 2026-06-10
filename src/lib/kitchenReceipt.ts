@@ -672,10 +672,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
         if (rest.length > 0) {
           html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(rest.join(", "))}</div>`;
         }
-        // Burger with zero customisation → say so explicitly, so the chef
-        // doesn't wonder whether changes are missing.
-        const noToppings = !it.toppings || it.toppings.length === 0;
-        if (!shortcutLbl && rest.length === 0 && noToppings && isBurgerItemName(it.item_name)) {
+        // Burger with no veggie changes → say "ללא שינויים" explicitly.
+        if (!shortcutLbl && rest.length === 0 && isBurgerItemName(it.item_name)) {
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
