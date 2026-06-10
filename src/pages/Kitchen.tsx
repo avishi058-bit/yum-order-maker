@@ -260,6 +260,7 @@ const AGGRESSIVE_RING_MS = 2000;
 const NORMAL_RING_MS = 5000;
 
 const Kitchen = () => {
+  useWakeLock(true);
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
