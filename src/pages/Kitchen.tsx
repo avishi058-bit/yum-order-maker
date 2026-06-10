@@ -1920,8 +1920,8 @@ const Kitchen = () => {
                         const doneLabel: Record<string, string> = { "doneness-m": "M — מדיום", "doneness-mw": "MW — מדיום וואל", "doneness-wd": "WD — וואל דאן" };
                         const otherRemovals = item.removals?.filter(r => !r.startsWith("doneness-") && !r.startsWith("__OWNER__:") && r !== "__FAVORITE__") || [];
                         const shortcut = getRemovalShortcut(otherRemovals);
-                        const skip = shortcutConsumedIds(shortcut);
-                        const shortcutLbl = removalShortcutLabel(shortcut);
+                        const skip = shortcutConsumedIds(shortcut, otherRemovals);
+                        const shortcutLbl = removalShortcutLabel(shortcut, otherRemovals);
                         const visibleRemovals = otherRemovals
                           .filter(r => !skip.has(r))
                           .map(r => REMOVAL_LABELS[r] || r);
