@@ -7,6 +7,7 @@
 // prints the same Hebrew text under all three profiles labeled A/B/C.
 
 import html2canvas from "html2canvas";
+import QRCode from "qrcode";
 import { buildReceiptHtml, type RoundOrder, buildRoundSummaryHtml, buildRoundChefSummaryHtml } from "./kitchenReceipt";
 import type { ReceiptOrder } from "./kitchenReceipt";
 
@@ -617,6 +618,7 @@ export type FastOp =
   | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
   | { kind: "header"; name: string; phone?: string; namePx?: number; phonePx?: number }
   | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean }
+  | { kind: "qr"; data: string; modulePx?: number; align?: "L" | "C" | "R" }
   | { kind: "sep" }
   | { kind: "feed"; n: number }
   | { kind: "cut" };
@@ -898,6 +900,44 @@ function _renderTwoColToMono(
   return _canvasToCroppedMono(canvas, width, false);
 }
 
+// Render a QR code as a 1-bit bitmap so it travels through the same raster
+// pipeline as the rest of the receipt (no separate ESC/POS QR command needed,
+// works identically on every printer model — same path as the other "bons").
+function _renderQrToMono(
+  data: string,
+  modulePx: number,
+  align: "L" | "C" | "R",
+  width: number,
+): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
+  const qr = QRCode.create(data, { errorCorrectionLevel: "M" });
+  const size: number = qr.modules.size;
+  const matrix: Uint8Array = qr.modules.data;
+  // Pick the largest module size that still fits the paper, capped at modulePx.
+  const maxPx = Math.max(2, Math.floor((width - 16) / size));
+  const px = Math.max(2, Math.min(modulePx, maxPx));
+  const dim = size * px;
+  const quiet = px * 2; // quiet zone so scanners can lock on
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = dim + quiet * 2;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#000";
+  const offX =
+    align === "L" ? quiet :
+    align === "R" ? width - dim - quiet :
+    Math.floor((width - dim) / 2);
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (matrix[r * size + c]) {
+        ctx.fillRect(offX + c * px, quiet + r * px, px, px);
+      }
+    }
+  }
+  return _canvasToCroppedMono(canvas, width, false);
+}
+
 // Growing Uint8Array buffer. Faster than number[] + push(...) for large payloads.
 class ByteBuf {
   buf: Uint8Array;
@@ -1129,6 +1169,9 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
       case "twoCol":
         monos.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
         break;
+      case "qr":
+        monos.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
+        break;
       case "cut": cut = true; break;
     }
   }
@@ -1216,6 +1259,10 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         pending.push(_renderHeaderToMono(
           op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width,
         ));
+        break;
+      }
+      case "qr": {
+        pending.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
         break;
       }
       case "twoCol": {
