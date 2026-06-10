@@ -2034,7 +2034,7 @@ const Kitchen = () => {
                           <p className="text-xs font-extrabold text-orange-400">🔥 {doneness}</p>
                         )}
                         {(() => {
-                          const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+                          const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals, item.item_name);
                           const noChanges = !shortcutLbl && rest.length === 0 && isBurgerItemName(item.item_name);
                           return (
                             <>
@@ -2065,7 +2065,7 @@ const Kitchen = () => {
                                 <p>{i + 1}. {b.name || ""}</p>
                                 {(() => {
                                   const bRemovals = b.removals || [];
-                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(bRemovals);
+                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(bRemovals, b.name);
                                   const noChanges = !bShort && bRest.length === 0;
                                   return (
                                     <>

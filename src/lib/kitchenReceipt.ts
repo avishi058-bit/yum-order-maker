@@ -198,6 +198,7 @@ const isVeggieAddition = (s: string): string | null => {
 };
 export const applyVeggieShortcut = (
   cleanedRemovals: string[],
+  itemName?: string,
 ): { label: string | null; rest: string[] } => {
   const removedVeggies = new Set<string>();
   const addedVeggies = new Set<string>();
@@ -212,6 +213,24 @@ export const applyVeggieShortcut = (
     other.push(r);
   }
   const vegCount = removedVeggies.size;
+  const isSmash = !!itemName && /סמאש|קרייזי/.test(itemName);
+
+  // ----- Smash burger with mixed add+remove → render final veg state -----
+  // Smash defaults = חסה, חמוצים, איולי. Adds available = בצל, עגבנייה.
+  // When the customer both adds and removes, listing deltas is confusing —
+  // show the chef the final bun composition directly (e.g. "חסה בצל איולי").
+  if (isSmash && addedVeggies.size > 0 && (removedVeggies.size > 0 || aioliRemoved)) {
+    const SMASH_DEFAULTS = new Set<string>(["חסה", "חמוצים"]);
+    const finalVeg: string[] = [];
+    for (const v of VEGGIE_HE_ORDER) {
+      const inDefault = SMASH_DEFAULTS.has(v);
+      const wasAdded = addedVeggies.has(v);
+      const wasRemoved = removedVeggies.has(v);
+      if ((inDefault && !wasRemoved) || (!inDefault && wasAdded)) finalVeg.push(v);
+    }
+    if (!aioliRemoved) finalVeg.push("איולי");
+    return { label: finalVeg.length > 0 ? finalVeg.join(" ") : "יבש", rest: other };
+  }
 
   // ----- Addition shortcut (smash burgers default to no onion/tomato) -----
   // Adding both onion + tomato (with no veggie or aioli removals) means the
@@ -666,7 +685,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       }
 
       {
-        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals, it.item_name);
         if (shortcutLbl) {
           html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
         }
@@ -692,7 +711,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           const bName = `${i + 1}. ${b.name || ""}`;
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
-            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
             if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
             if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
@@ -1083,7 +1102,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
         html += `<div class="sub" style="font-weight:900;">🔥 ${escapeHtml(doneness)}</div>`;
       }
       {
-        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals, it.item_name);
         if (shortcutLbl) {
           html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
         }
@@ -1108,7 +1127,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           const bName = `${i + 1}. ${b.name || ""}`;
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
-            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
             if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
             if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
