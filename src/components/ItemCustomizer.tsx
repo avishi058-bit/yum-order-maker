@@ -107,6 +107,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
   const [toppingsSeen, setToppingsSeen] = useState(false);
   const toppingsRef = useRef<HTMLDivElement>(null);
+  // Optional "side dishes" the user can add alongside a burger (arayes 3/4).
+  const [sideItemCounts, setSideItemCounts] = useState<Record<string, number>>({});
   const customToppings = useCustomToppings();
   const toppings = [...staticToppings, ...customToppings];
 
