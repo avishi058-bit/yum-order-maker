@@ -885,6 +885,56 @@ const Kitchen = () => {
     printOrder(order);
   };
 
+  // Print a QR code of the customer's phone (tel: link) with name + phone below.
+  // Used on takeaway orders so the courier/driver can scan to call instantly.
+  const printCustomerQr = async (order: Order) => {
+    try {
+      const phoneRaw = (order.customer_phone || "").trim();
+      if (!phoneRaw) {
+        toast.error("אין מספר טלפון להזמנה זו");
+        return;
+      }
+      const telDigits = phoneRaw.replace(/[^\d+]/g, "");
+      const qrDataUrl = await QRCode.toDataURL(`tel:${telDigits}`, {
+        width: 600,
+        margin: 1,
+        errorCorrectionLevel: "M",
+      });
+      const win = window.open("", "_blank", "width=400,height=600");
+      if (!win) {
+        toast.error("חלון ההדפסה נחסם — אפשר חלונות קופצים");
+        return;
+      }
+      const safeName = (order.customer_name || "").replace(/[<>&]/g, "");
+      const safePhone = phoneRaw.replace(/[<>&]/g, "");
+      win.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>QR ${safeName}</title>
+<style>
+  @page { margin: 8mm; }
+  html,body { margin:0; padding:0; font-family: -apple-system, "Heebo", Arial, sans-serif; }
+  .wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; }
+  img { width: 320px; height: 320px; }
+  .name { font-size: 28px; font-weight: 800; margin-top: 14px; text-align:center; }
+  .phone { font-size: 26px; font-weight: 700; margin-top: 4px; direction: ltr; letter-spacing: 1px; }
+  .order { font-size: 14px; color:#555; margin-top: 6px; }
+</style></head><body>
+  <div class="wrap">
+    <img src="${qrDataUrl}" alt="QR" />
+    <div class="name">${safeName}</div>
+    <div class="phone">${safePhone}</div>
+    <div class="order">הזמנה #${order.order_number}</div>
+  </div>
+  <script>
+    window.onload = function(){ setTimeout(function(){ window.print(); }, 150); };
+    window.onafterprint = function(){ window.close(); };
+  <\/script>
+</body></html>`);
+      win.document.close();
+    } catch (e: any) {
+      console.warn("[Kitchen] QR print failed", e);
+      toast.error(e?.message || "שגיאה בהדפסת QR");
+    }
+  };
+
 
   // Try silent reconnect on mount + keep retrying in the background whenever
   // the printer is not connected (handles printer powering off/on, BT range loss,
