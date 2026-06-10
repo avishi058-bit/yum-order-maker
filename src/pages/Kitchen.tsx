@@ -2035,8 +2035,7 @@ const Kitchen = () => {
                         )}
                         {(() => {
                           const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
-                          const noToppings = !item.toppings || item.toppings.length === 0;
-                          const noChanges = !shortcutLbl && rest.length === 0 && noToppings && isBurgerItemName(item.item_name);
+                          const noChanges = !shortcutLbl && rest.length === 0 && isBurgerItemName(item.item_name);
                           return (
                             <>
                               {shortcutLbl && (
