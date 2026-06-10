@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected } from "lucide-react";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary } from "@/lib/kitchenReceipt";
