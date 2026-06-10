@@ -1118,10 +1118,10 @@ function _renderNativeLineToMono(
   const { data } = ctx.getImageData(0, 0, width, lineHeight);
   const bytes = new Uint8Array(widthBytes * lineHeight);
   for (let y = 0; y < lineHeight; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 140) bytes[y * widthBytes + (x >> 3)] |= 0x80 >> (x & 7);
+    const rowOff = y * widthBytes;
+    let i = y * width * 4;
+    for (let x = 0; x < width; x++, i += 4) {
+      if (data[i] < 140) bytes[rowOff + (x >> 3)] |= 0x80 >> (x & 7);
     }
   }
   return { bytes, widthBytes, height: lineHeight, offsetX: 0 };
