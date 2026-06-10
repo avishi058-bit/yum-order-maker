@@ -896,9 +896,9 @@ const Kitchen = () => {
       }
       const telDigits = phoneRaw.replace(/[^\d+]/g, "");
       const qrDataUrl = await QRCode.toDataURL(`tel:${telDigits}`, {
-        width: 600,
-        margin: 1,
-        errorCorrectionLevel: "M",
+        width: 512,
+        margin: 2,
+        errorCorrectionLevel: "H",
       });
       const win = window.open("", "_blank", "width=400,height=600");
       if (!win) {
