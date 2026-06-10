@@ -1,20 +1,31 @@
-// Shared shortcuts for summarising burger removals.
+// Customer-preferences shortcut for the kitchen receipt / kitchen view.
 //
-// - If the customer removed ALL 4 veggies AND the aioli  → "יבש"
-// - If the customer removed ALL 4 veggies but kept aioli → "ללא ירקות"
+// Rules (regular burger — 4 veggies + aioli, defined by user):
+//   Veggies = חסה, בצל, עגבנייה, חמוצים
+//   Sauce   = אאיולי (separate, NOT a veggie)
 //
-// An ingredient that is currently out of stock counts as if the customer
-// removed it (it's not going on the burger anyway).
+// 0 changes                                  → nothing printed (default bun)
+// 1 veggie removed only                      → render normally ("ללא בצל")
+// aioli only removed                         → render normally ("ללא אאיולי")
+// 2-3 veggies removed                        → "חסה, חמוצים בלבד" (list remaining
+//                                              veggies). Aioli still rendered
+//                                              separately if removed.
+// 4 veggies removed, aioli kept              → "רק אאיולי"
+// 4 veggies removed + aioli removed          → "יבש"
 //
-// Returns null if no shortcut applies; the caller should render the
-// individual removals as usual.
+// An out-of-stock ingredient counts as removed (it isn't going on the burger).
 
 import { getUnavailableIngredientIds } from "./ingredientAvailability";
 
-const VEGGIE_IDS = ["no-lettuce", "no-onion", "no-tomato", "no-pickles"] as const;
-const AIOLI_ID = "no-aioli";
+const VEGGIE_IDS = ["lettuce", "onion", "tomato", "pickles"] as const;
+const VEGGIE_ORDER: readonly string[] = ["lettuce", "tomato", "onion", "pickles"];
+const VEGGIE_HE: Record<string, string> = {
+  lettuce: "חסה",
+  tomato: "עגבנייה",
+  onion: "בצל",
+  pickles: "חמוצים",
+};
 
-// removalId → ingredient.id (for matching availability)
 const REMOVAL_TO_INGREDIENT: Record<string, string> = {
   "no-lettuce": "lettuce",
   "no-onion": "onion",
@@ -23,7 +34,19 @@ const REMOVAL_TO_INGREDIENT: Record<string, string> = {
   "no-aioli": "aioli",
 };
 
-export type RemovalShortcut = "dry" | "no-veggies" | null;
+const VEG_REMOVAL_IDS = new Set(["no-lettuce", "no-onion", "no-tomato", "no-pickles"]);
+const AIOLI_REMOVAL_ID = "no-aioli";
+
+export type RemovalShortcut = "dry" | "only-aioli" | "remaining" | null;
+
+interface ShortcutInfo {
+  kind: RemovalShortcut;
+  // Label to print on the receipt (or null when none).
+  label: string | null;
+  // Removal IDs that the shortcut already covered — caller must skip them when
+  // rendering the per-line "ללא X" list to avoid duplicates.
+  consumed: Set<string>;
+}
 
 function effectiveRemovalSet(removalIds: string[]): Set<string> {
   const set = new Set(removalIds);
@@ -34,22 +57,70 @@ function effectiveRemovalSet(removalIds: string[]): Set<string> {
   return set;
 }
 
-export function getRemovalShortcut(removalIds: string[]): RemovalShortcut {
+function computeShortcut(removalIds: string[]): ShortcutInfo {
   const set = effectiveRemovalSet(removalIds);
-  const allVeggies = VEGGIE_IDS.every((id) => set.has(id));
-  if (!allVeggies) return null;
-  return set.has(AIOLI_ID) ? "dry" : "no-veggies";
+  const removedVeggies = [...VEG_REMOVAL_IDS].filter((id) => set.has(id));
+  const aioliRemoved = set.has(AIOLI_REMOVAL_ID);
+  const vegCount = removedVeggies.length;
+
+  // All veggies + aioli removed → "יבש"
+  if (vegCount === 4 && aioliRemoved) {
+    return {
+      kind: "dry",
+      label: "יבש",
+      consumed: new Set<string>([...VEG_REMOVAL_IDS, AIOLI_REMOVAL_ID]),
+    };
+  }
+
+  // All veggies removed, aioli kept → "רק אאיולי"
+  if (vegCount === 4) {
+    return {
+      kind: "only-aioli",
+      label: "רק אאיולי",
+      consumed: new Set<string>(VEG_REMOVAL_IDS),
+    };
+  }
+
+  // 2-3 veggies removed → list remaining veggies (aioli handled independently)
+  if (vegCount === 2 || vegCount === 3) {
+    const removedVegIngredients = new Set(removedVeggies.map((r) => REMOVAL_TO_INGREDIENT[r]));
+    const remainingNames = VEGGIE_ORDER
+      .filter((id) => !removedVegIngredients.has(id))
+      .map((id) => VEGGIE_HE[id]);
+    return {
+      kind: "remaining",
+      label: `${remainingNames.join(", ")} בלבד`,
+      consumed: new Set<string>(removedVeggies),
+    };
+  }
+
+  // 0 or 1 veggie removed → no shortcut; standard "ללא X" rendering handles it.
+  return { kind: null, label: null, consumed: new Set<string>() };
 }
 
-// IDs that should be hidden from the per-line "ללא X" list when a shortcut applies.
-// Only IDs that the customer actually selected get returned — we never want to
-// print/show "ללא חמוצים" if the only reason it's in the effective set is that
-// pickles are out of stock today.
-export function shortcutConsumedIds(s: RemovalShortcut): Set<string> {
-  if (s === "dry") return new Set<string>([...VEGGIE_IDS, AIOLI_ID]);
-  if (s === "no-veggies") return new Set<string>(VEGGIE_IDS);
+// ===== Public API (kept stable for existing callers) =====
+
+export function getRemovalShortcut(removalIds: string[]): RemovalShortcut {
+  return computeShortcut(removalIds).kind;
+}
+
+export function removalShortcutLabel(_s: RemovalShortcut, removalIds?: string[]): string | null {
+  // When caller passes the original removals, recompute to get the dynamic
+  // "X, Y בלבד" label. Otherwise return the static labels.
+  if (removalIds) return computeShortcut(removalIds).label;
+  if (_s === "dry") return "יבש";
+  if (_s === "only-aioli") return "רק אאיולי";
+  return null;
+}
+
+export function shortcutConsumedIds(_s: RemovalShortcut, removalIds?: string[]): Set<string> {
+  if (removalIds) return computeShortcut(removalIds).consumed;
+  if (_s === "dry") return new Set<string>([...VEG_REMOVAL_IDS, AIOLI_REMOVAL_ID]);
+  if (_s === "only-aioli") return new Set<string>(VEG_REMOVAL_IDS);
   return new Set<string>();
 }
 
-export const removalShortcutLabel = (s: RemovalShortcut): string | null =>
-  s === "dry" ? "יבש" : s === "no-veggies" ? "ללא ירקות" : null;
+// Richer accessor for callers that want the full result in one shot.
+export function getShortcutInfo(removalIds: string[]): ShortcutInfo {
+  return computeShortcut(removalIds);
+}
