@@ -1117,7 +1117,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                         </div>
 
                         {/* תוספות צד — שלח גם מנות עראיס (3 / 4 רבעים) יחד עם ההמבורגר */}
-                        {!editingCartId && item.id !== "arayes-special" && item.id !== "arayes-special-4" && (() => {
+                        {!initialState && item.id !== "arayes-special" && item.id !== "arayes-special-4" && (() => {
                           const sideOptions = (["arayes-special", "arayes-special-4"] as const)
                             .map((id) => menuItems.find((m) => m.id === id))
                             .filter((m): m is MenuItem => !!m)
