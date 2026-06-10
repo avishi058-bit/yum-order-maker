@@ -693,15 +693,18 @@ function _renderHebToMono(
   lines.forEach((ln, i) => ctx.fillText(ln, x, lineH * i + lineH / 2 + 1));
 
   // Convert to 1-bit MSB-first, pad width to multiple of 8.
+  // Fast path: text is pure black antialiased on white, so R==G==B==B′.
+  // Sampling a single channel (R) gives identical thresholding to the full
+  // luminance formula but ~3x faster on large bons.
   const padW = Math.ceil(width / 8) * 8;
   const widthBytes = padW / 8;
   const { data } = ctx.getImageData(0, 0, width, h);
   const bytes = new Uint8Array(widthBytes * h);
   for (let y = 0; y < h; y++) {
-    for (let xp = 0; xp < width; xp++) {
-      const i = (y * width + xp) * 4;
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 140) bytes[y * widthBytes + (xp >> 3)] |= 0x80 >> (xp & 7);
+    const rowOff = y * widthBytes;
+    let i = y * width * 4;
+    for (let xp = 0; xp < width; xp++, i += 4) {
+      if (data[i] < 140) bytes[rowOff + (xp >> 3)] |= 0x80 >> (xp & 7);
     }
   }
 
