@@ -1262,7 +1262,7 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         break;
       }
       case "qr": {
-        pending.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width + 3));
+        pending.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
         break;
       }
       case "twoCol": {
