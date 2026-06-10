@@ -181,45 +181,60 @@ function buildVeggieSummary(
     };
   }
 
-  // ===== Smash burger — legacy logic =====
-  if (
-    finalArr.length === defArr.length &&
-    finalArr.every((x, i) => x === defArr[i]) &&
-    others.length === 0
-  ) {
-    return { veg: "ללא שינויים", others };
-  }
-  const veggiesMatchDefault =
-    finalArr.length === defArr.length && finalArr.every((x, i) => x === defArr[i]);
-  if (veggiesMatchDefault) {
-    return { veg: finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "), others };
-  }
-  if (finalArr.length === 0) return { veg: "בלי כלום", others };
+  // ===== Smash burger — new spec =====
+  // Default = lettuce + pickles + aioli. Optional adds: tomato, onion.
+  const SMASH_DEF = ["lettuce", "pickles", "aioli"] as const;
+  const removedSmash = SMASH_DEF.filter((id) => !final.has(id));
+  const addedSmash = (["tomato", "onion"] as const).filter((id) => final.has(id));
+  const aioliRemovedS = !final.has("aioli");
+  const removeCount = removedSmash.length;
 
-  const allVeg = ["lettuce", "tomato", "onion", "pickles"];
-  const hasAllVeg = allVeg.every((v) => final.has(v));
-  if (hasAllVeg && !final.has("aioli") && final.size === 4) {
-    return { veg: "כל הירקות", others };
+  // No customer changes
+  if (removeCount === 0 && addedSmash.length === 0) {
+    if (others.length === 0) return { veg: "ללא שינויים", others };
+    return { veg: "חסה, חמוצים, אאיולי", others };
   }
-  if (hasAllVeg && final.has("aioli") && final.size === 5) {
-    return { veg: "כל הירקות ואיולי", others };
+
+  // All 3 removed → "יבש"
+  if (removeCount === 3) return { veg: "יבש", others };
+
+  // Added both tomato + onion (no removals) → "כל הירקות + אאיולי"
+  if (addedSmash.length === 2 && removeCount === 0) {
+    return { veg: "כל הירקות + אאיולי", others };
   }
-  if (finalArr.length === 1) {
-    return { veg: `רק ${VEGGIE_HEBREW[finalArr[0]]}`, others };
+
+  // Added one of tomato/onion (no removals) → "להוסיף X"
+  if (addedSmash.length === 1 && removeCount === 0) {
+    return { veg: `להוסיף ${VEGGIE_HEBREW[addedSmash[0]]}`, others };
   }
-  const missing = defArr.filter((id) => !final.has(id));
-  const addedExtras = finalArr.filter((id) => !def.has(id));
-  if (missing.length === 1 && addedExtras.length === 0) {
-    return { veg: `ללא ${VEGGIE_HEBREW[missing[0]]}`, others };
+
+  // lettuce+pickles removed, aioli kept, no adds → "רק אאיולי"
+  if (
+    removeCount === 2 &&
+    !aioliRemovedS &&
+    removedSmash.includes("lettuce") &&
+    removedSmash.includes("pickles") &&
+    addedSmash.length === 0
+  ) {
+    return { veg: "רק אאיולי", others };
   }
-  if (addedExtras.length === 1 && missing.length === 0) {
-    return { veg: `להוסיף ${VEGGIE_HEBREW[addedExtras[0]]}`, others };
+
+  // 1-2 removed (no adds) → list what remains on the bun
+  if (addedSmash.length === 0 && removeCount >= 1) {
+    const remaining = (["lettuce", "tomato", "onion", "pickles", "aioli"] as const)
+      .filter((id) => final.has(id))
+      .map((id) => VEGGIE_HEBREW[id]);
+    if (remaining.length === 0) return { veg: "יבש", others };
+    return { veg: remaining.join(", "), others };
   }
+
+  // Fallback for mixed add+remove
   return {
-    veg: finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "),
+    veg: finalArr.length === 0 ? "יבש" : finalArr.map((id) => VEGGIE_HEBREW[id]).join(", "),
     others,
   };
 }
+
 
 
 const HEB = /[\u0590-\u05FF]/;
