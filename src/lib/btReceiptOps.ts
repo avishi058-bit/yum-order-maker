@@ -292,6 +292,10 @@ function toppingLine(s: string): string {
   return n.startsWith("+") ? n : `+ ${n}`;
 }
 
+function printableToppings(toppings: string[] | null | undefined): string[] {
+  return (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
+}
+
 // A thin dashed separator line between dishes.
 function dashSep(): FastOp {
   return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
@@ -417,8 +421,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
     // Toppings — printed right after the burger preferences/changes, before
     // the meal side / drinks / deal extras.
-    if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
+    const toppingsToPrint = printableToppings(it.toppings);
+    if (toppingsToPrint.length > 0) {
+      for (const t of toppingsToPrint) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
     }
 
     // Spacing before meal / drink line
