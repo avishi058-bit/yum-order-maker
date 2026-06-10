@@ -685,7 +685,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       }
 
       {
-        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals, it.item_name);
         if (shortcutLbl) {
           html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
         }
@@ -711,7 +711,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           const bName = `${i + 1}. ${b.name || ""}`;
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
-            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
             if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
             if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
@@ -1102,7 +1102,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
         html += `<div class="sub" style="font-weight:900;">🔥 ${escapeHtml(doneness)}</div>`;
       }
       {
-        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals, it.item_name);
         if (shortcutLbl) {
           html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
         }
@@ -1127,7 +1127,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           const bName = `${i + 1}. ${b.name || ""}`;
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
-            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
             if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
             if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
