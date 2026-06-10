@@ -300,8 +300,9 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 
 // WoR chunk size — BLE Web API does not expose negotiated MTU, and writing
 // larger than the link MTU silently truncates on some stacks → printer gets
-// a mangled byte stream and prints gibberish. 180 is the safe ESC/POS norm.
-let _worChunkSize = 180;
+// a mangled byte stream and prints gibberish. Start at 244 (max payload for
+// MTU 247, the BLE 5.0 default on Android/Chrome) and auto-shrink on error.
+let _worChunkSize = 244;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
