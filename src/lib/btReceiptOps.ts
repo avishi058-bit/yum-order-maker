@@ -329,13 +329,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       phonePx: 32,
     });
   }
-  // Phone QR (tel:) — rasterized through the same raster pipeline as the rest
-  // of the bon so it prints reliably on every printer mode (RawBT / BT / agent).
-  if (order.customer_phone) {
-    ops.push(feed(0.4));
-    ops.push({ kind: "qr", data: `tel:${order.customer_phone}`, modulePx: 4, align: "C" });
-    ops.push(feed(0.4));
-  }
+  // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד — לא כאן.)
   ops.push(sep());
 
   // 2) Order type (small) + optional note
