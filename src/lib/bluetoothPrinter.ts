@@ -781,10 +781,10 @@ function _canvasToCroppedMono(
   const { data } = ctx.getImageData(0, 0, width, h);
   const bytes = new Uint8Array(widthBytes * h);
   for (let y = 0; y < h; y++) {
-    for (let xp = 0; xp < width; xp++) {
-      const i = (y * width + xp) * 4;
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 140) bytes[y * widthBytes + (xp >> 3)] |= 0x80 >> (xp & 7);
+    const rowOff = y * widthBytes;
+    let i = y * width * 4;
+    for (let xp = 0; xp < width; xp++, i += 4) {
+      if (data[i] < 140) bytes[rowOff + (xp >> 3)] |= 0x80 >> (xp & 7);
     }
   }
   const rowBlank = (r: number) => {
