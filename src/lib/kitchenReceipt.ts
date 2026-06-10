@@ -1030,8 +1030,14 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
       if (doneness) {
         html += `<div class="sub" style="font-weight:900;">🔥 ${escapeHtml(doneness)}</div>`;
       }
-      if (cleanedRemovals.length > 0) {
-        html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(cleanedRemovals.join(", "))}</div>`;
+      {
+        const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+        if (shortcutLbl) {
+          html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
+        }
+        if (rest.length > 0) {
+          html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(rest.join(", "))}</div>`;
+        }
       }
       if (it.toppings && it.toppings.length > 0) {
         html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
