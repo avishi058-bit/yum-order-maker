@@ -262,7 +262,7 @@ export const applyVeggieShortcut = (
     let label: string;
     if (remaining.length === 0) label = "יבש";
     else if (remaining.length === 1 && remaining[0] === "איולי") label = "רק איולי";
-    else label = remaining.join(", ");
+    else label = remaining.join(" ");
     return { label, rest };
   }
 
