@@ -2033,9 +2033,19 @@ const Kitchen = () => {
                         {doneness && (
                           <p className="text-xs font-extrabold text-orange-400">🔥 {doneness}</p>
                         )}
-                        {cleanedRemovals.length > 0 && (
-                          <p className="text-xs font-bold text-red-400">— שינויים: {cleanedRemovals.join(", ")}</p>
-                        )}
+                        {(() => {
+                          const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+                          return (
+                            <>
+                              {shortcutLbl && (
+                                <p className="text-xs font-extrabold text-red-400">{shortcutLbl}</p>
+                              )}
+                              {rest.length > 0 && (
+                                <p className="text-xs font-bold text-red-400">— שינויים: {rest.join(", ")}</p>
+                              )}
+                            </>
+                          );
+                        })()}
                         {item.toppings && item.toppings.length > 0 && (
                           <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
                         )}
