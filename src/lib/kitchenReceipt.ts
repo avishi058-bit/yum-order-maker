@@ -1089,8 +1089,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
         if (rest.length > 0) {
           html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(rest.join(", "))}</div>`;
         }
-        const noToppings = !it.toppings || it.toppings.length === 0;
-        if (!shortcutLbl && rest.length === 0 && noToppings && isBurgerItemName(it.item_name)) {
+        if (!shortcutLbl && rest.length === 0 && isBurgerItemName(it.item_name)) {
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
