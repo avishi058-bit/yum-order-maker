@@ -2051,7 +2051,7 @@ const Kitchen = () => {
                           );
                         })()}
                         {item.toppings && item.toppings.length > 0 && (
-                          <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
+                          <p className="text-xs font-extrabold text-green-400">+ {item.toppings.join(", ")}</p>
                         )}
                         {item.with_meal && (
                           <p className="text-xs text-muted-foreground">
