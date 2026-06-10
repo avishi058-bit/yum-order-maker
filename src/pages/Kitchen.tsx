@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode } from "lucide-react";
+import QRCode from "qrcode";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -882,6 +883,56 @@ const Kitchen = () => {
   const reprintOrder = (order: Order) => {
     printedOrdersRef.current.add(order.id);
     printOrder(order);
+  };
+
+  // Print a QR code of the customer's phone (tel: link) with name + phone below.
+  // Used on takeaway orders so the courier/driver can scan to call instantly.
+  const printCustomerQr = async (order: Order) => {
+    try {
+      const phoneRaw = (order.customer_phone || "").trim();
+      if (!phoneRaw) {
+        toast.error("אין מספר טלפון להזמנה זו");
+        return;
+      }
+      const telDigits = phoneRaw.replace(/[^\d+]/g, "");
+      const qrDataUrl = await QRCode.toDataURL(`tel:${telDigits}`, {
+        width: 600,
+        margin: 1,
+        errorCorrectionLevel: "M",
+      });
+      const win = window.open("", "_blank", "width=400,height=600");
+      if (!win) {
+        toast.error("חלון ההדפסה נחסם — אפשר חלונות קופצים");
+        return;
+      }
+      const safeName = (order.customer_name || "").replace(/[<>&]/g, "");
+      const safePhone = phoneRaw.replace(/[<>&]/g, "");
+      win.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>QR ${safeName}</title>
+<style>
+  @page { margin: 8mm; }
+  html,body { margin:0; padding:0; font-family: -apple-system, "Heebo", Arial, sans-serif; }
+  .wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; }
+  img { width: 320px; height: 320px; }
+  .name { font-size: 28px; font-weight: 800; margin-top: 14px; text-align:center; }
+  .phone { font-size: 26px; font-weight: 700; margin-top: 4px; direction: ltr; letter-spacing: 1px; }
+  .order { font-size: 14px; color:#555; margin-top: 6px; }
+</style></head><body>
+  <div class="wrap">
+    <img src="${qrDataUrl}" alt="QR" />
+    <div class="name">${safeName}</div>
+    <div class="phone">${safePhone}</div>
+    <div class="order">הזמנה #${order.order_number}</div>
+  </div>
+  <script>
+    window.onload = function(){ setTimeout(function(){ window.print(); }, 150); };
+    window.onafterprint = function(){ window.close(); };
+  <\/script>
+</body></html>`);
+      win.document.close();
+    } catch (e: any) {
+      console.warn("[Kitchen] QR print failed", e);
+      toast.error(e?.message || "שגיאה בהדפסת QR");
+    }
   };
 
 
@@ -1919,6 +1970,15 @@ const Kitchen = () => {
                     >
                       <Printer size={16} />
                     </button>
+                    {order.order_source !== "kiosk" && order.order_source !== "station" && (
+                      <button
+                        onClick={() => printCustomerQr(order)}
+                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                        title="הדפס QR טלפון לקוח"
+                      >
+                        <QrCode size={16} />
+                      </button>
+                    )}
                     <span className="text-xs opacity-80">
                       <Clock size={12} className="inline ml-0.5" />
                       {timeSince(order.created_at)}
