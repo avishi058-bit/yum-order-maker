@@ -198,6 +198,7 @@ const isVeggieAddition = (s: string): string | null => {
 };
 export const applyVeggieShortcut = (
   cleanedRemovals: string[],
+  itemName?: string,
 ): { label: string | null; rest: string[] } => {
   const removedVeggies = new Set<string>();
   const addedVeggies = new Set<string>();
@@ -212,6 +213,24 @@ export const applyVeggieShortcut = (
     other.push(r);
   }
   const vegCount = removedVeggies.size;
+  const isSmash = !!itemName && /סמאש|קרייזי/.test(itemName);
+
+  // ----- Smash burger with mixed add+remove → render final veg state -----
+  // Smash defaults = חסה, חמוצים, איולי. Adds available = בצל, עגבנייה.
+  // When the customer both adds and removes, listing deltas is confusing —
+  // show the chef the final bun composition directly (e.g. "חסה בצל איולי").
+  if (isSmash && addedVeggies.size > 0 && (removedVeggies.size > 0 || aioliRemoved)) {
+    const SMASH_DEFAULTS = new Set<string>(["חסה", "חמוצים"]);
+    const finalVeg: string[] = [];
+    for (const v of VEGGIE_HE_ORDER) {
+      const inDefault = SMASH_DEFAULTS.has(v);
+      const wasAdded = addedVeggies.has(v);
+      const wasRemoved = removedVeggies.has(v);
+      if ((inDefault && !wasRemoved) || (!inDefault && wasAdded)) finalVeg.push(v);
+    }
+    if (!aioliRemoved) finalVeg.push("איולי");
+    return { label: finalVeg.length > 0 ? finalVeg.join(" ") : "יבש", rest: other };
+  }
 
   // ----- Addition shortcut (smash burgers default to no onion/tomato) -----
   // Adding both onion + tomato (with no veggie or aioli removals) means the
