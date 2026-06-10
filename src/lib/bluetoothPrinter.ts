@@ -7,6 +7,7 @@
 // prints the same Hebrew text under all three profiles labeled A/B/C.
 
 import html2canvas from "html2canvas";
+import QRCode from "qrcode";
 import { buildReceiptHtml, type RoundOrder, buildRoundSummaryHtml, buildRoundChefSummaryHtml } from "./kitchenReceipt";
 import type { ReceiptOrder } from "./kitchenReceipt";
 
@@ -617,6 +618,7 @@ export type FastOp =
   | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
   | { kind: "header"; name: string; phone?: string; namePx?: number; phonePx?: number }
   | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean }
+  | { kind: "qr"; data: string; modulePx?: number; align?: "L" | "C" | "R" }
   | { kind: "sep" }
   | { kind: "feed"; n: number }
   | { kind: "cut" };
