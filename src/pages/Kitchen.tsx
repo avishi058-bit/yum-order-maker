@@ -19,6 +19,7 @@ import {
   printBluetoothReceipt,
   printBluetoothRoundSummary,
   printBluetoothRoundChef,
+  printBluetoothPhoneQr,
   printTest,
   printHybridDiagnostic,
   getEncoding,
@@ -35,13 +36,14 @@ import {
   printRawBTReceipt,
   printRawBTRoundSummary,
   printRawBTRoundChef,
+  printRawBTPhoneQr,
   printRawBTPlainText,
   printRawBTPlainTextDirect,
   printRawBTPlainTextShare,
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest } from "@/lib/localPrintAgent";
+import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { ingredients } from "@/data/menu";
@@ -888,51 +890,67 @@ const Kitchen = () => {
     printOrder(order);
   };
 
-  // Print a QR code of the customer's phone (tel: link) with name + phone below.
-  // Used on takeaway orders so the courier/driver can scan to call instantly.
+  // Print a standalone phone-QR bon through the same printer pipeline as the
+  // kitchen bon (BT → Agent → RawBT → browser). No window.print() / popup.
   const printCustomerQr = async (order: Order) => {
+    const phoneRaw = (order.customer_phone || "").trim();
+    if (!phoneRaw) {
+      toast.error("אין מספר טלפון להזמנה זו");
+      return;
+    }
+    const payload = {
+      order_number: order.order_number,
+      customer_name: order.customer_name,
+      customer_phone: phoneRaw,
+      notes: order.notes,
+      total: order.total,
+      created_at: order.created_at,
+      payment_method: order.payment_method,
+      order_source: order.order_source,
+      order_items: order.order_items,
+    };
+
+    if (isPrinterConnected()) {
+      printBluetoothPhoneQr(payload).catch((err) => {
+        console.warn("[Kitchen] BT QR print failed", err);
+        toast.error("שגיאה בהדפסת QR בבלוטות׳");
+      });
+      return;
+    }
+    if (printMode === "agent") {
+      printAgentPhoneQr(payload).then((info) => {
+        if (info.status === "error") {
+          console.warn("[Kitchen] Agent QR failed, falling back to RawBT", info.error);
+          toast.warning("Agent לא זמין — שולח QR דרך RawBT");
+          printRawBTPhoneQr(payload);
+        }
+      });
+      return;
+    }
+    if (printMode === "rawbt") {
+      printRawBTPhoneQr(payload).then((info) => {
+        if (info.status === "error") {
+          toast.error(`שגיאה ב-RawBT: ${info.error ?? "לא ידוע"}`);
+        }
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת");
+      return;
+    }
+    // browser fallback
     try {
-      const phoneRaw = (order.customer_phone || "").trim();
-      if (!phoneRaw) {
-        toast.error("אין מספר טלפון להזמנה זו");
-        return;
-      }
       const telDigits = phoneRaw.replace(/[^\d+]/g, "");
       const qrDataUrl = await QRCode.toDataURL(`tel:${telDigits}`, {
-        width: 512,
-        margin: 2,
-        errorCorrectionLevel: "H",
+        width: 512, margin: 2, errorCorrectionLevel: "H",
       });
       const win = window.open("", "_blank", "width=400,height=600");
-      if (!win) {
-        toast.error("חלון ההדפסה נחסם — אפשר חלונות קופצים");
-        return;
-      }
+      if (!win) { toast.error("חלון ההדפסה נחסם"); return; }
       const safeName = (order.customer_name || "").replace(/[<>&]/g, "");
       const safePhone = phoneRaw.replace(/[<>&]/g, "");
       win.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>QR ${safeName}</title>
-<style>
-  /* Narrow receipt-style page so the printer doesn't feed a full A4 sheet */
-  @page { size: 58mm auto; margin: 2mm; }
-  html,body { margin:0; padding:0; font-family: -apple-system, "Heebo", Arial, sans-serif; }
-  .wrap { display:flex; flex-direction:column; align-items:center; padding:2mm 0; }
-  /* QR ~38mm — high error-correction + quiet zone keep this readable to any phone camera */
-  img { width: 38mm; height: 38mm; image-rendering: pixelated; }
-  .name { font-size: 14pt; font-weight: 800; margin-top: 2mm; text-align:center; }
-  .phone { font-size: 13pt; font-weight: 700; margin-top: 0.5mm; direction: ltr; letter-spacing: 0.5px; }
-  .order { font-size: 9pt; color:#555; margin-top: 1mm; }
-</style></head><body>
-  <div class="wrap">
-    <img src="${qrDataUrl}" alt="QR" />
-    <div class="name">${safeName}</div>
-    <div class="phone">${safePhone}</div>
-    <div class="order">הזמנה #${order.order_number}</div>
-  </div>
-  <script>
-    window.onload = function(){ setTimeout(function(){ window.print(); }, 150); };
-    window.onafterprint = function(){ window.close(); };
-  <\/script>
-</body></html>`);
+<style>@page{size:58mm auto;margin:2mm}html,body{margin:0;padding:0;font-family:-apple-system,"Heebo",Arial,sans-serif}.wrap{display:flex;flex-direction:column;align-items:center;padding:2mm 0}img{width:38mm;height:38mm;image-rendering:pixelated}.name{font-size:14pt;font-weight:800;margin-top:2mm;text-align:center}.phone{font-size:13pt;font-weight:700;margin-top:.5mm;direction:ltr;letter-spacing:.5px}.order{font-size:9pt;color:#555;margin-top:1mm}</style></head><body><div class="wrap"><img src="${qrDataUrl}" alt="QR"/><div class="name">${safeName}</div><div class="phone">${safePhone}</div><div class="order">הזמנה #${order.order_number}</div></div><script>window.onload=function(){setTimeout(function(){window.print()},150)};window.onafterprint=function(){window.close()}<\/script></body></html>`);
       win.document.close();
     } catch (e: any) {
       console.warn("[Kitchen] QR print failed", e);

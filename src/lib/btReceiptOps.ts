@@ -329,13 +329,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       phonePx: 32,
     });
   }
-  // Phone QR (tel:) — rasterized through the same raster pipeline as the rest
-  // of the bon so it prints reliably on every printer mode (RawBT / BT / agent).
-  if (order.customer_phone) {
-    ops.push(feed(0.4));
-    ops.push({ kind: "qr", data: `tel:${order.customer_phone}`, modulePx: 4, align: "C" });
-    ops.push(feed(0.4));
-  }
+  // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד — לא כאן.)
   ops.push(sep());
 
   // 2) Order type (small) + optional note
@@ -707,4 +701,33 @@ export function buildTestOps(): FastOp[] {
     feed(2),
     { kind: "cut" },
   ];
+}
+
+// ============================================================
+// PHONE QR — standalone bon
+// ============================================================
+export function buildPhoneQrOps(order: ReceiptOrder): FastOp[] {
+  const phone = (order.customer_phone || "").trim();
+  const telDigits = phone.replace(/[^\d+]/g, "");
+  const ops: FastOp[] = [];
+  if (order.customer_name || phone) {
+    ops.push({
+      kind: "header",
+      name: order.customer_name || "",
+      phone: phone || undefined,
+      namePx: 44,
+      phonePx: 32,
+    });
+  }
+  if (telDigits) {
+    ops.push(feed(0.6));
+    ops.push({ kind: "qr", data: `tel:${telDigits}`, modulePx: 6, align: "C" });
+    ops.push(feed(0.6));
+  }
+  if ((order as any).order_number) {
+    ops.push(asLine(`הזמנה #${(order as any).order_number}`, { align: "C", bold: true, size: 26 }));
+  }
+  ops.push(feed(2));
+  ops.push({ kind: "cut" });
+  return ops;
 }

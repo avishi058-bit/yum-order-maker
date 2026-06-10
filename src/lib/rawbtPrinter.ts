@@ -198,6 +198,15 @@ export async function printRawBTRoundChef(
   return sendBytesToRawBT(buildOpsBytes(buildRoundChefOps(orders)));
 }
 
+export async function printRawBTPhoneQr(
+  order: ReceiptOrder,
+): Promise<RawBTDebugInfo> {
+  const { buildPhoneQrOps } = await import("./btReceiptOps");
+  const info = sendBytesToRawBT(buildOpsBytes(buildPhoneQrOps(order)));
+  info.orderNumber = (order as any).order_number;
+  return info;
+}
+
 export async function printRawBTTest(): Promise<RawBTDebugInfo> {
   const { buildTestOps } = await import("./btReceiptOps");
   return sendBytesToRawBT(buildOpsBytes(buildTestOps()));
