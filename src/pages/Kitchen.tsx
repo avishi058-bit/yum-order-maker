@@ -2059,9 +2059,15 @@ const Kitchen = () => {
                             {(item.deal_burgers as any[]).map((b: any, i: number) => (
                               <div key={i}>
                                 <p>{i + 1}. {b.name || ""}</p>
-                                {b.removals?.length > 0 && (
-                                  <p className="font-bold text-red-400">— שינויים: {b.removals.join(", ")}</p>
-                                )}
+                                {b.removals?.length > 0 && (() => {
+                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+                                  return (
+                                    <>
+                                      {bShort && <p className="font-extrabold text-red-400">{bShort}</p>}
+                                      {bRest.length > 0 && <p className="font-bold text-red-400">— שינויים: {bRest.join(", ")}</p>}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             ))}
                             <p>+ צ׳יפס ענק</p>
