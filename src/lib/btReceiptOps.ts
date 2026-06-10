@@ -326,7 +326,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       name: order.customer_name || "",
       phone: order.customer_phone || undefined,
       namePx: 48,
-      phonePx: 32,
+      phonePx: 44,
     });
   }
   // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד — לא כאן.)
