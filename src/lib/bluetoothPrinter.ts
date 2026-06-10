@@ -1261,6 +1261,10 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         ));
         break;
       }
+      case "qr": {
+        pending.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width + 3));
+        break;
+      }
       case "twoCol": {
         pending.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
         break;
