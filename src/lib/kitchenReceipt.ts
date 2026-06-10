@@ -1091,7 +1091,6 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     sumSection("לחמניות", bunRows) +
     sumSection("מטוגנים", friedRows) +
     sumSection("תוספות מעל ההמבורגר", toppingRows) +
-    sumSection("רטבים", sauceRows) +
     sumSection("מידות עשייה", donenessRows);
 
   const summaryHtml = sorted.length && summaryBody
