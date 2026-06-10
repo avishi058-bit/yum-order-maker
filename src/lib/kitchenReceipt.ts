@@ -153,6 +153,59 @@ export const extractOwnerName = (
   return { ownerName, doneness, cleanedRemovals: cleaned };
 };
 
+// ---------- veggie-shortcut applied to Hebrew removal strings ----------
+//
+// Removals are stored as Hebrew labels ("ללא חסה", "ללא איולי", ...) — not
+// English IDs — so the ID-based logic in ingredientShortcuts.ts can't match
+// them. This helper applies the same product rules directly on the Hebrew:
+//   • 4 veggies + aioli removed   → "יבש"
+//   • 4 veggies, aioli kept       → "רק אאיולי"
+//   • 2-3 veggies removed         → "X, Y בלבד" (list remaining veggies)
+//   • 0-1 veggie removed          → no shortcut; show "ללא X" normally
+// Returns the shortcut label (or null) and the list of removals that should
+// still be shown verbatim after the shortcut.
+const VEGGIE_HE_ORDER = ["חסה", "עגבנייה", "בצל", "חמוצים"] as const;
+const VEGGIE_HE_SET = new Set<string>(VEGGIE_HE_ORDER);
+const isAioliRemoval = (s: string) => /ללא\s*א?איולי/.test(s);
+const isVeggieRemoval = (s: string): string | null => {
+  const m = s.match(/^ללא\s+(.+)$/);
+  if (!m) return null;
+  const name = m[1].trim();
+  return VEGGIE_HE_SET.has(name) ? name : null;
+};
+export const applyVeggieShortcut = (
+  cleanedRemovals: string[],
+): { label: string | null; rest: string[] } => {
+  const removedVeggies = new Set<string>();
+  let aioliRemoved = false;
+  const other: string[] = [];
+  for (const r of cleanedRemovals) {
+    const v = isVeggieRemoval(r);
+    if (v) { removedVeggies.add(v); continue; }
+    if (isAioliRemoval(r)) { aioliRemoved = true; continue; }
+    other.push(r);
+  }
+  const vegCount = removedVeggies.size;
+  if (vegCount === 4 && aioliRemoved) {
+    return { label: "יבש", rest: other };
+  }
+  if (vegCount === 4) {
+    // Aioli kept — only veggies consumed; non-veg/non-aioli rest passes through.
+    return { label: "רק אאיולי", rest: other };
+  }
+  if (vegCount === 2 || vegCount === 3) {
+    const remaining = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
+    const label = `${remaining.join(", ")} בלבד`;
+    // Aioli (if removed) is shown separately alongside the shortcut.
+    const rest = aioliRemoved ? ["ללא אאיולי", ...other] : other;
+    return { label, rest };
+  }
+  // 0-1 veggies — no shortcut, render everything as-is (including aioli).
+  return { label: null, rest: cleanedRemovals };
+};
+
+
+
 // ---------- drink categorisation (for drink-summary block) ----------
 //
 // Maps a chosen drink (by name OR by id) to a chef-friendly label.
