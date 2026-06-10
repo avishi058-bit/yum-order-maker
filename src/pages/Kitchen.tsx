@@ -2035,6 +2035,8 @@ const Kitchen = () => {
                         )}
                         {(() => {
                           const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+                          const noToppings = !item.toppings || item.toppings.length === 0;
+                          const noChanges = !shortcutLbl && rest.length === 0 && noToppings && isBurgerItemName(item.item_name);
                           return (
                             <>
                               {shortcutLbl && (
@@ -2042,6 +2044,9 @@ const Kitchen = () => {
                               )}
                               {rest.length > 0 && (
                                 <p className="text-xs font-bold text-red-400">— שינויים: {rest.join(", ")}</p>
+                              )}
+                              {noChanges && (
+                                <p className="text-xs font-bold text-muted-foreground">— ללא שינויים</p>
                               )}
                             </>
                           );
