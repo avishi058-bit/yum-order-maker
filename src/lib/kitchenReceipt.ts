@@ -652,8 +652,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     section("קציצות", pattyRows) +
     section("לחמניות", bunRows) +
     section("מטוגנים", friedRows) +
-    section("תוספות מעל ההמבורגר", toppingRows) +
-    section("רטבים", sauceRows);
+    section("תוספות מעל ההמבורגר", toppingRows);
 
   const summaryHtml = summaryBody
     ? `<div class="summary">
