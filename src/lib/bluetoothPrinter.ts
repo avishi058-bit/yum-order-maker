@@ -1307,7 +1307,8 @@ function enqueuePrint(job: () => Promise<void>): Promise<void> {
       await job();
       // Small breather so the printer can drain its buffer before the next
       // job slams in more bytes (helps the thermal head finish cleanly).
-      await new Promise((r) => setTimeout(r, 60));
+      // 25ms is enough on every tested model and shaves ~35ms off each bon-to-bon gap.
+      await new Promise((r) => setTimeout(r, 25));
     } finally {
       _queueDepth--;
     }
