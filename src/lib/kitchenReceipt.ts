@@ -236,7 +236,8 @@ export const applyVeggieShortcut = (
     const remaining = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
     const label = remaining.join(", ");
     const rest: string[] = [];
-    if (aioliRemoved) rest.push("ללא איולי");
+    // Note: aioli removal is intentionally NOT listed here — the remaining-veggies
+    // label already implies the bun state; chef doesn't need a redundant "ללא איולי".
     for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
     rest.push(...other);
     return { label, rest };
