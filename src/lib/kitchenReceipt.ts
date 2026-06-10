@@ -172,7 +172,7 @@ export const extractOwnerName = (
 // English IDs — so the ID-based logic in ingredientShortcuts.ts can't match
 // them. This helper applies the same product rules directly on the Hebrew:
 //   • 4 veggies + aioli removed   → "יבש"
-//   • 4 veggies, aioli kept       → "רק אאיולי"
+//   • 4 veggies, aioli kept       → "רק איולי"
 //   • 2-3 veggies removed         → "X, Y בלבד" (list remaining veggies)
 //   • 0-1 veggie removed          → no shortcut; show "ללא X" normally
 // Returns the shortcut label (or null) and the list of removals that should
@@ -230,13 +230,13 @@ export const applyVeggieShortcut = (
     return { label: "יבש", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
   }
   if (vegCount === 4) {
-    return { label: "רק אאיולי", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
+    return { label: "רק איולי", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
   }
   if (vegCount === 2 || vegCount === 3) {
     const remaining = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
     const label = remaining.join(", ");
     const rest: string[] = [];
-    if (aioliRemoved) rest.push("ללא אאיולי");
+    if (aioliRemoved) rest.push("ללא איולי");
     for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
     rest.push(...other);
     return { label, rest };

@@ -2,15 +2,15 @@
 //
 // Rules (regular burger — 4 veggies + aioli, defined by user):
 //   Veggies = חסה, בצל, עגבנייה, חמוצים
-//   Sauce   = אאיולי (separate, NOT a veggie)
+//   Sauce   = איולי (separate, NOT a veggie)
 //
 // 0 changes                                  → nothing printed (default bun)
 // 1 veggie removed only                      → render normally ("ללא בצל")
-// aioli only removed                         → render normally ("ללא אאיולי")
+// aioli only removed                         → render normally ("ללא איולי")
 // 2-3 veggies removed                        → "חסה, חמוצים בלבד" (list remaining
 //                                              veggies). Aioli still rendered
 //                                              separately if removed.
-// 4 veggies removed, aioli kept              → "רק אאיולי"
+// 4 veggies removed, aioli kept              → "רק איולי"
 // 4 veggies removed + aioli removed          → "יבש"
 //
 // An out-of-stock ingredient counts as removed (it isn't going on the burger).
@@ -72,11 +72,11 @@ function computeShortcut(removalIds: string[]): ShortcutInfo {
     };
   }
 
-  // All veggies removed, aioli kept → "רק אאיולי"
+  // All veggies removed, aioli kept → "רק איולי"
   if (vegCount === 4) {
     return {
       kind: "only-aioli",
-      label: "רק אאיולי",
+      label: "רק איולי",
       consumed: new Set<string>(VEG_REMOVAL_IDS),
     };
   }
@@ -109,7 +109,7 @@ export function removalShortcutLabel(_s: RemovalShortcut, removalIds?: string[])
   // "X, Y בלבד" label. Otherwise return the static labels.
   if (removalIds) return computeShortcut(removalIds).label;
   if (_s === "dry") return "יבש";
-  if (_s === "only-aioli") return "רק אאיולי";
+  if (_s === "only-aioli") return "רק איולי";
   return null;
 }
 
