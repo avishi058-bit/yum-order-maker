@@ -651,6 +651,17 @@ function _wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return out.length ? out : [text];
 }
 
+// Shared measurement canvas — created once and reused for every line render.
+// Avoids paying for document.createElement + getContext on every Hebrew line.
+let _measureCtx: CanvasRenderingContext2D | null = null;
+function _getMeasureCtx(): CanvasRenderingContext2D {
+  if (_measureCtx) return _measureCtx;
+  const tmp = document.createElement("canvas");
+  tmp.width = 10; tmp.height = 10;
+  _measureCtx = tmp.getContext("2d")!;
+  return _measureCtx;
+}
+
 // Render one Hebrew/Unicode line to a tightly-cropped 1-bit bitmap.
 // No background fill, no padding boxes — just the letter ink.
 function _renderHebToMono(
@@ -658,10 +669,7 @@ function _renderHebToMono(
   opts: { width: number; px: number; bold: boolean; align: "L" | "C" | "R" },
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
   const { width, px, bold, align } = opts;
-  const tmp = document.createElement("canvas");
-  tmp.width = 10;
-  tmp.height = 10;
-  const measure = tmp.getContext("2d")!;
+  const measure = _getMeasureCtx();
   measure.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
   const lines = _wrapText(measure, text, width - 4);
 
