@@ -423,7 +423,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     // the meal side / drinks / deal extras.
     const toppingsToPrint = printableToppings(it.toppings);
     if (toppingsToPrint.length > 0) {
-      for (const t of toppingsToPrint) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
+      for (const t of toppingsToPrint) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 32 })); ops.push(feed(LINE_GAP)); }
     }
 
     // Spacing before meal / drink line
@@ -493,7 +493,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   if (sauceItem && sauceItem.toppings && sauceItem.toppings.length > 0) {
     ops.push(sep());
     for (const t of sauceItem.toppings) {
-      ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 }));
+      ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 32 }));
       ops.push(feed(LINE_GAP));
     }
   }
