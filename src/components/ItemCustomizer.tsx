@@ -621,6 +621,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       ...computeRemovals(),
       ...(includeDoneness ? [selectedDoneness] : []),
     ];
+    const sideItems = Object.entries(sideItemCounts)
+      .filter(([, q]) => q > 0)
+      .map(([itemId, qty]) => ({ itemId, qty }));
     onConfirm(
       item,
       quantity,
@@ -630,6 +633,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
       sideId,
       drinkId,
       trimmedOwner || undefined,
+      sideItems.length > 0 ? sideItems : undefined,
     );
     resetState();
   };
@@ -645,6 +649,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
     setOwnerNameEnabled(false);
     setOwnerName("");
     setToppingsSeen(false);
+    setSideItemCounts({});
   };
 
   const handleClose = () => {
