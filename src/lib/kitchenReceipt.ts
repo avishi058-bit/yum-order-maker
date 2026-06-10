@@ -652,8 +652,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     section("קציצות", pattyRows) +
     section("לחמניות", bunRows) +
     section("מטוגנים", friedRows) +
-    section("תוספות מעל ההמבורגר", toppingRows) +
-    section("רטבים", sauceRows);
+    section("תוספות מעל ההמבורגר", toppingRows);
 
   const summaryHtml = summaryBody
     ? `<div class="summary">
@@ -1092,7 +1091,6 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     sumSection("לחמניות", bunRows) +
     sumSection("מטוגנים", friedRows) +
     sumSection("תוספות מעל ההמבורגר", toppingRows) +
-    sumSection("רטבים", sauceRows) +
     sumSection("מידות עשייה", donenessRows);
 
   const summaryHtml = sorted.length && summaryBody
@@ -1400,7 +1398,6 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
     sumSection("לחמניות", bunRows) +
     sumSection("מטוגנים", friedRows) +
     sumSection("תוספות מעל ההמבורגר", toppingRows) +
-    sumSection("רטבים", sauceRows) +
     sumSection("מידות עשייה", donenessRows);
 
   const bodyHtml = summaryBody
