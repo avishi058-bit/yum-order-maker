@@ -1094,7 +1094,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
         }
       }
       if (it.toppings && it.toppings.length > 0) {
-        html += `<div class="sub">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
+        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
       }
       if (it.with_meal) {
         let mealText = "ארוחה";
