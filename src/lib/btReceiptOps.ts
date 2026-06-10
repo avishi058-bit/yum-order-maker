@@ -363,7 +363,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   }
   const isMultiItem = groups.length > 1 || (groups.length === 1 && groups[0].qty > 1);
-  const LINE_GAP = 0.5; // breathing room between lines within an item
+  const LINE_GAP = 1.2; // breathing room between lines within an item
 
   // Pre-compute drinks summary so we can avoid duplicating standalone drinks
   // both as a "dish" and in the bottom summary (takeaway only).
