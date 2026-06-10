@@ -651,6 +651,17 @@ function _wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return out.length ? out : [text];
 }
 
+// Shared measurement canvas — created once and reused for every line render.
+// Avoids paying for document.createElement + getContext on every Hebrew line.
+let _measureCtx: CanvasRenderingContext2D | null = null;
+function _getMeasureCtx(): CanvasRenderingContext2D {
+  if (_measureCtx) return _measureCtx;
+  const tmp = document.createElement("canvas");
+  tmp.width = 10; tmp.height = 10;
+  _measureCtx = tmp.getContext("2d")!;
+  return _measureCtx;
+}
+
 // Render one Hebrew/Unicode line to a tightly-cropped 1-bit bitmap.
 // No background fill, no padding boxes — just the letter ink.
 function _renderHebToMono(
@@ -658,10 +669,7 @@ function _renderHebToMono(
   opts: { width: number; px: number; bold: boolean; align: "L" | "C" | "R" },
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
   const { width, px, bold, align } = opts;
-  const tmp = document.createElement("canvas");
-  tmp.width = 10;
-  tmp.height = 10;
-  const measure = tmp.getContext("2d")!;
+  const measure = _getMeasureCtx();
   measure.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
   const lines = _wrapText(measure, text, width - 4);
 
@@ -693,15 +701,18 @@ function _renderHebToMono(
   lines.forEach((ln, i) => ctx.fillText(ln, x, lineH * i + lineH / 2 + 1));
 
   // Convert to 1-bit MSB-first, pad width to multiple of 8.
+  // Fast path: text is pure black antialiased on white, so R==G==B==B′.
+  // Sampling a single channel (R) gives identical thresholding to the full
+  // luminance formula but ~3x faster on large bons.
   const padW = Math.ceil(width / 8) * 8;
   const widthBytes = padW / 8;
   const { data } = ctx.getImageData(0, 0, width, h);
   const bytes = new Uint8Array(widthBytes * h);
   for (let y = 0; y < h; y++) {
-    for (let xp = 0; xp < width; xp++) {
-      const i = (y * width + xp) * 4;
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 140) bytes[y * widthBytes + (xp >> 3)] |= 0x80 >> (xp & 7);
+    const rowOff = y * widthBytes;
+    let i = y * width * 4;
+    for (let xp = 0; xp < width; xp++, i += 4) {
+      if (data[i] < 140) bytes[rowOff + (xp >> 3)] |= 0x80 >> (xp & 7);
     }
   }
 
@@ -778,10 +789,10 @@ function _canvasToCroppedMono(
   const { data } = ctx.getImageData(0, 0, width, h);
   const bytes = new Uint8Array(widthBytes * h);
   for (let y = 0; y < h; y++) {
-    for (let xp = 0; xp < width; xp++) {
-      const i = (y * width + xp) * 4;
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 140) bytes[y * widthBytes + (xp >> 3)] |= 0x80 >> (xp & 7);
+    const rowOff = y * widthBytes;
+    let i = y * width * 4;
+    for (let xp = 0; xp < width; xp++, i += 4) {
+      if (data[i] < 140) bytes[rowOff + (xp >> 3)] |= 0x80 >> (xp & 7);
     }
   }
   const rowBlank = (r: number) => {
@@ -1115,10 +1126,10 @@ function _renderNativeLineToMono(
   const { data } = ctx.getImageData(0, 0, width, lineHeight);
   const bytes = new Uint8Array(widthBytes * lineHeight);
   for (let y = 0; y < lineHeight; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      if (lum < 140) bytes[y * widthBytes + (x >> 3)] |= 0x80 >> (x & 7);
+    const rowOff = y * widthBytes;
+    let i = y * width * 4;
+    for (let x = 0; x < width; x++, i += 4) {
+      if (data[i] < 140) bytes[rowOff + (x >> 3)] |= 0x80 >> (x & 7);
     }
   }
   return { bytes, widthBytes, height: lineHeight, offsetX: 0 };
