@@ -60,7 +60,7 @@ function classifyIngredientChanges(removals: string[]): {
   const adds: string[] = [];
   const others: string[] = [];
   const shortcut: RemovalShortcut = getRemovalShortcut(removals);
-  const skip = shortcutConsumedIds(shortcut);
+  const skip = shortcutConsumedIds(shortcut, removals);
   for (const r of removals) {
     if (skip.has(r)) continue;
     const m = ING_LOOKUP[r];
