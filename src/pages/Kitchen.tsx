@@ -1970,6 +1970,15 @@ const Kitchen = () => {
                     >
                       <Printer size={16} />
                     </button>
+                    {order.order_source !== "kiosk" && order.order_source !== "station" && (
+                      <button
+                        onClick={() => printCustomerQr(order)}
+                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                        title="הדפס QR טלפון לקוח"
+                      >
+                        <QrCode size={16} />
+                      </button>
+                    )}
                     <span className="text-xs opacity-80">
                       <Clock size={12} className="inline ml-0.5" />
                       {timeSince(order.created_at)}
