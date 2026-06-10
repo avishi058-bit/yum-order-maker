@@ -19,6 +19,7 @@ import {
   printBluetoothReceipt,
   printBluetoothRoundSummary,
   printBluetoothRoundChef,
+  printBluetoothPhoneQr,
   printTest,
   printHybridDiagnostic,
   getEncoding,
