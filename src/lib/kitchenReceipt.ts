@@ -696,6 +696,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
             const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
             if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
+            if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+          } else {
+            html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
           }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;
@@ -1110,6 +1113,9 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
             const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
             if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
+            if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+          } else {
+            html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
           }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;

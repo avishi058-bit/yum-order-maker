@@ -2064,12 +2064,15 @@ const Kitchen = () => {
                             {(item.deal_burgers as any[]).map((b: any, i: number) => (
                               <div key={i}>
                                 <p>{i + 1}. {b.name || ""}</p>
-                                {b.removals?.length > 0 && (() => {
-                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+                                {(() => {
+                                  const bRemovals = b.removals || [];
+                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(bRemovals);
+                                  const noChanges = !bShort && bRest.length === 0;
                                   return (
                                     <>
                                       {bShort && <p className="font-extrabold text-red-400">{bShort}</p>}
                                       {bRest.length > 0 && <p className="font-bold text-red-400">— שינויים: {bRest.join(", ")}</p>}
+                                      {noChanges && <p className="font-bold text-muted-foreground">— ללא שינויים</p>}
                                     </>
                                   );
                                 })()}
