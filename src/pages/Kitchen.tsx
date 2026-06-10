@@ -2009,64 +2009,58 @@ const Kitchen = () => {
 
                 {/* Items */}
                 <div className="px-4 py-3 space-y-2 max-h-60 overflow-y-auto">
-                  {order.order_items.map((item) => (
-                    <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
-                      {item.removals?.some(r => r === "__FAVORITE__") && (
-                        <p className="text-xs font-extrabold text-green-400 mb-0.5">⭐ הקבוע</p>
-                      )}
-                      <div className="flex justify-between font-medium">
-                        <span>{item.item_name} x{item.quantity}</span>
-                        <span className="text-primary">₪{item.price * item.quantity}</span>
-                      </div>
-                      {(() => {
-                        const doneEntry = item.removals?.find(r => r.startsWith("doneness-"));
-                        const doneLabel: Record<string, string> = { "doneness-m": "M — מדיום", "doneness-mw": "MW — מדיום וואל", "doneness-wd": "WD — וואל דאן" };
-                        const otherRemovals = item.removals?.filter(r => !r.startsWith("doneness-") && !r.startsWith("__OWNER__:") && r !== "__FAVORITE__") || [];
-                        const shortcut = getRemovalShortcut(otherRemovals);
-                        const skip = shortcutConsumedIds(shortcut, otherRemovals);
-                        const shortcutLbl = removalShortcutLabel(shortcut, otherRemovals);
-                        const visibleRemovals = otherRemovals
-                          .filter(r => !skip.has(r))
-                          .map(r => REMOVAL_LABELS[r] || r);
-                        return (
-                          <>
-                            {doneEntry && (
-                              <p className="text-xs font-bold text-orange-400">🔥 {doneLabel[doneEntry] || doneEntry}</p>
-                            )}
-                            {shortcutLbl && (
-                              <p className="text-xs font-bold text-red-400">{shortcutLbl}</p>
-                            )}
-                            {visibleRemovals.length > 0 && (
-                              <p className="text-xs text-red-400">ללא: {visibleRemovals.join(", ")}</p>
-                            )}
-                          </>
-                        );
-                      })()}
-                      {item.toppings && item.toppings.length > 0 && (
-                        <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
-                      )}
-                      {item.with_meal && (
-                        <p className="text-xs text-muted-foreground">
-                          🍟 ארוחה{item.meal_side ? ` — ${item.meal_side}` : ""}{item.meal_drink ? `, ${item.meal_drink}` : ""}
-                        </p>
-                      )}
-                      {item.deal_burgers && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {(item.deal_burgers as any[]).map((b: any, i: number) => (
-                            <p key={i}>
-                              🍔 המבורגר {i + 1}
-                              {b.name && <span className="font-bold text-foreground"> ({b.name})</span>}
-                              {b.removals?.length > 0 && ` — ${b.removals.join(", ")}`}
-                            </p>
-                          ))}
-                          <p>🍟 צ׳יפס ענק</p>
-                          {item.deal_drinks && (item.deal_drinks as any[]).map((d: any, i: number) => (
-                            <p key={i}>🥤 {d.name}{d.extraCost > 0 ? ` (+₪${d.extraCost})` : ""}</p>
-                          ))}
+                  {order.order_items.map((item) => {
+                    // Same logic as the printed bon (kitchenReceipt buildReceiptHtml):
+                    // strip __FAVORITE__, __OWNER__:<name>, doneness-* out of the
+                    // removals array; show owner as a header, doneness as 🔥,
+                    // and the rest as "— שינויים: a, b, c".
+                    const { ownerName, doneness, cleanedRemovals } = extractOwnerName(item.removals);
+                    const isFavorite = item.removals?.some(r => r === "__FAVORITE__");
+                    return (
+                      <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
+                        {isFavorite && (
+                          <p className="text-xs font-extrabold text-green-400 mb-0.5">⭐ הקבוע</p>
+                        )}
+                        {ownerName && (
+                          <p className="text-xs font-bold text-foreground">👤 {ownerName}</p>
+                        )}
+                        <div className="flex justify-between font-medium">
+                          <span>{item.item_name} x{item.quantity}</span>
+                          <span className="text-primary">₪{item.price * item.quantity}</span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {doneness && (
+                          <p className="text-xs font-extrabold text-orange-400">🔥 {doneness}</p>
+                        )}
+                        {cleanedRemovals.length > 0 && (
+                          <p className="text-xs font-bold text-red-400">— שינויים: {cleanedRemovals.join(", ")}</p>
+                        )}
+                        {item.toppings && item.toppings.length > 0 && (
+                          <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
+                        )}
+                        {item.with_meal && (
+                          <p className="text-xs text-muted-foreground">
+                            → ארוחה{item.meal_side ? ` — ${item.meal_side}` : ""}{item.meal_drink ? `, ${item.meal_drink}` : ""}
+                          </p>
+                        )}
+                        {item.deal_burgers && Array.isArray(item.deal_burgers) && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {(item.deal_burgers as any[]).map((b: any, i: number) => (
+                              <div key={i}>
+                                <p>{i + 1}. {b.name || ""}</p>
+                                {b.removals?.length > 0 && (
+                                  <p className="font-bold text-red-400">— שינויים: {b.removals.join(", ")}</p>
+                                )}
+                              </div>
+                            ))}
+                            <p>+ צ׳יפס ענק</p>
+                            {item.deal_drinks && Array.isArray(item.deal_drinks) && (item.deal_drinks as any[]).map((d: any, i: number) => (
+                              <p key={i}>+ {d.name}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Time picker overlay */}
