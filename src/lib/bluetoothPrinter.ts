@@ -1169,6 +1169,9 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
       case "twoCol":
         monos.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
         break;
+      case "qr":
+        monos.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
+        break;
       case "cut": cut = true; break;
     }
   }
