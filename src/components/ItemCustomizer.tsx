@@ -60,7 +60,7 @@ export interface ItemCustomizerInitialState {
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number }>) => void;
   isAvailable?: (id: string) => boolean;
   /** When set, the customizer opens with these values prefilled — used for
    *  editing an item already in the cart. */
