@@ -1055,7 +1055,9 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           const bName = `${i + 1}. ${b.name || ""}`;
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
-            html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(b.removals.join(", "))}</div>`;
+            const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+            if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
+            if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
           }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;
