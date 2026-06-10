@@ -8,7 +8,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut } from "@/lib/kitchenReceipt";
 import {
   isWebBluetoothSupported,
   isPrinterConnected,
@@ -2033,9 +2033,19 @@ const Kitchen = () => {
                         {doneness && (
                           <p className="text-xs font-extrabold text-orange-400">🔥 {doneness}</p>
                         )}
-                        {cleanedRemovals.length > 0 && (
-                          <p className="text-xs font-bold text-red-400">— שינויים: {cleanedRemovals.join(", ")}</p>
-                        )}
+                        {(() => {
+                          const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals);
+                          return (
+                            <>
+                              {shortcutLbl && (
+                                <p className="text-xs font-extrabold text-red-400">{shortcutLbl}</p>
+                              )}
+                              {rest.length > 0 && (
+                                <p className="text-xs font-bold text-red-400">— שינויים: {rest.join(", ")}</p>
+                              )}
+                            </>
+                          );
+                        })()}
                         {item.toppings && item.toppings.length > 0 && (
                           <p className="text-xs text-green-400">+ {item.toppings.join(", ")}</p>
                         )}
@@ -2049,9 +2059,15 @@ const Kitchen = () => {
                             {(item.deal_burgers as any[]).map((b: any, i: number) => (
                               <div key={i}>
                                 <p>{i + 1}. {b.name || ""}</p>
-                                {b.removals?.length > 0 && (
-                                  <p className="font-bold text-red-400">— שינויים: {b.removals.join(", ")}</p>
-                                )}
+                                {b.removals?.length > 0 && (() => {
+                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals);
+                                  return (
+                                    <>
+                                      {bShort && <p className="font-extrabold text-red-400">{bShort}</p>}
+                                      {bRest.length > 0 && <p className="font-bold text-red-400">— שינויים: {bRest.join(", ")}</p>}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             ))}
                             <p>+ צ׳יפס ענק</p>
