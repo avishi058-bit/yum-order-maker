@@ -885,11 +885,52 @@ const Kitchen = () => {
   };
 
 
-  // Try silent reconnect once on mount, and subscribe to BT status changes.
+  // Try silent reconnect on mount + keep retrying in the background whenever
+  // the printer is not connected (handles printer powering off/on, BT range loss,
+  // OS putting the radio to sleep, etc.). Also retries when the tab becomes visible.
   useEffect(() => {
-    const unsub = onPrinterStatusChange(setBtConnected);
-    tryAutoReconnect().then((ok) => { if (ok) setBtConnected(true); });
-    return () => { unsub(); };
+    let connected = false;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const unsub = onPrinterStatusChange((ok) => {
+      connected = ok;
+      setBtConnected(ok);
+      if (!ok) scheduleRetry(2000);
+    });
+
+    const attempt = async () => {
+      if (cancelled || connected) return;
+      try {
+        const ok = await tryAutoReconnect();
+        if (ok) {
+          connected = true;
+          setBtConnected(true);
+          return;
+        }
+      } catch {}
+      scheduleRetry(5000);
+    };
+
+    const scheduleRetry = (ms: number) => {
+      if (cancelled || connected) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(attempt, ms);
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !connected) attempt();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    attempt();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      unsub();
+    };
   }, []);
 
   const handleConnectPrinter = async () => {
