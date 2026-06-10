@@ -116,6 +116,9 @@ const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.te
 const isDrinkOrMisc = (name: string): boolean =>
   /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
+const printableToppings = (toppings: string[] | null | undefined): string[] =>
+  (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
+
 // Detect fried-side items by name. Order matters.
 type FriedKind = "friendsMix" | "tempuraOnionSide" | "sweetPotatoFries" | "onionRings" | "fries" | null;
 const detectFried = (name: string): FriedKind => {
@@ -698,8 +701,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
-      if (it.toppings && it.toppings.length > 0) {
-        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
+      const toppingsToPrint = printableToppings(it.toppings);
+      if (toppingsToPrint.length > 0) {
+        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(toppingsToPrint.join(", "))}</div>`;
       }
       if (it.with_meal) {
         let mealText = "ארוחה";
@@ -1114,8 +1118,9 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
-      if (it.toppings && it.toppings.length > 0) {
-        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(it.toppings.join(", "))}</div>`;
+      const toppingsToPrint = printableToppings(it.toppings);
+      if (toppingsToPrint.length > 0) {
+        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(toppingsToPrint.join(", "))}</div>`;
       }
       if (it.with_meal) {
         let mealText = "ארוחה";
