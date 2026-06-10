@@ -251,7 +251,7 @@ export const applyVeggieShortcut = (
 
   if (totalRemovals >= 2) {
     const remainingVeg = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
-    const remaining = [...remainingVeg];
+    const remaining: string[] = [...remainingVeg];
     if (!aioliRemoved) remaining.push("איולי");
     const rest: string[] = [];
     for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
