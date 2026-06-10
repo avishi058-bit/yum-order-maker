@@ -137,7 +137,7 @@ function buildVeggieSummary(
     // No customer-driven veg/aioli changes (and no add-ons) → default bun
     if (vegCount === 0 && !aioliRemoved && addedVeg.length === 0) {
       if (others.length === 0) return { veg: "ללא שינויים", others };
-      return { veg: "כל הירקות + אאיולי", others };
+      return { veg: "כל הירקות + איולי", others };
     }
 
     // Added veg (no removals) → "להוסיף X"
@@ -148,14 +148,14 @@ function buildVeggieSummary(
     // All 4 veggies + aioli removed → "יבש"
     if (vegCount === 4 && aioliRemoved) return { veg: "יבש", others };
 
-    // All 4 veggies removed, aioli kept → "רק אאיולי"
-    if (vegCount === 4 && aioliKept) return { veg: "רק אאיולי", others };
+    // All 4 veggies removed, aioli kept → "רק איולי"
+    if (vegCount === 4 && aioliKept) return { veg: "רק איולי", others };
 
     // 2-3 veggies removed → list remaining + " בלבד" (aioli rendered separately)
     if ((vegCount === 2 || vegCount === 3) && addedVeg.length === 0) {
       const remaining = VEG4.filter((id) => final.has(id)).map((id) => VEGGIE_HEBREW[id]);
       const line = `${remaining.join(", ")} בלבד`;
-      if (aioliRemoved) others.unshift("ללא אאיולי");
+      if (aioliRemoved) others.unshift("ללא איולי");
       return { veg: line, others };
     }
 
@@ -164,14 +164,14 @@ function buildVeggieSummary(
       return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}`, others };
     }
 
-    // Aioli only removed → "ללא אאיולי"
+    // Aioli only removed → "ללא איולי"
     if (vegCount === 0 && aioliRemoved && addedVeg.length === 0) {
-      return { veg: "ללא אאיולי", others };
+      return { veg: "ללא איולי", others };
     }
 
     // 1 veg + aioli removed → combined line
     if (vegCount === 1 && aioliRemoved && addedVeg.length === 0) {
-      return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}, ללא אאיולי`, others };
+      return { veg: `ללא ${VEGGIE_HEBREW[removedVeg[0]]}, ללא איולי`, others };
     }
 
     // Fallback for unusual combinations (e.g. mixed add+remove) — list final state
@@ -192,15 +192,15 @@ function buildVeggieSummary(
   // No customer changes
   if (removeCount === 0 && addedSmash.length === 0) {
     if (others.length === 0) return { veg: "ללא שינויים", others };
-    return { veg: "חסה, חמוצים, אאיולי", others };
+    return { veg: "חסה, חמוצים, איולי", others };
   }
 
   // All 3 removed → "יבש"
   if (removeCount === 3) return { veg: "יבש", others };
 
-  // Added both tomato + onion (no removals) → "כל הירקות + אאיולי"
+  // Added both tomato + onion (no removals) → "כל הירקות + איולי"
   if (addedSmash.length === 2 && removeCount === 0) {
-    return { veg: "כל הירקות + אאיולי", others };
+    return { veg: "כל הירקות + איולי", others };
   }
 
   // Added one of tomato/onion (no removals) → "להוסיף X"
@@ -208,7 +208,7 @@ function buildVeggieSummary(
     return { veg: `להוסיף ${VEGGIE_HEBREW[addedSmash[0]]}`, others };
   }
 
-  // lettuce+pickles removed, aioli kept, no adds → "רק אאיולי"
+  // lettuce+pickles removed, aioli kept, no adds → "רק איולי"
   if (
     removeCount === 2 &&
     !aioliRemovedS &&
@@ -216,7 +216,7 @@ function buildVeggieSummary(
     removedSmash.includes("pickles") &&
     addedSmash.length === 0
   ) {
-    return { veg: "רק אאיולי", others };
+    return { veg: "רק איולי", others };
   }
 
   // 1-2 removed (no adds) → list what remains on the bun
