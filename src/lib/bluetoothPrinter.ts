@@ -832,7 +832,7 @@ function _renderHeaderToMono(
   phonePx: number,
   width: number,
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
-  const lineH = Math.ceil(namePx * 1.2);
+  const lineH = Math.ceil(Math.max(namePx, phonePx) * 1.2);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = lineH + 6;
@@ -843,13 +843,13 @@ function _renderHeaderToMono(
   (ctx as unknown as { direction: string }).direction = "rtl";
   ctx.textBaseline = "middle";
   const y = lineH / 2 + 3;
-  const gap = 16;
+  const gap = 20;
 
   ctx.font = `900 ${namePx}px Arial, "Heebo", sans-serif`;
   const nameW = name ? ctx.measureText(name).width : 0;
   let phoneW = 0;
   if (phone) {
-    ctx.font = `300 ${phonePx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `900 ${phonePx}px Arial, "Heebo", sans-serif`;
     phoneW = ctx.measureText(phone).width;
   }
   const totalW = nameW + (phone ? gap + phoneW : 0);
@@ -863,7 +863,7 @@ function _renderHeaderToMono(
     ctx.fillText(name, startRight, y);
   }
   if (phone) {
-    ctx.font = `300 ${phonePx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `900 ${phonePx}px Arial, "Heebo", sans-serif`;
     ctx.fillText(phone, startRight - nameW - gap, y);
   }
   return _canvasToCroppedMono(canvas, width, false);
