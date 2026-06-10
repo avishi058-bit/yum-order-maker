@@ -896,9 +896,9 @@ const Kitchen = () => {
       }
       const telDigits = phoneRaw.replace(/[^\d+]/g, "");
       const qrDataUrl = await QRCode.toDataURL(`tel:${telDigits}`, {
-        width: 600,
-        margin: 1,
-        errorCorrectionLevel: "M",
+        width: 512,
+        margin: 2,
+        errorCorrectionLevel: "H",
       });
       const win = window.open("", "_blank", "width=400,height=600");
       if (!win) {
@@ -909,13 +909,15 @@ const Kitchen = () => {
       const safePhone = phoneRaw.replace(/[<>&]/g, "");
       win.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>QR ${safeName}</title>
 <style>
-  @page { margin: 8mm; }
+  /* Narrow receipt-style page so the printer doesn't feed a full A4 sheet */
+  @page { size: 58mm auto; margin: 2mm; }
   html,body { margin:0; padding:0; font-family: -apple-system, "Heebo", Arial, sans-serif; }
-  .wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; }
-  img { width: 320px; height: 320px; }
-  .name { font-size: 28px; font-weight: 800; margin-top: 14px; text-align:center; }
-  .phone { font-size: 26px; font-weight: 700; margin-top: 4px; direction: ltr; letter-spacing: 1px; }
-  .order { font-size: 14px; color:#555; margin-top: 6px; }
+  .wrap { display:flex; flex-direction:column; align-items:center; padding:2mm 0; }
+  /* QR ~38mm — high error-correction + quiet zone keep this readable to any phone camera */
+  img { width: 38mm; height: 38mm; image-rendering: pixelated; }
+  .name { font-size: 14pt; font-weight: 800; margin-top: 2mm; text-align:center; }
+  .phone { font-size: 13pt; font-weight: 700; margin-top: 0.5mm; direction: ltr; letter-spacing: 0.5px; }
+  .order { font-size: 9pt; color:#555; margin-top: 1mm; }
 </style></head><body>
   <div class="wrap">
     <img src="${qrDataUrl}" alt="QR" />
