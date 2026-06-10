@@ -403,7 +403,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
 
-    // Spacing before meal / drink / toppings line
+    // Toppings — printed right after the burger preferences/changes, before
+    // the meal side / drinks / deal extras.
+    if (it.toppings && it.toppings.length > 0) {
+      for (const t of it.toppings) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
+    }
+
+    // Spacing before meal / drink line
     ops.push(feed(0.6));
 
     // Per-item drinks (meal drink / deal drinks)
@@ -456,10 +462,6 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       });
     }
 
-    // Toppings
-    if (it.toppings && it.toppings.length > 0) {
-      for (const t of it.toppings) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 28 })); ops.push(feed(LINE_GAP)); }
-    }
 
     // Dashed separator between distinct dishes (skip after last)
     if (gi < printedGroups.length - 1) {
