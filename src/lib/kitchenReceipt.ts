@@ -245,24 +245,25 @@ export const applyVeggieShortcut = (
   }
 
   // ----- Removal shortcuts -----
-  if (vegCount === 4 && aioliRemoved) {
-    return { label: "יבש", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
-  }
-  if (vegCount === 4) {
-    return { label: "רק איולי", rest: [...[...addedVeggies].map((v) => `להוסיף ${v}`), ...other] };
-  }
-  if (vegCount === 2 || vegCount === 3) {
-    const remaining = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
-    const label = remaining.join(", ");
+  // Rule: if only ONE removal total (one veggie OR aioli) → keep "ללא X" verbatim.
+  // If TWO or more removals → list what stays instead of multiple "ללא" lines.
+  const totalRemovals = vegCount + (aioliRemoved ? 1 : 0);
+
+  if (totalRemovals >= 2) {
+    const remainingVeg = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
+    const remaining: string[] = [...remainingVeg];
+    if (!aioliRemoved) remaining.push("איולי");
     const rest: string[] = [];
-    // Note: aioli removal is intentionally NOT listed here — the remaining-veggies
-    // label already implies the bun state; chef doesn't need a redundant "ללא איולי".
     for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
     rest.push(...other);
+    let label: string;
+    if (remaining.length === 0) label = "יבש";
+    else if (remaining.length === 1 && remaining[0] === "איולי") label = "רק איולי";
+    else label = remaining.join(", ");
     return { label, rest };
   }
 
-  // 0-1 veggies removed, or only one addition — no shortcut.
+  // 0-1 removals total — no shortcut; keep verbatim "ללא X" rendering.
   return { label: null, rest: cleanedRemovals };
 };
 
