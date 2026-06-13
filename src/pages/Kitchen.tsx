@@ -1558,29 +1558,10 @@ const Kitchen = () => {
                   <span>{autoPrint ? "מופעל" : "כבוי"}</span>
                 </button>
 
-                {/* Print mode */}
-                <div>
-                  <div className="text-xs text-muted-foreground px-1 pb-1">מצב הדפסה</div>
-                  <select
-                    value={printMode}
-                    onChange={(e) => {
-                      const m = e.target.value as PrintMode;
-                      setPrintModeState(m);
-                      setPrintMode(m);
-                      toast.success(
-                        m === "agent" ? "מצב הדפסה: Agent מקומי"
-                          : m === "rawbt" ? "מצב הדפסה: RawBT"
-                          : m === "bt" ? "מצב הדפסה: בלוטות׳"
-                          : "מצב הדפסה: דפדפן",
-                      );
-                    }}
-                    className="w-full text-sm px-2 py-2 rounded-lg bg-muted text-foreground border border-border"
-                  >
-                    <option value="agent">Agent (מקומי)</option>
-                    <option value="rawbt">RawBT</option>
-                    <option value="bt">בלוטות׳</option>
-                    <option value="browser">דפדפן</option>
-                  </select>
+                {/* Print mode (Agent only) */}
+                <div className="px-3 py-2 rounded-lg bg-muted text-foreground border border-border text-sm flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">מצב הדפסה</span>
+                  <span className="font-bold">Agent (מקומי)</span>
                 </div>
 
                 {/* Agent health */}
