@@ -276,7 +276,24 @@ const Kitchen = () => {
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
   const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
-  const agentHealth = usePrintAgentHealth(printMode === "agent");
+  const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
+
+  // Force Agent as the only print mode (legacy modes removed from UI)
+  useEffect(() => {
+    if (printMode !== "agent") {
+      setPrintModeState("agent");
+      setPrintMode("agent");
+    }
+  }, [printMode]);
+
+  const handleQuickConnect = useCallback(async () => {
+    const t = toast.loading("מתחבר למדפסת…");
+    const h = await refreshAgentHealth();
+    toast.dismiss(t);
+    if (h?.ok) toast.success(`מחובר ל-${h.printer ?? "מדפסת"}`);
+    else if (h?.reachable) toast.warning("Agent פעיל — אין חיבור למדפסת");
+    else toast.error("Agent לא זמין בטאבלט");
+  }, [refreshAgentHealth]);
 
 
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
