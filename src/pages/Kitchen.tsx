@@ -276,7 +276,24 @@ const Kitchen = () => {
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
   const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
-  const agentHealth = usePrintAgentHealth(printMode === "agent");
+  const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
+
+  // Force Agent as the only print mode (legacy modes removed from UI)
+  useEffect(() => {
+    if (printMode !== "agent") {
+      setPrintModeState("agent");
+      setPrintMode("agent");
+    }
+  }, [printMode]);
+
+  const handleQuickConnect = useCallback(async () => {
+    const t = toast.loading("מתחבר למדפסת…");
+    const h = await refreshAgentHealth();
+    toast.dismiss(t);
+    if (h?.ok) toast.success(`מחובר ל-${h.printer ?? "מדפסת"}`);
+    else if (h?.reachable) toast.warning("Agent פעיל — אין חיבור למדפסת");
+    else toast.error("Agent לא זמין בטאבלט");
+  }, [refreshAgentHealth]);
 
 
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
@@ -1493,16 +1510,32 @@ const Kitchen = () => {
 
 
 
+          {/* ⚡ Quick connect to printer (Agent) */}
+          <button
+            onClick={handleQuickConnect}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              agentHealth?.ok
+                ? "bg-emerald-500/20 text-emerald-300"
+                : agentHealth?.reachable
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+            }`}
+            title="התחבר למדפסת עכשיו"
+          >
+            {agentHealth?.ok ? <BluetoothConnected size={16} /> : <Bluetooth size={16} />}
+            <span>{agentHealth?.ok ? "מדפסת מחוברת" : "חבר מדפסת"}</span>
+          </button>
+
           {/* 🖨️ Print & Diagnostics group */}
           <div className="relative">
             <button
               onClick={() => { setShowPrintMenu(!showPrintMenu); setShowNotifMenu(false); }}
               className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-                btConnected || (printMode === "agent" && agentHealth?.ok)
+                agentHealth?.ok
                   ? "bg-blue-500/20 text-blue-300"
                   : "bg-muted text-muted-foreground hover:bg-secondary"
               }`}
-              title="הגדרות הדפסה ובדיקות"
+              title="הגדרות הדפסה"
             >
               <Printer size={16} />
               <span>הדפסה</span>
@@ -1525,29 +1558,10 @@ const Kitchen = () => {
                   <span>{autoPrint ? "מופעל" : "כבוי"}</span>
                 </button>
 
-                {/* Print mode */}
-                <div>
-                  <div className="text-xs text-muted-foreground px-1 pb-1">מצב הדפסה</div>
-                  <select
-                    value={printMode}
-                    onChange={(e) => {
-                      const m = e.target.value as PrintMode;
-                      setPrintModeState(m);
-                      setPrintMode(m);
-                      toast.success(
-                        m === "agent" ? "מצב הדפסה: Agent מקומי"
-                          : m === "rawbt" ? "מצב הדפסה: RawBT"
-                          : m === "bt" ? "מצב הדפסה: בלוטות׳"
-                          : "מצב הדפסה: דפדפן",
-                      );
-                    }}
-                    className="w-full text-sm px-2 py-2 rounded-lg bg-muted text-foreground border border-border"
-                  >
-                    <option value="agent">Agent (מקומי)</option>
-                    <option value="rawbt">RawBT</option>
-                    <option value="bt">בלוטות׳</option>
-                    <option value="browser">דפדפן</option>
-                  </select>
+                {/* Print mode (Agent only) */}
+                <div className="px-3 py-2 rounded-lg bg-muted text-foreground border border-border text-sm flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">מצב הדפסה</span>
+                  <span className="font-bold">Agent (מקומי)</span>
                 </div>
 
                 {/* Agent health */}
