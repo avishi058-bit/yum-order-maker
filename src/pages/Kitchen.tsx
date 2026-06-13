@@ -1510,16 +1510,32 @@ const Kitchen = () => {
 
 
 
+          {/* ⚡ Quick connect to printer (Agent) */}
+          <button
+            onClick={handleQuickConnect}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              agentHealth?.ok
+                ? "bg-emerald-500/20 text-emerald-300"
+                : agentHealth?.reachable
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+            }`}
+            title="התחבר למדפסת עכשיו"
+          >
+            {agentHealth?.ok ? <BluetoothConnected size={16} /> : <Bluetooth size={16} />}
+            <span>{agentHealth?.ok ? "מדפסת מחוברת" : "חבר מדפסת"}</span>
+          </button>
+
           {/* 🖨️ Print & Diagnostics group */}
           <div className="relative">
             <button
               onClick={() => { setShowPrintMenu(!showPrintMenu); setShowNotifMenu(false); }}
               className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-                btConnected || (printMode === "agent" && agentHealth?.ok)
+                agentHealth?.ok
                   ? "bg-blue-500/20 text-blue-300"
                   : "bg-muted text-muted-foreground hover:bg-secondary"
               }`}
-              title="הגדרות הדפסה ובדיקות"
+              title="הגדרות הדפסה"
             >
               <Printer size={16} />
               <span>הדפסה</span>
