@@ -1,30 +1,35 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { checkAgentHealth, type AgentHealth } from "@/lib/localPrintAgent";
 
 const POLL_MS = 10_000;
 
-export function usePrintAgentHealth(enabled: boolean = true): AgentHealth | null {
+export function usePrintAgentHealth(
+  enabled: boolean = true,
+): [AgentHealth | null, () => Promise<AgentHealth | null>] {
   const [health, setHealth] = useState<AgentHealth | null>(null);
+  const cancelledRef = useRef(false);
+
+  const refresh = useCallback(async () => {
+    const h = await checkAgentHealth();
+    if (!cancelledRef.current) setHealth(h);
+    return h;
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
-    let cancelled = false;
+    cancelledRef.current = false;
 
-    const tick = async () => {
-      const h = await checkAgentHealth();
-      if (!cancelled) setHealth(h);
-    };
-    tick();
-    const id = setInterval(tick, POLL_MS);
+    refresh();
+    const id = setInterval(refresh, POLL_MS);
 
-    const onFocus = () => tick();
+    const onFocus = () => refresh();
     window.addEventListener("focus", onFocus);
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
       clearInterval(id);
       window.removeEventListener("focus", onFocus);
     };
-  }, [enabled]);
+  }, [enabled, refresh]);
 
-  return health;
+  return [health, refresh];
 }
