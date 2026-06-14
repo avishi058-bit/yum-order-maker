@@ -13,8 +13,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2 } from "lucide-react";
+import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash } from "lucide-react";
 import { toast } from "sonner";
+
 
 type Preset = { label: string; amount: number };
 
@@ -44,10 +45,12 @@ type Movement = {
 const REASON_LABEL: Record<string, string> = {
   manual_add: "הוספה ידנית",
   manual_remove: "הורדה ידנית",
+  waste: "פחת / נזרק",
   order_ready: "הזמנה הושלמה",
   order_cancelled: "החזרה מביטול",
   init: "התחלה",
 };
+
 
 function formatQty(q: number, unit: string): string {
   if (unit === "g") {
@@ -76,6 +79,8 @@ export default function Inventory() {
   const [showMovementsFor, setShowMovementsFor] = useState<InventoryItem | null>(null);
   const [zeroAlertFor, setZeroAlertFor] = useState<InventoryItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [wasteFor, setWasteFor] = useState<InventoryItem | null>(null);
+
 
   const call = useCallback(
     async (action: string, payload: Record<string, unknown> = {}) => {
@@ -223,8 +228,10 @@ export default function Inventory() {
                   onAdjust={(d) => handleAdjust(item, d)}
                   onEdit={() => setEditing(item)}
                   onShowLog={() => setShowMovementsFor(item)}
+                  onWaste={() => setWasteFor(item)}
                 />
               ))}
+
             </div>
           </section>
         ))}
@@ -296,9 +303,31 @@ export default function Inventory() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {wasteFor && (
+        <WasteDialog
+          item={wasteFor}
+          onClose={() => setWasteFor(null)}
+          onConfirm={async (amount, note) => {
+            try {
+              await call("adjust", {
+                item_id: wasteFor.id,
+                delta: -Math.abs(amount),
+                reason: "waste",
+                note: note || null,
+              });
+              toast.success(`נרשם פחת: ${formatQty(amount, wasteFor.unit)}`);
+              setWasteFor(null);
+            } catch (e) {
+              toast.error(`שגיאה: ${String(e)}`);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
+
 
 // ============ Sub-components ============
 
@@ -307,12 +336,15 @@ function ItemCard({
   onAdjust,
   onEdit,
   onShowLog,
+  onWaste,
 }: {
   item: InventoryItem;
   onAdjust: (delta: number) => void;
   onEdit: () => void;
   onShowLog: () => void;
+  onWaste: () => void;
 }) {
+
   const isLow =
     Number(item.low_threshold) > 0 && Number(item.quantity) <= Number(item.low_threshold);
   const isZero = Number(item.quantity) <= 0;
@@ -361,6 +393,15 @@ function ItemCard({
           </Button>
         ))}
         <div className="flex-1" />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 px-2 text-destructive hover:bg-destructive/10"
+          onClick={onWaste}
+          title="פחת / נזרק לפח"
+        >
+          <Trash className="h-4 w-4" />
+        </Button>
         <Button size="sm" variant="ghost" className="h-8 px-2" onClick={onShowLog}>
           <History className="h-4 w-4" />
         </Button>
@@ -371,6 +412,7 @@ function ItemCard({
     </div>
   );
 }
+
 
 function EditItemDialog({
   item,
@@ -630,6 +672,101 @@ function MovementsDialog({
             </div>
           ))}
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function WasteDialog({
+  item,
+  onClose,
+  onConfirm,
+}: {
+  item: InventoryItem;
+  onClose: () => void;
+  onConfirm: (amount: number, note: string) => Promise<void>;
+}) {
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const quickAmounts: number[] =
+    item.unit === "g"
+      ? [100, 250, 500, 1000]
+      : item.unit === "ml"
+      ? [100, 250, 500, 1000]
+      : [1, 2, 5, 10];
+
+  const submit = async () => {
+    const n = Number(amount);
+    if (!n || n <= 0) {
+      toast.error("הכנס כמות חיובית");
+      return;
+    }
+    setSaving(true);
+    try {
+      await onConfirm(n, note.trim());
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent dir="rtl" className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Trash className="h-5 w-5 text-destructive" />
+            פחת — {item.name}
+          </DialogTitle>
+          <DialogDescription>
+            מה הכמות שנזרקה / התקלקלה? תרד מהמלאי ותירשם בלוג.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>
+              כמות ({item.unit === "g" ? "גרם" : item.unit === "ml" ? 'מ"ל' : "יחידות"})
+            </Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              autoFocus
+            />
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {quickAmounts.map((q) => (
+                <Button
+                  key={q}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={() => setAmount(String(q))}
+                >
+                  {formatQty(q, item.unit)}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label>סיבה (לא חובה)</Label>
+            <Input
+              placeholder="נפל, נשרף, פג תוקף..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>
+            ביטול
+          </Button>
+          <Button variant="destructive" onClick={submit} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 ml-1 animate-spin" />}
+            רשום פחת
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
