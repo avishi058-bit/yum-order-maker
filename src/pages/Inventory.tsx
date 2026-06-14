@@ -183,14 +183,31 @@ export default function Inventory() {
   }, [authState]);
 
   const grouped = useMemo(() => {
-    const map = new Map<string, InventoryItem[]>();
+    // Two-level grouping: super-group (drinks/frozen/other) → category → items
+    const superMap = new Map<string, Map<string, InventoryItem[]>>();
     for (const item of items) {
-      const arr = map.get(item.category) ?? [];
+      const gk = groupKeyForCategory(item.category);
+      const catMap = superMap.get(gk) ?? new Map<string, InventoryItem[]>();
+      const arr = catMap.get(item.category) ?? [];
       arr.push(item);
-      map.set(item.category, arr);
+      catMap.set(item.category, arr);
+      superMap.set(gk, catMap);
     }
-    return Array.from(map.entries());
+    const orderedKeys = [
+      ...CATEGORY_GROUPS.map((g) => g.key),
+      "other",
+    ];
+    return orderedKeys
+      .filter((k) => superMap.has(k))
+      .map((k) => ({
+        key: k,
+        label:
+          CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
+          "אחר",
+        categories: Array.from(superMap.get(k)!.entries()),
+      }));
   }, [items]);
+
 
   const handleAdjust = async (item: InventoryItem, delta: number) => {
     // Optimistic update — instant visual feedback
