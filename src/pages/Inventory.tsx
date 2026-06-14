@@ -586,6 +586,16 @@ function EditItemDialog({
             </div>
           </div>
           <div>
+            <Label>מחיר ליחידה (₪) — לחישוב שווי בלאי וקניות</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
+              placeholder="0"
+            />
+          </div>
+          <div>
             <Label>סף התראה (low)</Label>
             <Input
               type="number"
