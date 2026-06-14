@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator } from "lucide-react";
 import QRCode from "qrcode";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
@@ -1211,6 +1211,66 @@ const Kitchen = () => {
     printRoundChefSummary(activeRoundOrders);
   };
 
+  const printFridgeRefillBon = async () => {
+    try {
+      const [itemsRes, availRes] = await Promise.all([
+        supabase
+          .from("inventory_items")
+          .select("id, name, fridge_target, fridge_qty, menu_item_id, sort_order, category")
+          .gt("fridge_target", 0)
+          .order("sort_order", { ascending: true }),
+        supabase.from("menu_availability").select("item_id, available"),
+      ]);
+      if (itemsRes.error) throw itemsRes.error;
+      const unavailable = new Set(
+        (availRes.data ?? [])
+          .filter((a: { available: boolean }) => a.available === false)
+          .map((a: { item_id: string }) => a.item_id),
+      );
+      const refill = (itemsRes.data ?? [])
+        .filter((i) => !i.menu_item_id || !unavailable.has(i.menu_item_id))
+        .map((i) => ({
+          name: i.name as string,
+          needed: Math.max(0, Number(i.fridge_target ?? 0) - Number(i.fridge_qty ?? 0)),
+        }))
+        .filter((i) => i.needed > 0);
+
+      const w = window.open("", "_blank", "width=380,height=600");
+      if (!w) {
+        toast.error("חלון ההדפסה נחסם");
+        return;
+      }
+      const dateStr = new Date().toLocaleString("he-IL");
+      const escape = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      const rows = refill
+        .map((d) => `<tr><td class="qty">${d.needed}</td><td>${escape(d.name)}</td></tr>`)
+        .join("");
+      w.document.write(`<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8"/>
+<title>בון מילוי מקרר</title>
+<style>
+  @page { size: 80mm auto; margin: 4mm; }
+  body { font-family: 'Heebo', sans-serif; color: #000; margin: 0; padding: 8px; }
+  h1 { font-size: 22px; text-align: center; margin: 0 0 4px; }
+  .sub { text-align: center; font-size: 12px; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 18px; }
+  td { padding: 6px 4px; border-bottom: 1px dashed #555; }
+  td.qty { width: 56px; font-size: 26px; font-weight: 900; text-align: center; background: #000; color: #fff; border-radius: 6px; }
+  .empty { text-align: center; padding: 40px 0; font-size: 16px; }
+</style>
+</head><body>
+<h1>🧊 מילוי מקרר</h1>
+<div class="sub">${dateStr}</div>
+${refill.length ? `<table>${rows}</table>` : `<div class="empty">המקרר מלא ✅</div>`}
+<script>window.onload=()=>{window.print();setTimeout(()=>window.close(),300);};</script>
+</body></html>`);
+      w.document.close();
+    } catch (e) {
+      console.error(e);
+      toast.error("שגיאה בטעינת נתוני המקרר");
+    }
+  };
+
   const roundSummaryHtml = useMemo(
     () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders, { interactive: true }) : ""),
     [showRoundSummary, activeRoundOrders],
@@ -1688,6 +1748,14 @@ const Kitchen = () => {
             title={`הצג סיכום סבב לטבח (${activeRoundOrders.length})`}
           >
             <ListChecks size={20} />
+          </button>
+          <button
+            onClick={printFridgeRefillBon}
+            className="p-2 rounded-lg transition-colors bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-1"
+            title="הדפס בון מילוי מקרר"
+          >
+            <Refrigerator size={20} />
+            <Printer size={14} />
           </button>
           <button
             onClick={printChefBon}
