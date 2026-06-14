@@ -981,6 +981,11 @@ class ByteBuf {
 
 type Mono = { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number };
 
+const NATIVE_FONT_PX = 20;
+const NATIVE_LINE_DOTS = 30;
+const NATIVE_DOUBLE_FONT_PX = 40;
+const NATIVE_DOUBLE_LINE_DOTS = 60;
+
 // Combine several per-line monos into one full-width bitmap so the whole block
 // is sent as ONE GS v 0 raster command instead of N separate commands.
 // offsetX from each mono is honoured by placing it at the right byte offset
@@ -1098,6 +1103,21 @@ function _blankMono(width: number, rows: number): Mono {
   return { bytes: new Uint8Array(widthBytes * rows), widthBytes, height: rows, offsetX: 0 };
 }
 
+function _countTrailingBlankRows(mono: Mono): number {
+  const { bytes, widthBytes, height } = mono;
+  let rows = 0;
+  for (let y = height - 1; y >= 0; y--) {
+    const off = y * widthBytes;
+    let blank = true;
+    for (let i = 0; i < widthBytes; i++) {
+      if (bytes[off + i] !== 0) { blank = false; break; }
+    }
+    if (!blank) break;
+    rows++;
+  }
+  return rows;
+}
+
 function _renderNativeLineToMono(
   text: string,
   opts: { width: number; px: number; lineHeight: number; bold: boolean; align: "L" | "C" | "R" },
@@ -1110,7 +1130,12 @@ function _renderNativeLineToMono(
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, width, lineHeight);
   ctx.fillStyle = "#000";
-  ctx.font = `${bold ? "900" : "500"} ${px}px "Courier New", monospace`;
+  let fontPx = px;
+  ctx.font = `${bold ? "900" : "500"} ${fontPx}px "Courier New", monospace`;
+  while (fontPx > 8 && ctx.measureText(text).width > width - 4) {
+    fontPx -= 1;
+    ctx.font = `${bold ? "900" : "500"} ${fontPx}px "Courier New", monospace`;
+  }
   ctx.textBaseline = "middle";
   if (align === "R") {
     ctx.textAlign = "right";
@@ -1145,44 +1170,51 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
   const monos: Mono[] = [];
   let cut = false;
+  const pushPendingMono = (mono: Mono) => {
+    monos.push(mono);
+  };
+  const pushNativeFeed = (n = 1) => {
+    monos.push(_blankMono(width, Math.max(1, Math.round(n * 24))));
+  };
   for (const op of ops) {
     switch (op.kind) {
       case "init": break;
       case "sep":
-        monos.push(_renderNativeLineToMono("-".repeat(cols), {
-          width, px: 24, lineHeight: 30, bold: false, align: "C",
+        // Match the upright path exactly: it flushes pending Hebrew bitmaps,
+        // then prints native ESC/POS dashes followed by one native LF.
+        pushPendingMono(_renderNativeLineToMono("-".repeat(cols), {
+          width, px: NATIVE_FONT_PX, lineHeight: NATIVE_LINE_DOTS, bold: false, align: "L",
         }));
         break;
       case "feed": {
-        const dots = Math.max(1, Math.round((op.n ?? 1) * 24));
-        monos.push(_blankMono(width, dots));
+        pushNativeFeed(op.n ?? 1);
         break;
       }
       case "text":
         // Keep native-text rows at the printer's real line advance. The Hebrew
         // renderer crops vertically, which made rotated ASCII separators tighter
         // than the upright ESC/POS output.
-        monos.push(_renderNativeLineToMono(op.text, {
+        pushPendingMono(_renderNativeLineToMono(op.text, {
           width,
-          px: (op.size === 2 ? 48 : 24),
-          lineHeight: (op.size === 2 ? 60 : 30),
+          px: (op.size === 2 ? NATIVE_DOUBLE_FONT_PX : NATIVE_FONT_PX),
+          lineHeight: (op.size === 2 ? NATIVE_DOUBLE_LINE_DOTS : NATIVE_LINE_DOTS),
           bold: !!op.bold,
           align: op.align ?? "L",
         }));
         break;
       case "heb":
-        monos.push(_renderHebToMono(op.text, {
+        pushPendingMono(_renderHebToMono(op.text, {
           width, px: op.size ?? 22, bold: !!op.bold, align: op.align ?? "R",
         }));
         break;
       case "header":
-        monos.push(_renderHeaderToMono(op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width));
+        pushPendingMono(_renderHeaderToMono(op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width));
         break;
       case "twoCol":
-        monos.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
+        pushPendingMono(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
         break;
       case "qr":
-        monos.push(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
+        pushPendingMono(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
         break;
       case "cut": cut = true; break;
     }
@@ -1196,7 +1228,10 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     // bitmap so after rotation the readable top gets the same lead-in gap as
     // the upright bon.
     const LEAD_IN_DOTS = 110; // ~13mm @ 203dpi — matches the upright lead-in.
-    monos.push(_blankMono(width, LEAD_IN_DOTS));
+    const combinedBeforeLead = _combineMonos(monos, width);
+    const existingEndFeed = _countTrailingBlankRows(combinedBeforeLead);
+    const leadCompensation = Math.max(0, LEAD_IN_DOTS - existingEndFeed);
+    if (leadCompensation > 0) monos.push(_blankMono(width, leadCompensation));
     const combined = _combineMonos(monos, width);
     // Rotate the full bitmap including the final blank feed. That makes the
     // readable top of the upside-down bon match the upright bon exactly: the
