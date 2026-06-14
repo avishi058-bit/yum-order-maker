@@ -1786,14 +1786,6 @@ const Kitchen = () => {
             <ListChecks size={20} />
           </button>
           <button
-            onClick={printFridgeRefillBon}
-            className="p-2 rounded-lg transition-colors bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-1"
-            title="הדפס בון מילוי מקרר"
-          >
-            <Refrigerator size={20} />
-            <Printer size={14} />
-          </button>
-          <button
             onClick={printChefBon}
             disabled={activeRoundOrders.length === 0}
             className={`p-2 rounded-lg transition-colors ${
@@ -1809,6 +1801,15 @@ const Kitchen = () => {
           <div className="text-sm text-muted-foreground ml-auto">
             {new Date().toLocaleDateString("he-IL")}
           </div>
+
+          <button
+            onClick={printFridgeRefillBon}
+            className="p-2 rounded-lg transition-colors bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-1"
+            title="הדפס בון מילוי מקרר"
+          >
+            <Refrigerator size={20} />
+            <Printer size={14} />
+          </button>
         </div>
       </div>
 
