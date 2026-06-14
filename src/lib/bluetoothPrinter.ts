@@ -1188,6 +1188,15 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     }
   }
   if (monos.length > 0) {
+    // Simulate the printer's natural lead-in margin: when printing upright, the
+    // paper sits ~12-15mm past the tear bar before the head, so the first
+    // printed row appears with a generous top gap. In rotated mode the first
+    // printed row is the LAST op (rotated to become the top), which has only
+    // the small feed(2) before cut. Append a blank band at the end of the
+    // bitmap so after rotation the readable top gets the same lead-in gap as
+    // the upright bon.
+    const LEAD_IN_DOTS = 110; // ~13mm @ 203dpi — matches the upright lead-in.
+    monos.push(_blankMono(width, LEAD_IN_DOTS));
     const combined = _combineMonos(monos, width);
     // Rotate the full bitmap including the final blank feed. That makes the
     // readable top of the upside-down bon match the upright bon exactly: the
