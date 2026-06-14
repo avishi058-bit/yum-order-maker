@@ -72,6 +72,34 @@ function formatDelta(d: number, unit: string): string {
   return `${sign}${formatQty(d, unit)}`;
 }
 
+// Extracts the "box size" from presets — the largest positive preset amount
+// whose label looks like a box/package (ארגז/חבילה/קרטון). Returns null if none.
+function getBoxSize(item: InventoryItem): { size: number; label: string } | null {
+  if (!item.presets?.length) return null;
+  const boxPresets = item.presets.filter(
+    (p) =>
+      p.amount > 1 &&
+      /ארגז|חבילה|קרטון|ארגיז/.test(p.label),
+  );
+  if (!boxPresets.length) return null;
+  const biggest = boxPresets.reduce((a, b) => (a.amount >= b.amount ? a : b));
+  return { size: biggest.amount, label: biggest.label };
+}
+
+// Top-level grouping of inventory categories into themed sections.
+const CATEGORY_GROUPS: { key: string; label: string; cats: string[] }[] = [
+  { key: "drinks", label: "שתיה", cats: ["בירות", "פחיות", "בקבוקים", "שתיה"] },
+  { key: "frozen", label: "קפואים", cats: ["בשר", "צ׳יפס", "לחם", "קפואים"] },
+];
+
+function groupKeyForCategory(cat: string): string {
+  for (const g of CATEGORY_GROUPS) {
+    if (g.cats.includes(cat)) return g.key;
+  }
+  return "other";
+}
+
+
 export default function Inventory() {
   const { token } = useParams<{ token: string }>();
   const [authState, setAuthState] = useState<"checking" | "ok" | "bad">("checking");
