@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, Pencil } from "lucide-react";
+import EditOrderModal from "@/components/EditOrderModal";
 import QRCode from "qrcode";
 import DashboardView from "@/components/DashboardView";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
@@ -65,6 +66,7 @@ const REMOVAL_LABELS: Record<string, string> = (() => {
 
 interface OrderItem {
   id: string;
+  item_id: string | null;
   item_name: string;
   price: number;
   quantity: number;
@@ -329,6 +331,7 @@ const Kitchen = () => {
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
@@ -2039,10 +2042,18 @@ const Kitchen = () => {
                       onClick={() => reprintOrder(order)}
                       className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
                       title="הדפס שוב"
-
                     >
                       <Printer size={16} />
                     </button>
+                    {(order.status === "new" || order.status === "preparing") && (
+                      <button
+                        onClick={() => setEditingOrder(order)}
+                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                        title="ערוך הזמנה"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    )}
                     {order.order_source !== "kiosk" && order.order_source !== "station" && (
                       <button
                         onClick={() => printCustomerQr(order)}
@@ -2411,6 +2422,41 @@ const Kitchen = () => {
             />
           </div>
         </div>
+      )}
+      {editingOrder && (
+        <EditOrderModal
+          open={!!editingOrder}
+          onClose={() => setEditingOrder(null)}
+          orderId={editingOrder.id}
+          orderNumber={editingOrder.order_number}
+          items={editingOrder.order_items.map((it) => ({
+            id: it.id,
+            item_id: it.item_id,
+            item_name: it.item_name,
+            price: it.price,
+            quantity: it.quantity,
+            toppings: it.toppings,
+            removals: it.removals,
+            with_meal: it.with_meal,
+            meal_side: it.meal_side,
+            meal_drink: it.meal_drink,
+            deal_burgers: it.deal_burgers,
+            deal_drinks: it.deal_drinks,
+          }))}
+          onSaved={async ({ requires_reprint }) => {
+            // Refetch the updated order so we have fresh items for reprint
+            const { data } = await supabase
+              .from("orders")
+              .select("*, order_items(*)")
+              .eq("id", editingOrder.id)
+              .maybeSingle();
+            if (requires_reprint && data) {
+              printedOrdersRef.current.add(data.id);
+              printOrder(data as Order);
+              toast.info("מדפיס בון מעודכן למטבח");
+            }
+          }}
+        />
       )}
     </div>
   );
