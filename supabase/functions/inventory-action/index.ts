@@ -152,6 +152,8 @@ Deno.serve(async (req) => {
           "sort_order",
           "notes",
           "unit_cost",
+          "fridge_target",
+          "fridge_qty",
         ];
         const clean: Record<string, unknown> = {};
         for (const k of allowed) if (k in patch) clean[k] = (patch as Record<string, unknown>)[k];
