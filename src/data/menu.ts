@@ -79,7 +79,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה" },
   "arayes-special": { description: "3 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
   "arayes-special-4": { description: "4 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
-  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י" },
+  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י, מלון תפוח" },
   bottle: { description: "ענבים / תפוזים" },
   water: { description: "בקבוק מים מינרליים" },
   "flavored-water": { description: "מים בטעם תפוח / ענבים" },
