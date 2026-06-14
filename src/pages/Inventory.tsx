@@ -359,6 +359,37 @@ export default function Inventory() {
           }}
         />
       )}
+
+      {purchaseFor && (
+        <PurchaseDialog
+          item={purchaseFor}
+          onClose={() => setPurchaseFor(null)}
+          onConfirm={async (qty, unit_cost, note) => {
+            try {
+              await call("record_purchase", {
+                item_id: purchaseFor.id,
+                qty,
+                unit_cost: unit_cost || undefined,
+                note: note || null,
+              });
+              toast.success(`נרשמה קנייה`);
+              setPurchaseFor(null);
+            } catch (e) {
+              toast.error(`שגיאה: ${String(e)}`);
+            }
+          }}
+        />
+      )}
+
+      {showStats && (
+        <InventoryStats
+          onClose={() => setShowStats(false)}
+          loadStats={async (from, to) => {
+            const data = await call("stats", { from, to });
+            return data;
+          }}
+        />
+      )}
     </div>
   );
 }
