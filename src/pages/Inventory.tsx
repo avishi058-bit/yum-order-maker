@@ -303,9 +303,31 @@ export default function Inventory() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {wasteFor && (
+        <WasteDialog
+          item={wasteFor}
+          onClose={() => setWasteFor(null)}
+          onConfirm={async (amount, note) => {
+            try {
+              await call("adjust", {
+                item_id: wasteFor.id,
+                delta: -Math.abs(amount),
+                reason: "waste",
+                note: note || null,
+              });
+              toast.success(`נרשם פחת: ${formatQty(amount, wasteFor.unit)}`);
+              setWasteFor(null);
+            } catch (e) {
+              toast.error(`שגיאה: ${String(e)}`);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
+
 
 // ============ Sub-components ============
 
