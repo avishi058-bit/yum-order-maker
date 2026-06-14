@@ -314,12 +314,15 @@ function ItemCard({
   onAdjust,
   onEdit,
   onShowLog,
+  onWaste,
 }: {
   item: InventoryItem;
   onAdjust: (delta: number) => void;
   onEdit: () => void;
   onShowLog: () => void;
+  onWaste: () => void;
 }) {
+
   const isLow =
     Number(item.low_threshold) > 0 && Number(item.quantity) <= Number(item.low_threshold);
   const isZero = Number(item.quantity) <= 0;
