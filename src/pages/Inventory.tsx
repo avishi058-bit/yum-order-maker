@@ -371,6 +371,15 @@ function ItemCard({
           </Button>
         ))}
         <div className="flex-1" />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 px-2 text-destructive hover:bg-destructive/10"
+          onClick={onWaste}
+          title="פחת / נזרק לפח"
+        >
+          <Trash className="h-4 w-4" />
+        </Button>
         <Button size="sm" variant="ghost" className="h-8 px-2" onClick={onShowLog}>
           <History className="h-4 w-4" />
         </Button>
@@ -381,6 +390,7 @@ function ItemCard({
     </div>
   );
 }
+
 
 function EditItemDialog({
   item,
