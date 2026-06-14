@@ -547,6 +547,7 @@ function EditItemDialog({
         low_threshold: Number(lowThreshold) || 0,
         menu_item_id: menuItemId || null,
         presets,
+        unit_cost: Number(unitCost) || 0,
       });
     } catch (e) {
       toast.error(`שגיאה: ${String(e)}`);
