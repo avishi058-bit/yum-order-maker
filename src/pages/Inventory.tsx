@@ -877,3 +877,118 @@ function WasteDialog({
     </Dialog>
   );
 }
+
+function PurchaseDialog({
+  item,
+  onClose,
+  onConfirm,
+}: {
+  item: InventoryItem;
+  onClose: () => void;
+  onConfirm: (qty: number, unit_cost: number, note: string) => Promise<void>;
+}) {
+  const [qty, setQty] = useState("");
+  const [totalCost, setTotalCost] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const qtyNum = Number(qty) || 0;
+  const totalNum = Number(totalCost) || 0;
+  const unitCost = qtyNum > 0 && totalNum > 0 ? totalNum / qtyNum : 0;
+
+  const quickAmounts: number[] =
+    item.unit === "g"
+      ? [1000, 5000, 10000]
+      : item.unit === "ml"
+      ? [1000, 5000, 10000]
+      : [12, 24, 48];
+
+  const submit = async () => {
+    if (qtyNum <= 0) {
+      toast.error("הכנס כמות");
+      return;
+    }
+    setSaving(true);
+    try {
+      await onConfirm(qtyNum, unitCost, note.trim());
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent dir="rtl" className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-blue-600" />
+            רישום קנייה — {item.name}
+          </DialogTitle>
+          <DialogDescription>
+            הוספת מלאי + מחיר כדי שנדע לחשב שווי קניות וצריכה.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>
+              כמות שנקנתה ({item.unit === "g" ? "גרם" : item.unit === "ml" ? 'מ"ל' : "יחידות"})
+            </Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              autoFocus
+            />
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {quickAmounts.map((q) => (
+                <Button
+                  key={q}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={() => setQty(String(q))}
+                >
+                  {formatQty(q, item.unit)}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label>מחיר כולל ששילמת (₪) — לא חובה</Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={totalCost}
+              onChange={(e) => setTotalCost(e.target.value)}
+              placeholder="0"
+            />
+            {unitCost > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                מחיר ליחידה: ₪{unitCost.toFixed(2)}
+              </p>
+            )}
+          </div>
+          <div>
+            <Label>הערה</Label>
+            <Input
+              placeholder="ספק / חשבונית..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>
+            ביטול
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 ml-1 animate-spin" />}
+            רשום קנייה
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
