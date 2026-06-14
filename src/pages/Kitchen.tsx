@@ -1578,20 +1578,18 @@ ${refill.length ? `<table>${rows}</table>` : `<div class="empty">המקרר מל
 
 
 
-          {/* ⚡ Quick connect to printer (Agent) */}
+          {/* ⚡ Quick connect to printer (Bluetooth) */}
           <button
             onClick={handleQuickConnect}
             className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-              agentHealth?.ok
+              btConnected
                 ? "bg-emerald-500/20 text-emerald-300"
-                : agentHealth?.reachable
-                  ? "bg-amber-500/20 text-amber-300"
-                  : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
             }`}
-            title="התחבר למדפסת עכשיו"
+            title="חיבור מדפסת בלוטות׳"
           >
-            {agentHealth?.ok ? <BluetoothConnected size={16} /> : <Bluetooth size={16} />}
-            <span>{agentHealth?.ok ? "מדפסת מחוברת" : "חבר מדפסת"}</span>
+            {btConnected ? <BluetoothConnected size={16} /> : <Bluetooth size={16} />}
+            <span>{btConnected ? "מדפסת מחוברת" : "חבר מדפסת"}</span>
           </button>
 
           {/* 🖨️ Print & Diagnostics group */}
@@ -1626,10 +1624,10 @@ ${refill.length ? `<table>${rows}</table>` : `<div class="empty">המקרר מל
                   <span>{autoPrint ? "מופעל" : "כבוי"}</span>
                 </button>
 
-                {/* Print mode (Agent only) */}
+                {/* Print mode */}
                 <div className="px-3 py-2 rounded-lg bg-muted text-foreground border border-border text-sm flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">מצב הדפסה</span>
-                  <span className="font-bold">Agent (מקומי)</span>
+                  <span className="font-bold">{btConnected ? "Bluetooth" : printMode === "agent" ? "Agent (מקומי)" : printMode}</span>
                 </div>
 
                 {/* Agent health */}
