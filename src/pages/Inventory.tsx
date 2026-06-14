@@ -525,6 +525,7 @@ function EditItemDialog({
   const [lowThreshold, setLowThreshold] = useState(String(item.low_threshold));
   const [menuItemId, setMenuItemId] = useState(item.menu_item_id ?? "");
   const [presetsJson, setPresetsJson] = useState(JSON.stringify(item.presets, null, 2));
+  const [unitCost, setUnitCost] = useState(String(item.unit_cost ?? 0));
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
