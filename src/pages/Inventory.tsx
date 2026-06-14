@@ -503,9 +503,18 @@ function ItemCard({
           variant="ghost"
           className="h-8 px-2 text-blue-600 hover:bg-blue-600/10"
           onClick={onPurchase}
-          title="רשום קנייה"
+          title="רשום קנייה / הוסף למלאי"
         >
           <ShoppingCart className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 px-2 text-slate-600 hover:bg-slate-600/10"
+          onClick={onCorrection}
+          title="הורד כמות (תיקון — לא נספר כפחת)"
+        >
+          <Minus className="h-4 w-4" />
         </Button>
         {!isZero && (
           <Button
