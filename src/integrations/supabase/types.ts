@@ -111,6 +111,8 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          fridge_qty: number
+          fridge_target: number
           id: string
           low_threshold: number
           menu_item_id: string | null
@@ -126,6 +128,8 @@ export type Database = {
         Insert: {
           category?: string
           created_at?: string
+          fridge_qty?: number
+          fridge_target?: number
           id?: string
           low_threshold?: number
           menu_item_id?: string | null
@@ -141,6 +145,8 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          fridge_qty?: number
+          fridge_target?: number
           id?: string
           low_threshold?: number
           menu_item_id?: string | null
