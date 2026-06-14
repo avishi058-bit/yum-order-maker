@@ -13,8 +13,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash } from "lucide-react";
+import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash, BarChart3, ShoppingCart, PackageX } from "lucide-react";
 import { toast } from "sonner";
+import { InventoryStats } from "@/components/InventoryStats";
 
 
 type Preset = { label: string; amount: number };
