@@ -37,6 +37,7 @@ import {
   printRawBTReceipt,
   printRawBTRoundSummary,
   printRawBTRoundChef,
+  printRawBTFridgeRefill,
   printRawBTPhoneQr,
   printRawBTPlainText,
   printRawBTPlainTextDirect,
