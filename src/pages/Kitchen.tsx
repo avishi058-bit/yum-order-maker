@@ -278,22 +278,30 @@ const Kitchen = () => {
   const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
   const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
 
-  // Force Agent as the only print mode (legacy modes removed from UI)
-  useEffect(() => {
-    if (printMode !== "agent") {
-      setPrintModeState("agent");
-      setPrintMode("agent");
-    }
-  }, [printMode]);
-
   const handleQuickConnect = useCallback(async () => {
-    const t = toast.loading("מתחבר למדפסת…");
-    const h = await refreshAgentHealth();
-    toast.dismiss(t);
-    if (h?.ok) toast.success(`מחובר ל-${h.printer ?? "מדפסת"}`);
-    else if (h?.reachable) toast.warning("Agent פעיל — אין חיבור למדפסת");
-    else toast.error("Agent לא זמין בטאבלט");
-  }, [refreshAgentHealth]);
+    if (isPrinterConnected()) {
+      setBtConnected(true);
+      setPrintModeState("bt");
+      setPrintMode("bt");
+      toast.success("המדפסת כבר מחוברת");
+      return;
+    }
+    if (!isWebBluetoothSupported()) {
+      toast.error("הדפדפן הזה לא תומך ב-Web Bluetooth. השתמש ב-Chrome על אנדרואיד.");
+      return;
+    }
+    try {
+      await pairPrinter();
+      setBtConnected(true);
+      setPrintModeState("bt");
+      setPrintMode("bt");
+      toast.success("המדפסת חוברה בהצלחה");
+    } catch (e: any) {
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message || "שגיאה בחיבור המדפסת");
+      }
+    }
+  }, []);
 
 
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
