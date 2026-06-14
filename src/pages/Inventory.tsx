@@ -434,6 +434,7 @@ function ItemCard({
   onShowLog,
   onWaste,
   onPurchase,
+  onCorrection,
   onMarkOut,
 }: {
   item: InventoryItem;
@@ -442,6 +443,7 @@ function ItemCard({
   onShowLog: () => void;
   onWaste: () => void;
   onPurchase: () => void;
+  onCorrection: () => void;
   onMarkOut: () => void;
 }) {
 
