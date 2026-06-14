@@ -45,7 +45,7 @@ import {
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
+import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { ingredients } from "@/data/menu";
