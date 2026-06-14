@@ -120,6 +120,7 @@ export type Database = {
           quantity: number
           sort_order: number
           unit: string
+          unit_cost: number
           updated_at: string
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           quantity?: number
           sort_order?: number
           unit?: string
+          unit_cost?: number
           updated_at?: string
         }
         Update: {
@@ -148,6 +150,7 @@ export type Database = {
           quantity?: number
           sort_order?: number
           unit?: string
+          unit_cost?: number
           updated_at?: string
         }
         Relationships: []
@@ -161,6 +164,7 @@ export type Database = {
           note: string | null
           order_id: string | null
           reason: string
+          unit_cost: number | null
         }
         Insert: {
           created_at?: string
@@ -170,6 +174,7 @@ export type Database = {
           note?: string | null
           order_id?: string | null
           reason: string
+          unit_cost?: number | null
         }
         Update: {
           created_at?: string
@@ -179,6 +184,7 @@ export type Database = {
           note?: string | null
           order_id?: string | null
           reason?: string
+          unit_cost?: number | null
         }
         Relationships: [
           {
