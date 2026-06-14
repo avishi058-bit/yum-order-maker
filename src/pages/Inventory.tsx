@@ -382,6 +382,34 @@ export default function Inventory() {
           }}
         />
       )}
+      {correctionFor && (
+        <CorrectionDialog
+          item={correctionFor}
+          onClose={() => setCorrectionFor(null)}
+          onConfirm={async (qty, note) => {
+            try {
+              await call("adjust", {
+                item_id: correctionFor.id,
+                delta: -qty,
+                reason: "manual_remove",
+                note: note || "תיקון ידני",
+              });
+              setItems((prev) =>
+                prev.map((i) =>
+                  i.id === correctionFor.id
+                    ? { ...i, quantity: Number(i.quantity) - qty }
+                    : i,
+                ),
+              );
+              toast.success("עודכן");
+              setCorrectionFor(null);
+            } catch (e) {
+              toast.error(`שגיאה: ${String(e)}`);
+            }
+          }}
+        />
+      )}
+
 
       {showStats && (
         <InventoryStats
