@@ -75,10 +75,11 @@ Deno.serve(async (req) => {
       }
 
       case "adjust": {
-        const { item_id, delta, note } = body as {
+        const { item_id, delta, note, reason } = body as {
           item_id: string;
           delta: number;
           note?: string;
+          reason?: string;
         };
         if (!item_id || typeof delta !== "number") {
           return json({ error: "bad_params" }, 400);
@@ -95,14 +96,17 @@ Deno.serve(async (req) => {
           .update({ quantity: next })
           .eq("id", item_id);
         if (e2) return json({ error: e2.message }, 500);
+        const finalReason =
+          reason ?? (delta >= 0 ? "manual_add" : "manual_remove");
         await supabase.from("inventory_movements").insert({
           inventory_item_id: item_id,
           delta,
-          reason: delta >= 0 ? "manual_add" : "manual_remove",
+          reason: finalReason,
           note: note ?? null,
         });
         return json({ ok: true, quantity: next });
       }
+
 
       case "set_quantity": {
         const { item_id, quantity } = body as {
