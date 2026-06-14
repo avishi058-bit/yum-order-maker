@@ -159,9 +159,24 @@ export default function Inventory() {
   }, [items]);
 
   const handleAdjust = async (item: InventoryItem, delta: number) => {
+    // Optimistic update — instant visual feedback
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, quantity: Number(i.quantity) + delta } : i,
+      ),
+    );
     try {
-      await call("adjust", { item_id: item.id, delta });
+      const data = await call("adjust", { item_id: item.id, delta });
+      if (data?.item) {
+        setItems((prev) => prev.map((i) => (i.id === item.id ? data.item : i)));
+      }
     } catch (e) {
+      // rollback
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: Number(i.quantity) - delta } : i,
+        ),
+      );
       toast.error(`שגיאה: ${String(e)}`);
     }
   };
