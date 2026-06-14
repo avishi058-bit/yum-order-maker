@@ -45,10 +45,12 @@ type Movement = {
 const REASON_LABEL: Record<string, string> = {
   manual_add: "הוספה ידנית",
   manual_remove: "הורדה ידנית",
+  waste: "פחת / נזרק",
   order_ready: "הזמנה הושלמה",
   order_cancelled: "החזרה מביטול",
   init: "התחלה",
 };
+
 
 function formatQty(q: number, unit: string): string {
   if (unit === "g") {
