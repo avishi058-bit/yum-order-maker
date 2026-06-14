@@ -286,37 +286,44 @@ export default function Inventory() {
       </header>
 
       <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
-        {grouped.map(([category, list]) => (
-          <section key={category}>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-1">
-              {category}
+        {grouped.map((group) => (
+          <section key={group.key} className="space-y-3">
+            <h2 className="text-base font-bold border-b pb-1 px-1">
+              {group.label}
             </h2>
-            <div className="space-y-2">
-              {list.map((item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  onAdjust={(d) => handleAdjust(item, d)}
-                  onEdit={() => setEditing(item)}
-                  onShowLog={() => setShowMovementsFor(item)}
-                  onWaste={() => setWasteFor(item)}
-                  onPurchase={() => setPurchaseFor(item)}
-                  onCorrection={() => setCorrectionFor(item)}
-                  onMarkOut={async () => {
-                    if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
-                    try {
-                      await call("mark_out_of_stock", { item_id: item.id });
-                      toast.success("סומן כנגמר");
-                    } catch (e) {
-                      toast.error(`שגיאה: ${String(e)}`);
-                    }
-                  }}
-                />
-              ))}
-
-            </div>
+            {group.categories.map(([category, list]) => (
+              <div key={category}>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-1">
+                  {category}
+                </h3>
+                <div className="space-y-2">
+                  {list.map((item) => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      onAdjust={(d) => handleAdjust(item, d)}
+                      onEdit={() => setEditing(item)}
+                      onShowLog={() => setShowMovementsFor(item)}
+                      onWaste={() => setWasteFor(item)}
+                      onPurchase={() => setPurchaseFor(item)}
+                      onCorrection={() => setCorrectionFor(item)}
+                      onMarkOut={async () => {
+                        if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
+                        try {
+                          await call("mark_out_of_stock", { item_id: item.id });
+                          toast.success("סומן כנגמר");
+                        } catch (e) {
+                          toast.error(`שגיאה: ${String(e)}`);
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
         ))}
+
         {items.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
             אין פריטים. הוסף פריט ראשון בכפתור למעלה.
