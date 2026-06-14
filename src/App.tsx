@@ -91,6 +91,7 @@ const App = () => (
                 }
               />
               <Route path="/inventory/:token" element={<Inventory />} />
+              <Route path="/inventory/:token/fridge" element={<InventoryFridge />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
