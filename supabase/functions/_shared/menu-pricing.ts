@@ -166,6 +166,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-fanta", name: "פאנטה", price: 0 },
   { id: "fam-sprite", name: "ספרייט", price: 0 },
   { id: "fam-blu", name: "בלו", price: 0 },
+  { id: "fam-blu-melon-apple", name: "בלו מלון תפוח", price: 0 },
   { id: "fam-grapes", name: "ענבים", price: 0 },
   { id: "fam-apples", name: "תפוזים", price: 0 },
   { id: "fam-water", name: "מים (בקבוק)", price: 0 },
