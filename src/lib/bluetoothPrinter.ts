@@ -1361,6 +1361,11 @@ export async function printBluetoothRoundChef(orders: RoundOrder[]): Promise<voi
   await printOps(buildRoundChefOps(orders));
 }
 
+export async function printBluetoothFridgeRefill(items: { name: string; needed: number }[]): Promise<void> {
+  const { buildFridgeRefillOps } = await _ops();
+  await printOps(buildFridgeRefillOps(items));
+}
+
 export async function printBluetoothPhoneQr(order: ReceiptOrder): Promise<void> {
   const { buildPhoneQrOps } = await _ops();
   await printOps(buildPhoneQrOps(order));

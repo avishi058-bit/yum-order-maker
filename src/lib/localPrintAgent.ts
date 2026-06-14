@@ -147,6 +147,11 @@ export async function printAgentRoundChef(orders: RoundOrder[]): Promise<AgentPr
   return sendBytesToAgent(buildOpsBytes(buildRoundChefOps(orders)));
 }
 
+export async function printAgentFridgeRefill(items: { name: string; needed: number }[]): Promise<AgentPrintResult> {
+  const { buildFridgeRefillOps } = await import("./btReceiptOps");
+  return sendBytesToAgent(buildOpsBytes(buildFridgeRefillOps(items)));
+}
+
 export async function printAgentPhoneQr(order: ReceiptOrder): Promise<AgentPrintResult> {
   const { buildPhoneQrOps } = await import("./btReceiptOps");
   const result = await sendBytesToAgent(buildOpsBytes(buildPhoneQrOps(order)));
