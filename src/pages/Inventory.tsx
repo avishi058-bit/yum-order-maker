@@ -48,6 +48,7 @@ const REASON_LABEL: Record<string, string> = {
   manual_add: "הוספה ידנית",
   manual_remove: "הורדה ידנית",
   waste: "פחת / נזרק",
+  purchase: "קנייה",
   order_ready: "הזמנה הושלמה",
   order_cancelled: "החזרה מביטול",
   init: "התחלה",
