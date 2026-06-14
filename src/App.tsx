@@ -24,6 +24,7 @@ const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const StationSetup = lazy(() => import("./pages/StationSetup"));
 const Kiosk = lazy(() => import("./pages/Kiosk"));
 const Inventory = lazy(() => import("./pages/Inventory"));
+const InventoryFridge = lazy(() => import("./pages/InventoryFridge"));
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -90,6 +91,7 @@ const App = () => (
                 }
               />
               <Route path="/inventory/:token" element={<Inventory />} />
+              <Route path="/inventory/:token/fridge" element={<InventoryFridge />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -13,7 +13,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash, BarChart3, ShoppingCart, PackageX } from "lucide-react";
+import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash, BarChart3, ShoppingCart, PackageX, Refrigerator } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { InventoryStats } from "@/components/InventoryStats";
 
@@ -275,7 +276,12 @@ export default function Inventory() {
             {items.length} פריטים · עדכון בלייב
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Link to={`/inventory/${token}/fridge`}>
+            <Button size="sm" variant="outline" className="gap-1">
+              <Refrigerator className="h-4 w-4" /> מקרר
+            </Button>
+          </Link>
           <Button size="sm" variant="outline" onClick={() => setShowStats(true)}>
             <BarChart3 className="h-4 w-4 ml-1" /> דוחות
           </Button>

@@ -152,6 +152,8 @@ Deno.serve(async (req) => {
           "sort_order",
           "notes",
           "unit_cost",
+          "fridge_target",
+          "fridge_qty",
         ];
         const clean: Record<string, unknown> = {};
         for (const k of allowed) if (k in patch) clean[k] = (patch as Record<string, unknown>)[k];
@@ -416,6 +418,61 @@ Deno.serve(async (req) => {
           .limit(Math.min(limit ?? 30, 200));
         if (error) return json({ error: error.message }, 500);
         return json({ movements: data });
+      }
+
+      case "fridge_set_target": {
+        const { item_id, fridge_target } = body as { item_id: string; fridge_target: number };
+        if (!item_id || typeof fridge_target !== "number" || fridge_target < 0) {
+          return json({ error: "bad_params" }, 400);
+        }
+        const { error } = await supabase
+          .from("inventory_items")
+          .update({ fridge_target: Math.round(fridge_target) })
+          .eq("id", item_id);
+        if (error) return json({ error: error.message }, 500);
+        return json({ ok: true });
+      }
+
+      case "fridge_mark_refilled": {
+        // Mark items as fully refilled. Either a single item (item_id) or all tracked items.
+        const { item_id, items } = body as { item_id?: string; items?: Array<{ id: string; qty: number }> };
+        if (Array.isArray(items) && items.length > 0) {
+          for (const it of items) {
+            await supabase
+              .from("inventory_items")
+              .update({ fridge_qty: Math.max(0, Math.round(it.qty)) })
+              .eq("id", it.id);
+          }
+          return json({ ok: true });
+        }
+        if (item_id) {
+          const { data: cur } = await supabase
+            .from("inventory_items")
+            .select("fridge_target")
+            .eq("id", item_id)
+            .maybeSingle();
+          if (!cur) return json({ error: "not_found" }, 404);
+          const { error } = await supabase
+            .from("inventory_items")
+            .update({ fridge_qty: Number(cur.fridge_target) || 0 })
+            .eq("id", item_id);
+          if (error) return json({ error: error.message }, 500);
+          return json({ ok: true });
+        }
+        return json({ error: "bad_params" }, 400);
+      }
+
+      case "fridge_set_qty": {
+        const { item_id, fridge_qty } = body as { item_id: string; fridge_qty: number };
+        if (!item_id || typeof fridge_qty !== "number" || fridge_qty < 0) {
+          return json({ error: "bad_params" }, 400);
+        }
+        const { error } = await supabase
+          .from("inventory_items")
+          .update({ fridge_qty: Math.round(fridge_qty) })
+          .eq("id", item_id);
+        if (error) return json({ error: error.message }, 500);
+        return json({ ok: true });
       }
 
       default:
