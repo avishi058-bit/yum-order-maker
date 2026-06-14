@@ -338,7 +338,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "deal-fanta-grape": "drink-fanta-grape", "deal-fanta-exotic": "drink-fanta-exotic",
   "deal-sprite": "drink-sprite", "deal-sprite-zero": "drink-sprite-zero",
   "deal-blu": "drink-blu", "deal-blu-mojito": "drink-blu-mojito", "deal-blu-day": "drink-blu-day",
-  "deal-blu-watermelon": "drink-watermelon",
+  "deal-blu-watermelon": "drink-watermelon", "deal-blu-melon-apple": "drink-blu-melon-apple",
 
   "deal-grapes": "drink-grapes", "deal-oranges": "drink-grapes", "deal-flavored-water": "drink-flavored-water",
   "deal-flavored-water-apple": "drink-flavored-water-apple", "deal-flavored-water-grape": "drink-flavored-water-grape",
