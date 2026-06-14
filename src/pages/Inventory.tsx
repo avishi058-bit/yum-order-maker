@@ -997,21 +997,25 @@ function PurchaseDialog({
   onClose: () => void;
   onConfirm: (qty: number, unit_cost: number, note: string) => Promise<void>;
 }) {
-  const [qty, setQty] = useState("");
+  const box = getBoxSize(item);
+  const [boxes, setBoxes] = useState("");
+  const [units, setUnits] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const qtyNum = Number(qty) || 0;
+  const boxesNum = Number(boxes) || 0;
+  const unitsNum = Number(units) || 0;
+  const qtyNum = box ? boxesNum * box.size + unitsNum : unitsNum;
   const totalNum = Number(totalCost) || 0;
   const unitCost = qtyNum > 0 && totalNum > 0 ? totalNum / qtyNum : 0;
 
-  const quickAmounts: number[] =
+  const quickUnits: number[] =
     item.unit === "g"
       ? [1000, 5000, 10000]
       : item.unit === "ml"
       ? [1000, 5000, 10000]
-      : [12, 24, 48];
+      : box ? [1, 6, 12] : [12, 24, 48];
 
   const submit = async () => {
     if (qtyNum <= 0) {
@@ -1039,31 +1043,66 @@ function PurchaseDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
+          {box && (
+            <div>
+              <Label>כמות ארגזים ({box.size} יח׳ לארגז)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={boxes}
+                onChange={(e) => setBoxes(e.target.value)}
+                placeholder="0"
+                autoFocus
+                className="text-lg h-12 text-center font-bold"
+              />
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {[1, 2, 3, 5, 10].map((q) => (
+                  <Button
+                    key={q}
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    onClick={() => setBoxes(String(q))}
+                  >
+                    {q} ארגזים
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <Label>
-              כמות שנקנתה ({item.unit === "g" ? "גרם" : item.unit === "ml" ? 'מ"ל' : "יחידות"})
+              {box ? "יחידות בודדות נוספות" : "כמות"} ({item.unit === "g" ? "גרם" : item.unit === "ml" ? 'מ"ל' : "יחידות"})
             </Label>
             <Input
               type="number"
               inputMode="decimal"
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-              autoFocus
+              value={units}
+              onChange={(e) => setUnits(e.target.value)}
+              placeholder="0"
+              autoFocus={!box}
+              className="text-lg h-12 text-center font-bold"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
-              {quickAmounts.map((q) => (
+              {quickUnits.map((q) => (
                 <Button
                   key={q}
                   size="sm"
                   variant="outline"
                   className="h-8 text-xs"
-                  onClick={() => setQty(String(q))}
+                  onClick={() => setUnits(String(q))}
                 >
                   {formatQty(q, item.unit)}
                 </Button>
               ))}
             </div>
           </div>
+          {qtyNum > 0 && (
+            <div className="text-sm text-muted-foreground bg-muted/50 rounded p-2 text-center">
+              סה״כ להוספה: <span className="font-bold text-foreground">{formatQty(qtyNum, item.unit)}</span>
+            </div>
+          )}
           <div>
             <Label>מחיר כולל ששילמת (₪) — לא חובה</Label>
             <Input
