@@ -84,6 +84,7 @@ export default function Inventory() {
   const [showCreate, setShowCreate] = useState(false);
   const [wasteFor, setWasteFor] = useState<InventoryItem | null>(null);
   const [purchaseFor, setPurchaseFor] = useState<InventoryItem | null>(null);
+  const [correctionFor, setCorrectionFor] = useState<InventoryItem | null>(null);
   const [showStats, setShowStats] = useState(false);
 
 
