@@ -228,8 +228,10 @@ export default function Inventory() {
                   onAdjust={(d) => handleAdjust(item, d)}
                   onEdit={() => setEditing(item)}
                   onShowLog={() => setShowMovementsFor(item)}
+                  onWaste={() => setWasteFor(item)}
                 />
               ))}
+
             </div>
           </section>
         ))}
