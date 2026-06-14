@@ -316,6 +316,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "beer-carlsberg": "drink-carlsberg", "beer-goldstar": "drink-goldstar",
   "beer-heineken": "drink-heineken", "beer-corona": "drink-corona",
   "beer-hoegaarden": "drink-hoegaarden", "beer-laffe": "drink-laffe", "beer-unfiltered": "drink-unfiltered",
+  "beer-paulaner": "drink-paulaner", "beer-stella": "drink-stella",
   // meal drink options (ItemCustomizer)
   "drink-cola": "drink-cola", "drink-zero": "drink-zero", "drink-fanta": "drink-fanta",
   "drink-fanta-grape": "drink-fanta-grape", "drink-fanta-exotic": "drink-fanta-exotic",
