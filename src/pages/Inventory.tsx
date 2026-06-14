@@ -256,6 +256,7 @@ export default function Inventory() {
                   onShowLog={() => setShowMovementsFor(item)}
                   onWaste={() => setWasteFor(item)}
                   onPurchase={() => setPurchaseFor(item)}
+                  onCorrection={() => setCorrectionFor(item)}
                   onMarkOut={async () => {
                     if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
                     try {
