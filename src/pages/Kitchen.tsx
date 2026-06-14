@@ -66,6 +66,7 @@ const REMOVAL_LABELS: Record<string, string> = (() => {
 
 interface OrderItem {
   id: string;
+  item_id: string | null;
   item_name: string;
   price: number;
   quantity: number;
