@@ -229,9 +229,14 @@ export default function Inventory() {
             {items.length} פריטים · עדכון בלייב
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 ml-1" /> פריט
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowStats(true)}>
+            <BarChart3 className="h-4 w-4 ml-1" /> דוחות
+          </Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 ml-1" /> פריט
+          </Button>
+        </div>
       </header>
 
       <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
@@ -249,6 +254,16 @@ export default function Inventory() {
                   onEdit={() => setEditing(item)}
                   onShowLog={() => setShowMovementsFor(item)}
                   onWaste={() => setWasteFor(item)}
+                  onPurchase={() => setPurchaseFor(item)}
+                  onMarkOut={async () => {
+                    if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
+                    try {
+                      await call("mark_out_of_stock", { item_id: item.id });
+                      toast.success("סומן כנגמר");
+                    } catch (e) {
+                      toast.error(`שגיאה: ${String(e)}`);
+                    }
+                  }}
                 />
               ))}
 
