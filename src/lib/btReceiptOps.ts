@@ -749,16 +749,17 @@ export function buildFridgeRefillOps(items: FridgeRefillLine[]): FastOp[] {
     minute: "2-digit",
   });
 
-  ops.push(asLine("מילוי מקרר", { align: "C", bold: true, size: 36 }));
-  ops.push(asLine(time, { align: "C", bold: false, size: 22 }));
+  ops.push(asLine("מילוי מקרר", { align: "C", bold: true, size: 54 }));
+  ops.push(asLine(time, { align: "C", bold: false, size: 33 }));
   ops.push(sep());
 
   const refill = items.filter((i) => i.needed > 0);
   if (refill.length === 0) {
-    ops.push(asLine("המקרר מלא", { align: "C", bold: true, size: 30 }));
+    ops.push(asLine("המקרר מלא", { align: "C", bold: true, size: 45 }));
   } else {
     for (const r of refill) {
-      ops.push(asLine(`${r.needed} x ${r.name}`, { align: "R", bold: true, size: 34 }));
+      ops.push(asLine(`${r.needed} x ${r.name}`, { align: "R", bold: true, size: 51 }));
+      ops.push(feed(1));
     }
   }
 
