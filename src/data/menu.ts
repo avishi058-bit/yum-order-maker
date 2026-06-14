@@ -348,7 +348,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "deal-laffe": "drink-laffe", "deal-unfiltered": "drink-unfiltered", "deal-guinness": "drink-guinness",
   // family deal drink options (FamilyDealCustomizer)
   "fam-cola": "drink-cola", "fam-zero": "drink-zero", "fam-fanta": "drink-fanta",
-  "fam-sprite": "drink-sprite", "fam-blu": "drink-blu",
+  "fam-sprite": "drink-sprite", "fam-blu": "drink-blu", "fam-blu-melon-apple": "drink-blu-melon-apple",
   "fam-grapes": "drink-grapes", "fam-apples": "drink-apples",
   "fam-flavored-water-apple": "drink-flavored-water-apple", "fam-flavored-water-grape": "drink-flavored-water-grape",
   "fam-water": "water", "fam-soda": "soda",
