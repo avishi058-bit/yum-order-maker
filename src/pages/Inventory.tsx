@@ -13,8 +13,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash } from "lucide-react";
+import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash, BarChart3, ShoppingCart, PackageX } from "lucide-react";
 import { toast } from "sonner";
+import { InventoryStats } from "@/components/InventoryStats";
 
 
 type Preset = { label: string; amount: number };
@@ -30,6 +31,7 @@ type InventoryItem = {
   menu_item_id: string | null;
   sort_order: number;
   notes: string | null;
+  unit_cost: number;
 };
 
 type Movement = {
@@ -46,6 +48,7 @@ const REASON_LABEL: Record<string, string> = {
   manual_add: "הוספה ידנית",
   manual_remove: "הורדה ידנית",
   waste: "פחת / נזרק",
+  purchase: "קנייה",
   order_ready: "הזמנה הושלמה",
   order_cancelled: "החזרה מביטול",
   init: "התחלה",
@@ -80,6 +83,8 @@ export default function Inventory() {
   const [zeroAlertFor, setZeroAlertFor] = useState<InventoryItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [wasteFor, setWasteFor] = useState<InventoryItem | null>(null);
+  const [purchaseFor, setPurchaseFor] = useState<InventoryItem | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
 
   const call = useCallback(
@@ -224,9 +229,14 @@ export default function Inventory() {
             {items.length} פריטים · עדכון בלייב
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 ml-1" /> פריט
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowStats(true)}>
+            <BarChart3 className="h-4 w-4 ml-1" /> דוחות
+          </Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 ml-1" /> פריט
+          </Button>
+        </div>
       </header>
 
       <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
@@ -244,6 +254,16 @@ export default function Inventory() {
                   onEdit={() => setEditing(item)}
                   onShowLog={() => setShowMovementsFor(item)}
                   onWaste={() => setWasteFor(item)}
+                  onPurchase={() => setPurchaseFor(item)}
+                  onMarkOut={async () => {
+                    if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
+                    try {
+                      await call("mark_out_of_stock", { item_id: item.id });
+                      toast.success("סומן כנגמר");
+                    } catch (e) {
+                      toast.error(`שגיאה: ${String(e)}`);
+                    }
+                  }}
                 />
               ))}
 
@@ -339,6 +359,37 @@ export default function Inventory() {
           }}
         />
       )}
+
+      {purchaseFor && (
+        <PurchaseDialog
+          item={purchaseFor}
+          onClose={() => setPurchaseFor(null)}
+          onConfirm={async (qty, unit_cost, note) => {
+            try {
+              await call("record_purchase", {
+                item_id: purchaseFor.id,
+                qty,
+                unit_cost: unit_cost || undefined,
+                note: note || null,
+              });
+              toast.success(`נרשמה קנייה`);
+              setPurchaseFor(null);
+            } catch (e) {
+              toast.error(`שגיאה: ${String(e)}`);
+            }
+          }}
+        />
+      )}
+
+      {showStats && (
+        <InventoryStats
+          onClose={() => setShowStats(false)}
+          loadStats={async (from, to) => {
+            const data = await call("stats", { from, to });
+            return data;
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -352,12 +403,16 @@ function ItemCard({
   onEdit,
   onShowLog,
   onWaste,
+  onPurchase,
+  onMarkOut,
 }: {
   item: InventoryItem;
   onAdjust: (delta: number) => void;
   onEdit: () => void;
   onShowLog: () => void;
   onWaste: () => void;
+  onPurchase: () => void;
+  onMarkOut: () => void;
 }) {
 
   const isLow =
@@ -377,11 +432,14 @@ function ItemCard({
       <div className="flex items-start justify-between mb-2 gap-2">
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{item.name}</div>
-          {item.low_threshold > 0 && (
-            <div className="text-xs text-muted-foreground">
-              סף: {formatQty(Number(item.low_threshold), item.unit)}
-            </div>
-          )}
+          <div className="text-xs text-muted-foreground flex gap-2 flex-wrap">
+            {item.low_threshold > 0 && (
+              <span>סף: {formatQty(Number(item.low_threshold), item.unit)}</span>
+            )}
+            {Number(item.unit_cost) > 0 && (
+              <span>₪{Number(item.unit_cost).toFixed(2)}/יח׳</span>
+            )}
+          </div>
         </div>
         <div
           className={`text-lg font-bold whitespace-nowrap ${
@@ -411,6 +469,26 @@ function ItemCard({
         <Button
           size="sm"
           variant="ghost"
+          className="h-8 px-2 text-blue-600 hover:bg-blue-600/10"
+          onClick={onPurchase}
+          title="רשום קנייה"
+        >
+          <ShoppingCart className="h-4 w-4" />
+        </Button>
+        {!isZero && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-orange-600 hover:bg-orange-600/10"
+            onClick={onMarkOut}
+            title="נגמר עכשיו (יירשם כפחת)"
+          >
+            <PackageX className="h-4 w-4" />
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
           className="h-8 px-2 text-destructive hover:bg-destructive/10"
           onClick={onWaste}
           title="פחת / נזרק לפח"
@@ -427,6 +505,7 @@ function ItemCard({
     </div>
   );
 }
+
 
 
 function EditItemDialog({
@@ -446,6 +525,7 @@ function EditItemDialog({
   const [lowThreshold, setLowThreshold] = useState(String(item.low_threshold));
   const [menuItemId, setMenuItemId] = useState(item.menu_item_id ?? "");
   const [presetsJson, setPresetsJson] = useState(JSON.stringify(item.presets, null, 2));
+  const [unitCost, setUnitCost] = useState(String(item.unit_cost ?? 0));
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
@@ -467,6 +547,7 @@ function EditItemDialog({
         low_threshold: Number(lowThreshold) || 0,
         menu_item_id: menuItemId || null,
         presets,
+        unit_cost: Number(unitCost) || 0,
       });
     } catch (e) {
       toast.error(`שגיאה: ${String(e)}`);
@@ -503,6 +584,16 @@ function EditItemDialog({
                 <option value="ml">מ״ל</option>
               </select>
             </div>
+          </div>
+          <div>
+            <Label>מחיר ליחידה (₪) — לחישוב שווי בלאי וקניות</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
+              placeholder="0"
+            />
           </div>
           <div>
             <Label>סף התראה (low)</Label>
@@ -780,6 +871,121 @@ function WasteDialog({
           <Button variant="destructive" onClick={submit} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 ml-1 animate-spin" />}
             רשום פחת
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PurchaseDialog({
+  item,
+  onClose,
+  onConfirm,
+}: {
+  item: InventoryItem;
+  onClose: () => void;
+  onConfirm: (qty: number, unit_cost: number, note: string) => Promise<void>;
+}) {
+  const [qty, setQty] = useState("");
+  const [totalCost, setTotalCost] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const qtyNum = Number(qty) || 0;
+  const totalNum = Number(totalCost) || 0;
+  const unitCost = qtyNum > 0 && totalNum > 0 ? totalNum / qtyNum : 0;
+
+  const quickAmounts: number[] =
+    item.unit === "g"
+      ? [1000, 5000, 10000]
+      : item.unit === "ml"
+      ? [1000, 5000, 10000]
+      : [12, 24, 48];
+
+  const submit = async () => {
+    if (qtyNum <= 0) {
+      toast.error("הכנס כמות");
+      return;
+    }
+    setSaving(true);
+    try {
+      await onConfirm(qtyNum, unitCost, note.trim());
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent dir="rtl" className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-blue-600" />
+            רישום קנייה — {item.name}
+          </DialogTitle>
+          <DialogDescription>
+            הוספת מלאי + מחיר כדי שנדע לחשב שווי קניות וצריכה.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>
+              כמות שנקנתה ({item.unit === "g" ? "גרם" : item.unit === "ml" ? 'מ"ל' : "יחידות"})
+            </Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              autoFocus
+            />
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {quickAmounts.map((q) => (
+                <Button
+                  key={q}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={() => setQty(String(q))}
+                >
+                  {formatQty(q, item.unit)}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label>מחיר כולל ששילמת (₪) — לא חובה</Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={totalCost}
+              onChange={(e) => setTotalCost(e.target.value)}
+              placeholder="0"
+            />
+            {unitCost > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                מחיר ליחידה: ₪{unitCost.toFixed(2)}
+              </p>
+            )}
+          </div>
+          <div>
+            <Label>הערה</Label>
+            <Input
+              placeholder="ספק / חשבונית..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>
+            ביטול
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 ml-1 animate-spin" />}
+            רשום קנייה
           </Button>
         </DialogFooter>
       </DialogContent>
