@@ -83,6 +83,8 @@ export default function Inventory() {
   const [zeroAlertFor, setZeroAlertFor] = useState<InventoryItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [wasteFor, setWasteFor] = useState<InventoryItem | null>(null);
+  const [purchaseFor, setPurchaseFor] = useState<InventoryItem | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
 
   const call = useCallback(
