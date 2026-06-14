@@ -1245,6 +1245,35 @@ const Kitchen = () => {
         }))
         .filter((i) => i.needed > 0);
 
+      if (refill.length === 0) {
+        toast.success("המקרר מלא ✅");
+        return;
+      }
+
+      // Route through the same print pipeline as other bons.
+      if (isPrinterConnected()) {
+        printBluetoothFridgeRefill(refill).catch((err) => {
+          console.warn("[Kitchen] BT fridge print failed", err);
+          toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+        });
+        return;
+      }
+      if (printMode === "bt") {
+        toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+        return;
+      }
+      if (printMode === "agent") {
+        printAgentFridgeRefill(refill).then((info) => {
+          if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+        });
+        return;
+      }
+      if (printMode === "rawbt") {
+        printRawBTFridgeRefill(refill).then((info) => setRawbtDebug(info));
+        return;
+      }
+
+      // Browser fallback — same as round summary fallback path.
       const w = window.open("", "_blank", "width=380,height=600");
       if (!w) {
         toast.error("חלון ההדפסה נחסם");
@@ -1266,12 +1295,11 @@ const Kitchen = () => {
   table { width: 100%; border-collapse: collapse; font-size: 18px; }
   td { padding: 6px 4px; border-bottom: 1px dashed #555; }
   td.qty { width: 56px; font-size: 26px; font-weight: 900; text-align: center; background: #000; color: #fff; border-radius: 6px; }
-  .empty { text-align: center; padding: 40px 0; font-size: 16px; }
 </style>
 </head><body>
 <h1>🧊 מילוי מקרר</h1>
 <div class="sub">${dateStr}</div>
-${refill.length ? `<table>${rows}</table>` : `<div class="empty">המקרר מלא ✅</div>`}
+<table>${rows}</table>
 <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),300);};</script>
 </body></html>`);
       w.document.close();
