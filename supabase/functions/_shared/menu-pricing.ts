@@ -110,6 +110,7 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-blu-mojito", name: "בלו מוחיטו", price: 0 },
   { id: "drink-blu-day", name: "בלו דיי", price: 0 },
   { id: "drink-blu-watermelon", name: "בלו אבטיח", price: 0 },
+  { id: "drink-blu-melon-apple", name: "בלו מלון תפוח", price: 0 },
   { id: "drink-grapes", name: "ענבים (בקבוק)", price: 0 },
   { id: "drink-oranges", name: "תפוזים (בקבוק)", price: 0 },
 
