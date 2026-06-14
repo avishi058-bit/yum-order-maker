@@ -110,6 +110,7 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-blu-mojito", name: "בלו מוחיטו", price: 0 },
   { id: "drink-blu-day", name: "בלו דיי", price: 0 },
   { id: "drink-blu-watermelon", name: "בלו אבטיח", price: 0 },
+  { id: "drink-blu-melon-apple", name: "בלו מלון תפוח", price: 0 },
   { id: "drink-grapes", name: "ענבים (בקבוק)", price: 0 },
   { id: "drink-oranges", name: "תפוזים (בקבוק)", price: 0 },
 
@@ -120,6 +121,7 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-laffe", name: "לאפ בראון", price: 12 },
   { id: "drink-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "drink-paulaner", name: "פאולנר", price: 12 },
+  { id: "drink-stella", name: "סטלה", price: 12 },
   { id: "drink-hoegaarden", name: "הוגרדן", price: 12 },
   { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15 },
   { id: "drink-guinness", name: "גינס", price: 12 },
@@ -143,6 +145,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-blu-mojito", name: "בלו מוחיטו", price: 0 },
   { id: "deal-blu-day", name: "בלו דיי", price: 0 },
   { id: "deal-blu-watermelon", name: "בלו אבטיח", price: 0 },
+  { id: "deal-blu-melon-apple", name: "בלו מלון תפוח", price: 0 },
 
   { id: "deal-grapes", name: "ענבים (בקבוק)", price: 2 },
   { id: "deal-oranges", name: "תפוזים (בקבוק)", price: 2 },
@@ -163,6 +166,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-fanta", name: "פאנטה", price: 0 },
   { id: "fam-sprite", name: "ספרייט", price: 0 },
   { id: "fam-blu", name: "בלו", price: 0 },
+  { id: "fam-blu-melon-apple", name: "בלו מלון תפוח", price: 0 },
   { id: "fam-grapes", name: "ענבים", price: 0 },
   { id: "fam-apples", name: "תפוזים", price: 0 },
   { id: "fam-water", name: "מים (בקבוק)", price: 0 },
