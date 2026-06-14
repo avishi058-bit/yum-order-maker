@@ -684,6 +684,10 @@ export type Database = {
         Returns: boolean
       }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
+      pull_fridge_for_menu_id: {
+        Args: { p_menu_id: string; p_order_id: string; p_qty: number }
+        Returns: undefined
+      }
       reping_kitchen_for_pending_orders: { Args: never; Returns: undefined }
     }
     Enums: {
