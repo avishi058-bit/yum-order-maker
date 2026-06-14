@@ -31,6 +31,7 @@ type InventoryItem = {
   menu_item_id: string | null;
   sort_order: number;
   notes: string | null;
+  unit_cost: number;
 };
 
 type Movement = {
