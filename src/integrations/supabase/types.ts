@@ -83,6 +83,155 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_access_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          last_used_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          low_threshold: number
+          menu_item_id: string | null
+          name: string
+          notes: string | null
+          presets: Json
+          quantity: number
+          sort_order: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          low_threshold?: number
+          menu_item_id?: string | null
+          name: string
+          notes?: string | null
+          presets?: Json
+          quantity?: number
+          sort_order?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          low_threshold?: number
+          menu_item_id?: string | null
+          name?: string
+          notes?: string | null
+          presets?: Json
+          quantity?: number
+          sort_order?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          inventory_item_id: string
+          note: string | null
+          order_id: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          inventory_item_id: string
+          note?: string | null
+          order_id?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          inventory_item_id?: string
+          note?: string | null
+          order_id?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_recipes: {
+        Row: {
+          amount_per_unit: number
+          created_at: string
+          id: string
+          inventory_item_id: string
+          menu_item_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_per_unit?: number
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          menu_item_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_per_unit?: number
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          menu_item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_recipes_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_availability: {
         Row: {
           available: boolean
