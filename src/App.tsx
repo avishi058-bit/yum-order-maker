@@ -89,6 +89,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/inventory/:token" element={<Inventory />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
