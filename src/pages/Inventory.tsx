@@ -403,12 +403,16 @@ function ItemCard({
   onEdit,
   onShowLog,
   onWaste,
+  onPurchase,
+  onMarkOut,
 }: {
   item: InventoryItem;
   onAdjust: (delta: number) => void;
   onEdit: () => void;
   onShowLog: () => void;
   onWaste: () => void;
+  onPurchase: () => void;
+  onMarkOut: () => void;
 }) {
 
   const isLow =
@@ -428,11 +432,14 @@ function ItemCard({
       <div className="flex items-start justify-between mb-2 gap-2">
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{item.name}</div>
-          {item.low_threshold > 0 && (
-            <div className="text-xs text-muted-foreground">
-              סף: {formatQty(Number(item.low_threshold), item.unit)}
-            </div>
-          )}
+          <div className="text-xs text-muted-foreground flex gap-2 flex-wrap">
+            {item.low_threshold > 0 && (
+              <span>סף: {formatQty(Number(item.low_threshold), item.unit)}</span>
+            )}
+            {Number(item.unit_cost) > 0 && (
+              <span>₪{Number(item.unit_cost).toFixed(2)}/יח׳</span>
+            )}
+          </div>
         </div>
         <div
           className={`text-lg font-bold whitespace-nowrap ${
@@ -462,6 +469,26 @@ function ItemCard({
         <Button
           size="sm"
           variant="ghost"
+          className="h-8 px-2 text-blue-600 hover:bg-blue-600/10"
+          onClick={onPurchase}
+          title="רשום קנייה"
+        >
+          <ShoppingCart className="h-4 w-4" />
+        </Button>
+        {!isZero && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-orange-600 hover:bg-orange-600/10"
+            onClick={onMarkOut}
+            title="נגמר עכשיו (יירשם כפחת)"
+          >
+            <PackageX className="h-4 w-4" />
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="ghost"
           className="h-8 px-2 text-destructive hover:bg-destructive/10"
           onClick={onWaste}
           title="פחת / נזרק לפח"
@@ -478,6 +505,7 @@ function ItemCard({
     </div>
   );
 }
+
 
 
 function EditItemDialog({
