@@ -731,3 +731,39 @@ export function buildPhoneQrOps(order: ReceiptOrder): FastOp[] {
   ops.push({ kind: "cut" });
   return ops;
 }
+
+// ============================================================
+// FRIDGE REFILL BON
+// ============================================================
+export interface FridgeRefillLine {
+  name: string;
+  needed: number;
+}
+
+export function buildFridgeRefillOps(items: FridgeRefillLine[]): FastOp[] {
+  const ops: FastOp[] = [];
+  const time = new Date().toLocaleString("he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  ops.push(asLine("מילוי מקרר", { align: "C", bold: true, size: 36 }));
+  ops.push(asLine(time, { align: "C", bold: false, size: 22 }));
+  ops.push(sep());
+
+  const refill = items.filter((i) => i.needed > 0);
+  if (refill.length === 0) {
+    ops.push(asLine("המקרר מלא", { align: "C", bold: true, size: 30 }));
+  } else {
+    for (const r of refill) {
+      ops.push(asLine(`${r.needed} x ${r.name}`, { align: "R", bold: true, size: 34 }));
+    }
+  }
+
+  ops.push(feed(2));
+  ops.push({ kind: "cut" });
+  return ops;
+}
+
