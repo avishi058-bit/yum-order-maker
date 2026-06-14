@@ -331,6 +331,7 @@ const Kitchen = () => {
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
