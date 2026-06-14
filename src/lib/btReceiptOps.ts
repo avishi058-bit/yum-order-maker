@@ -759,7 +759,7 @@ export function buildFridgeRefillOps(items: FridgeRefillLine[]): FastOp[] {
   } else {
     for (const r of refill) {
       ops.push(asLine(`${r.needed} x ${r.name}`, { align: "R", bold: true, size: 51 }));
-      ops.push(feed(1));
+      ops.push(feed(2));
     }
   }
 
