@@ -84,6 +84,7 @@ export default function Inventory() {
   const [showCreate, setShowCreate] = useState(false);
   const [wasteFor, setWasteFor] = useState<InventoryItem | null>(null);
   const [purchaseFor, setPurchaseFor] = useState<InventoryItem | null>(null);
+  const [correctionFor, setCorrectionFor] = useState<InventoryItem | null>(null);
   const [showStats, setShowStats] = useState(false);
 
 
@@ -255,6 +256,7 @@ export default function Inventory() {
                   onShowLog={() => setShowMovementsFor(item)}
                   onWaste={() => setWasteFor(item)}
                   onPurchase={() => setPurchaseFor(item)}
+                  onCorrection={() => setCorrectionFor(item)}
                   onMarkOut={async () => {
                     if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
                     try {
@@ -380,6 +382,34 @@ export default function Inventory() {
           }}
         />
       )}
+      {correctionFor && (
+        <CorrectionDialog
+          item={correctionFor}
+          onClose={() => setCorrectionFor(null)}
+          onConfirm={async (qty, note) => {
+            try {
+              await call("adjust", {
+                item_id: correctionFor.id,
+                delta: -qty,
+                reason: "manual_remove",
+                note: note || "תיקון ידני",
+              });
+              setItems((prev) =>
+                prev.map((i) =>
+                  i.id === correctionFor.id
+                    ? { ...i, quantity: Number(i.quantity) - qty }
+                    : i,
+                ),
+              );
+              toast.success("עודכן");
+              setCorrectionFor(null);
+            } catch (e) {
+              toast.error(`שגיאה: ${String(e)}`);
+            }
+          }}
+        />
+      )}
+
 
       {showStats && (
         <InventoryStats
@@ -404,6 +434,7 @@ function ItemCard({
   onShowLog,
   onWaste,
   onPurchase,
+  onCorrection,
   onMarkOut,
 }: {
   item: InventoryItem;
@@ -412,6 +443,7 @@ function ItemCard({
   onShowLog: () => void;
   onWaste: () => void;
   onPurchase: () => void;
+  onCorrection: () => void;
   onMarkOut: () => void;
 }) {
 
@@ -471,9 +503,18 @@ function ItemCard({
           variant="ghost"
           className="h-8 px-2 text-blue-600 hover:bg-blue-600/10"
           onClick={onPurchase}
-          title="רשום קנייה"
+          title="רשום קנייה / הוסף למלאי"
         >
           <ShoppingCart className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 px-2 text-slate-600 hover:bg-slate-600/10"
+          onClick={onCorrection}
+          title="הורד כמות (תיקון — לא נספר כפחת)"
+        >
+          <Minus className="h-4 w-4" />
         </Button>
         {!isZero && (
           <Button
@@ -986,6 +1027,101 @@ function PurchaseDialog({
           <Button onClick={submit} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 ml-1 animate-spin" />}
             רשום קנייה
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function CorrectionDialog({
+  item,
+  onClose,
+  onConfirm,
+}: {
+  item: InventoryItem;
+  onClose: () => void;
+  onConfirm: (amount: number, note: string) => Promise<void>;
+}) {
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const quickAmounts: number[] =
+    item.unit === "g"
+      ? [100, 250, 500, 1000]
+      : item.unit === "ml"
+      ? [100, 250, 500, 1000]
+      : [1, 2, 5, 10];
+
+  const submit = async () => {
+    const n = Number(amount);
+    if (!n || n <= 0) {
+      toast.error("הכנס כמות חיובית");
+      return;
+    }
+    setSaving(true);
+    try {
+      await onConfirm(n, note.trim());
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent dir="rtl" className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Minus className="h-5 w-5" />
+            הורדת כמות — {item.name}
+          </DialogTitle>
+          <DialogDescription>
+            תיקון של המלאי (לא ייספר כפחת ולא ישפיע על הסטטיסטיקות).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>
+              כמות להורדה ({item.unit === "g" ? "גרם" : item.unit === "ml" ? 'מ"ל' : "יחידות"})
+            </Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              autoFocus
+            />
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {quickAmounts.map((q) => (
+                <Button
+                  key={q}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={() => setAmount(String(q))}
+                >
+                  {formatQty(q, item.unit)}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label>הערה (לא חובה)</Label>
+            <Input
+              placeholder="תיקון ספירה, טעות..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>
+            ביטול
+          </Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 ml-1 animate-spin" />}
+            הורד מהמלאי
           </Button>
         </DialogFooter>
       </DialogContent>
