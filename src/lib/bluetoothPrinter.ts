@@ -981,6 +981,11 @@ class ByteBuf {
 
 type Mono = { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number };
 
+const NATIVE_FONT_PX = 20;
+const NATIVE_LINE_DOTS = 30;
+const NATIVE_DOUBLE_FONT_PX = 40;
+const NATIVE_DOUBLE_LINE_DOTS = 60;
+
 // Combine several per-line monos into one full-width bitmap so the whole block
 // is sent as ONE GS v 0 raster command instead of N separate commands.
 // offsetX from each mono is honoured by placing it at the right byte offset
@@ -1098,6 +1103,21 @@ function _blankMono(width: number, rows: number): Mono {
   return { bytes: new Uint8Array(widthBytes * rows), widthBytes, height: rows, offsetX: 0 };
 }
 
+function _countTrailingBlankRows(mono: Mono): number {
+  const { bytes, widthBytes, height } = mono;
+  let rows = 0;
+  for (let y = height - 1; y >= 0; y--) {
+    const off = y * widthBytes;
+    let blank = true;
+    for (let i = 0; i < widthBytes; i++) {
+      if (bytes[off + i] !== 0) { blank = false; break; }
+    }
+    if (!blank) break;
+    rows++;
+  }
+  return rows;
+}
+
 function _renderNativeLineToMono(
   text: string,
   opts: { width: number; px: number; lineHeight: number; bold: boolean; align: "L" | "C" | "R" },
@@ -1110,7 +1130,12 @@ function _renderNativeLineToMono(
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, width, lineHeight);
   ctx.fillStyle = "#000";
-  ctx.font = `${bold ? "900" : "500"} ${px}px "Courier New", monospace`;
+  let fontPx = px;
+  ctx.font = `${bold ? "900" : "500"} ${fontPx}px "Courier New", monospace`;
+  while (fontPx > 8 && ctx.measureText(text).width > width - 4) {
+    fontPx -= 1;
+    ctx.font = `${bold ? "900" : "500"} ${fontPx}px "Courier New", monospace`;
+  }
   ctx.textBaseline = "middle";
   if (align === "R") {
     ctx.textAlign = "right";
