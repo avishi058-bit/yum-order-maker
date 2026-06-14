@@ -72,6 +72,34 @@ function formatDelta(d: number, unit: string): string {
   return `${sign}${formatQty(d, unit)}`;
 }
 
+// Extracts the "box size" from presets — the largest positive preset amount
+// whose label looks like a box/package (ארגז/חבילה/קרטון). Returns null if none.
+function getBoxSize(item: InventoryItem): { size: number; label: string } | null {
+  if (!item.presets?.length) return null;
+  const boxPresets = item.presets.filter(
+    (p) =>
+      p.amount > 1 &&
+      /ארגז|חבילה|קרטון|ארגיז/.test(p.label),
+  );
+  if (!boxPresets.length) return null;
+  const biggest = boxPresets.reduce((a, b) => (a.amount >= b.amount ? a : b));
+  return { size: biggest.amount, label: biggest.label };
+}
+
+// Top-level grouping of inventory categories into themed sections.
+const CATEGORY_GROUPS: { key: string; label: string; cats: string[] }[] = [
+  { key: "drinks", label: "שתיה", cats: ["בירות", "פחיות", "בקבוקים", "שתיה"] },
+  { key: "frozen", label: "קפואים", cats: ["בשר", "צ׳יפס", "לחם", "קפואים"] },
+];
+
+function groupKeyForCategory(cat: string): string {
+  for (const g of CATEGORY_GROUPS) {
+    if (g.cats.includes(cat)) return g.key;
+  }
+  return "other";
+}
+
+
 export default function Inventory() {
   const { token } = useParams<{ token: string }>();
   const [authState, setAuthState] = useState<"checking" | "ok" | "bad">("checking");
@@ -155,14 +183,31 @@ export default function Inventory() {
   }, [authState]);
 
   const grouped = useMemo(() => {
-    const map = new Map<string, InventoryItem[]>();
+    // Two-level grouping: super-group (drinks/frozen/other) → category → items
+    const superMap = new Map<string, Map<string, InventoryItem[]>>();
     for (const item of items) {
-      const arr = map.get(item.category) ?? [];
+      const gk = groupKeyForCategory(item.category);
+      const catMap = superMap.get(gk) ?? new Map<string, InventoryItem[]>();
+      const arr = catMap.get(item.category) ?? [];
       arr.push(item);
-      map.set(item.category, arr);
+      catMap.set(item.category, arr);
+      superMap.set(gk, catMap);
     }
-    return Array.from(map.entries());
+    const orderedKeys = [
+      ...CATEGORY_GROUPS.map((g) => g.key),
+      "other",
+    ];
+    return orderedKeys
+      .filter((k) => superMap.has(k))
+      .map((k) => ({
+        key: k,
+        label:
+          CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
+          "אחר",
+        categories: Array.from(superMap.get(k)!.entries()),
+      }));
   }, [items]);
+
 
   const handleAdjust = async (item: InventoryItem, delta: number) => {
     // Optimistic update — instant visual feedback
@@ -241,37 +286,44 @@ export default function Inventory() {
       </header>
 
       <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
-        {grouped.map(([category, list]) => (
-          <section key={category}>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2 px-1">
-              {category}
+        {grouped.map((group) => (
+          <section key={group.key} className="space-y-3">
+            <h2 className="text-base font-bold border-b pb-1 px-1">
+              {group.label}
             </h2>
-            <div className="space-y-2">
-              {list.map((item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  onAdjust={(d) => handleAdjust(item, d)}
-                  onEdit={() => setEditing(item)}
-                  onShowLog={() => setShowMovementsFor(item)}
-                  onWaste={() => setWasteFor(item)}
-                  onPurchase={() => setPurchaseFor(item)}
-                  onCorrection={() => setCorrectionFor(item)}
-                  onMarkOut={async () => {
-                    if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
-                    try {
-                      await call("mark_out_of_stock", { item_id: item.id });
-                      toast.success("סומן כנגמר");
-                    } catch (e) {
-                      toast.error(`שגיאה: ${String(e)}`);
-                    }
-                  }}
-                />
-              ))}
-
-            </div>
+            {group.categories.map(([category, list]) => (
+              <div key={category}>
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-1">
+                  {category}
+                </h3>
+                <div className="space-y-2">
+                  {list.map((item) => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      onAdjust={(d) => handleAdjust(item, d)}
+                      onEdit={() => setEditing(item)}
+                      onShowLog={() => setShowMovementsFor(item)}
+                      onWaste={() => setWasteFor(item)}
+                      onPurchase={() => setPurchaseFor(item)}
+                      onCorrection={() => setCorrectionFor(item)}
+                      onMarkOut={async () => {
+                        if (!confirm(`לסמן את "${item.name}" כנגמר עכשיו? יתרת המלאי תירשם כפחת.`)) return;
+                        try {
+                          await call("mark_out_of_stock", { item_id: item.id });
+                          toast.success("סומן כנגמר");
+                        } catch (e) {
+                          toast.error(`שגיאה: ${String(e)}`);
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
         ))}
+
         {items.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
             אין פריטים. הוסף פריט ראשון בכפתור למעלה.
@@ -473,14 +525,31 @@ function ItemCard({
             )}
           </div>
         </div>
-        <div
-          className={`text-lg font-bold whitespace-nowrap ${
-            isZero ? "text-destructive" : isLow ? "text-yellow-700 dark:text-yellow-400" : ""
-          }`}
-        >
-          {formatQty(Number(item.quantity), item.unit)}
-          {isZero && <Badge variant="destructive" className="mr-2">אזל</Badge>}
+        <div className="text-right whitespace-nowrap">
+          <div
+            className={`text-lg font-bold ${
+              isZero ? "text-destructive" : isLow ? "text-yellow-700 dark:text-yellow-400" : ""
+            }`}
+          >
+            {formatQty(Number(item.quantity), item.unit)}
+            {isZero && <Badge variant="destructive" className="mr-2">אזל</Badge>}
+          </div>
+          {(() => {
+            const box = getBoxSize(item);
+            const qty = Number(item.quantity);
+            if (!box || qty <= 0) return null;
+            const boxes = Math.floor(qty / box.size);
+            const remainder = qty - boxes * box.size;
+            if (boxes < 1) return null;
+            return (
+              <div className="text-[11px] text-muted-foreground">
+                {boxes} {boxes === 1 ? "ארגז" : "ארגזים"}
+                {remainder > 0 && ` + ${formatQty(remainder, item.unit)}`}
+              </div>
+            );
+          })()}
         </div>
+
       </div>
 
       <div className="flex flex-wrap gap-1.5">
