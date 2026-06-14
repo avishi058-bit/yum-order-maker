@@ -329,6 +329,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "drink-corona": "drink-corona", "drink-carlsberg": "drink-carlsberg",
   "drink-laffe": "drink-laffe", "drink-unfiltered": "drink-unfiltered", "drink-guinness": "drink-guinness",
   "drink-weiss": "drink-weiss", "drink-paulaner": "drink-paulaner", "drink-hoegaarden": "drink-hoegaarden",
+  "drink-stella": "drink-stella",
 
   "drink-water": "water", "drink-soda": "soda",
   "drink-flavored-water-apple": "drink-flavored-water-apple", "drink-flavored-water-grape": "drink-flavored-water-grape",
