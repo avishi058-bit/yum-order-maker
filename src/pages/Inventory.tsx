@@ -525,14 +525,31 @@ function ItemCard({
             )}
           </div>
         </div>
-        <div
-          className={`text-lg font-bold whitespace-nowrap ${
-            isZero ? "text-destructive" : isLow ? "text-yellow-700 dark:text-yellow-400" : ""
-          }`}
-        >
-          {formatQty(Number(item.quantity), item.unit)}
-          {isZero && <Badge variant="destructive" className="mr-2">אזל</Badge>}
+        <div className="text-right whitespace-nowrap">
+          <div
+            className={`text-lg font-bold ${
+              isZero ? "text-destructive" : isLow ? "text-yellow-700 dark:text-yellow-400" : ""
+            }`}
+          >
+            {formatQty(Number(item.quantity), item.unit)}
+            {isZero && <Badge variant="destructive" className="mr-2">אזל</Badge>}
+          </div>
+          {(() => {
+            const box = getBoxSize(item);
+            const qty = Number(item.quantity);
+            if (!box || qty <= 0) return null;
+            const boxes = Math.floor(qty / box.size);
+            const remainder = qty - boxes * box.size;
+            if (boxes < 1) return null;
+            return (
+              <div className="text-[11px] text-muted-foreground">
+                {boxes} {boxes === 1 ? "ארגז" : "ארגזים"}
+                {remainder > 0 && ` + ${formatQty(remainder, item.unit)}`}
+              </div>
+            );
+          })()}
         </div>
+
       </div>
 
       <div className="flex flex-wrap gap-1.5">
