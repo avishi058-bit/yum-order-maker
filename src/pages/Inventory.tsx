@@ -79,6 +79,8 @@ export default function Inventory() {
   const [showMovementsFor, setShowMovementsFor] = useState<InventoryItem | null>(null);
   const [zeroAlertFor, setZeroAlertFor] = useState<InventoryItem | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [wasteFor, setWasteFor] = useState<InventoryItem | null>(null);
+
 
   const call = useCallback(
     async (action: string, payload: Record<string, unknown> = {}) => {
