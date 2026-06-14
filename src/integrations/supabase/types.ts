@@ -689,6 +689,7 @@ export type Database = {
         Returns: undefined
       }
       reping_kitchen_for_pending_orders: { Args: never; Returns: undefined }
+      resolve_fridge_menu_ids: { Args: { p_value: string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "kitchen"
