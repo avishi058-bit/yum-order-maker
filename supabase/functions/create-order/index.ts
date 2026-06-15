@@ -133,6 +133,8 @@ interface PricedLine {
   mealSideName: string | null;
   mealDrinkName: string | null;
   dealDrinks: Array<{ optionId: string; name: string }> | null;
+  /** Per-burger paid toppings inside a deal, resolved to Hebrew names. */
+  dealBurgerToppingNames: string[][] | null;
 }
 
 function priceCart(
@@ -206,6 +208,26 @@ function priceCart(
       }
     }
 
+    // Per-burger paid toppings inside a deal: charge each topping and resolve
+    // to Hebrew names for storage (so the kitchen receipt + fridge trigger see them).
+    let dealBurgerToppingNames: string[][] | null = null;
+    if (item.dealBurgers?.length) {
+      if (menuItem.category !== "deal") {
+        return { ok: false, error: `תוספות לדיל לא מותרות על ${menuItem.name}` };
+      }
+      dealBurgerToppingNames = [];
+      for (const b of item.dealBurgers) {
+        const namesForBurger: string[] = [];
+        for (const tId of b.toppings ?? []) {
+          const t = TOPPINGS_PRICING[tId];
+          if (!t) return { ok: false, error: `תוספת לא ידועה בדיל: ${tId}` };
+          unit += t.price;
+          namesForBurger.push(t.name);
+        }
+        dealBurgerToppingNames.push(namesForBurger);
+      }
+    }
+
     total += unit * item.quantity;
     lines.push({
       itemId: item.itemId,
@@ -217,6 +239,7 @@ function priceCart(
       mealSideName,
       mealDrinkName,
       dealDrinks: dealDrinkNames,
+      dealBurgerToppingNames,
     });
   }
 
