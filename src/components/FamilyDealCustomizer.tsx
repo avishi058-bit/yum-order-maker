@@ -539,7 +539,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                       : "bg-primary text-primary-foreground shadow-primary/20"
                   }`}
                 >
-                  {isLastStep ? "הוספה להזמנה 🍔" : "המשך"}
+                  {isLastStep ? "הוספה להזמנה 🍔" : isToppingsStep && currentToppings.length === 0 ? "דלג" : "המשך"}
                 </motion.button>
               </div>
             </motion.div>
