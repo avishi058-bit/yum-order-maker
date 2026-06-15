@@ -7,6 +7,9 @@ import { computeCartItemTotal } from "@/lib/cartPricing";
 
 export interface DealBurgerConfig {
   removals: string[];
+  /** Optional per-burger paid toppings (extra cost added on top of the deal price).
+   *  Stored as topping ids in the cart; sent to server which prices + stores names. */
+  toppings?: string[];
   name?: string;
 }
 
@@ -164,17 +167,32 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
                     {/* Show deal details */}
                     {item.dealBurgers && (
                       <div className="mb-2 space-y-1">
-                        {item.dealBurgers.map((burger, i) => (
-                          <div key={i} className={`${isKiosk ? 'text-lg' : 'text-xs'} text-muted-foreground`}>
-                            🍔 המבורגר {i + 1}
-                            {burger.name && <span className="font-bold text-foreground mr-1">({burger.name})</span>}
-                            {burger.removals.length > 0 && (
-                              <span className="mr-1">
-                                — {getRemovalNames(burger.removals).join(", ")}
-                              </span>
-                            )}
-                          </div>
-                        ))}
+                        {item.dealBurgers.map((burger, i) => {
+                          const burgerToppings = (burger.toppings ?? [])
+                            .map((tId) => {
+                              const t = findTopping(tId);
+                              return t ? { name: t.name, price: t.price } : null;
+                            })
+                            .filter(Boolean) as Array<{ name: string; price: number }>;
+                          return (
+                            <div key={i} className={`${isKiosk ? 'text-lg' : 'text-xs'} text-muted-foreground`}>
+                              <div>
+                                🍔 המבורגר {i + 1}
+                                {burger.name && <span className="font-bold text-foreground mr-1">({burger.name})</span>}
+                                {burger.removals.length > 0 && (
+                                  <span className="mr-1">
+                                    — {getRemovalNames(burger.removals).join(", ")}
+                                  </span>
+                                )}
+                              </div>
+                              {burgerToppings.length > 0 && (
+                                <div className={`mr-5 ${isKiosk ? 'text-base' : 'text-[11px]'} text-primary`}>
+                                  + {burgerToppings.map((t) => `${t.name} (+₪${t.price})`).join(", ")}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                         <div className={`${isKiosk ? 'text-lg' : 'text-xs'} text-muted-foreground`}>🍟 צ׳יפס ענק</div>
                         {item.dealDrinks?.map((drink, i) => (
                           <div key={i} className={`${isKiosk ? 'text-lg' : 'text-xs'} text-muted-foreground`}>
