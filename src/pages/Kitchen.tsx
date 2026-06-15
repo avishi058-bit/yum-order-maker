@@ -2158,6 +2158,9 @@ const Kitchen = () => {
                                     </>
                                   );
                                 })()}
+                                {Array.isArray(b.toppings) && b.toppings.length > 0 && (
+                                  <p className="font-extrabold text-green-400">+ {b.toppings.join(", ")}</p>
+                                )}
                               </div>
                             ))}
                             <p>+ צ׳יפס ענק</p>

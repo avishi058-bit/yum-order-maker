@@ -73,9 +73,15 @@ const ItemDetails = ({ item }: { item: CartItem }) => {
       const removalNames = (b.removals ?? [])
         .filter((r) => !r.startsWith("doneness-"))
         .map((r) => removalDisplayNames[r] || r);
+      const toppingNames = (b.toppings ?? [])
+        .map((tId) => {
+          const t = findTopping(tId);
+          return t ? t.name : null;
+        })
+        .filter(Boolean) as string[];
       const label = `המבורגר ${i + 1}${b.name ? ` (${b.name})` : ""}${
         removalNames.length ? ` — בלי ${removalNames.join(", ")}` : ""
-      }`;
+      }${toppingNames.length ? ` · + ${toppingNames.join(", ")}` : ""}`;
       lines.push(label);
     });
     if (item.dealDrinks && item.dealDrinks.length > 0) {

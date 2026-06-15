@@ -172,6 +172,9 @@ export function buildKitchenBonLines(order: ReceiptOrder): PrintLine[] {
       it.deal_burgers.forEach((b: any, i: number) => {
         lines.push({ text: `${i + 1}. ${b.name || ""}`, align: "right" });
         if (b.removals?.length > 0) lines.push({ text: `- ${b.removals.join(", ")}`, align: "right" });
+        if (Array.isArray(b.toppings) && b.toppings.length > 0) {
+          lines.push({ text: `+ ${b.toppings.join(", ")}`, align: "right" });
+        }
       });
     }
     if (Array.isArray(it.deal_drinks)) {
