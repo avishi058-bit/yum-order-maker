@@ -74,6 +74,8 @@ const CartItemSchema = z.object({
         name: z.string().max(120).optional(),
         removals: z.array(z.string().max(64)).max(20).optional(),
         removalNames: z.array(z.string().max(120)).max(20).optional(),
+        // Per-burger paid toppings inside a deal (ids).
+        toppings: z.array(z.string().max(64)).max(20).optional(),
       })
     )
     .max(10)
