@@ -274,6 +274,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             removalNames: (b.removals ?? [])
               .map((rId) => removalDisplayNames[rId] || rId)
               .filter(Boolean) as string[],
+            toppings: b.toppings ?? [],
           }))
         : null,
       dealDrinks: item.dealDrinks
@@ -349,8 +350,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         const descParts: string[] = [];
 
         if (item.dealBurgers) {
-          // Deals: price already includes drink extras baked in
-          descParts.push("דיל");
+          // Deals: base price already includes drink extras baked in.
+          // Add per-burger paid toppings on top (charged extra over the deal price).
+          const dealToppingsCost = item.dealBurgers.reduce((s, b) => {
+            return s + (b.toppings ?? []).reduce((ss, tId) => {
+              const t = findTopping(tId);
+              return ss + (t?.price || 0);
+            }, 0);
+          }, 0);
+          unitPrice += dealToppingsCost;
+          descParts.push(dealToppingsCost > 0 ? `דיל (כולל תוספות +₪${dealToppingsCost})` : "דיל");
         } else {
           // Toppings cost
           const toppingsCost = item.toppings.reduce((s, tId) => {
