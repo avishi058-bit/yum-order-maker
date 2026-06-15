@@ -381,12 +381,9 @@ const Index = () => {
   const freeSauces = burgerCount * 3;
 
   const getTotal = () => {
-    let base = cart.reduce((sum, item) => {
-      if (item.dealBurgers) {
-        return sum + item.price * item.quantity;
-      }
-      return sum + computeCartItemTotal(item);
-    }, 0);
+    // computeCartItemTotal already handles deals (base + per-burger toppings)
+    // AND regular items, so we use it for everything.
+    let base = cart.reduce((sum, item) => sum + computeCartItemTotal(item), 0);
     // Add extra sauce cost
     if (dineIn === false && selectedSauces.length > 0) {
       const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
