@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { drinkToAvailabilityId } from "@/data/menu";
+import { drinkToAvailabilityId, toppings as allToppings } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -19,7 +19,7 @@ interface FamilyDealCustomizerProps {
   isAvailable?: (id: string) => boolean;
 }
 
-type Step = "burger-1" | "burger-2" | "burger-3" | "burger-4" | "burger-5" | "drinks-ask" | "drink-count" | `drink-${number}`;
+type Step = `burger-${number}` | `toppings-${number}` | "drinks-ask" | "drink-count" | `drink-${number}`;
 
 const burgerStepLabels: Record<string, string> = {
   "burger-1": "מנה ראשונה מתוך חמש",
@@ -27,6 +27,11 @@ const burgerStepLabels: Record<string, string> = {
   "burger-3": "מנה שלישית מתוך חמש",
   "burger-4": "מנה רביעית מתוך חמש",
   "burger-5": "מנה חמישית מתוך חמש",
+  "toppings-1": "תוספות למנה הראשונה",
+  "toppings-2": "תוספות למנה השנייה",
+  "toppings-3": "תוספות למנה השלישית",
+  "toppings-4": "תוספות למנה הרביעית",
+  "toppings-5": "תוספות למנה החמישית",
   "drinks-ask": "רוצים להוסיף שתייה?",
   "drink-count": "כמה שתיות?",
 };
