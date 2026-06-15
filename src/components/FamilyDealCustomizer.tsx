@@ -287,7 +287,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
               </div>
 
               <AnimatePresence mode="wait">
-                {burgerSteps.includes(step) && (
+                {isBurgerStep && (
                   <motion.div
                     key={step}
                     initial={{ opacity: 0, x: 50 }}
@@ -327,6 +327,63 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                     </div>
                   </motion.div>
                 )}
+
+                {isToppingsStep && currentBurgerIndex >= 0 && (
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    className="flex-1 overflow-y-auto"
+                  >
+                    <div className="px-5 py-4">
+                      <h3 className="text-lg font-bold text-right mb-1">
+                        תוספות למנה ה{["ראשונה", "שנייה", "שלישית", "רביעית", "חמישית"][currentBurgerIndex]}
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-right mb-4">
+                        אופציונלי — בתשלום נוסף על מחיר הדיל
+                      </p>
+                      <div className="space-y-0">
+                        {allToppings.map((t) => {
+                          const active = currentToppings.includes(t.id);
+                          const unavailable = isAvailable ? !isAvailable(t.id) : false;
+                          return (
+                            <button
+                              key={t.id}
+                              disabled={unavailable}
+                              onClick={() => !unavailable && toggleBurgerTopping(t.id)}
+                              className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                                    unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  }`}
+                                >
+                                  {active && !unavailable && (
+                                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-primary-foreground text-xs font-bold">✓</motion.span>
+                                  )}
+                                </div>
+                                {unavailable ? (
+                                  <span className="text-xs text-destructive">(אזל)</span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">+₪{t.price}</span>
+                                )}
+                              </div>
+                              <span className={`font-medium text-sm text-right ${unavailable ? "line-through text-muted-foreground" : ""}`}>{t.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {currentToppingsTotal > 0 && (
+                        <p className="text-sm font-bold text-primary text-left mt-3">
+                          תוספות: +₪{currentToppingsTotal}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
 
                 {step === "drinks-ask" && (
                   <motion.div
