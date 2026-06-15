@@ -387,10 +387,13 @@ Deno.serve(async (req: Request) => {
         ? original.removalNames
         : original.removals ?? [];
     const dealBurgers = original.dealBurgers
-      ? original.dealBurgers.map((b) => ({
+      ? original.dealBurgers.map((b, bi) => ({
           name: b.name,
           removals:
             b.removalNames && b.removalNames.length ? b.removalNames : b.removals ?? [],
+          // Per-burger paid toppings — stored as Hebrew names so the kitchen
+          // receipt prints them and the fridge trigger resolves them by name.
+          toppings: line.dealBurgerToppingNames?.[bi] ?? [],
         }))
       : null;
     return {
