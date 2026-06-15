@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { drinkToAvailabilityId } from "@/data/menu";
+import { drinkToAvailabilityId, toppings as allToppings } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -19,7 +19,7 @@ interface FamilyDealCustomizerProps {
   isAvailable?: (id: string) => boolean;
 }
 
-type Step = "burger-1" | "burger-2" | "burger-3" | "burger-4" | "burger-5" | "drinks-ask" | "drink-count" | `drink-${number}`;
+type Step = `burger-${number}` | `toppings-${number}` | "drinks-ask" | "drink-count" | `drink-${number}`;
 
 const burgerStepLabels: Record<string, string> = {
   "burger-1": "מנה ראשונה מתוך חמש",
@@ -27,6 +27,11 @@ const burgerStepLabels: Record<string, string> = {
   "burger-3": "מנה שלישית מתוך חמש",
   "burger-4": "מנה רביעית מתוך חמש",
   "burger-5": "מנה חמישית מתוך חמש",
+  "toppings-1": "תוספות למנה הראשונה",
+  "toppings-2": "תוספות למנה השנייה",
+  "toppings-3": "תוספות למנה השלישית",
+  "toppings-4": "תוספות למנה הרביעית",
+  "toppings-5": "תוספות למנה החמישית",
   "drinks-ask": "רוצים להוסיף שתייה?",
   "drink-count": "כמה שתיות?",
 };
@@ -69,12 +74,23 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   const [burgerIngredients, setBurgerIngredients] = useState<IngredientState[]>(
     Array.from({ length: 5 }, () => defaultRegularIngredientState())
   );
+  const [burgerToppings, setBurgerToppings] = useState<string[][]>(
+    Array.from({ length: 5 }, () => [])
+  );
   const [wantsDrinks, setWantsDrinks] = useState<boolean | null>(null);
   const [drinkCount, setDrinkCount] = useState(0);
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>([]);
 
   const burgerSteps = ["burger-1", "burger-2", "burger-3", "burger-4", "burger-5"];
-  const currentBurgerIndex = burgerSteps.indexOf(step);
+  const toppingsSteps = ["toppings-1", "toppings-2", "toppings-3", "toppings-4", "toppings-5"];
+  const mainSteps = burgerSteps.flatMap((b, i) => [b, toppingsSteps[i]]);
+  const isBurgerStep = burgerSteps.includes(step);
+  const isToppingsStep = toppingsSteps.includes(step);
+  const currentBurgerIndex = isBurgerStep
+    ? burgerSteps.indexOf(step)
+    : isToppingsStep
+    ? toppingsSteps.indexOf(step)
+    : -1;
   const isDrinkStep = step.startsWith("drink-") && step !== "drink-count";
   const currentDrinkIndex = isDrinkStep ? parseInt(step.split("-")[1]) - 1 : 0;
 
@@ -107,6 +123,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
     setStep("burger-1");
     setBurgerNames(Array.from({ length: 5 }, () => ""));
     setBurgerIngredients(Array.from({ length: 5 }, () => defaultRegularIngredientState()));
+    setBurgerToppings(Array.from({ length: 5 }, () => []));
     setWantsDrinks(null);
     setDrinkCount(0);
     setSelectedDrinks([]);
@@ -119,7 +136,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const toggleIngredient = (ingId: string) => {
     const idx = currentBurgerIndex;
-    if (idx < 0) return;
+    if (idx < 0 || !isBurgerStep) return;
     setBurgerIngredients((prev) => {
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [ingId]: !updated[idx][ingId] };
@@ -127,9 +144,22 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
     });
   };
 
+  const toggleBurgerTopping = (tId: string) => {
+    const idx = currentBurgerIndex;
+    if (idx < 0 || !isToppingsStep) return;
+    setBurgerToppings((prev) => {
+      const updated = prev.map((arr) => [...arr]);
+      updated[idx] = updated[idx].includes(tId)
+        ? updated[idx].filter((x) => x !== tId)
+        : [...updated[idx], tId];
+      return updated;
+    });
+  };
+
   const finishDeal = (drinks: DealDrinkChoice[]) => {
     const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, i) => ({
       removals: ingredientStateToRemovals(state),
+      toppings: burgerToppings[i] ?? [],
       name: burgerNames[i]?.trim() || undefined,
     }));
     onConfirm(cleanBurgers, drinks);
@@ -138,10 +168,10 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
 
   const handleNext = () => {
-    if (burgerSteps.includes(step)) {
-      const idx = burgerSteps.indexOf(step);
-      if (idx < 4) {
-        setStep(burgerSteps[idx + 1]);
+    if (isBurgerStep || isToppingsStep) {
+      const idx = mainSteps.indexOf(step);
+      if (idx < mainSteps.length - 1) {
+        setStep(mainSteps[idx + 1]);
       } else {
         setStep("drinks-ask");
       }
@@ -177,7 +207,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   };
 
   const getProgressSteps = () => {
-    const steps = [...burgerSteps];
+    const steps = [...mainSteps];
     if (wantsDrinks && drinkCount > 0) {
       for (let i = 1; i <= drinkCount; i++) steps.push(`drink-${i}`);
     } else {
@@ -188,6 +218,13 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const progressSteps = getProgressSteps();
   const currentProgressIndex = progressSteps.indexOf(step);
+  
+  const currentToppings = isToppingsStep && currentBurgerIndex >= 0 ? burgerToppings[currentBurgerIndex] : [];
+  const currentToppingsTotal = currentToppings.reduce((s, tId) => {
+    const t = allToppings.find((x) => x.id === tId);
+    return s + (t?.price || 0);
+  }, 0);
+
   
 
   if (!open) return null;
@@ -250,7 +287,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
               </div>
 
               <AnimatePresence mode="wait">
-                {burgerSteps.includes(step) && (
+                {isBurgerStep && (
                   <motion.div
                     key={step}
                     initial={{ opacity: 0, x: 50 }}
@@ -290,6 +327,63 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                     </div>
                   </motion.div>
                 )}
+
+                {isToppingsStep && currentBurgerIndex >= 0 && (
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    className="flex-1 overflow-y-auto"
+                  >
+                    <div className="px-5 py-4">
+                      <h3 className="text-lg font-bold text-right mb-1">
+                        תוספות למנה ה{["ראשונה", "שנייה", "שלישית", "רביעית", "חמישית"][currentBurgerIndex]}
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-right mb-4">
+                        אופציונלי — בתשלום נוסף על מחיר הדיל
+                      </p>
+                      <div className="space-y-0">
+                        {allToppings.map((t) => {
+                          const active = currentToppings.includes(t.id);
+                          const unavailable = isAvailable ? !isAvailable(t.id) : false;
+                          return (
+                            <button
+                              key={t.id}
+                              disabled={unavailable}
+                              onClick={() => !unavailable && toggleBurgerTopping(t.id)}
+                              className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                                    unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  }`}
+                                >
+                                  {active && !unavailable && (
+                                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-primary-foreground text-xs font-bold">✓</motion.span>
+                                  )}
+                                </div>
+                                {unavailable ? (
+                                  <span className="text-xs text-destructive">(אזל)</span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">+₪{t.price}</span>
+                                )}
+                              </div>
+                              <span className={`font-medium text-sm text-right ${unavailable ? "line-through text-muted-foreground" : ""}`}>{t.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {currentToppingsTotal > 0 && (
+                        <p className="text-sm font-bold text-primary text-left mt-3">
+                          תוספות: +₪{currentToppingsTotal}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
 
                 {step === "drinks-ask" && (
                   <motion.div
@@ -445,7 +539,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                       : "bg-primary text-primary-foreground shadow-primary/20"
                   }`}
                 >
-                  {isLastStep ? "הוספה להזמנה 🍔" : "המשך"}
+                  {isLastStep ? "הוספה להזמנה 🍔" : isToppingsStep && currentToppings.length === 0 ? "דלג" : "המשך"}
                 </motion.button>
               </div>
             </motion.div>

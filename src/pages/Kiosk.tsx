@@ -323,10 +323,9 @@ const Kiosk = () => {
   const freeSauces = burgerCount * 3;
 
   const getTotal = () => {
-    let base = cart.reduce((sum, item) => {
-      if (item.dealBurgers) return sum + item.price * item.quantity;
-      return sum + computeCartItemTotal(item);
-    }, 0);
+    // computeCartItemTotal handles both deals (base + per-burger toppings)
+    // and regular items.
+    let base = cart.reduce((sum, item) => sum + computeCartItemTotal(item), 0);
     if (!dineIn && selectedSauces.length > 0) {
       const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
       base += Math.max(0, totalSauceQty - freeSauces);

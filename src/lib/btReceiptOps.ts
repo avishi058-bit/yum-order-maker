@@ -466,6 +466,12 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           ops.push(asLine(`- ${bRem.join(", ")}`, { align: "R", bold: true, size: 24 }));
           ops.push(feed(LINE_GAP));
         }
+        const bTops = (b as any).toppings;
+        if (Array.isArray(bTops) && bTops.length > 0) {
+          ops.push(asLine(`+ ${bTops.join(", ")}`, { align: "R", bold: true, size: 24 }));
+          ops.push(feed(LINE_GAP));
+        }
+
 
       });
       ops.push(feed(1.0));

@@ -22,7 +22,19 @@ export const shouldChargeMealUpgrade = (item: CartItem): boolean => {
 
 /** Single source of truth for per-line cart pricing (matches server logic). */
 export const computeCartItemUnitPrice = (item: CartItem): number => {
-  if (item.dealBurgers) return item.price; // deal price already final
+  if (item.dealBurgers) {
+    // Deal: base (drinks already baked-in) + per-burger paid toppings.
+    const dealToppingsCost = item.dealBurgers.reduce((sum, b) => {
+      return (
+        sum +
+        (b.toppings ?? []).reduce((s, tId) => {
+          const t = findTopping(tId);
+          return s + (t?.price || 0);
+        }, 0)
+      );
+    }, 0);
+    return item.price + dealToppingsCost;
+  }
   const toppingsCost = item.toppings.reduce((sum, tId) => {
     const t = findTopping(tId);
     return sum + (t?.price || 0);

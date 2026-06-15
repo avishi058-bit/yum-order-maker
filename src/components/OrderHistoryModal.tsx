@@ -237,6 +237,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
                                       <li key={i}>
                                         {b.name || "המבורגר"}
                                         {b.removals?.length ? ` — ${b.removals.join(", ")}` : ""}
+                                        {Array.isArray(b.toppings) && b.toppings.length > 0 ? ` · + ${b.toppings.join(", ")}` : ""}
                                       </li>
                                     ))}
                                   </ul>

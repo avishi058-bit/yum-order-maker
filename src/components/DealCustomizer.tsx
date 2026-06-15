@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { dealDrinkOptions, drinkToAvailabilityId } from "@/data/menu";
+import { dealDrinkOptions, drinkToAvailabilityId, toppings as allToppings } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -19,16 +19,38 @@ interface DealCustomizerProps {
   isAvailable?: (id: string) => boolean;
 }
 
-type Step = "burger-1" | "burger-2" | "burger-3" | "drink-1" | "drink-2" | "drink-3";
+type Step =
+  | "burger-1" | "toppings-1"
+  | "burger-2" | "toppings-2"
+  | "burger-3" | "toppings-3"
+  | "drink-1" | "drink-2" | "drink-3";
+
+const STEP_ORDER: Step[] = [
+  "burger-1", "toppings-1",
+  "burger-2", "toppings-2",
+  "burger-3", "toppings-3",
+  "drink-1", "drink-2", "drink-3",
+];
 
 const stepLabels: Record<Step, string> = {
   "burger-1": "מנה ראשונה מתוך שלוש",
+  "toppings-1": "תוספות למנה הראשונה",
   "burger-2": "מנה שנייה מתוך שלוש",
+  "toppings-2": "תוספות למנה השנייה",
   "burger-3": "מנה שלישית מתוך שלוש",
+  "toppings-3": "תוספות למנה השלישית",
   "drink-1": "שתייה 1 מתוך 3",
   "drink-2": "שתייה 2 מתוך 3",
   "drink-3": "שתייה 3 מתוך 3",
 };
+
+const burgerStepIndex = (step: Step): number =>
+  step === "burger-1" || step === "toppings-1" ? 0 :
+  step === "burger-2" || step === "toppings-2" ? 1 :
+  step === "burger-3" || step === "toppings-3" ? 2 : -1;
+
+const drinkStepIndex = (step: Step): number =>
+  step === "drink-1" ? 0 : step === "drink-2" ? 1 : step === "drink-3" ? 2 : -1;
 
 const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomizerProps) => {
   const alcoholConsent = useAlcoholConsent();
@@ -49,11 +71,14 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
     defaultRegularIngredientState(),
     defaultRegularIngredientState(),
   ]);
+  const [burgerToppings, setBurgerToppings] = useState<string[][]>([[], [], []]);
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
-  const currentBurgerIndex = step === "burger-1" ? 0 : step === "burger-2" ? 1 : 2;
-  const isDrinkStep = step === "drink-1" || step === "drink-2" || step === "drink-3";
-  const currentDrinkIndex = step === "drink-1" ? 0 : step === "drink-2" ? 1 : 2;
+  const currentBurgerIndex = burgerStepIndex(step);
+  const isBurgerStep = step.startsWith("burger-");
+  const isToppingsStep = step.startsWith("toppings-");
+  const isDrinkStep = step.startsWith("drink-");
+  const currentDrinkIndex = drinkStepIndex(step);
 
   const isBeerDrinkId = (drinkId: string) => {
     const drink = dealDrinkOptions.find((option) => option.id === drinkId);
@@ -76,7 +101,6 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
       );
       return;
     }
-
     setDrink(drinkIndex, drinkId);
   };
 
@@ -88,6 +112,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
       defaultRegularIngredientState(),
       defaultRegularIngredientState(),
     ]);
+    setBurgerToppings([[], [], []]);
     setSelectedDrinks(["", "", ""]);
   };
 
@@ -98,6 +123,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
 
   const toggleIngredient = (ingId: string) => {
     const idx = currentBurgerIndex;
+    if (idx < 0) return;
     setBurgerIngredients((prev) => {
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [ingId]: !updated[idx][ingId] };
@@ -105,35 +131,49 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
     });
   };
 
+  const toggleBurgerTopping = (tId: string) => {
+    const idx = currentBurgerIndex;
+    if (idx < 0) return;
+    setBurgerToppings((prev) => {
+      const updated = prev.map((arr) => [...arr]);
+      updated[idx] = updated[idx].includes(tId)
+        ? updated[idx].filter((x) => x !== tId)
+        : [...updated[idx], tId];
+      return updated;
+    });
+  };
+
   const handleNext = () => {
-    if (step === "burger-1") setStep("burger-2");
-    else if (step === "burger-2") setStep("burger-3");
-    else if (step === "burger-3") setStep("drink-1");
-    else if (step === "drink-1") {
-      if (selectedDrinks[0] === "") return;
-      setStep("drink-2");
-    } else if (step === "drink-2") {
-      if (selectedDrinks[1] === "") return;
-      setStep("drink-3");
-    } else if (step === "drink-3") {
-      if (selectedDrinks[2] === "") return;
+    const i = STEP_ORDER.indexOf(step);
+    const next = STEP_ORDER[i + 1];
+    if (isDrinkStep && selectedDrinks[currentDrinkIndex] === "") return;
+    if (step === "drink-3") {
       const drinks: DealDrinkChoice[] = selectedDrinks.map((dId) => {
         const drink = dealDrinkOptions.find((d) => d.id === dId)!;
         return { id: drink.id, name: drink.name, extraCost: drink.price };
       });
-      const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, i) => ({
+      const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, idx) => ({
         removals: ingredientStateToRemovals(state),
-        name: burgerNames[i]?.trim() || undefined,
+        toppings: burgerToppings[idx] ?? [],
+        name: burgerNames[idx]?.trim() || undefined,
       }));
       onConfirm(cleanBurgers, drinks);
       resetState();
+      return;
     }
+    setStep(next);
   };
 
   const softDrinks = dealDrinkOptions.filter((d) => d.category === "soft");
   const beerDrinks = dealDrinkOptions.filter((d) => d.category === "beer");
 
   if (!open) return null;
+
+  const currentToppings = currentBurgerIndex >= 0 ? burgerToppings[currentBurgerIndex] : [];
+  const currentToppingsTotal = currentToppings.reduce((s, tId) => {
+    const t = allToppings.find((x) => x.id === tId);
+    return s + (t?.price || 0);
+  }, 0);
 
   return (
     <>
@@ -171,14 +211,12 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
               </div>
 
               <div className="px-5 pt-3 pb-1">
-                <div className="flex gap-1.5">
-                  {(["burger-1", "burger-2", "burger-3", "drink-1", "drink-2", "drink-3"] as Step[]).map((s, i) => (
+                <div className="flex gap-1">
+                  {STEP_ORDER.map((s, i) => (
                     <div
                       key={s}
                       className={`h-1.5 flex-1 rounded-full transition-colors ${
-                        (["burger-1", "burger-2", "burger-3", "drink-1", "drink-2", "drink-3"] as Step[]).indexOf(step) >= i
-                          ? "bg-primary"
-                          : "bg-muted"
+                        STEP_ORDER.indexOf(step) >= i ? "bg-primary" : "bg-muted"
                       }`}
                     />
                   ))}
@@ -186,7 +224,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
               </div>
 
               <AnimatePresence mode="wait">
-                {!isDrinkStep ? (
+                {isBurgerStep && (
                   <motion.div
                     key={step}
                     initial={{ opacity: 0, x: 50 }}
@@ -223,7 +261,65 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
                       />
                     </div>
                   </motion.div>
-                ) : (
+                )}
+
+                {isToppingsStep && currentBurgerIndex >= 0 && (
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    className="flex-1 overflow-y-auto"
+                  >
+                    <div className="px-5 py-4">
+                      <h3 className="text-lg font-bold text-right mb-1">
+                        תוספות למנה ה{["ראשונה", "שנייה", "שלישית"][currentBurgerIndex]}
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-right mb-4">
+                        אופציונלי — בתשלום נוסף על מחיר הדיל
+                      </p>
+                      <div className="space-y-0">
+                        {allToppings.map((t) => {
+                          const active = currentToppings.includes(t.id);
+                          const unavailable = isAvailable ? !isAvailable(t.id) : false;
+                          return (
+                            <button
+                              key={t.id}
+                              disabled={unavailable}
+                              onClick={() => !unavailable && toggleBurgerTopping(t.id)}
+                              className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                                    unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
+                                  }`}
+                                >
+                                  {active && !unavailable && (
+                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-primary-foreground text-xs font-bold">✓</motion.div>
+                                  )}
+                                </div>
+                                {unavailable ? (
+                                  <span className="text-xs text-destructive">(אזל)</span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">+₪{t.price}</span>
+                                )}
+                              </div>
+                              <span className={`font-medium text-sm text-right ${unavailable ? "line-through text-muted-foreground" : ""}`}>{t.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {currentToppingsTotal > 0 && (
+                        <p className="text-sm font-bold text-primary text-left mt-3">
+                          תוספות: +₪{currentToppingsTotal}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {isDrinkStep && (
                   <motion.div
                     key={step}
                     initial={{ opacity: 0, x: 50 }}
@@ -314,7 +410,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
                       : "bg-primary text-primary-foreground shadow-primary/20"
                   }`}
                 >
-                  {step === "drink-3" ? "הוספה להזמנה 🍔" : "המשך"}
+                  {step === "drink-3" ? "הוספה להזמנה 🍔" : isToppingsStep && currentToppings.length === 0 ? "דלג" : "המשך"}
                 </motion.button>
               </div>
             </motion.div>
