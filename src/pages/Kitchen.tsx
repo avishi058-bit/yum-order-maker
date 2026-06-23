@@ -1224,6 +1224,41 @@ const Kitchen = () => {
     printRoundChefSummary(activeRoundOrders);
   };
 
+  // Print chef summary for a single order — reuses the exact same transport
+  // pipeline as the round-chef summary so it goes out through the same printer.
+  const printChefForOrder = (order: Order) => {
+    const single: RoundOrder[] = [{
+      id: order.id,
+      order_number: order.order_number,
+      customer_name: order.customer_name,
+      created_at: order.created_at,
+      status: order.status,
+      order_items: order.order_items,
+    }];
+    if (isPrinterConnected()) {
+      printBluetoothRoundChef(single).catch((err) => {
+        console.warn("[Kitchen] BT chef print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      return;
+    }
+    if (printMode === "agent") {
+      printAgentRoundChef(single).then((info) => {
+        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+      });
+      return;
+    }
+    if (printMode === "rawbt") {
+      printRawBTRoundChef(single).then((info) => setRawbtDebug(info));
+      return;
+    }
+    printRoundChefSummary(single);
+  };
+
   const printFridgeRefillBon = async () => {
     try {
       const [itemsRes, availRes] = await Promise.all([
