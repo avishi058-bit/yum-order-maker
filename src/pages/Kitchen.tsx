@@ -2080,6 +2080,13 @@ const Kitchen = () => {
                     >
                       <Printer size={16} />
                     </button>
+                    <button
+                      onClick={() => printChefForOrder(order)}
+                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
+                      title="הדפס סיכום לטבח להזמנה זו"
+                    >
+                      <ChefHat size={16} />
+                    </button>
                     {(order.status === "new" || order.status === "preparing") && (
                       <button
                         onClick={() => setEditingOrder(order)}
