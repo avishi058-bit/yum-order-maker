@@ -53,13 +53,27 @@ const CustomerGreeting = ({ onOpenHistory }: CustomerGreetingProps) => {
 
   return (
     <div className="relative" dir="rtl">
-      <button
-        onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-      >
-        <User size={16} />
-        <span className="text-sm font-semibold">שלום {firstName} 😊</span>
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+        >
+          <User size={16} />
+          <span className="text-sm font-semibold">שלום {firstName} 😊</span>
+        </button>
+
+        {onOpenHistory && (
+          <button
+            onClick={() => { onOpenHistory(); setShowMenu(false); cancelEdit(); }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors border border-border shadow-sm"
+            aria-label="ההזמנות שלי"
+          >
+            <Package size={16} />
+            <span className="text-sm font-bold">ההזמנות שלי</span>
+          </button>
+        )}
+      </div>
+
 
       <AnimatePresence>
         {showMenu && (
