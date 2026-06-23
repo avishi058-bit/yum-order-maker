@@ -237,9 +237,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Map a cart item to the create-order Edge Function payload.
   // Includes Hebrew names for removals/dealBurger removals so they're stored as-is.
   const buildServerItem = (item: CartItem) => {
+    // Keep doneness-* entries as-is — the kitchen receipt + chef summary read
+    // them directly via the "doneness-" prefix. Stripping them here caused the
+    // bon to always fall back to "MW" (or show nothing) regardless of choice.
     const removalNames = item.removals
-      .filter(rId => !rId.startsWith("doneness-"))
-      .map((rId) => removalDisplayNames[rId] || rId)
+      .map((rId) => (rId.startsWith("doneness-") ? rId : removalDisplayNames[rId] || rId))
       .filter(Boolean) as string[];
     // `id` may be a unique cart key like `classic-1776430479457`. Use `menuItemId` as the
     // canonical pricing id; fall back to `id` for legacy carts that don't have it.
