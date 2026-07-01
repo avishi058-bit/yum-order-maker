@@ -340,6 +340,14 @@ const Kitchen = () => {
   // kitchen view doesn't re-render and scroll-jump under the user.
   const pauseRefreshRef = useRef(false);
   const pendingRefreshRef = useRef(false);
+  // Suppress background refetches for a short window after a local mutation.
+  // Without this, our own status click triggers a realtime event that re-fetches
+  // every order + items and re-renders the whole grid, which makes the button
+  // feel frozen for hundreds of ms on a busy tablet.
+  const localMutationUntilRef = useRef<number>(0);
+  // Track orders currently being mutated to disable buttons + show feedback,
+  // and to prevent double-clicks that queue up multiple updates.
+  const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
     pauseRefreshRef.current = open;
@@ -596,6 +604,12 @@ const Kitchen = () => {
       pendingRefreshRef.current = true;
       return;
     }
+    // Skip if we just performed a local mutation — the optimistic update
+    // already applied the change, and re-fetching everything would jank the UI.
+    if (Date.now() < localMutationUntilRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
     void fetchOrders();
   }, [fetchOrders]);
 
@@ -786,6 +800,10 @@ const Kitchen = () => {
   };
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
+    // Guard against double-clicks — if this order is already being updated,
+    // ignore extra taps until the DB round-trip finishes.
+    if (pendingStatusIds.has(orderId)) return;
+
     const updateData: any = { status: newStatus };
     if (newStatus === "preparing" && prepMinutes) {
       updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
@@ -802,12 +820,25 @@ const Kitchen = () => {
       ),
     );
     setShowTimePicker(null);
+    setPendingStatusIds((s) => {
+      const n = new Set(s);
+      n.add(orderId);
+      return n;
+    });
+    // Suppress the self-triggered realtime refetch for ~1.5s.
+    localMutationUntilRef.current = Date.now() + 1500;
 
     const { data, error } = await supabase
       .from("orders")
       .update(updateData)
       .eq("id", orderId)
       .select();
+
+    setPendingStatusIds((s) => {
+      const n = new Set(s);
+      n.delete(orderId);
+      return n;
+    });
 
     if (error) {
       console.error("[Kitchen] Failed to update order status:", error);
@@ -2244,10 +2275,12 @@ const Kitchen = () => {
                 <div className="px-4 py-3 border-t border-border flex items-center justify-between">
                   <span className="font-bold text-lg text-primary">₪{order.total}</span>
                   <div className="flex gap-2">
+                    {(() => { const isPending = pendingStatusIds.has(order.id); return (<>
                     {order.status === "new" && (
                       <button
                         onClick={() => updateStatus(order.id, "cancelled")}
-                        className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        disabled={isPending}
+                        className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-60 disabled:cursor-wait"
                       >
                         ביטול
                       </button>
@@ -2255,7 +2288,8 @@ const Kitchen = () => {
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
-                        className="px-4 py-3 rounded-lg bg-muted text-foreground text-base font-bold hover:bg-secondary transition-colors active:scale-95"
+                        disabled={isPending}
+                        className="px-4 py-3 rounded-lg bg-muted text-foreground text-base font-bold hover:bg-secondary transition-colors active:scale-95 disabled:opacity-60 disabled:cursor-wait"
                         title="החזר להכנה"
                       >
                         ↩ חזור להכנה
@@ -2266,14 +2300,16 @@ const Kitchen = () => {
                         order.order_source === "kiosk" ? (
                           <button
                             onClick={() => updateStatus(order.id, "preparing")}
-                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
+                            disabled={isPending}
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
                           >
-                            קבל הזמנה ✅
+                            {isPending ? "מעדכן..." : "קבל הזמנה ✅"}
                           </button>
                         ) : (
                           <button
                             onClick={() => setShowTimePicker(order.id)}
-                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
+                            disabled={isPending}
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
                           >
                             התחל הכנה 👨‍🍳
                           </button>
@@ -2281,12 +2317,14 @@ const Kitchen = () => {
                       ) : (
                         <button
                           onClick={() => updateStatus(order.id, next)}
-                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
+                          disabled={isPending}
+                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
                         >
-                          {next === "ready" ? "מוכנה ✅" : "הושלמה ✅"}
+                          {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : "הושלמה ✅")}
                         </button>
                       )
                     )}
+                    </>); })()}
                   </div>
                 </div>
 
