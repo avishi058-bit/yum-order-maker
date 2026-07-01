@@ -224,6 +224,7 @@ export const excludedToppingsByItem: Record<string, string[]> = {
   "avishai": ["egg"],
   "crazy-smash": ["maple", "hot-pepper-jam"],
   "napoleon": ["vegan-blue-cheese", "onion-jam"],
+  "haf-mifsha": ["extra-patty"],
 };
 
 export const mealUpgrade = {
