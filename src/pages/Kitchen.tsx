@@ -604,6 +604,12 @@ const Kitchen = () => {
       pendingRefreshRef.current = true;
       return;
     }
+    // Skip if we just performed a local mutation — the optimistic update
+    // already applied the change, and re-fetching everything would jank the UI.
+    if (Date.now() < localMutationUntilRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
     void fetchOrders();
   }, [fetchOrders]);
 
