@@ -269,12 +269,18 @@ export async function pairPrinter(): Promise<void> {
 export async function tryAutoReconnect(): Promise<boolean> {
   if (!isWebBluetoothSupported()) return false;
   const savedId = (() => { try { return localStorage.getItem(STORAGE_KEY); } catch { return null; } })();
-  if (!savedId) return false;
   const bt: any = (navigator as any).bluetooth;
   if (typeof bt.getDevices !== "function") return false;
   try {
     const devices: BluetoothDevice[] = await bt.getDevices();
-    const dev = devices.find((d) => d.id === savedId);
+    // Prefer the previously-paired device by id, otherwise auto-pick any
+    // already-permitted device whose name looks like our printer
+    // ("Printer..."). This makes the kitchen tablet reconnect on its own
+    // without the operator ever pressing "חבר מדפסת" again.
+    let dev = savedId ? devices.find((d) => d.id === savedId) : undefined;
+    if (!dev) {
+      dev = devices.find((d) => (d.name || "").toLowerCase().startsWith("printer"));
+    }
     if (!dev) return false;
     await connectDevice(dev);
     return true;
