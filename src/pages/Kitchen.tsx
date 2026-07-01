@@ -2275,10 +2275,12 @@ const Kitchen = () => {
                 <div className="px-4 py-3 border-t border-border flex items-center justify-between">
                   <span className="font-bold text-lg text-primary">₪{order.total}</span>
                   <div className="flex gap-2">
+                    {(() => { const isPending = pendingStatusIds.has(order.id); return (<>
                     {order.status === "new" && (
                       <button
                         onClick={() => updateStatus(order.id, "cancelled")}
-                        className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        disabled={isPending}
+                        className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-60 disabled:cursor-wait"
                       >
                         ביטול
                       </button>
@@ -2286,7 +2288,8 @@ const Kitchen = () => {
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
-                        className="px-4 py-3 rounded-lg bg-muted text-foreground text-base font-bold hover:bg-secondary transition-colors active:scale-95"
+                        disabled={isPending}
+                        className="px-4 py-3 rounded-lg bg-muted text-foreground text-base font-bold hover:bg-secondary transition-colors active:scale-95 disabled:opacity-60 disabled:cursor-wait"
                         title="החזר להכנה"
                       >
                         ↩ חזור להכנה
@@ -2297,14 +2300,16 @@ const Kitchen = () => {
                         order.order_source === "kiosk" ? (
                           <button
                             onClick={() => updateStatus(order.id, "preparing")}
-                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
+                            disabled={isPending}
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
                           >
-                            קבל הזמנה ✅
+                            {isPending ? "מעדכן..." : "קבל הזמנה ✅"}
                           </button>
                         ) : (
                           <button
                             onClick={() => setShowTimePicker(order.id)}
-                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
+                            disabled={isPending}
+                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
                           >
                             התחל הכנה 👨‍🍳
                           </button>
@@ -2312,12 +2317,14 @@ const Kitchen = () => {
                       ) : (
                         <button
                           onClick={() => updateStatus(order.id, next)}
-                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md"
+                          disabled={isPending}
+                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
                         >
-                          {next === "ready" ? "מוכנה ✅" : "הושלמה ✅"}
+                          {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : "הושלמה ✅")}
                         </button>
                       )
                     )}
+                    </>); })()}
                   </div>
                 </div>
 
