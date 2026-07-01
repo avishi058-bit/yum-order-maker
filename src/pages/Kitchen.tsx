@@ -340,6 +340,14 @@ const Kitchen = () => {
   // kitchen view doesn't re-render and scroll-jump under the user.
   const pauseRefreshRef = useRef(false);
   const pendingRefreshRef = useRef(false);
+  // Suppress background refetches for a short window after a local mutation.
+  // Without this, our own status click triggers a realtime event that re-fetches
+  // every order + items and re-renders the whole grid, which makes the button
+  // feel frozen for hundreds of ms on a busy tablet.
+  const localMutationUntilRef = useRef<number>(0);
+  // Track orders currently being mutated to disable buttons + show feedback,
+  // and to prevent double-clicks that queue up multiple updates.
+  const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
     pauseRefreshRef.current = open;
