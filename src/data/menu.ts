@@ -203,6 +203,7 @@ const TOPPING_UI: Record<string, ToppingUIOverlay> = {
   "peanut-butter": { displayName: "חמאת בוטנים 🥜", recommended: true },
   maple: { image: "maple" },
   "extra-patty": { image: "extra-patty" },
+  "extra-vegan-patty": { image: "extra-patty" },
   "extra-smash-patty": { image: "extra-patty" },
   "onion-rings-topping": { image: "onion-rings" },
   "gluten-free-bun": { displayName: "לחמנייה ללא גלוטן (מיוחדים) 🌾" },
