@@ -800,6 +800,10 @@ const Kitchen = () => {
   };
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
+    // Guard against double-clicks — if this order is already being updated,
+    // ignore extra taps until the DB round-trip finishes.
+    if (pendingStatusIds.has(orderId)) return;
+
     const updateData: any = { status: newStatus };
     if (newStatus === "preparing" && prepMinutes) {
       updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
@@ -816,12 +820,25 @@ const Kitchen = () => {
       ),
     );
     setShowTimePicker(null);
+    setPendingStatusIds((s) => {
+      const n = new Set(s);
+      n.add(orderId);
+      return n;
+    });
+    // Suppress the self-triggered realtime refetch for ~1.5s.
+    localMutationUntilRef.current = Date.now() + 1500;
 
     const { data, error } = await supabase
       .from("orders")
       .update(updateData)
       .eq("id", orderId)
       .select();
+
+    setPendingStatusIds((s) => {
+      const n = new Set(s);
+      n.delete(orderId);
+      return n;
+    });
 
     if (error) {
       console.error("[Kitchen] Failed to update order status:", error);
