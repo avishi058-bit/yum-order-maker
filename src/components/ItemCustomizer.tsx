@@ -1008,6 +1008,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 // Non-smash burgers: hide smash extra patty, show regular extra patty.
                                 if (t.id === "extra-patty") return !isSmash;
                                 if (t.id === "extra-smash-patty") return isSmash;
+                                // Vegan extra patty — only for חף מפשע
+                                if (t.id === "extra-vegan-patty") return baseId === "haf-mifsha";
                                 return true;
                               })
                               .sort((a, b) => {

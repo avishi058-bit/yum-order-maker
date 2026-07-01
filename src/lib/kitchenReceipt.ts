@@ -422,8 +422,10 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
 
     // "כפולה" = 2 patties → 2× the doneness count
     const multiplier = isDoubleName(name) ? 2 : 1;
-    // Extra patty topping also adds another patty of the same doneness
-    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]);
+    // Extra patty topping also adds another patty of the same doneness.
+    // The vegan variant ("תוספת קציצה צמחונית") has no doneness — exclude it.
+    const extraVeganPattiesForDoneness = includesAny(it.toppings, ["תוספת קציצה צמחונית", "קציצה צמחונית"]);
+    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) - extraVeganPattiesForDoneness;
     add(extractDonenessKey(it.removals), qty * (multiplier + extraPatties));
   }
 
@@ -548,8 +550,12 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     }
 
     // ---- topping-driven extras ----
+    // Vegan extra patty topping ("תוספת קציצה צמחונית") → +1 vegan patty
+    const extraVeganPattyCount = includesAny(it.toppings, ["תוספת קציצה צמחונית", "קציצה צמחונית"]);
+    veganPatties += extraVeganPattyCount * qty;
     // Regular extra patty topping → +1 regular meat patty
-    regularPatties += includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) * qty;
+    // (subtract vegan matches — they'd also match "תוספת קציצה" as a substring)
+    regularPatties += (includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) - extraVeganPattyCount) * qty;
     // Smash extra patty topping ("אקסטרה קציצת סמאש") → +1 smash patty in
     // the chef summary (the customer-facing label may say "+זוג קציצות 110ג",
     // but the chef counts it as a single smash portion).

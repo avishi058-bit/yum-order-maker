@@ -203,6 +203,7 @@ const TOPPING_UI: Record<string, ToppingUIOverlay> = {
   "peanut-butter": { displayName: "חמאת בוטנים 🥜", recommended: true },
   maple: { image: "maple" },
   "extra-patty": { image: "extra-patty" },
+  "extra-vegan-patty": { image: "extra-patty" },
   "extra-smash-patty": { image: "extra-patty" },
   "onion-rings-topping": { image: "onion-rings" },
   "gluten-free-bun": { displayName: "לחמנייה ללא גלוטן (מיוחדים) 🌾" },
@@ -223,6 +224,7 @@ export const excludedToppingsByItem: Record<string, string[]> = {
   "avishai": ["egg"],
   "crazy-smash": ["maple", "hot-pepper-jam"],
   "napoleon": ["vegan-blue-cheese", "onion-jam"],
+  "haf-mifsha": ["extra-patty"],
 };
 
 export const mealUpgrade = {
