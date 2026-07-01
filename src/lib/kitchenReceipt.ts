@@ -422,8 +422,10 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
 
     // "כפולה" = 2 patties → 2× the doneness count
     const multiplier = isDoubleName(name) ? 2 : 1;
-    // Extra patty topping also adds another patty of the same doneness
-    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]);
+    // Extra patty topping also adds another patty of the same doneness.
+    // The vegan variant ("תוספת קציצה צמחונית") has no doneness — exclude it.
+    const extraVeganPattiesForDoneness = includesAny(it.toppings, ["תוספת קציצה צמחונית", "קציצה צמחונית"]);
+    const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) - extraVeganPattiesForDoneness;
     add(extractDonenessKey(it.removals), qty * (multiplier + extraPatties));
   }
 
