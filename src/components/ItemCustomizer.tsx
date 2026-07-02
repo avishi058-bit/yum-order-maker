@@ -26,10 +26,10 @@ import cheddarIcon from "@/assets/menu/cheddar-icon.png";
 import donenessMediumImg from "@/assets/doneness-medium.webp";
 import donenessMediumWellImg from "@/assets/doneness-medium-well.webp";
 import donenessWellDoneImg from "@/assets/doneness-well-done.webp";
-import friesRegularImg from "@/assets/fries-regular.png";
-import waffleFriesImg from "@/assets/waffle-fries.png";
-import onionRingsSideImg from "@/assets/onion-rings.png";
-import tempuraOnionRingsImg from "@/assets/tempura-onion-rings.png";
+import friesRegularImg from "@/assets/fries-regular.webp";
+import waffleFriesImg from "@/assets/waffle-fries.webp";
+import onionRingsSideImg from "@/assets/onion-rings.webp";
+import tempuraOnionRingsImg from "@/assets/tempura-onion-rings.webp";
 
 const mealSideImages: Record<string, string> = {
   "side-fries": friesRegularImg,
