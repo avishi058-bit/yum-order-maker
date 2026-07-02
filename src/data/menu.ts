@@ -76,7 +76,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "onion-rings": { description: "" },
 
   "tempura-onion": { description: "טבעות בצל ביתיות בציפוי טמפורה" },
-  "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, צ׳יפס בטטה" },
+  "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, וופל צ׳יפס" },
   "arayes-special": { description: "3 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
   "arayes-special-4": { description: "4 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
   can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י, מלון תפוח" },
