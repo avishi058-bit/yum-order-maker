@@ -1,0 +1,1 @@
+UPDATE public.menu_availability SET item_name = 'תפוזים (בקבוק)' WHERE item_id = 'drink-apples' AND item_name = 'תפוחים (בקבוק)';
