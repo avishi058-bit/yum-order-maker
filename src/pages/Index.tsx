@@ -46,7 +46,7 @@ const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"))
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa, isIos } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions, sauceOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
