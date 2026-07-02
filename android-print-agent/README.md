@@ -13,27 +13,42 @@
 
 ```
 GET  /health
-     →  { "ok": true, "printer": "Printer001-352C", "connected": true, "version": "1.0.0" }
+     →  {
+          "ok": true,
+          "connected": true,
+          "printer": "Printer001-352C",
+          "printerType": "Generic",           // או "StarLineMode"
+          "printerTypeLabel": "ESC/POS (Generic)",
+          "version": "1.1.0"
+        }
 
 POST /print-raw
      Content-Type: application/json
      Body: { "b64": "<base64-of-escpos-bytes>" }
-     →  { "ok": true, "bytes": 12345 }   או   HTTP 502 + { "error": "..." }
+     →  { "ok": true, "bytes": 12345, "sourceBytes": 12345, "printerType": "Generic" }
+        או   HTTP 502 + { "error": "..." }
 ```
 
-האתר שולח את אותם בייטים שה-Bluetooth driver הפנימי מייצר (כולל ה-raster לעברית) — לכן עיצוב הבון לא משתנה.
+האתר שולח **תמיד** ESC/POS — בדיוק אותם בייטים שה-Bluetooth driver הפנימי מייצר (כולל raster לעברית). ה-Agent מזהה לבד את סוג המדפסת:
+
+- **Generic (ברירת מחדל, ללא שינוי)** — Xprinter/ESC/POS. הבייטים עוברים as-is.
+- **Star Line Mode** — Star Micronics **mC-Print3 (MCP31LB)**. ה-Agent מתרגם את אותו payload על-הזבוב לפורמט Star Line Mode (`ESC * r A ... b n1 n2 ... ESC * r B`, `ESC GS a` alignment, `ESC d 3` cut) ושולח דרך SPP/RFCOMM.
+
+הזיהוי הוא לפי שם ה-Bluetooth של המכשיר המזווג — הראשון שמתאים ל-`KNOWN_PRINTERS` ב-`Config.kt` זוכה (Star קודם ל-Generic). לכן ה-Xprinter הקיים ממשיך לעבוד בדיוק כמו קודם.
 
 ## בנייה (Android Studio)
 
 1. `File → Open` ובחר את התיקייה `android-print-agent/`.
 2. המתן ל-Gradle sync.
-3. ערוך את `app/src/main/java/co/habakta/printagent/Config.kt` והגדר את **שם המדפסת** המזווגת (`PRINTER_NAME = "Printer001-352C"`).
+3. אופציונלי — ערוך את `app/src/main/java/co/habakta/printagent/Config.kt` והוסף/הסר entries ב-`KNOWN_PRINTERS` אם שם ה-Bluetooth של המדפסת שלך לא מתחיל ב-`Printer`, `mC-Print3`, `MCP31` או `STAR`.
 4. `Build → Build APK(s)` — ה-APK יישמר ב-`app/build/outputs/apk/release/`.
 5. העבר את ה-APK לטאבלט (USB / Google Drive / `adb install`).
 
 ## התקנה על הטאבלט
 
-1. ודא שהמדפסת מזווגת ב-Android: `Settings → Bluetooth → Pair new device → Printer001-352C`.
+1. ודא שהמדפסת מזווגת ב-Android: `Settings → Bluetooth → Pair new device`.
+   - Xprinter: `Printer001-352C`.
+   - Star mC-Print3: יופיע בשם `mC-Print3-XXXXX` או `STAR-XXXXX` (וודא ש-**Bluetooth Classic / SPP** מופעל במדפסת — לא BLE).
 2. התקן את ה-APK (יידרש "Install from unknown sources" אם זה לא מ-Play Store).
 3. פתח את האפליקציה פעם אחת — תאשר Bluetooth permissions + Notification permission.
 4. סמן ✅ "Start on boot".
