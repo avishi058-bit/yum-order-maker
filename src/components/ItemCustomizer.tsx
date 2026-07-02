@@ -1154,7 +1154,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 <span className={`font-bold text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי כרגע)</span>
                               )}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+                              {mealSideImages[side.id] && (
+                                <img
+                                  src={mealSideImages[side.id]}
+                                  alt={side.name}
+                                  loading="lazy"
+                                  className={`${isKiosk ? "w-14 h-14" : "w-11 h-11"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                                />
+                              )}
+                            </div>
                           </button>
                         );
                       })}
