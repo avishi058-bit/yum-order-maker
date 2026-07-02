@@ -15,6 +15,7 @@ import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
+import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
 
 export interface CheckoutSauce {
   id: string;
