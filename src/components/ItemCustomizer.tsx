@@ -30,12 +30,35 @@ import friesRegularImg from "@/assets/fries-regular.webp";
 import waffleFriesImg from "@/assets/waffle-fries.webp";
 import onionRingsSideImg from "@/assets/onion-rings.webp";
 import tempuraOnionRingsImg from "@/assets/tempura-onion-rings.webp";
+import drinkColaImg from "@/assets/drink-cola.png";
+import drinkZeroImg from "@/assets/drink-zero.png";
+import drinkSpriteImg from "@/assets/drink-sprite.png";
+import drinkFantaImg from "@/assets/drink-fanta.png";
+import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.png";
+import drinkSodaImg from "@/assets/drink-soda.png";
+import drinkWaterImg from "@/assets/drink-water.png";
+import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.png";
+import drinkGoldstarImg from "@/assets/drink-goldstar.png";
+import drinkStellaImg from "@/assets/drink-stella.png";
 
 const mealSideImages: Record<string, string> = {
   "side-fries": friesRegularImg,
   "side-sweet-potato": waffleFriesImg,
   "side-onion-rings": onionRingsSideImg,
   "side-tempura": tempuraOnionRingsImg,
+};
+
+const mealDrinkImages: Record<string, string> = {
+  "drink-cola": drinkColaImg,
+  "drink-zero": drinkZeroImg,
+  "drink-sprite": drinkSpriteImg,
+  "drink-fanta": drinkFantaImg,
+  "drink-fanta-exotic": drinkFantaExoticImg,
+  "drink-soda": drinkSodaImg,
+  "drink-water": drinkWaterImg,
+  "drink-blu-watermelon": drinkBluWatermelonImg,
+  "drink-goldstar": drinkGoldstarImg,
+  "drink-stella": drinkStellaImg,
 };
 
 const donenessImages: Record<string, string> = {
@@ -1221,7 +1244,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               </div>
                               {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                              {mealDrinkImages[drink.id] && (
+                                <img
+                                  src={mealDrinkImages[drink.id]}
+                                  alt={drink.name}
+                                  width={80}
+                                  height={80}
+                                  loading="lazy"
+                                  className={`${isKiosk ? "w-20 h-20" : "w-16 h-16"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                                />
+                              )}
+                            </div>
                           </button>
                         );
                       })}
@@ -1253,7 +1288,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
                               {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{drink.price}</span>}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                              {mealDrinkImages[drink.id] && (
+                                <img
+                                  src={mealDrinkImages[drink.id]}
+                                  alt={drink.name}
+                                  width={80}
+                                  height={80}
+                                  loading="lazy"
+                                  className={`${isKiosk ? "w-20 h-20" : "w-16 h-16"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                                />
+                              )}
+                            </div>
                           </button>
                         );
                       })}
