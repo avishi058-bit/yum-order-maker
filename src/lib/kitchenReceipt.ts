@@ -771,7 +771,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   // Fried sides — keep types separate
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(row("צ׳יפס", summary.fries));
-  if (summary.sweetPotatoFries > 0) friedRows.push(row("צ׳יפס בטטה", summary.sweetPotatoFries));
+  if (summary.sweetPotatoFries > 0) friedRows.push(row("וופל צ׳יפס", summary.sweetPotatoFries));
   if (summary.onionRings > 0) friedRows.push(row("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(row("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
@@ -1230,7 +1230,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
 
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
-  if (summary.sweetPotatoFries > 0) friedRows.push(sumRow("צ׳יפס בטטה", summary.sweetPotatoFries));
+  if (summary.sweetPotatoFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.sweetPotatoFries));
   if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
@@ -1537,7 +1537,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
 
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(sumRow("צ׳יפס", summary.fries));
-  if (summary.sweetPotatoFries > 0) friedRows.push(sumRow("צ׳יפס בטטה", summary.sweetPotatoFries));
+  if (summary.sweetPotatoFries > 0) friedRows.push(sumRow("וופל צ׳יפס", summary.sweetPotatoFries));
   if (summary.onionRings > 0) friedRows.push(sumRow("טבעות בצל", summary.onionRings));
   if (summary.tempuraOnionSide > 0)
     friedRows.push(sumRow("טבעות בצל בטמפורה (מנה)", summary.tempuraOnionSide));
