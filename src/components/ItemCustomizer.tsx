@@ -30,12 +30,35 @@ import friesRegularImg from "@/assets/fries-regular.webp";
 import waffleFriesImg from "@/assets/waffle-fries.webp";
 import onionRingsSideImg from "@/assets/onion-rings.webp";
 import tempuraOnionRingsImg from "@/assets/tempura-onion-rings.webp";
+import drinkColaImg from "@/assets/drink-cola.png";
+import drinkZeroImg from "@/assets/drink-zero.png";
+import drinkSpriteImg from "@/assets/drink-sprite.png";
+import drinkFantaImg from "@/assets/drink-fanta.png";
+import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.png";
+import drinkSodaImg from "@/assets/drink-soda.png";
+import drinkWaterImg from "@/assets/drink-water.png";
+import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.png";
+import drinkGoldstarImg from "@/assets/drink-goldstar.png";
+import drinkStellaImg from "@/assets/drink-stella.png";
 
 const mealSideImages: Record<string, string> = {
   "side-fries": friesRegularImg,
   "side-sweet-potato": waffleFriesImg,
   "side-onion-rings": onionRingsSideImg,
   "side-tempura": tempuraOnionRingsImg,
+};
+
+const mealDrinkImages: Record<string, string> = {
+  "drink-cola": drinkColaImg,
+  "drink-zero": drinkZeroImg,
+  "drink-sprite": drinkSpriteImg,
+  "drink-fanta": drinkFantaImg,
+  "drink-fanta-exotic": drinkFantaExoticImg,
+  "drink-soda": drinkSodaImg,
+  "drink-water": drinkWaterImg,
+  "drink-blu-watermelon": drinkBluWatermelonImg,
+  "drink-goldstar": drinkGoldstarImg,
+  "drink-stella": drinkStellaImg,
 };
 
 const donenessImages: Record<string, string> = {
