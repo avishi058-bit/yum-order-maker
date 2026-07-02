@@ -587,7 +587,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {step === "otp" && (
           <div className="space-y-4">
             {customerName && (
-              <p className="text-primary font-bold text-lg">ברוך הבא בחזרה, {customerName}! 👋</p>
+              <p className="text-primary font-bold text-lg">כיף שחזרת, {customerName} :)</p>
             )}
             <p className="text-muted-foreground text-sm">שלחנו קוד בן 4 ספרות לוואטסאפ למספר {form.phone}</p>
             <div>
@@ -636,7 +636,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {step === "details" && (
           <>
             {customerName && (
-              <p className="text-primary font-bold text-lg mb-4">ברוך הבא בחזרה, {customerName}! 👋</p>
+              <p className="text-primary font-bold text-lg mb-4">כיף שחזרת, {customerName} :)</p>
             )}
 
             <div className="mb-6 bg-secondary/50 rounded-lg p-4 space-y-1">
