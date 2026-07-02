@@ -45,6 +45,7 @@ const App = () => (
     <TooltipProvider>
       <CustomerAuthProvider>
       <FlyToCartProvider>
+      <SkibidiGuardProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
