@@ -9,6 +9,7 @@ import CookieBanner from "@/components/CookieBanner";
 import PostInstallPermissionModal from "@/components/PostInstallPermissionModal";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
+import { SkibidiGuardProvider } from "@/components/SkibidiGuard";
 
 // Eager load public pages
 import Index from "./pages/Index";
