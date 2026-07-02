@@ -512,7 +512,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       if (!name) return null;
       if (/מיקס\s*חברים/.test(name)) return "מיקס חברים";
       if (/טבעות.*טמפורה|טמפורה/.test(name)) return "טבעות בצל בטמפורה";
-      if (/בטטה/.test(name)) return "צ'יפס בטטה";
+      if (/וופל|בטטה/.test(name)) return "וופל צ'יפס";
       if (/טבעות\s*בצל/.test(name)) return "טבעות בצל";
       if (/צ['׳]?יפס\s*ענק/.test(name)) return "צ'יפס ענק";
       if (/צ['׳]?יפס/.test(name)) return "צ'יפס רגיל";
@@ -675,7 +675,7 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.regularBuns > 0) rows.push(["לחמנייה רגילה", s.regularBuns]);
   if (s.glutenFreeBuns > 0) rows.push(["לחמנייה ל\"ג", s.glutenFreeBuns]);
   if (s.fries > 0) rows.push(["צ'יפס", s.fries]);
-  if (s.sweetPotatoFries > 0) rows.push(["צ'יפס בטטה", s.sweetPotatoFries]);
+  if (s.sweetPotatoFries > 0) rows.push(["וופל צ'יפס", s.sweetPotatoFries]);
   if (s.onionRings > 0) rows.push(["טבעות בצל", s.onionRings]);
   if (s.tempuraOnionSide > 0) rows.push(["טמפורה מנה", s.tempuraOnionSide]);
   if (s.tempuraOnionTopping > 0) rows.push(["טמפורה יחידה", s.tempuraOnionTopping]);
