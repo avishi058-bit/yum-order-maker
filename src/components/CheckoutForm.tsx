@@ -35,6 +35,7 @@ interface CheckoutFormProps {
 }
 
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false }, ref) => {
+  const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
   const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
