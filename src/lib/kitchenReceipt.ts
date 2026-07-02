@@ -124,7 +124,7 @@ type FriedKind = "friendsMix" | "tempuraOnionSide" | "sweetPotatoFries" | "onion
 const detectFried = (name: string): FriedKind => {
   if (!name) return null;
   if (isFriendsMix(name)) return "friendsMix";
-  // "טבעות בצל בטמפורה" / "טבעות בצל ביתיות בטמפורה" / "טמפורה"
+  // "טבעות בצל בטמפורה" / "טמפורה"
   if (/טבעות.*טמפורה|טמפורה/.test(name)) return "tempuraOnionSide";
   if (/וופל|בטטה/.test(name)) return "sweetPotatoFries";
   if (/טבעות\s*בצל/.test(name)) return "onionRings";
