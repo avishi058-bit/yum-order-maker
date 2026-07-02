@@ -260,7 +260,10 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "can-cola", name: "קולה" },
     { id: "can-zero", name: "זירו" },
     { id: "can-fanta", name: "פאנטה" },
+    { id: "can-fanta-grape", name: "פאנטה ענבים" },
+    { id: "can-fanta-exotic", name: "פאנטה אקזוטי" },
     { id: "can-sprite", name: "ספרייט" },
+    { id: "can-sprite-zero", name: "ספרייט זירו" },
     { id: "can-blu", name: "בלו רגיל" },
     { id: "can-mojito", name: "בלו מוחיטו" },
     { id: "can-watermelon", name: "בלו אבטיח" },
@@ -289,6 +292,7 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "beer-laffe", name: "לאף" },
     { id: "beer-unfiltered", name: "גולדסטאר אנפילטר" },
     { id: "beer-paulaner", name: "פאולנר" },
+    { id: "beer-guinness", name: "גינס" },
   ],
 };
 
