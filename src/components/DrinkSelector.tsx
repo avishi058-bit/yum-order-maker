@@ -5,6 +5,56 @@ import { MenuItem, drinkSubOptions, drinkToAvailabilityId } from "@/data/menu";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 
+import drinkColaImg from "@/assets/drink-cola.png";
+import drinkZeroImg from "@/assets/drink-zero.png";
+import drinkSpriteImg from "@/assets/drink-sprite.png";
+import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.png";
+import drinkFantaImg from "@/assets/drink-fanta.png";
+import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.png";
+import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.png";
+import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.png";
+import drinkBluMojitoImg from "@/assets/drink-blu-mojito.png";
+import drinkBluDayImg from "@/assets/drink-blu-day.png";
+import drinkBluMelonAppleImg from "@/assets/drink-blu-melon-apple.png";
+import drinkGoldstarImg from "@/assets/drink-goldstar.png";
+import drinkStellaImg from "@/assets/drink-stella.png";
+import drinkHeinekenImg from "@/assets/drink-heineken.png";
+import drinkCoronaImg from "@/assets/drink-corona.png";
+import drinkCarlsbergImg from "@/assets/drink-carlsberg.png";
+import drinkPaulanerImg from "@/assets/drink-paulaner.png";
+import drinkWeissImg from "@/assets/drink-weiss.png";
+import drinkFlavoredWaterAppleImg from "@/assets/drink-flavored-water-apple.png";
+import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.png";
+import drinkGrapesImg from "@/assets/drink-grapes.png";
+import drinkOrangesImg from "@/assets/drink-apples.png";
+
+const drinkOptionImages: Record<string, string> = {
+  "can-cola": drinkColaImg,
+  "can-zero": drinkZeroImg,
+  "can-fanta": drinkFantaImg,
+  "can-fanta-grape": drinkFantaGrapeImg,
+  "can-fanta-exotic": drinkFantaExoticImg,
+  "can-sprite": drinkSpriteImg,
+  "can-sprite-zero": drinkSpriteZeroImg,
+  "can-blu": drinkBluWatermelonImg,
+  "can-mojito": drinkBluMojitoImg,
+  "can-day": drinkBluDayImg,
+  "can-watermelon": drinkBluWatermelonImg,
+  "can-melon-apple": drinkBluMelonAppleImg,
+  "bottle-grapes": drinkGrapesImg,
+  "bottle-apples": drinkOrangesImg,
+  "flavored-water-apple": drinkFlavoredWaterAppleImg,
+  "flavored-water-grape": drinkFlavoredWaterGrapeImg,
+  "beer-goldstar": drinkGoldstarImg,
+  "beer-heineken": drinkHeinekenImg,
+  "beer-corona": drinkCoronaImg,
+  "beer-carlsberg": drinkCarlsbergImg,
+  "beer-stella": drinkStellaImg,
+  "beer-paulaner": drinkPaulanerImg,
+  "beer-weiss": drinkWeissImg,
+};
+
+
 interface DrinkSelectorProps {
   item: MenuItem | null;
   onClose: () => void;
@@ -111,12 +161,26 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
                             : "border-border bg-secondary/50 text-foreground hover:border-primary/50"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className={`font-medium ${isKiosk ? "text-2xl" : ""} ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
-                        {unavailable && <span className="text-xs text-destructive">אזל</span>}
-                        {!unavailable && selected === opt.id && (
-                          <Check size={isKiosk ? 28 : 18} className="text-primary" />
-                        )}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {unavailable && <span className="text-xs text-destructive">אזל</span>}
+                          {!unavailable && selected === opt.id && (
+                            <Check size={isKiosk ? 28 : 18} className="text-primary" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 flex-1 justify-end min-w-0">
+                          <span className={`font-medium ${isKiosk ? "text-2xl" : ""} ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
+                          {drinkOptionImages[opt.id] && (
+                            <img
+                              src={drinkOptionImages[opt.id]}
+                              alt={opt.name}
+                              width={64}
+                              height={64}
+                              loading="lazy"
+                              className={`${isKiosk ? "w-20 h-20" : "w-14 h-14"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                            />
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
