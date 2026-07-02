@@ -55,7 +55,7 @@ const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: 
 };
 import ItemPreview from "@/components/ItemPreview";
 import KioskKeyboard from "@/components/KioskKeyboard";
-import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions, sauceOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
@@ -327,8 +327,14 @@ const Kiosk = () => {
     // and regular items.
     let base = cart.reduce((sum, item) => sum + computeCartItemTotal(item), 0);
     if (!dineIn && selectedSauces.length > 0) {
-      const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
-      base += Math.max(0, totalSauceQty - freeSauces);
+      let regularQty = 0;
+      let premiumCost = 0;
+      for (const s of selectedSauces) {
+        const opt = sauceOptions.find((x) => x.id === s.id);
+        if (opt?.price) premiumCost += opt.price * s.quantity;
+        else regularQty += s.quantity;
+      }
+      base += Math.max(0, regularQty - freeSauces) + premiumCost;
     }
     return base;
   };

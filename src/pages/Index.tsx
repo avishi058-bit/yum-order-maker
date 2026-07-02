@@ -46,7 +46,7 @@ const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"))
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa, isIos } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions } from "@/data/menu";
+import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions, sauceOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
@@ -384,11 +384,17 @@ const Index = () => {
     // computeCartItemTotal already handles deals (base + per-burger toppings)
     // AND regular items, so we use it for everything.
     let base = cart.reduce((sum, item) => sum + computeCartItemTotal(item), 0);
-    // Add extra sauce cost
+    // Add extra sauce cost (premium priced sauces always billed; regular sauces above the free quota billed at 1₪ each)
     if (dineIn === false && selectedSauces.length > 0) {
-      const totalSauceQty = selectedSauces.reduce((sum, s) => sum + s.quantity, 0);
-      const extraSauces = Math.max(0, totalSauceQty - freeSauces);
-      base += extraSauces;
+      let regularQty = 0;
+      let premiumCost = 0;
+      for (const s of selectedSauces) {
+        const opt = sauceOptions.find((x) => x.id === s.id);
+        if (opt?.price) premiumCost += opt.price * s.quantity;
+        else regularQty += s.quantity;
+      }
+      const extraSauces = Math.max(0, regularQty - freeSauces);
+      base += extraSauces + premiumCost;
     }
     return base;
   };

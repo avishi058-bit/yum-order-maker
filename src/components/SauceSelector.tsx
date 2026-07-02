@@ -19,9 +19,22 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
 
   const [sauces, setSauces] = useState<Record<string, number>>({});
 
+  // Split premium (priced) sauces from regular ones. Premium sauces never
+  // consume the free-sauce quota — they always cost their fixed price.
+  const isPremium = (id: string) => {
+    const s = sauceOptions.find((x) => x.id === id);
+    return !!(s && typeof s.price === "number" && s.price > 0);
+  };
+  const regularSelected = Object.entries(sauces)
+    .filter(([id]) => !isPremium(id))
+    .reduce((sum, [, q]) => sum + q, 0);
+  const premiumCost = Object.entries(sauces).reduce((sum, [id, q]) => {
+    const s = sauceOptions.find((x) => x.id === id);
+    return sum + (s?.price ? s.price * q : 0);
+  }, 0);
   const totalSelected = Object.values(sauces).reduce((sum, q) => sum + q, 0);
-  const extraSauces = Math.max(0, totalSelected - freeSauces);
-  const extraCost = extraSauces * 1;
+  const extraSauces = Math.max(0, regularSelected - freeSauces);
+  const extraCost = extraSauces * 1 + premiumCost;
 
   const updateSauce = (id: string, delta: number) => {
     setSauces((prev) => {
@@ -119,6 +132,11 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-base">{sauce.name}</span>
+                        {sauce.price ? (
+                          <span className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
+                            +₪{sauce.price}
+                          </span>
+                        ) : null}
                         {sauce.recommended && (
                           <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
                             <Star size={8} fill="currentColor" className="inline mb-0.5" /> מומלץ

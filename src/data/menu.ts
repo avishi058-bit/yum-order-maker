@@ -301,6 +301,8 @@ export interface SauceOption {
   id: string;
   name: string;
   recommended?: boolean;
+  /** Premium sauce with a fixed per-unit price. Not counted toward the free-sauce quota. */
+  price?: number;
 }
 
 // Mapping from any drink option ID to canonical availability ID
@@ -365,4 +367,5 @@ export const sauceOptions: SauceOption[] = [
   { id: "mayo", name: "מיונז" },
   { id: "chili", name: "צ׳ילי חריף" },
   { id: "plum", name: "שזיפים", recommended: true },
+  { id: "aioli-garlic-mint", name: "איולי שום נענע", price: 2 },
 ];
