@@ -49,6 +49,7 @@ import {
 import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
+import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
 import { ingredients } from "@/data/menu";
 import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
 
