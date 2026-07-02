@@ -41,7 +41,21 @@ export function useTrackCustomerActivity(active: boolean) {
 
     channelRef.current = channel;
 
+    // Untrack immediately when the tab closes so the kitchen indicator
+    // disappears right away instead of waiting for the realtime timeout.
+    const handleUnload = () => {
+      try {
+        channel.untrack();
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+
     return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
       try {
         channel.untrack();
       } catch {
