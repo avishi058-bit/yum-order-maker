@@ -75,7 +75,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "sweet-potato-fries": { description: "" },
   "onion-rings": { description: "" },
 
-  "tempura-onion": { description: "טבעות בצל ביתיות בציפוי טמפורה" },
+  "tempura-onion": { description: "טבעות בצל בטמפורה" },
   "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, וופל צ׳יפס" },
   "arayes-special": { description: "3 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
   "arayes-special-4": { description: "4 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
