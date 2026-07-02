@@ -8,7 +8,7 @@ import specialHadegel from "@/assets/menu/special-hadegel.webp";
 import fries from "@/assets/menu/fries.webp";
 import waffleFriesAsset from "@/assets/menu/waffle-fries.jpeg.asset.json";
 import tempuraOnion from "@/assets/menu/tempura-onion.webp";
-import friendsMix from "@/assets/menu/friends-mix.webp";
+import friendsMixAsset from "@/assets/menu/friends-mix.jpeg.asset.json";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
 import beerImg from "@/assets/menu/beer-goldstar.webp";
 import bottleImg from "@/assets/menu/bottle-prigat.webp";
@@ -34,7 +34,7 @@ export const menuImages: Record<string, string> = {
   fries: fries,
   "sweet-potato-fries": waffleFriesAsset.url,
   "tempura-onion": tempuraOnion,
-  "friends-mix": friendsMix,
+  "friends-mix": friendsMixAsset.url,
   "arayes-special": arayesSpecialAsset.url,
   "arayes-special-4": arayesSpecial4Asset.url,
   can: canDrink,
