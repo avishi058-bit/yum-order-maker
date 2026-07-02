@@ -20,8 +20,8 @@ object Config {
      * character-for-character (case sensitive).
      */
     val PRINTER_NAMES: List<String> = listOf(
-        PRINTER_NAME,          // legacy generic thermal printer
         "mC-Print3-D0011",     // Star Micronics mC-Print3 (MCP31LB) — kitchen
+        PRINTER_NAME,          // legacy generic thermal printer
     )
 
     /**
