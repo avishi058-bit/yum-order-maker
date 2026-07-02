@@ -73,6 +73,7 @@ const mealDrinkImages: Record<string, string> = {
   "drink-fanta-exotic": drinkFantaExoticImg,
   "drink-soda": drinkSodaImg,
   "drink-water": drinkWaterImg,
+  "drink-blu": drinkBluImg,
   "drink-blu-watermelon": drinkBluWatermelonImg,
   "drink-blu-mojito": drinkBluMojitoImg,
   "drink-blu-day": drinkBluDayImg,
