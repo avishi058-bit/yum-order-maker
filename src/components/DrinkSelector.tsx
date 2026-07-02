@@ -12,6 +12,7 @@ import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.png";
 import drinkFantaImg from "@/assets/drink-fanta.png";
 import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.png";
 import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.png";
+import drinkBluImg from "@/assets/drink-blu.png";
 import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.png";
 import drinkBluMojitoImg from "@/assets/drink-blu-mojito.png";
 import drinkBluDayImg from "@/assets/drink-blu-day.png";
