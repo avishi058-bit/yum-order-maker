@@ -122,7 +122,7 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-laffe", name: "לאפ בראון", price: 12 },
   { id: "drink-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "drink-paulaner", name: "פאולנר", price: 12 },
-  { id: "drink-stella", name: "סטלה", price: 12 },
+  { id: "drink-stella", name: "סטלה", price: 8 },
   { id: "drink-hoegaarden", name: "הוגרדן", price: 12 },
   { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15 },
   { id: "drink-guinness", name: "גינס", price: 12 },
