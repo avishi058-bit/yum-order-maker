@@ -64,6 +64,7 @@ export function useTrackCustomerActivity(active: boolean) {
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
       window.removeEventListener("pagehide", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibility);
       try {
         channel.untrack();
       } catch {
