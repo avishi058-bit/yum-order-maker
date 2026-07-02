@@ -104,6 +104,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
   const [ownerName, setOwnerName] = useState("");
   const ownerInputRef = useRef<HTMLInputElement>(null);
+  const { trigger: triggerSkibidi } = useSkibidiGuard();
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
   const [toppingsSeen, setToppingsSeen] = useState(false);
