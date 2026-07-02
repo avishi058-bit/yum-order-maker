@@ -260,7 +260,10 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "can-cola", name: "קולה" },
     { id: "can-zero", name: "זירו" },
     { id: "can-fanta", name: "פאנטה" },
+    { id: "can-fanta-grape", name: "פאנטה ענבים" },
+    { id: "can-fanta-exotic", name: "פאנטה אקזוטי" },
     { id: "can-sprite", name: "ספרייט" },
+    { id: "can-sprite-zero", name: "ספרייט זירו" },
     { id: "can-blu", name: "בלו רגיל" },
     { id: "can-mojito", name: "בלו מוחיטו" },
     { id: "can-watermelon", name: "בלו אבטיח" },
@@ -289,6 +292,7 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "beer-laffe", name: "לאף" },
     { id: "beer-unfiltered", name: "גולדסטאר אנפילטר" },
     { id: "beer-paulaner", name: "פאולנר" },
+    { id: "beer-guinness", name: "גינס" },
   ],
 };
 
@@ -309,7 +313,8 @@ export interface SauceOption {
 export const drinkToAvailabilityId: Record<string, string> = {
   // can sub-options (DrinkSelector)
   "can-cola": "drink-cola", "can-zero": "drink-zero", "can-fanta": "drink-fanta",
-  "can-sprite": "drink-sprite", "can-blu": "drink-blu",
+  "can-fanta-grape": "drink-fanta-grape", "can-fanta-exotic": "drink-fanta-exotic",
+  "can-sprite": "drink-sprite", "can-sprite-zero": "drink-sprite-zero", "can-blu": "drink-blu",
   "can-mojito": "drink-blu-mojito", "can-watermelon": "drink-watermelon", "can-day": "drink-blu-day",
   "can-melon-apple": "drink-blu-melon-apple",
   // bottle sub-options
@@ -320,7 +325,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "beer-carlsberg": "drink-carlsberg", "beer-goldstar": "drink-goldstar",
   "beer-heineken": "drink-heineken", "beer-corona": "drink-corona",
   "beer-hoegaarden": "drink-hoegaarden", "beer-laffe": "drink-laffe", "beer-unfiltered": "drink-unfiltered",
-  "beer-paulaner": "drink-paulaner", "beer-stella": "drink-stella",
+  "beer-paulaner": "drink-paulaner", "beer-stella": "drink-stella", "beer-guinness": "drink-guinness",
   // meal drink options (ItemCustomizer)
   "drink-cola": "drink-cola", "drink-zero": "drink-zero", "drink-fanta": "drink-fanta",
   "drink-fanta-grape": "drink-fanta-grape", "drink-fanta-exotic": "drink-fanta-exotic",
