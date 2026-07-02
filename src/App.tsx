@@ -100,6 +100,7 @@ const App = () => (
           <CookieBanner />
           <PostInstallPermissionModal />
         </BrowserRouter>
+      </SkibidiGuardProvider>
       </FlyToCartProvider>
       </CustomerAuthProvider>
     </TooltipProvider>
