@@ -52,6 +52,14 @@ export function useTrackCustomerActivity(active: boolean) {
     };
     window.addEventListener("beforeunload", handleUnload);
     window.addEventListener("pagehide", handleUnload);
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        try { channel.untrack(); } catch { /* noop */ }
+      } else if (document.visibilityState === "visible") {
+        try { channel.track({ role: "customer", startedAt: Date.now() }); } catch { /* noop */ }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
