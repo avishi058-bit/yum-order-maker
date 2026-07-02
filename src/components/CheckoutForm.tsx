@@ -29,7 +29,7 @@ interface CheckoutFormProps {
   sauces?: CheckoutSauce[];
   freeSauces?: number;
   onClose: () => void;
-  onSuccess: (orderNumber?: number, phone?: string) => void;
+  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter") => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
 }
