@@ -7,23 +7,17 @@ export function usePrintAgentHealth(
   enabled: boolean = true,
 ): [AgentHealth | null, () => Promise<AgentHealth | null>] {
   const [health, setHealth] = useState<AgentHealth | null>(null);
-  const mountedRef = useRef(true);
+  const cancelledRef = useRef(false);
 
   const refresh = useCallback(async () => {
     const h = await checkAgentHealth();
-    if (mountedRef.current) setHealth(h);
+    if (!cancelledRef.current) setHealth(h);
     return h;
   }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!enabled) return;
+    cancelledRef.current = false;
 
     refresh();
     const id = setInterval(refresh, POLL_MS);
@@ -31,6 +25,7 @@ export function usePrintAgentHealth(
     const onFocus = () => refresh();
     window.addEventListener("focus", onFocus);
     return () => {
+      cancelledRef.current = true;
       clearInterval(id);
       window.removeEventListener("focus", onFocus);
     };

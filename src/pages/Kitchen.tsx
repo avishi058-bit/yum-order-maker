@@ -285,11 +285,27 @@ const Kitchen = () => {
   const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
 
   const handleQuickConnect = useCallback(async () => {
+    if (isPrinterConnected()) {
+      setBtConnected(true);
+      setPrintModeState("bt");
+      setPrintMode("bt");
+      toast.success("המדפסת כבר מחוברת");
+      return;
+    }
+    if (!isWebBluetoothSupported()) {
+      toast.error("הדפדפן הזה לא תומך ב-Web Bluetooth. השתמש ב-Chrome על אנדרואיד.");
+      return;
+    }
     try {
       await pairPrinter();
-      setBtConnected(isPrinterConnected());
+      setBtConnected(true);
+      setPrintModeState("bt");
+      setPrintMode("bt");
+      toast.success("המדפסת חוברה בהצלחה");
     } catch (e: any) {
-      toast.error(e?.message || "שגיאה בחיבור המדפסת");
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message || "שגיאה בחיבור המדפסת");
+      }
     }
   }, []);
 
@@ -872,8 +888,9 @@ const Kitchen = () => {
     }
 
     // Local Print Agent (preferred): tiny Android app on the same tablet
-    // holds an open Bluetooth Classic SPP socket and writes ESC/POS bytes
-    // directly. This is the correct path for Star mC-Print3 (MCP31LB).
+    // holds an open BT socket and writes ESC/POS bytes directly. Completely
+    // silent — Kitchen stays visible. Falls back to RawBT if the agent is
+    // unreachable or returns an error.
     if (printMode === "agent") {
       printAgentReceipt(payload)
         .then((info) => {
@@ -888,8 +905,9 @@ const Kitchen = () => {
             orderNumber: info.orderNumber,
           });
           if (info.status === "error") {
-            console.warn("[Kitchen] Agent print failed", info.error);
-            toast.error(`Agent לא זמין להדפסה: ${info.error ?? "בדוק שהאפליקציה פתוחה והמדפסת מזווגת"}`);
+            console.warn("[Kitchen] Agent print failed, falling back to RawBT", info.error);
+            toast.warning("Agent לא זמין — שולח דרך RawBT");
+            printRawBTReceipt(payload).then((r) => setRawbtDebug(r));
           }
         });
       return;
@@ -936,7 +954,7 @@ const Kitchen = () => {
   };
 
   // Print a standalone phone-QR bon through the same printer pipeline as the
-  // kitchen bon (Agent for Star mC-Print3, BLE only for printers that support it).
+  // kitchen bon (BT → Agent → RawBT → browser). No window.print() / popup.
   const printCustomerQr = async (order: Order) => {
     const phoneRaw = (order.customer_phone || "").trim();
     if (!phoneRaw) {
@@ -965,8 +983,9 @@ const Kitchen = () => {
     if (printMode === "agent") {
       printAgentPhoneQr(payload).then((info) => {
         if (info.status === "error") {
-          console.warn("[Kitchen] Agent QR failed", info.error);
-          toast.error(`Agent לא זמין להדפסת QR: ${info.error ?? "בדוק שהאפליקציה פתוחה והמדפסת מזווגת"}`);
+          console.warn("[Kitchen] Agent QR failed, falling back to RawBT", info.error);
+          toast.warning("Agent לא זמין — שולח QR דרך RawBT");
+          printRawBTPhoneQr(payload);
         }
       });
       return;
@@ -1070,22 +1089,10 @@ const Kitchen = () => {
 
   const handleDisconnectPrinter = async () => {
     await disconnectPrinter();
-    setBtConnected(false);
-    setPrintModeState("agent");
-    setPrintMode("agent");
     toast.success("המדפסת נותקה");
   };
 
   const handleTestPrint = async () => {
-    if (printMode === "agent") {
-      const info = await printAgentTest();
-      if (info.status === "sent") {
-        toast.success("נשלחה בדיקת הדפסה דרך ה-Agent");
-      } else {
-        toast.error(`Agent לא זמין: ${info.error ?? "בדוק שהאפליקציה פתוחה והמדפסת מזווגת"}`);
-      }
-      return;
-    }
     if (!isPrinterConnected()) {
       toast.error("חבר תחילה את המדפסת");
       return;
@@ -1688,18 +1695,18 @@ const Kitchen = () => {
 
 
 
-          {/* ⚡ Quick status/check for the local Android Print Agent */}
+          {/* ⚡ Quick connect to printer (Bluetooth) */}
           <button
             onClick={handleQuickConnect}
             className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-              agentHealth?.ok
+              btConnected
                 ? "bg-emerald-500/20 text-emerald-300"
                 : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
             }`}
-            title="בדיקת Print Agent מקומי"
+            title="חיבור מדפסת בלוטות׳"
           >
-            {agentHealth?.ok ? <BluetoothConnected size={16} /> : <WifiOff size={16} />}
-            <span>{agentHealth?.ok ? "Agent מחובר" : "בדוק Agent"}</span>
+            {btConnected ? <BluetoothConnected size={16} /> : <Bluetooth size={16} />}
+            <span>{btConnected ? "מדפסת מחוברת" : "חבר מדפסת"}</span>
           </button>
 
           {/* 🖨️ Print & Diagnostics group */}
@@ -1737,7 +1744,7 @@ const Kitchen = () => {
                 {/* Print mode */}
                 <div className="px-3 py-2 rounded-lg bg-muted text-foreground border border-border text-sm flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">מצב הדפסה</span>
-                  <span className="font-bold">{btConnected ? "Bluetooth BLE" : printMode === "agent" ? "Agent (מקומי)" : printMode}</span>
+                  <span className="font-bold">{btConnected ? "Bluetooth" : printMode === "agent" ? "Agent (מקומי)" : printMode}</span>
                 </div>
 
                 {/* Agent health */}
@@ -1759,30 +1766,7 @@ const Kitchen = () => {
                   </div>
                 )}
 
-                <button
-                  onClick={async () => {
-                    setPrintModeState("agent");
-                    setPrintMode("agent");
-                    const health = await refreshAgentHealth();
-                    if (health?.ok) toast.success(`Agent מחובר: ${health.printer || "מדפסת"}`);
-                    else if (health?.reachable) toast.error(health.error || "ה-Agent פעיל אבל לא מחובר למדפסת");
-                    else toast.error("ה-Print Agent לא זמין במכשיר הזה");
-                  }}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between bg-primary/20 text-primary hover:bg-primary/30"
-                >
-                  <span className="flex items-center gap-2"><Printer size={14} /> השתמש ב-Agent למדפסת Star</span>
-                  <span>{agentHealth?.ok ? "✓ מוכן" : "בדוק"}</span>
-                </button>
-
-                <button
-                  onClick={handleTestPrint}
-                  className="w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between bg-muted text-foreground hover:bg-secondary"
-                >
-                  <span className="flex items-center gap-2"><Printer size={14} /> בדיקת הדפסה</span>
-                  <span>{printMode === "agent" ? "Agent" : "BLE"}</span>
-                </button>
-
-                {/* Web Bluetooth is only for BLE printers. Star mC-Print3 is Classic SPP and must use Agent. */}
+                {/* Bluetooth connect */}
                 <button
                   onClick={btConnected ? handleDisconnectPrinter : handleConnectPrinter}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
@@ -1791,9 +1775,9 @@ const Kitchen = () => {
                 >
                   <span className="flex items-center gap-2">
                     {btConnected ? <BluetoothConnected size={14} /> : <Bluetooth size={14} />}
-                    Bluetooth BLE בלבד
+                    מדפסת בלוטות׳
                   </span>
-                  <span>{btConnected ? "✓ מחוברת" : "למדפסות BLE"}</span>
+                  <span>{btConnected ? "✓ מחוברת" : "חבר"}</span>
                 </button>
 
                 {/* Encoding & paper width (only if BT connected) */}

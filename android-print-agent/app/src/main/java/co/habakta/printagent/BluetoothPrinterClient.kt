@@ -22,7 +22,6 @@ class BluetoothPrinterClient(private val ctx: Context) {
     private val executor = Executors.newSingleThreadExecutor()
     @Volatile private var shuttingDown = false
     @Volatile private var lastError: String? = null
-    @Volatile private var connectedName: String? = null
 
     fun startAutoConnect() {
         executor.submit { reconnectLoop() }
@@ -36,8 +35,7 @@ class BluetoothPrinterClient(private val ctx: Context) {
 
     fun isConnected(): Boolean = socketRef.get()?.isConnected == true
 
-    /** Name of the paired device we are actually talking to (mC-Print3, Printer001, ...). */
-    fun printerName(): String = connectedName ?: Config.PRINTER_NAMES.firstOrNull() ?: Config.PRINTER_NAME
+    fun printerName(): String = Config.PRINTER_NAME
 
     fun lastErrorMessage(): String? = lastError
 
@@ -91,68 +89,22 @@ class BluetoothPrinterClient(private val ctx: Context) {
             ?: throw IllegalStateException("no Bluetooth adapter")
         if (!adapter.isEnabled) throw IllegalStateException("Bluetooth is off")
 
-        val bonded = adapter.bondedDevices ?: emptySet()
-
-        // 1. Prefer an exact-name match, in priority order from Config.
-        var device: BluetoothDevice? = Config.PRINTER_NAMES
-            .asSequence()
-            .mapNotNull { wanted -> bonded.firstOrNull { it.name == wanted } }
-            .firstOrNull()
-
-        // 2. Otherwise, accept any paired device whose name starts with
-        //    one of the known printer prefixes (mC-Print3, Star, Printer001).
-        if (device == null) {
-            device = Config.PRINTER_NAME_PREFIXES
-                .asSequence()
-                .mapNotNull { pfx -> bonded.firstOrNull { it.name?.startsWith(pfx) == true } }
-                .firstOrNull()
-        }
-
-        if (device == null) {
-            val pairedList = bonded.joinToString(", ") { it.name ?: "?" }
-            throw IllegalStateException(
-                "no supported printer paired (looking for ${Config.PRINTER_NAMES}; " +
-                    "paired: [$pairedList])",
-            )
-        }
+        val device: BluetoothDevice = adapter.bondedDevices
+            .firstOrNull { it.name == Config.PRINTER_NAME }
+            ?: throw IllegalStateException("printer '${Config.PRINTER_NAME}' not paired")
 
         // Cancel discovery — speeds up connect dramatically
         try { adapter.cancelDiscovery() } catch (_: SecurityException) {}
 
         val sock = device.createRfcommSocketToServiceRecord(UUID.fromString(Config.SPP_UUID))
-        try {
-            sock.connect()
-        } catch (e: Exception) {
-            // Some Bluetooth stacks (notably older Android on certain OEM
-            // tablets) fail the SDP-based SPP connect against the Star
-            // mC-Print3. Fall back to the reflective RFCOMM channel 1
-            // route, which bypasses SDP and dials the SPP channel directly.
-            Log.w(TAG, "SDP SPP connect to ${device.name} failed, trying channel-1 fallback: ${e.message}")
-            try { sock.close() } catch (_: Exception) {}
-            val fallback = try {
-                val m = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
-                m.invoke(device, 1) as BluetoothSocket
-            } catch (re: Exception) {
-                throw IllegalStateException(
-                    "connect to ${device.name} failed: ${e.message} (fallback unavailable: ${re.message})",
-                )
-            }
-            fallback.connect()
-            socketRef.set(fallback)
-            connectedName = device.name
-            lastError = null
-            Log.i(TAG, "connected to ${device.name} (channel-1 fallback)")
-            return
-        }
+        sock.connect()
         socketRef.set(sock)
-        connectedName = device.name
         lastError = null
         Log.i(TAG, "connected to ${device.name}")
     }
 
     private fun closeSocket() {
         val s = socketRef.getAndSet(null) ?: return
-        connectedName = null
         try { s.close() } catch (_: Exception) {}
     }
 

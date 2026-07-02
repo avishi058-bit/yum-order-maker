@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
                 הבקתה — Print Agent
                 
                 מאזין על: http://127.0.0.1:${Config.HTTP_PORT}
-                מדפסות נתמכות: ${Config.PRINTER_NAMES.joinToString(", ")}
+                מדפסת מוגדרת: ${Config.PRINTER_NAME}
                 גרסה: ${Config.VERSION}
                 
                 ההגדרה הזו רצה ברקע — אפשר לסגור את האפליקציה.
