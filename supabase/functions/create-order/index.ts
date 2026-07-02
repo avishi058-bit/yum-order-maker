@@ -338,11 +338,20 @@ Deno.serve(async (req: Request) => {
   const pricing = priceCart(body.items, overrides);
   if (!pricing.ok) return jsonResponse({ error: pricing.error }, 400);
 
-  // Sauce extra-charge: 1₪ per sauce above the free quota (kept generous: free
-  // quota is whatever the client said, so worst case server overcharges = 0).
-  const totalSauceQty = body.sauces.reduce((s, x) => s + x.quantity, 0);
-  const extraSauces = Math.max(0, totalSauceQty - body.freeSauces);
-  const finalTotal = Math.round((pricing.total + extraSauces) * 100) / 100;
+  // Sauce extra-charge: premium sauces (fixed per-unit price) are always billed;
+  // regular sauces are billed at 1₪ per sauce above the free quota.
+  const PREMIUM_SAUCE_PRICES: Record<string, number> = {
+    "aioli-garlic-mint": 2,
+  };
+  let regularSauceQty = 0;
+  let premiumSauceCost = 0;
+  for (const s of body.sauces) {
+    const p = PREMIUM_SAUCE_PRICES[s.id];
+    if (p) premiumSauceCost += p * s.quantity;
+    else regularSauceQty += s.quantity;
+  }
+  const extraSauces = Math.max(0, regularSauceQty - body.freeSauces);
+  const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost) * 100) / 100;
 
   // Normalize phone: kiosk no-phone flow sends "" — store a placeholder so
   // the NOT NULL column on `orders.customer_phone` stays satisfied without
