@@ -29,7 +29,7 @@ interface CheckoutFormProps {
   sauces?: CheckoutSauce[];
   freeSauces?: number;
   onClose: () => void;
-  onSuccess: (orderNumber?: number, phone?: string) => void;
+  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter") => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
 }
@@ -490,7 +490,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.orderNumber}`,
       });
-      onSuccess(order.orderNumber, form.phone);
+      onSuccess(order.orderNumber, form.phone, method);
     } catch (error: any) {
       console.error("Order error:", error);
       toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });

@@ -79,6 +79,7 @@ const Kiosk = () => {
   const [view, setView] = useState<KioskView>("welcome");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
+  const [successPaymentMethod, setSuccessPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
@@ -117,6 +118,7 @@ const Kiosk = () => {
     const orderNum = searchParams.get("order");
     if (paid === "true" && orderNum) {
       setOrderSuccess(parseInt(orderNum));
+      setSuccessPaymentMethod("credit");
       setView("welcome");
       setCart([]);
       setCheckoutOpen(false);
@@ -125,6 +127,7 @@ const Kiosk = () => {
       });
       setTimeout(() => {
         setOrderSuccess(null);
+        setSuccessPaymentMethod(null);
       }, 2000);
       setSearchParams({}, { replace: true });
     }
@@ -523,15 +526,17 @@ const Kiosk = () => {
             sauces={selectedSauces}
             freeSauces={freeSauces}
             onClose={() => setCheckoutOpen(false)}
-            onSuccess={(orderNumber) => {
+            onSuccess={(orderNumber, _phone, method) => {
               setCheckoutOpen(false);
               setOrderSuccess(orderNumber ?? 0);
+              setSuccessPaymentMethod(method ?? null);
               // Fire confetti
               import("canvas-confetti").then(({ default: confetti }) => {
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
               });
               setTimeout(() => {
                 setOrderSuccess(null);
+                setSuccessPaymentMethod(null);
                 resetOrder();
               }, 2000);
             }}
@@ -556,9 +561,13 @@ const Kiosk = () => {
               className="bg-card rounded-3xl p-12 text-center shadow-2xl max-w-lg mx-4 border border-border"
             >
               <p className="text-8xl mb-6">🎉</p>
-              <p className="text-4xl font-black text-foreground mb-3">הזמנתך התקבלה!</p>
+              <p className="text-4xl font-black text-foreground mb-3">
+                {successPaymentMethod === "counter" ? "הזמנתך התקבלה גש לשלם בקופה :)" : "הזמנתך התקבלה!"}
+              </p>
               <p className="text-5xl font-black text-primary mb-4">#{orderSuccess}</p>
-              <p className="text-2xl text-muted-foreground">תודה רבה, ההזמנה בהכנה 🍔</p>
+              <p className="text-2xl text-muted-foreground">
+                {successPaymentMethod === "counter" ? "מספר ההזמנה שלך למעלה" : "תודה רבה, ההזמנה בהכנה 🍔"}
+              </p>
             </motion.div>
           </motion.div>
         )}
