@@ -59,6 +59,8 @@ class HttpServer(
             .put("ok", printer.isConnected())
             .put("connected", printer.isConnected())
             .put("printer", printer.printerName())
+            .put("printerType", printer.printerType().name)
+            .put("printerTypeLabel", printer.printerType().label)
             .put("version", Config.VERSION)
             .apply { printer.lastErrorMessage()?.let { put("lastError", it) } }
             .toString()
@@ -73,8 +75,17 @@ class HttpServer(
         val b64 = json.optString("b64", "")
         if (b64.isEmpty()) throw IllegalArgumentException("missing 'b64' field")
 
-        val bytes = Base64.decode(b64, Base64.DEFAULT)
-        if (bytes.isEmpty()) throw IllegalArgumentException("empty payload")
+        val incoming = Base64.decode(b64, Base64.DEFAULT)
+        if (incoming.isEmpty()) throw IllegalArgumentException("empty payload")
+
+        // The website always sends ESC/POS (see src/lib/bluetoothPrinter.ts).
+        // For Generic printers we pass the bytes through unchanged — this is
+        // the original behavior and MUST remain intact. For Star mC-Print3
+        // we translate the same bytes into Star Line Mode on the fly.
+        val bytes = when (printer.printerType()) {
+            PrinterType.Generic -> incoming
+            PrinterType.StarLineMode -> EscPosToStar.translate(incoming)
+        }
 
         try {
             printer.writeBytes(bytes)
@@ -86,7 +97,12 @@ class HttpServer(
             )
         }
 
-        val ok = JSONObject().put("ok", true).put("bytes", bytes.size).toString()
+        val ok = JSONObject()
+            .put("ok", true)
+            .put("bytes", bytes.size)
+            .put("sourceBytes", incoming.size)
+            .put("printerType", printer.printerType().name)
+            .toString()
         return addHeaders(newFixedLengthResponse(Response.Status.OK, "application/json", ok), cors)
     }
 
