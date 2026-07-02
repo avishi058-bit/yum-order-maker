@@ -497,7 +497,7 @@ const Kiosk = () => {
         onSelect={(val) => {
           setDineIn(val);
           setDineInSelectorOpen(false);
-          if (!val && burgerCount > 0) {
+          if (!val && freeSauces > 0) {
             setSauceSelectorOpen(true);
           } else {
             setCheckoutOpen(true);
