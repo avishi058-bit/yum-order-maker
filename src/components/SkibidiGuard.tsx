@@ -26,25 +26,24 @@ export const useSkibidiGuard = (): SkibidiGuardContextValue => {
 
 export const SkibidiGuardProvider = ({ children }: { children: React.ReactNode }) => {
   const [visible, setVisible] = useState(false);
-  const [topPx, setTopPx] = useState<number | null>(null);
+  const [keyboardInset, setKeyboardInset] = useState(0);
   const shownRef = useRef(false);
+
+  const measureKeyboard = useCallback(() => {
+    if (typeof window === "undefined") return 0;
+    const vv = window.visualViewport;
+    if (!vv) return 0;
+    // Amount of the layout viewport covered by the on-screen keyboard.
+    return Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  }, []);
 
   const trigger = useCallback(() => {
     if (shownRef.current) return false;
     shownRef.current = true;
-
-    // Position the message at the vertical center of the *visible* viewport,
-    // so it isn't hidden behind an open on-screen keyboard.
-    const vv = typeof window !== "undefined" ? window.visualViewport : null;
-    if (vv) {
-      setTopPx(vv.offsetTop + vv.height / 2);
-    } else {
-      setTopPx(typeof window !== "undefined" ? window.innerHeight / 2 : null);
-    }
-
+    setKeyboardInset(measureKeyboard());
     setVisible(true);
     return true;
-  }, []);
+  }, [measureKeyboard]);
 
   const reset = useCallback(() => {
     shownRef.current = false;
@@ -56,6 +55,19 @@ export const SkibidiGuardProvider = ({ children }: { children: React.ReactNode }
     return () => clearTimeout(t);
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible) return;
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    const update = () => setKeyboardInset(measureKeyboard());
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [visible, measureKeyboard]);
+
   return (
     <SkibidiGuardContext.Provider value={{ trigger, reset }}>
       {children}
@@ -66,22 +78,18 @@ export const SkibidiGuardProvider = ({ children }: { children: React.ReactNode }
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm px-6"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm px-6"
             role="alert"
             aria-live="assertive"
+            style={{ paddingBottom: `${keyboardInset}px` }}
+            dir="rtl"
           >
             <motion.div
               initial={{ scale: 0.6, rotate: -6, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               exit={{ scale: 0.7, opacity: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 18 }}
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: topPx !== null ? `${topPx}px` : "50%",
-                transform: "translate(-50%, -50%)",
-              }}
-              className="text-center w-[min(32rem,calc(100%-3rem))]"
+              className="text-center max-w-lg w-full"
             >
               <div className="text-7xl mb-4">😂😂😂</div>
               <div className="text-white font-black text-3xl md:text-4xl leading-tight">
@@ -97,3 +105,4 @@ export const SkibidiGuardProvider = ({ children }: { children: React.ReactNode }
     </SkibidiGuardContext.Provider>
   );
 };
+
