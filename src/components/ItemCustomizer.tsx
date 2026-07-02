@@ -1313,7 +1313,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     ref={ownerInputRef}
                     type="text"
                     value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                    onChange={(e) => {
+                      const raw = e.target.value.slice(0, 30);
+                      if (containsSixtySeven(raw)) {
+                        triggerSkibidi();
+                        setOwnerName("");
+                        return;
+                      }
+                      setOwnerName(raw);
+                    }}
                     placeholder="שם (למשל: יוסי)"
                     maxLength={30}
                     inputMode="text"
