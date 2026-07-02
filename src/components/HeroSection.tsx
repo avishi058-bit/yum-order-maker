@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { heroAnimations } from "@/config/uiConfig";
-import heroBurger from "@/assets/hero-burger.webp";
+import heroBurger from "@/assets/hero-burger.jpeg.asset.json";
 import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.jpeg";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
