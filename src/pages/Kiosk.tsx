@@ -314,13 +314,22 @@ const Kiosk = () => {
   }, []);
 
   const totalItems = cart.reduce((sum, c) => sum + c.quantity, 0);
+  const FRIED_SIDE_IDS = ["fries", "sweet-potato-fries", "onion-rings", "tempura-onion"];
   const burgerCount = cart.reduce((sum, item) => {
     if (item.dealBurgers) return sum + item.dealBurgers.length * item.quantity;
     const menuItem = menuItems.find((m) => m.name === item.name || item.id.startsWith(m.id));
     if (menuItem && (menuItem.category === "burger" || menuItem.category === "meal")) return sum + item.quantity;
     return sum;
   }, 0);
-  const freeSauces = burgerCount * 3;
+  const sideFreeSauces = cart.reduce((sum, item) => {
+    if (item.dealBurgers) return sum;
+    const menuItem = menuItems.find((m) => m.name === item.name || item.id.startsWith(m.id));
+    if (!menuItem) return sum;
+    if (menuItem.id === "friends-mix") return sum + 5 * item.quantity;
+    if (FRIED_SIDE_IDS.includes(menuItem.id)) return sum + 2 * item.quantity;
+    return sum;
+  }, 0);
+  const freeSauces = burgerCount > 0 ? burgerCount * 3 : sideFreeSauces;
 
   const getTotal = () => {
     // computeCartItemTotal handles both deals (base + per-burger toppings)
