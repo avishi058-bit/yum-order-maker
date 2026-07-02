@@ -108,44 +108,67 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
               <div className="space-y-0">
-                {visibleSauces.map((sauce: SauceOption) => {
-                  const qty = sauces[sauce.id] || 0;
+                {(() => {
+                  const regularSauces = visibleSauces.filter((s) => !isPremium(s.id));
+                  const premiumSauces = visibleSauces.filter((s) => isPremium(s.id));
+                  const renderSauce = (sauce: SauceOption) => {
+                    const qty = sauces[sauce.id] || 0;
+                    return (
+                      <div
+                        key={sauce.id}
+                        className="flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => updateSauce(sauce.id, -1)}
+                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="font-bold text-lg w-6 text-center">{qty}</span>
+                          <button
+                            onClick={() => updateSauce(sauce.id, 1)}
+                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-base">{sauce.name}</span>
+                          {sauce.price ? (
+                            <span className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
+                              +₪{sauce.price}
+                            </span>
+                          ) : null}
+                          {sauce.recommended && (
+                            <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                              <Star size={8} fill="currentColor" className="inline mb-0.5" /> מומלץ
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  };
                   return (
-                    <div
-                      key={sauce.id}
-                      className="flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => updateSauce(sauce.id, -1)}
-                          className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span className="font-bold text-lg w-6 text-center">{qty}</span>
-                        <button
-                          onClick={() => updateSauce(sauce.id, 1)}
-                          className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-base">{sauce.name}</span>
-                        {sauce.price ? (
-                          <span className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
-                            +₪{sauce.price}
-                          </span>
-                        ) : null}
-                        {sauce.recommended && (
-                          <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                            <Star size={8} fill="currentColor" className="inline mb-0.5" /> מומלץ
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <>
+                      {regularSauces.length > 0 && (
+                        <div className="mb-1">
+                          <h3 className="text-sm font-bold text-muted-foreground text-right py-2">רטבים חינמיים</h3>
+                          <div className="divide-y divide-border/50">{regularSauces.map(renderSauce)}</div>
+                        </div>
+                      )}
+                      {regularSauces.length > 0 && premiumSauces.length > 0 && (
+                        <div className="my-3 border-t border-border" />
+                      )}
+                      {premiumSauces.length > 0 && (
+                        <div className="mb-1">
+                          <h3 className="text-sm font-bold text-muted-foreground text-right py-2">רטבים בתשלום</h3>
+                          <div className="divide-y divide-border/50">{premiumSauces.map(renderSauce)}</div>
+                        </div>
+                      )}
+                    </>
                   );
-                })}
+                })()}
               </div>
             </div>
 

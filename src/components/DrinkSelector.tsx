@@ -93,8 +93,8 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
               <div className={isKiosk ? "space-y-4" : "space-y-2"}>
                 {options.map((opt) => {
                   const unavailable = isDrinkUnavailable(opt.id);
-                  // Hide out-of-stock BLU variants entirely instead of showing "אזל"
-                  if (unavailable && opt.id.startsWith("can-")) return null;
+                  // Hide out-of-stock beer / BLU variants entirely instead of showing "אזל"
+                  if (unavailable && (opt.id.startsWith("can-") || opt.id.startsWith("beer-"))) return null;
 
                   return (
                     <button
