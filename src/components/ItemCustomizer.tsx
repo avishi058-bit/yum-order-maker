@@ -10,6 +10,7 @@ import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
 import aioliImg from "@/assets/aioli-sauce.webp";
 import picklesImg from "@/assets/pickles.webp";
 import tomatoImg from "@/assets/tomato.webp";
