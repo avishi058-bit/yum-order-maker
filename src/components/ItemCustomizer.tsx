@@ -1227,7 +1227,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       })}
                     </div>
 
+                    {beerDrinks.some((d) => !isDrinkUnavailable(d.id)) && (
                     <h4 className={`font-black text-right mt-6 mb-3 ${isKiosk ? "text-[26px]" : "text-base"}`}>בירות:</h4>
+                    )}
                     <div className="space-y-0">
                       {beerDrinks.map((drink) => {
                         const active = selectedDrink === drink.id;
