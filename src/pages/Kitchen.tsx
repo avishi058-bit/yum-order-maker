@@ -285,19 +285,13 @@ const Kitchen = () => {
   const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
 
   const handleQuickConnect = useCallback(async () => {
-    setPrintModeState("agent");
-    setPrintMode("agent");
-    const health = await refreshAgentHealth();
-    if (health?.ok) {
-      toast.success(`ה-Agent מחובר למדפסת ${health.printer || ""}`.trim());
-      return;
+    try {
+      await pairPrinter();
+      setBtConnected(isPrinterConnected());
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בחיבור המדפסת");
     }
-    if (health?.reachable) {
-      toast.error(health.error || "ה-Agent פעיל אבל לא מחובר למדפסת — ודא שה-mC-Print3 מזווגת באנדרואיד והפעל מחדש את ה-Agent");
-      return;
-    }
-    toast.error("ה-Print Agent לא זמין — פתח/התקן את אפליקציית ההדפסה במכשיר");
-  }, [refreshAgentHealth]);
+  }, []);
 
 
   const [showTimePicker, setShowTimePicker] = useState<string | null>(null);
