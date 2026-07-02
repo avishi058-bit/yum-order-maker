@@ -45,7 +45,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "meal-haf-mifsha", name: "ארוחת חף מפשע", price: 78, category: "meal" },
   // Sides
   { id: "fries", name: "צ׳יפס", price: 20, category: "side" },
-  { id: "sweet-potato-fries", name: "צ׳יפס בטטה", price: 25, category: "side" },
+  { id: "sweet-potato-fries", name: "וופל צ׳יפס", price: 25, category: "side" },
   { id: "onion-rings", name: "טבעות בצל", price: 24, category: "side" },
   { id: "tempura-onion", name: "טבעות בצל ביתיות בטמפורה", price: 32, category: "side" },
   { id: "friends-mix", name: "מיקס חברים", price: 59, category: "side" },
