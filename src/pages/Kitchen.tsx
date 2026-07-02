@@ -49,6 +49,7 @@ import {
 import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
+import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
 import { ingredients } from "@/data/menu";
 import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
 
@@ -272,6 +273,7 @@ const NORMAL_RING_MS = 5000;
 
 const Kitchen = () => {
   useWakeLock(true);
+  const activeCustomers = useActiveCustomerCount();
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
@@ -1437,6 +1439,22 @@ const Kitchen = () => {
       <div className="bg-card border-b border-border px-4 py-3 flex flex-col gap-3 sticky top-0 z-10 overflow-x-hidden max-w-full">
         <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-2xl font-black text-foreground">🍔 מטבח הבקתה</h1>
+          {activeCustomers > 0 && (
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-sm font-bold animate-pulse"
+              title="לקוחות שכרגע בונים הזמנה באתר"
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <span>
+                {activeCustomers === 1
+                  ? "לקוח בונה הזמנה כרגע"
+                  : `${activeCustomers} לקוחות בונים הזמנה כרגע`}
+              </span>
+            </div>
+          )}
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setViewMode("active")}
