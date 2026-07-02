@@ -161,12 +161,26 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
                             : "border-border bg-secondary/50 text-foreground hover:border-primary/50"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className={`font-medium ${isKiosk ? "text-2xl" : ""} ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
-                        {unavailable && <span className="text-xs text-destructive">אזל</span>}
-                        {!unavailable && selected === opt.id && (
-                          <Check size={isKiosk ? 28 : 18} className="text-primary" />
-                        )}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {unavailable && <span className="text-xs text-destructive">אזל</span>}
+                          {!unavailable && selected === opt.id && (
+                            <Check size={isKiosk ? 28 : 18} className="text-primary" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 flex-1 justify-end min-w-0">
+                          <span className={`font-medium ${isKiosk ? "text-2xl" : ""} ${unavailable ? "line-through text-muted-foreground" : ""}`}>{opt.name}</span>
+                          {drinkOptionImages[opt.id] && (
+                            <img
+                              src={drinkOptionImages[opt.id]}
+                              alt={opt.name}
+                              width={64}
+                              height={64}
+                              loading="lazy"
+                              className={`${isKiosk ? "w-20 h-20" : "w-14 h-14"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                            />
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
