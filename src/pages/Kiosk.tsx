@@ -79,6 +79,7 @@ const Kiosk = () => {
   const [view, setView] = useState<KioskView>("welcome");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
+  const [successPaymentMethod, setSuccessPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
