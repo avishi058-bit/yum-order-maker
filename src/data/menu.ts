@@ -301,6 +301,8 @@ export interface SauceOption {
   id: string;
   name: string;
   recommended?: boolean;
+  /** Premium sauce with a fixed per-unit price. Not counted toward the free-sauce quota. */
+  price?: number;
 }
 
 // Mapping from any drink option ID to canonical availability ID
