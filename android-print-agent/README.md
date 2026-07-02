@@ -27,7 +27,9 @@ POST /print-raw
 
 1. `File → Open` ובחר את התיקייה `android-print-agent/`.
 2. המתן ל-Gradle sync.
-3. ערוך את `app/src/main/java/co/habakta/printagent/Config.kt` והגדר את **שם המדפסת** המזווגת (`PRINTER_NAME = "Printer001-352C"`).
+3. ערוך את `app/src/main/java/co/habakta/printagent/Config.kt` והגדר את **שמות המדפסות** הנתמכות ברשימת `PRINTER_NAMES` (למשל `"Printer001-352C"`, `"mC-Print3-D0011"`). ניתן גם להוסיף קידומות ל-`PRINTER_NAME_PREFIXES`. הסוכן בוחר את המדפסת הראשונה המזווגת מהרשימה.
+
+   **תמיכה ב-Star mC-Print3 (MCP31LB):** המדפסת משתמשת ב-Bluetooth Classic SPP (לא BLE) — לכן דפדפן לא רואה אותה, אבל הסוכן הזה כן. יש לוודא שהמדפסת מוגדרת ל-**ESC/POS emulation** דרך Star Quick Setup Utility (אם היא ב-StarPRNT native mode הבייטים לא יפורשו נכון). כאשר RawBT מדפיס תקין — סימן שהמצב כבר נכון.
 4. `Build → Build APK(s)` — ה-APK יישמר ב-`app/build/outputs/apk/release/`.
 5. העבר את ה-APK לטאבלט (USB / Google Drive / `adb install`).
 
