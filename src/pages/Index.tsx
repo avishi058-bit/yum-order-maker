@@ -184,6 +184,21 @@ const Index = () => {
 
   const alcoholConsent = useAlcoholConsent();
 
+  // Anonymous "customer is building an order" signal for the kitchen dashboard.
+  // Active whenever a customizer is open OR there is something in the cart.
+  // Only from the public site (not from the in-store kiosk).
+  const isBuildingOrder =
+    !isStation &&
+    (!!customizerItem ||
+      !!drinkItem ||
+      !!arayesItem ||
+      dealOpen ||
+      familyDealOpen ||
+      sauceSelectorOpen ||
+      !!previewItem ||
+      cart.length > 0);
+  useTrackCustomerActivity(isBuildingOrder);
+
   const openItemFlow = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
       setDealOpen(true);
