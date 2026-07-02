@@ -712,7 +712,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 <label className="block text-sm font-medium mb-1">הערות</label>
                 <textarea
                   value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (containsSixtySeven(val)) {
+                      triggerSkibidi();
+                      setForm({ ...form, notes: "" });
+                      return;
+                    }
+                    setForm({ ...form, notes: val });
+                  }}
                   className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                   rows={2}
                   placeholder="הערות להזמנה"
