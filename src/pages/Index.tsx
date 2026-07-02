@@ -58,6 +58,7 @@ import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "@/hooks/use-toast";
+import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
