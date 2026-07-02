@@ -685,7 +685,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                       }
                     }}
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (containsSixtySeven(val)) {
+                        triggerSkibidi();
+                        setForm({ ...form, name: "" });
+                        return;
+                      }
+                      setForm({ ...form, name: val });
+                    }}
                     className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
