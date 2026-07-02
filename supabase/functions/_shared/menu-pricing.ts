@@ -47,7 +47,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "fries", name: "צ׳יפס", price: 20, category: "side" },
   { id: "sweet-potato-fries", name: "וופל צ׳יפס", price: 25, category: "side" },
   { id: "onion-rings", name: "טבעות בצל", price: 24, category: "side" },
-  { id: "tempura-onion", name: "טבעות בצל ביתיות בטמפורה", price: 32, category: "side" },
+  { id: "tempura-onion", name: "טבעות בצל בטמפורה", price: 32, category: "side" },
   { id: "friends-mix", name: "מיקס חברים", price: 59, category: "side" },
   { id: "arayes-special", name: "ספיישל עראיס הבית", price: 44, category: "side" },
   { id: "arayes-special-4", name: "ספיישל עראיס הבית (4 רבעים)", price: 59, category: "side" },
@@ -95,7 +95,7 @@ export const MEAL_SIDES_PRICING: PricedOption[] = [
   { id: "side-fries", name: "צ׳יפס רגיל", price: 0 },
   { id: "side-sweet-potato", name: "וופל צ׳יפס", price: 5 },
   { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
-  { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
+  { id: "side-tempura", name: "טבעות בצל בטמפורה", price: 13 },
 ];
 
 // ===== Meal drinks =====
