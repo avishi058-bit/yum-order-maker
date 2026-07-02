@@ -1160,8 +1160,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                                 <img
                                   src={mealSideImages[side.id]}
                                   alt={side.name}
-                                  loading="lazy"
-                                  className={`${isKiosk ? "w-14 h-14" : "w-11 h-11"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                                  width={80}
+                                  height={80}
+                                  className={`${isKiosk ? "w-20 h-20" : "w-16 h-16"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
                                 />
                               )}
                             </div>
