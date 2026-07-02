@@ -1257,9 +1257,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
 
               {/* Owner-name field — printed on the kitchen receipt above this item.
                   Helpful when one customer orders multiple dishes.
-                  Placed just above the Continue button so it's easy to reach before confirming. */}
+                  Placed flush against the Continue button so it's easy to reach before confirming. */}
               {isBurger && step === "customize" && (
-                <div className={`mx-5 ${isKiosk ? "mb-1" : "mb-1"}`}>
+                <div className={`mx-5 ${isKiosk ? "mb-0" : "mb-0"}`}>
                   {!ownerNameEnabled && (
                     <button
                       type="button"
