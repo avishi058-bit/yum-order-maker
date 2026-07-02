@@ -118,6 +118,7 @@ const Kiosk = () => {
     const orderNum = searchParams.get("order");
     if (paid === "true" && orderNum) {
       setOrderSuccess(parseInt(orderNum));
+      setSuccessPaymentMethod("credit");
       setView("welcome");
       setCart([]);
       setCheckoutOpen(false);
@@ -126,6 +127,7 @@ const Kiosk = () => {
       });
       setTimeout(() => {
         setOrderSuccess(null);
+        setSuccessPaymentMethod(null);
       }, 2000);
       setSearchParams({}, { replace: true });
     }
