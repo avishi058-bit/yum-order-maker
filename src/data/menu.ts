@@ -241,7 +241,7 @@ export interface DrinkOption {
   category: "soft" | "beer";
 }
 
-const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness"];
+const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness", "stella"];
 const isBeerId = (id: string) => BEER_SUFFIXES.some((s) => id.endsWith(s));
 
 export const mealDrinkOptions: DrinkOption[] = MEAL_DRINKS_PRICING.map((d) => ({
