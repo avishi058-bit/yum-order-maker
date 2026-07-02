@@ -84,7 +84,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   water: { description: "בקבוק מים מינרליים" },
   "flavored-water": { description: "מים בטעם תפוח / ענבים" },
   soda: { description: "בקבוק סודה" },
-  "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
+  "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה, סטלה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
   "beer-weiss": { description: "בירת חיטה גרמנית" },
 
@@ -241,7 +241,7 @@ export interface DrinkOption {
   category: "soft" | "beer";
 }
 
-const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness"];
+const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness", "stella"];
 const isBeerId = (id: string) => BEER_SUFFIXES.some((s) => id.endsWith(s));
 
 export const mealDrinkOptions: DrinkOption[] = MEAL_DRINKS_PRICING.map((d) => ({
@@ -282,13 +282,13 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "beer-goldstar", name: "גולדסטאר" },
     { id: "beer-heineken", name: "הייניקן" },
     { id: "beer-corona", name: "קורונה" },
+    { id: "beer-stella", name: "סטלה" },
   ],
   "beer-premium": [
     { id: "beer-hoegaarden", name: "הוגרדן" },
     { id: "beer-laffe", name: "לאף" },
     { id: "beer-unfiltered", name: "גולדסטאר אנפילטר" },
     { id: "beer-paulaner", name: "פאולנר" },
-    { id: "beer-stella", name: "סטלה" },
   ],
 };
 

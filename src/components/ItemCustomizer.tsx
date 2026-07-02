@@ -10,6 +10,7 @@ import { menuImages } from "@/data/menuImages";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
+import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
 import aioliImg from "@/assets/aioli-sauce.webp";
 import picklesImg from "@/assets/pickles.webp";
 import tomatoImg from "@/assets/tomato.webp";
@@ -103,6 +104,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
   const [ownerName, setOwnerName] = useState("");
   const ownerInputRef = useRef<HTMLInputElement>(null);
+  const { trigger: triggerSkibidi } = useSkibidiGuard();
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
   const [toppingsSeen, setToppingsSeen] = useState(false);
@@ -1311,7 +1313,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     ref={ownerInputRef}
                     type="text"
                     value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                    onChange={(e) => {
+                      const raw = e.target.value.slice(0, 30);
+                      if (containsSixtySeven(raw)) {
+                        triggerSkibidi();
+                        setOwnerName("");
+                        return;
+                      }
+                      setOwnerName(raw);
+                    }}
                     placeholder="שם (למשל: יוסי)"
                     maxLength={30}
                     inputMode="text"
