@@ -188,8 +188,7 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
                               height={64}
                               loading="eager"
                               decoding="sync"
-                              // @ts-ignore fetchpriority is valid HTML attr
-                              fetchpriority="high"
+                              fetchPriority="high"
                               className={`${isKiosk ? "w-20 h-20" : "w-14 h-14"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
                             />
                           )}
