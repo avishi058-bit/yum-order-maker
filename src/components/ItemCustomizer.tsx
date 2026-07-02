@@ -1232,6 +1232,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                       {beerDrinks.map((drink) => {
                         const active = selectedDrink === drink.id;
                         const unavailable = isDrinkUnavailable(drink.id);
+                        if (unavailable) return null;
                         return (
                           <button
                             key={drink.id}
