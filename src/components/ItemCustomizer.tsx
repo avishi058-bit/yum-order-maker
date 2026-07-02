@@ -1288,7 +1288,19 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                               {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
                               {!unavailable && <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{drink.price}</span>}
                             </div>
-                            <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{drink.name}</span>
+                              {mealDrinkImages[drink.id] && (
+                                <img
+                                  src={mealDrinkImages[drink.id]}
+                                  alt={drink.name}
+                                  width={80}
+                                  height={80}
+                                  loading="lazy"
+                                  className={`${isKiosk ? "w-20 h-20" : "w-16 h-16"} object-contain flex-shrink-0 ${unavailable ? "opacity-40 grayscale" : ""}`}
+                                />
+                              )}
+                            </div>
                           </button>
                         );
                       })}
