@@ -84,7 +84,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   water: { description: "בקבוק מים מינרליים" },
   "flavored-water": { description: "מים בטעם תפוח / ענבים" },
   soda: { description: "בקבוק סודה" },
-  "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה" },
+  "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה, סטלה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
   "beer-weiss": { description: "בירת חיטה גרמנית" },
 
