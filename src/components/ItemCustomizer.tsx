@@ -1253,6 +1253,101 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                 )}
               </AnimatePresence>
 
+              {/* Owner-name field — printed on the kitchen receipt above this item.
+                  Helpful when one customer orders multiple dishes.
+                  Placed just above the action button so it's easy to reach before confirming. */}
+              {isBurger && step === "customize" && (
+                <div className={`mx-5 ${isKiosk ? "mb-5" : "mb-3"}`}>
+                  {!ownerNameEnabled && (
+                    <button
+                      type="button"
+                      // onPointerDown fires earlier in the touch lifecycle
+                      // than onClick — gives Safari/iOS the user-gesture
+                      // window it needs to allow programmatic .focus()
+                      // to open the on-screen keyboard.
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        const el = ownerInputRef.current;
+                        if (el) {
+                          el.focus({ preventScroll: true });
+                          // Some Android/Chromium kiosks need a click too
+                          try { el.click(); } catch { /* ignore focus fallback failures */ }
+                        }
+                        setOwnerNameEnabled(true);
+                      }}
+                      className={`w-full bg-muted text-foreground font-black rounded-xl border border-border shadow-sm active:scale-[0.98] transition-transform flex flex-col items-center justify-center gap-1 ${isKiosk ? "py-5 px-4" : "py-4 px-3"}`}
+                    >
+                      <span className={`flex items-center gap-2 ${isKiosk ? "text-[22px]" : "text-lg"}`}>
+                        <span>✍🏼</span>
+                        <span>לחץ כדי להוסיף שם למנה</span>
+                      </span>
+                      <span className={`text-muted-foreground font-medium ${isKiosk ? "text-[16px]" : "text-xs"}`}>
+                        (רלוונטי למי שמזמין יותר ממנה אחת)
+                      </span>
+                    </button>
+                  )}
+                  {ownerNameEnabled && (
+                    <div className={`rounded-xl border border-border bg-card ${isKiosk ? "px-4 py-3" : "px-3 py-2.5"}`}>
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <h3 className={`font-black flex items-center gap-1.5 ${isKiosk ? "text-[22px]" : "text-base"}`}>
+                          <span>👤</span>
+                          <span>שם על המנה</span>
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => { setOwnerName(""); setOwnerNameEnabled(false); }}
+                          className={`text-muted-foreground underline ${isKiosk ? "text-[16px]" : "text-xs"}`}
+                        >
+                          ביטול
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {/* Input is ALWAYS mounted and visible (clipped when
+                      disabled). iOS Safari refuses programmatic focus
+                      on display:none/opacity:0/visibility:hidden inputs
+                      — clip-path keeps it 'visible' to the engine. */}
+                  <input
+                    ref={ownerInputRef}
+                    type="text"
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value.slice(0, 30))}
+                    placeholder="שם (למשל: יוסי)"
+                    maxLength={30}
+                    inputMode="text"
+                    enterKeyHint="done"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="words"
+                    spellCheck={false}
+                    name="dish-owner-name"
+                    dir="rtl"
+                    aria-hidden={!ownerNameEnabled}
+                    tabIndex={ownerNameEnabled ? 0 : -1}
+                    style={
+                      ownerNameEnabled
+                        ? { fontSize: "16px" }
+                        : {
+                            position: "absolute",
+                            width: 1,
+                            height: 1,
+                            padding: 0,
+                            margin: 0,
+                            border: 0,
+                            clipPath: "inset(50%)",
+                            whiteSpace: "nowrap",
+                            fontSize: "16px",
+                          }
+                    }
+                    className={
+                      ownerNameEnabled
+                        ? `mt-2 w-full bg-background border border-border rounded-lg px-3 py-2 text-right focus:outline-none focus:border-gray-500 transition-colors block`
+                        : ""
+                    }
+                  />
+                </div>
+              )}
+
               {/* Bottom bar - only on customize step */}
               {step === "customize" && (
                 <div className={`border-t border-gray-200 flex items-center gap-3 bg-white pwa-safe-bottom ${isKiosk ? "px-8 py-6" : "px-5 py-4"}`}>
