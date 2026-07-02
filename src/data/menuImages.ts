@@ -32,7 +32,7 @@ export const menuImages: Record<string, string> = {
   "crazy-smash": crazySmash,
   "special-hadegel": specialHadegel,
   fries: fries,
-  "sweet-potato-fries": sweetPotatoFries,
+  "sweet-potato-fries": waffleFriesAsset.url,
   "tempura-onion": tempuraOnion,
   "friends-mix": friendsMix,
   "arayes-special": arayesSpecialAsset.url,
