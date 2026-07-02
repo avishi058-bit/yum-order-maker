@@ -512,7 +512,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       if (!name) return null;
       if (/מיקס\s*חברים/.test(name)) return "מיקס חברים";
       if (/טבעות.*טמפורה|טמפורה/.test(name)) return "טבעות בצל בטמפורה";
-      if (/בטטה/.test(name)) return "צ'יפס בטטה";
+      if (/וופל|בטטה/.test(name)) return "וופל צ'יפס";
       if (/טבעות\s*בצל/.test(name)) return "טבעות בצל";
       if (/צ['׳]?יפס\s*ענק/.test(name)) return "צ'יפס ענק";
       if (/צ['׳]?יפס/.test(name)) return "צ'יפס רגיל";
