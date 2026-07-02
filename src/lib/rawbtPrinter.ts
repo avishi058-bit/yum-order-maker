@@ -22,13 +22,14 @@ export function getPrintMode(): PrintMode {
   try {
     const v = localStorage.getItem(MODE_KEY);
     // Star mC-Print3 (MCP31LB) is Bluetooth Classic SPP and is handled by
-    // our local Android Print Agent, not the browser Web Bluetooth picker.
-    // Migrate older kitchen tablets that were left in direct-BLE mode.
-    if (v === "bt") {
+    // our local Android Print Agent — not RawBT and not the browser Web
+    // Bluetooth picker. Migrate older kitchen tablets that were left on an
+    // obsolete transport.
+    if (v === "bt" || v === "rawbt") {
       localStorage.setItem(MODE_KEY, "agent");
       return "agent";
     }
-    if (v === "agent" || v === "rawbt" || v === "browser") return v;
+    if (v === "agent" || v === "browser") return v;
   } catch {}
   return "agent";
 }
