@@ -48,7 +48,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
 
       <div className="absolute inset-0">
         <img
-          src={heroBurger}
+          src={heroBurger.url}
           alt="המבורגר הבקתה"
           width={1920}
           height={1080}
