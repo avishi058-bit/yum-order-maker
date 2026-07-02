@@ -93,7 +93,7 @@ export const MEAL_UPGRADE_PRICE = 23;
 // ===== Meal sides (chosen with meal upgrade or full meal) =====
 export const MEAL_SIDES_PRICING: PricedOption[] = [
   { id: "side-fries", name: "צ׳יפס רגיל", price: 0 },
-  { id: "side-sweet-potato", name: "צ׳יפס בטטה", price: 5 },
+  { id: "side-sweet-potato", name: "וופל צ׳יפס", price: 5 },
   { id: "side-onion-rings", name: "טבעות בצל", price: 4 },
   { id: "side-tempura", name: "טבעות בצל ביתיות בטמפורה", price: 13 },
 ];
