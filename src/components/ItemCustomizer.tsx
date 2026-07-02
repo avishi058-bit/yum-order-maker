@@ -33,13 +33,27 @@ import tempuraOnionRingsImg from "@/assets/tempura-onion-rings.webp";
 import drinkColaImg from "@/assets/drink-cola.png";
 import drinkZeroImg from "@/assets/drink-zero.png";
 import drinkSpriteImg from "@/assets/drink-sprite.png";
+import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.png";
 import drinkFantaImg from "@/assets/drink-fanta.png";
+import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.png";
 import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.png";
 import drinkSodaImg from "@/assets/drink-soda.png";
 import drinkWaterImg from "@/assets/drink-water.png";
 import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.png";
+import drinkBluMojitoImg from "@/assets/drink-blu-mojito.png";
+import drinkBluDayImg from "@/assets/drink-blu-day.png";
+import drinkBluMelonAppleImg from "@/assets/drink-blu-melon-apple.png";
 import drinkGoldstarImg from "@/assets/drink-goldstar.png";
 import drinkStellaImg from "@/assets/drink-stella.png";
+import drinkHeinekenImg from "@/assets/drink-heineken.png";
+import drinkCoronaImg from "@/assets/drink-corona.png";
+import drinkCarlsbergImg from "@/assets/drink-carlsberg.png";
+import drinkPaulanerImg from "@/assets/drink-paulaner.png";
+import drinkWeissImg from "@/assets/drink-weiss.png";
+import drinkFlavoredWaterAppleImg from "@/assets/drink-flavored-water-apple.png";
+import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.png";
+import drinkGrapesImg from "@/assets/drink-grapes.png";
+import drinkOrangesImg from "@/assets/drink-apples.png";
 
 const mealSideImages: Record<string, string> = {
   "side-fries": friesRegularImg,
@@ -52,13 +66,28 @@ const mealDrinkImages: Record<string, string> = {
   "drink-cola": drinkColaImg,
   "drink-zero": drinkZeroImg,
   "drink-sprite": drinkSpriteImg,
+  "drink-sprite-zero": drinkSpriteZeroImg,
   "drink-fanta": drinkFantaImg,
+  "drink-fanta-grape": drinkFantaGrapeImg,
   "drink-fanta-exotic": drinkFantaExoticImg,
   "drink-soda": drinkSodaImg,
   "drink-water": drinkWaterImg,
   "drink-blu-watermelon": drinkBluWatermelonImg,
+  "drink-blu-mojito": drinkBluMojitoImg,
+  "drink-blu-day": drinkBluDayImg,
+  "drink-blu-melon-apple": drinkBluMelonAppleImg,
   "drink-goldstar": drinkGoldstarImg,
   "drink-stella": drinkStellaImg,
+  "drink-heineken": drinkHeinekenImg,
+  "drink-corona": drinkCoronaImg,
+  "drink-carlsberg": drinkCarlsbergImg,
+  "drink-paulaner": drinkPaulanerImg,
+  "drink-weiss": drinkWeissImg,
+  "drink-flavored-water-apple": drinkFlavoredWaterAppleImg,
+  "drink-flavored-water-grape": drinkFlavoredWaterGrapeImg,
+  "drink-grapes": drinkGrapesImg,
+  "drink-oranges": drinkOrangesImg,
+  "drink-apples": drinkOrangesImg,
 };
 
 const donenessImages: Record<string, string> = {
