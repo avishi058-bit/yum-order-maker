@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { heroAnimations } from "@/config/uiConfig";
-import heroBurger from "@/assets/hero-burger.jpeg.asset.json";
+import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.jpeg";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -48,7 +48,7 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
 
       <div className="absolute inset-0">
         <img
-          src={heroBurger.url}
+          src={heroBurger}
           alt="המבורגר הבקתה"
           width={1920}
           height={1080}
