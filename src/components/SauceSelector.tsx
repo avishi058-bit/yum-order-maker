@@ -132,6 +132,11 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-base">{sauce.name}</span>
+                        {sauce.price ? (
+                          <span className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
+                            +₪{sauce.price}
+                          </span>
+                        ) : null}
                         {sauce.recommended && (
                           <span className="text-[10px] font-bold bg-green-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
                             <Star size={8} fill="currentColor" className="inline mb-0.5" /> מומלץ
