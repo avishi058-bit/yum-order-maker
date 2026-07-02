@@ -55,6 +55,15 @@ const drinkOptionImages: Record<string, string> = {
   "beer-weiss": drinkWeissImg,
 };
 
+// Preload all drink icons at module load so they're cached before the selector opens
+if (typeof window !== "undefined") {
+  Object.values(drinkOptionImages).forEach((src) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+  });
+}
+
 
 interface DrinkSelectorProps {
   item: MenuItem | null;
