@@ -659,7 +659,7 @@ const Index = () => {
             onUpdateQuantity={updateQuantity}
             onCheckout={() => {
               setCartOpen(false);
-              if (dineIn === false && burgerCount > 0) {
+              if (dineIn === false && freeSauces > 0) {
                 setSauceSelectorOpen(true);
               } else {
                 setCheckoutOpen(true);
