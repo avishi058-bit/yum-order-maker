@@ -37,7 +37,7 @@ const drinkOptionImages: Record<string, string> = {
   "can-fanta-exotic": drinkFantaExoticImg,
   "can-sprite": drinkSpriteImg,
   "can-sprite-zero": drinkSpriteZeroImg,
-  "can-blu": drinkBluWatermelonImg,
+  "can-blu": drinkBluImg,
   "can-mojito": drinkBluMojitoImg,
   "can-day": drinkBluDayImg,
   "can-watermelon": drinkBluWatermelonImg,
