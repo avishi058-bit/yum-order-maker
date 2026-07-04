@@ -722,10 +722,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
-      const toppingsToPrint = printableToppings(it.toppings);
-      if (toppingsToPrint.length > 0) {
-        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(toppingsToPrint.join(", "))}</div>`;
-      }
+      html += formatToppingsHtml(it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
         if (it.meal_side) mealText += ` — ${it.meal_side}`;
