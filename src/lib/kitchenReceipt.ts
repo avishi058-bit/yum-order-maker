@@ -1159,7 +1159,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
             html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
           }
           if (Array.isArray(b.toppings) && b.toppings.length > 0) {
-            html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(b.toppings.join(", "))}</div>`;
+            html += formatToppingsHtml(b.toppings);
           }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;
