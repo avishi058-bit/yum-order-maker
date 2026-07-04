@@ -119,6 +119,22 @@ const isDrinkOrMisc = (name: string): boolean =>
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
+const isPattyTopping = (t: string): boolean => /קציצה/.test(String(t || ""));
+
+const formatToppingsHtml = (toppings: string[]): string => {
+  const tops = printableToppings(toppings);
+  if (tops.length === 0) return "";
+  return tops
+    .map((t) => {
+      const name = String(t || "").trim();
+      const line = `+ ${name}`;
+      return isPattyTopping(name)
+        ? `<div class="sub patty-topping">${escapeHtml(line)}</div>`
+        : `<div class="sub" style="font-weight:900;">${escapeHtml(line)}</div>`;
+    })
+    .join("");
+};
+
 // Detect fried-side items by name. Order matters.
 type FriedKind = "friendsMix" | "tempuraOnionSide" | "sweetPotatoFries" | "onionRings" | "fries" | null;
 const detectFried = (name: string): FriedKind => {
@@ -706,10 +722,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
-      const toppingsToPrint = printableToppings(it.toppings);
-      if (toppingsToPrint.length > 0) {
-        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(toppingsToPrint.join(", "))}</div>`;
-      }
+      html += formatToppingsHtml(it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
         if (it.meal_side) mealText += ` — ${it.meal_side}`;
@@ -729,7 +742,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
             html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
           }
           if (Array.isArray(b.toppings) && b.toppings.length > 0) {
-            html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(b.toppings.join(", "))}</div>`;
+            html += formatToppingsHtml(b.toppings);
           }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;
@@ -932,6 +945,14 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     padding-right: 3mm;
     margin-top: 1mm;
   }
+  .patty-topping {
+    font-size: 13pt;
+    font-weight: 900;
+    border-bottom: 2px solid #000;
+    padding-bottom: 1mm;
+    margin-bottom: 1mm;
+    display: inline-block;
+  }
   .summary {
     border: 3px solid #000;
     margin-top: 3mm;
@@ -1126,10 +1147,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
         }
       }
-      const toppingsToPrint = printableToppings(it.toppings);
-      if (toppingsToPrint.length > 0) {
-        html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(toppingsToPrint.join(", "))}</div>`;
-      }
+      html += formatToppingsHtml(it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
         if (it.meal_side) mealText += ` — ${it.meal_side}`;
@@ -1149,7 +1167,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
             html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
           }
           if (Array.isArray(b.toppings) && b.toppings.length > 0) {
-            html += `<div class="sub" style="font-weight:900;">+ ${escapeHtml(b.toppings.join(", "))}</div>`;
+            html += formatToppingsHtml(b.toppings);
           }
         });
         html += `<div class="sub">+ צ׳יפס ענק</div>`;
@@ -1375,6 +1393,14 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     padding-right: 2mm;
     line-height: 1.3;
     margin-top: 0.5mm;
+  }
+  .patty-topping {
+    font-size: 12.5pt;
+    font-weight: 900;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5mm;
+    margin-bottom: 0.5mm;
+    display: inline-block;
   }
   .empty {
     text-align: center;
