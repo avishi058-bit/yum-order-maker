@@ -267,7 +267,7 @@ const playRingtone = (ringtoneId: RingtoneId) => {
 // Escalation thresholds (seconds) — saved in localStorage
 const DEFAULT_RED_AFTER = 60;
 const DEFAULT_AGGRESSIVE_AFTER = 120;
-const POLLING_FALLBACK_MS = 3000;
+const POLLING_FALLBACK_MS = 10000;
 const AGGRESSIVE_RING_MS = 2000;
 const NORMAL_RING_MS = 5000;
 
@@ -567,10 +567,16 @@ const Kitchen = () => {
   }, []);
 
   const fetchOrders = useCallback(async () => {
+    // Only pull recent orders (last 48h) with a hard cap so the payload stays
+    // small — otherwise every poll/realtime tick refetches the entire history,
+    // which slows the kitchen tablet down and makes button taps feel laggy.
+    const sinceIso = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from("orders")
       .select("*, order_items(*)")
-      .order("created_at", { ascending: false });
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(200);
     if (!error && data) {
       const fetched = data as Order[];
 
@@ -641,7 +647,10 @@ const Kitchen = () => {
       })
       .subscribe();
 
-    // Polling fallback — runs every 3s as a safety net even if realtime drops
+    // Polling fallback — realtime already pushes updates instantly, so we only
+    // need a slow safety-net poll (every 10s) to catch dropped events. A tight
+    // 3s poll on top of realtime kept re-fetching the whole orders table and
+    // made status-button taps feel unresponsive.
     const pollInterval = setInterval(() => {
       fetchOrdersAuto();
     }, POLLING_FALLBACK_MS);
