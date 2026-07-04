@@ -567,10 +567,16 @@ const Kitchen = () => {
   }, []);
 
   const fetchOrders = useCallback(async () => {
+    // Only pull recent orders (last 48h) with a hard cap so the payload stays
+    // small — otherwise every poll/realtime tick refetches the entire history,
+    // which slows the kitchen tablet down and makes button taps feel laggy.
+    const sinceIso = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from("orders")
       .select("*, order_items(*)")
-      .order("created_at", { ascending: false });
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false })
+      .limit(200);
     if (!error && data) {
       const fetched = data as Order[];
 
