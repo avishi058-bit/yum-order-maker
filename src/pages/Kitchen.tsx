@@ -267,7 +267,7 @@ const playRingtone = (ringtoneId: RingtoneId) => {
 // Escalation thresholds (seconds) — saved in localStorage
 const DEFAULT_RED_AFTER = 60;
 const DEFAULT_AGGRESSIVE_AFTER = 120;
-const POLLING_FALLBACK_MS = 3000;
+const POLLING_FALLBACK_MS = 10000;
 const AGGRESSIVE_RING_MS = 2000;
 const NORMAL_RING_MS = 5000;
 
