@@ -483,8 +483,18 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
         }
         const bTops = (b as any).toppings;
         if (Array.isArray(bTops) && bTops.length > 0) {
-          ops.push(asLine(`+ ${bTops.join(", ")}`, { align: "R", bold: true, size: 24 }));
-          ops.push(feed(LINE_GAP));
+          for (const t of bTops) {
+            const n = normalizeToppingName(t).trim();
+            const line = n.startsWith("+") ? n : `+ ${n}`;
+            if (isPattyTopping(t)) {
+              ops.push(asLine(line, { align: "R", bold: true, size: 30 }));
+              ops.push(feed(LINE_GAP));
+              ops.push(asLine("────────────", { align: "C", bold: false, size: 22 }));
+            } else {
+              ops.push(asLine(line, { align: "R", bold: true, size: 24 }));
+            }
+            ops.push(feed(LINE_GAP));
+          }
         }
 
 
