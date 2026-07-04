@@ -429,7 +429,17 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     // the meal side / drinks / deal extras.
     const toppingsToPrint = printableToppings(it.toppings);
     if (toppingsToPrint.length > 0) {
-      for (const t of toppingsToPrint) { ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 32 })); ops.push(feed(LINE_GAP)); }
+      for (const t of toppingsToPrint) {
+        const line = toppingLine(t);
+        if (isPattyTopping(t)) {
+          ops.push(asLine(line, { align: "R", bold: true, size: 38 }));
+          ops.push(feed(LINE_GAP));
+          ops.push(asLine("────────────", { align: "C", bold: false, size: 22 }));
+        } else {
+          ops.push(asLine(line, { align: "R", bold: true, size: 32 }));
+        }
+        ops.push(feed(LINE_GAP));
+      }
     }
 
     // Spacing before meal / drink line
