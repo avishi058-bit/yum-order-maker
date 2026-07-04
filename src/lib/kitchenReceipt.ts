@@ -119,6 +119,22 @@ const isDrinkOrMisc = (name: string): boolean =>
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
+const isPattyTopping = (t: string): boolean => /קציצה/.test(String(t || ""));
+
+const formatToppingsHtml = (toppings: string[]): string => {
+  const tops = printableToppings(toppings);
+  if (tops.length === 0) return "";
+  return tops
+    .map((t) => {
+      const name = String(t || "").trim();
+      const line = `+ ${name}`;
+      return isPattyTopping(name)
+        ? `<div class="sub patty-topping">${escapeHtml(line)}</div>`
+        : `<div class="sub" style="font-weight:900;">${escapeHtml(line)}</div>`;
+    })
+    .join("");
+};
+
 // Detect fried-side items by name. Order matters.
 type FriedKind = "friendsMix" | "tempuraOnionSide" | "sweetPotatoFries" | "onionRings" | "fries" | null;
 const detectFried = (name: string): FriedKind => {
