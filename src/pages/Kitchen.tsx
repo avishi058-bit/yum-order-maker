@@ -647,7 +647,10 @@ const Kitchen = () => {
       })
       .subscribe();
 
-    // Polling fallback — runs every 3s as a safety net even if realtime drops
+    // Polling fallback — realtime already pushes updates instantly, so we only
+    // need a slow safety-net poll (every 10s) to catch dropped events. A tight
+    // 3s poll on top of realtime kept re-fetching the whole orders table and
+    // made status-button taps feel unresponsive.
     const pollInterval = setInterval(() => {
       fetchOrdersAuto();
     }, POLLING_FALLBACK_MS);
