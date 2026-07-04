@@ -1394,6 +1394,14 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     line-height: 1.3;
     margin-top: 0.5mm;
   }
+  .patty-topping {
+    font-size: 12.5pt;
+    font-weight: 900;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5mm;
+    margin-bottom: 0.5mm;
+    display: inline-block;
+  }
   .empty {
     text-align: center;
     padding: 6mm 2mm;
