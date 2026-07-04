@@ -292,6 +292,11 @@ function toppingLine(s: string): string {
   return n.startsWith("+") ? n : `+ ${n}`;
 }
 
+const PATTY_RX = /קציצה/;
+function isPattyTopping(s: string): boolean {
+  return PATTY_RX.test(s);
+}
+
 function printableToppings(toppings: string[] | null | undefined): string[] {
   return (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 }
