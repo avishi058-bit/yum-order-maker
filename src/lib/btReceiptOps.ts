@@ -434,7 +434,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
         if (isPattyTopping(t)) {
           ops.push(asLine(line, { align: "R", bold: true, size: 38 }));
           ops.push(feed(LINE_GAP));
-          ops.push(asLine("────────────", { align: "C", bold: false, size: 22 }));
+          ops.push(asLine("- - - - - - - - - - - - -", { align: "C", bold: false, size: 22 }));
         } else {
           ops.push(asLine(line, { align: "R", bold: true, size: 32 }));
         }
