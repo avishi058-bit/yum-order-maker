@@ -945,6 +945,14 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     padding-right: 3mm;
     margin-top: 1mm;
   }
+  .patty-topping {
+    font-size: 13pt;
+    font-weight: 900;
+    border-bottom: 2px solid #000;
+    padding-bottom: 1mm;
+    margin-bottom: 1mm;
+    display: inline-block;
+  }
   .summary {
     border: 3px solid #000;
     margin-top: 3mm;
