@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Clock, ChevronDown } from "lucide-react";
+import { Clock, ChevronDown, Flame } from "lucide-react";
 import { useBusinessHours, DAY_NAMES_HE, formatCountdown } from "@/hooks/useBusinessHours";
+import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import {
 
 const BusinessStatusBar = () => {
   const { hours, status, loading } = useBusinessHours();
+  const { status: restaurantStatus } = useRestaurantStatus();
   const [open, setOpen] = useState(false);
 
   if (loading) return null;
@@ -20,10 +22,16 @@ const BusinessStatusBar = () => {
     : "היום סגור";
 
   return (
-    <div
-      dir="rtl"
-      className="sticky top-0 z-40 w-full border-b border-border bg-card/95 backdrop-blur-md"
-    >
+    <div dir="rtl" className="sticky top-0 z-40 w-full">
+      {restaurantStatus.high_load && (
+        <div className="w-full bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 text-white px-3 py-2 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md animate-pulse">
+          <Flame size={16} className="shrink-0" />
+          <span>עומס במטבח כרגע — זמני המתנה ארוכים מהרגיל, סבלנות ותודה 🙏</span>
+          <Flame size={16} className="shrink-0" />
+        </div>
+      )}
+      <div className="w-full border-b border-border bg-card/95 backdrop-blur-md">
+
       <div className="mx-auto flex max-w-screen-lg items-center justify-between gap-2 px-3 py-1.5 text-xs sm:text-sm">
         <div className="flex min-w-0 items-center gap-2">
           <span
