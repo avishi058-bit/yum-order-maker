@@ -22,8 +22,8 @@ export const DEFAULT_PREP_SETTINGS: KitchenPrepSettings = {
   lettuce_g: 20,
   chips_g: 250,
   potatoes_g: 250,
-  onion_rings_g: 185,
-  waffle_g: 185,
+  onion_rings_g: 220,
+  waffle_g: 220,
   default_eggs_per_guest: 1,
   default_dessert_per_guest: 1,
 };
