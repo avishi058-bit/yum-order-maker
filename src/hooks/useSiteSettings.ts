@@ -19,6 +19,7 @@ export interface SiteSettings {
   banner_text: string;
   banner_enabled: boolean;
   business_hours: BusinessHoursMap;
+  google_review_url: string;
   // Kiosk display tuning (admin-controlled, kiosk-only)
   kiosk_modal_height_vh: number;
   kiosk_image_height_px: number;
@@ -62,6 +63,7 @@ const defaultSettings: SiteSettings = {
   banner_text: "",
   banner_enabled: false,
   business_hours: defaultBusinessHours,
+  google_review_url: "",
   ...KIOSK_DEFAULTS,
 };
 
@@ -112,10 +114,11 @@ export const useSiteSettings = () => {
         background_color: d.background_color || defaultSettings.background_color,
         menu_item_overrides: (d.menu_item_overrides as Record<string, { name?: string; description?: string }>) || {},
         menu_order: (d.menu_order as string[]) || [],
-        banner_text: d.banner_text || "",
-        banner_enabled: d.banner_enabled ?? false,
-        business_hours: (d.business_hours as BusinessHoursMap) || defaultBusinessHours,
-        kiosk_modal_height_vh: Number(d.kiosk_modal_height_vh) || KIOSK_DEFAULTS.kiosk_modal_height_vh,
+      banner_text: d.banner_text || "",
+      banner_enabled: d.banner_enabled ?? false,
+      business_hours: (d.business_hours as BusinessHoursMap) || defaultBusinessHours,
+      google_review_url: d.google_review_url || "",
+      kiosk_modal_height_vh: Number(d.kiosk_modal_height_vh) || KIOSK_DEFAULTS.kiosk_modal_height_vh,
         kiosk_image_height_px: Number(d.kiosk_image_height_px) || KIOSK_DEFAULTS.kiosk_image_height_px,
         kiosk_image_scale: Number(d.kiosk_image_scale) || KIOSK_DEFAULTS.kiosk_image_scale,
         kiosk_card_image_size_px: Number(d.kiosk_card_image_size_px) || KIOSK_DEFAULTS.kiosk_card_image_size_px,
