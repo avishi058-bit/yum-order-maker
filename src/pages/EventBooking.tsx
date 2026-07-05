@@ -87,14 +87,14 @@ const EventBooking = () => {
   const filledContract = useMemo<string>(() => {
     if (!contractTemplate) return "";
     const data: ContractData = {
-      customer_name: customerName,
+      customer_name: invoiceName || customerName,
       customer_phone: customerPhone,
       customer_email: customerEmail,
       event_type: EVENT_TYPES.find((t) => t.value === eventType)?.label || eventType,
       event_date: eventDate ? format(eventDate, "dd/MM/yyyy") : "",
       start_time: startTime,
       end_time: endTime,
-      event_address: eventAddress,
+      event_address: atVenue ? VENUE_ADDRESS : eventAddress,
       guests_count: guests,
       package_name: selectedPackage.name,
       package_price: selectedPackage.pricePerPerson,
