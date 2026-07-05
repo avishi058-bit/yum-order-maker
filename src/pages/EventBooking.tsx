@@ -86,10 +86,13 @@ const EventBooking = () => {
     () => EVENT_ADDONS.filter((a) => selectedAddons.includes(a.id)),
     [selectedAddons]
   );
+  const addonQty = (a: typeof EVENT_ADDONS[number]) =>
+    a.partial ? Math.min(guests, Math.max(0, addonQuantities[a.id] ?? 0)) : guests;
   const subtotal = useMemo(() => {
-    const addonPerPerson = chosenAddons.reduce((s, a) => s + a.pricePerPerson, 0);
-    return (selectedPackage.pricePerPerson + addonPerPerson) * guests;
-  }, [selectedPackage, chosenAddons, guests]);
+    const pkg = selectedPackage.pricePerPerson * guests;
+    const addonsSum = chosenAddons.reduce((s, a) => s + a.pricePerPerson * addonQty(a), 0);
+    return pkg + addonsSum;
+  }, [selectedPackage, chosenAddons, guests, addonQuantities]);
   const minApplied = subtotal < minimumAmount;
   const total = Math.max(subtotal, minimumAmount);
 
