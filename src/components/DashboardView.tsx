@@ -67,15 +67,15 @@ const DashboardView = () => {
   const orderCount = filteredOrders.length;
   const avgOrder = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-  const isStationOrder = (o: Order) => o.order_source === "station" || o.order_source === "kiosk";
-  const websiteOrders = filteredOrders.filter((o) => !isStationOrder(o));
-  const stationOrders = filteredOrders.filter(isStationOrder);
+  const isKioskOrder = (o: Order) => o.order_source === "station" || o.order_source === "kiosk";
+  const websiteOrders = filteredOrders.filter((o) => !isKioskOrder(o));
+  const kioskOrders = filteredOrders.filter(isKioskOrder);
   const websiteRevenue = websiteOrders.reduce((s, o) => s + o.total, 0);
-  const stationRevenue = stationOrders.reduce((s, o) => s + o.total, 0);
+  const kioskRevenue = kioskOrders.reduce((s, o) => s + o.total, 0);
 
   const pieData = [
     { name: "אתר", value: websiteRevenue, count: websiteOrders.length },
-    { name: "קיוסק", value: stationRevenue, count: stationOrders.length },
+    { name: "קיוסק", value: kioskRevenue, count: kioskOrders.length },
   ].filter((d) => d.value > 0);
 
   const cashOrders = filteredOrders.filter((o) => o.payment_method === "cash");
@@ -101,13 +101,13 @@ const DashboardView = () => {
 
   // Daily breakdown for week/month
   const dailyData = useMemo(() => {
-    const days: Record<string, { date: string; revenue: number; orders: number; website: number; station: number }> = {};
+    const days: Record<string, { date: string; revenue: number; orders: number; website: number; kiosk: number }> = {};
     filteredOrders.forEach((o) => {
       const d = new Date(o.created_at).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
-      if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, station: 0 };
+      if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, kiosk: 0 };
       days[d].revenue += o.total;
       days[d].orders += 1;
-      if (isStationOrder(o)) days[d].station += o.total;
+      if (isKioskOrder(o)) days[d].kiosk += o.total;
       else days[d].website += o.total;
     });
     return Object.values(days);
@@ -328,7 +328,7 @@ const DashboardView = () => {
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip
                     formatter={(value: number, name: string) => {
-                      const labels: Record<string, string> = { website: "אתר", station: "קיוסק" };
+                      const labels: Record<string, string> = { website: "אתר", kiosk: "קיוסק" };
                       return [`₪${value}`, labels[name] || name];
                     }}
                     contentStyle={{
@@ -340,7 +340,7 @@ const DashboardView = () => {
                   />
                   <Legend formatter={(v) => (v === "website" ? "אתר" : "קיוסק")} />
                   <Bar dataKey="website" stackId="a" fill="#f97316" name="website" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="station" stackId="a" fill="#3b82f6" name="station" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="kiosk" stackId="a" fill="#3b82f6" name="kiosk" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
