@@ -270,64 +270,10 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </div>
           </div>
 
-          {/* Add to home screen button — hidden once installed as PWA */}
-          {!isStandalonePwa() && (
-            <div className="px-4 py-2 border-b border-border bg-primary/5">
-              <button
-                onClick={() => setShowIosInstallModal(true)}
-                className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold py-2.5 rounded-xl text-sm transition-colors"
-              >
-                <Smartphone size={16} />
-                הוסף את הבקתה למסך הבית
-              </button>
-            </div>
-          )}
+          {/* Notification prompt & add-to-home-screen intentionally hidden here —
+              both are reachable from the bell / smartphone icons in the header
+              to keep this modal focused on ONE thing: the live order status. */}
 
-          <AnimatePresence>
-            {showPermissionPrompt && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="px-5 py-5 bg-gradient-to-b from-primary/10 to-primary/5 border-b border-border">
-                  <div className="flex items-center justify-center mb-3">
-                    <motion.div
-                      animate={{ rotate: [0, -10, 10, -10, 0] }}
-                      transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1.5 }}
-                      className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center"
-                    >
-                      <Bell size={28} className="text-primary" />
-                    </motion.div>
-                  </div>
-                  <p className="text-base font-black text-foreground text-center mb-1">
-                    רוצה שנעדכן אותך כשההזמנה מוכנה?
-                  </p>
-                  <p className="text-xs text-muted-foreground text-center mb-4">
-                    תקבל התראה לטלפון גם אם תצא מהאתר
-                  </p>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      animate={{ boxShadow: ["0 0 0 0 hsl(142 76% 45% / 0.7)", "0 0 0 12px hsl(142 76% 45% / 0)"] }}
-                      transition={{ duration: 1.4, repeat: Infinity }}
-                      onClick={handleEnableNotifications}
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-xl text-sm shadow-lg"
-                    >
-                      כן, עדכנו אותי! 🔔
-                    </motion.button>
-                    <button
-                      onClick={handleSkipNotifications}
-                      className="px-4 bg-muted text-muted-foreground font-medium py-3 rounded-xl text-sm hover:bg-muted/80"
-                    >
-                      לא רוצה
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-5 py-5">
