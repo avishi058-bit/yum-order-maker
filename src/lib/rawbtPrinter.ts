@@ -205,6 +205,14 @@ export async function printRawBTFridgeRefill(
   return sendBytesToRawBT(buildOpsBytes(buildFridgeRefillOps(items)));
 }
 
+export async function printRawBTEventPrep(
+  booking: import("./btReceiptOps").EventPrepBookingLike,
+  prep: import("./btReceiptOps").EventPrepResultLike,
+): Promise<RawBTDebugInfo> {
+  const { buildEventPrepOps } = await import("./btReceiptOps");
+  return sendBytesToRawBT(buildOpsBytes(buildEventPrepOps(booking, prep)));
+}
+
 export async function printRawBTPhoneQr(
   order: ReceiptOrder,
 ): Promise<RawBTDebugInfo> {
