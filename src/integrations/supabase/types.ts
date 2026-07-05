@@ -483,6 +483,7 @@ export type Database = {
         Row: {
           cash_enabled: boolean
           credit_enabled: boolean
+          high_load: boolean
           id: string
           station_open: boolean
           updated_at: string
@@ -491,6 +492,7 @@ export type Database = {
         Insert: {
           cash_enabled?: boolean
           credit_enabled?: boolean
+          high_load?: boolean
           id?: string
           station_open?: boolean
           updated_at?: string
@@ -499,6 +501,7 @@ export type Database = {
         Update: {
           cash_enabled?: boolean
           credit_enabled?: boolean
+          high_load?: boolean
           id?: string
           station_open?: boolean
           updated_at?: string

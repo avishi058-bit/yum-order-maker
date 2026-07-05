@@ -6,10 +6,11 @@ export interface RestaurantStatus {
   station_open: boolean;
   cash_enabled: boolean;
   credit_enabled: boolean;
+  high_load: boolean;
 }
 
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true });
+  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false });
   const [loading, setLoading] = useState(true);
   const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
 
@@ -17,7 +18,7 @@ export const useRestaurantStatus = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("restaurant_status")
-        .select("website_open, station_open, cash_enabled, credit_enabled")
+        .select("website_open, station_open, cash_enabled, credit_enabled, high_load")
         .limit(1)
         .single();
       if (data) setStatus(data as RestaurantStatus);
@@ -32,8 +33,8 @@ export const useRestaurantStatus = () => {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
         (payload) => {
-          const { website_open, station_open, cash_enabled, credit_enabled } = payload.new as RestaurantStatus;
-          setStatus({ website_open, station_open, cash_enabled, credit_enabled });
+          const { website_open, station_open, cash_enabled, credit_enabled, high_load } = payload.new as RestaurantStatus;
+          setStatus({ website_open, station_open, cash_enabled, credit_enabled, high_load: high_load ?? false });
         }
       )
       .subscribe();
@@ -42,6 +43,7 @@ export const useRestaurantStatus = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   const notifyReopen = async () => {
     try {
@@ -85,5 +87,10 @@ export const useRestaurantStatus = () => {
     if (wasClosed) notifyReopen();
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll };
+  const toggleHighLoad = async (on: boolean) => {
+    await supabase.from("restaurant_status").update({ high_load: on }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, high_load: on }));
+  };
+
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, closeAll, openAll };
 };

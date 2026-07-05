@@ -274,7 +274,7 @@ const NORMAL_RING_MS = 5000;
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
-  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -1674,7 +1674,20 @@ const Kitchen = () => {
                   <span>{restaurantStatus.credit_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
+                <button
+                  onClick={() => toggleHighLoad(!restaurantStatus.high_load)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 border-2 ${
+                    restaurantStatus.high_load
+                      ? "bg-orange-500/25 text-orange-300 border-orange-500/60 animate-pulse"
+                      : "bg-muted/40 text-muted-foreground border-transparent hover:bg-muted/60"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">🔥 מצב עומס</span>
+                  <span>{restaurantStatus.high_load ? "פעיל — לקוחות רואים התראה" : "כבוי"}</span>
+                </button>
+
                 <div className="pt-1 border-t border-border">
+
                   {restaurantStatus.website_open || restaurantStatus.station_open ? (
                     <button
                       onClick={closeAll}
