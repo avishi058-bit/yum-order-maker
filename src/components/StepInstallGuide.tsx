@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Share, Plus, MoreVertical, CheckCircle2, Download, Smartphone, ExternalLink, Copy, Check, ArrowDown } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import InstallAnimation from "./InstallAnimation";
 
 type Platform = "ios-safari" | "ios-other" | "android" | "desktop" | "standalone";
 
