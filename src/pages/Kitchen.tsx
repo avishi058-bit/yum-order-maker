@@ -1547,6 +1547,16 @@ const Kitchen = () => {
             <Settings size={20} />
           </button>
 
+          {/* 🎉 Events back office */}
+          <a
+            href="/events/admin"
+            className="px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
+            title="ניהול אירועים והזמנות קייטרינג"
+          >
+            <span>🎉</span>
+            <span>אירועים</span>
+          </a>
+
           {/* 🔔 Notifications group */}
           <div className="relative">
             <button
