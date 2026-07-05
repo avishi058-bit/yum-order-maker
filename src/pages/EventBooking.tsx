@@ -17,6 +17,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES } from "@/data/eventPackages";
 import { fillTemplate, generateContractPdf, downloadBlob, fetchClientIp, type ContractData } from "@/lib/eventContract";
 import { cn } from "@/lib/utils";
+import EventStoryGallery from "@/components/EventStoryGallery";
+
+const VENUE_ADDRESS = "המבורגר הבקתה — האירוע אצלנו במקום";
+
 
 const supa = supabase as any;
 
@@ -33,12 +37,15 @@ const EventBooking = () => {
 
   // Form state
   const [customerName, setCustomerName] = useState("");
+  const [businessId, setBusinessId] = useState("");
+  const [invoiceName, setInvoiceName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [eventDate, setEventDate] = useState<Date | undefined>();
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState("");
+  const [atVenue, setAtVenue] = useState(false);
   const [eventAddress, setEventAddress] = useState("");
   const [guests, setGuests] = useState<number>(50);
   const [packageId, setPackageId] = useState<string>("premium");
