@@ -17,20 +17,22 @@ export interface ContractData {
 }
 
 export function fillTemplate(template: string, data: ContractData): string {
-  return template
-    .replaceAll("{{customer_name}}", data.customer_name)
-    .replaceAll("{{customer_phone}}", data.customer_phone)
-    .replaceAll("{{customer_email}}", data.customer_email)
-    .replaceAll("{{event_type}}", data.event_type)
-    .replaceAll("{{event_date}}", data.event_date)
-    .replaceAll("{{start_time}}", data.start_time)
-    .replaceAll("{{end_time}}", data.end_time)
-    .replaceAll("{{event_address}}", data.event_address)
-    .replaceAll("{{guests_count}}", String(data.guests_count))
-    .replaceAll("{{package_name}}", data.package_name)
-    .replaceAll("{{package_price}}", String(data.package_price))
-    .replaceAll("{{addons_list}}", data.addons_list || "ללא")
-    .replaceAll("{{total_price}}", String(data.total_price));
+  const map: Record<string, string> = {
+    customer_name: data.customer_name,
+    customer_phone: data.customer_phone,
+    customer_email: data.customer_email,
+    event_type: data.event_type,
+    event_date: data.event_date,
+    start_time: data.start_time,
+    end_time: data.end_time,
+    event_address: data.event_address,
+    guests_count: String(data.guests_count),
+    package_name: data.package_name,
+    package_price: String(data.package_price),
+    addons_list: data.addons_list || "ללא",
+    total_price: String(data.total_price),
+  };
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => map[key] ?? "");
 }
 
 export async function generateContractPdf(opts: {
