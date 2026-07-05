@@ -52,6 +52,7 @@ import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush
 import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
 import { ingredients } from "@/data/menu";
 import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
+import EventsKitchenPanel from "@/components/EventsKitchenPanel";
 
 const REMOVAL_LABELS: Record<string, string> = (() => {
   const m: Record<string, string> = {};
@@ -332,6 +333,7 @@ const Kitchen = () => {
   // Realtime / fallback state
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showEventsPanel, setShowEventsPanel] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
@@ -1548,14 +1550,16 @@ const Kitchen = () => {
           </button>
 
           {/* 🎉 Events */}
-          <a
-            href="/events/kitchen"
-            className="px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
+          <button
+            onClick={() => setShowEventsPanel((v) => !v)}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              showEventsPanel ? "bg-pink-500/40 text-pink-100" : "bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
+            }`}
             title="הזמנות אירועים — הכנות מטבח"
           >
             <span>🎉</span>
             <span>אירועים</span>
-          </a>
+          </button>
 
           {/* 🔔 Notifications group */}
           <div className="relative">
@@ -1937,6 +1941,26 @@ const Kitchen = () => {
 
 
 
+
+      {/* Events kitchen inline panel */}
+      {showEventsPanel && (
+        <div className="bg-card border-b border-border px-4 py-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                🎉 הזמנות אירועים — הכנות מטבח
+              </h3>
+              <button
+                onClick={() => setShowEventsPanel(false)}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                סגור
+              </button>
+            </div>
+            <EventsKitchenPanel />
+          </div>
+        </div>
+      )}
 
       {/* Escalation settings panel */}
       {showSettings && (
