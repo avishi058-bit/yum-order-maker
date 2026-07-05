@@ -1,41 +1,22 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Share, Plus, MoreVertical, Download, CheckCircle2, Smartphone } from "lucide-react";
-import { isIos, isStandalonePwa } from "@/lib/push";
-import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import addToHomeImg from "@/assets/add-to-home-screen-ios.jpeg";
+import { CheckCircle2, Smartphone } from "lucide-react";
+import { isStandalonePwa } from "@/lib/push";
+import StepInstallGuide from "@/components/StepInstallGuide";
 
 const Install = () => {
-  const iOS = typeof window !== "undefined" ? isIos() : false;
   const standalone = typeof window !== "undefined" ? isStandalonePwa() : false;
-  const { canPrompt, promptInstall } = useInstallPrompt();
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
     document.title = "התקנת היישום | הבקתה";
   }, []);
 
-  useEffect(() => {
-    const handler = () => setInstalled(true);
-    window.addEventListener("appinstalled", handler);
-    return () => window.removeEventListener("appinstalled", handler);
-  }, []);
-
-  const handleInstall = async () => {
-    const result = await promptInstall();
-    if (result === "accepted") setInstalled(true);
-  };
-
-  // If we're already running as the installed PWA (opened from the home-screen
-  // icon on Android/iOS), the user landed on /install by accident — push them
-  // to the actual app home so they don't get stuck on a dead-end screen.
   if (standalone) {
     return <Navigate to="/" replace />;
   }
 
-  // Just installed from this very page (browser tab) — guide them to open
-  // it via the new home-screen icon.
   if (installed) {
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -45,12 +26,12 @@ const Install = () => {
           className="bg-card border-2 border-primary/40 rounded-3xl shadow-2xl max-w-md w-full p-6 text-center"
         >
           <CheckCircle2 className="mx-auto text-primary mb-3" size={64} />
-          <h1 className="text-2xl font-black text-foreground mb-2">היישום מותקן! ✅</h1>
+          <h1 className="text-2xl font-black text-foreground mb-2">כל הכבוד! 🎉</h1>
           <p className="text-base font-bold text-foreground leading-relaxed">
-            צא/י מהדפדפן והיכנס/י ל<span className="text-primary">הבקתה</span> דרך האייקון במסך הבית 🏠
+            צאו מהדפדפן ופתחו את <span className="text-primary">הבקתה</span> דרך האייקון החדש במסך הבית 🏠
           </p>
           <p className="text-sm text-muted-foreground mt-3">
-            רק כך תוכל/י לאשר התראות ולקבל עדכון מתי ההזמנה מוכנה 🔔🍔
+            כך תוכלו לאשר התראות ולקבל עדכון מתי ההזמנה מוכנה 🔔🍔
           </p>
         </motion.div>
       </div>
@@ -60,7 +41,6 @@ const Install = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 p-4">
       <div className="max-w-md mx-auto py-6 space-y-5">
-        {/* Hero */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -74,133 +54,18 @@ const Install = () => {
             <Smartphone className="text-primary-foreground" size={40} />
           </motion.div>
           <h1 className="text-3xl font-black text-foreground mb-2">
-            התקן/י את <span className="text-primary">הבקתה</span> 🍔
+            התקינו את <span className="text-primary">הבקתה</span> 🍔
           </h1>
           <p className="text-base font-bold text-muted-foreground">
-            הזמנות מהירות + התראות כשההמבורגר שלך מוכן 🔔
+            נלווה אתכם שלב-שלב — קל, מהיר וברור 👌
           </p>
         </motion.div>
 
-        {/* Fun Fact — bouncy & friendly */}
-        <motion.div
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 12, delay: 0.08 }}
-          className="rounded-2xl bg-gradient-to-br from-emerald-400/20 via-emerald-500/10 to-teal-400/5 border-2 border-emerald-500/60 p-4 text-right shadow-lg"
-        >
-          <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <p className="text-sm font-black text-foreground leading-relaxed">
-              💡 הידעת? 🤯
-            </p>
-            <p className="text-sm font-bold text-foreground leading-relaxed mt-1">
-              היישומון של הבקתה שוקל בערך כמו תמונה אחת בגלריה שלך 📸
-            </p>
-            <p className="text-sm font-bold text-foreground leading-relaxed">
-              כך שהוא כמעט <span className="text-emerald-600 font-black">ולא</span> תופס מקום בטלפון 🍔
-            </p>
-          </motion.div>
-        </motion.div>
+        <StepInstallGuide onDone={() => setInstalled(true)} />
 
-
-        {/* Instructions per platform */}
-        {iOS ? (
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="-mx-2 bg-card border-2 border-border rounded-2xl overflow-hidden shadow-lg"
-          >
-            <div className="px-4 py-3 bg-primary/10 border-b border-border">
-              <h2 className="text-lg font-black text-foreground text-right">
-                הוספה למסך הבית (אייפון) 📲
-              </h2>
-            </div>
-            <div className="bg-white">
-              <img
-                src={addToHomeImg}
-                alt="הוראות להוספת הבקתה למסך הבית באייפון"
-                className="w-full h-auto block"
-              />
-            </div>
-            <div className="p-4 space-y-2 text-right">
-              <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Share className="text-primary" size={18} />
-                לחצ/י על כפתור השיתוף בסרגל התחתון
-              </p>
-              <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Plus className="text-primary" size={18} />
-                בחר/י "הוסף למסך הבית"
-              </p>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="bg-card border-2 border-border rounded-2xl shadow-lg"
-          >
-            <div className="px-4 py-3 bg-primary/10 border-b border-border rounded-t-2xl">
-              <h2 className="text-base font-black text-foreground text-right">
-                התקנת היישום (אנדרואיד) 📲
-              </h2>
-            </div>
-            <div className="p-4 space-y-3 text-right">
-              {canPrompt ? (
-                <>
-                  <p className="text-sm font-bold text-foreground leading-relaxed">
-                    לחצ/י על הכפתור למטה כדי להתקין את הבקתה ישירות במסך הבית 👇
-                  </p>
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
-                    onClick={handleInstall}
-                    className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-base shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-                  >
-                    <Download size={20} />
-                    התקן/י עכשיו
-                  </motion.button>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm">1</div>
-                    <p className="text-sm font-bold text-foreground leading-relaxed flex-1 flex items-center gap-1 flex-wrap">
-                      לחצ/י על תפריט הדפדפן
-                      <MoreVertical size={16} className="inline text-primary" />
-                      (שלוש נקודות בפינה)
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm">2</div>
-                    <p className="text-sm font-bold text-foreground leading-relaxed flex-1">
-                      בחר/י <span className="text-primary">"הוסף למסך הבית"</span>
-                      <Plus size={14} className="inline mx-1 text-primary" />
-                      ואשר/י
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm">3</div>
-                    <p className="text-sm font-bold text-foreground leading-relaxed flex-1">
-                      פתח/י את הבקתה דרך <span className="text-primary">האייקון במסך הבית</span> 🏠
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-xs text-center text-muted-foreground leading-relaxed px-4"
-        >
-          💡 חובה להיכנס דרך האייקון במסך הבית כדי לקבל התראות מתי ההזמנה מוכנה
-        </motion.p>
+        <p className="text-xs text-center text-muted-foreground leading-relaxed px-4">
+          💡 מהאייקון החדש תקבלו התראות מתי ההזמנה מוכנה
+        </p>
       </div>
     </div>
   );
