@@ -62,6 +62,13 @@ const EventsAdmin = () => {
     }).eq("id", 1);
     if (error) toast.error(error.message); else toast.success("נשמר");
   };
+  const savePrep = async () => {
+    const { error } = await supa.from("event_settings").update({
+      kitchen_prep: prep,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
+    if (error) toast.error(error.message); else toast.success("הגדרות מטבח נשמרו");
+  };
 
   const downloadPdf = async (b: any) => {
     if (!b.customer_signature || !b.business_signature) {
