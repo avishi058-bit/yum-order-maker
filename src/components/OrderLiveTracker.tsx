@@ -283,21 +283,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </div>
           </div>
 
-          {/* Notification prompt shown at the top of the content, before the
-              progress tracker, so it is visually above the timer without
-              covering it as a front layer. */}
-          <SmartPushPrompt
-            inline
-            open={showSmartPrompt}
-            phone={phone}
-            orderId={order?.id ?? null}
-            orderNumber={orderNumber}
-            onAccept={() => {
-              setShowSmartPrompt(false);
-              handleEnableNotifications();
-            }}
-            onDismiss={() => setShowSmartPrompt(false)}
-          />
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-5 py-5">
