@@ -80,22 +80,30 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     }
   }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber]);
 
-  // Countdown timer
+  // Live countdown timer — ticks every second regardless of status so we can
+  // show "elapsed" while waiting and "remaining" while cooking.
   useEffect(() => {
-    if (!order?.estimated_ready_at || order.status === "ready" || order.status === "completed") {
+    if (!order || order.status === "ready" || order.status === "completed") {
       setTimeLeft(null);
       return;
     }
 
     const update = () => {
-      const diff = Math.max(0, Math.floor((new Date(order.estimated_ready_at).getTime() - Date.now()) / 1000));
-      setTimeLeft(diff);
+      if (order.estimated_ready_at) {
+        const diff = Math.max(0, Math.floor((new Date(order.estimated_ready_at).getTime() - Date.now()) / 1000));
+        setTimeLeft(diff);
+      } else {
+        // no ETA yet — show elapsed since order was placed
+        const elapsed = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 1000);
+        setTimeLeft(-elapsed); // negative = elapsed
+      }
     };
 
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [order]);
+
 
   // Auto-hide prompt if user already subscribed for this device
   useEffect(() => {
