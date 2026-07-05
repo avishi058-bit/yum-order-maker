@@ -335,54 +335,83 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   </div>
                 </div>
 
-                {/* Timer — preparing */}
-                {order.status === "preparing" && timeLeft !== null && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-muted/50 rounded-2xl p-5 text-center mb-4"
-                  >
-                    <p className="text-xs text-muted-foreground mb-1">זמן משוער עד שההזמנה מוכנה</p>
+                {/* Timer — Wolt-style circular ring (preparing / new) */}
+                {(order.status === "preparing" || order.status === "new") && timeLeft !== null && (() => {
+                  const size = 200;
+                  const stroke = 12;
+                  const radius = (size - stroke) / 2;
+                  const circ = 2 * Math.PI * radius;
+                  const pct = order.status === "preparing" ? cookingProgress : 0;
+                  const offset = circ - (pct / 100) * circ;
+                  const isNew = order.status === "new";
+                  return (
                     <motion.div
-                      key={timeLeft <= 0 ? "done" : "count"}
-                      animate={timeLeft > 0 && timeLeft <= 30 ? { scale: [1, 1.05, 1] } : {}}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="text-4xl font-black text-primary mb-3 tabular-nums"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center justify-center py-4 mb-4"
                     >
-                      {timeLeft <= 0 ? "כמעט מוכן! 🔥" : formatTime(timeLeft)}
+                      <div className="relative" style={{ width: size, height: size }}>
+                        <svg width={size} height={size} className="-rotate-90">
+                          {/* Track */}
+                          <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            fill="none"
+                            stroke="hsl(var(--muted))"
+                            strokeWidth={stroke}
+                          />
+                          {/* Progress */}
+                          <motion.circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r={radius}
+                            fill="none"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={stroke}
+                            strokeLinecap="round"
+                            strokeDasharray={circ}
+                            initial={false}
+                            animate={{ strokeDashoffset: isNew ? circ : offset }}
+                            transition={{ duration: 1, ease: "linear" }}
+                          />
+                        </svg>
+                        {/* Inner content */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <p className="text-[11px] text-muted-foreground mb-1">
+                            {isNew ? "ההזמנה התקבלה" : "מוכן בעוד"}
+                          </p>
+                          <motion.div
+                            key={timeLeft <= 0 ? "done" : "count"}
+                            animate={!isNew && timeLeft > 0 && timeLeft <= 30 ? { scale: [1, 1.06, 1] } : {}}
+                            transition={{ duration: 1, repeat: Infinity }}
+                            className="text-5xl font-black text-foreground tabular-nums leading-none"
+                          >
+                            {isNew
+                              ? formatTime(timeLeft)
+                              : timeLeft <= 0
+                              ? "🔥"
+                              : formatTime(timeLeft)}
+                          </motion.div>
+                          <p className="text-[11px] text-muted-foreground mt-2">
+                            {isNew ? (
+                              <motion.span
+                                animate={{ opacity: [0.4, 1, 0.4] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                              >
+                                ⏳ ממתין לאישור
+                              </motion.span>
+                            ) : timeLeft <= 0 ? (
+                              "כמעט מוכן!"
+                            ) : (
+                              "דקות משוערות"
+                            )}
+                          </p>
+                        </div>
+                      </div>
                     </motion.div>
-                    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                      <motion.div
-                        className="bg-primary h-full rounded-full"
-                        animate={{ width: `${cookingProgress}%` }}
-                        transition={{ duration: 1, ease: "linear" }}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Status messages */}
-                {order.status === "new" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-muted/50 rounded-2xl p-5 text-center mb-4"
-                  >
-                    <p className="text-xs text-muted-foreground mb-1">ההזמנה התקבלה — ממתינים שהמטבח יתחיל</p>
-                    <div className="text-3xl font-black text-foreground mb-1 tabular-nums">
-                      {timeLeft !== null ? formatTime(timeLeft) : "0:00"}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      <motion.span
-                        animate={{ opacity: [0.4, 1, 0.4] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="inline-block"
-                      >
-                        ⏳ ממתינים לאישור מהמטבח
-                      </motion.span>
-                    </p>
-                  </motion.div>
-                )}
+                  );
+                })()}
 
 
                 {order.status === "ready" && (
