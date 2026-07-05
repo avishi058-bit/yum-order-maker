@@ -12,12 +12,15 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   computePrep,
-  openPrepWindow,
+  buildPrepHtml,
   tierOf,
   DEFAULT_PREP_SETTINGS,
   type KitchenPrepSettings,
   type EventBookingLike,
 } from "@/lib/eventKitchenPrep";
+import { isPrinterConnected, printBluetoothEventPrep } from "@/lib/bluetoothPrinter";
+import { getPrintMode, printRawBTEventPrep } from "@/lib/rawbtPrinter";
+import { printAgentEventPrep } from "@/lib/localPrintAgent";
 
 const supa = supabase as any;
 
