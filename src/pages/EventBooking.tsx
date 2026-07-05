@@ -110,7 +110,7 @@ const EventBooking = () => {
       guests_count: guests,
       package_name: selectedPackage.name,
       package_price: selectedPackage.pricePerPerson,
-      addons_list: chosenAddons.map((a) => a.name).join(", "),
+      addons_list: chosenAddons.map((a) => `${a.name}${a.partial ? ` (×${addonQty(a)})` : ""}`).join(", "),
       total_price: total,
     };
     return fillTemplate(contractTemplate, data);
