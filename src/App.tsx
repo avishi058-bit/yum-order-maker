@@ -28,6 +28,7 @@ const Inventory = lazy(() => import("./pages/Inventory"));
 const InventoryFridge = lazy(() => import("./pages/InventoryFridge"));
 const EventBooking = lazy(() => import("./pages/EventBooking"));
 const EventsAdmin = lazy(() => import("./pages/EventsAdmin"));
+const EventsKitchen = lazy(() => import("./pages/EventsKitchen"));
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
