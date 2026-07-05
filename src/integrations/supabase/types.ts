@@ -110,6 +110,7 @@ export type Database = {
           at_venue: boolean
           business_id: string | null
           business_signature: string | null
+          chili_count: number | null
           client_ip: string | null
           contract_text: string | null
           created_at: string
@@ -117,14 +118,22 @@ export type Database = {
           customer_name: string
           customer_phone: string
           customer_signature: string | null
+          dessert_count: number | null
+          eggs_count: number | null
           end_time: string
           event_address: string
           event_date: string
           event_type: string
+          fried_onion_count: number | null
+          gf_count: number
           guests_count: number
           id: string
           invoice_name: string | null
+          kids_count: number
+          kitchen_notes: string | null
           min_applied: boolean
+          no_bun_count: number
+          onion_jam_count: number | null
           package_id: string
           package_name: string
           package_price_per_person: number
@@ -135,12 +144,15 @@ export type Database = {
           subtotal: number
           total_price: number
           updated_at: string
+          veg_count: number
+          vegan_count: number
         }
         Insert: {
           addons?: Json
           at_venue?: boolean
           business_id?: string | null
           business_signature?: string | null
+          chili_count?: number | null
           client_ip?: string | null
           contract_text?: string | null
           created_at?: string
@@ -148,14 +160,22 @@ export type Database = {
           customer_name: string
           customer_phone: string
           customer_signature?: string | null
+          dessert_count?: number | null
+          eggs_count?: number | null
           end_time: string
           event_address: string
           event_date: string
           event_type: string
+          fried_onion_count?: number | null
+          gf_count?: number
           guests_count: number
           id?: string
           invoice_name?: string | null
+          kids_count?: number
+          kitchen_notes?: string | null
           min_applied?: boolean
+          no_bun_count?: number
+          onion_jam_count?: number | null
           package_id: string
           package_name: string
           package_price_per_person: number
@@ -166,12 +186,15 @@ export type Database = {
           subtotal: number
           total_price: number
           updated_at?: string
+          veg_count?: number
+          vegan_count?: number
         }
         Update: {
           addons?: Json
           at_venue?: boolean
           business_id?: string | null
           business_signature?: string | null
+          chili_count?: number | null
           client_ip?: string | null
           contract_text?: string | null
           created_at?: string
@@ -179,14 +202,22 @@ export type Database = {
           customer_name?: string
           customer_phone?: string
           customer_signature?: string | null
+          dessert_count?: number | null
+          eggs_count?: number | null
           end_time?: string
           event_address?: string
           event_date?: string
           event_type?: string
+          fried_onion_count?: number | null
+          gf_count?: number
           guests_count?: number
           id?: string
           invoice_name?: string | null
+          kids_count?: number
+          kitchen_notes?: string | null
           min_applied?: boolean
+          no_bun_count?: number
+          onion_jam_count?: number | null
           package_id?: string
           package_name?: string
           package_price_per_person?: number
@@ -197,6 +228,8 @@ export type Database = {
           subtotal?: number
           total_price?: number
           updated_at?: string
+          veg_count?: number
+          vegan_count?: number
         }
         Relationships: []
       }
@@ -204,18 +237,21 @@ export type Database = {
         Row: {
           contract_template: string
           id: number
+          kitchen_prep: Json
           minimum_amount: number
           updated_at: string
         }
         Insert: {
           contract_template?: string
           id?: number
+          kitchen_prep?: Json
           minimum_amount?: number
           updated_at?: string
         }
         Update: {
           contract_template?: string
           id?: number
+          kitchen_prep?: Json
           minimum_amount?: number
           updated_at?: string
         }
