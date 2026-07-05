@@ -90,6 +90,15 @@ const EventBooking = () => {
   );
   const addonQty = (a: typeof EVENT_ADDONS[number]) =>
     a.partial ? Math.min(guests, Math.max(0, addonQuantities[a.id] ?? 0)) : guests;
+
+  const packageIncludesDrinks = PACKAGES_WITH_DRINKS.has(packageId);
+  const needsDrinkSelection = packageIncludesDrinks && !atVenue;
+  const drinksTotal = useMemo(
+    () => Object.values(drinkSelections).reduce((s, n) => s + (Number(n) || 0), 0),
+    [drinkSelections]
+  );
+  const setDrinkQty = (id: string, n: number) =>
+    setDrinkSelections((cur) => ({ ...cur, [id]: Math.max(0, Math.floor(n || 0)) }));
   const subtotal = useMemo(() => {
     const pkg = selectedPackage.pricePerPerson * guests;
     const addonsSum = chosenAddons.reduce((s, a) => s + a.pricePerPerson * addonQty(a), 0);
