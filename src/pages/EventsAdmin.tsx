@@ -188,6 +188,41 @@ const EventsAdmin = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="prep">
+            <Card>
+              <CardHeader>
+                <CardTitle>כמויות מטבח לאירוע</CardTitle>
+                <CardDescription>גרם למנה / ברירות מחדל. כל ערך שיישונה יעדכן את החישוב האוטומטי בכל הזמנת אירוע.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {([
+                    ["tomato_g", "עגבנייה למנה (גרם)"],
+                    ["onion_g", "בצל למנה (גרם)"],
+                    ["lettuce_g", "חסה למנה (גרם)"],
+                    ["pickles_g", "חמוצים למנה (גרם)"],
+                    ["chips_g", "צ׳יפס למנה (גרם)"],
+                    ["potatoes_g", "פוטטוס למנה (גרם)"],
+                    ["onion_rings_g", "טבעות בצל למנה (גרם)"],
+                    ["waffle_g", "וופל למנה (גרם)"],
+                    ["default_eggs_per_guest", "ביצי עין — ברירת מחדל לסועד"],
+                    ["default_dessert_per_guest", "קינוח — ברירת מחדל לסועד"],
+                  ] as [keyof KitchenPrepSettings, string][]).map(([k, label]) => (
+                    <div key={k}>
+                      <label className="text-sm font-medium block mb-1">{label}</label>
+                      <Input
+                        type="number" step="0.01" min={0}
+                        value={prep[k]}
+                        onChange={(e) => setPrep({ ...prep, [k]: Number(e.target.value) })}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={savePrep}>שמור הגדרות מטבח</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
