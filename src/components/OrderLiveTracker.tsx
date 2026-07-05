@@ -413,20 +413,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   );
                 })()}
 
-                {/* Inline push-notification prompt — sits BELOW the timer so users
-                    don't reflexively dismiss it to see the countdown. */}
-                <SmartPushPrompt
-                  inline
-                  open={showSmartPrompt}
-                  phone={phone}
-                  orderId={order?.id ?? null}
-                  orderNumber={orderNumber}
-                  onAccept={() => {
-                    setShowSmartPrompt(false);
-                    handleEnableNotifications();
-                  }}
-                  onDismiss={() => setShowSmartPrompt(false)}
-                />
 
 
 
