@@ -101,13 +101,13 @@ const DashboardView = () => {
 
   // Daily breakdown for week/month
   const dailyData = useMemo(() => {
-    const days: Record<string, { date: string; revenue: number; orders: number; website: number; station: number }> = {};
+    const days: Record<string, { date: string; revenue: number; orders: number; website: number; kiosk: number }> = {};
     filteredOrders.forEach((o) => {
       const d = new Date(o.created_at).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
-      if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, station: 0 };
+      if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, kiosk: 0 };
       days[d].revenue += o.total;
       days[d].orders += 1;
-      if (isStationOrder(o)) days[d].station += o.total;
+      if (isKioskOrder(o)) days[d].kiosk += o.total;
       else days[d].website += o.total;
     });
     return Object.values(days);
