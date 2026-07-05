@@ -75,7 +75,41 @@ const EventsKitchenPanel = () => {
   const printPrep = async (b: any) => {
     const m = merged(b);
     if (edits[b.id]) await saveEdits(b);
-    openPrepWindow(m, settings);
+    const prep = computePrep(m, settings);
+    const printMode = getPrintMode();
+
+    // Route through the same print pipeline as all other kitchen bons.
+    if (isPrinterConnected()) {
+      printBluetoothEventPrep(m, prep).catch((err) => {
+        console.warn("[Events] BT event-prep print failed", err);
+        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+      });
+      return;
+    }
+    if (printMode === "bt") {
+      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      return;
+    }
+    if (printMode === "agent") {
+      const info = await printAgentEventPrep(m, prep);
+      if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+      return;
+    }
+    if (printMode === "rawbt") {
+      await printRawBTEventPrep(m, prep);
+      return;
+    }
+
+    // Browser fallback — window.print() via HTML.
+    const html = buildPrepHtml(m, prep);
+    const w = window.open("", "_blank", "width=520,height=800");
+    if (!w) {
+      toast.error("חלון ההדפסה נחסם");
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
   };
 
   return (
