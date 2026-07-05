@@ -196,6 +196,11 @@ const EventBooking = () => {
         subtotal,
         total_price: total,
         min_applied: minApplied,
+        drink_selections: needsDrinkSelection
+          ? EVENT_DRINK_OPTIONS
+              .filter((d) => (drinkSelections[d.id] || 0) > 0)
+              .reduce((acc, d) => ({ ...acc, [d.name]: drinkSelections[d.id] }), {} as Record<string, number>)
+          : {},
         contract_text: filledContract,
         customer_signature: customerSig,
         business_signature: businessSig,
