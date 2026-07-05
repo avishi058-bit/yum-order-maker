@@ -36,6 +36,7 @@ const EventsAdmin = () => {
     if (s.data) {
       setContractTemplate(s.data.contract_template || "");
       setMinAmount(Number(s.data.minimum_amount) || 2000);
+      if (s.data.kitchen_prep) setPrep({ ...DEFAULT_PREP_SETTINGS, ...s.data.kitchen_prep });
     }
   };
   useEffect(() => { load(); }, []);
