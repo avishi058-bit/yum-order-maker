@@ -283,10 +283,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             </div>
           </div>
 
-          {/* Notification prompt & add-to-home-screen intentionally hidden here —
-              both are reachable from the bell / smartphone icons in the header
-              to keep this modal focused on ONE thing: the live order status. */}
-
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-5 py-5">
@@ -296,6 +292,22 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
               </div>
             ) : (
               <>
+                {/* Push-notification prompt — at the top of the live tracker,
+                    before the progress bar, so it sits above the timer in the
+                    normal page flow instead of hiding it as a front layer. */}
+                <SmartPushPrompt
+                  inline
+                  open={showSmartPrompt}
+                  phone={phone}
+                  orderId={order?.id ?? null}
+                  orderNumber={orderNumber}
+                  onAccept={() => {
+                    setShowSmartPrompt(false);
+                    handleEnableNotifications();
+                  }}
+                  onDismiss={() => setShowSmartPrompt(false)}
+                />
+
                 {/* Progress Steps with continuous live-filling connector */}
                 <div className="relative mb-6 px-2">
                   {/* Track behind the icons */}
@@ -334,21 +346,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                     })}
                   </div>
                 </div>
-
-                {/* Push-notification prompt — ABOVE the timer so users see it
-                    before their attention locks onto the countdown. */}
-                <SmartPushPrompt
-                  inline
-                  open={showSmartPrompt}
-                  phone={phone}
-                  orderId={order?.id ?? null}
-                  orderNumber={orderNumber}
-                  onAccept={() => {
-                    setShowSmartPrompt(false);
-                    handleEnableNotifications();
-                  }}
-                  onDismiss={() => setShowSmartPrompt(false)}
-                />
 
                 {/* Timer — Wolt-style circular ring (preparing / new) */}
                 {(order.status === "preparing" || order.status === "new") && timeLeft !== null && (() => {
