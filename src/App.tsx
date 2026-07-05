@@ -106,6 +106,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/events/kitchen"
+                element={
+                  <ProtectedRoute requiredRole={["kitchen", "admin"]}>
+                    <EventsKitchen />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
