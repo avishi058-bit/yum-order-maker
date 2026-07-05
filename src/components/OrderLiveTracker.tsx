@@ -335,6 +335,21 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   </div>
                 </div>
 
+                {/* Push-notification prompt — ABOVE the timer so users see it
+                    before their attention locks onto the countdown. */}
+                <SmartPushPrompt
+                  inline
+                  open={showSmartPrompt}
+                  phone={phone}
+                  orderId={order?.id ?? null}
+                  orderNumber={orderNumber}
+                  onAccept={() => {
+                    setShowSmartPrompt(false);
+                    handleEnableNotifications();
+                  }}
+                  onDismiss={() => setShowSmartPrompt(false)}
+                />
+
                 {/* Timer — Wolt-style circular ring (preparing / new) */}
                 {(order.status === "preparing" || order.status === "new") && timeLeft !== null && (() => {
                   const size = 200;
