@@ -87,5 +87,10 @@ export const useRestaurantStatus = () => {
     if (wasClosed) notifyReopen();
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, closeAll, openAll };
+  const toggleHighLoad = async (on: boolean) => {
+    await supabase.from("restaurant_status").update({ high_load: on }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, high_load: on }));
+  };
+
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, closeAll, openAll };
 };
