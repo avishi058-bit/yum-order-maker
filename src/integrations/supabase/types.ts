@@ -274,6 +274,41 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_prompts: {
+        Row: {
+          action: string
+          created_at: string
+          device_fingerprint: string | null
+          id: string
+          order_id: string | null
+          phone: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          order_id?: string | null
+          phone?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          order_id?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_prompts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
