@@ -59,6 +59,7 @@ const EventBooking = () => {
   const [packageId, setPackageId] = useState<string>("premium");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [addonQuantities, setAddonQuantities] = useState<Record<string, number>>({});
+  const [drinkSelections, setDrinkSelections] = useState<Record<string, number>>({});
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
