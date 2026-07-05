@@ -296,25 +296,54 @@ const EventBooking = () => {
               <div>
                 <h3 className="font-bold mb-2 mt-4">✨ תוספות ושדרוגים</h3>
                 <div className="space-y-2">
-                  {EVENT_ADDONS.map((a) => (
-                    <label key={a.id} className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover:bg-muted/40">
-                      <Checkbox
-                        checked={selectedAddons.includes(a.id)}
-                        onCheckedChange={(v) => setSelectedAddons((cur) => v ? [...cur, a.id] : cur.filter((x) => x !== a.id))}
-                      />
-                      <span className="flex-1">{a.emoji} {a.name}</span>
-                      <Badge variant="outline">+{a.pricePerPerson} ₪ לאדם</Badge>
-                    </label>
-                  ))}
+                  {EVENT_ADDONS.map((a) => {
+                    const checked = selectedAddons.includes(a.id);
+                    return (
+                      <div key={a.id} className="p-3 rounded-md border">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setSelectedAddons((cur) => v ? [...cur, a.id] : cur.filter((x) => x !== a.id));
+                              if (v && a.partial && !addonQuantities[a.id]) {
+                                setAddonQuantities((q) => ({ ...q, [a.id]: 1 }));
+                              }
+                            }}
+                          />
+                          <span className="flex-1">{a.emoji} {a.name}</span>
+                          <Badge variant="outline">+{a.pricePerPerson} ₪ {a.partial ? "ליחידה" : "לאדם"}</Badge>
+                        </label>
+                        {checked && a.partial && (
+                          <div className="mt-3 pr-8 flex items-center gap-2 flex-wrap">
+                            <Label className="text-sm">כמה מנות כאלו מתוך {guests}?</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={guests}
+                              value={addonQuantities[a.id] ?? 1}
+                              onChange={(e) => setAddonQuantities((q) => ({ ...q, [a.id]: Number(e.target.value) }))}
+                              className="w-24"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              = {((addonQuantities[a.id] ?? 0) * a.pricePerPerson).toLocaleString()} ₪
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
               <Card className="bg-primary/5 border-primary">
                 <CardContent className="p-4 space-y-1">
                   <div className="flex justify-between text-sm"><span>מסלול × {guests} אורחים</span><span>{(selectedPackage.pricePerPerson * guests).toLocaleString()} ₪</span></div>
-                  {chosenAddons.map((a) => (
-                    <div key={a.id} className="flex justify-between text-sm text-muted-foreground"><span>{a.name} × {guests}</span><span>+{(a.pricePerPerson * guests).toLocaleString()} ₪</span></div>
-                  ))}
+                  {chosenAddons.map((a) => {
+                    const q = addonQty(a);
+                    return (
+                      <div key={a.id} className="flex justify-between text-sm text-muted-foreground"><span>{a.name} × {q}</span><span>+{(a.pricePerPerson * q).toLocaleString()} ₪</span></div>
+                    );
+                  })}
                   <div className="border-t pt-2 flex justify-between font-bold"><span>סה״כ</span><span>{subtotal.toLocaleString()} ₪</span></div>
                   {minApplied && (
                     <div className="text-xs text-destructive bg-destructive/10 rounded p-2 mt-2">
@@ -323,6 +352,7 @@ const EventBooking = () => {
                   )}
                   <div className="text-lg font-bold text-primary flex justify-between pt-2 border-t">
                     <span>לתשלום</span><span>{total.toLocaleString()} ₪</span>
+
                   </div>
                 </CardContent>
               </Card>
