@@ -5,6 +5,7 @@ import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2, Smartphone } 
 import { toast } from "sonner";
 import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPush, getExistingSubscription } from "@/lib/push";
 import IosInstallModal from "@/components/IosInstallModal";
+import SmartPushPrompt from "@/components/SmartPushPrompt";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
