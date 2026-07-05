@@ -292,6 +292,22 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
               </div>
             ) : (
               <>
+                {/* Push-notification prompt — at the top of the live tracker,
+                    before the progress bar, so it sits above the timer in the
+                    normal page flow instead of hiding it as a front layer. */}
+                <SmartPushPrompt
+                  inline
+                  open={showSmartPrompt}
+                  phone={phone}
+                  orderId={order?.id ?? null}
+                  orderNumber={orderNumber}
+                  onAccept={() => {
+                    setShowSmartPrompt(false);
+                    handleEnableNotifications();
+                  }}
+                  onDismiss={() => setShowSmartPrompt(false)}
+                />
+
                 {/* Progress Steps with continuous live-filling connector */}
                 <div className="relative mb-6 px-2">
                   {/* Track behind the icons */}
