@@ -93,6 +93,7 @@ const BusinessStatusBar = () => {
           </DialogContent>
         </Dialog>
       </div>
+      </div>
     </div>
   );
 };
