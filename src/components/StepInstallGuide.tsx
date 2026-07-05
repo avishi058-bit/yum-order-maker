@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Share, Plus, MoreVertical, ChevronLeft, CheckCircle2, Download, Smartphone, ExternalLink, Copy, Check, ArrowDown } from "lucide-react";
+import { motion } from "framer-motion";
+import { Share, Plus, MoreVertical, CheckCircle2, Download, Smartphone, ExternalLink, Copy, Check, ArrowDown } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
@@ -32,9 +32,8 @@ interface Props {
   compact?: boolean;
 }
 
-const StepInstallGuide = ({ onDone, onClose, compact = false }: Props) => {
+const StepInstallGuide = ({ onDone, onClose }: Props) => {
   const [platform, setPlatform] = useState<Platform>("desktop");
-  const [stepIdx, setStepIdx] = useState(0);
   const [copied, setCopied] = useState(false);
   const { canPrompt, promptInstall } = useInstallPrompt();
 
