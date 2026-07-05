@@ -199,4 +199,61 @@ export const unsubscribeKitchenFromPush = async (): Promise<{ ok: boolean; reaso
   return { ok: true };
 };
 
+/**
+ * Subscribe THIS device to receive a push notification when the restaurant
+ * reopens for orders. One-shot: the notify-reopen edge function deletes these
+ * rows after sending, so the user is notified once per registration.
+ */
+export const subscribeReopenToPush = async (): Promise<{ ok: boolean; reason?: string }> => {
+  if (!isPushSupported()) return { ok: false, reason: "unsupported" };
+  if (iosNeedsInstall()) return { ok: false, reason: "ios_needs_install" };
+
+  const reg = await ensureServiceWorker();
+  if (!reg) return { ok: false, reason: "sw_failed" };
+  await navigator.serviceWorker.ready;
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return { ok: false, reason: "denied" };
+
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+    });
+  }
+
+  const json = sub.toJSON();
+  const endpoint = sub.endpoint;
+  const p256dh = (json.keys && json.keys.p256dh) || "";
+  const auth = (json.keys && json.keys.auth) || "";
+
+  const { data: existing } = await supabase
+    .from("push_subscriptions")
+    .select("id")
+    .eq("endpoint", endpoint)
+    .limit(1);
+
+  let err: any = null;
+  if (existing && existing.length > 0) {
+    const { error } = await supabase
+      .from("push_subscriptions")
+      .update({ p256dh, auth, for_reopen: true })
+      .eq("id", existing[0].id);
+    err = error;
+  } else {
+    const { error } = await supabase
+      .from("push_subscriptions")
+      .insert({ endpoint, p256dh, auth, for_reopen: true });
+    err = error;
+  }
+
+  if (err && (err as any).code !== "23505") {
+    console.error("[push] save reopen subscription failed", err);
+    return { ok: false, reason: "save_failed" };
+  }
+  return { ok: true };
+};
+
+
 

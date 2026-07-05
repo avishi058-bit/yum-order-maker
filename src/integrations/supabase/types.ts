@@ -455,6 +455,7 @@ export type Database = {
           created_at: string
           customer_phone: string | null
           endpoint: string
+          for_reopen: boolean
           id: string
           is_kitchen: boolean
           order_id: string | null
@@ -465,6 +466,7 @@ export type Database = {
           created_at?: string
           customer_phone?: string | null
           endpoint: string
+          for_reopen?: boolean
           id?: string
           is_kitchen?: boolean
           order_id?: string | null
@@ -475,6 +477,7 @@ export type Database = {
           created_at?: string
           customer_phone?: string | null
           endpoint?: string
+          for_reopen?: boolean
           id?: string
           is_kitchen?: boolean
           order_id?: string | null

@@ -1,41 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Check, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Bell, X, Check, Loader2, Download, Smartphone } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
-import { validateIsraeliPhone } from "@/lib/utils";
+import {
+  isPushSupported,
+  iosNeedsInstall,
+  isStandalonePwa,
+  subscribeReopenToPush,
+} from "@/lib/push";
 
 interface ReopenNotifyModalProps {
   open: boolean;
   onClose: () => void;
 }
 
+const STORAGE_KEY = "habakta_reopen_notify_registered";
+
 const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
-  const { customer } = useCustomerAuth();
-  const [phone, setPhone] = useState(customer?.phone ?? "");
-  const [name, setName] = useState(customer?.name ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [needsInstall, setNeedsInstall] = useState(false);
+  const [unsupported, setUnsupported] = useState(false);
 
-  const handleSubmit = async () => {
-    const phoneCheck = validateIsraeliPhone(phone);
-    if (!phoneCheck.valid) {
-      toast.error(phoneCheck.error);
-      return;
-    }
-    const cleaned = phone.replace(/[\s-]/g, "");
+  useEffect(() => {
+    if (!open) return;
+    try {
+      if (localStorage.getItem(STORAGE_KEY) === "1") {
+        setAlreadyRegistered(true);
+      }
+    } catch {}
+    setNeedsInstall(iosNeedsInstall() || (!isStandalonePwa() && !isPushSupported()));
+    setUnsupported(!isPushSupported() && !iosNeedsInstall());
+  }, [open]);
+
+  const handleEnable = async () => {
     setSubmitting(true);
-    const { error } = await supabase.from("reopen_notifications").insert({
-      phone: cleaned,
-      name: name.trim() || null,
-    });
+    const res = await subscribeReopenToPush();
     setSubmitting(false);
-    if (error) {
-      toast.error("שגיאה ברישום, נסו שוב");
+
+    if (res.ok) {
+      try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
+      setDone(true);
       return;
     }
-    setDone(true);
+    if (res.reason === "ios_needs_install") {
+      setNeedsInstall(true);
+      return;
+    }
+    if (res.reason === "denied") {
+      toast.error("צריך לאשר התראות בהגדרות הדפדפן");
+      return;
+    }
+    if (res.reason === "unsupported") {
+      setUnsupported(true);
+      return;
+    }
+    toast.error("שגיאה בהפעלת ההתראות, נסו שוב");
   };
 
   const handleClose = () => {
@@ -69,18 +91,59 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
               <X size={18} />
             </button>
 
-            {done ? (
+            {done || alreadyRegistered ? (
               <div className="text-center py-4">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
                   <Check size={32} className="text-green-600" />
                 </div>
-                <h3 className="text-xl font-black mb-2">נרשמת בהצלחה! 🎉</h3>
+                <h3 className="text-xl font-black mb-2">
+                  {alreadyRegistered && !done ? "כבר רשומים 🎉" : "הכל מוכן! 🎉"}
+                </h3>
                 <p className="text-muted-foreground text-sm">
-                  נשלח לכם הודעה בוואטסאפ ברגע שנפתח שוב להזמנות
+                  נשלח לכם התראה למכשיר ברגע שנפתח שוב להזמנות
                 </p>
                 <button
                   onClick={handleClose}
                   className="mt-6 w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl"
+                >
+                  סגור
+                </button>
+              </div>
+            ) : needsInstall ? (
+              <>
+                <div className="flex items-center gap-3 mb-4 pl-8">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-none">
+                    <Smartphone size={22} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black">קודם מתקינים את האפליקציה</h3>
+                    <p className="text-xs text-muted-foreground">
+                      כדי לקבל התראה כשנפתח שוב, צריך להתקין את הבקתה במסך הבית ולאשר התראות
+                    </p>
+                  </div>
+                </div>
+                <ol className="text-sm text-muted-foreground space-y-2 mb-5 mr-4 list-decimal">
+                  <li>לחצו על הכפתור למטה כדי לפתוח את דף ההתקנה</li>
+                  <li>הוסיפו את האפליקציה למסך הבית</li>
+                  <li>פתחו אותה מהאייקון החדש וחזרו לכאן ללחוץ "הפעילו התראות"</li>
+                </ol>
+                <Link
+                  to="/install"
+                  onClick={handleClose}
+                  className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl flex items-center justify-center gap-2"
+                >
+                  <Download size={18} />
+                  להורדת האפליקציה
+                </Link>
+              </>
+            ) : unsupported ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">
+                  הדפדפן הזה לא תומך בהתראות. נסו לפתוח את האתר בדפדפן אחר (Chrome / Safari עדכני).
+                </p>
+                <button
+                  onClick={handleClose}
+                  className="mt-6 w-full bg-secondary text-foreground font-bold py-3 rounded-xl"
                 >
                   סגור
                 </button>
@@ -93,43 +156,22 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black">עדכנו אותי כשנפתח שוב</h3>
-                    <p className="text-xs text-muted-foreground">נשלח הודעה בוואטסאפ ברגע שנפתח</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-bold text-muted-foreground mb-1 block">שם (אופציונלי)</label>
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="השם שלכם"
-                      className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-muted-foreground mb-1 block">מספר טלפון *</label>
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="0501234567"
-                      type="tel"
-                      dir="ltr"
-                      className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground text-right"
-                    />
+                    <p className="text-xs text-muted-foreground">
+                      נשלח התראה ישירות למכשיר ברגע שנפתח להזמנות — פעם אחת בלבד
+                    </p>
                   </div>
                 </div>
 
                 <button
-                  onClick={handleSubmit}
-                  disabled={submitting || !phone.trim()}
-                  className="mt-5 w-full bg-primary text-primary-foreground font-black py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
+                  onClick={handleEnable}
+                  disabled={submitting}
+                  className="mt-2 w-full bg-primary text-primary-foreground font-black py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />}
-                  עדכנו אותי כשנפתח
+                  הפעילו התראות
                 </button>
                 <p className="text-[11px] text-muted-foreground text-center mt-3">
-                  נשתמש במספר רק כדי להודיע על פתיחה מחדש
+                  לא נשמור מספר טלפון — רק התראה אחת כשהאתר נפתח שוב
                 </p>
               </>
             )}
