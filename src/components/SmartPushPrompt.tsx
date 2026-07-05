@@ -30,7 +30,7 @@ const logEvent = (action: "shown" | "accepted" | "dismissed" | "denied", phone: 
   } catch {}
 };
 
-const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismiss }: SmartPushPromptProps) => {
+const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismiss, inline = false }: SmartPushPromptProps) => {
   useEffect(() => {
     if (open) logEvent("shown", phone, orderId);
   }, [open, phone, orderId]);
