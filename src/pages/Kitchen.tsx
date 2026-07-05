@@ -567,16 +567,16 @@ const Kitchen = () => {
   }, []);
 
   const fetchOrders = useCallback(async () => {
-    // Only pull recent orders (last 48h) with a hard cap so the payload stays
-    // small — otherwise every poll/realtime tick refetches the entire history,
-    // which slows the kitchen tablet down and makes button taps feel laggy.
-    const sinceIso = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    // Kitchen tablet only loads the last 7 days of orders. Older orders remain
+    // in the database (accessible via reports/customer history) but are never
+    // pulled here, so the tablet stays fast regardless of total order volume.
+    const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from("orders")
       .select("*, order_items(*)")
       .gte("created_at", sinceIso)
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(300);
     if (!error && data) {
       const fetched = data as Order[];
 
