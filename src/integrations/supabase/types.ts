@@ -119,6 +119,7 @@ export type Database = {
           customer_phone: string
           customer_signature: string | null
           dessert_count: number | null
+          drink_selections: Json
           eggs_count: number | null
           end_time: string
           event_address: string
@@ -161,6 +162,7 @@ export type Database = {
           customer_phone: string
           customer_signature?: string | null
           dessert_count?: number | null
+          drink_selections?: Json
           eggs_count?: number | null
           end_time: string
           event_address: string
@@ -203,6 +205,7 @@ export type Database = {
           customer_phone?: string
           customer_signature?: string | null
           dessert_count?: number | null
+          drink_selections?: Json
           eggs_count?: number | null
           end_time?: string
           event_address?: string
