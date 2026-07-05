@@ -107,7 +107,7 @@ const DashboardView = () => {
       if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, station: 0 };
       days[d].revenue += o.total;
       days[d].orders += 1;
-      if (o.order_source === "station") days[d].station += o.total;
+      if (isStationOrder(o)) days[d].station += o.total;
       else days[d].website += o.total;
     });
     return Object.values(days);
