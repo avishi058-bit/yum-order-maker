@@ -213,7 +213,7 @@ const OrderTracking = () => {
               <p className="text-lg text-foreground">ההזמנה הושלמה ✅</p>
               <p className="text-sm text-muted-foreground mt-2">בתיאבון!</p>
             </div>
-            <GoogleReviewCard url={settings.google_review_url} className="mt-4" />
+            <GoogleReviewCard url={settings.google_review_url} completedAt={order.updated_at} className="mt-4" />
           </>
         )}
 
