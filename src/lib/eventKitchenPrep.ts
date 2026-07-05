@@ -114,12 +114,14 @@ export function computePrep(b: EventBookingLike, s: KitchenPrepSettings): PrepRe
   let ringsG = 0;
   let waffleG = 0;
   if (tier === "classic") {
+    // כל סועד מקבל מנת צ׳יפס מלאה
     chipsG = guests * s.chips_g;
   } else if (tier === "upgraded" || tier === "premium") {
-    chipsG = guests * s.chips_g;
-    potatoesG = guests * s.potatoes_g;
-    ringsG = guests * s.onion_rings_g;
-    waffleG = guests * s.waffle_g;
+    // חלוקה שווה בין צ׳יפס / וופל צ׳יפס / טבעות בצל
+    const perThird = guests / 3;
+    chipsG = perThird * s.chips_g;
+    ringsG = perThird * s.onion_rings_g;
+    waffleG = perThird * s.waffle_g;
   }
 
   // Premium-only extras — default = per-guest, but manual counts win when set.
