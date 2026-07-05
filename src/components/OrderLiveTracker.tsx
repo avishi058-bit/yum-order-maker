@@ -418,6 +418,17 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
         </motion.div>
 
         <IosInstallModal open={showIosInstallModal} onClose={() => setShowIosInstallModal(false)} />
+        <SmartPushPrompt
+          open={showSmartPrompt}
+          phone={phone}
+          orderId={order?.id ?? null}
+          orderNumber={orderNumber}
+          onAccept={() => {
+            setShowSmartPrompt(false);
+            handleEnableNotifications();
+          }}
+          onDismiss={() => setShowSmartPrompt(false)}
+        />
       </motion.div>
     </AnimatePresence>
   );
