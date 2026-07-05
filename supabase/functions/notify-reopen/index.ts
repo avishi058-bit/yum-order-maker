@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       .select('id, phone, name')
       .eq('notified', false)
     if (subsErr) return json({ error: subsErr.message }, 500)
-    if (!subs || subs.length === 0) return json({ sent: 0 })
+    // (don't early-return if empty — web-push subscribers may still exist)
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
     const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY')
