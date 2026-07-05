@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     let sent = 0
     const successIds: string[] = []
 
-    for (const sub of subs) {
+    for (const sub of (subs ?? [])) {
       const to = normalizePhoneNumber(sub.phone)
       if (!to) continue
       if (twilioConfigured && formattedFrom) {
