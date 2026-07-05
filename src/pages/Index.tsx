@@ -17,7 +17,7 @@ interface CustomizerResult {
   mealDrinkId?: string;
   ownerName?: string;
 }
-import OrderTopBar, { setTrackedOrder } from "@/components/OrderTopBar";
+import OrderTopBar, { getTrackedOrder, setTrackedOrder } from "@/components/OrderTopBar";
 import BusinessStatusBar from "@/components/BusinessStatusBar";
 import SideMenu from "@/components/SideMenu";
 import KioskWelcome from "@/components/KioskWelcome";
@@ -124,6 +124,15 @@ const Index = () => {
   }, []);
 
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
+
+  // Auto-open the live tracker/timer when the customer returns to the site
+  // and still has an active order saved in localStorage.
+  useEffect(() => {
+    const tracked = getTrackedOrder();
+    if (tracked?.phone) {
+      setLiveTrackerOrder({ orderNumber: tracked.orderNumber, phone: tracked.phone });
+    }
+  }, []);
   /**
    * When set, the next ItemCustomizer confirm/close resolves this promise
    * INSTEAD of mutating the cart. Used by the favorite-order modal to let
