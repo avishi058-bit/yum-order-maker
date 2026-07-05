@@ -67,8 +67,9 @@ const DashboardView = () => {
   const orderCount = filteredOrders.length;
   const avgOrder = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-  const websiteOrders = filteredOrders.filter((o) => o.order_source !== "station");
-  const stationOrders = filteredOrders.filter((o) => o.order_source === "station");
+  const isStationOrder = (o: Order) => o.order_source === "station" || o.order_source === "kiosk";
+  const websiteOrders = filteredOrders.filter((o) => !isStationOrder(o));
+  const stationOrders = filteredOrders.filter(isStationOrder);
   const websiteRevenue = websiteOrders.reduce((s, o) => s + o.total, 0);
   const stationRevenue = stationOrders.reduce((s, o) => s + o.total, 0);
 
@@ -106,7 +107,7 @@ const DashboardView = () => {
       if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, station: 0 };
       days[d].revenue += o.total;
       days[d].orders += 1;
-      if (o.order_source === "station") days[d].station += o.total;
+      if (isStationOrder(o)) days[d].station += o.total;
       else days[d].website += o.total;
     });
     return Object.values(days);
