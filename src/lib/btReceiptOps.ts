@@ -799,3 +799,110 @@ export function buildFridgeRefillOps(items: FridgeRefillLine[]): FastOp[] {
   return ops;
 }
 
+// ============================================================
+// EVENT PREP BON (kitchen prep for a signed event booking)
+// ============================================================
+export interface EventPrepBookingLike {
+  customer_name: string;
+  event_date: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  event_type?: string | null;
+  event_address?: string | null;
+  at_venue?: boolean | null;
+  package_name: string;
+  kitchen_notes?: string | null;
+}
+
+export interface EventPrepResultLike {
+  guests: number;
+  regularPatties: number;
+  vegPatties: number;
+  veganPatties: number;
+  regularBuns: number;
+  gfBuns: number;
+  tomatoKg: number;
+  onionKg: number;
+  lettuceKg: number;
+  picklesKg: number;
+  chipsKg: number;
+  potatoesKg: number;
+  onionRingsKg: number;
+  waffleKg: number;
+  eggs: number;
+  onionJam: number;
+  friedOnion: number;
+  chili: number;
+  desserts: number;
+  tier: "classic" | "upgraded" | "premium" | "meat" | "other";
+}
+
+const kgStr = (v: number) => `${v.toFixed(2)} ק"ג`;
+
+export function buildEventPrepOps(
+  b: EventPrepBookingLike,
+  r: EventPrepResultLike,
+): FastOp[] {
+  const ops: FastOp[] = [];
+
+  const dt = new Date(b.event_date + "T00:00:00");
+  const dateStr = dt.toLocaleDateString("he-IL", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+  const timeStr = [b.start_time, b.end_time].filter(Boolean).join(" - ");
+  const place = b.at_venue ? "אצלנו במקום" : (b.event_address || "");
+
+  ops.push(asLine("בון הכנות אירוע", { align: "C", bold: true, size: 54 }));
+  ops.push(asLine(b.customer_name, { align: "C", bold: true, size: 42 }));
+  ops.push(asLine(dateStr, { align: "C", size: 30 }));
+  if (timeStr) ops.push(asLine(timeStr, { align: "C", size: 30 }));
+  if (b.event_type) ops.push(asLine(b.event_type, { align: "C", size: 30 }));
+  if (place) ops.push(asLine(place, { align: "C", size: 30 }));
+  ops.push(asLine(`${b.package_name} · ${r.guests} סועדים`, { align: "C", bold: true, size: 33 }));
+  ops.push(sep());
+
+  ops.push(asLine("קציצות ולחמניות", { align: "C", bold: true, size: 36 }));
+  ops.push(asLine(`קציצה רגילה: ${r.regularPatties}`, { align: "R", bold: true, size: 42 }));
+  if (r.vegPatties > 0) ops.push(asLine(`קציצה צמחונית: ${r.vegPatties}`, { align: "R", bold: true, size: 42 }));
+  if (r.veganPatties > 0) ops.push(asLine(`קציצה טבעונית: ${r.veganPatties}`, { align: "R", bold: true, size: 42 }));
+  ops.push(asLine(`לחמניות: ${r.regularBuns}`, { align: "R", bold: true, size: 42 }));
+  if (r.gfBuns > 0) ops.push(asLine(`ללא גלוטן: ${r.gfBuns}`, { align: "R", bold: true, size: 42 }));
+  ops.push(sep());
+
+  ops.push(asLine("ירקות", { align: "C", bold: true, size: 36 }));
+  ops.push(asLine(`עגבנייה: ${kgStr(r.tomatoKg)}`, { align: "R", bold: true, size: 39 }));
+  ops.push(asLine(`בצל: ${kgStr(r.onionKg)}`, { align: "R", bold: true, size: 39 }));
+  ops.push(asLine(`חסה: ${kgStr(r.lettuceKg)}`, { align: "R", bold: true, size: 39 }));
+  ops.push(asLine(`חמוצים: ${kgStr(r.picklesKg)}`, { align: "R", bold: true, size: 39 }));
+  ops.push(sep());
+
+  ops.push(asLine("מטוגנים", { align: "C", bold: true, size: 36 }));
+  if (r.chipsKg > 0) ops.push(asLine(`צ'יפס: ${kgStr(r.chipsKg)}`, { align: "R", bold: true, size: 42 }));
+  if (r.waffleKg > 0) ops.push(asLine(`וופל צ'יפס: ${kgStr(r.waffleKg)}`, { align: "R", bold: true, size: 42 }));
+  if (r.onionRingsKg > 0) ops.push(asLine(`טבעות בצל: ${kgStr(r.onionRingsKg)}`, { align: "R", bold: true, size: 42 }));
+  if (r.potatoesKg > 0) ops.push(asLine(`פוטטוס: ${kgStr(r.potatoesKg)}`, { align: "R", bold: true, size: 42 }));
+
+  if (r.tier === "premium") {
+    ops.push(sep());
+    ops.push(asLine("תוספות מפנק", { align: "C", bold: true, size: 36 }));
+    ops.push(asLine(`ביצי עין: ${r.eggs}`, { align: "R", bold: true, size: 39 }));
+    ops.push(asLine(`ריבת בצל: ${r.onionJam}`, { align: "R", bold: true, size: 39 }));
+    ops.push(asLine(`בצל מטוגן: ${r.friedOnion}`, { align: "R", bold: true, size: 39 }));
+    ops.push(asLine(`פלפל חריף: ${r.chili}`, { align: "R", bold: true, size: 39 }));
+    ops.push(asLine(`קינוח: ${r.desserts}`, { align: "R", bold: true, size: 39 }));
+  }
+
+  if (b.kitchen_notes && b.kitchen_notes.trim()) {
+    ops.push(sep());
+    ops.push(asLine("הערות למטבח", { align: "C", bold: true, size: 33 }));
+    for (const line of b.kitchen_notes.split(/\r?\n/)) {
+      if (line.trim()) ops.push(asLine(line, { align: "R", size: 33 }));
+    }
+  }
+
+  ops.push(feed(2));
+  ops.push({ kind: "cut" });
+  return ops;
+}
+
+
