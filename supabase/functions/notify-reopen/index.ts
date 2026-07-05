@@ -118,7 +118,55 @@ Deno.serve(async (req) => {
         .in('id', successIds)
     }
 
-    return json({ sent, total: subs.length })
+    // --- Web Push: notify every device registered via the "notify me when reopens" flow.
+    // One-shot: delete the row after sending so users are notified once per registration.
+    let pushSent = 0
+    let pushRemoved = 0
+    try {
+      const { data: pushSubs } = await supabase
+        .from('push_subscriptions')
+        .select('id, endpoint, p256dh, auth')
+        .eq('for_reopen', true)
+
+      if (pushSubs && pushSubs.length > 0 && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+        const payload = JSON.stringify({
+          title: 'הבקתה נפתחה שוב להזמנות! 🎉',
+          body: 'לחצו כדי להזמין עכשיו 🍔',
+          tag: 'reopen-notify',
+          url: '/',
+        })
+        const toDelete: string[] = []
+        await Promise.all(
+          pushSubs.map(async (s) => {
+            try {
+              await webpush.sendNotification(
+                { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                payload,
+              )
+              pushSent++
+              toDelete.push(s.id)
+            } catch (err: any) {
+              const status = err?.statusCode
+              if (status === 404 || status === 410) toDelete.push(s.id)
+              else console.error('[reopen-push] send failed', status, err?.body || err?.message)
+            }
+          }),
+        )
+        if (toDelete.length > 0) {
+          // Clear the for_reopen flag (keep the row if it's used for another purpose like order tracking)
+          await supabase
+            .from('push_subscriptions')
+            .update({ for_reopen: false })
+            .in('id', toDelete)
+          pushRemoved = toDelete.length
+        }
+      }
+    } catch (e) {
+      console.error('reopen web-push error', e)
+    }
+
+    return json({ sent, total: subs.length, push_sent: pushSent, push_cleared: pushRemoved })
+
   } catch (e) {
     console.error('notify-reopen error', e)
     return json({ error: 'Internal error' }, 500)
