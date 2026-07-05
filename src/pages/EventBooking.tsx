@@ -178,7 +178,7 @@ const EventBooking = () => {
         package_id: selectedPackage.id,
         package_name: selectedPackage.name,
         package_price_per_person: selectedPackage.pricePerPerson,
-        addons: chosenAddons,
+        addons: chosenAddons.map((a) => ({ ...a, quantity: addonQty(a), lineTotal: a.pricePerPerson * addonQty(a) })),
         subtotal,
         total_price: total,
         min_applied: minApplied,
