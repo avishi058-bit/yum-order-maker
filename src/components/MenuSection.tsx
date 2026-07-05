@@ -256,8 +256,13 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
         className={`sticky z-50 bg-background border-b border-border ${
           isKiosk
             ? "top-0 -mx-4 px-4 pt-5 pb-4 mb-6"
-            : "top-0 -mx-4 px-4 pt-3 pb-3 mb-6"
+            : "top-0 -mx-4 px-4 pb-3 mb-6"
         }`}
+        style={
+          isKiosk
+            ? undefined
+            : { paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }
+        }
       >
         <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-3" : "gap-2"}`} dir="rtl">
 
