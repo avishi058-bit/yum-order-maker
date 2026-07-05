@@ -65,6 +65,7 @@ const EventBooking = () => {
   const businessSigRef = useRef<SignatureCanvas | null>(null);
 
   useEffect(() => {
+    document.title = "הזמנת אירועים | המבורגר הבקתה";
     (async () => {
       const [{ data: blocked }, { data: settings }] = await Promise.all([
         supa.from("event_blocked_dates").select("blocked_date"),
