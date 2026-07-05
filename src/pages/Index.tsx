@@ -126,8 +126,10 @@ const Index = () => {
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
 
   // Auto-open the live tracker/timer when the customer returns to the site
-  // and still has an active order saved in localStorage.
+  // and still has an active order saved in localStorage. Skip in kiosk/station mode.
   useEffect(() => {
+    const isStationMode = localStorage.getItem("habakta_station") === "true";
+    if (isStationMode) return;
     const tracked = getTrackedOrder();
     if (tracked?.phone) {
       setLiveTrackerOrder({ orderNumber: tracked.orderNumber, phone: tracked.phone });
