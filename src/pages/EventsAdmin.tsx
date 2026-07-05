@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateContractPdf, downloadBlob } from "@/lib/eventContract";
+import { DEFAULT_PREP_SETTINGS, type KitchenPrepSettings } from "@/lib/eventKitchenPrep";
 
 const supa = supabase as any;
 
@@ -22,6 +23,7 @@ const EventsAdmin = () => {
   const [reason, setReason] = useState("");
   const [contractTemplate, setContractTemplate] = useState("");
   const [minAmount, setMinAmount] = useState(2000);
+  const [prep, setPrep] = useState<KitchenPrepSettings>(DEFAULT_PREP_SETTINGS);
 
   const load = async () => {
     const [b, bd, s] = await Promise.all([
@@ -34,6 +36,7 @@ const EventsAdmin = () => {
     if (s.data) {
       setContractTemplate(s.data.contract_template || "");
       setMinAmount(Number(s.data.minimum_amount) || 2000);
+      if (s.data.kitchen_prep) setPrep({ ...DEFAULT_PREP_SETTINGS, ...s.data.kitchen_prep });
     }
   };
   useEffect(() => { load(); }, []);
@@ -58,6 +61,13 @@ const EventsAdmin = () => {
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
     if (error) toast.error(error.message); else toast.success("נשמר");
+  };
+  const savePrep = async () => {
+    const { error } = await supa.from("event_settings").update({
+      kitchen_prep: prep,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
+    if (error) toast.error(error.message); else toast.success("הגדרות מטבח נשמרו");
   };
 
   const downloadPdf = async (b: any) => {
@@ -91,6 +101,7 @@ const EventsAdmin = () => {
             <TabsTrigger value="bookings">הזמנות ({bookings.length})</TabsTrigger>
             <TabsTrigger value="calendar">יומן זמינות</TabsTrigger>
             <TabsTrigger value="settings">הגדרות חוזה</TabsTrigger>
+            <TabsTrigger value="prep">כמויות מטבח</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings" className="space-y-3">
@@ -174,6 +185,41 @@ const EventsAdmin = () => {
                 </div>
                 <Textarea rows={20} value={contractTemplate} onChange={(e) => setContractTemplate(e.target.value)} className="font-mono text-sm" />
                 <Button onClick={saveSettings}>שמור</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prep">
+            <Card>
+              <CardHeader>
+                <CardTitle>כמויות מטבח לאירוע</CardTitle>
+                <CardDescription>גרם למנה / ברירות מחדל. כל ערך שיישונה יעדכן את החישוב האוטומטי בכל הזמנת אירוע.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {([
+                    ["tomato_g", "עגבנייה למנה (גרם)"],
+                    ["onion_g", "בצל למנה (גרם)"],
+                    ["lettuce_g", "חסה למנה (גרם)"],
+                    ["pickles_g", "חמוצים למנה (גרם)"],
+                    ["chips_g", "צ׳יפס למנה (גרם)"],
+                    ["potatoes_g", "פוטטוס למנה (גרם)"],
+                    ["onion_rings_g", "טבעות בצל למנה (גרם)"],
+                    ["waffle_g", "וופל למנה (גרם)"],
+                    ["default_eggs_per_guest", "ביצי עין — ברירת מחדל לסועד"],
+                    ["default_dessert_per_guest", "קינוח — ברירת מחדל לסועד"],
+                  ] as [keyof KitchenPrepSettings, string][]).map(([k, label]) => (
+                    <div key={k}>
+                      <label className="text-sm font-medium block mb-1">{label}</label>
+                      <Input
+                        type="number" step="0.01" min={0}
+                        value={prep[k]}
+                        onChange={(e) => setPrep({ ...prep, [k]: Number(e.target.value) })}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={savePrep}>שמור הגדרות מטבח</Button>
               </CardContent>
             </Card>
           </TabsContent>

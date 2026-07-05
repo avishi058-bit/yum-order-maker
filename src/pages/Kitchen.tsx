@@ -1547,11 +1547,11 @@ const Kitchen = () => {
             <Settings size={20} />
           </button>
 
-          {/* 🎉 Events back office */}
+          {/* 🎉 Events */}
           <a
-            href="/events/admin"
+            href="/events/kitchen"
             className="px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
-            title="ניהול אירועים והזמנות קייטרינג"
+            title="הזמנות אירועים — הכנות מטבח"
           >
             <span>🎉</span>
             <span>אירועים</span>
