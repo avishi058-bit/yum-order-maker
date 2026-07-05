@@ -36,23 +36,19 @@ const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismis
   }, [open, phone, orderId]);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-          dir="rtl"
-        >
-          <motion.div
-            initial={{ y: 40, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 40, opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", damping: 24, stiffness: 320 }}
-            className="bg-card w-full sm:max-w-sm rounded-3xl shadow-2xl border border-border overflow-hidden"
-          >
-            <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-6 pt-8 pb-6 text-center">
+  const card = (
+    <motion.div
+      initial={{ y: 20, opacity: 0, scale: 0.97 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      exit={{ y: 20, opacity: 0, scale: 0.97 }}
+      transition={{ type: "spring", damping: 24, stiffness: 320 }}
+      className={
+        inline
+          ? "bg-card w-full rounded-2xl shadow-lg border border-border overflow-hidden"
+          : "bg-card w-full sm:max-w-sm rounded-3xl shadow-2xl border border-border overflow-hidden"
+      }
+    >
+      <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-6 pt-8 pb-6 text-center">
               <button
                 onClick={() => {
                   logEvent("dismissed", phone, orderId);
