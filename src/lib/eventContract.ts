@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export interface ContractData {
   customer_name: string;
@@ -35,6 +36,18 @@ export function fillTemplate(template: string, data: ContractData): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => map[key] ?? "");
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/**
+ * Render the contract as a Hebrew/RTL HTML block off-screen, capture with
+ * html2canvas, and paginate into a jsPDF A4 document. This preserves Hebrew
+ * characters (jsPDF's default fonts don't).
+ */
 export async function generateContractPdf(opts: {
   contractText: string;
   customerSignature: string;
@@ -43,56 +56,78 @@ export async function generateContractPdf(opts: {
   clientIp: string;
   bookingId: string;
 }): Promise<Blob> {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 15;
-  const maxWidth = pageWidth - margin * 2;
+  const container = document.createElement("div");
+  container.setAttribute("dir", "rtl");
+  container.style.position = "fixed";
+  container.style.top = "-10000px";
+  container.style.right = "0";
+  container.style.width = "794px"; // ~ A4 @ 96dpi
+  container.style.padding = "40px 48px";
+  container.style.background = "#ffffff";
+  container.style.color = "#111";
+  container.style.fontFamily =
+    "'Heebo', 'Rubik', 'Arial Hebrew', 'Segoe UI', system-ui, sans-serif";
+  container.style.fontSize = "15px";
+  container.style.lineHeight = "1.8";
 
-  // Simple RTL: reverse each line
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
+  container.innerHTML = `
+    <div style="text-align:center;margin-bottom:8px">
+      <h1 style="font-size:24px;margin:0;font-weight:800">חוזה אירוע – המבורגר הבקתה</h1>
+      <div style="font-size:12px;color:#555;margin-top:4px">מספר הזמנה: ${escapeHtml(
+        opts.bookingId
+      )}</div>
+    </div>
+    <hr style="margin:16px 0;border:0;border-top:1px solid #ddd" />
+    <div style="white-space:pre-wrap;text-align:right">${escapeHtml(opts.contractText)}</div>
+    <div style="margin-top:24px;font-size:12px;color:#555;text-align:right">
+      נחתם בתאריך: ${escapeHtml(opts.signedAt)} &nbsp;•&nbsp; IP: ${escapeHtml(opts.clientIp || "-")}
+    </div>
+    <div style="margin-top:24px;display:flex;justify-content:space-between;gap:24px">
+      <div style="flex:1;text-align:center">
+        <div style="font-weight:700;margin-bottom:4px">חתימת בעל העסק</div>
+        <img src="${opts.businessSignature}" style="max-height:120px;max-width:100%;border-bottom:1px solid #999" />
+      </div>
+      <div style="flex:1;text-align:center">
+        <div style="font-weight:700;margin-bottom:4px">חתימת לקוח</div>
+        <img src="${opts.customerSignature}" style="max-height:120px;max-width:100%;border-bottom:1px solid #999" />
+      </div>
+    </div>
+  `;
 
-  doc.setFontSize(14);
-  doc.text("Event Contract / חוזה אירוע", pageWidth / 2, 15, { align: "center" });
-  doc.setFontSize(10);
-  doc.text(`Booking ID: ${opts.bookingId}`, pageWidth / 2, 22, { align: "center" });
+  document.body.appendChild(container);
+  try {
+    // Wait a tick so fonts/images settle
+    await new Promise((r) => setTimeout(r, 50));
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+    });
 
-  doc.setFontSize(11);
-  const lines = opts.contractText.split("\n");
-  let y = 32;
-  for (const line of lines) {
-    const wrapped = doc.splitTextToSize(line, maxWidth);
-    for (const w of wrapped) {
-      if (y > 265) {
-        doc.addPage();
-        y = 20;
-      }
-      doc.text(w, pageWidth - margin, y, { align: "right" });
-      y += 6;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW;
+    const imgH = (canvas.height * pageW) / canvas.width;
+
+    let heightLeft = imgH;
+    let position = 0;
+    const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+    pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+    heightLeft -= pageH;
+    while (heightLeft > 0) {
+      position = heightLeft - imgH;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
     }
+
+    return pdf.output("blob");
+  } finally {
+    document.body.removeChild(container);
   }
-
-  if (y > 220) {
-    doc.addPage();
-    y = 20;
-  }
-
-  y += 6;
-  doc.setFontSize(10);
-  doc.text(`Signed at: ${opts.signedAt}   IP: ${opts.clientIp}`, pageWidth - margin, y, { align: "right" });
-  y += 10;
-
-  doc.text("Customer signature:", pageWidth - margin, y, { align: "right" });
-  doc.text("Business signature:", margin, y);
-  y += 3;
-  try {
-    doc.addImage(opts.customerSignature, "PNG", pageWidth - margin - 70, y, 70, 30);
-  } catch { /* ignore */ }
-  try {
-    doc.addImage(opts.businessSignature, "PNG", margin, y, 70, 30);
-  } catch { /* ignore */ }
-
-  return doc.output("blob");
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
