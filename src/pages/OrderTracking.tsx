@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, Bell, BellRing, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import GoogleReviewCard from "@/components/GoogleReviewCard";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   isPushSupported,
   iosNeedsInstall,
@@ -23,6 +25,7 @@ const OrderTracking = () => {
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [pushState, setPushState] = useState<"idle" | "subscribing" | "subscribed">("idle");
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     if (!orderNumber || !phone) return;
