@@ -3,6 +3,8 @@ export interface EventAddon {
   name: string;
   pricePerPerson: number;
   emoji?: string;
+  /** partial addon: applies only to selected portion of guests (e.g., vegan / gluten-free) */
+  partial?: boolean;
 }
 
 export interface EventPackage {
