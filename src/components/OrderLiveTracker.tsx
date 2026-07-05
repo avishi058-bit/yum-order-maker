@@ -23,6 +23,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(true);
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
+  const [showSmartPrompt, setShowSmartPrompt] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   // Fetch order via secure edge function (no direct DB access)
