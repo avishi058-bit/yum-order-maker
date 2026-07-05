@@ -101,6 +101,7 @@ const EventsAdmin = () => {
             <TabsTrigger value="bookings">הזמנות ({bookings.length})</TabsTrigger>
             <TabsTrigger value="calendar">יומן זמינות</TabsTrigger>
             <TabsTrigger value="settings">הגדרות חוזה</TabsTrigger>
+            <TabsTrigger value="prep">כמויות מטבח</TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings" className="space-y-3">
