@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import { CalendarSearch, CheckCircle2, ChevronLeft, ChevronRight, Download, PartyPopper } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES } from "@/data/eventPackages";
+import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES, EVENT_DRINK_OPTIONS, PACKAGES_WITH_DRINKS } from "@/data/eventPackages";
 import { fillTemplate, generateContractPdf, downloadBlob, fetchClientIp, type ContractData } from "@/lib/eventContract";
 import { cn } from "@/lib/utils";
 import EventStoryGallery from "@/components/EventStoryGallery";
@@ -59,6 +59,7 @@ const EventBooking = () => {
   const [packageId, setPackageId] = useState<string>("premium");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [addonQuantities, setAddonQuantities] = useState<Record<string, number>>({});
+  const [drinkSelections, setDrinkSelections] = useState<Record<string, number>>({});
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
@@ -89,6 +90,15 @@ const EventBooking = () => {
   );
   const addonQty = (a: typeof EVENT_ADDONS[number]) =>
     a.partial ? Math.min(guests, Math.max(0, addonQuantities[a.id] ?? 0)) : guests;
+
+  const packageIncludesDrinks = PACKAGES_WITH_DRINKS.has(packageId);
+  const needsDrinkSelection = packageIncludesDrinks && !atVenue;
+  const drinksTotal = useMemo(
+    () => Object.values(drinkSelections).reduce((s, n) => s + (Number(n) || 0), 0),
+    [drinkSelections]
+  );
+  const setDrinkQty = (id: string, n: number) =>
+    setDrinkSelections((cur) => ({ ...cur, [id]: Math.max(0, Math.floor(n || 0)) }));
   const subtotal = useMemo(() => {
     const pkg = selectedPackage.pricePerPerson * guests;
     const addonsSum = chosenAddons.reduce((s, a) => s + a.pricePerPerson * addonQty(a), 0);
@@ -137,6 +147,9 @@ const EventBooking = () => {
       if (!customerEmail.includes("@")) return "אימייל לא תקין";
       if (!eventType) return "יש לבחור סוג אירוע";
       if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
+      if (needsDrinkSelection && drinksTotal !== guests) {
+        return `בחירת שתייה: נבחרו ${drinksTotal} מתוך ${guests} — יש להתאים לפי מספר האורחים`;
+      }
     }
     if (s === 4 && !acceptTerms) return "יש לאשר את תנאי החוזה";
     return null;
@@ -183,6 +196,11 @@ const EventBooking = () => {
         subtotal,
         total_price: total,
         min_applied: minApplied,
+        drink_selections: needsDrinkSelection
+          ? EVENT_DRINK_OPTIONS
+              .filter((d) => (drinkSelections[d.id] || 0) > 0)
+              .reduce((acc, d) => ({ ...acc, [d.name]: drinkSelections[d.id] }), {} as Record<string, number>)
+          : {},
         contract_text: filledContract,
         customer_signature: customerSig,
         business_signature: businessSig,
@@ -439,6 +457,46 @@ const EventBooking = () => {
                   )}
                 </div>
               </div>
+
+              {/* Drinks — outside-venue events only. אצלנו במקום השתייה מסופקת ישירות ואין צורך שהלקוח יבחר. */}
+              {needsDrinkSelection && (
+                <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div>
+                    <h3 className="font-bold text-base">🥤 בחירת שתייה לאירוע</h3>
+                    <p className="text-xs text-muted-foreground">
+                      חלקו את השתייה בין הסוגים לפי טעמכם.
+                      סה״כ יחידות צריכות להיות זהות למספר האורחים ({guests}).
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {EVENT_DRINK_OPTIONS.map((d) => (
+                      <div key={d.id} className="flex items-center gap-2 p-2 rounded-md border bg-background">
+                        <span className="flex-1 text-sm">{d.emoji} {d.name}</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={drinkSelections[d.id] ?? ""}
+                          onChange={(e) => setDrinkQty(d.id, Number(e.target.value))}
+                          className="w-20 text-center"
+                          placeholder="0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className={cn(
+                    "flex justify-between items-center px-3 py-2 rounded-md text-sm font-bold",
+                    drinksTotal === guests ? "bg-green-500/15 text-green-700 dark:text-green-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                  )}>
+                    <span>סה״כ יחידות שנבחרו</span>
+                    <span>{drinksTotal} / {guests}</span>
+                  </div>
+                </div>
+              )}
+              {packageIncludesDrinks && atVenue && (
+                <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  🏠 האירוע מתקיים אצלנו במקום — השתייה תסופק ישירות ואין צורך לבחור מראש.
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

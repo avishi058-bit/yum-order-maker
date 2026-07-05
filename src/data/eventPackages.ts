@@ -108,3 +108,26 @@ export const EVENT_TYPES = [
   { value: "brit", label: "ברית / בריתה" },
   { value: "other", label: "אחר" },
 ];
+
+/** מסלולים שכוללים שתייה במחיר. במסלול הקלאסי אין שתייה. */
+export const PACKAGES_WITH_DRINKS = new Set(["upgraded", "premium", "all-inclusive", "meat-bar"]);
+
+export interface DrinkOption {
+  id: string;
+  name: string;
+  emoji?: string;
+}
+
+/** רשימת השתייה שהלקוח בוחר ממנה באירועי חוץ. */
+export const EVENT_DRINK_OPTIONS: DrinkOption[] = [
+  { id: "cola", name: "קוקה קולה", emoji: "🥤" },
+  { id: "cola-zero", name: "קולה זירו", emoji: "🥤" },
+  { id: "sprite", name: "ספרייט", emoji: "🥤" },
+  { id: "fanta", name: "פאנטה", emoji: "🍊" },
+  { id: "grape-juice", name: "מיץ ענבים", emoji: "🍇" },
+  { id: "orange-juice", name: "מיץ תפוזים", emoji: "🍊" },
+  { id: "flavored-water-apple", name: "מים בטעם תפוח", emoji: "🍏" },
+  { id: "flavored-water-grape", name: "מים בטעם ענבים", emoji: "🍇" },
+  { id: "soda", name: "סודה", emoji: "💧" },
+  { id: "water", name: "מים מינרליים", emoji: "💧" },
+];
