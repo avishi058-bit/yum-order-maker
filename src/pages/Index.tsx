@@ -750,12 +750,6 @@ const Index = () => {
                   setTrackedOrder(trackedOrder);
                   setLiveTrackerOrder({ orderNumber, phone: phone ?? "" });
                   window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
-                  toast({
-                    title: "ההזמנה התקבלה בהצלחה 🎉",
-                    description:
-                      "ניתן להתעדכן בסטטוס ההזמנה בכל זמן דרך האתר (בחלק העליון), גם אם יצאת מהאתר.",
-                    duration: 10000,
-                  });
                   // Offer push notifications to users who haven't decided yet
                   if (typeof Notification !== "undefined" && Notification.permission === "default") {
                     setTimeout(() => {
