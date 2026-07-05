@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSiteSettings, type BusinessHoursMap } from "@/hooks/useSiteSettings";
 import { menuItems } from "@/data/menu";
-import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock } from "lucide-react";
+import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
@@ -23,7 +23,8 @@ const AdminSettings = () => {
   const [bannerText, setBannerText] = useState("");
   const [bannerEnabled, setBannerEnabled] = useState(false);
   const [businessHours, setBusinessHours] = useState<BusinessHoursMap>(DEFAULT_HOURS);
-  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours">("fonts");
+  const [googleReviewUrl, setGoogleReviewUrl] = useState("");
+  const [activeTab, setActiveTab] = useState<"fonts" | "menu" | "colors" | "banner" | "order" | "hours" | "reviews">("fonts");
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ const AdminSettings = () => {
       setBannerText(settings.banner_text);
       setBannerEnabled(settings.banner_enabled);
       setBusinessHours(settings.business_hours || DEFAULT_HOURS);
+      setGoogleReviewUrl(settings.google_review_url || "");
     }
   }, [loading, settings]);
 
@@ -80,6 +82,7 @@ const AdminSettings = () => {
     { id: "colors" as const, label: "צבעים", icon: Palette },
     { id: "banner" as const, label: "באנר", icon: MessageSquare },
     { id: "hours" as const, label: "שעות פעילות", icon: Clock },
+    { id: "reviews" as const, label: "ביקורות", icon: Star },
   ];
 
   const orderedItems = menuOrder
