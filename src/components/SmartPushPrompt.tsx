@@ -10,6 +10,8 @@ interface SmartPushPromptProps {
   orderNumber: number;
   onAccept: () => void;
   onDismiss: () => void;
+  /** When true, renders as an inline card instead of a full-screen modal. */
+  inline?: boolean;
 }
 
 const logEvent = (action: "shown" | "accepted" | "dismissed" | "denied", phone: string, orderId?: string | null) => {
