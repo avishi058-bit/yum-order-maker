@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Share, Plus, MoreVertical, ChevronLeft, CheckCircle2, Download, Smartphone, ExternalLink, Copy, Check, ArrowDown } from "lucide-react";
+import { motion } from "framer-motion";
+import { Share, Plus, MoreVertical, CheckCircle2, Download, Smartphone, ExternalLink, Copy, Check, ArrowDown } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 
@@ -32,9 +32,8 @@ interface Props {
   compact?: boolean;
 }
 
-const StepInstallGuide = ({ onDone, onClose, compact = false }: Props) => {
+const StepInstallGuide = ({ onDone, onClose }: Props) => {
   const [platform, setPlatform] = useState<Platform>("desktop");
-  const [stepIdx, setStepIdx] = useState(0);
   const [copied, setCopied] = useState(false);
   const { canPrompt, promptInstall } = useInstallPrompt();
 
@@ -182,22 +181,15 @@ const StepInstallGuide = ({ onDone, onClose, compact = false }: Props) => {
   }, [platform, canPrompt, copied]);
 
   const total = steps.length;
-  const step = steps[stepIdx];
-  const isLast = stepIdx === total - 1;
+  const isSingleStep = total === 1;
 
-  const handleNext = async () => {
-    if (platform === "android" && canPrompt && stepIdx === 0) {
+  const handleSingleAction = async () => {
+    if (platform === "android" && canPrompt) {
       const res = await promptInstall();
-      if (res === "accepted") {
-        onDone?.();
-      }
+      if (res === "accepted") onDone?.();
       return;
     }
-    if (isLast) {
-      onDone?.();
-      return;
-    }
-    setStepIdx((i) => Math.min(total - 1, i + 1));
+    onDone?.();
   };
 
   if (platform === "standalone") {
@@ -217,22 +209,6 @@ const StepInstallGuide = ({ onDone, onClose, compact = false }: Props) => {
 
   return (
     <div className="w-full" dir="rtl">
-      {/* Progress dots */}
-      {total > 1 && (
-        <div className="flex items-center justify-center gap-1.5 mb-4">
-          {steps.map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{
-                width: i === stepIdx ? 24 : 8,
-                backgroundColor: i <= stepIdx ? "hsl(var(--primary))" : "hsl(var(--muted))",
-              }}
-              className="h-2 rounded-full"
-            />
-          ))}
-        </div>
-      )}
-
       {/* Platform badge */}
       <div className="text-center mb-3">
         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">
@@ -240,18 +216,13 @@ const StepInstallGuide = ({ onDone, onClose, compact = false }: Props) => {
           {platform === "ios-other" && "🍎 אייפון"}
           {platform === "android" && "🤖 אנדרואיד"}
           {platform === "desktop" && "💻 מחשב"}
-          {total > 1 && ` · שלב ${stepIdx + 1} מתוך ${total}`}
         </span>
       </div>
 
-      {/* Step card */}
-      <AnimatePresence mode="wait">
+      {isSingleStep ? (
         <motion.div
-          key={stepIdx}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          transition={{ duration: 0.25 }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
           className="bg-card border-2 border-primary/30 rounded-2xl p-5 shadow-lg"
         >
           <motion.div
@@ -259,68 +230,71 @@ const StepInstallGuide = ({ onDone, onClose, compact = false }: Props) => {
             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
             className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center text-primary mb-4"
           >
-            {step.icon}
+            {steps[0].icon}
           </motion.div>
           <h3 className="text-xl font-black text-center mb-3 text-foreground">
-            {step.title}
+            {steps[0].title}
           </h3>
           <div className="text-base font-medium text-foreground leading-relaxed text-center">
-            {step.body}
+            {steps[0].body}
           </div>
-
-          {/* Visual hint arrow */}
-          {step.hint === "bottom" && (
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-              className="text-center mt-4 text-primary text-3xl"
-              aria-hidden
-            >
-              ⬇️
-            </motion.div>
-          )}
-          {step.hint === "top-right" && (
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-              className="text-right mt-4 text-primary text-3xl pr-2"
-              aria-hidden
-            >
-              ⬆️
-            </motion.div>
-          )}
         </motion.div>
-      </AnimatePresence>
+      ) : (
+        <div className="space-y-2.5">
+          <p className="text-center text-sm font-bold text-foreground mb-1">
+            כל השלבים בבת אחת — קראו לפני שמתחילים 👇
+          </p>
+          {steps.map((s, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="bg-card border-2 border-primary/25 rounded-2xl p-4 shadow-md flex items-start gap-3"
+            >
+              <div className="flex-none w-9 h-9 rounded-full bg-primary text-primary-foreground font-black text-lg flex items-center justify-center">
+                {i + 1}
+              </div>
+              <div className="flex-1 text-right">
+                <h4 className="text-base font-black text-foreground leading-tight mb-1">
+                  {s.title}
+                </h4>
+                <div className="text-sm font-medium text-foreground/90 leading-relaxed">
+                  {s.body}
+                </div>
+                {s.hint === "bottom" && (
+                  <p className="text-xs text-primary font-bold mt-1">⬇️ בתחתית המסך</p>
+                )}
+                {s.hint === "top-right" && (
+                  <p className="text-xs text-primary font-bold mt-1">⬆️ בפינה הימנית העליונה</p>
+                )}
+              </div>
+            </motion.div>
+          ))}
+          <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 text-center">
+            <p className="text-xs font-bold text-foreground">
+              💡 טיפ: תפריט השיתוף מכסה את המסך — לכן כל השלבים כאן ביחד, אין צורך לחזור לאתר בין לבין
+            </p>
+          </div>
+        </div>
+      )}
 
-      {/* Actions */}
-      <div className="mt-5 space-y-2">
+      {/* Single action button */}
+      <div className="mt-5">
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={handleNext}
+          onClick={handleSingleAction}
           className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-base shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
         >
-          {platform === "android" && canPrompt && stepIdx === 0 ? (
+          {platform === "android" && canPrompt ? (
             <>
               <Download size={20} />
               התקינו עכשיו
             </>
-          ) : isLast ? (
-            <>סיימתי 👍</>
           ) : (
-            <>
-              הבנתי, הבא <ChevronLeft size={20} />
-            </>
+            <>סיימתי 👍</>
           )}
         </motion.button>
-
-        {stepIdx > 0 && (
-          <button
-            onClick={() => setStepIdx((i) => Math.max(0, i - 1))}
-            className="w-full text-sm font-bold text-muted-foreground py-2"
-          >
-            חזרה לשלב הקודם
-          </button>
-        )}
       </div>
     </div>
   );
