@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Share, Plus, MoreVertical, CheckCircle2, Download, Smartphone, ExternalLink, Copy, Check, ArrowDown } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import InstallAnimation from "./InstallAnimation";
 
 type Platform = "ios-safari" | "ios-other" | "android" | "desktop" | "standalone";
 
@@ -219,6 +220,13 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
         </span>
       </div>
 
+      {/* Animated demo for mobile platforms */}
+      {(platform === "ios-safari" || platform === "android") && (
+        <div className="mb-4">
+          <InstallAnimation mode={platform === "android" ? "android" : "ios"} />
+        </div>
+      )}
+
       {isSingleStep ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -242,7 +250,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
       ) : (
         <div className="space-y-2.5">
           <p className="text-center text-sm font-bold text-foreground mb-1">
-            כל השלבים בבת אחת — קראו לפני שמתחילים 👇
+            צפו באנימציה למעלה 👆 או קראו את השלבים:
           </p>
           {steps.map((s, i) => (
             <motion.div
