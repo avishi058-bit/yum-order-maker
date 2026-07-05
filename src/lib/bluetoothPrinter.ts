@@ -1419,6 +1419,14 @@ export async function printBluetoothFridgeRefill(items: { name: string; needed: 
   await printOps(buildFridgeRefillOps(items));
 }
 
+export async function printBluetoothEventPrep(
+  booking: import("./btReceiptOps").EventPrepBookingLike,
+  prep: import("./btReceiptOps").EventPrepResultLike,
+): Promise<void> {
+  const { buildEventPrepOps } = await _ops();
+  await printOps(buildEventPrepOps(booking, prep));
+}
+
 export async function printBluetoothPhoneQr(order: ReceiptOrder): Promise<void> {
   const { buildPhoneQrOps } = await _ops();
   await printOps(buildPhoneQrOps(order));
