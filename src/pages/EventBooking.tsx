@@ -208,6 +208,15 @@ const EventBooking = () => {
           <p className="text-muted-foreground">שולחן שוק • המבורגר הבקתה</p>
         </header>
 
+        {step === 1 && (
+          <div className="mb-6 max-w-sm mx-auto">
+            <EventStoryGallery />
+            <p className="text-center text-sm text-muted-foreground mt-2">רגעים מאירועים שכבר עשינו 👆</p>
+          </div>
+        )}
+
+
+
         {/* Stepper */}
         <div className="flex items-center justify-between mb-6 gap-2">
           {[1, 2, 3, 4, 5].map((s) => (
