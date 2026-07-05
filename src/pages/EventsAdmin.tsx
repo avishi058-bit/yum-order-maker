@@ -114,8 +114,12 @@ const EventsAdmin = () => {
                     <div>✉️ {b.customer_email}</div>
                     <div>👥 {b.guests_count} אורחים</div>
                     <div>💰 {Number(b.total_price).toLocaleString()} ₪</div>
-                    <div className="col-span-2">📍 {b.event_address}</div>
+                    <div className="col-span-2">📍 {b.at_venue ? "🏠 אצלנו במקום" : b.event_address}</div>
                     <div className="col-span-2">🍔 {b.package_name}</div>
+                    {b.invoice_name && b.invoice_name !== b.customer_name && (
+                      <div className="col-span-2">🧾 חשבונית ע״ש: <b>{b.invoice_name}</b></div>
+                    )}
+                    {b.business_id && <div className="col-span-2">🏢 ח.פ / ע.מ: <b>{b.business_id}</b></div>}
                   </div>
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <Button size="sm" onClick={() => downloadPdf(b)}><Download className="ml-1 w-4 h-4" /> הורד PDF</Button>

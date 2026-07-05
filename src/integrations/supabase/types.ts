@@ -107,6 +107,8 @@ export type Database = {
       event_bookings: {
         Row: {
           addons: Json
+          at_venue: boolean
+          business_id: string | null
           business_signature: string | null
           client_ip: string | null
           contract_text: string | null
@@ -121,6 +123,7 @@ export type Database = {
           event_type: string
           guests_count: number
           id: string
+          invoice_name: string | null
           min_applied: boolean
           package_id: string
           package_name: string
@@ -135,6 +138,8 @@ export type Database = {
         }
         Insert: {
           addons?: Json
+          at_venue?: boolean
+          business_id?: string | null
           business_signature?: string | null
           client_ip?: string | null
           contract_text?: string | null
@@ -149,6 +154,7 @@ export type Database = {
           event_type: string
           guests_count: number
           id?: string
+          invoice_name?: string | null
           min_applied?: boolean
           package_id: string
           package_name: string
@@ -163,6 +169,8 @@ export type Database = {
         }
         Update: {
           addons?: Json
+          at_venue?: boolean
+          business_id?: string | null
           business_signature?: string | null
           client_ip?: string | null
           contract_text?: string | null
@@ -177,6 +185,7 @@ export type Database = {
           event_type?: string
           guests_count?: number
           id?: string
+          invoice_name?: string | null
           min_applied?: boolean
           package_id?: string
           package_name?: string

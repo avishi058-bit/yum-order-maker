@@ -17,6 +17,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES } from "@/data/eventPackages";
 import { fillTemplate, generateContractPdf, downloadBlob, fetchClientIp, type ContractData } from "@/lib/eventContract";
 import { cn } from "@/lib/utils";
+import EventStoryGallery from "@/components/EventStoryGallery";
+
+const VENUE_ADDRESS = "המבורגר הבקתה — האירוע אצלנו במקום";
+
 
 const supa = supabase as any;
 
@@ -33,12 +37,15 @@ const EventBooking = () => {
 
   // Form state
   const [customerName, setCustomerName] = useState("");
+  const [businessId, setBusinessId] = useState("");
+  const [invoiceName, setInvoiceName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [eventDate, setEventDate] = useState<Date | undefined>();
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState("");
+  const [atVenue, setAtVenue] = useState(false);
   const [eventAddress, setEventAddress] = useState("");
   const [guests, setGuests] = useState<number>(50);
   const [packageId, setPackageId] = useState<string>("premium");
@@ -80,14 +87,14 @@ const EventBooking = () => {
   const filledContract = useMemo<string>(() => {
     if (!contractTemplate) return "";
     const data: ContractData = {
-      customer_name: customerName,
+      customer_name: invoiceName || customerName,
       customer_phone: customerPhone,
       customer_email: customerEmail,
       event_type: EVENT_TYPES.find((t) => t.value === eventType)?.label || eventType,
       event_date: eventDate ? format(eventDate, "dd/MM/yyyy") : "",
       start_time: startTime,
       end_time: endTime,
-      event_address: eventAddress,
+      event_address: atVenue ? VENUE_ADDRESS : eventAddress,
       guests_count: guests,
       package_name: selectedPackage.name,
       package_price: selectedPackage.pricePerPerson,
@@ -109,7 +116,7 @@ const EventBooking = () => {
     if (!eventDate) return "יש לבחור תאריך";
     if (!startTime || !endTime) return "יש להזין שעות";
     if (!eventType) return "יש לבחור סוג אירוע";
-    if (!eventAddress.trim()) return "יש להזין כתובת";
+    if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
     if (!guests || guests < 10) return "מינימום 10 אורחים";
     return null;
   };
@@ -151,7 +158,10 @@ const EventBooking = () => {
         start_time: startTime,
         end_time: endTime,
         event_type: EVENT_TYPES.find((t) => t.value === eventType)?.label || eventType,
-        event_address: eventAddress,
+        event_address: atVenue ? VENUE_ADDRESS : eventAddress,
+        at_venue: atVenue,
+        business_id: businessId || null,
+        invoice_name: invoiceName || customerName,
         guests_count: guests,
         package_id: selectedPackage.id,
         package_name: selectedPackage.name,
@@ -198,6 +208,15 @@ const EventBooking = () => {
           <p className="text-muted-foreground">שולחן שוק • המבורגר הבקתה</p>
         </header>
 
+        {step === 1 && (
+          <div className="mb-6 max-w-sm mx-auto">
+            <EventStoryGallery />
+            <p className="text-center text-sm text-muted-foreground mt-2">רגעים מאירועים שכבר עשינו 👆</p>
+          </div>
+        )}
+
+
+
         {/* Stepper */}
         <div className="flex items-center justify-between mb-6 gap-2">
           {[1, 2, 3, 4, 5].map((s) => (
@@ -219,9 +238,11 @@ const EventBooking = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><Label>שם מלא</Label><Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} /></div>
+                <div><Label>שם מלא / שם החברה</Label><Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="שם פרטי ומשפחה או שם עסק" /></div>
                 <div><Label>טלפון</Label><Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="05XXXXXXXX" /></div>
                 <div className="md:col-span-2"><Label>אימייל</Label><Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} /></div>
+                <div><Label>מס׳ ח.פ / עוסק <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={businessId} onChange={(e) => setBusinessId(e.target.value)} placeholder="9 ספרות" /></div>
+                <div><Label>שם על החשבונית <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={invoiceName} onChange={(e) => setInvoiceName(e.target.value)} placeholder="אם ריק — יופיע השם מלמעלה" /></div>
                 <div>
                   <Label>סוג אירוע</Label>
                   <Select value={eventType} onValueChange={setEventType}>
@@ -234,7 +255,15 @@ const EventBooking = () => {
                 <div><Label>מספר אורחים משוער</Label><Input type="number" min={10} value={guests} onChange={(e) => setGuests(Number(e.target.value))} /></div>
                 <div><Label>שעת התחלה</Label><Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></div>
                 <div><Label>שעת סיום</Label><Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} /></div>
-                <div className="md:col-span-2"><Label>כתובת האירוע</Label><Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="עיר, רחוב ומספר" /></div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10">
+                    <Checkbox checked={atVenue} onCheckedChange={(v) => setAtVenue(!!v)} />
+                    <span className="font-medium">🏠 האירוע אצלכם — במבורגר הבקתה</span>
+                  </label>
+                  {!atVenue && (
+                    <div><Label>כתובת האירוע</Label><Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="עיר, רחוב ומספר" /></div>
+                  )}
+                </div>
               </div>
 
               <div>
