@@ -1941,6 +1941,26 @@ const Kitchen = () => {
 
 
 
+      {/* Events kitchen inline panel */}
+      {showEventsPanel && (
+        <div className="bg-card border-b border-border px-4 py-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                🎉 הזמנות אירועים — הכנות מטבח
+              </h3>
+              <button
+                onClick={() => setShowEventsPanel(false)}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                סגור
+              </button>
+            </div>
+            <EventsKitchenPanel />
+          </div>
+        </div>
+      )}
+
       {/* Escalation settings panel */}
       {showSettings && (
         <div className="bg-card border-b border-border px-6 py-4">
