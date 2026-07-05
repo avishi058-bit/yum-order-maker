@@ -229,9 +229,11 @@ const EventBooking = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><Label>שם מלא</Label><Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} /></div>
+                <div><Label>שם מלא / שם החברה</Label><Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="שם פרטי ומשפחה או שם עסק" /></div>
                 <div><Label>טלפון</Label><Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="05XXXXXXXX" /></div>
                 <div className="md:col-span-2"><Label>אימייל</Label><Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} /></div>
+                <div><Label>מס׳ ח.פ / עוסק <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={businessId} onChange={(e) => setBusinessId(e.target.value)} placeholder="9 ספרות" /></div>
+                <div><Label>שם על החשבונית <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={invoiceName} onChange={(e) => setInvoiceName(e.target.value)} placeholder="אם ריק — יופיע השם מלמעלה" /></div>
                 <div>
                   <Label>סוג אירוע</Label>
                   <Select value={eventType} onValueChange={setEventType}>
@@ -244,7 +246,15 @@ const EventBooking = () => {
                 <div><Label>מספר אורחים משוער</Label><Input type="number" min={10} value={guests} onChange={(e) => setGuests(Number(e.target.value))} /></div>
                 <div><Label>שעת התחלה</Label><Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></div>
                 <div><Label>שעת סיום</Label><Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} /></div>
-                <div className="md:col-span-2"><Label>כתובת האירוע</Label><Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="עיר, רחוב ומספר" /></div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10">
+                    <Checkbox checked={atVenue} onCheckedChange={(v) => setAtVenue(!!v)} />
+                    <span className="font-medium">🏠 האירוע אצלכם — במבורגר הבקתה</span>
+                  </label>
+                  {!atVenue && (
+                    <div><Label>כתובת האירוע</Label><Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="עיר, רחוב ומספר" /></div>
+                  )}
+                </div>
               </div>
 
               <div>
