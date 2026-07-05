@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPush, getExistingSubscription } from "@/lib/push";
 import IosInstallModal from "@/components/IosInstallModal";
 import SmartPushPrompt from "@/components/SmartPushPrompt";
+import GoogleReviewCard from "@/components/GoogleReviewCard";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
@@ -17,6 +19,7 @@ interface OrderLiveTrackerProps {
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
 const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
+  const { settings } = useSiteSettings();
   const [order, setOrder] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -441,10 +444,13 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                 )}
 
                 {order.status === "completed" && (
-                  <div className="bg-muted/50 rounded-2xl p-5 text-center">
-                    <p className="text-base font-bold text-foreground">ההזמנה הושלמה ✅</p>
-                    <p className="text-xs text-muted-foreground mt-1">בתיאבון!</p>
-                  </div>
+                  <>
+                    <div className="bg-muted/50 rounded-2xl p-5 text-center">
+                      <p className="text-base font-bold text-foreground">ההזמנה הושלמה ✅</p>
+                      <p className="text-xs text-muted-foreground mt-1">בתיאבון!</p>
+                    </div>
+                    <GoogleReviewCard url={settings.google_review_url} className="mt-4" />
+                  </>
                 )}
               </>
             )}

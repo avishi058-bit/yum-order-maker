@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, Bell, BellRing, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import GoogleReviewCard from "@/components/GoogleReviewCard";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   isPushSupported,
   iosNeedsInstall,
@@ -23,6 +25,7 @@ const OrderTracking = () => {
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [pushState, setPushState] = useState<"idle" | "subscribing" | "subscribed">("idle");
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     if (!orderNumber || !phone) return;
@@ -205,10 +208,13 @@ const OrderTracking = () => {
         )}
 
         {order.status === "completed" && (
-          <div className="bg-card border border-border rounded-2xl p-6 text-center">
-            <p className="text-lg text-foreground">ההזמנה הושלמה ✅</p>
-            <p className="text-sm text-muted-foreground mt-2">בתיאבון!</p>
-          </div>
+          <>
+            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+              <p className="text-lg text-foreground">ההזמנה הושלמה ✅</p>
+              <p className="text-sm text-muted-foreground mt-2">בתיאבון!</p>
+            </div>
+            <GoogleReviewCard url={settings.google_review_url} className="mt-4" />
+          </>
         )}
 
         {/* Waze navigation — visible on the timer screen for all live statuses */}
