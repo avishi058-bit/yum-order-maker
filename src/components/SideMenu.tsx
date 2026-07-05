@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBusinessHours, DAY_NAMES_HE } from "@/hooks/useBusinessHours";
+import WazeIcon from "@/components/icons/WazeIcon";
 
 interface SideMenuProps {
   onLoginClick: () => void;
