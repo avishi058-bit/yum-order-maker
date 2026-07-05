@@ -67,15 +67,15 @@ const DashboardView = () => {
   const orderCount = filteredOrders.length;
   const avgOrder = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-  const isStationOrder = (o: Order) => o.order_source === "station" || o.order_source === "kiosk";
-  const websiteOrders = filteredOrders.filter((o) => !isStationOrder(o));
-  const stationOrders = filteredOrders.filter(isStationOrder);
+  const isKioskOrder = (o: Order) => o.order_source === "station" || o.order_source === "kiosk";
+  const websiteOrders = filteredOrders.filter((o) => !isKioskOrder(o));
+  const kioskOrders = filteredOrders.filter(isKioskOrder);
   const websiteRevenue = websiteOrders.reduce((s, o) => s + o.total, 0);
-  const stationRevenue = stationOrders.reduce((s, o) => s + o.total, 0);
+  const kioskRevenue = kioskOrders.reduce((s, o) => s + o.total, 0);
 
   const pieData = [
     { name: "אתר", value: websiteRevenue, count: websiteOrders.length },
-    { name: "קיוסק", value: stationRevenue, count: stationOrders.length },
+    { name: "קיוסק", value: kioskRevenue, count: kioskOrders.length },
   ].filter((d) => d.value > 0);
 
   const cashOrders = filteredOrders.filter((o) => o.payment_method === "cash");
