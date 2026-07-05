@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       console.error('reopen web-push error', e)
     }
 
-    return json({ sent, total: subs.length, push_sent: pushSent, push_cleared: pushRemoved })
+    return json({ sent, total: subs?.length ?? 0, push_sent: pushSent, push_cleared: pushRemoved })
 
   } catch (e) {
     console.error('notify-reopen error', e)
