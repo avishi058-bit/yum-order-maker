@@ -457,6 +457,46 @@ const EventBooking = () => {
                   )}
                 </div>
               </div>
+
+              {/* Drinks — outside-venue events only. אצלנו במקום השתייה מסופקת ישירות ואין צורך שהלקוח יבחר. */}
+              {needsDrinkSelection && (
+                <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div>
+                    <h3 className="font-bold text-base">🥤 בחירת שתייה לאירוע</h3>
+                    <p className="text-xs text-muted-foreground">
+                      חלקו את השתייה בין הסוגים לפי טעמכם.
+                      סה״כ יחידות צריכות להיות זהות למספר האורחים ({guests}).
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {EVENT_DRINK_OPTIONS.map((d) => (
+                      <div key={d.id} className="flex items-center gap-2 p-2 rounded-md border bg-background">
+                        <span className="flex-1 text-sm">{d.emoji} {d.name}</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={drinkSelections[d.id] ?? ""}
+                          onChange={(e) => setDrinkQty(d.id, Number(e.target.value))}
+                          className="w-20 text-center"
+                          placeholder="0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className={cn(
+                    "flex justify-between items-center px-3 py-2 rounded-md text-sm font-bold",
+                    drinksTotal === guests ? "bg-green-500/15 text-green-700 dark:text-green-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                  )}>
+                    <span>סה״כ יחידות שנבחרו</span>
+                    <span>{drinksTotal} / {guests}</span>
+                  </div>
+                </div>
+              )}
+              {packageIncludesDrinks && atVenue && (
+                <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  🏠 האירוע מתקיים אצלנו במקום — השתייה תסופק ישירות ואין צורך לבחור מראש.
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
