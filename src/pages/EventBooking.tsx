@@ -215,10 +215,25 @@ const EventBooking = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 py-6 px-4">
       <div className="max-w-3xl mx-auto">
-        <header className="text-center mb-6">
+        <header className="text-center mb-4">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">🚜🍔 הזמנת אירוע – הבקתה</h1>
           <p className="text-muted-foreground">שולחן שוק • המבורגר הבקתה</p>
         </header>
+
+        {/* Kosher certification banner */}
+        <div className="mb-6 rounded-xl border-2 border-primary/30 bg-primary/5 p-4 text-sm leading-relaxed">
+          <div className="flex items-center gap-2 font-bold text-base mb-2">
+            <span>✡️</span>
+            <span>כשרות</span>
+          </div>
+          <p>
+            כאשר בהשגחת <b>הרבנות המקומית שדות נגב</b>.
+            ההמבורגר: <b>בשר חלק</b> ברבנות. הירק: <b>גוש קטיף</b> — תעודת כשרות רגילה.
+            <span className="text-muted-foreground"> (תוספת רצועות רוסטביף — לא חלק)</span>.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">תעודת כשרות מעודכנת מוצגת במקום ותצורף לחוזה.</p>
+        </div>
+
 
         {step === 1 && (
           <div className="mb-6 max-w-sm mx-auto">
