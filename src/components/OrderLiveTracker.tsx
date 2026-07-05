@@ -5,6 +5,7 @@ import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2, Smartphone } 
 import { toast } from "sonner";
 import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPush, getExistingSubscription } from "@/lib/push";
 import IosInstallModal from "@/components/IosInstallModal";
+import SmartPushPrompt from "@/components/SmartPushPrompt";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
@@ -22,6 +23,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(true);
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
+  const [showSmartPrompt, setShowSmartPrompt] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   // Fetch order via secure edge function (no direct DB access)
@@ -105,15 +107,26 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   }, [order]);
 
 
-  // Auto-hide prompt if user already subscribed for this device
+  // Auto-hide prompt if user already subscribed; otherwise trigger smart prompt once per order
   useEffect(() => {
     getExistingSubscription().then((sub) => {
       if (sub) {
         setNotificationsEnabled(true);
         setShowPermissionPrompt(false);
+        return;
       }
+      // Only show smart prompt if push is actually usable on this device
+      if (!isPushSupported() && !iosNeedsInstall()) return;
+      const key = `smart_push_prompt_seen_${orderNumber}`;
+      if (localStorage.getItem(key)) return;
+      // Small delay so the modal doesn't slam on top of the celebration
+      const t = setTimeout(() => {
+        setShowSmartPrompt(true);
+        localStorage.setItem(key, "1");
+      }, 1200);
+      return () => clearTimeout(t);
     });
-  }, []);
+  }, [orderNumber]);
 
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
@@ -405,6 +418,17 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
         </motion.div>
 
         <IosInstallModal open={showIosInstallModal} onClose={() => setShowIosInstallModal(false)} />
+        <SmartPushPrompt
+          open={showSmartPrompt}
+          phone={phone}
+          orderId={order?.id ?? null}
+          orderNumber={orderNumber}
+          onAccept={() => {
+            setShowSmartPrompt(false);
+            handleEnableNotifications();
+          }}
+          onDismiss={() => setShowSmartPrompt(false)}
+        />
       </motion.div>
     </AnimatePresence>
   );
