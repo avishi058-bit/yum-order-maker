@@ -23,6 +23,7 @@ const EventsAdmin = () => {
   const [reason, setReason] = useState("");
   const [contractTemplate, setContractTemplate] = useState("");
   const [minAmount, setMinAmount] = useState(2000);
+  const [prep, setPrep] = useState<KitchenPrepSettings>(DEFAULT_PREP_SETTINGS);
 
   const load = async () => {
     const [b, bd, s] = await Promise.all([
