@@ -52,6 +52,7 @@ import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush
 import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
 import { ingredients } from "@/data/menu";
 import { getRemovalShortcut, shortcutConsumedIds, removalShortcutLabel } from "@/lib/ingredientShortcuts";
+import EventsKitchenPanel from "@/components/EventsKitchenPanel";
 
 const REMOVAL_LABELS: Record<string, string> = (() => {
   const m: Record<string, string> = {};
