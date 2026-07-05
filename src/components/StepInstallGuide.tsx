@@ -250,7 +250,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
       ) : (
         <div className="space-y-2.5">
           <p className="text-center text-sm font-bold text-foreground mb-1">
-            כל השלבים בבת אחת — קראו לפני שמתחילים 👇
+            צפו באנימציה למעלה 👆 או קראו את השלבים:
           </p>
           {steps.map((s, i) => (
             <motion.div
