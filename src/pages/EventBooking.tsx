@@ -123,9 +123,9 @@ const EventBooking = () => {
       toast.error("יש לאשר את תנאי החוזה");
       return;
     }
-    setStep((s) => Math.min(5, (s + 1) as Step));
+    setStep((s) => Math.min(5, s + 1) as Step);
   };
-  const prev = () => setStep((s) => Math.max(1, (s - 1) as Step));
+  const prev = () => setStep((s) => Math.max(1, s - 1) as Step);
 
   const submitBooking = async () => {
     if (!customerSigRef.current || customerSigRef.current.isEmpty()) {
