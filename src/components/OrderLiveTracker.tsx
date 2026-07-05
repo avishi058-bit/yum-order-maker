@@ -107,15 +107,26 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   }, [order]);
 
 
-  // Auto-hide prompt if user already subscribed for this device
+  // Auto-hide prompt if user already subscribed; otherwise trigger smart prompt once per order
   useEffect(() => {
     getExistingSubscription().then((sub) => {
       if (sub) {
         setNotificationsEnabled(true);
         setShowPermissionPrompt(false);
+        return;
       }
+      // Only show smart prompt if push is actually usable on this device
+      if (!isPushSupported() && !iosNeedsInstall()) return;
+      const key = `smart_push_prompt_seen_${orderNumber}`;
+      if (localStorage.getItem(key)) return;
+      // Small delay so the modal doesn't slam on top of the celebration
+      const t = setTimeout(() => {
+        setShowSmartPrompt(true);
+        localStorage.setItem(key, "1");
+      }, 1200);
+      return () => clearTimeout(t);
     });
-  }, []);
+  }, [orderNumber]);
 
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
