@@ -3,6 +3,8 @@ export interface EventAddon {
   name: string;
   pricePerPerson: number;
   emoji?: string;
+  /** partial addon: applies only to selected portion of guests (e.g., vegan / gluten-free) */
+  partial?: boolean;
 }
 
 export interface EventPackage {
@@ -94,8 +96,8 @@ export const EVENT_ADDONS: EventAddon[] = [
   { id: "unlimited-drinks", name: "שתייה קלה ללא הגבלה", pricePerPerson: 9, emoji: "🥤" },
   { id: "roastbeef", name: "רצועות רוסטביף", pricePerPerson: 18, emoji: "🥓" },
   { id: "tempura-onion", name: "שדרוג טבעות בצל בטמפורה", pricePerPerson: 5, emoji: "🧅" },
-  { id: "vegan", name: "המבורגר צמחוני/טבעוני (חלקי)", pricePerPerson: 4, emoji: "🌱" },
-  { id: "gluten-free", name: "לחמנייה ללא גלוטן (חלקי)", pricePerPerson: 4, emoji: "🌾" },
+  { id: "vegan", name: "המבורגר צמחוני/טבעוני (חלקי)", pricePerPerson: 4, emoji: "🌱", partial: true },
+  { id: "gluten-free", name: "לחמנייה ללא גלוטן (חלקי)", pricePerPerson: 4, emoji: "🌾", partial: true },
 ];
 
 export const EVENT_TYPES = [

@@ -58,6 +58,7 @@ const EventBooking = () => {
   const [guests, setGuests] = useState<number>(50);
   const [packageId, setPackageId] = useState<string>("premium");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [addonQuantities, setAddonQuantities] = useState<Record<string, number>>({});
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
@@ -85,10 +86,13 @@ const EventBooking = () => {
     () => EVENT_ADDONS.filter((a) => selectedAddons.includes(a.id)),
     [selectedAddons]
   );
+  const addonQty = (a: typeof EVENT_ADDONS[number]) =>
+    a.partial ? Math.min(guests, Math.max(0, addonQuantities[a.id] ?? 0)) : guests;
   const subtotal = useMemo(() => {
-    const addonPerPerson = chosenAddons.reduce((s, a) => s + a.pricePerPerson, 0);
-    return (selectedPackage.pricePerPerson + addonPerPerson) * guests;
-  }, [selectedPackage, chosenAddons, guests]);
+    const pkg = selectedPackage.pricePerPerson * guests;
+    const addonsSum = chosenAddons.reduce((s, a) => s + a.pricePerPerson * addonQty(a), 0);
+    return pkg + addonsSum;
+  }, [selectedPackage, chosenAddons, guests, addonQuantities]);
   const minApplied = subtotal < minimumAmount;
   const total = Math.max(subtotal, minimumAmount);
 
@@ -106,7 +110,7 @@ const EventBooking = () => {
       guests_count: guests,
       package_name: selectedPackage.name,
       package_price: selectedPackage.pricePerPerson,
-      addons_list: chosenAddons.map((a) => a.name).join(", "),
+      addons_list: chosenAddons.map((a) => `${a.name}${a.partial ? ` (×${addonQty(a)})` : ""}`).join(", "),
       total_price: total,
     };
     return fillTemplate(contractTemplate, data);
@@ -174,7 +178,7 @@ const EventBooking = () => {
         package_id: selectedPackage.id,
         package_name: selectedPackage.name,
         package_price_per_person: selectedPackage.pricePerPerson,
-        addons: chosenAddons,
+        addons: chosenAddons.map((a) => ({ ...a, quantity: addonQty(a), lineTotal: a.pricePerPerson * addonQty(a) })),
         subtotal,
         total_price: total,
         min_applied: minApplied,
@@ -211,10 +215,25 @@ const EventBooking = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 py-6 px-4">
       <div className="max-w-3xl mx-auto">
-        <header className="text-center mb-6">
+        <header className="text-center mb-4">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">🚜🍔 הזמנת אירוע – הבקתה</h1>
           <p className="text-muted-foreground">שולחן שוק • המבורגר הבקתה</p>
         </header>
+
+        {/* Kosher certification banner */}
+        <div className="mb-6 rounded-xl border-2 border-primary/30 bg-primary/5 p-4 text-sm leading-relaxed">
+          <div className="flex items-center gap-2 font-bold text-base mb-2">
+            <span>✡️</span>
+            <span>כשרות</span>
+          </div>
+          <p>
+            כאשר בהשגחת <b>הרבנות המקומית שדות נגב</b>.
+            ההמבורגר: <b>בשר חלק</b> ברבנות. הירק: <b>גוש קטיף</b> — תעודת כשרות רגילה.
+            <span className="text-muted-foreground"> (תוספת רצועות רוסטביף — לא חלק)</span>.
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">תעודת כשרות מעודכנת מוצגת במקום ותצורף לחוזה.</p>
+        </div>
+
 
         {step === 1 && (
           <div className="mb-6 max-w-sm mx-auto">
@@ -277,25 +296,54 @@ const EventBooking = () => {
               <div>
                 <h3 className="font-bold mb-2 mt-4">✨ תוספות ושדרוגים</h3>
                 <div className="space-y-2">
-                  {EVENT_ADDONS.map((a) => (
-                    <label key={a.id} className="flex items-center gap-3 p-3 rounded-md border cursor-pointer hover:bg-muted/40">
-                      <Checkbox
-                        checked={selectedAddons.includes(a.id)}
-                        onCheckedChange={(v) => setSelectedAddons((cur) => v ? [...cur, a.id] : cur.filter((x) => x !== a.id))}
-                      />
-                      <span className="flex-1">{a.emoji} {a.name}</span>
-                      <Badge variant="outline">+{a.pricePerPerson} ₪ לאדם</Badge>
-                    </label>
-                  ))}
+                  {EVENT_ADDONS.map((a) => {
+                    const checked = selectedAddons.includes(a.id);
+                    return (
+                      <div key={a.id} className="p-3 rounded-md border">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setSelectedAddons((cur) => v ? [...cur, a.id] : cur.filter((x) => x !== a.id));
+                              if (v && a.partial && !addonQuantities[a.id]) {
+                                setAddonQuantities((q) => ({ ...q, [a.id]: 1 }));
+                              }
+                            }}
+                          />
+                          <span className="flex-1">{a.emoji} {a.name}</span>
+                          <Badge variant="outline">+{a.pricePerPerson} ₪ {a.partial ? "ליחידה" : "לאדם"}</Badge>
+                        </label>
+                        {checked && a.partial && (
+                          <div className="mt-3 pr-8 flex items-center gap-2 flex-wrap">
+                            <Label className="text-sm">כמה מנות כאלו מתוך {guests}?</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={guests}
+                              value={addonQuantities[a.id] ?? 1}
+                              onChange={(e) => setAddonQuantities((q) => ({ ...q, [a.id]: Number(e.target.value) }))}
+                              className="w-24"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                              = {((addonQuantities[a.id] ?? 0) * a.pricePerPerson).toLocaleString()} ₪
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
               <Card className="bg-primary/5 border-primary">
                 <CardContent className="p-4 space-y-1">
                   <div className="flex justify-between text-sm"><span>מסלול × {guests} אורחים</span><span>{(selectedPackage.pricePerPerson * guests).toLocaleString()} ₪</span></div>
-                  {chosenAddons.map((a) => (
-                    <div key={a.id} className="flex justify-between text-sm text-muted-foreground"><span>{a.name} × {guests}</span><span>+{(a.pricePerPerson * guests).toLocaleString()} ₪</span></div>
-                  ))}
+                  {chosenAddons.map((a) => {
+                    const q = addonQty(a);
+                    return (
+                      <div key={a.id} className="flex justify-between text-sm text-muted-foreground"><span>{a.name} × {q}</span><span>+{(a.pricePerPerson * q).toLocaleString()} ₪</span></div>
+                    );
+                  })}
                   <div className="border-t pt-2 flex justify-between font-bold"><span>סה״כ</span><span>{subtotal.toLocaleString()} ₪</span></div>
                   {minApplied && (
                     <div className="text-xs text-destructive bg-destructive/10 rounded p-2 mt-2">
@@ -304,6 +352,7 @@ const EventBooking = () => {
                   )}
                   <div className="text-lg font-bold text-primary flex justify-between pt-2 border-t">
                     <span>לתשלום</span><span>{total.toLocaleString()} ₪</span>
+
                   </div>
                 </CardContent>
               </Card>
