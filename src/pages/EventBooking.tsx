@@ -116,7 +116,7 @@ const EventBooking = () => {
     if (!eventDate) return "יש לבחור תאריך";
     if (!startTime || !endTime) return "יש להזין שעות";
     if (!eventType) return "יש לבחור סוג אירוע";
-    if (!eventAddress.trim()) return "יש להזין כתובת";
+    if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
     if (!guests || guests < 10) return "מינימום 10 אורחים";
     return null;
   };
