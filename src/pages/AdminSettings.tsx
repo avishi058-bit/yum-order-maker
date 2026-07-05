@@ -410,6 +410,36 @@ const AdminSettings = () => {
             </button>
           </div>
         )}
+
+        {activeTab === "reviews" && (
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div className="bg-card rounded-2xl p-6 border border-border">
+              <h2 className="text-lg font-black mb-4">קישור לדירוג בגוגל</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                כשהקישור מוגדר, לקוחות יראו בקשה לדרג אתכם בגוגל אחרי שההזמנה מסתיימת.
+              </p>
+              <input
+                type="url"
+                value={googleReviewUrl}
+                onChange={(e) => setGoogleReviewUrl(e.target.value)}
+                placeholder="https://g.page/.../review"
+                className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 mb-2"
+                dir="ltr"
+              />
+              <p className="text-xs text-muted-foreground">
+                ניתן להעתיק את קישור הדירוג מ-Google Business Profile.
+              </p>
+            </div>
+
+            <button
+              onClick={() => handleSave("ביקורות", { google_review_url: googleReviewUrl })}
+              className="w-full bg-primary text-primary-foreground font-black py-4 rounded-xl text-lg flex items-center justify-center gap-2"
+            >
+              <Save size={20} />
+              שמור קישור
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
