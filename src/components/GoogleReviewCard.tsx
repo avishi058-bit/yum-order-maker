@@ -1,17 +1,46 @@
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface GoogleReviewCardProps {
   url: string;
   className?: string;
+  /** ISO timestamp of when the order was completed. The review prompt only
+   *  appears ~30 minutes after this time, so customers get a chance to eat
+   *  before being asked to rate. If omitted, the prompt shows immediately. */
+  completedAt?: string | null;
+  /** Delay in minutes before the prompt appears. Defaults to 30. */
+  delayMinutes?: number;
 }
 
 /**
- * Prompt shown after an order is completed, linking to the restaurant's
- * Google Business review page. Hidden when no review URL is configured.
+ * Prompt shown a while after an order is completed, linking to the
+ * restaurant's Google Business review page. Hidden when no review URL is
+ * configured or when the delay hasn't elapsed yet.
  */
-export const GoogleReviewCard = ({ url, className = "" }: GoogleReviewCardProps) => {
-  if (!url) return null;
+export const GoogleReviewCard = ({
+  url,
+  className = "",
+  completedAt,
+  delayMinutes = 30,
+}: GoogleReviewCardProps) => {
+  const [ready, setReady] = useState(() => {
+    if (!completedAt) return true;
+    return Date.now() - new Date(completedAt).getTime() >= delayMinutes * 60_000;
+  });
+
+  useEffect(() => {
+    if (ready || !completedAt) return;
+    const remaining = new Date(completedAt).getTime() + delayMinutes * 60_000 - Date.now();
+    if (remaining <= 0) {
+      setReady(true);
+      return;
+    }
+    const t = setTimeout(() => setReady(true), remaining);
+    return () => clearTimeout(t);
+  }, [completedAt, delayMinutes, ready]);
+
+  if (!url || !ready) return null;
 
   return (
     <motion.a

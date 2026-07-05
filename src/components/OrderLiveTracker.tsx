@@ -449,7 +449,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                       <p className="text-base font-bold text-foreground">ההזמנה הושלמה ✅</p>
                       <p className="text-xs text-muted-foreground mt-1">בתיאבון!</p>
                     </div>
-                    <GoogleReviewCard url={settings.google_review_url} className="mt-4" />
+                    <GoogleReviewCard url={settings.google_review_url} completedAt={order.updated_at} className="mt-4" />
                   </>
                 )}
               </>
