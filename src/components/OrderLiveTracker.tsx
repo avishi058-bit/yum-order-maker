@@ -175,8 +175,9 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   }, []);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
+    const abs = Math.abs(seconds);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
@@ -186,11 +187,31 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     { key: "ready", label: "מוכנה!", icon: <CheckCircle size={20} /> },
   ];
 
-  const currentIndex = order ? steps.findIndex((s) => s.key === order.status) : 0;
+  const currentIndex = order ? Math.max(0, steps.findIndex((s) => s.key === order.status)) : 0;
 
-  const progress = timeLeft !== null && order?.estimated_ready_at
-    ? Math.max(0, Math.min(100, 100 - (timeLeft / ((new Date(order.estimated_ready_at).getTime() - new Date(order.updated_at).getTime()) / 1000)) * 100))
-    : 0;
+  // Smooth overall progress (0-100) across the whole order lifecycle,
+  // anchored to created_at → estimated_ready_at so it never jitters.
+  const overallProgress = (() => {
+    if (!order) return 0;
+    if (order.status === "ready" || order.status === "completed") return 100;
+    const start = new Date(order.created_at).getTime();
+    const end = order.estimated_ready_at ? new Date(order.estimated_ready_at).getTime() : start + 15 * 60 * 1000;
+    const now = Date.now();
+    const pct = ((now - start) / (end - start)) * 100;
+    // Never below the current step's minimum position, never past 95 until "ready"
+    const stepFloor = (currentIndex / (steps.length - 1)) * 100;
+    return Math.max(stepFloor, Math.min(95, pct));
+  })();
+
+  // Countdown timer % for the "preparing" card (0-100, fills toward ready)
+  const cookingProgress = (() => {
+    if (!order?.estimated_ready_at || timeLeft === null || timeLeft < 0) return 0;
+    const start = new Date(order.updated_at || order.created_at).getTime();
+    const end = new Date(order.estimated_ready_at).getTime();
+    const total = Math.max(1, (end - start) / 1000);
+    return Math.max(0, Math.min(100, 100 - (timeLeft / total) * 100));
+  })();
+
 
   return (
     <AnimatePresence>
