@@ -1548,14 +1548,16 @@ const Kitchen = () => {
           </button>
 
           {/* 🎉 Events */}
-          <a
-            href="/events/kitchen"
-            className="px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
+          <button
+            onClick={() => setShowEventsPanel((v) => !v)}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              showEventsPanel ? "bg-pink-500/40 text-pink-100" : "bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
+            }`}
             title="הזמנות אירועים — הכנות מטבח"
           >
             <span>🎉</span>
             <span>אירועים</span>
-          </a>
+          </button>
 
           {/* 🔔 Notifications group */}
           <div className="relative">
