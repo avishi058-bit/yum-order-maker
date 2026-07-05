@@ -67,8 +67,9 @@ const DashboardView = () => {
   const orderCount = filteredOrders.length;
   const avgOrder = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-  const websiteOrders = filteredOrders.filter((o) => o.order_source !== "station");
-  const stationOrders = filteredOrders.filter((o) => o.order_source === "station");
+  const isStationOrder = (o: Order) => o.order_source === "station" || o.order_source === "kiosk";
+  const websiteOrders = filteredOrders.filter((o) => !isStationOrder(o));
+  const stationOrders = filteredOrders.filter(isStationOrder);
   const websiteRevenue = websiteOrders.reduce((s, o) => s + o.total, 0);
   const stationRevenue = stationOrders.reduce((s, o) => s + o.total, 0);
 
