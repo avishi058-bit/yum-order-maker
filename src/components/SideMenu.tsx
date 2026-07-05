@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBusinessHours, DAY_NAMES_HE } from "@/hooks/useBusinessHours";
+import WazeIcon from "@/components/icons/WazeIcon";
 
 interface SideMenuProps {
   onLoginClick: () => void;
@@ -191,7 +192,7 @@ const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
                     rel="noopener noreferrer"
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
                   >
-                    <MapPin size={14} />
+                    <WazeIcon size={16} className="text-white" />
                     נווט עם Waze
                   </a>
                   <a
