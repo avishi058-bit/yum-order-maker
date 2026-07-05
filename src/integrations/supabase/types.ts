@@ -83,6 +83,135 @@ export type Database = {
         }
         Relationships: []
       }
+      event_blocked_dates: {
+        Row: {
+          blocked_date: string
+          created_at: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_date: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_date?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      event_bookings: {
+        Row: {
+          addons: Json
+          business_signature: string | null
+          client_ip: string | null
+          contract_text: string | null
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          customer_signature: string | null
+          end_time: string
+          event_address: string
+          event_date: string
+          event_type: string
+          guests_count: number
+          id: string
+          min_applied: boolean
+          package_id: string
+          package_name: string
+          package_price_per_person: number
+          pdf_url: string | null
+          signed_at: string | null
+          start_time: string
+          status: string
+          subtotal: number
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          addons?: Json
+          business_signature?: string | null
+          client_ip?: string | null
+          contract_text?: string | null
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          customer_signature?: string | null
+          end_time: string
+          event_address: string
+          event_date: string
+          event_type: string
+          guests_count: number
+          id?: string
+          min_applied?: boolean
+          package_id: string
+          package_name: string
+          package_price_per_person: number
+          pdf_url?: string | null
+          signed_at?: string | null
+          start_time: string
+          status?: string
+          subtotal: number
+          total_price: number
+          updated_at?: string
+        }
+        Update: {
+          addons?: Json
+          business_signature?: string | null
+          client_ip?: string | null
+          contract_text?: string | null
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          customer_signature?: string | null
+          end_time?: string
+          event_address?: string
+          event_date?: string
+          event_type?: string
+          guests_count?: number
+          id?: string
+          min_applied?: boolean
+          package_id?: string
+          package_name?: string
+          package_price_per_person?: number
+          pdf_url?: string | null
+          signed_at?: string | null
+          start_time?: string
+          status?: string
+          subtotal?: number
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      event_settings: {
+        Row: {
+          contract_template: string
+          id: number
+          minimum_amount: number
+          updated_at: string
+        }
+        Insert: {
+          contract_template?: string
+          id?: number
+          minimum_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          contract_template?: string
+          id?: number
+          minimum_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_access_tokens: {
         Row: {
           created_at: string
