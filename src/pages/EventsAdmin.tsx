@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateContractPdf, downloadBlob } from "@/lib/eventContract";
+import { DEFAULT_PREP_SETTINGS, type KitchenPrepSettings } from "@/lib/eventKitchenPrep";
 
 const supa = supabase as any;
 
