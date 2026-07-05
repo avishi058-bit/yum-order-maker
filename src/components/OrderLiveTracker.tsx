@@ -80,22 +80,30 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     }
   }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber]);
 
-  // Countdown timer
+  // Live countdown timer — ticks every second regardless of status so we can
+  // show "elapsed" while waiting and "remaining" while cooking.
   useEffect(() => {
-    if (!order?.estimated_ready_at || order.status === "ready" || order.status === "completed") {
+    if (!order || order.status === "ready" || order.status === "completed") {
       setTimeLeft(null);
       return;
     }
 
     const update = () => {
-      const diff = Math.max(0, Math.floor((new Date(order.estimated_ready_at).getTime() - Date.now()) / 1000));
-      setTimeLeft(diff);
+      if (order.estimated_ready_at) {
+        const diff = Math.max(0, Math.floor((new Date(order.estimated_ready_at).getTime() - Date.now()) / 1000));
+        setTimeLeft(diff);
+      } else {
+        // no ETA yet — show elapsed since order was placed
+        const elapsed = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 1000);
+        setTimeLeft(-elapsed); // negative = elapsed
+      }
     };
 
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [order]);
+
 
   // Auto-hide prompt if user already subscribed for this device
   useEffect(() => {
@@ -167,8 +175,9 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   }, []);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
+    const abs = Math.abs(seconds);
+    const m = Math.floor(abs / 60);
+    const s = abs % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
@@ -178,11 +187,31 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     { key: "ready", label: "מוכנה!", icon: <CheckCircle size={20} /> },
   ];
 
-  const currentIndex = order ? steps.findIndex((s) => s.key === order.status) : 0;
+  const currentIndex = order ? Math.max(0, steps.findIndex((s) => s.key === order.status)) : 0;
 
-  const progress = timeLeft !== null && order?.estimated_ready_at
-    ? Math.max(0, Math.min(100, 100 - (timeLeft / ((new Date(order.estimated_ready_at).getTime() - new Date(order.updated_at).getTime()) / 1000)) * 100))
-    : 0;
+  // Smooth overall progress (0-100) across the whole order lifecycle,
+  // anchored to created_at → estimated_ready_at so it never jitters.
+  const overallProgress = (() => {
+    if (!order) return 0;
+    if (order.status === "ready" || order.status === "completed") return 100;
+    const start = new Date(order.created_at).getTime();
+    const end = order.estimated_ready_at ? new Date(order.estimated_ready_at).getTime() : start + 15 * 60 * 1000;
+    const now = Date.now();
+    const pct = ((now - start) / (end - start)) * 100;
+    // Never below the current step's minimum position, never past 95 until "ready"
+    const stepFloor = (currentIndex / (steps.length - 1)) * 100;
+    return Math.max(stepFloor, Math.min(95, pct));
+  })();
+
+  // Countdown timer % for the "preparing" card (0-100, fills toward ready)
+  const cookingProgress = (() => {
+    if (!order?.estimated_ready_at || timeLeft === null || timeLeft < 0) return 0;
+    const start = new Date(order.updated_at || order.created_at).getTime();
+    const end = new Date(order.estimated_ready_at).getTime();
+    const total = Math.max(1, (end - start) / 1000);
+    return Math.max(0, Math.min(100, 100 - (timeLeft / total) * 100));
+  })();
+
 
   return (
     <AnimatePresence>
@@ -308,42 +337,46 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
               </div>
             ) : (
               <>
-                {/* Progress Steps */}
-                <div className="flex items-center justify-between mb-6 px-2">
-                  {steps.map((step, i) => {
-                    const isActive = i <= currentIndex;
-                    const isCurrent = i === currentIndex;
-                    return (
-                      <div key={step.key} className="flex flex-col items-center gap-1.5 relative">
-                        <motion.div
-                          animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 ${
-                            isCurrent
-                              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                              : isActive
-                              ? "bg-primary/20 text-primary"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {step.icon}
-                        </motion.div>
-                        <span className={`text-xs font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                          {step.label}
-                        </span>
-                        {i < steps.length - 1 && (
-                          <div
-                            className={`absolute top-6 -left-8 w-6 h-0.5 ${
-                              i < currentIndex ? "bg-primary" : "bg-muted"
+                {/* Progress Steps with continuous live-filling connector */}
+                <div className="relative mb-6 px-2">
+                  {/* Track behind the icons */}
+                  <div className="absolute top-6 left-8 right-8 h-1 bg-muted rounded-full" />
+                  <motion.div
+                    className="absolute top-6 right-8 h-1 bg-gradient-to-l from-primary to-primary/60 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `calc((100% - 4rem) * ${overallProgress / 100})` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                  />
+
+                  <div className="relative flex items-start justify-between">
+                    {steps.map((step, i) => {
+                      const isActive = i <= currentIndex;
+                      const isCurrent = i === currentIndex;
+                      return (
+                        <div key={step.key} className="flex flex-col items-center gap-1.5">
+                          <motion.div
+                            animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 ring-4 ring-card ${
+                              isCurrent
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                                : isActive
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground"
                             }`}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+                          >
+                            {step.icon}
+                          </motion.div>
+                          <span className={`text-xs font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                            {step.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Timer */}
+                {/* Timer — preparing */}
                 {order.status === "preparing" && timeLeft !== null && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -351,14 +384,19 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                     className="bg-muted/50 rounded-2xl p-5 text-center mb-4"
                   >
                     <p className="text-xs text-muted-foreground mb-1">זמן משוער עד שההזמנה מוכנה</p>
-                    <div className="text-4xl font-black text-primary mb-3">
-                      {timeLeft === 0 ? "כמעט מוכן! 🔥" : formatTime(timeLeft)}
-                    </div>
+                    <motion.div
+                      key={timeLeft <= 0 ? "done" : "count"}
+                      animate={timeLeft > 0 && timeLeft <= 30 ? { scale: [1, 1.05, 1] } : {}}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="text-4xl font-black text-primary mb-3 tabular-nums"
+                    >
+                      {timeLeft <= 0 ? "כמעט מוכן! 🔥" : formatTime(timeLeft)}
+                    </motion.div>
                     <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                       <motion.div
                         className="bg-primary h-full rounded-full"
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 1 }}
+                        animate={{ width: `${cookingProgress}%` }}
+                        transition={{ duration: 1, ease: "linear" }}
                       />
                     </div>
                   </motion.div>
@@ -366,11 +404,27 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
 
                 {/* Status messages */}
                 {order.status === "new" && (
-                  <div className="bg-muted/50 rounded-2xl p-5 text-center">
-                    <p className="text-base font-bold text-foreground">ההזמנה התקבלה! ⏳</p>
-                    <p className="text-xs text-muted-foreground mt-1">ממתינים שהמטבח יתחיל להכין</p>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-muted/50 rounded-2xl p-5 text-center mb-4"
+                  >
+                    <p className="text-xs text-muted-foreground mb-1">ההזמנה התקבלה — ממתינים שהמטבח יתחיל</p>
+                    <div className="text-3xl font-black text-foreground mb-1 tabular-nums">
+                      {timeLeft !== null ? formatTime(timeLeft) : "0:00"}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      <motion.span
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="inline-block"
+                      >
+                        ⏳ ממתינים לאישור מהמטבח
+                      </motion.span>
+                    </p>
+                  </motion.div>
                 )}
+
 
                 {order.status === "ready" && (
                   <motion.div
