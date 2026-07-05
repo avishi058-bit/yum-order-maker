@@ -220,6 +220,13 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
         </span>
       </div>
 
+      {/* Animated demo for mobile platforms */}
+      {(platform === "ios-safari" || platform === "android") && (
+        <div className="mb-4">
+          <InstallAnimation mode={platform === "android" ? "android" : "ios"} />
+        </div>
+      )}
+
       {isSingleStep ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
