@@ -147,6 +147,9 @@ const EventBooking = () => {
       if (!customerEmail.includes("@")) return "אימייל לא תקין";
       if (!eventType) return "יש לבחור סוג אירוע";
       if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
+      if (needsDrinkSelection && drinksTotal !== guests) {
+        return `בחירת שתייה: נבחרו ${drinksTotal} מתוך ${guests} — יש להתאים לפי מספר האורחים`;
+      }
     }
     if (s === 4 && !acceptTerms) return "יש לאשר את תנאי החוזה";
     return null;
