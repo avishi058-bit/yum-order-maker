@@ -328,7 +328,7 @@ const DashboardView = () => {
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip
                     formatter={(value: number, name: string) => {
-                      const labels: Record<string, string> = { website: "אתר", station: "קיוסק" };
+                      const labels: Record<string, string> = { website: "אתר", kiosk: "קיוסק" };
                       return [`₪${value}`, labels[name] || name];
                     }}
                     contentStyle={{
@@ -340,7 +340,7 @@ const DashboardView = () => {
                   />
                   <Legend formatter={(v) => (v === "website" ? "אתר" : "קיוסק")} />
                   <Bar dataKey="website" stackId="a" fill="#f97316" name="website" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="station" stackId="a" fill="#3b82f6" name="station" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="kiosk" stackId="a" fill="#3b82f6" name="kiosk" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
