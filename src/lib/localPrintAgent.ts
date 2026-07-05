@@ -152,6 +152,14 @@ export async function printAgentFridgeRefill(items: { name: string; needed: numb
   return sendBytesToAgent(buildOpsBytes(buildFridgeRefillOps(items)));
 }
 
+export async function printAgentEventPrep(
+  booking: import("./btReceiptOps").EventPrepBookingLike,
+  prep: import("./btReceiptOps").EventPrepResultLike,
+): Promise<AgentPrintResult> {
+  const { buildEventPrepOps } = await import("./btReceiptOps");
+  return sendBytesToAgent(buildOpsBytes(buildEventPrepOps(booking, prep)));
+}
+
 export async function printAgentPhoneQr(order: ReceiptOrder): Promise<AgentPrintResult> {
   const { buildPhoneQrOps } = await import("./btReceiptOps");
   const result = await sendBytesToAgent(buildOpsBytes(buildPhoneQrOps(order)));
