@@ -497,7 +497,7 @@ const Index = () => {
               aria-label="נווט למסעדה עם Waze"
               className="w-9 h-9 hover:scale-105 active:scale-95 transition-transform overflow-hidden shrink-0"
             >
-              <img src={wazeIconAsset.url} alt="Waze" className="w-full h-full object-cover" />
+              <img src="/waze-icon.png" alt="Waze" className="w-full h-full object-cover" />
             </a>
             {!isInstalled && (
               <button
