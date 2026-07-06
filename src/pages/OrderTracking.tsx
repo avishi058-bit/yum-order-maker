@@ -226,7 +226,7 @@ const OrderTracking = () => {
             rel="noopener noreferrer"
             className="mt-4 w-full flex items-center justify-center gap-2 bg-[#33ccff] text-white font-bold py-3 rounded-xl hover:opacity-90 transition shadow-md"
           >
-            <WazeIcon size={20} />
+            <img src={wazeIconAsset.url} alt="Waze" className="w-5 h-5 rounded-full" />
             נווט למסעדה עם Waze
           </a>
         )}
