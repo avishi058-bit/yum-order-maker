@@ -60,6 +60,8 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "beer-regular", name: "בירה", price: 18, category: "drink" },
   { id: "beer-premium", name: "בירה פרימיום", price: 23, category: "drink" },
   { id: "beer-weiss", name: "ויינשטפאן (חצי)", price: 25, category: "drink" },
+  { id: "beer-shapira", name: "בירת שפירא", price: 25, category: "drink" },
+  { id: "beer-maccabi", name: "בירה מכבי 7.9%", price: 20, category: "drink" },
 
   // Deals
   { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
@@ -126,6 +128,8 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-stella", name: "סטלה", price: 8 },
   { id: "drink-hoegaarden", name: "הוגרדן", price: 12 },
   { id: "drink-weiss", name: "ויינשטפאן (חצי)", price: 15 },
+  { id: "drink-shapira", name: "שפירא", price: 15 },
+  { id: "drink-maccabi", name: "מכבי 7.9%", price: 10 },
   { id: "drink-guinness", name: "גינס", price: 12 },
   { id: "drink-water", name: "מים (בקבוק)", price: 0 },
   { id: "drink-flavored-water-apple", name: "מים בטעם תפוח", price: 0 },
@@ -161,6 +165,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-laffe", name: "לאפ בראון", price: 12 },
   { id: "deal-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "deal-guinness", name: "גינס", price: 12 },
+  { id: "deal-shapira", name: "שפירא", price: 15 },
+  { id: "deal-maccabi", name: "מכבי 7.9%", price: 10 },
   { id: "deal-water", name: "מים (בקבוק)", price: 0 },
   { id: "deal-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-cola", name: "קולה", price: 0 },
@@ -182,6 +188,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-laffe", name: "לאפ בראון", price: 12 },
   { id: "fam-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "fam-guinness", name: "גינס", price: 12 },
+  { id: "fam-shapira", name: "שפירא", price: 15 },
+  { id: "fam-maccabi", name: "מכבי 7.9%", price: 10 },
 ];
 
 
