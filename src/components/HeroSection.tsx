@@ -35,16 +35,15 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
         <span className="text-[9px] text-muted-foreground">(לצפייה)</span>
       </button>
 
-      {/* Waze navigation */}
+      {/* Waze navigation — next to kosher badge */}
       <a
         href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="נווט למסעדה עם Waze"
-        className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-[#33ccff] text-white font-bold rounded-xl px-3 py-2 shadow-lg hover:opacity-90 transition"
+        className="absolute top-4 right-24 z-20 w-11 h-11 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform overflow-hidden"
       >
-        <WazeIcon size={18} className="text-white" />
-        <span className="text-xs">נווט</span>
+        <img src={wazeIconAsset.url} alt="Waze" className="w-full h-full object-cover" />
       </a>
 
       <Dialog open={showKosher} onOpenChange={setShowKosher}>
