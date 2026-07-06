@@ -188,6 +188,8 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-laffe", name: "לאפ בראון", price: 12 },
   { id: "fam-unfiltered", name: "גולדסטאר אנפילטר", price: 12 },
   { id: "fam-guinness", name: "גינס", price: 12 },
+  { id: "fam-shapira", name: "שפירא", price: 15 },
+  { id: "fam-maccabi", name: "מכבי 7.9%", price: 10 },
 ];
 
 
