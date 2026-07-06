@@ -13,3 +13,4 @@ Strict separation UI/logic/data. No console.log in prod (keep console.error). Mi
 - [Customer auth system](mem://features/customer-auth) — Phone OTP, device token auto-login, registration with terms/marketing consent
 - [UI config](mem://design/ui-config) — Centralized positions and animations in src/config/uiConfig.ts
 - [Code quality & data standards](mem://standards/code-quality) — Mandatory standards: code quality, modularity, data minimization, analytics event names, security, performance
+- [Menu item inventory end-to-end](mem://features/menu-item-inventory-end-to-end) — New menu items must also be connected to kitchen availability, inventory, recipes, fridge, pricing, and orders
