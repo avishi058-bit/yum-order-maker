@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, X, Bell, BellOff, Volume2 } from "lucide-react";
+import WazeIcon from "@/components/icons/WazeIcon";
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
@@ -296,6 +297,18 @@ const OrderTopBar = () => {
 
                 {order.status === "completed" && (
                   <p className="text-center text-sm text-muted-foreground">ההזמנה הושלמה ✅ בתיאבון!</p>
+                )}
+
+                {(order.status === "new" || order.status === "preparing" || order.status === "ready") && (
+                  <a
+                    href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 w-full flex items-center justify-center gap-2 bg-[#33ccff] text-white font-bold py-2.5 rounded-xl hover:opacity-90 transition shadow-md"
+                  >
+                    <WazeIcon size={18} className="text-white" />
+                    נווט למסעדה עם Waze
+                  </a>
                 )}
               </div>
             </motion.div>

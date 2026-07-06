@@ -5,6 +5,7 @@ import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.jpeg";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import WazeIcon from "@/components/icons/WazeIcon";
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
@@ -33,6 +34,18 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
         <span className="text-xs font-bold text-foreground">כשר </span>
         <span className="text-[9px] text-muted-foreground">(לצפייה)</span>
       </button>
+
+      {/* Waze navigation */}
+      <a
+        href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="נווט למסעדה עם Waze"
+        className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-[#33ccff] text-white font-bold rounded-xl px-3 py-2 shadow-lg hover:opacity-90 transition"
+      >
+        <WazeIcon size={18} className="text-white" />
+        <span className="text-xs">נווט</span>
+      </a>
 
       <Dialog open={showKosher} onOpenChange={setShowKosher}>
         <DialogContent className="max-w-lg p-2">
