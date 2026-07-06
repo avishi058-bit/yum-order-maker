@@ -139,6 +139,7 @@ const itemOrder: Record<string, string[]> = {
     "water", "soda",
     "drink-carlsberg", "drink-goldstar", "drink-heineken", "drink-corona",
     "drink-hoegaarden", "drink-laffe", "drink-unfiltered", "drink-guinness", "drink-weiss",
+    "drink-stella", "drink-paulaner", "drink-shapira", "drink-maccabi",
   ],
 
   deal: ["family-deal", "friends-deal"],
