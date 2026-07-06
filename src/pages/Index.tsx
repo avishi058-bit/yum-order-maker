@@ -58,7 +58,7 @@ import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "@/hooks/use-toast";
-import wazeIconAsset from "@/assets/waze-icon.png.asset.json";
+
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
 const Index = () => {
