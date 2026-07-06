@@ -58,7 +58,7 @@ import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "@/hooks/use-toast";
-import wazeIconAsset from "@/assets/waze-icon.png.asset.json";
+
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
 const Index = () => {
@@ -497,7 +497,7 @@ const Index = () => {
               aria-label="נווט למסעדה עם Waze"
               className="w-9 h-9 hover:scale-105 active:scale-95 transition-transform overflow-hidden shrink-0"
             >
-              <img src={wazeIconAsset.url} alt="Waze" className="w-full h-full object-cover" />
+              <img src="/waze-icon.png" alt="Waze" className="w-full h-full object-cover" />
             </a>
             {!isInstalled && (
               <button

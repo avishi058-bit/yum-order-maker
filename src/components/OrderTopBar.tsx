@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, X, Bell, BellOff, Volume2 } from "lucide-react";
-import wazeIconAsset from "@/assets/waze-icon.png.asset.json";
+
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
@@ -306,7 +306,7 @@ const OrderTopBar = () => {
                     rel="noopener noreferrer"
                     className="mt-3 w-full flex items-center justify-center gap-2 bg-[#33ccff] text-white font-bold py-2.5 rounded-xl hover:opacity-90 transition shadow-md"
                   >
-                    <img src={wazeIconAsset.url} alt="Waze" className="w-5 h-5 rounded-full" />
+                    <img src="/waze-icon.png" alt="Waze" className="w-5 h-5" />
                     נווט למסעדה עם Waze
                   </a>
                 )}
