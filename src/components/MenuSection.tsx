@@ -27,6 +27,8 @@ const matchesCategory = (item: MenuItem, key: typeof categories[number]["key"]) 
 // Some menu items use a different ID than the availability row in the DB.
 const menuItemAvailabilityAlias: Record<string, string> = {
   "beer-weiss": "drink-weiss",
+  "beer-shapira": "drink-shapira",
+  "beer-maccabi": "drink-maccabi",
 };
 const availabilityIdFor = (id: string) => menuItemAvailabilityAlias[id] ?? id;
 
