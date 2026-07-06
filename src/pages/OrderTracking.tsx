@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, Bell, BellRing } from "lucide-react";
-import wazeIconAsset from "@/assets/waze-icon.png.asset.json";
+
 import { toast } from "sonner";
 import GoogleReviewCard from "@/components/GoogleReviewCard";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
