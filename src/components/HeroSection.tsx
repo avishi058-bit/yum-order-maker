@@ -5,7 +5,7 @@ import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.jpeg";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import WazeIcon from "@/components/icons/WazeIcon";
+import wazeIconAsset from "@/assets/waze-icon.png.asset.json";
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
