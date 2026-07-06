@@ -58,6 +58,7 @@ import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "@/hooks/use-toast";
+import wazeIconAsset from "@/assets/waze-icon.png.asset.json";
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
 const Index = () => {
@@ -489,6 +490,15 @@ const Index = () => {
             onUpdateFavorite={() => { setFavoriteStartInSetup(true); setFavoriteModalOpen(true); }}
           />
           <div className="flex items-center gap-2">
+            <a
+              href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="נווט למסעדה עם Waze"
+              className="w-9 h-9 hover:scale-105 active:scale-95 transition-transform overflow-hidden shrink-0"
+            >
+              <img src={wazeIconAsset.url} alt="Waze" className="w-full h-full object-cover" />
+            </a>
             {!isInstalled && (
               <button
                 onClick={handleInstallClick}
