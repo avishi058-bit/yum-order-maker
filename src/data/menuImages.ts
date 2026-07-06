@@ -14,6 +14,8 @@ import beerImg from "@/assets/menu/beer-goldstar.webp";
 import bottleImg from "@/assets/menu/bottle-prigat.webp";
 import beerPremiumImg from "@/assets/menu/beer-leffe.webp";
 import beerWeissImg from "@/assets/menu/beer-weihenstephaner.webp";
+import beerShapiraImg from "@/assets/menu/beer-shapira.webp";
+import beerMaccabiImg from "@/assets/menu/beer-maccabi.webp";
 import hafMifsha from "@/assets/menu/haf-mifsha.webp";
 import napoleon from "@/assets/menu/napoleon.jpg";
 import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
@@ -47,6 +49,8 @@ export const menuImages: Record<string, string> = {
   "beer-regular": beerImg,
   "beer-premium": beerPremiumImg,
   "beer-weiss": beerWeissImg,
+  "beer-shapira": beerShapiraImg,
+  "beer-maccabi": beerMaccabiImg,
   double: doubleImg,
   "haf-mifsha": hafMifsha,
   napoleon: napoleon,

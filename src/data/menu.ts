@@ -87,6 +87,8 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה, סטלה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
   "beer-weiss": { description: "בירת חיטה גרמנית" },
+  "beer-shapira": { description: "בירת קראפט ירושלמית — Pale Ale 5%" },
+  "beer-maccabi": { description: "בירת לאגר חזקה 7.9%" },
 
   "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
   "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
@@ -241,7 +243,7 @@ export interface DrinkOption {
   category: "soft" | "beer";
 }
 
-const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness", "stella"];
+const BEER_SUFFIXES = ["goldstar", "heineken", "corona", "carlsberg", "laffe", "unfiltered", "paulaner", "hoegaarden", "weiss", "guinness", "stella", "shapira", "maccabi"];
 const isBeerId = (id: string) => BEER_SUFFIXES.some((s) => id.endsWith(s));
 
 export const mealDrinkOptions: DrinkOption[] = MEAL_DRINKS_PRICING.map((d) => ({
@@ -339,6 +341,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "drink-laffe": "drink-laffe", "drink-unfiltered": "drink-unfiltered", "drink-guinness": "drink-guinness",
   "drink-weiss": "drink-weiss", "drink-paulaner": "drink-paulaner", "drink-hoegaarden": "drink-hoegaarden",
   "drink-stella": "drink-stella",
+  "drink-shapira": "drink-shapira", "drink-maccabi": "drink-maccabi",
 
   "drink-water": "water", "drink-soda": "soda",
   "drink-flavored-water-apple": "drink-flavored-water-apple", "drink-flavored-water-grape": "drink-flavored-water-grape",
@@ -355,6 +358,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "deal-goldstar": "drink-goldstar", "deal-heineken": "drink-heineken",
   "deal-corona": "drink-corona", "deal-carlsberg": "drink-carlsberg",
   "deal-laffe": "drink-laffe", "deal-unfiltered": "drink-unfiltered", "deal-guinness": "drink-guinness",
+  "deal-shapira": "drink-shapira", "deal-maccabi": "drink-maccabi",
   // family deal drink options (FamilyDealCustomizer)
   "fam-cola": "drink-cola", "fam-zero": "drink-zero", "fam-fanta": "drink-fanta",
   "fam-sprite": "drink-sprite", "fam-blu": "drink-blu", "fam-blu-melon-apple": "drink-blu-melon-apple",
@@ -364,6 +368,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "fam-goldstar": "drink-goldstar", "fam-heineken": "drink-heineken",
   "fam-corona": "drink-corona", "fam-carlsberg": "drink-carlsberg",
   "fam-laffe": "drink-laffe", "fam-unfiltered": "drink-unfiltered", "fam-guinness": "drink-guinness",
+  "fam-shapira": "drink-shapira", "fam-maccabi": "drink-maccabi",
 };
 
 
