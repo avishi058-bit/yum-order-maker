@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { isPushSupported, iosNeedsInstall, isIos, ensureServiceWorker } from "@/lib/push";
-import LocationPickerModal from "./LocationPickerModal";
+import LocationPickerModal, { isExcludedText } from "./LocationPickerModal";
 
 export interface DeliveryApprovedData {
   requestId: string;
