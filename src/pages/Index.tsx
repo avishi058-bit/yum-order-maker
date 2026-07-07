@@ -775,6 +775,7 @@ const Index = () => {
               sauces={selectedSauces}
               freeSauces={freeSauces}
               skipDetails={checkoutSkipDetails}
+              delivery={deliveryInfo ?? undefined}
               onClose={() => { setCheckoutOpen(false); setCheckoutSkipDetails(false); }}
               onSuccess={(orderNumber, phone) => {
                 // Snapshot the cart BEFORE clearing — used for the
