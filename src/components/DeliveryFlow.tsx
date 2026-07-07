@@ -485,6 +485,13 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
                 </div>
               )}
 
+              <a
+                href="tel:0584633555"
+                className="w-full inline-flex items-center justify-center gap-2 bg-secondary border border-border text-foreground font-bold py-3 rounded-xl hover:bg-secondary/80 transition-colors"
+              >
+                📞 לעוד פרטים התקשרו
+              </a>
+
               <button
                 onClick={handleCancelSearch}
                 className="text-sm text-destructive hover:underline"
