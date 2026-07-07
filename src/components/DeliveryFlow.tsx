@@ -227,10 +227,10 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     );
   };
 
-  const handleMapConfirm = async (loc: { lat: number; lng: number }) => {
+  const handleMapConfirm = async (loc: { lat: number; lng: number; address?: string }) => {
     setPickerOpen(false);
-    setPickedCoords(loc);
-    await runCalculate({ lat: loc.lat, lng: loc.lng });
+    setPickedCoords({ lat: loc.lat, lng: loc.lng });
+    await runCalculate({ lat: loc.lat, lng: loc.lng, displayAddress: loc.address });
   };
 
   const handleCalculate = async () => {
