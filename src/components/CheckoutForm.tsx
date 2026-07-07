@@ -771,6 +771,41 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
+            {/* 🕒 Preorder — schedule pickup for later within the allowed window */}
+            {restaurantStatus.preorder_enabled && (() => {
+              const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
+              const end = (restaurantStatus.preorder_end_time || "22:00").slice(0, 5);
+              return (
+                <div className={`rounded-xl border-2 p-4 ${preorderEnabled ? "border-blue-500/50 bg-blue-500/5" : "border-border bg-secondary/40"}`}>
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={preorderEnabled}
+                      onChange={(e) => setPreorderEnabled(e.target.checked)}
+                      className="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+                    />
+                    <span className="font-bold text-foreground">🕒 הזמנה מראש לשעה מאוחרת יותר</span>
+                  </label>
+                  {preorderEnabled && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-foreground">
+                      <span className="text-muted-foreground">שעת איסוף:</span>
+                      <input
+                        type="time"
+                        min={start}
+                        max={end}
+                        value={preorderTime}
+                        onChange={(e) => setPreorderTime(e.target.value)}
+                        className="bg-secondary border border-border rounded px-3 py-2 text-foreground"
+                      />
+                      <span className="text-xs text-muted-foreground">({start}–{end})</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+
+
             {/* Required terms acceptance — gates both payment buttons */}
             <label
               className={`flex items-start gap-3 rounded-xl border-2 transition-colors cursor-pointer select-none ${
