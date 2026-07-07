@@ -359,6 +359,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    // Delivery: mark request as completed and link back the order id.
+    if (delivery?.requestId) {
+      supabase
+        .from("delivery_requests")
+        .update({ status: "completed", order_id: data.orderId })
+        .eq("id", delivery.requestId)
+        .then(() => {}, () => {});
+    }
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
