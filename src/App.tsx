@@ -34,6 +34,8 @@ const EventsKitchen = lazy(() => import("./pages/EventsKitchen"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const Courier = lazy(() => import("./pages/Courier"));
+const AdminCouriers = lazy(() => import("./pages/AdminCouriers"));
 
 const queryClient = new QueryClient();
 
