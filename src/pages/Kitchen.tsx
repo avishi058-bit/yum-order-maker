@@ -1732,6 +1732,26 @@ const Kitchen = () => {
                   )}
                 </div>
 
+                {/* 🛵 Delivery toggle + zones */}
+                <div className={`rounded-lg border-2 ${restaurantStatus.delivery_enabled ? "border-orange-500/50 bg-orange-500/10" : "border-transparent bg-muted/30"} p-2 space-y-2`}>
+                  <button
+                    onClick={() => toggleDelivery(!restaurantStatus.delivery_enabled)}
+                    className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                      restaurantStatus.delivery_enabled ? "bg-orange-500/20 text-orange-300" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">🛵 משלוחים</span>
+                    <span>{restaurantStatus.delivery_enabled ? "פעילים" : "כבויים"}</span>
+                  </button>
+                  <button
+                    onClick={() => setDeliveryZonesOpen(true)}
+                    className="w-full px-3 py-2 rounded-lg text-xs font-bold bg-secondary hover:bg-secondary/70 text-foreground"
+                  >
+                    ⚙️ ניהול אזורי משלוח
+                  </button>
+                </div>
+
+
 
                 <div className="pt-1 border-t border-border">
 
