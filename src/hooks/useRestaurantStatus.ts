@@ -10,12 +10,13 @@ export interface RestaurantStatus {
   preorder_enabled: boolean;
   preorder_start_time: string; // "HH:MM" or "HH:MM:SS"
   preorder_end_time: string;
+  delivery_enabled: boolean;
 }
 
-const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time";
+const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled";
 
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00" });
+  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false });
   const [loading, setLoading] = useState(true);
   const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
 
@@ -48,6 +49,7 @@ export const useRestaurantStatus = () => {
             preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
             preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
             preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
+            delivery_enabled: n.delivery_enabled ?? prev.delivery_enabled,
           }));
         }
       )
@@ -116,5 +118,10 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, preorder_start_time: start, preorder_end_time: end }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, closeAll, openAll };
+  const toggleDelivery = async (on: boolean) => {
+    await supabase.from("restaurant_status").update({ delivery_enabled: on }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, delivery_enabled: on }));
+  };
+
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
 };

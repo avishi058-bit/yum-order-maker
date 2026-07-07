@@ -8,10 +8,12 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
+  onDeliveryChoice?: () => void;
+  showDelivery?: boolean;
   dineIn: boolean | null;
 }
 
-const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
+const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
   useEffect(() => {
@@ -99,10 +101,10 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
             >
               בחר כדי להתחיל בהזמנה👇🏽
             </motion.p>
-            <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1">
+            <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1 flex-wrap justify-center">
               <button
                 onClick={() => onDineInChoice(true)}
-                className={`px-8 py-3.5 rounded-full text-base font-bold transition-all ${
+                className={`px-6 py-3.5 rounded-full text-base font-bold transition-all ${
                   dineIn === true ? "bg-primary text-primary-foreground shadow-lg scale-105" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -110,12 +112,20 @@ const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
               </button>
               <button
                 onClick={() => onDineInChoice(false)}
-                className={`px-8 py-3.5 rounded-full text-base font-bold transition-all ${
+                className={`px-6 py-3.5 rounded-full text-base font-bold transition-all ${
                   dineIn === false ? "bg-primary text-primary-foreground shadow-lg scale-105" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 🥡 לקחת
               </button>
+              {showDelivery && onDeliveryChoice && (
+                <button
+                  onClick={() => onDeliveryChoice()}
+                  className="px-6 py-3.5 rounded-full text-base font-bold transition-all text-muted-foreground hover:text-foreground"
+                >
+                  🛵 משלוח
+                </button>
+              )}
             </div>
           </motion.div>
         ) : (

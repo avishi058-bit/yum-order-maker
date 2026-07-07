@@ -32,9 +32,18 @@ interface CheckoutFormProps {
   onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter") => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
+  /** When set, this is a delivery order. Adds required legal ack + passes delivery data to create-order. */
+  delivery?: {
+    requestId: string;
+    address: string;
+    fee: number;
+    zoneName: string;
+    customerName: string;
+    customerPhone: string;
+  };
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, delivery }, ref) => {
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
@@ -89,6 +98,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Preorder scheduling — pick a future pickup time within the allowed window.
   const [preorderEnabled, setPreorderEnabled] = useState(false);
   const [preorderTime, setPreorderTime] = useState<string>(""); // "HH:MM" today
+  const [deliveryAck, setDeliveryAck] = useState(false);
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
@@ -228,6 +238,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       });
       return;
     }
+    // Delivery: force ack before any payment path
+    if (delivery && !deliveryAck) {
+      toast({
+        title: "יש לאשר את הודעת המשלוח",
+        description: "יש לסמן שהתשלום על המשלוח יתבצע ישירות לשליח",
+        variant: "destructive",
+      });
+      return;
+    }
     setPaymentMethod(method);
 
     if (method === "credit") {
@@ -328,6 +347,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
           return d.toISOString();
         })(),
+        // Delivery order (website only). Delivery fee NOT collected here.
+        deliveryRequestId: delivery?.requestId ?? null,
+        deliveryAddress: delivery?.address ?? null,
+        deliveryFee: delivery?.fee ?? null,
       },
     });
 
@@ -345,6 +368,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    // Delivery: mark request as completed and link back the order id.
+    if (delivery?.requestId) {
+      supabase
+        .from("delivery_requests")
+        .update({ status: "completed", order_id: data.orderId })
+        .eq("id", delivery.requestId)
+        .then(() => {}, () => {});
+    }
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
@@ -770,6 +801,33 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {step === "payment" && (
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
+
+            {/* 🛵 Delivery notice — website only, when this is a delivery order */}
+            {delivery && (
+              <div className="rounded-xl border-2 border-yellow-500/60 bg-yellow-500/10 p-4 space-y-3">
+                <div className="text-sm text-foreground leading-relaxed">
+                  <div className="font-black text-base mb-1">🛵 שים לב — הזמנת משלוח</div>
+                  באתר זה אתה משלם רק על ההזמנה.<br />
+                  את דמי המשלוח (<b>{delivery.fee}₪</b> — {delivery.zoneName}) משלמים <b>ישירות לשליח</b> בעת קבלת ההזמנה.<br />
+                  ניתן לשלם לשליח באמצעות <b>Bit</b> או במזומן בלבד.
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  כתובת: {delivery.address}
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={deliveryAck}
+                    onChange={(e) => setDeliveryAck(e.target.checked)}
+                    className="mt-1 w-5 h-5 accent-primary"
+                  />
+                  <span className="text-sm font-bold text-foreground">
+                    קראתי והבנתי שהתשלום על המשלוח יתבצע ישירות לשליח.
+                  </span>
+                </label>
+              </div>
+            )}
+
 
             {/* 🕒 Preorder — schedule pickup for later within the allowed window */}
             {restaurantStatus.preorder_enabled && (() => {

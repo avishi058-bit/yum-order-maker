@@ -42,6 +42,8 @@ const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
 const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
+const DeliveryFlow = lazy(() => import("@/components/DeliveryFlow"));
+import type { DeliveryApprovedData } from "@/components/DeliveryFlow";
 
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa, isIos } from "@/lib/push";
@@ -86,6 +88,8 @@ const Index = () => {
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
   const [arayesItem, setArayesItem] = useState<MenuItem | null>(null);
   const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : null);
+  const [deliveryFlowOpen, setDeliveryFlowOpen] = useState(false);
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryApprovedData | null>(null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
@@ -469,6 +473,21 @@ const Index = () => {
 
   const handleDineInChoice = (val: boolean) => {
     setDineIn(val);
+    setDeliveryInfo(null);
+    setTimeout(() => {
+      document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const handleDeliveryChoice = () => {
+    setDeliveryFlowOpen(true);
+  };
+
+  const handleDeliveryApproved = (data: DeliveryApprovedData) => {
+    setDeliveryInfo(data);
+    setDeliveryFlowOpen(false);
+    setDineIn(false); // treat like takeaway for menu/pricing
+    toast({ title: "נמצא שליח! 🛵", description: "אפשר להתחיל להזמין" });
     setTimeout(() => {
       document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -574,7 +593,14 @@ const Index = () => {
         </div>
       )}
 
-      {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
+      {!isStation && (
+        <HeroSection
+          onDineInChoice={isClosed ? undefined : handleDineInChoice}
+          onDeliveryChoice={isClosed ? undefined : handleDeliveryChoice}
+          showDelivery={restaurantStatus.delivery_enabled}
+          dineIn={dineIn}
+        />
+      )}
       {isClosed ? (
         <div className="py-16 text-center px-6">
           <p className="text-6xl mb-4">{isManualClosure ? "⏸️" : "🔒"}</p>
@@ -679,6 +705,14 @@ const Index = () => {
             items={cart}
             onUpdateQuantity={updateQuantity}
             onCheckout={() => {
+              if (deliveryInfo && getTotal() < 300) {
+                toast({
+                  title: "מינימום הזמנה למשלוח 300₪",
+                  description: `הסכום הנוכחי: ${getTotal()}₪. יש להוסיף עוד ${Math.max(0, 300 - getTotal())}₪`,
+                  variant: "destructive",
+                });
+                return;
+              }
               setCartOpen(false);
               if (dineIn === false && freeSauces > 0) {
                 setSauceSelectorOpen(true);
@@ -741,6 +775,7 @@ const Index = () => {
               sauces={selectedSauces}
               freeSauces={freeSauces}
               skipDetails={checkoutSkipDetails}
+              delivery={deliveryInfo ?? undefined}
               onClose={() => { setCheckoutOpen(false); setCheckoutSkipDetails(false); }}
               onSuccess={(orderNumber, phone) => {
                 // Snapshot the cart BEFORE clearing — used for the
@@ -749,6 +784,7 @@ const Index = () => {
                 setCheckoutOpen(false);
                 setCheckoutSkipDetails(false);
                 setCart([]);
+                setDeliveryInfo(null);
                 // Order was placed — discard any saved cart so the
                 // "continue previous order" modal doesn't pop up later.
                 suppressNextSave();
@@ -848,6 +884,13 @@ const Index = () => {
         )}
 
         <IosInstallModal open={installModalOpen} onClose={() => setInstallModalOpen(false)} />
+        {deliveryFlowOpen && (
+          <DeliveryFlow
+            open={deliveryFlowOpen}
+            onClose={() => setDeliveryFlowOpen(false)}
+            onApproved={handleDeliveryApproved}
+          />
+        )}
         <IosInstallModal
           open={postInstallInstructionsOpen}
           postInstallOpen

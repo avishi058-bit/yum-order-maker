@@ -1,36 +1,83 @@
-# הוספת תוספות לכל המבורגר בדיל חברים ודיל משפחתי
+## מערכת משלוחים - תוכנית מפורטת
 
-מוסיף אופציה לבחור תוספות (toppings) בתשלום על כל המבורגר בנפרד בתוך דיל חברים (3 המבורגרים) ובדיל משפחתי (5 המבורגרים). מימוש מקצה לקצה: UI, מחירים, שרת, מטבח, קבלות, מלאי.
+### 1. מסד נתונים
 
-## שינויים
+**עדכון `restaurant_status`:**
+- `delivery_enabled` (bool, default false) - מתג הפעלה כללי
 
-### 1. Frontend — UI
-- **`DealBurgerConfig`** (CartDrawer.tsx): הוספת שדה `toppings: string[]` (מערך מזהי תוספות).
-- **`DealCustomizer.tsx`** + **`FamilyDealCustomizer.tsx`**: אחרי שלב בחירת המנה (חוסרים+שם) — מסך תוספות אופציונליות לאותו המבורגר עם המחירים מ-`TOPPINGS_PRICING`. שימוש באותו רכיב טוגלים כמו `ItemCustomizer`.
-- **`CartDrawer.tsx`** + **`KioskCartDrawer.tsx`** + **`OrderHistoryModal.tsx`**: הצגת תוספות מתחת לכל המבורגר בדיל ("בורגר 1: ריבת בצל, ביצת עין").
+**טבלה חדשה `delivery_zones`:**
+- `id`, `name` (שם אזור), `price` (מחיר), `keywords` (text[] - מילות זיהוי בכתובת: "תושיה", "ערבי הנחל", "כפר תבור" וכו'), `active` (bool)
+- קריאה: anon+authenticated. עריכה: מטבח/אדמין
 
-### 2. תמחור
-- **`src/lib/cartPricing.ts`**: עבור פריט עם `dealBurgers`, להוסיף סכום תוספות לכל בורגר על המחיר הבסיסי של הדיל (במקום `return item.price` היבש).
-- **`supabase/functions/create-order/index.ts`**: הרחבת `dealBurgers` ב-zod — הוספת `toppings: string[]`, חישוב מחיר תוספות בשרת לכל בורגר (source of truth), שמירת שמות תוספות ב-jsonb.
+**טבלה חדשה `delivery_requests`:**
+- `id`, `customer_name`, `customer_phone`, `address`, `lat/lng` (nullable), `zone_id`, `price`, `status` (pending/approved/rejected/completed), `order_id` (nullable), `created_at`
+- Realtime enabled
 
-### 3. בסיס נתונים
-- אין צורך במיגרציה לסכמה — `order_items.deal_burgers` הוא JSONB גמיש. כל בורגר ישמר כ-`{name, removals:[שמות], toppings:[שמות]}`.
+### 2. הגדרות מטבח (Kitchen)
 
-### 4. טריגרים (מלאי)
-- **`apply_order_item_to_fridge`**: כיום שולף `fridge_qty` עבור `id`/`name` של כל deal_burger. נוסיף לולאה פנימית על `toppings` של כל בורגר כדי למשוך גם תוספות מהמקרר (למשל ביצה, בצל).
-- **`apply_order_to_inventory`** (כאשר order עובר ל-`ready`): אותה הרחבה לקליטת תוספות הדיל כצריכת מלאי מהמחסן.
-- **`restore_fridge_for_order_item`** (עריכת/ביטול הזמנה): אותה הרחבה להחזרת תוספות.
+בסרגל העליון של Kitchen.tsx, ליד "הזמנה מראש":
+- **מתג "משלוחים פעילים"** - מעדכן `restaurant_status.delivery_enabled`
+- **כפתור "אזורי משלוח"** → dialog לניהול `delivery_zones` (הוספה/עריכה: שם, מחיר, מילות חיפוש)
 
-### 5. מטבח וקבלות
-- **`src/pages/Kitchen.tsx`**: הצגת תוספות לכל בורגר בדיל.
-- **`src/lib/kitchenReceipt.ts`** + **`src/lib/btReceiptOps.ts`** + **`src/lib/bluetoothPrinter.ts`**: הדפסת שורת תוספות לכל בורגר בדיל בקבלת המטבח.
+### 3. כרטיסי בקשות משלוח במטבח
 
-### 6. עריכת הזמנה
-- **`edit-order`** edge function ו-**`EditOrderModal.tsx`**: כבר מעבירים את `deal_burgers` כ-jsonb — יעבוד אוטומטית עם הפורמט החדש. נוודא שהשרת לא מאבד את שדה ה-toppings.
+מעל רשימת ההזמנות בקיטשן, sections חדש: **"בקשות משלוח ממתינות"**
+מוצג כל `delivery_request` בסטטוס `pending`:
+- שם + טלפון
+- כתובת מלאה
+- מחיר משלוח שחושב
+- כפתור **"הצג QR"** → dialog עם QR של `https://waze.com/ul?q=<address>` (משתמש בספריית qrcode.react)
+- כפתור **"אשר משלוח"** → status=approved
+- כפתור **"דחה"** → status=rejected
 
-## פתיחות
-- **מקסימום תוספות לבורגר בדיל**: ללא הגבלה מיוחדת (משתמש באותה הגבלת `.max(20)` של פריט רגיל).
-- **תוספות זמינות**: כל הרשימה מ-`TOPPINGS_PRICING` (זהה לבורגר רגיל), כולל "תוספת קציצה", "+ קציצת סמאש", "לחמנייה ללא גלוטן" וכו'.
-- **מחיר נוסף**: מצטבר על מחיר הדיל הקבוע (216₪ דיל חברים, 300₪ משפחתי).
+Realtime subscription על `delivery_requests`.
 
-מאשר/ת? אתחיל לממש את כל הצעדים ברצף.
+### 4. אתר ההזמנות - זרימה
+
+**Index.tsx - מסך פתיחה:**
+- מוסיף אפשרות שלישית "משלוח" (מוצג רק כש-`delivery_enabled=true`)
+- לחיצה → מעבר למסך כתובת
+
+**מסך חדש `DeliveryAddress` (בתוך Index או route חדש):**
+1. שדה כתובת (input טקסטואלי)
+2. בלחיצה על "חשב עלות" - מתאים לאזור לפי keywords ב-`delivery_zones`
+3. מציג "עלות המשלוח: X₪" + הודעה על תשלום לשליח
+4. Checkbox חובה "קראתי והבנתי..."
+5. כפתור **"חפש לי שליח"** - יוצר `delivery_request` (pending)
+6. הכפתור נעלם → מציג "מחפשים עבורך שליח... 🔍" עם spinner
+7. **Polling / realtime** על status הבקשה:
+   - `approved` → פותח את מסך התפריט (dineType=delivery, מזין phone/name/address מהבקשה)
+   - `rejected` → מציג "מצטערים, לא נמצא שליח כרגע"
+
+**אם הכתובת לא תואמת לאזור:** מציג "לצערנו איננו מגיעים לאזור זה"
+
+### 5. תפריט + עגלה + Checkout
+
+- מצב חדש `dineType='delivery'` (בנוסף ל-sit/take)
+- **בעגלה/checkout:** אם delivery ומסכום ההזמנה < 300₪ → חוסם עם הודעה "מינימום 300₪"
+- **ב-CheckoutForm:** אם delivery, מציג בלוק גדול לפני תשלום:
+  > שים לב: באתר זה אתה משלם רק על ההזמנה. את דמי המשלוח משלמים ישירות לשליח (Bit או מזומן).
+  
+  + Checkbox חובה + לא ניתן לשלם ללא סימון
+- ההזמנה נשמרת עם `delivery_request_id` ו-`delivery_address`
+- לאחר יצירת ההזמנה: `delivery_request.order_id` מתעדכן
+
+### 6. עדכוני schema ל-orders
+
+- `delivery_request_id` (uuid, nullable, FK)
+- `delivery_address` (text, nullable)
+- `delivery_fee` (numeric, nullable) - לתצוגה בלבד, לא נגבה
+
+### 7. קיוסק - ללא שינוי
+
+הקוד של הקיוסק (`KioskMode`/עמדה) לא יציג את אפשרות המשלוח בכלל - הבדיקה תהיה `if (!isKiosk && delivery_enabled)`.
+
+### טכני
+
+- QR: `qrcode.react` (כבר קיים? אבדוק, אם לא - `bun add qrcode.react`)
+- Realtime על `delivery_requests` בצד לקוח (המתנה לשליח) ובצד מטבח
+- כל הטבלאות החדשות עם RLS + GRANTs
+
+**הערה:** לא מבצע חישוב מרחק/Google Maps - רק התאמת keywords לאזור מוגדר. תוכל להוסיף אזורים דרך dialog במטבח.
+
+מאשר להתחיל?

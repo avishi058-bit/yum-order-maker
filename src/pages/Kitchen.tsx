@@ -5,6 +5,7 @@ import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, 
 import EditOrderModal from "@/components/EditOrderModal";
 import QRCode from "qrcode";
 import DashboardView from "@/components/DashboardView";
+import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { motion } from "framer-motion";
@@ -276,7 +277,7 @@ const NORMAL_RING_MS = 5000;
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
-  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -285,6 +286,7 @@ const Kitchen = () => {
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
   const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
   const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
+  const [deliveryZonesOpen, setDeliveryZonesOpen] = useState(false);
 
   const handleQuickConnect = useCallback(async () => {
     if (isPrinterConnected()) {
@@ -1732,6 +1734,26 @@ const Kitchen = () => {
                   )}
                 </div>
 
+                {/* 🛵 Delivery toggle + zones */}
+                <div className={`rounded-lg border-2 ${restaurantStatus.delivery_enabled ? "border-orange-500/50 bg-orange-500/10" : "border-transparent bg-muted/30"} p-2 space-y-2`}>
+                  <button
+                    onClick={() => toggleDelivery(!restaurantStatus.delivery_enabled)}
+                    className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                      restaurantStatus.delivery_enabled ? "bg-orange-500/20 text-orange-300" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">🛵 משלוחים</span>
+                    <span>{restaurantStatus.delivery_enabled ? "פעילים" : "כבויים"}</span>
+                  </button>
+                  <button
+                    onClick={() => setDeliveryZonesOpen(true)}
+                    className="w-full px-3 py-2 rounded-lg text-xs font-bold bg-secondary hover:bg-secondary/70 text-foreground"
+                  >
+                    ⚙️ ניהול אזורי משלוח
+                  </button>
+                </div>
+
+
 
                 <div className="pt-1 border-t border-border">
 
@@ -2153,7 +2175,9 @@ const Kitchen = () => {
         <DashboardView />
       ) : (
         /* Orders Grid */
-        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="p-4">
+          {viewMode === "active" && <DeliveryRequestsPanel />}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayOrders.length === 0 && (
             <div className="col-span-full text-center py-20 text-muted-foreground">
               <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : "📋"}</p>
@@ -2483,8 +2507,12 @@ const Kitchen = () => {
               </div>
             );
           })}
+          </div>
         </div>
       )}
+
+      <DeliveryZonesDialog open={deliveryZonesOpen} onClose={() => setDeliveryZonesOpen(false)} />
+
 
       {/* Receipt preview modal */}
       {previewOrder && (

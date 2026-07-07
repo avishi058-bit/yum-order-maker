@@ -109,6 +109,11 @@ const BodySchema = z.object({
   // Optional: customer-requested pickup time (ISO datetime). When set, order is
   // scheduled — kitchen displays it and can start preparing closer to the time.
   scheduledFor: z.string().datetime().nullable().optional(),
+  // Delivery (website only). When set, order is a delivery order — customer pays
+  // for the food here; delivery fee is paid directly to the courier (Bit/cash).
+  deliveryRequestId: z.string().uuid().nullable().optional(),
+  deliveryAddress: z.string().max(500).nullable().optional(),
+  deliveryFee: z.number().min(0).max(10000).nullable().optional(),
   items: z.array(CartItemSchema).min(1).max(50),
   // Optional: sauces selected at checkout (chef-summary use). Server adds the
   // extra-sauce charge (1₪ per sauce above the free quota) to the total and
@@ -384,6 +389,9 @@ Deno.serve(async (req: Request) => {
       order_source: body.orderSource,
       terms_accepted_at: body.termsAcceptedAt,
       scheduled_for: body.scheduledFor ?? null,
+      delivery_request_id: body.deliveryRequestId ?? null,
+      delivery_address: body.deliveryAddress ?? null,
+      delivery_fee: body.deliveryFee ?? null,
     })
     .select("id, order_number, total")
     .single();

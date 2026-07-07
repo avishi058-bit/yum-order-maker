@@ -83,6 +83,93 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_requests: {
+        Row: {
+          address: string
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          order_id: string | null
+          price: number
+          status: string
+          updated_at: string
+          zone_id: string | null
+          zone_name: string | null
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id?: string | null
+          price?: number
+          status?: string
+          updated_at?: string
+          zone_id?: string | null
+          zone_name?: string | null
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id?: string | null
+          price?: number
+          status?: string
+          updated_at?: string
+          zone_id?: string | null
+          zone_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_requests_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_zones: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          keywords: string[]
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_blocked_dates: {
         Row: {
           blocked_date: string
@@ -552,6 +639,9 @@ export type Database = {
           customer_address: string | null
           customer_name: string
           customer_phone: string
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_request_id: string | null
           estimated_ready_at: string | null
           id: string
           notes: string | null
@@ -571,6 +661,9 @@ export type Database = {
           customer_address?: string | null
           customer_name: string
           customer_phone: string
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_request_id?: string | null
           estimated_ready_at?: string | null
           id?: string
           notes?: string | null
@@ -590,6 +683,9 @@ export type Database = {
           customer_address?: string | null
           customer_name?: string
           customer_phone?: string
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_request_id?: string | null
           estimated_ready_at?: string | null
           id?: string
           notes?: string | null
@@ -603,7 +699,15 @@ export type Database = {
           total?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_delivery_request_id_fkey"
+            columns: ["delivery_request_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -701,6 +805,7 @@ export type Database = {
         Row: {
           cash_enabled: boolean
           credit_enabled: boolean
+          delivery_enabled: boolean
           high_load: boolean
           id: string
           preorder_enabled: boolean
@@ -713,6 +818,7 @@ export type Database = {
         Insert: {
           cash_enabled?: boolean
           credit_enabled?: boolean
+          delivery_enabled?: boolean
           high_load?: boolean
           id?: string
           preorder_enabled?: boolean
@@ -725,6 +831,7 @@ export type Database = {
         Update: {
           cash_enabled?: boolean
           credit_enabled?: boolean
+          delivery_enabled?: boolean
           high_load?: boolean
           id?: string
           preorder_enabled?: boolean
