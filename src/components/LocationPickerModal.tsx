@@ -151,25 +151,20 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
       };
       const MAX_STRAIGHT_KM = 22; // ~25 min drive from תושיה
 
-      const EXCLUDED_LOCALITIES = ["כפר מימון", "תושיה"];
-      const isExcluded = (text: string) =>
-        EXCLUDED_LOCALITIES.some((name) => text?.includes(name));
-
       const checked = await Promise.allSettled(
         predictions.map(async (p: any) => {
           const primary = p.structuredFormat?.mainText?.text ?? p.text?.text ?? "";
           const secondary = p.structuredFormat?.secondaryText?.text ?? "";
-          if (isExcluded(primary) || isExcluded(secondary)) return null;
+          const excludedByText = isExcludedText(primary) || isExcludedText(secondary);
 
           const place = new Place({ id: p.placeId });
           await place.fetchFields({ fields: ["location", "formattedAddress"] });
           const loc = place.location;
           if (!loc) return null;
 
-          if (isExcluded(place.formattedAddress ?? "")) return null;
-
           const coords = { lat: loc.lat(), lng: loc.lng() };
-          if (haversineKm(DEFAULT_CENTER, coords) > MAX_STRAIGHT_KM) return null;
+          const excluded = excludedByText || isExcludedText(place.formattedAddress ?? "");
+          if (!excluded && haversineKm(DEFAULT_CENTER, coords) > MAX_STRAIGHT_KM) return null;
 
           return {
             placeId: p.placeId,
@@ -177,6 +172,7 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
             secondary,
             location: coords,
             formattedAddress: place.formattedAddress,
+            excluded,
           } satisfies Suggestion;
         }),
       );
