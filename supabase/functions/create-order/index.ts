@@ -383,6 +383,7 @@ Deno.serve(async (req: Request) => {
       payment_method: body.paymentMethod,
       order_source: body.orderSource,
       terms_accepted_at: body.termsAcceptedAt,
+      scheduled_for: body.scheduledFor ?? null,
     })
     .select("id, order_number, total")
     .single();
