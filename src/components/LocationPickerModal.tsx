@@ -328,7 +328,7 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
           </div>
 
           <button
-            onClick={() => picked && onConfirm(picked)}
+            onClick={() => picked && onConfirm({ ...picked, address: searchQuery.trim() || undefined })}
             disabled={!picked}
             className="w-full bg-green-600 text-white font-black py-3 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
