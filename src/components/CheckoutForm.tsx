@@ -338,6 +338,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
           return d.toISOString();
         })(),
+        // Delivery order (website only). Delivery fee NOT collected here.
+        deliveryRequestId: delivery?.requestId ?? null,
+        deliveryAddress: delivery?.address ?? null,
+        deliveryFee: delivery?.fee ?? null,
       },
     });
 
