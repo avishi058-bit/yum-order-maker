@@ -293,14 +293,22 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
                   <li key={s.placeId}>
                     <button
                       type="button"
-                      onClick={() => pickSuggestion(s)}
-                      className="w-full text-right px-3 py-2 hover:bg-secondary flex items-start gap-2 border-b border-border/50 last:border-b-0"
+                      onClick={() => !s.excluded && pickSuggestion(s)}
+                      disabled={s.excluded}
+                      className={`w-full text-right px-3 py-2 flex items-start gap-2 border-b border-border/50 last:border-b-0 ${
+                        s.excluded ? "opacity-60 cursor-not-allowed bg-destructive/5" : "hover:bg-secondary"
+                      }`}
                     >
-                      <MapPin size={14} className="text-primary mt-0.5 shrink-0" />
+                      <MapPin size={14} className={`${s.excluded ? "text-destructive" : "text-primary"} mt-0.5 shrink-0`} />
                       <span className="flex-1 min-w-0">
                         <span className="block text-sm text-foreground font-bold truncate">{s.primary}</span>
                         {s.secondary && (
                           <span className="block text-xs text-muted-foreground truncate">{s.secondary}</span>
+                        )}
+                        {s.excluded && (
+                          <span className="block text-[11px] font-bold text-destructive mt-0.5">
+                            אין משלוחים לאזור זה
+                          </span>
                         )}
                       </span>
                     </button>
