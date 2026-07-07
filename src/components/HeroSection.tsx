@@ -8,10 +8,12 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
+  onDeliveryChoice?: () => void;
+  showDelivery?: boolean;
   dineIn: boolean | null;
 }
 
-const HeroSection = ({ onDineInChoice, dineIn }: HeroSectionProps) => {
+const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
   useEffect(() => {
