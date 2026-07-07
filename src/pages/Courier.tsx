@@ -47,8 +47,9 @@ const CourierApp = () => {
   const [openReqs, setOpenReqs] = useState<DeliveryReq[]>([]);
   const [myReqs, setMyReqs] = useState<DeliveryReq[]>([]);
   const [pushEnabled, setPushEnabled] = useState(false);
-  const [gpsOn, setGpsOn] = useState(false);
+  const [gpsOn, setGpsOn] = useState(true);
   const [installed, setInstalled] = useState<boolean>(() => isStandalone());
+  const [geoState, setGeoState] = useState<PermissionState | "unknown">("unknown");
 
   // ─── Watch for install / display mode changes ───
   useEffect(() => {
@@ -62,6 +63,23 @@ const CourierApp = () => {
     };
   }, []);
 
+  // ─── Watch geolocation permission ───
+  useEffect(() => {
+    if (!installed) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        // @ts-ignore
+        const p = await navigator.permissions?.query?.({ name: "geolocation" as PermissionName });
+        if (cancelled || !p) return;
+        setGeoState(p.state);
+        p.onchange = () => setGeoState(p.state);
+      } catch { /* older browsers */ }
+    };
+    check();
+    return () => { cancelled = true; };
+  }, [installed]);
+
   // ─── Auth session tracking ───
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,6 +91,9 @@ const CourierApp = () => {
   }, []);
 
   if (!installed) return <InstallGate />;
+  if (geoState !== "granted") return <LocationGate state={geoState} onGranted={() => setGeoState("granted")} />;
+
+
 
 
   // ─── Load courier row when session exists ───
