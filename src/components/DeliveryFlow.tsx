@@ -217,48 +217,19 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
 
   const handleCalculate = async () => {
     const a = address.trim();
-    if (a.length < 5) {
+    if (!pickedCoords && a.length < 5) {
       toast({ title: "בחר/י מיקום למשלוח", description: "השתמש/י במיקום הנוכחי או בחר/י על המפה", variant: "destructive" });
       return;
     }
-    if (a.length < 5) {
-      toast({ title: "כתובת קצרה מדי", description: "הזן/י כתובת מלאה", variant: "destructive" });
-      return;
-    }
-    if (name.trim().length < 2) {
-      toast({ title: "שם חסר", variant: "destructive" });
-      return;
-    }
-    if (phone.trim().length < 7) {
-      toast({ title: "טלפון חסר", variant: "destructive" });
-      return;
-    }
-
-    setCalculating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("calculate-delivery-price", {
-        body: { address: a },
-      });
-      if (!error && data && typeof data.price === "number") {
-        setMatchedZone({
-          id: "auto",
-          name: `${data.km} ק"מ · ${data.minutes} דק'`,
-          price: data.price,
-          keywords: [],
-          active: true,
-        });
-        setStage("quoted");
-        return;
-      }
-      console.warn("Auto price failed, falling back to zones", error);
-    } finally {
-      setCalculating(false);
-    }
+    const ok = await runCalculate(
+      pickedCoords ? { lat: pickedCoords.lat, lng: pickedCoords.lng } : { address: a },
+    );
+    if (ok) return;
 
     // Fallback: keyword-based zone matching
     const z = matchZone(a, zones);
     if (!z) {
-      toast({ title: "לצערנו איננו מגיעים לאזור זה", description: "נסה/י כתובת אחרת", variant: "destructive" });
+      toast({ title: "לצערנו איננו מגיעים לאזור זה", description: "נסה/י מיקום אחר", variant: "destructive" });
       return;
     }
     setMatchedZone(z);
