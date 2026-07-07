@@ -493,6 +493,12 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
           )}
         </motion.div>
       </motion.div>
+      <LocationPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={handleMapConfirm}
+        initial={pickedCoords}
+      />
     </AnimatePresence>
   );
 };
