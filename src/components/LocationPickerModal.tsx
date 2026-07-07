@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, MapPin, Crosshair, Check, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Load the Google Maps JS API once, using the browser (referrer-restricted) key.
 let mapsLoaderPromise: Promise<void> | null = null;
@@ -37,7 +38,13 @@ interface Suggestion {
   placeId: string;
   primary: string;
   secondary: string;
+  location: { lat: number; lng: number };
+  formattedAddress?: string;
 }
+
+const DELIVERY_SEARCH_RADIUS_METERS = 30000;
+const MAX_RAW_SUGGESTIONS = 8;
+const MAX_DELIVERABLE_SUGGESTIONS = 5;
 
 const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
   const mapDiv = useRef<HTMLDivElement | null>(null);
@@ -111,26 +118,50 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
     setSearching(true);
     try {
       const g = (window as any).google;
-      const { AutocompleteSuggestion } = await g.maps.importLibrary("places");
+      const { AutocompleteSuggestion, Place } = await g.maps.importLibrary("places");
       const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
         input,
         sessionToken: sessionTokenRef.current,
         includedRegionCodes: ["il"],
         language: "he",
-        locationRestriction: {
+        locationBias: {
           center: DEFAULT_CENTER,
-          radius: 30000, // ~30km ≈ 25 min drive from תושיה
+          radius: DELIVERY_SEARCH_RADIUS_METERS, // Bias near תושיה; exact 25-min filter happens below.
         },
       });
-      const mapped: Suggestion[] = (results ?? [])
+      const predictions = (results ?? [])
         .map((s: any) => s.placePrediction)
         .filter(Boolean)
-        .slice(0, 6)
-        .map((p: any) => ({
-          placeId: p.placeId,
-          primary: p.structuredFormat?.mainText?.text ?? p.text?.text ?? "",
-          secondary: p.structuredFormat?.secondaryText?.text ?? "",
-        }));
+        .slice(0, MAX_RAW_SUGGESTIONS);
+
+      const checked = await Promise.allSettled(
+        predictions.map(async (p: any) => {
+          const place = new Place({ id: p.placeId });
+          await place.fetchFields({ fields: ["location", "formattedAddress"] });
+          const loc = place.location;
+          if (!loc) return null;
+
+          const coords = { lat: loc.lat(), lng: loc.lng() };
+          const { error } = await supabase.functions.invoke("calculate-delivery-price", {
+            body: coords,
+          });
+          if (error) return null;
+
+          return {
+            placeId: p.placeId,
+            primary: p.structuredFormat?.mainText?.text ?? p.text?.text ?? "",
+            secondary: p.structuredFormat?.secondaryText?.text ?? "",
+            location: coords,
+            formattedAddress: place.formattedAddress,
+          } satisfies Suggestion;
+        }),
+      );
+
+      const mapped = checked
+        .map((result) => (result.status === "fulfilled" ? result.value : null))
+        .filter((result): result is Suggestion => Boolean(result))
+        .slice(0, MAX_DELIVERABLE_SUGGESTIONS);
+
       setSuggestions(mapped);
     } catch (e) {
       console.warn("autocomplete failed", e);
@@ -149,15 +180,10 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
   const pickSuggestion = async (s: Suggestion) => {
     try {
       const g = (window as any).google;
-      const { Place } = await g.maps.importLibrary("places");
-      const place = new Place({ id: s.placeId });
-      await place.fetchFields({ fields: ["location", "formattedAddress"] });
-      const loc = place.location;
-      if (!loc) return;
-      const p = { lat: loc.lat(), lng: loc.lng() };
+      const p = s.location;
       setPicked(p);
       setSuggestions([]);
-      setSearchQuery(place.formattedAddress ?? s.primary);
+      setSearchQuery(s.formattedAddress ?? s.primary);
       if (mapRef.current && markerRef.current) {
         mapRef.current.panTo(p);
         mapRef.current.setZoom(17);
