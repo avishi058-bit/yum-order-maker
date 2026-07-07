@@ -32,9 +32,18 @@ interface CheckoutFormProps {
   onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter") => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
+  /** When set, this is a delivery order. Adds required legal ack + passes delivery data to create-order. */
+  delivery?: {
+    requestId: string;
+    address: string;
+    fee: number;
+    zoneName: string;
+    customerName: string;
+    customerPhone: string;
+  };
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, delivery }, ref) => {
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
