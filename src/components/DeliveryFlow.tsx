@@ -247,9 +247,11 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
               </div>
               <button
                 onClick={handleCalculate}
-                className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors"
+                disabled={calculating}
+                className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                חשב עלות משלוח
+                {calculating && <Loader2 className="animate-spin" size={18} />}
+                {calculating ? "מחשב מרחק..." : "חשב עלות משלוח"}
               </button>
             </div>
           )}
