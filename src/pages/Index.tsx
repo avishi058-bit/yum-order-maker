@@ -42,6 +42,8 @@ const ReopenNotifyModal = lazy(() => import("@/components/ReopenNotifyModal"));
 const OrderHistoryModal = lazy(() => import("@/components/OrderHistoryModal"));
 const OrderLiveTracker = lazy(() => import("@/components/OrderLiveTracker"));
 const FavoriteOrderModal = lazy(() => import("@/components/FavoriteOrderModal"));
+const DeliveryFlow = lazy(() => import("@/components/DeliveryFlow"));
+import type { DeliveryApprovedData } from "@/components/DeliveryFlow";
 
 import IosInstallModal from "@/components/IosInstallModal";
 import { isStandalonePwa, isIos } from "@/lib/push";
