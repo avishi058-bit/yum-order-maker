@@ -558,6 +558,7 @@ export type Database = {
           order_number: number
           order_source: string
           payment_method: string | null
+          scheduled_for: string | null
           status: string
           ten_min_notified_at: string | null
           terms_accepted_at: string | null
@@ -576,6 +577,7 @@ export type Database = {
           order_number?: number
           order_source?: string
           payment_method?: string | null
+          scheduled_for?: string | null
           status?: string
           ten_min_notified_at?: string | null
           terms_accepted_at?: string | null
@@ -594,6 +596,7 @@ export type Database = {
           order_number?: number
           order_source?: string
           payment_method?: string | null
+          scheduled_for?: string | null
           status?: string
           ten_min_notified_at?: string | null
           terms_accepted_at?: string | null
@@ -700,6 +703,9 @@ export type Database = {
           credit_enabled: boolean
           high_load: boolean
           id: string
+          preorder_enabled: boolean
+          preorder_end_time: string
+          preorder_start_time: string
           station_open: boolean
           updated_at: string
           website_open: boolean
@@ -709,6 +715,9 @@ export type Database = {
           credit_enabled?: boolean
           high_load?: boolean
           id?: string
+          preorder_enabled?: boolean
+          preorder_end_time?: string
+          preorder_start_time?: string
           station_open?: boolean
           updated_at?: string
           website_open?: boolean
@@ -718,6 +727,9 @@ export type Database = {
           credit_enabled?: boolean
           high_load?: boolean
           id?: string
+          preorder_enabled?: boolean
+          preorder_end_time?: string
+          preorder_start_time?: string
           station_open?: boolean
           updated_at?: string
           website_open?: boolean
