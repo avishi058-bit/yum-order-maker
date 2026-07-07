@@ -34,6 +34,8 @@ const EventsKitchen = lazy(() => import("./pages/EventsKitchen"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const Courier = lazy(() => import("./pages/Courier"));
+const AdminCouriers = lazy(() => import("./pages/AdminCouriers"));
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,15 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/courier" element={<Courier />} />
+              <Route
+                path="/admin/couriers"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminCouriers />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/kitchen"
                 element={
