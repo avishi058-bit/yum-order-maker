@@ -802,6 +802,33 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
+            {/* 🛵 Delivery notice — website only, when this is a delivery order */}
+            {delivery && (
+              <div className="rounded-xl border-2 border-yellow-500/60 bg-yellow-500/10 p-4 space-y-3">
+                <div className="text-sm text-foreground leading-relaxed">
+                  <div className="font-black text-base mb-1">🛵 שים לב — הזמנת משלוח</div>
+                  באתר זה אתה משלם רק על ההזמנה.<br />
+                  את דמי המשלוח (<b>{delivery.fee}₪</b> — {delivery.zoneName}) משלמים <b>ישירות לשליח</b> בעת קבלת ההזמנה.<br />
+                  ניתן לשלם לשליח באמצעות <b>Bit</b> או במזומן בלבד.
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  כתובת: {delivery.address}
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={deliveryAck}
+                    onChange={(e) => setDeliveryAck(e.target.checked)}
+                    className="mt-1 w-5 h-5 accent-primary"
+                  />
+                  <span className="text-sm font-bold text-foreground">
+                    קראתי והבנתי שהתשלום על המשלוח יתבצע ישירות לשליח.
+                  </span>
+                </label>
+              </div>
+            )}
+
+
             {/* 🕒 Preorder — schedule pickup for later within the allowed window */}
             {restaurantStatus.preorder_enabled && (() => {
               const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
