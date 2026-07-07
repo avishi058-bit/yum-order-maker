@@ -153,7 +153,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locatingQuick, setLocatingQuick] = useState(false);
 
-  const runCalculate = async (payload: { address?: string; lat?: number; lng?: number }) => {
+  const runCalculate = async (payload: { address?: string; lat?: number; lng?: number; displayAddress?: string }) => {
     if (name.trim().length < 2) {
       toast({ title: "שם חסר", variant: "destructive" });
       return;
@@ -183,7 +183,8 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         } catch { /* ignore */ }
       }
       if (!error && data && typeof data.price === "number") {
-        if (data.address) setAddress(data.address);
+        if (payload.displayAddress) setAddress(payload.displayAddress);
+        else if (data.address) setAddress(data.address);
         setMatchedZone({
           id: "auto",
           name: `${data.km} ק"מ · ${data.minutes} דק'`,
@@ -226,10 +227,10 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     );
   };
 
-  const handleMapConfirm = async (loc: { lat: number; lng: number }) => {
+  const handleMapConfirm = async (loc: { lat: number; lng: number; address?: string }) => {
     setPickerOpen(false);
-    setPickedCoords(loc);
-    await runCalculate({ lat: loc.lat, lng: loc.lng });
+    setPickedCoords({ lat: loc.lat, lng: loc.lng });
+    await runCalculate({ lat: loc.lat, lng: loc.lng, displayAddress: loc.address });
   };
 
   const handleCalculate = async () => {
