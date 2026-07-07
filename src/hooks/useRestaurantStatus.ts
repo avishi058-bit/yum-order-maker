@@ -7,10 +7,15 @@ export interface RestaurantStatus {
   cash_enabled: boolean;
   credit_enabled: boolean;
   high_load: boolean;
+  preorder_enabled: boolean;
+  preorder_start_time: string; // "HH:MM" or "HH:MM:SS"
+  preorder_end_time: string;
 }
 
+const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time";
+
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false });
+  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00" });
   const [loading, setLoading] = useState(true);
   const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
 
@@ -18,7 +23,7 @@ export const useRestaurantStatus = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("restaurant_status")
-        .select("website_open, station_open, cash_enabled, credit_enabled, high_load")
+        .select(SELECT_COLS)
         .limit(1)
         .single();
       if (data) setStatus(data as RestaurantStatus);
@@ -33,8 +38,17 @@ export const useRestaurantStatus = () => {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
         (payload) => {
-          const { website_open, station_open, cash_enabled, credit_enabled, high_load } = payload.new as RestaurantStatus;
-          setStatus({ website_open, station_open, cash_enabled, credit_enabled, high_load: high_load ?? false });
+          const n = payload.new as Partial<RestaurantStatus>;
+          setStatus((prev) => ({
+            website_open: n.website_open ?? prev.website_open,
+            station_open: n.station_open ?? prev.station_open,
+            cash_enabled: n.cash_enabled ?? prev.cash_enabled,
+            credit_enabled: n.credit_enabled ?? prev.credit_enabled,
+            high_load: n.high_load ?? prev.high_load,
+            preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
+            preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
+            preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
+          }));
         }
       )
       .subscribe();
@@ -92,5 +106,15 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, high_load: on }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, closeAll, openAll };
+  const togglePreorder = async (on: boolean) => {
+    await supabase.from("restaurant_status").update({ preorder_enabled: on }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, preorder_enabled: on }));
+  };
+
+  const setPreorderWindow = async (start: string, end: string) => {
+    await supabase.from("restaurant_status").update({ preorder_start_time: start, preorder_end_time: end }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, preorder_start_time: start, preorder_end_time: end }));
+  };
+
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, closeAll, openAll };
 };

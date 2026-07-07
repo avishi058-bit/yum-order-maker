@@ -276,7 +276,7 @@ const NORMAL_RING_MS = 5000;
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
-  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -1701,6 +1701,38 @@ const Kitchen = () => {
                   <span>{restaurantStatus.high_load ? "פעיל — לקוחות רואים התראה" : "כבוי"}</span>
                 </button>
 
+                {/* 🕒 Preorder (הזמנה מראש) */}
+                <div className={`rounded-lg border-2 ${restaurantStatus.preorder_enabled ? "border-blue-500/50 bg-blue-500/10" : "border-transparent bg-muted/30"} p-2 space-y-2`}>
+                  <button
+                    onClick={() => togglePreorder(!restaurantStatus.preorder_enabled)}
+                    className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                      restaurantStatus.preorder_enabled ? "bg-blue-500/20 text-blue-300" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">🕒 הזמנה מראש לשעה</span>
+                    <span>{restaurantStatus.preorder_enabled ? "פעיל" : "כבוי"}</span>
+                  </button>
+                  {restaurantStatus.preorder_enabled && (
+                    <div className="flex items-center gap-2 text-xs text-foreground px-1">
+                      <span className="text-muted-foreground">שעות זמינות:</span>
+                      <input
+                        type="time"
+                        value={(restaurantStatus.preorder_start_time || "10:00").slice(0, 5)}
+                        onChange={(e) => setPreorderWindow(e.target.value, (restaurantStatus.preorder_end_time || "22:00").slice(0, 5))}
+                        className="bg-secondary border border-border rounded px-2 py-1 text-foreground"
+                      />
+                      <span>עד</span>
+                      <input
+                        type="time"
+                        value={(restaurantStatus.preorder_end_time || "22:00").slice(0, 5)}
+                        onChange={(e) => setPreorderWindow((restaurantStatus.preorder_start_time || "10:00").slice(0, 5), e.target.value)}
+                        className="bg-secondary border border-border rounded px-2 py-1 text-foreground"
+                      />
+                    </div>
+                  )}
+                </div>
+
+
                 <div className="pt-1 border-t border-border">
 
                   {restaurantStatus.website_open || restaurantStatus.station_open ? (
@@ -2227,6 +2259,11 @@ const Kitchen = () => {
                   )}
                   {order.notes && (
                     <p className="text-sm text-primary mt-1">📝 {order.notes}</p>
+                  )}
+                  {(order as any).scheduled_for && (
+                    <p className="text-sm font-bold text-blue-400 mt-1">
+                      🕒 הזמנה מראש ל־{new Date((order as any).scheduled_for).toLocaleString("he-IL", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+                    </p>
                   )}
                   {order.payment_method === "cash" && (
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
