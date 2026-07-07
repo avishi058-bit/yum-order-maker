@@ -86,6 +86,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [saveFavoritePromptOpen, setSaveFavoritePromptOpen] = useState(false);
   const { status: restaurantStatus } = useRestaurantStatus();
+  // Preorder scheduling — pick a future pickup time within the allowed window.
+  const [preorderEnabled, setPreorderEnabled] = useState(false);
+  const [preorderTime, setPreorderTime] = useState<string>(""); // "HH:MM" today
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
