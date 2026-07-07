@@ -7,10 +7,15 @@ export interface RestaurantStatus {
   cash_enabled: boolean;
   credit_enabled: boolean;
   high_load: boolean;
+  preorder_enabled: boolean;
+  preorder_start_time: string; // "HH:MM" or "HH:MM:SS"
+  preorder_end_time: string;
 }
 
+const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time";
+
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false });
+  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00" });
   const [loading, setLoading] = useState(true);
   const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
 
