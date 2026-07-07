@@ -24,13 +24,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const rawBody = await req.text();
+    let body: any = {};
+    try { body = rawBody ? JSON.parse(rawBody) : {}; } catch { body = {}; }
+    console.log('calculate-delivery-price body:', rawBody);
+
     const address = String(body?.address ?? '').trim();
-    const lat = typeof body?.lat === 'number' ? body.lat : null;
-    const lng = typeof body?.lng === 'number' ? body.lng : null;
-    const hasCoords = lat !== null && lng !== null;
+    const latNum = Number(body?.lat);
+    const lngNum = Number(body?.lng);
+    const hasCoords = Number.isFinite(latNum) && Number.isFinite(lngNum);
+    const lat = hasCoords ? latNum : null;
+    const lng = hasCoords ? lngNum : null;
     if (!hasCoords && address.length < 5) {
-      return new Response(JSON.stringify({ error: 'invalid_address' }), {
+      console.error('invalid_address, parsed body:', body);
+      return new Response(JSON.stringify({ error: 'invalid_address', received: body }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
