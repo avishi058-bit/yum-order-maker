@@ -106,6 +106,9 @@ const BodySchema = z.object({
   // Required: legal proof that the customer accepted Terms + Privacy at order time.
   // Without this the order is rejected (no silent default).
   termsAcceptedAt: z.string().datetime({ message: "termsAcceptedAt must be ISO datetime" }),
+  // Optional: customer-requested pickup time (ISO datetime). When set, order is
+  // scheduled — kitchen displays it and can start preparing closer to the time.
+  scheduledFor: z.string().datetime().nullable().optional(),
   items: z.array(CartItemSchema).min(1).max(50),
   // Optional: sauces selected at checkout (chef-summary use). Server adds the
   // extra-sauce charge (1₪ per sauce above the free quota) to the total and
