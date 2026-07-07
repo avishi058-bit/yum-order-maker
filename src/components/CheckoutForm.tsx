@@ -238,6 +238,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       });
       return;
     }
+    // Delivery: force ack before any payment path
+    if (delivery && !deliveryAck) {
+      toast({
+        title: "יש לאשר את הודעת המשלוח",
+        description: "יש לסמן שהתשלום על המשלוח יתבצע ישירות לשליח",
+        variant: "destructive",
+      });
+      return;
+    }
     setPaymentMethod(method);
 
     if (method === "credit") {
