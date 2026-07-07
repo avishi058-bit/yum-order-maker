@@ -27,7 +27,7 @@ const loadMaps = (): Promise<void> => {
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: (loc: { lat: number; lng: number }) => void;
+  onConfirm: (loc: { lat: number; lng: number; address?: string }) => void;
   initial?: { lat: number; lng: number } | null;
 }
 
