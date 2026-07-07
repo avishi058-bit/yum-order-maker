@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, MapPin, Crosshair, Check } from "lucide-react";
+import { X, Loader2, MapPin, Crosshair, Check, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 // Load the Google Maps JS API once, using the browser (referrer-restricted) key.
@@ -15,7 +15,7 @@ const loadMaps = (): Promise<void> => {
     if (!key) return reject(new Error("missing browser key"));
     (window as any).__initDeliveryMap = () => resolve();
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__initDeliveryMap&channel=${channel ?? ""}&language=he&region=IL`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&libraries=places&callback=__initDeliveryMap&channel=${channel ?? ""}&language=he&region=IL`;
     s.async = true;
     s.onerror = () => reject(new Error("maps script failed"));
     document.head.appendChild(s);
@@ -30,16 +30,27 @@ interface Props {
   initial?: { lat: number; lng: number } | null;
 }
 
-// Default: תושיה — origin of the restaurant
-const DEFAULT_CENTER = { lat: 32.5822, lng: 35.1961 };
+// Default: תושיה (מושב תושיה, עמק יזרעאל)
+const DEFAULT_CENTER = { lat: 32.5286, lng: 35.2361 };
+
+interface Suggestion {
+  placeId: string;
+  primary: string;
+  secondary: string;
+}
 
 const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
   const mapDiv = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const sessionTokenRef = useRef<any>(null);
+  const searchDebounceRef = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
   const [locating, setLocating] = useState(false);
   const [picked, setPicked] = useState<{ lat: number; lng: number } | null>(initial ?? null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +78,14 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
           const p = marker.getPosition();
           setPicked({ lat: p.lat(), lng: p.lng() });
         });
+
+        try {
+          const { AutocompleteSessionToken } = await g.maps.importLibrary("places");
+          sessionTokenRef.current = new AutocompleteSessionToken();
+        } catch (e) {
+          console.warn("places lib failed", e);
+        }
+
         setReady(true);
       } catch (e) {
         console.error(e);
@@ -78,8 +97,76 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
       setReady(false);
       mapRef.current = null;
       markerRef.current = null;
+      sessionTokenRef.current = null;
+      setSuggestions([]);
+      setSearchQuery("");
     };
   }, [open, initial]);
+
+  const runSearch = async (input: string) => {
+    if (!input || input.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const g = (window as any).google;
+      const { AutocompleteSuggestion } = await g.maps.importLibrary("places");
+      const { suggestions: results } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input,
+        sessionToken: sessionTokenRef.current,
+        includedRegionCodes: ["il"],
+        language: "he",
+      });
+      const mapped: Suggestion[] = (results ?? [])
+        .map((s: any) => s.placePrediction)
+        .filter(Boolean)
+        .slice(0, 6)
+        .map((p: any) => ({
+          placeId: p.placeId,
+          primary: p.structuredFormat?.mainText?.text ?? p.text?.text ?? "",
+          secondary: p.structuredFormat?.secondaryText?.text ?? "",
+        }));
+      setSuggestions(mapped);
+    } catch (e) {
+      console.warn("autocomplete failed", e);
+      setSuggestions([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const onSearchChange = (v: string) => {
+    setSearchQuery(v);
+    if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = window.setTimeout(() => runSearch(v), 250);
+  };
+
+  const pickSuggestion = async (s: Suggestion) => {
+    try {
+      const g = (window as any).google;
+      const { Place } = await g.maps.importLibrary("places");
+      const place = new Place({ id: s.placeId });
+      await place.fetchFields({ fields: ["location", "formattedAddress"] });
+      const loc = place.location;
+      if (!loc) return;
+      const p = { lat: loc.lat(), lng: loc.lng() };
+      setPicked(p);
+      setSuggestions([]);
+      setSearchQuery(place.formattedAddress ?? s.primary);
+      if (mapRef.current && markerRef.current) {
+        mapRef.current.panTo(p);
+        mapRef.current.setZoom(17);
+        markerRef.current.setPosition(p);
+      }
+      // reset session token after selection
+      const { AutocompleteSessionToken } = await g.maps.importLibrary("places");
+      sessionTokenRef.current = new AutocompleteSessionToken();
+    } catch (e) {
+      console.warn("place details failed", e);
+      toast({ title: "שגיאה בטעינת המקום", variant: "destructive" });
+    }
+  };
 
   const useCurrentLocation = () => {
     if (!("geolocation" in navigator)) {
@@ -134,8 +221,44 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
             <MapPin size={18} className="text-primary" /> בחר/י מיקום למשלוח
           </h3>
           <p className="text-xs text-muted-foreground">
-            הקש/י על המפה או גרר/י את הסיכה למיקום המדויק.
+            חפש/י כתובת, הקש/י על המפה או גרר/י את הסיכה למיקום המדויק.
           </p>
+
+          <div className="relative">
+            <div className="relative">
+              <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <input
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="חפש/י כתובת או מקום..."
+                className="w-full pr-9 pl-9 py-2.5 rounded-xl bg-secondary border-2 border-border text-foreground text-sm focus:border-primary/60 focus:outline-none"
+              />
+              {searching && (
+                <Loader2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            {suggestions.length > 0 && (
+              <ul className="absolute z-20 right-0 left-0 mt-1 max-h-64 overflow-auto rounded-xl bg-card border border-border shadow-xl">
+                {suggestions.map((s) => (
+                  <li key={s.placeId}>
+                    <button
+                      type="button"
+                      onClick={() => pickSuggestion(s)}
+                      className="w-full text-right px-3 py-2 hover:bg-secondary flex items-start gap-2 border-b border-border/50 last:border-b-0"
+                    >
+                      <MapPin size={14} className="text-primary mt-0.5 shrink-0" />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm text-foreground font-bold truncate">{s.primary}</span>
+                        {s.secondary && (
+                          <span className="block text-xs text-muted-foreground truncate">{s.secondary}</span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <button
             onClick={useCurrentLocation}
@@ -146,7 +269,7 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
             השתמש/י במיקום הנוכחי שלי
           </button>
 
-          <div className="relative w-full h-[55vh] max-h-[420px] rounded-xl overflow-hidden border border-border bg-secondary">
+          <div className="relative w-full h-[45vh] max-h-[380px] rounded-xl overflow-hidden border border-border bg-secondary">
             {!ready && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Loader2 className="animate-spin text-primary" size={28} />
