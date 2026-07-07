@@ -95,7 +95,9 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     return () => { supabase.removeChannel(channel); };
   }, [requestId, stage, address, matchedZone, name, phone, onApproved]);
 
-  const handleCalculate = () => {
+  const [calculating, setCalculating] = useState(false);
+
+  const handleCalculate = async () => {
     const a = address.trim();
     if (a.length < 5) {
       toast({ title: "כתובת קצרה מדי", description: "הזן/י כתובת מלאה", variant: "destructive" });
@@ -109,6 +111,29 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       toast({ title: "טלפון חסר", variant: "destructive" });
       return;
     }
+
+    setCalculating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("calculate-delivery-price", {
+        body: { address: a },
+      });
+      if (!error && data && typeof data.price === "number") {
+        setMatchedZone({
+          id: "auto",
+          name: `${data.km} ק"מ · ${data.minutes} דק'`,
+          price: data.price,
+          keywords: [],
+          active: true,
+        });
+        setStage("quoted");
+        return;
+      }
+      console.warn("Auto price failed, falling back to zones", error);
+    } finally {
+      setCalculating(false);
+    }
+
+    // Fallback: keyword-based zone matching
     const z = matchZone(a, zones);
     if (!z) {
       toast({ title: "לצערנו איננו מגיעים לאזור זה", description: "נסה/י כתובת אחרת", variant: "destructive" });
@@ -131,7 +156,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         customer_name: name.trim(),
         customer_phone: phone.trim(),
         address: address.trim(),
-        zone_id: matchedZone.id,
+        zone_id: matchedZone.id === "auto" ? null : matchedZone.id,
         zone_name: matchedZone.name,
         price: matchedZone.price,
         status: "pending",
@@ -222,9 +247,11 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
               </div>
               <button
                 onClick={handleCalculate}
-                className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors"
+                disabled={calculating}
+                className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                חשב עלות משלוח
+                {calculating && <Loader2 className="animate-spin" size={18} />}
+                {calculating ? "מחשב מרחק..." : "חשב עלות משלוח"}
               </button>
             </div>
           )}
