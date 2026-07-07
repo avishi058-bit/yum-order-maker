@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, MapPin, Bike } from "lucide-react";
+import { X, Loader2, MapPin, Bike, Bell, BellRing, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import { isPushSupported, iosNeedsInstall, isIos, ensureServiceWorker } from "@/lib/push";
 
 export interface DeliveryApprovedData {
   requestId: string;
@@ -75,9 +76,22 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "delivery_requests", filter: `id=eq.${requestId}` },
-        (payload) => {
+        async (payload) => {
           const row = payload.new as { status: string };
           if (row.status === "approved") {
+            // Fire local/push notification if user opted in
+            try {
+              if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+                const reg = await navigator.serviceWorker?.getRegistration("/sw.js");
+                const title = "🛵 נמצא שליח!";
+                const body = "השליח בדרך אליך — פתח/י את האפליקציה להשלמת ההזמנה";
+                if (reg) {
+                  reg.showNotification(title, { body, icon: "/favicon.ico", badge: "/favicon.ico", tag: "delivery-approved" });
+                } else {
+                  new Notification(title, { body, icon: "/favicon.ico" });
+                }
+              }
+            } catch (e) { console.warn("notify failed", e); }
             onApproved({
               requestId,
               address,
@@ -96,6 +110,41 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   }, [requestId, stage, address, matchedZone, name, phone, onApproved]);
 
   const [calculating, setCalculating] = useState(false);
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "enabled" | "denied" | "unsupported" | "ios_install">(() => {
+    if (typeof Notification === "undefined") return "unsupported";
+    if (Notification.permission === "granted") return "enabled";
+    return "idle";
+  });
+  const [notifyBusy, setNotifyBusy] = useState(false);
+  const [showNotifyHelp, setShowNotifyHelp] = useState(false);
+
+  const handleEnableNotify = async () => {
+    if (!isPushSupported()) {
+      setNotifyStatus("unsupported");
+      setShowNotifyHelp(true);
+      return;
+    }
+    if (iosNeedsInstall()) {
+      setNotifyStatus("ios_install");
+      setShowNotifyHelp(true);
+      return;
+    }
+    setNotifyBusy(true);
+    try {
+      await ensureServiceWorker();
+      const perm = await Notification.requestPermission();
+      if (perm === "granted") {
+        setNotifyStatus("enabled");
+        toast({ title: "מעולה! נעדכן אותך כשיימצא שליח 🛵" });
+      } else {
+        setNotifyStatus("denied");
+        setShowNotifyHelp(true);
+      }
+    } finally {
+      setNotifyBusy(false);
+    }
+  };
+
 
   const handleCalculate = async () => {
     const a = address.trim();
@@ -301,12 +350,69 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 נעדכן אותך מיד כשיימצא שליח. נשאר במסך זה — ההזמנה תיפתח אוטומטית.
               </p>
+
+              {notifyStatus === "enabled" ? (
+                <div className="rounded-xl bg-green-500/10 border border-green-500/40 p-3 text-sm text-foreground flex items-center justify-center gap-2">
+                  <Check size={18} className="text-green-500" />
+                  ההתראות מופעלות — נעדכן אותך ברגע שיימצא שליח
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={handleEnableNotify}
+                    disabled={notifyBusy}
+                    className="w-full bg-primary/15 border-2 border-primary/40 text-foreground font-bold py-3 rounded-xl hover:bg-primary/25 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {notifyBusy ? <Loader2 className="animate-spin" size={18} /> : <BellRing size={18} className="text-primary" />}
+                    עדכנו אותי כשמגיע שליח
+                  </button>
+                  <button
+                    onClick={() => setShowNotifyHelp((v) => !v)}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    {showNotifyHelp ? "הסתר הוראות" : "איך זה עובד?"}
+                  </button>
+                </>
+              )}
+
+              {showNotifyHelp && notifyStatus !== "enabled" && (
+                <div className="rounded-lg bg-secondary/60 border border-border p-3 text-right text-xs text-foreground leading-relaxed space-y-2">
+                  <p className="font-bold flex items-center gap-1 justify-end">
+                    <Bell size={14} className="text-primary" />
+                    כדי לקבל התראה כשיימצא שליח:
+                  </p>
+                  {notifyStatus === "ios_install" || isIos() ? (
+                    <ol className="list-decimal pr-5 space-y-1">
+                      <li>לחצו על כפתור השיתוף בסאפארי <b>⬆︎</b> ובחרו <b>"הוסף למסך הבית"</b>.</li>
+                      <li>פתחו את האפליקציה מהאייקון שנוצר במסך הבית.</li>
+                      <li>חזרו למסך זה ולחצו שוב על <b>"עדכנו אותי"</b> ואשרו התראות.</li>
+                      <li>אפשר לצאת מהאפליקציה — נשלח לכם התראה כשיימצא שליח.</li>
+                    </ol>
+                  ) : notifyStatus === "denied" ? (
+                    <ol className="list-decimal pr-5 space-y-1">
+                      <li>ההתראות חסומות בדפדפן. פתחו את הגדרות האתר (סמל 🔒 בסרגל הכתובת).</li>
+                      <li>שנו את "התראות" ל<b>"אפשר"</b>.</li>
+                      <li>רעננו את הדף ולחצו שוב על <b>"עדכנו אותי"</b>.</li>
+                    </ol>
+                  ) : notifyStatus === "unsupported" ? (
+                    <p>הדפדפן שלכם לא תומך בהתראות. השאירו את המסך פתוח — ההזמנה תיפתח אוטומטית כשיימצא שליח.</p>
+                  ) : (
+                    <ol className="list-decimal pr-5 space-y-1">
+                      <li>לחצו על <b>"עדכנו אותי כשמגיע שליח"</b>.</li>
+                      <li>אשרו את בקשת ההתראות שתופיע בדפדפן.</li>
+                      <li>אפשר לסגור את המסך — נשלח לכם התראה ברגע שיימצא שליח 🛵</li>
+                    </ol>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={handleCancelSearch}
                 className="text-sm text-destructive hover:underline"
               >
                 ביטול הבקשה
               </button>
+
             </div>
           )}
 
