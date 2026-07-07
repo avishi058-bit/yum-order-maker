@@ -88,6 +88,8 @@ const Index = () => {
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
   const [arayesItem, setArayesItem] = useState<MenuItem | null>(null);
   const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : null);
+  const [deliveryFlowOpen, setDeliveryFlowOpen] = useState(false);
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryApprovedData | null>(null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
