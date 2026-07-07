@@ -593,7 +593,14 @@ const Index = () => {
         </div>
       )}
 
-      {!isStation && <HeroSection onDineInChoice={isClosed ? undefined : handleDineInChoice} dineIn={dineIn} />}
+      {!isStation && (
+        <HeroSection
+          onDineInChoice={isClosed ? undefined : handleDineInChoice}
+          onDeliveryChoice={isClosed ? undefined : handleDeliveryChoice}
+          showDelivery={restaurantStatus.delivery_enabled}
+          dineIn={dineIn}
+        />
+      )}
       {isClosed ? (
         <div className="py-16 text-center px-6">
           <p className="text-6xl mb-4">{isManualClosure ? "⏸️" : "🔒"}</p>
