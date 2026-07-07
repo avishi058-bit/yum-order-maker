@@ -105,6 +105,7 @@ Deno.serve(async (req) => {
       km: Math.round(km * 10) / 10,
       minutes: Math.round(minutes),
       raw: Math.round(raw * 100) / 100,
+      address: resolvedAddress,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('calculate-delivery-price error', e);
