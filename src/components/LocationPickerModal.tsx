@@ -134,6 +134,18 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
         .filter(Boolean)
         .slice(0, MAX_RAW_SUGGESTIONS);
 
+      const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+        const toRad = (d: number) => (d * Math.PI) / 180;
+        const R = 6371;
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const s =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+        return 2 * R * Math.asin(Math.sqrt(s));
+      };
+      const MAX_STRAIGHT_KM = 22; // ~25 min drive from תושיה
+
       const checked = await Promise.allSettled(
         predictions.map(async (p: any) => {
           const place = new Place({ id: p.placeId });
@@ -142,10 +154,7 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
           if (!loc) return null;
 
           const coords = { lat: loc.lat(), lng: loc.lng() };
-          const { error } = await supabase.functions.invoke("calculate-delivery-price", {
-            body: coords,
-          });
-          if (error) return null;
+          if (haversineKm(DEFAULT_CENTER, coords) > MAX_STRAIGHT_KM) return null;
 
           return {
             placeId: p.placeId,
