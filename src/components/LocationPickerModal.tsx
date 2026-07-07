@@ -40,7 +40,12 @@ interface Suggestion {
   secondary: string;
   location: { lat: number; lng: number };
   formattedAddress?: string;
+  excluded?: boolean;
 }
+
+export const EXCLUDED_LOCALITIES = ["כפר מימון", "תושיה"];
+export const isExcludedText = (text: string) =>
+  EXCLUDED_LOCALITIES.some((name) => text?.includes(name));
 
 const DELIVERY_SEARCH_RADIUS_METERS = 30000;
 const MAX_RAW_SUGGESTIONS = 8;
@@ -146,25 +151,20 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
       };
       const MAX_STRAIGHT_KM = 22; // ~25 min drive from תושיה
 
-      const EXCLUDED_LOCALITIES = ["כפר מימון", "תושיה"];
-      const isExcluded = (text: string) =>
-        EXCLUDED_LOCALITIES.some((name) => text?.includes(name));
-
       const checked = await Promise.allSettled(
         predictions.map(async (p: any) => {
           const primary = p.structuredFormat?.mainText?.text ?? p.text?.text ?? "";
           const secondary = p.structuredFormat?.secondaryText?.text ?? "";
-          if (isExcluded(primary) || isExcluded(secondary)) return null;
+          const excludedByText = isExcludedText(primary) || isExcludedText(secondary);
 
           const place = new Place({ id: p.placeId });
           await place.fetchFields({ fields: ["location", "formattedAddress"] });
           const loc = place.location;
           if (!loc) return null;
 
-          if (isExcluded(place.formattedAddress ?? "")) return null;
-
           const coords = { lat: loc.lat(), lng: loc.lng() };
-          if (haversineKm(DEFAULT_CENTER, coords) > MAX_STRAIGHT_KM) return null;
+          const excluded = excludedByText || isExcludedText(place.formattedAddress ?? "");
+          if (!excluded && haversineKm(DEFAULT_CENTER, coords) > MAX_STRAIGHT_KM) return null;
 
           return {
             placeId: p.placeId,
@@ -172,6 +172,7 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
             secondary,
             location: coords,
             formattedAddress: place.formattedAddress,
+            excluded,
           } satisfies Suggestion;
         }),
       );
@@ -292,14 +293,22 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
                   <li key={s.placeId}>
                     <button
                       type="button"
-                      onClick={() => pickSuggestion(s)}
-                      className="w-full text-right px-3 py-2 hover:bg-secondary flex items-start gap-2 border-b border-border/50 last:border-b-0"
+                      onClick={() => !s.excluded && pickSuggestion(s)}
+                      disabled={s.excluded}
+                      className={`w-full text-right px-3 py-2 flex items-start gap-2 border-b border-border/50 last:border-b-0 ${
+                        s.excluded ? "opacity-60 cursor-not-allowed bg-destructive/5" : "hover:bg-secondary"
+                      }`}
                     >
-                      <MapPin size={14} className="text-primary mt-0.5 shrink-0" />
+                      <MapPin size={14} className={`${s.excluded ? "text-destructive" : "text-primary"} mt-0.5 shrink-0`} />
                       <span className="flex-1 min-w-0">
                         <span className="block text-sm text-foreground font-bold truncate">{s.primary}</span>
                         {s.secondary && (
                           <span className="block text-xs text-muted-foreground truncate">{s.secondary}</span>
+                        )}
+                        {s.excluded && (
+                          <span className="block text-[11px] font-bold text-destructive mt-0.5">
+                            אין משלוחים לאזור זה
+                          </span>
                         )}
                       </span>
                     </button>
