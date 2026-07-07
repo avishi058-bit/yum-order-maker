@@ -26,13 +26,53 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const address = String(body?.address ?? '').trim();
-    if (address.length < 5) {
+    const lat = typeof body?.lat === 'number' ? body.lat : null;
+    const lng = typeof body?.lng === 'number' ? body.lng : null;
+    const hasCoords = lat !== null && lng !== null;
+    if (!hasCoords && address.length < 5) {
       return new Response(JSON.stringify({ error: 'invalid_address' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    // If we got coords, reverse-geocode so we can echo a human-readable address
+    let resolvedAddress = address;
+    if (hasCoords) {
+      try {
+        const geoRes = await fetch(
+          `${GATEWAY_URL}/maps/api/geocode/json?latlng=${lat},${lng}&language=he&region=IL`,
+          { headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'X-Connection-Api-Key': GOOGLE_MAPS_API_KEY } },
+        );
+        if (geoRes.ok) {
+          const geo: any = await geoRes.json();
+          resolvedAddress = geo?.results?.[0]?.formatted_address ?? `${lat},${lng}`;
+        } else {
+          resolvedAddress = `${lat},${lng}`;
+        }
+      } catch { resolvedAddress = `${lat},${lng}`; }
+    }
+
+    const destination = hasCoords
+      ? { location: { latLng: { latitude: lat, longitude: lng } } }
+      : { address };
+
     const routesRes = await fetch(`${GATEWAY_URL}/routes/directions/v2:computeRoutes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'X-Connection-Api-Key': GOOGLE_MAPS_API_KEY,
+        'Content-Type': 'application/json',
+        'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters',
+      },
+      body: JSON.stringify({
+        origin: { address: ORIGIN_ADDRESS },
+        destination,
+        travelMode: 'DRIVE',
+        routingPreference: 'TRAFFIC_AWARE',
+        languageCode: 'he',
+        regionCode: 'IL',
+      }),
+    });
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
