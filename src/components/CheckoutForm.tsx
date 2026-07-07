@@ -318,7 +318,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           .filter((s) => s.quantity > 0)
           .map((s) => ({ id: s.id, name: s.name, quantity: s.quantity })),
         freeSauces,
-      },
+        // Preorder pickup time (optional). ISO datetime built from today + HH:MM.
+        scheduledFor: (() => {
+          if (!preorderEnabled || !preorderTime) return null;
+          const [h, m] = preorderTime.split(":").map(Number);
+          if (Number.isNaN(h) || Number.isNaN(m)) return null;
+          const d = new Date();
+          d.setHours(h, m, 0, 0);
+          if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
+          return d.toISOString();
+        })(),
     });
 
     if (error) {
