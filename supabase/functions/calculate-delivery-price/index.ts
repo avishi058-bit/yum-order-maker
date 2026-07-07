@@ -104,6 +104,20 @@ Deno.serve(async (req) => {
 
     const km = distanceMeters / 1000;
     const minutes = durationSec / 60;
+
+    // Only deliver within 25 minutes driving from origin
+    if (minutes > 25) {
+      return new Response(JSON.stringify({
+        error: 'out_of_range',
+        message: 'לצערנו איננו מגיעים לאזור זה. אנחנו מבצעים משלוחים עד 25 דקות נסיעה בלבד.',
+        minutes: Math.round(minutes),
+        km: Math.round(km * 10) / 10,
+        address: resolvedAddress,
+      }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const raw = (minutes + km) * MULTIPLIER;
     const price = roundHalfDown(raw);
 

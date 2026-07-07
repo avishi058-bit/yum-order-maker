@@ -167,6 +167,21 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       const { data, error } = await supabase.functions.invoke("calculate-delivery-price", {
         body: payload,
       });
+      // Out-of-range (25 min limit) — surface friendly message
+      const errAny = error as any;
+      if (errAny) {
+        try {
+          const details = errAny?.context ? await errAny.context.json() : null;
+          if (details?.error === "out_of_range") {
+            toast({
+              title: "מחוץ לאזור המשלוח",
+              description: details.message ?? "אנחנו מבצעים משלוחים עד 25 דקות נסיעה בלבד.",
+              variant: "destructive",
+            });
+            return true; // handled — don't fall through to zones
+          }
+        } catch { /* ignore */ }
+      }
       if (!error && data && typeof data.price === "number") {
         if (data.address) setAddress(data.address);
         setMatchedZone({
