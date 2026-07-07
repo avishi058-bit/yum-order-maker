@@ -884,6 +884,13 @@ const Index = () => {
         )}
 
         <IosInstallModal open={installModalOpen} onClose={() => setInstallModalOpen(false)} />
+        {deliveryFlowOpen && (
+          <DeliveryFlow
+            open={deliveryFlowOpen}
+            onClose={() => setDeliveryFlowOpen(false)}
+            onApproved={handleDeliveryApproved}
+          />
+        )}
         <IosInstallModal
           open={postInstallInstructionsOpen}
           postInstallOpen
