@@ -40,7 +40,12 @@ interface Suggestion {
   secondary: string;
   location: { lat: number; lng: number };
   formattedAddress?: string;
+  excluded?: boolean;
 }
+
+export const EXCLUDED_LOCALITIES = ["כפר מימון", "תושיה"];
+export const isExcludedText = (text: string) =>
+  EXCLUDED_LOCALITIES.some((name) => text?.includes(name));
 
 const DELIVERY_SEARCH_RADIUS_METERS = 30000;
 const MAX_RAW_SUGGESTIONS = 8;
