@@ -367,7 +367,62 @@ const Screen = ({ children }: { children: React.ReactNode }) => (
 );
 
 // ─── Install gate: forces PWA install before use ───
+// ─── Location gate: forces GPS permission before use ───
+const LocationGate = ({ state, onGranted }: { state: PermissionState | "unknown"; onGranted: () => void }) => {
+  const [busy, setBusy] = useState(false);
+  const request = () => {
+    if (!("geolocation" in navigator)) {
+      toast({ title: "המכשיר לא תומך במיקום", variant: "destructive" });
+      return;
+    }
+    setBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      () => { setBusy(false); onGranted(); },
+      (err) => {
+        setBusy(false);
+        toast({
+          title: "צריך לאשר גישה למיקום",
+          description: err.message || "פתח את הגדרות הטלפון ואפשר מיקום לאפליקציה.",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  };
+
+  return (
+    <Screen>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> אשר גישה למיקום</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p className="text-muted-foreground">
+            אפליקציית השליחים חייבת גישה למיקום כדי לשלוח לך משלוחים קרובים ולעדכן את המנהל איפה אתה. ללא אישור מיקום לא ניתן להשתמש באפליקציה.
+          </p>
+          {state === "denied" ? (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 space-y-2">
+              <p className="font-semibold text-destructive">המיקום חסום</p>
+              <p className="text-muted-foreground">
+                פתח את הגדרות הטלפון ← הרשאות ← אפשר "מיקום" לאפליקציית הבקתה, ואז חזור לאפליקציה.
+              </p>
+            </div>
+          ) : (
+            <Button className="w-full h-12" onClick={request} disabled={busy}>
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <><MapPin className="ml-2 h-5 w-5" /> אפשר מיקום</>}
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground text-center">
+            המיקום משמש רק לשליחת משלוחים ולניווט. אין שיתוף עם צד שלישי.
+          </p>
+        </CardContent>
+      </Card>
+    </Screen>
+  );
+};
+
 const InstallGate = () => {
+
   const [deferred, setDeferred] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
 
