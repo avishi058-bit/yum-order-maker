@@ -326,26 +326,44 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
                   maxLength={20}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold mb-1 text-foreground flex items-center gap-1">
-                  <MapPin size={14} /> כתובת מלאה למשלוח
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-foreground flex items-center gap-1">
+                  <MapPin size={14} /> מיקום למשלוח
                 </label>
-                <input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground"
-                  placeholder="ישוב, רחוב ומספר בית"
-                  maxLength={200}
-                />
+
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={locatingQuick || calculating}
+                  className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {locatingQuick ? <Loader2 className="animate-spin" size={18} /> : <Crosshair size={18} />}
+                  {locatingQuick ? "מאתר מיקום..." : "השתמש/י במיקום הנוכחי שלי"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  disabled={calculating}
+                  className="w-full bg-secondary border-2 border-border text-foreground font-bold py-2.5 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <MapPin size={16} className="text-primary" />
+                  בחר/י מיקום אחר על המפה
+                </button>
+
+                {address && (
+                  <div className="mt-2 rounded-lg bg-secondary/60 border border-border p-2.5 text-xs text-foreground flex items-start gap-2">
+                    <MapPin size={14} className="text-primary shrink-0 mt-0.5" />
+                    <span className="flex-1 leading-relaxed">{address}</span>
+                  </div>
+                )}
+
+                {calculating && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
+                    <Loader2 className="animate-spin" size={16} /> מחשב מרחק ומחיר...
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleCalculate}
-                disabled={calculating}
-                className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {calculating && <Loader2 className="animate-spin" size={18} />}
-                {calculating ? "מחשב מרחק..." : "חשב עלות משלוח"}
-              </button>
             </div>
           )}
 
