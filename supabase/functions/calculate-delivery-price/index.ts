@@ -2,7 +2,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_maps';
-const ORIGIN_ADDRESS = 'תושיה ערבי הנחל 22, ישראל';
+const ORIGIN_ADDRESS = 'דרך ערבי נחל 21, תושיה, ישראל';
 const MULTIPLIER = 1.7;
 
 // Round with 0.5 going DOWN. e.g. 12.5 -> 12, 12.51 -> 13, 12.49 -> 12
