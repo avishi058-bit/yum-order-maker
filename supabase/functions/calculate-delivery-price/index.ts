@@ -73,22 +73,7 @@ Deno.serve(async (req) => {
         regionCode: 'IL',
       }),
     });
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'X-Connection-Api-Key': GOOGLE_MAPS_API_KEY,
-        'Content-Type': 'application/json',
-        'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters',
-      },
-      body: JSON.stringify({
-        origin: { address: ORIGIN_ADDRESS },
-        destination: { address },
-        travelMode: 'DRIVE',
-        routingPreference: 'TRAFFIC_AWARE',
-        languageCode: 'he',
-        regionCode: 'IL',
-      }),
-    });
+
 
     if (!routesRes.ok) {
       const details = await routesRes.text();
