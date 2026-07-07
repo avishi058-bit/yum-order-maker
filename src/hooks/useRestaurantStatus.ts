@@ -23,7 +23,7 @@ export const useRestaurantStatus = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("restaurant_status")
-        .select("website_open, station_open, cash_enabled, credit_enabled, high_load")
+        .select(SELECT_COLS)
         .limit(1)
         .single();
       if (data) setStatus(data as RestaurantStatus);
@@ -38,8 +38,17 @@ export const useRestaurantStatus = () => {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
         (payload) => {
-          const { website_open, station_open, cash_enabled, credit_enabled, high_load } = payload.new as RestaurantStatus;
-          setStatus({ website_open, station_open, cash_enabled, credit_enabled, high_load: high_load ?? false });
+          const n = payload.new as Partial<RestaurantStatus>;
+          setStatus((prev) => ({
+            website_open: n.website_open ?? prev.website_open,
+            station_open: n.station_open ?? prev.station_open,
+            cash_enabled: n.cash_enabled ?? prev.cash_enabled,
+            credit_enabled: n.credit_enabled ?? prev.credit_enabled,
+            high_load: n.high_load ?? prev.high_load,
+            preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
+            preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
+            preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
+          }));
         }
       )
       .subscribe();
