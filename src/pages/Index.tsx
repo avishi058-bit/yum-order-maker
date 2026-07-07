@@ -705,6 +705,14 @@ const Index = () => {
             items={cart}
             onUpdateQuantity={updateQuantity}
             onCheckout={() => {
+              if (deliveryInfo && getTotal() < 300) {
+                toast({
+                  title: "מינימום הזמנה למשלוח 300₪",
+                  description: `הסכום הנוכחי: ${getTotal()}₪. יש להוסיף עוד ${Math.max(0, 300 - getTotal())}₪`,
+                  variant: "destructive",
+                });
+                return;
+              }
               setCartOpen(false);
               if (dineIn === false && freeSauces > 0) {
                 setSauceSelectorOpen(true);
