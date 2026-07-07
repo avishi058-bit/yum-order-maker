@@ -110,6 +110,41 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   }, [requestId, stage, address, matchedZone, name, phone, onApproved]);
 
   const [calculating, setCalculating] = useState(false);
+  const [notifyStatus, setNotifyStatus] = useState<"idle" | "enabled" | "denied" | "unsupported" | "ios_install">(() => {
+    if (typeof Notification === "undefined") return "unsupported";
+    if (Notification.permission === "granted") return "enabled";
+    return "idle";
+  });
+  const [notifyBusy, setNotifyBusy] = useState(false);
+  const [showNotifyHelp, setShowNotifyHelp] = useState(false);
+
+  const handleEnableNotify = async () => {
+    if (!isPushSupported()) {
+      setNotifyStatus("unsupported");
+      setShowNotifyHelp(true);
+      return;
+    }
+    if (iosNeedsInstall()) {
+      setNotifyStatus("ios_install");
+      setShowNotifyHelp(true);
+      return;
+    }
+    setNotifyBusy(true);
+    try {
+      await ensureServiceWorker();
+      const perm = await Notification.requestPermission();
+      if (perm === "granted") {
+        setNotifyStatus("enabled");
+        toast({ title: "מעולה! נעדכן אותך כשיימצא שליח 🛵" });
+      } else {
+        setNotifyStatus("denied");
+        setShowNotifyHelp(true);
+      }
+    } finally {
+      setNotifyBusy(false);
+    }
+  };
+
 
   const handleCalculate = async () => {
     const a = address.trim();
