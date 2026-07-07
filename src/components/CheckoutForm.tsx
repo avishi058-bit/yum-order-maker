@@ -98,6 +98,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Preorder scheduling — pick a future pickup time within the allowed window.
   const [preorderEnabled, setPreorderEnabled] = useState(false);
   const [preorderTime, setPreorderTime] = useState<string>(""); // "HH:MM" today
+  const [deliveryAck, setDeliveryAck] = useState(false);
 
   // Safety net: if auth state changes after mount, re-route past the phone/OTP steps.
   useEffect(() => {
