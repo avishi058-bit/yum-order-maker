@@ -183,7 +183,8 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         } catch { /* ignore */ }
       }
       if (!error && data && typeof data.price === "number") {
-        if (data.address) setAddress(data.address);
+        if (payload.displayAddress) setAddress(payload.displayAddress);
+        else if (data.address) setAddress(data.address);
         setMatchedZone({
           id: "auto",
           name: `${data.km} ק"מ · ${data.minutes} דק'`,
