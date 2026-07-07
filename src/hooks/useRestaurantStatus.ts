@@ -118,5 +118,10 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, preorder_start_time: start, preorder_end_time: end }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, closeAll, openAll };
+  const toggleDelivery = async (on: boolean) => {
+    await supabase.from("restaurant_status").update({ delivery_enabled: on }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, delivery_enabled: on }));
+  };
+
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
 };
