@@ -285,6 +285,7 @@ const Kitchen = () => {
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
   const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
   const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
+  const [deliveryZonesOpen, setDeliveryZonesOpen] = useState(false);
 
   const handleQuickConnect = useCallback(async () => {
     if (isPrinterConnected()) {
