@@ -118,10 +118,8 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
         includedRegionCodes: ["il"],
         language: "he",
         locationRestriction: {
-          circle: {
-            center: DEFAULT_CENTER,
-            radius: 30000, // ~30km ≈ 25 min drive from תושיה
-          },
+          center: DEFAULT_CENTER,
+          radius: 30000, // ~30km ≈ 25 min drive from תושיה
         },
       });
       const mapped: Suggestion[] = (results ?? [])
