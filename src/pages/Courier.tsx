@@ -32,6 +32,14 @@ type DeliveryReq = {
   created_at: string;
 };
 
+const isStandalone = () => {
+  if (typeof window === "undefined") return true;
+  // @ts-ignore iOS Safari
+  const iosStandalone = (window.navigator as any).standalone === true;
+  const displayStandalone = window.matchMedia?.("(display-mode: standalone)")?.matches;
+  return Boolean(iosStandalone || displayStandalone);
+};
+
 const CourierApp = () => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
@@ -40,6 +48,19 @@ const CourierApp = () => {
   const [myReqs, setMyReqs] = useState<DeliveryReq[]>([]);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [gpsOn, setGpsOn] = useState(false);
+  const [installed, setInstalled] = useState<boolean>(() => isStandalone());
+
+  // ─── Watch for install / display mode changes ───
+  useEffect(() => {
+    const mq = window.matchMedia?.("(display-mode: standalone)");
+    const onChange = () => setInstalled(isStandalone());
+    mq?.addEventListener?.("change", onChange);
+    window.addEventListener("visibilitychange", onChange);
+    return () => {
+      mq?.removeEventListener?.("change", onChange);
+      window.removeEventListener("visibilitychange", onChange);
+    };
+  }, []);
 
   // ─── Auth session tracking ───
   useEffect(() => {
@@ -50,6 +71,9 @@ const CourierApp = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
+
+  if (!installed) return <InstallGate />;
+
 
   // ─── Load courier row when session exists ───
   const loadCourier = async () => {
