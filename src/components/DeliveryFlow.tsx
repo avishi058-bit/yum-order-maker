@@ -147,8 +147,80 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   };
 
 
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingQuick, setLocatingQuick] = useState(false);
+
+  const runCalculate = async (payload: { address?: string; lat?: number; lng?: number }) => {
+    if (name.trim().length < 2) {
+      toast({ title: "שם חסר", variant: "destructive" });
+      return;
+    }
+    if (phone.trim().length < 7) {
+      toast({ title: "טלפון חסר", variant: "destructive" });
+      return;
+    }
+    setCalculating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("calculate-delivery-price", {
+        body: payload,
+      });
+      if (!error && data && typeof data.price === "number") {
+        if (data.address) setAddress(data.address);
+        setMatchedZone({
+          id: "auto",
+          name: `${data.km} ק"מ · ${data.minutes} דק'`,
+          price: data.price,
+          keywords: [],
+          active: true,
+        });
+        setStage("quoted");
+        return true;
+      }
+      console.warn("Auto price failed, falling back to zones", error);
+      return false;
+    } finally {
+      setCalculating(false);
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast({ title: "הדפדפן לא תומך במיקום", variant: "destructive" });
+      return;
+    }
+    setLocatingQuick(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setLocatingQuick(false);
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setPickedCoords(p);
+        await runCalculate({ lat: p.lat, lng: p.lng });
+      },
+      (err) => {
+        setLocatingQuick(false);
+        toast({
+          title: "לא הצלחנו לאתר את המיקום",
+          description: err.code === 1 ? "יש לאשר גישה למיקום או לבחור על המפה" : "נסה/י שוב או בחר/י על המפה",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    );
+  };
+
+  const handleMapConfirm = async (loc: { lat: number; lng: number }) => {
+    setPickerOpen(false);
+    setPickedCoords(loc);
+    await runCalculate({ lat: loc.lat, lng: loc.lng });
+  };
+
   const handleCalculate = async () => {
     const a = address.trim();
+    if (a.length < 5) {
+      toast({ title: "בחר/י מיקום למשלוח", description: "השתמש/י במיקום הנוכחי או בחר/י על המפה", variant: "destructive" });
+      return;
+    }
     if (a.length < 5) {
       toast({ title: "כתובת קצרה מדי", description: "הזן/י כתובת מלאה", variant: "destructive" });
       return;
