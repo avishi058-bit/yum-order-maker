@@ -30,8 +30,8 @@ interface Props {
   initial?: { lat: number; lng: number } | null;
 }
 
-// Default: תושיה (מושב תושיה, עמק יזרעאל)
-const DEFAULT_CENTER = { lat: 32.5286, lng: 35.2361 };
+// Default: הבקתה - המבורגר של מושבניקים (כפר מימון / תושיה)
+const DEFAULT_CENTER = { lat: 31.4347276, lng: 34.5416983 };
 
 interface Suggestion {
   placeId: string;
