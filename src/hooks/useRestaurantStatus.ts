@@ -49,6 +49,7 @@ export const useRestaurantStatus = () => {
             preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
             preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
             preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
+            delivery_enabled: n.delivery_enabled ?? prev.delivery_enabled,
           }));
         }
       )
