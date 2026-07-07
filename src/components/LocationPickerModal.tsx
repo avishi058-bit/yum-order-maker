@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, MapPin, Crosshair, Check, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Load the Google Maps JS API once, using the browser (referrer-restricted) key.
 let mapsLoaderPromise: Promise<void> | null = null;
