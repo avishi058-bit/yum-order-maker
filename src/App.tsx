@@ -65,6 +65,15 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/courier" element={<Courier />} />
+              <Route
+                path="/admin/couriers"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminCouriers />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/kitchen"
                 element={
