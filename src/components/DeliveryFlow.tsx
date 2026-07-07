@@ -76,9 +76,22 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "delivery_requests", filter: `id=eq.${requestId}` },
-        (payload) => {
+        async (payload) => {
           const row = payload.new as { status: string };
           if (row.status === "approved") {
+            // Fire local/push notification if user opted in
+            try {
+              if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+                const reg = await navigator.serviceWorker?.getRegistration("/sw.js");
+                const title = "🛵 נמצא שליח!";
+                const body = "השליח בדרך אליך — פתח/י את האפליקציה להשלמת ההזמנה";
+                if (reg) {
+                  reg.showNotification(title, { body, icon: "/favicon.ico", badge: "/favicon.ico", tag: "delivery-approved" });
+                } else {
+                  new Notification(title, { body, icon: "/favicon.ico" });
+                }
+              }
+            } catch (e) { console.warn("notify failed", e); }
             onApproved({
               requestId,
               address,
