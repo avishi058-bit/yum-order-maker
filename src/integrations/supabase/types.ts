@@ -14,6 +14,109 @@ export type Database = {
   }
   public: {
     Tables: {
+      courier_locations: {
+        Row: {
+          courier_id: string
+          lat: number
+          lng: number
+          updated_at: string
+        }
+        Insert: {
+          courier_id: string
+          lat: number
+          lng: number
+          updated_at?: string
+        }
+        Update: {
+          courier_id?: string
+          lat?: number
+          lng?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_locations_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: true
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_push_subscriptions: {
+        Row: {
+          auth: string
+          courier_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth: string
+          courier_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          courier_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_push_subscriptions_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couriers: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       custom_toppings: {
         Row: {
           created_at: string
@@ -86,11 +189,16 @@ export type Database = {
       delivery_requests: {
         Row: {
           address: string
+          claimed_at: string | null
+          courier_id: string | null
           created_at: string
           customer_name: string | null
           customer_phone: string | null
           id: string
+          lat: number | null
+          lng: number | null
           order_id: string | null
+          payout: number | null
           price: number
           status: string
           updated_at: string
@@ -99,11 +207,16 @@ export type Database = {
         }
         Insert: {
           address: string
+          claimed_at?: string | null
+          courier_id?: string | null
           created_at?: string
           customer_name?: string | null
           customer_phone?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           order_id?: string | null
+          payout?: number | null
           price?: number
           status?: string
           updated_at?: string
@@ -112,11 +225,16 @@ export type Database = {
         }
         Update: {
           address?: string
+          claimed_at?: string | null
+          courier_id?: string | null
           created_at?: string
           customer_name?: string | null
           customer_phone?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           order_id?: string | null
+          payout?: number | null
           price?: number
           status?: string
           updated_at?: string
@@ -1016,6 +1134,7 @@ export type Database = {
       check_otp_rate_limit: { Args: { p_phone: string }; Returns: boolean }
       cleanup_expired_saved_carts: { Args: never; Returns: undefined }
       cleanup_old_verification_codes: { Args: never; Returns: undefined }
+      current_courier_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1023,6 +1142,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_role_admin: { Args: { _uid: string }; Returns: boolean }
+      is_approved_courier: { Args: { _uid: string }; Returns: boolean }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }
@@ -1040,7 +1161,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "kitchen"
+      app_role: "admin" | "kitchen" | "courier"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1168,7 +1289,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "kitchen"],
+      app_role: ["admin", "kitchen", "courier"],
     },
   },
 } as const
