@@ -106,5 +106,15 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, high_load: on }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, closeAll, openAll };
+  const togglePreorder = async (on: boolean) => {
+    await supabase.from("restaurant_status").update({ preorder_enabled: on }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, preorder_enabled: on }));
+  };
+
+  const setPreorderWindow = async (start: string, end: string) => {
+    await supabase.from("restaurant_status").update({ preorder_start_time: start, preorder_end_time: end }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, preorder_start_time: start, preorder_end_time: end }));
+  };
+
+  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, closeAll, openAll };
 };
