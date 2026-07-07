@@ -2260,6 +2260,11 @@ const Kitchen = () => {
                   {order.notes && (
                     <p className="text-sm text-primary mt-1">📝 {order.notes}</p>
                   )}
+                  {(order as any).scheduled_for && (
+                    <p className="text-sm font-bold text-blue-400 mt-1">
+                      🕒 הזמנה מראש ל־{new Date((order as any).scheduled_for).toLocaleString("he-IL", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}
+                    </p>
+                  )}
                   {order.payment_method === "cash" && (
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
