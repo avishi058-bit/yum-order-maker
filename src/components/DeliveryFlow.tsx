@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, MapPin, Bike, Bell, BellRing, Check } from "lucide-react";
+import { X, Loader2, MapPin, Bike, Bell, BellRing, Check, Crosshair } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { isPushSupported, iosNeedsInstall, isIos, ensureServiceWorker } from "@/lib/push";
+import LocationPickerModal from "./LocationPickerModal";
 
 export interface DeliveryApprovedData {
   requestId: string;
@@ -61,6 +62,8 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     setAckDelivery(false);
     setMatchedZone(null);
     setRequestId(null);
+    setPickedCoords(null);
+    setAddress("");
     supabase
       .from("delivery_zones")
       .select("id,name,price,keywords,active")
@@ -146,12 +149,11 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   };
 
 
-  const handleCalculate = async () => {
-    const a = address.trim();
-    if (a.length < 5) {
-      toast({ title: "כתובת קצרה מדי", description: "הזן/י כתובת מלאה", variant: "destructive" });
-      return;
-    }
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locatingQuick, setLocatingQuick] = useState(false);
+
+  const runCalculate = async (payload: { address?: string; lat?: number; lng?: number }) => {
     if (name.trim().length < 2) {
       toast({ title: "שם חסר", variant: "destructive" });
       return;
@@ -160,13 +162,13 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       toast({ title: "טלפון חסר", variant: "destructive" });
       return;
     }
-
     setCalculating(true);
     try {
       const { data, error } = await supabase.functions.invoke("calculate-delivery-price", {
-        body: { address: a },
+        body: payload,
       });
       if (!error && data && typeof data.price === "number") {
+        if (data.address) setAddress(data.address);
         setMatchedZone({
           id: "auto",
           name: `${data.km} ק"מ · ${data.minutes} דק'`,
@@ -175,17 +177,61 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
           active: true,
         });
         setStage("quoted");
-        return;
+        return true;
       }
       console.warn("Auto price failed, falling back to zones", error);
+      return false;
     } finally {
       setCalculating(false);
     }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast({ title: "הדפדפן לא תומך במיקום", variant: "destructive" });
+      return;
+    }
+    setLocatingQuick(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setLocatingQuick(false);
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setPickedCoords(p);
+        await runCalculate({ lat: p.lat, lng: p.lng });
+      },
+      (err) => {
+        setLocatingQuick(false);
+        toast({
+          title: "לא הצלחנו לאתר את המיקום",
+          description: err.code === 1 ? "יש לאשר גישה למיקום או לבחור על המפה" : "נסה/י שוב או בחר/י על המפה",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    );
+  };
+
+  const handleMapConfirm = async (loc: { lat: number; lng: number }) => {
+    setPickerOpen(false);
+    setPickedCoords(loc);
+    await runCalculate({ lat: loc.lat, lng: loc.lng });
+  };
+
+  const handleCalculate = async () => {
+    const a = address.trim();
+    if (!pickedCoords && a.length < 5) {
+      toast({ title: "בחר/י מיקום למשלוח", description: "השתמש/י במיקום הנוכחי או בחר/י על המפה", variant: "destructive" });
+      return;
+    }
+    const ok = await runCalculate(
+      pickedCoords ? { lat: pickedCoords.lat, lng: pickedCoords.lng } : { address: a },
+    );
+    if (ok) return;
 
     // Fallback: keyword-based zone matching
     const z = matchZone(a, zones);
     if (!z) {
-      toast({ title: "לצערנו איננו מגיעים לאזור זה", description: "נסה/י כתובת אחרת", variant: "destructive" });
+      toast({ title: "לצערנו איננו מגיעים לאזור זה", description: "נסה/י מיקום אחר", variant: "destructive" });
       return;
     }
     setMatchedZone(z);
@@ -282,26 +328,44 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
                   maxLength={20}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold mb-1 text-foreground flex items-center gap-1">
-                  <MapPin size={14} /> כתובת מלאה למשלוח
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-foreground flex items-center gap-1">
+                  <MapPin size={14} /> מיקום למשלוח
                 </label>
-                <input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg bg-secondary border border-border text-foreground"
-                  placeholder="ישוב, רחוב ומספר בית"
-                  maxLength={200}
-                />
+
+                <button
+                  type="button"
+                  onClick={handleUseCurrentLocation}
+                  disabled={locatingQuick || calculating}
+                  className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {locatingQuick ? <Loader2 className="animate-spin" size={18} /> : <Crosshair size={18} />}
+                  {locatingQuick ? "מאתר מיקום..." : "השתמש/י במיקום הנוכחי שלי"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  disabled={calculating}
+                  className="w-full bg-secondary border-2 border-border text-foreground font-bold py-2.5 rounded-xl hover:bg-secondary/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <MapPin size={16} className="text-primary" />
+                  בחר/י מיקום אחר על המפה
+                </button>
+
+                {address && (
+                  <div className="mt-2 rounded-lg bg-secondary/60 border border-border p-2.5 text-xs text-foreground flex items-start gap-2">
+                    <MapPin size={14} className="text-primary shrink-0 mt-0.5" />
+                    <span className="flex-1 leading-relaxed">{address}</span>
+                  </div>
+                )}
+
+                {calculating && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-1">
+                    <Loader2 className="animate-spin" size={16} /> מחשב מרחק ומחיר...
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleCalculate}
-                disabled={calculating}
-                className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {calculating && <Loader2 className="animate-spin" size={18} />}
-                {calculating ? "מחשב מרחק..." : "חשב עלות משלוח"}
-              </button>
             </div>
           )}
 
@@ -431,6 +495,12 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
           )}
         </motion.div>
       </motion.div>
+      <LocationPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={handleMapConfirm}
+        initial={pickedCoords}
+      />
     </AnimatePresence>
   );
 };
