@@ -183,6 +183,15 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         } catch { /* ignore */ }
       }
       if (!error && data && typeof data.price === "number") {
+        const resolvedAddress = payload.displayAddress || data.address || "";
+        if (isExcludedText(resolvedAddress)) {
+          toast({
+            title: "אין משלוחים לאזור זה",
+            description: "לצערנו איננו מבצעים משלוחים לתושיה / כפר מימון.",
+            variant: "destructive",
+          });
+          return true;
+        }
         if (payload.displayAddress) setAddress(payload.displayAddress);
         else if (data.address) setAddress(data.address);
         setMatchedZone({
