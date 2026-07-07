@@ -328,6 +328,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
           return d.toISOString();
         })(),
+      },
     });
 
     if (error) {
