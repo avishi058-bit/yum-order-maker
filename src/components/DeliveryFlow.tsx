@@ -153,7 +153,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   const [pickedCoords, setPickedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locatingQuick, setLocatingQuick] = useState(false);
 
-  const runCalculate = async (payload: { address?: string; lat?: number; lng?: number }) => {
+  const runCalculate = async (payload: { address?: string; lat?: number; lng?: number; displayAddress?: string }) => {
     if (name.trim().length < 2) {
       toast({ title: "שם חסר", variant: "destructive" });
       return;
