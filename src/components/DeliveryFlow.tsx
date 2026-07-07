@@ -279,6 +279,9 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         zone_id: matchedZone.id === "auto" ? null : matchedZone.id,
         zone_name: matchedZone.name,
         price: matchedZone.price,
+        payout: matchedZone.price,
+        lat: pickedCoords?.lat ?? null,
+        lng: pickedCoords?.lng ?? null,
         status: "pending",
       })
       .select("id")
