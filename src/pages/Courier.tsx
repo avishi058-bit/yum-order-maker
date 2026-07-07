@@ -345,7 +345,76 @@ const Screen = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+// ─── Install gate: forces PWA install before use ───
+const InstallGate = () => {
+  const [deferred, setDeferred] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent || "";
+    setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream);
+    const onPrompt = (e: any) => { e.preventDefault(); setDeferred(e); };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+  }, []);
+
+  const install = async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    setDeferred(null);
+  };
+
+  return (
+    <Screen>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" /> התקן את האפליקציה
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p className="text-muted-foreground">
+            כדי לקבל התראות על משלוחים חדשים חובה להתקין את אפליקציית השליחים על המסך הראשי של הטלפון. אחרי ההתקנה תפתח אותה מהאייקון בלבד.
+          </p>
+
+          {isIOS ? (
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 space-y-2">
+              <p className="font-semibold">איך מתקינים באייפון:</p>
+              <ol className="list-decimal pr-5 space-y-1 text-muted-foreground">
+                <li>לחץ על כפתור השיתוף בתחתית ספארי (ריבוע עם חץ למעלה).</li>
+                <li>גלול ובחר <b>"הוסף למסך הבית"</b>.</li>
+                <li>לחץ <b>"הוסף"</b>.</li>
+                <li>סגור את הדפדפן ופתח את האפליקציה מהאייקון החדש.</li>
+              </ol>
+            </div>
+          ) : deferred ? (
+            <Button className="w-full h-12" onClick={install}>
+              <Smartphone className="ml-2 h-5 w-5" /> התקן עכשיו
+            </Button>
+          ) : (
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 space-y-2">
+              <p className="font-semibold">איך מתקינים באנדרואיד:</p>
+              <ol className="list-decimal pr-5 space-y-1 text-muted-foreground">
+                <li>פתח את תפריט הדפדפן (שלוש נקודות ⋮).</li>
+                <li>בחר <b>"התקן אפליקציה"</b> או <b>"הוסף למסך הבית"</b>.</li>
+                <li>אשר, וסגור את הדפדפן.</li>
+                <li>פתח את האפליקציה מהאייקון החדש במסך הבית.</li>
+              </ol>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground text-center">
+            הכניסה לחשבון והתראות משלוחים יעבדו רק מתוך האפליקציה המותקנת.
+          </p>
+        </CardContent>
+      </Card>
+    </Screen>
+  );
+};
+
 // ─── Auth (login + signup) ───
+
 const CourierAuth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
