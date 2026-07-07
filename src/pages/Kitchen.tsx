@@ -2175,7 +2175,9 @@ const Kitchen = () => {
         <DashboardView />
       ) : (
         /* Orders Grid */
-        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="p-4">
+          {viewMode === "active" && <DeliveryRequestsPanel />}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayOrders.length === 0 && (
             <div className="col-span-full text-center py-20 text-muted-foreground">
               <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : "📋"}</p>
