@@ -473,6 +473,21 @@ const Index = () => {
 
   const handleDineInChoice = (val: boolean) => {
     setDineIn(val);
+    setDeliveryInfo(null);
+    setTimeout(() => {
+      document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  const handleDeliveryChoice = () => {
+    setDeliveryFlowOpen(true);
+  };
+
+  const handleDeliveryApproved = (data: DeliveryApprovedData) => {
+    setDeliveryInfo(data);
+    setDeliveryFlowOpen(false);
+    setDineIn(false); // treat like takeaway for menu/pricing
+    toast({ title: "נמצא שליח! 🛵", description: "אפשר להתחיל להזמין" });
     setTimeout(() => {
       document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
