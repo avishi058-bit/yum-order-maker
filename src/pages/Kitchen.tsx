@@ -2507,8 +2507,12 @@ const Kitchen = () => {
               </div>
             );
           })}
+          </div>
         </div>
       )}
+
+      <DeliveryZonesDialog open={deliveryZonesOpen} onClose={() => setDeliveryZonesOpen(false)} />
+
 
       {/* Receipt preview modal */}
       {previewOrder && (
