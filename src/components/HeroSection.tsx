@@ -101,29 +101,36 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
             >
               בחר כדי להתחיל בהזמנה👇🏽
             </motion.p>
-            <div className="bg-secondary/80 backdrop-blur-sm rounded-full p-1.5 flex gap-1 flex-wrap justify-center">
+            <div className="flex gap-3 flex-wrap justify-center max-w-md">
               <button
                 onClick={() => onDineInChoice(true)}
-                className={`px-6 py-3.5 rounded-full text-base font-bold transition-all ${
-                  dineIn === true ? "bg-primary text-primary-foreground shadow-lg scale-105" : "text-muted-foreground hover:text-foreground"
+                className={`flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl font-bold transition-all border-2 ${
+                  dineIn === true
+                    ? "bg-primary text-primary-foreground border-primary shadow-xl scale-105"
+                    : "bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60 hover:scale-105"
                 }`}
               >
-                🪑 לשבת
+                <span className="text-3xl">🪑</span>
+                <span className="text-sm">לשבת</span>
               </button>
               <button
                 onClick={() => onDineInChoice(false)}
-                className={`px-6 py-3.5 rounded-full text-base font-bold transition-all ${
-                  dineIn === false ? "bg-primary text-primary-foreground shadow-lg scale-105" : "text-muted-foreground hover:text-foreground"
+                className={`flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl font-bold transition-all border-2 ${
+                  dineIn === false
+                    ? "bg-primary text-primary-foreground border-primary shadow-xl scale-105"
+                    : "bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60 hover:scale-105"
                 }`}
               >
-                🥡 לקחת
+                <span className="text-3xl">🥡</span>
+                <span className="text-sm">לקחת</span>
               </button>
               {showDelivery && onDeliveryChoice && (
                 <button
                   onClick={() => onDeliveryChoice()}
-                  className="px-6 py-3.5 rounded-full text-base font-bold transition-all text-muted-foreground hover:text-foreground"
+                  className="flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl font-bold transition-all border-2 bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60 hover:scale-105"
                 >
-                  🛵 משלוח
+                  <span className="text-3xl">🛵</span>
+                  <span className="text-sm">משלוח</span>
                 </button>
               )}
             </div>
