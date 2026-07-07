@@ -156,7 +156,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         customer_name: name.trim(),
         customer_phone: phone.trim(),
         address: address.trim(),
-        zone_id: matchedZone.id,
+        zone_id: matchedZone.id === "auto" ? null : matchedZone.id,
         zone_name: matchedZone.name,
         price: matchedZone.price,
         status: "pending",
