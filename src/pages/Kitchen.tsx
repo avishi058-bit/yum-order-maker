@@ -5,6 +5,7 @@ import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, 
 import EditOrderModal from "@/components/EditOrderModal";
 import QRCode from "qrcode";
 import DashboardView from "@/components/DashboardView";
+import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { motion } from "framer-motion";
