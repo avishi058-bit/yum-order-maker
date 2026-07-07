@@ -117,7 +117,7 @@ const LocationPickerModal = ({ open, onClose, onConfirm, initial }: Props) => {
         sessionToken: sessionTokenRef.current,
         includedRegionCodes: ["il"],
         language: "he",
-        locationRestriction: {
+        locationBias: {
           center: DEFAULT_CENTER,
           radius: 30000, // ~30km ≈ 25 min drive from תושיה
         },
