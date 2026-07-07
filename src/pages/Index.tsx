@@ -784,6 +784,7 @@ const Index = () => {
                 setCheckoutOpen(false);
                 setCheckoutSkipDetails(false);
                 setCart([]);
+                setDeliveryInfo(null);
                 // Order was placed — discard any saved cart so the
                 // "continue previous order" modal doesn't pop up later.
                 suppressNextSave();
