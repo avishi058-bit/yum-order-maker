@@ -9,6 +9,9 @@ import LocationPickerModal, { isExcludedText } from "./LocationPickerModal";
 
 export interface DeliveryApprovedData {
   requestId: string;
+  // Ownership token returned by the DB when the request was created.
+  // Passed back to create-order so the server can finalize this request.
+  clientToken: string;
   address: string;
   fee: number;
   zoneName: string;
