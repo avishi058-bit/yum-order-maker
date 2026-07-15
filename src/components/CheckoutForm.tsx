@@ -35,6 +35,7 @@ interface CheckoutFormProps {
   /** When set, this is a delivery order. Adds required legal ack + passes delivery data to create-order. */
   delivery?: {
     requestId: string;
+    clientToken: string;
     address: string;
     fee: number;
     zoneName: string;
@@ -349,6 +350,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         })(),
         // Delivery order (website only). Delivery fee NOT collected here.
         deliveryRequestId: delivery?.requestId ?? null,
+        // Ownership proof — server verifies this before marking the delivery
+        // request completed. Without it the server won't touch the row.
+        deliveryRequestClientToken: delivery?.clientToken ?? null,
         deliveryAddress: delivery?.address ?? null,
         deliveryFee: delivery?.fee ?? null,
       },
@@ -368,14 +372,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
-    // Delivery: mark request as completed and link back the order id.
-    if (delivery?.requestId) {
-      supabase
-        .from("delivery_requests")
-        .update({ status: "completed", order_id: data.orderId })
-        .eq("id", delivery.requestId)
-        .then(() => {}, () => {});
-    }
+    // Delivery request finalization now happens inside create-order server-side
+    // (validated by client_token). Client-side UPDATE is intentionally removed —
+    // anon writes on delivery_requests are blocked by RLS.
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
@@ -475,8 +474,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         });
       }
 
-      const baseUrl = window.location.origin;
-      const isKiosk = window.location.pathname === "/kiosk";
+      // NOTE: successUrl / cancelUrl / callbackUrl are hard-coded server-side
+      // in the create-payment edge function. Do NOT pass them from the client —
+      // otherwise an attacker can redirect payment notifications to their own
+      // server. The server enforces amount = order.total as well.
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
         {
@@ -491,11 +492,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             customerName: form.name,
             customerPhone: form.phone,
             orderId: order.orderId,
-             successUrl: isKiosk
-               ? `${baseUrl}/kiosk?paid=true&order=${order.orderNumber}`
-               : `${baseUrl}/track?order=${order.orderNumber}&paid=true`,
-             cancelUrl: isKiosk ? `${baseUrl}/kiosk?payment=cancelled` : `${baseUrl}/?payment=cancelled`,
-            callbackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-callback`,
           }),
         }
       );

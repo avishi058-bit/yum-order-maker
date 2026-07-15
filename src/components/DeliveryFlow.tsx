@@ -9,6 +9,9 @@ import LocationPickerModal, { isExcludedText } from "./LocationPickerModal";
 
 export interface DeliveryApprovedData {
   requestId: string;
+  // Ownership token returned by the DB when the request was created.
+  // Passed back to create-order so the server can finalize this request.
+  clientToken: string;
   address: string;
   fee: number;
   zoneName: string;
@@ -54,6 +57,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   const [matchedZone, setMatchedZone] = useState<DeliveryZone | null>(null);
   const [ackDelivery, setAckDelivery] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [clientToken, setClientToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -62,6 +66,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     setAckDelivery(false);
     setMatchedZone(null);
     setRequestId(null);
+    setClientToken(null);
     setPickedCoords(null);
     setAddress("");
     supabase
@@ -97,6 +102,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
             } catch (e) { console.warn("notify failed", e); }
             onApproved({
               requestId,
+              clientToken: clientToken ?? "",
               address,
               fee: matchedZone?.price ?? 0,
               zoneName: matchedZone?.name ?? "",
@@ -284,7 +290,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
         lng: pickedCoords?.lng ?? null,
         status: "pending",
       })
-      .select("id")
+      .select("id, client_token")
       .single();
     setSubmitting(false);
     if (error || !data) {
@@ -292,12 +298,24 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       return;
     }
     setRequestId(data.id);
+    // client_token is the ownership proof for later finalize/cancel. Without
+    // it, no one — including the customer — can change this row (RLS blocks
+    // anon updates). It stays only in this browser session.
+    setClientToken((data as { client_token: string }).client_token);
     setStage("searching");
   };
 
   const handleCancelSearch = async () => {
-    if (requestId) {
-      await supabase.from("delivery_requests").update({ status: "rejected" }).eq("id", requestId);
+    if (requestId && clientToken) {
+      // Anon update is closed at the DB. Call the edge function with our
+      // client_token so only we can cancel this specific request.
+      try {
+        await supabase.functions.invoke("cancel-delivery-request", {
+          body: { id: requestId, clientToken },
+        });
+      } catch (e) {
+        console.warn("cancel-delivery-request failed", e);
+      }
     }
     onClose();
   };
