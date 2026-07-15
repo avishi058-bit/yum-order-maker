@@ -94,10 +94,16 @@ Deno.serve(async (req) => {
     if (action === 'send') {
       const parsed = SendSchema.safeParse(body)
       if (!parsed.success) {
-        return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
+        return jsonResponse({ error: 'מספר טלפון לא תקין או חסר אימות אבטחה' }, 400)
       }
 
-      const { phone } = parsed.data
+      const { phone, turnstileToken } = parsed.data
+      const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+      const turnstileOk = await verifyTurnstileToken(turnstileToken, clientIp)
+      if (!turnstileOk) {
+        return jsonResponse({ error: 'אימות האבטחה נכשל. נסה שוב.' }, 403)
+      }
+
       const formattedPhone = normalizePhoneNumber(phone)
       if (!formattedPhone) {
         return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
