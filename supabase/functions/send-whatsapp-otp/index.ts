@@ -95,17 +95,17 @@ Deno.serve(async (req) => {
     const rawFwd = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
     const clientIp = rawFwd.split(',')[0].trim() || 'unknown'
 
-    // Permanent IP block — attackers are identified by IP, so this is safe to keep forever.
+    // Permanent IP block — checks both exact IPs AND blocked /24 subnets.
     if (clientIp && clientIp !== 'unknown') {
-      const { data: ipBlocked } = await supabase
-        .from('blocked_ips')
-        .select('ip_address')
-        .eq('ip_address', clientIp)
-        .maybeSingle()
-      if (ipBlocked) {
+      const { data: ipBlocked } = await supabase.rpc('is_ip_blocked', { p_ip: clientIp })
+      if (ipBlocked === true) {
         return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
       }
     }
+
+    // Attack-mode detection: when the system is under active attack, everything is tightened.
+    const { data: attackMode } = await supabase.rpc('is_attack_mode_active')
+    const underAttack = attackMode === true
 
     // Phone block check (kept for existing entries; new brute-force events block IP instead).
     if (typeof body?.phone === 'string') {
