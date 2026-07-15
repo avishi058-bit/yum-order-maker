@@ -686,12 +686,25 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 placeholder="____"
               />
             </div>
+            {verifyCaptchaRequired && (
+              <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                <p className="text-xs text-muted-foreground mb-2 text-center">
+                  זוהתה פעילות חריגה במערכת. אנא השלם אימות אבטחה.
+                </p>
+                <TurnstileWidget
+                  onVerify={setVerifyTurnstileToken}
+                  onExpire={() => setVerifyTurnstileToken(null)}
+                  onError={() => setVerifyTurnstileToken(null)}
+                  action="verify-otp"
+                />
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={verifying}
+                disabled={verifying || (verifyCaptchaRequired && !verifyTurnstileToken)}
                 onClick={handleVerifyOtp}
                 className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
               >
