@@ -66,6 +66,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     setAckDelivery(false);
     setMatchedZone(null);
     setRequestId(null);
+    setClientToken(null);
     setPickedCoords(null);
     setAddress("");
     supabase
