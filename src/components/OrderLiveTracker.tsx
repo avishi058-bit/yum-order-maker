@@ -33,7 +33,12 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
 
   // Play sound & send notification on status change
   useEffect(() => {
-    if (!order || !prevStatus || prevStatus === order.status) return;
+    if (!order) return;
+    if (prevStatus === null) {
+      setPrevStatus(order.status);
+      return;
+    }
+    if (prevStatus === order.status) return;
 
     const statusLabels: Record<string, string> = {
       preparing: "ההזמנה שלך בהכנה! 👨‍🍳",
@@ -42,6 +47,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     };
 
     const message = statusLabels[order.status];
+    setPrevStatus(order.status);
     if (!message) return;
 
     // Play sound
