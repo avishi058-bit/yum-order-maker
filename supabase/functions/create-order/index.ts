@@ -123,6 +123,8 @@ const BodySchema = z.object({
   // stores them as a synthetic order_item line for the kitchen receipt.
   sauces: z.array(SauceSchema).max(20).optional().default([]),
   freeSauces: z.number().int().min(0).max(100).optional().default(0),
+  // Cloudflare Turnstile anti-bot token. Required for website orders.
+  turnstileToken: z.string().min(1).max(2048).optional(),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
