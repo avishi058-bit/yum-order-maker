@@ -91,7 +91,23 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action')
     const body = await req.json()
 
-    // Permanent block check — phones added to blocked_phones after brute-force are locked out forever.
+    // Extract client IP (first entry in x-forwarded-for is the real client).
+    const rawFwd = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
+    const clientIp = rawFwd.split(',')[0].trim() || 'unknown'
+
+    // Permanent IP block — attackers are identified by IP, so this is safe to keep forever.
+    if (clientIp && clientIp !== 'unknown') {
+      const { data: ipBlocked } = await supabase
+        .from('blocked_ips')
+        .select('ip_address')
+        .eq('ip_address', clientIp)
+        .maybeSingle()
+      if (ipBlocked) {
+        return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
+      }
+    }
+
+    // Phone block check (kept for existing entries; new brute-force events block IP instead).
     if (typeof body?.phone === 'string') {
       const { data: blocked } = await supabase
         .from('blocked_phones')
@@ -99,7 +115,7 @@ Deno.serve(async (req) => {
         .eq('phone', body.phone)
         .maybeSingle()
       if (blocked) {
-        return jsonResponse({ error: 'המספר נחסם לצמיתות עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
+        return jsonResponse({ error: 'המספר נחסם עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
       }
     }
 
@@ -202,9 +218,31 @@ Deno.serve(async (req) => {
 
       const { phone, code } = parsed.data
 
-      // Two-tier rate limit for OTP verification:
-      // Tier 1 (soft — human mistakes): 6 failed attempts per 15 minutes → short wait.
-      // Tier 2 (hard — brute-force attack): 15 failed attempts per 2 hours → long block.
+      // Three-tier defense for OTP verification:
+      // Tier 1 (soft — human mistakes): 6 failed attempts per phone / 15 min → short wait.
+      // Tier 2 (phone lockout): 15 failed attempts per phone / 2 hours → temporary block.
+      // Tier 3 (IP hard block): 10 failed attempts per IP / 1 hour → PERMANENT IP BAN.
+      //   IP is the attacker's identifier, so blocking it forever won't hurt real users.
+
+      // Tier 3: permanent IP ban after 10 fails from same IP.
+      if (clientIp && clientIp !== 'unknown') {
+        const { data: ipAllowed } = await supabase.rpc('check_rate_limit', {
+          p_action: 'otp_verify',
+          p_key: `ip:${clientIp}`,
+          p_max_attempts: 10,
+          p_window: '1 hour',
+        })
+        if (ipAllowed === false) {
+          await supabase.from('blocked_ips').upsert(
+            { ip_address: clientIp, reason: 'brute_force_otp: 10+ failed verifications from same IP in 1 hour' },
+            { onConflict: 'ip_address' }
+          )
+          console.warn('IP permanently blocked for brute-force:', clientIp)
+          return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
+        }
+      }
+
+      // Tier 2: temporary phone lockout (2h) — not permanent, avoids punishing innocent phone owners.
       const { data: hardAllowed } = await supabase.rpc('check_rate_limit', {
         p_action: 'otp_verify',
         p_key: phone,
@@ -212,14 +250,10 @@ Deno.serve(async (req) => {
         p_window: '2 hours',
       })
       if (hardAllowed === false) {
-        // Permanent block — write to blocked_phones so every future request is refused.
-        await supabase.from('blocked_phones').upsert(
-          { phone, reason: 'brute_force_otp: 15+ failed verification attempts in 2 hours' },
-          { onConflict: 'phone' }
-        )
-        console.warn('Phone permanently blocked for brute-force:', phone)
-        return jsonResponse({ error: 'המספר נחסם לצמיתות עקב ניסיונות חשודים. יש לפנות לתמיכה.' }, 403)
+        return jsonResponse({ error: 'המספר נחסם זמנית. נסו שוב בעוד שעתיים.' }, 429)
       }
+
+      // Tier 1: soft short wait.
       const { data: softAllowed } = await supabase.rpc('check_rate_limit', {
         p_action: 'otp_verify',
         p_key: phone,
@@ -242,12 +276,19 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!record) {
-        // Record a failed attempt so brute-force counts.
+        // Record failure against BOTH phone and IP so both counters advance.
         await supabase.rpc('record_rate_limit_attempt', {
           p_action: 'otp_verify',
           p_key: phone,
-          p_ip_address: req.headers.get('x-forwarded-for') || null,
+          p_ip_address: clientIp,
         })
+        if (clientIp && clientIp !== 'unknown') {
+          await supabase.rpc('record_rate_limit_attempt', {
+            p_action: 'otp_verify',
+            p_key: `ip:${clientIp}`,
+            p_ip_address: clientIp,
+          })
+        }
         return jsonResponse({ error: 'קוד שגוי או שפג תוקפו' }, 400)
       }
 
