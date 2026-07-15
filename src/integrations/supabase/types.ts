@@ -895,6 +895,30 @@ export type Database = {
           },
         ]
       }
+      rate_limit_attempts: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          key: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          key: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          key?: string
+        }
+        Relationships: []
+      }
       reopen_notifications: {
         Row: {
           created_at: string
@@ -1132,7 +1156,17 @@ export type Database = {
     }
     Functions: {
       check_otp_rate_limit: { Args: { p_phone: string }; Returns: boolean }
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_key: string
+          p_max_attempts: number
+          p_window: string
+        }
+        Returns: boolean
+      }
       cleanup_expired_saved_carts: { Args: never; Returns: undefined }
+      cleanup_old_rate_limit_attempts: { Args: never; Returns: undefined }
       cleanup_old_verification_codes: { Args: never; Returns: undefined }
       current_courier_id: { Args: never; Returns: string }
       has_role: {
@@ -1147,6 +1181,10 @@ export type Database = {
       notify_orders_almost_ready: { Args: never; Returns: undefined }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }
+        Returns: undefined
+      }
+      record_rate_limit_attempt: {
+        Args: { p_action: string; p_ip_address?: string; p_key: string }
         Returns: undefined
       }
       reping_kitchen_for_pending_orders: { Args: never; Returns: undefined }
