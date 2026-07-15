@@ -1,45 +1,57 @@
 // Edge function: gateway for the inventory page.
-// All actions are gated by a secret token. No JWT auth required.
+// All actions are gated by a token from public.inventory_access_tokens.
+// Tokens now support:
+//   - `expires_at`  — after this time, the token stops working
+//   - `revoked_at`  — manually killing a specific token
+//   - `scope`       — "admin" (full access + financial stats) or
+//                     "inventory" (stock CRUD only, no revenue reads)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { corsHeadersFor } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+type TokenScope = "admin" | "inventory";
+
+interface TokenValidation {
+  ok: boolean;
+  scope: TokenScope;
 }
 
-async function validateToken(token: string | undefined): Promise<boolean> {
-  if (!token || typeof token !== "string" || token.length < 16) return false;
+async function validateToken(token: string | undefined): Promise<TokenValidation> {
+  if (!token || typeof token !== "string" || token.length < 16) {
+    return { ok: false, scope: "inventory" };
+  }
   const { data } = await supabase
     .from("inventory_access_tokens")
-    .select("id")
+    .select("id, scope, expires_at, revoked_at")
     .eq("token", token)
     .maybeSingle();
-  if (!data) return false;
+  if (!data) return { ok: false, scope: "inventory" };
+  if (data.revoked_at) return { ok: false, scope: "inventory" };
+  if (data.expires_at && new Date(data.expires_at as string).getTime() < Date.now()) {
+    return { ok: false, scope: "inventory" };
+  }
   // touch last_used_at (fire-and-forget)
   supabase
     .from("inventory_access_tokens")
     .update({ last_used_at: new Date().toISOString() })
     .eq("id", data.id)
     .then(() => {});
-  return true;
+  return { ok: true, scope: (data.scope as TokenScope) ?? "admin" };
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -48,8 +60,21 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { token, action } = body as { token?: string; action?: string };
 
-    const ok = await validateToken(token);
-    if (!ok) return json({ error: "invalid_token" }, 401);
+    const validation = await validateToken(token);
+    if (!validation.ok) return json({ error: "invalid_token" }, 401);
+
+    // Actions that expose financial/order data require admin scope.
+    const ADMIN_ONLY_ACTIONS = new Set([
+      "stats",
+      "list_tokens",
+      "create_token",
+      "revoke_token",
+      "rotate_token",
+    ]);
+    if (ADMIN_ONLY_ACTIONS.has(action ?? "") && validation.scope !== "admin") {
+      return json({ error: "insufficient_scope" }, 403);
+    }
+
 
     switch (action) {
       case "list": {
