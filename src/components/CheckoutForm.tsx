@@ -241,6 +241,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       });
       return;
     }
+    // Anti-bot gate: Turnstile required for website orders (kiosk is a trusted device).
+    if (!isKiosk && !turnstileToken) {
+      toast({
+        title: "יש לאמת את תיבת \"אני לא רובוט\"",
+        variant: "destructive",
+      });
+      return;
+    }
     // Delivery: force ack before any payment path
     if (delivery && !deliveryAck) {
       toast({
