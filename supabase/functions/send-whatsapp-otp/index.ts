@@ -69,6 +69,7 @@ const SendSchema = z.object({
 const VerifySchema = z.object({
   phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
   code: z.string().length(4),
+  turnstileToken: z.string().min(1).max(2048).optional(),
 })
 
 Deno.serve(async (req) => {
