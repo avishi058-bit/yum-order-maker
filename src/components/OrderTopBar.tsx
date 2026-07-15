@@ -65,7 +65,13 @@ const OrderTopBar = () => {
 
   // Sound & notification on status change
   useEffect(() => {
-    if (!order || !prevStatus || prevStatus === order.status || !tracked) return;
+    if (!order || !tracked) return;
+    if (prevStatus === null) {
+      // First observation for this order — seed prevStatus without notifying.
+      setPrevStatus(order.status);
+      return;
+    }
+    if (prevStatus === order.status) return;
 
     const statusLabels: Record<string, string> = {
       preparing: "ההזמנה שלך בהכנה! 👨‍🍳",
@@ -74,6 +80,7 @@ const OrderTopBar = () => {
     };
 
     const message = statusLabels[order.status];
+    setPrevStatus(order.status);
     if (!message) return;
 
     if (tracked.soundEnabled) {
