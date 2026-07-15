@@ -98,6 +98,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [saveFavoritePromptOpen, setSaveFavoritePromptOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [otpTurnstileToken, setOtpTurnstileToken] = useState<string | null>(null);
+  const [verifyCaptchaRequired, setVerifyCaptchaRequired] = useState(false);
+  const [verifyTurnstileToken, setVerifyTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
   // Preorder scheduling — pick a future pickup time within the allowed window.
   const [preorderEnabled, setPreorderEnabled] = useState(false);
