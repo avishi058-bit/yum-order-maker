@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-export type AppRole = "admin" | "kitchen";
+export type AppRole = "admin" | "kitchen" | "courier";
 
 interface AuthState {
   user: User | null;
@@ -20,29 +20,35 @@ export const useAuth = () => {
   });
 
   const fetchRoles = useCallback(async (userId: string): Promise<AppRole[]> => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      if (error) {
-        console.error("[useAuth] fetchRoles error:", error);
+    const uniqueRoles = (roles: AppRole[]) => Array.from(new Set(roles));
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId);
+
+        if (error) {
+          console.error("[useAuth] fetchRoles error:", error);
+        } else if (data && data.length > 0) {
+          return uniqueRoles(data.map((r) => r.role as AppRole));
+        }
+
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+        }
+      } catch (e) {
+        console.error("[useAuth] fetchRoles exception:", e);
         return [];
       }
-      return (data?.map((r) => r.role as AppRole)) || [];
-    } catch (e) {
-      console.error("[useAuth] fetchRoles exception:", e);
-      return [];
     }
+
+    return [];
   }, []);
 
   useEffect(() => {
     let mounted = true;
-
-    const safetyTimer = setTimeout(() => {
-      if (!mounted) return;
-      setState((prev) => (prev.loading ? { ...prev, loading: false } : prev));
-    }, 6000);
 
     const applySession = async (session: Session | null) => {
       if (!mounted) return;
@@ -77,7 +83,6 @@ export const useAuth = () => {
 
     return () => {
       mounted = false;
-      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [fetchRoles]);
