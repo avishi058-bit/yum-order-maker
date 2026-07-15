@@ -925,13 +925,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             <div className="grid grid-cols-1 gap-3">
               {availablePaymentMethods.cash && (
                 <motion.button
-                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("cash")}
-                  disabled={submitting || !termsAccepted}
+                  disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "cash"}
-                  aria-disabled={!termsAccepted}
-                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -948,13 +948,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
               {availablePaymentMethods.credit && (
                 <motion.button
-                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("credit")}
-                  disabled={submitting || !termsAccepted}
+                  disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "credit"}
-                  aria-disabled={!termsAccepted}
-                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -973,13 +973,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   Sends order to kitchen immediately; customer pays in person. */}
               {RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
                 <motion.button
-                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("counter")}
-                  disabled={submitting || !termsAccepted}
+                  disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "counter"}
-                  aria-disabled={!termsAccepted}
-                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
