@@ -21,7 +21,8 @@ const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869
 
 const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
   const { settings } = useSiteSettings();
-  const [order, setOrder] = useState<any>(null);
+  // Shared polling hook — dedupes with OrderTopBar when both are mounted on /track.
+  const order = useOrderPoll(orderNumber, phone);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -29,29 +30,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
   const [showSmartPrompt, setShowSmartPrompt] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
-
-  // Fetch order via secure edge function (no direct DB access)
-  useEffect(() => {
-    const fetchOrder = async () => {
-      const { data } = await supabase.functions.invoke("get-order-by-token", {
-        body: { order_number: orderNumber, phone },
-      });
-      const fetched = data?.order;
-      if (fetched) {
-        setOrder((prev: any) => {
-          if (prev && prev.status !== fetched.status) {
-            setPrevStatus(prev.status);
-          }
-          return fetched;
-        });
-      }
-    };
-
-    fetchOrder();
-    // Poll every 8s instead of realtime (no public DB channel access)
-    const interval = setInterval(fetchOrder, 8000);
-    return () => clearInterval(interval);
-  }, [orderNumber]);
 
   // Play sound & send notification on status change
   useEffect(() => {
