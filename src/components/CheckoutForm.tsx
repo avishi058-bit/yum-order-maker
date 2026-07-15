@@ -475,8 +475,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         });
       }
 
-      const baseUrl = window.location.origin;
-      const isKiosk = window.location.pathname === "/kiosk";
+      // NOTE: successUrl / cancelUrl / callbackUrl are hard-coded server-side
+      // in the create-payment edge function. Do NOT pass them from the client —
+      // otherwise an attacker can redirect payment notifications to their own
+      // server. The server enforces amount = order.total as well.
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment`,
         {
@@ -491,11 +493,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             customerName: form.name,
             customerPhone: form.phone,
             orderId: order.orderId,
-             successUrl: isKiosk
-               ? `${baseUrl}/kiosk?paid=true&order=${order.orderNumber}`
-               : `${baseUrl}/track?order=${order.orderNumber}&paid=true`,
-             cancelUrl: isKiosk ? `${baseUrl}/kiosk?payment=cancelled` : `${baseUrl}/?payment=cancelled`,
-            callbackUrl: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/payment-callback`,
           }),
         }
       );
