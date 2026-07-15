@@ -20,6 +20,7 @@ export type Database = {
           blocked_by: string | null
           id: string
           ip_address: string
+          is_pattern: boolean
           reason: string
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           blocked_by?: string | null
           id?: string
           ip_address: string
+          is_pattern?: boolean
           reason: string
         }
         Update: {
@@ -34,6 +36,7 @@ export type Database = {
           blocked_by?: string | null
           id?: string
           ip_address?: string
+          is_pattern?: boolean
           reason?: string
         }
         Relationships: []
@@ -1224,6 +1227,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_activate_attack_mode: { Args: never; Returns: boolean }
       check_otp_rate_limit: { Args: { p_phone: string }; Returns: boolean }
       check_rate_limit: {
         Args: {
@@ -1249,6 +1253,8 @@ export type Database = {
       }
       has_role_admin: { Args: { _uid: string }; Returns: boolean }
       is_approved_courier: { Args: { _uid: string }; Returns: boolean }
+      is_attack_mode_active: { Args: never; Returns: boolean }
+      is_ip_blocked: { Args: { p_ip: string }; Returns: boolean }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }
