@@ -276,12 +276,19 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!record) {
-        // Record a failed attempt so brute-force counts.
+        // Record failure against BOTH phone and IP so both counters advance.
         await supabase.rpc('record_rate_limit_attempt', {
           p_action: 'otp_verify',
           p_key: phone,
-          p_ip_address: req.headers.get('x-forwarded-for') || null,
+          p_ip_address: clientIp,
         })
+        if (clientIp && clientIp !== 'unknown') {
+          await supabase.rpc('record_rate_limit_attempt', {
+            p_action: 'otp_verify',
+            p_key: `ip:${clientIp}`,
+            p_ip_address: clientIp,
+          })
+        }
         return jsonResponse({ error: 'קוד שגוי או שפג תוקפו' }, 400)
       }
 
