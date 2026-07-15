@@ -357,6 +357,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         deliveryRequestClientToken: delivery?.clientToken ?? null,
         deliveryAddress: delivery?.address ?? null,
         deliveryFee: delivery?.fee ?? null,
+        // Cloudflare Turnstile anti-bot token (verified server-side).
+        turnstileToken: turnstileToken || undefined,
       },
     });
 
