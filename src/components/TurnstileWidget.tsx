@@ -33,7 +33,6 @@ export default function TurnstileWidget({ onVerify, onError, onExpire, action }:
         theme="auto"
         language="auto"
         retry="auto"
-        appearance="interaction-only"
         className="overflow-hidden rounded-xl"
       />
     </div>
