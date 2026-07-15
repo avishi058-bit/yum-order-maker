@@ -611,12 +611,22 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 dir="ltr"
               />
             </div>
+            <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
+              <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
+              <TurnstileWidget
+                action="send-otp"
+                onVerify={setOtpTurnstileToken}
+                onExpire={() => setOtpTurnstileToken(null)}
+                onError={() => setOtpTurnstileToken(null)}
+              />
+              <p className="text-xs text-muted-foreground">יש לאמת את התיבה למעלה כדי לקבל קוד.</p>
+            </div>
             <div className="flex gap-3 pt-2">
               <motion.button
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={sendingOtp}
+                whileHover={{ scale: otpTurnstileToken && !sendingOtp ? 1.02 : undefined }}
+                whileTap={{ scale: otpTurnstileToken && !sendingOtp ? 0.98 : undefined }}
+                disabled={sendingOtp || !otpTurnstileToken}
                 onClick={handleSendOtp}
                 className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
               >
