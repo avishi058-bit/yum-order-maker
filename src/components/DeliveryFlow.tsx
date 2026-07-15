@@ -276,28 +276,30 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       return;
     }
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("delivery_requests")
-      .insert({
+    // Price/payout are computed SERVER-SIDE inside the edge function.
+    // We never trust the client-provided price — the edge function calls
+    // Google Maps directly and inserts with service_role.
+    const { data, error } = await supabase.functions.invoke("create-delivery-request", {
+      body: {
         customer_name: name.trim(),
         customer_phone: phone.trim(),
         address: address.trim(),
         zone_id: matchedZone.id === "auto" ? null : matchedZone.id,
         zone_name: matchedZone.name,
-        price: matchedZone.price,
-        payout: matchedZone.price,
         lat: pickedCoords?.lat ?? null,
         lng: pickedCoords?.lng ?? null,
-        status: "pending",
-      })
-      .select("id, client_token")
-      .single();
+      },
+    });
     setSubmitting(false);
-    if (error || !data) {
-      toast({ title: "שגיאה בשליחת בקשה", description: error?.message, variant: "destructive" });
+    if (error || !data || (data as any).error) {
+      toast({
+        title: "שגיאה בשליחת בקשה",
+        description: error?.message || (data as any)?.message || (data as any)?.error,
+        variant: "destructive",
+      });
       return;
     }
-    setRequestId(data.id);
+    setRequestId((data as { id: string }).id);
     // client_token is the ownership proof for later finalize/cancel. Without
     // it, no one — including the customer — can change this row (RLS blocks
     // anon updates). It stays only in this browser session.
