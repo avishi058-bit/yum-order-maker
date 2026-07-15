@@ -23,6 +23,21 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Only the site's DB trigger / kitchen UI (via edge invoke) can call this.
+    const provided = req.headers.get("x-internal-secret");
+    const { data: expected } = await supabase.rpc("get_webhook_secret");
+    if (!provided || !expected || provided !== expected) {
+      console.warn("[send-order-ready-push] unauthorized call");
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { order_id, type } = await req.json();
     if (!order_id || typeof order_id !== "string") {
       return new Response(JSON.stringify({ error: "order_id required" }), {
@@ -32,11 +47,6 @@ Deno.serve(async (req) => {
     }
     const notifType: "ready" | "preparing" | "almost_ready" | "ten_minutes" =
       type === "preparing" || type === "almost_ready" || type === "ten_minutes" ? type : "ready";
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
