@@ -129,6 +129,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
+    if (!otpTurnstileToken) {
+      toast({ title: "יש לאמת את תיבת \"אני לא רובוט\" לפני שליחת הקוד", variant: "destructive" });
+      return;
+    }
 
     setSendingOtp(true);
     try {
@@ -140,7 +144,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ phone: form.phone }),
+          body: JSON.stringify({ phone: form.phone, turnstileToken: otpTurnstileToken }),
         }
       );
       const result = await response.json();
