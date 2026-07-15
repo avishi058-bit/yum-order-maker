@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, Pencil } from "lucide-react";
 import EditOrderModal from "@/components/EditOrderModal";
 import QRCode from "qrcode";
-import DashboardView from "@/components/DashboardView";
+// DashboardView is lazy-loaded — pulls in recharts, admin-only, keep out of main bundle
+const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
