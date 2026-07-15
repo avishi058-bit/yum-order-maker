@@ -14,6 +14,13 @@ export const RUNTIME_FLAGS = {
   WEBSITE_SKIP_OTP: true,
 
   /**
+   * Website checkout: when false, temporarily bypass Cloudflare Turnstile.
+   * This prevents mobile in-app browsers / Safari cases where the security box
+   * stays blank from blocking real customers during soft launch.
+   */
+  WEBSITE_REQUIRE_TURNSTILE: false,
+
+  /**
    * Kiosk checkout: when true, do NOT collect a phone number on the kiosk.
    * Orders are placed with the customer name only. Set to `false` to
    * restore the phone field in the kiosk flow.
