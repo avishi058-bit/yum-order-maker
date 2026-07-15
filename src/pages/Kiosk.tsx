@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
@@ -8,14 +8,20 @@ import KioskWelcome from "@/components/KioskWelcome";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import KioskCartDrawer from "@/components/KioskCartDrawer";
-import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
-import DealCustomizer from "@/components/DealCustomizer";
-import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
+import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import ArayesCustomizer from "@/components/ArayesCustomizer";
 import SauceSelector from "@/components/SauceSelector";
 import { menuImages } from "@/data/menuImages";
+import { prefetchCustomerFlow } from "@/lib/prefetchCustomerFlow";
+
+// Heavy modals: lazy so the initial kiosk bundle stays small. Prefetched
+// during the Welcome-screen preload effect below, so by the time the user
+// taps an item the chunks are already resident in memory — no first-tap jank.
+const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
+const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
+const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
+const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
 // Inline DineInSelector - was a separate component but only used here
 const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: boolean) => void }) => {
   if (!open) return null;
@@ -139,6 +145,12 @@ const Kiosk = () => {
   // progressive flicker, no layout settle, no scroll jump.
   const [imagesReady, setImagesReady] = useState(false);
   useEffect(() => {
+    // Additive: warm the lazy customizer/checkout chunks + their icons while
+    // the Welcome screen is idle. Does not affect imagesReady/pendingStart —
+    // it's fire-and-forget.
+    prefetchCustomerFlow();
+
+
     let cancelled = false;
     const unique = Array.from(new Set(Object.values(menuImages)));
     Promise.all(
@@ -428,11 +440,15 @@ const Kiosk = () => {
         </div>
       )}
 
-      {/* Modals - reuse existing components */}
-      <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} initialState={customizerInitial} />
+      {/* Modals - reuse existing components. Suspense fallback is null: the
+          chunks are prefetched during Welcome (see prefetchCustomerFlow), so
+          in practice they are already resident when opened. */}
+      <Suspense fallback={null}>
+        <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} initialState={customizerInitial} />
+        <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
+        <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
+      </Suspense>
       <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} isKiosk />
-      <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
-      <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
       <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
       <ArayesCustomizer
         item={arayesItem}
@@ -520,27 +536,29 @@ const Kiosk = () => {
 
       <AnimatePresence>
         {checkoutOpen && (
-          <CheckoutForm
-            items={cart}
-            total={getTotal()}
-            sauces={selectedSauces}
-            freeSauces={freeSauces}
-            onClose={() => setCheckoutOpen(false)}
-            onSuccess={(orderNumber, _phone, method) => {
-              setCheckoutOpen(false);
-              setOrderSuccess(orderNumber ?? 0);
-              setSuccessPaymentMethod(method ?? null);
-              // Fire confetti
-              import("canvas-confetti").then(({ default: confetti }) => {
-                confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
-              });
-              setTimeout(() => {
-                setOrderSuccess(null);
-                setSuccessPaymentMethod(null);
-                resetOrder();
-              }, 2000);
-            }}
-          />
+          <Suspense fallback={null}>
+            <CheckoutForm
+              items={cart}
+              total={getTotal()}
+              sauces={selectedSauces}
+              freeSauces={freeSauces}
+              onClose={() => setCheckoutOpen(false)}
+              onSuccess={(orderNumber, _phone, method) => {
+                setCheckoutOpen(false);
+                setOrderSuccess(orderNumber ?? 0);
+                setSuccessPaymentMethod(method ?? null);
+                // Fire confetti
+                import("canvas-confetti").then(({ default: confetti }) => {
+                  confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+                });
+                setTimeout(() => {
+                  setOrderSuccess(null);
+                  setSuccessPaymentMethod(null);
+                  resetOrder();
+                }, 2000);
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 

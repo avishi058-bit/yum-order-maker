@@ -4,9 +4,27 @@ import ErrorBoundary from "./components/ErrorBoundary.tsx";
 import "./index.css";
 import { initIngredientAvailability } from "./lib/ingredientAvailability";
 import { preloadSelectorIcons } from "./lib/preloadSelectorIcons";
+import { prefetchCustomerFlow } from "./lib/prefetchCustomerFlow";
 
 initIngredientAvailability().catch(() => {});
 preloadSelectorIcons();
+
+// Warm the customer ordering flow (customizer/checkout chunks + their icons)
+// on idle, so the first item tap feels instant. Skipped on kiosk (Kiosk.tsx
+// triggers it during Welcome). Skipped on admin/kitchen routes to avoid
+// stealing bandwidth from the operational UI. prefetchCustomerFlow is
+// idempotent, so a duplicate trigger from Kiosk on the same session is a no-op.
+(function warmCustomerFlowOnIdle() {
+  if (typeof window === "undefined") return;
+  const path = window.location.pathname;
+  if (path.startsWith("/kitchen") || path.startsWith("/admin") ||
+      path.startsWith("/inventory") || path.startsWith("/courier") ||
+      path.startsWith("/station-setup") || path.startsWith("/kiosk")) return;
+  const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
+  const kick = () => { void prefetchCustomerFlow(); };
+  if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(kick);
+  else setTimeout(kick, 800);
+})();
 
 // Swap manifest + apple title when on the /kitchen route so installing from
 // /kitchen creates a separate "Kitchen" PWA, while / stays the customer app.
