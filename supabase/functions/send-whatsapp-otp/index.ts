@@ -74,15 +74,33 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
       }
 
-      // Always store bypass code for dev/testing
-      await supabase.from('verification_codes').insert({
-        phone,
-        code: DEV_BYPASS_CODE,
-        expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
+      // Rate limit: max 3 send attempts per phone in 5 minutes.
+      const { data: allowed, error: rateError } = await supabase.rpc(
+        'check_otp_rate_limit',
+        { p_phone: phone }
+      )
+      if (rateError || allowed === false) {
+        console.warn('OTP rate limit exceeded for', phone, rateError)
+        return jsonResponse({ error: 'יותר מדי ניסיונות. נסו שוב בעוד 5 דקות.' }, 429)
+      }
+
+      // Record this attempt so the count stays accurate.
+      await supabase.rpc('record_rate_limit_attempt', {
+        p_action: 'otp_send',
+        p_key: phone,
+        p_ip_address: req.headers.get('x-forwarded-for') || null,
       })
 
-      if (twilioConfigured) {
-        // Also send real OTP via WhatsApp
+      if (!twilioConfigured) {
+        // Dev/test mode: only insert a static bypass code when WhatsApp is not
+        // configured. In production this path must never be reachable.
+        await supabase.from('verification_codes').insert({
+          phone,
+          code: DEV_BYPASS_CODE,
+          expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
+        })
+      } else {
+        // Production: send a real OTP via WhatsApp.
         const formattedWhatsappFrom = normalizePhoneNumber(whatsappFrom!)
         if (!formattedWhatsappFrom) {
           console.error('TWILIO_WHATSAPP_FROM is invalid:', whatsappFrom)
@@ -125,8 +143,8 @@ Deno.serve(async (req) => {
         .eq('phone', phone)
         .maybeSingle()
 
-      return jsonResponse({ 
-        success: true, 
+      return jsonResponse({
+        success: true,
         customerName: customer?.name || null,
         devMode: !twilioConfigured,
       })
