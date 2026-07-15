@@ -212,7 +212,13 @@ Deno.serve(async (req) => {
         p_window: '2 hours',
       })
       if (hardAllowed === false) {
-        return jsonResponse({ error: 'המספר נחסם עקב ניסיונות חשודים. פנו לתמיכה או נסו שוב בעוד שעתיים.' }, 429)
+        // Permanent block — write to blocked_phones so every future request is refused.
+        await supabase.from('blocked_phones').upsert(
+          { phone, reason: 'brute_force_otp: 15+ failed verification attempts in 2 hours' },
+          { onConflict: 'phone' }
+        )
+        console.warn('Phone permanently blocked for brute-force:', phone)
+        return jsonResponse({ error: 'המספר נחסם לצמיתות עקב ניסיונות חשודים. יש לפנות לתמיכה.' }, 403)
       }
       const { data: softAllowed } = await supabase.rpc('check_rate_limit', {
         p_action: 'otp_verify',
