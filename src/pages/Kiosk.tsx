@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
@@ -8,14 +8,20 @@ import KioskWelcome from "@/components/KioskWelcome";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import KioskCartDrawer from "@/components/KioskCartDrawer";
-import CheckoutForm from "@/components/CheckoutForm";
-import ItemCustomizer, { type ItemCustomizerInitialState } from "@/components/ItemCustomizer";
-import DealCustomizer from "@/components/DealCustomizer";
-import FamilyDealCustomizer from "@/components/FamilyDealCustomizer";
+import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 import DrinkSelector from "@/components/DrinkSelector";
 import ArayesCustomizer from "@/components/ArayesCustomizer";
 import SauceSelector from "@/components/SauceSelector";
 import { menuImages } from "@/data/menuImages";
+import { prefetchCustomerFlow } from "@/lib/prefetchCustomerFlow";
+
+// Heavy modals: lazy so the initial kiosk bundle stays small. Prefetched
+// during the Welcome-screen preload effect below, so by the time the user
+// taps an item the chunks are already resident in memory — no first-tap jank.
+const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
+const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
+const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
+const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
 // Inline DineInSelector - was a separate component but only used here
 const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: boolean) => void }) => {
   if (!open) return null;
