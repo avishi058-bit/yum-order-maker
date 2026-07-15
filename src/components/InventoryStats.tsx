@@ -120,7 +120,8 @@ export function InventoryStats({
     return `${f} - ${t}`;
   }, [dates]);
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
+    const XLSX = await import("xlsx");
     if (!stats) return;
     const wb = XLSX.utils.book_new();
 
