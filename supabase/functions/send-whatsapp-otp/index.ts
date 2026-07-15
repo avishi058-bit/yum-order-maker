@@ -224,20 +224,34 @@ Deno.serve(async (req) => {
       // Tier 3 (IP hard block): 10 failed attempts per IP / 1 hour → PERMANENT IP BAN.
       //   IP is the attacker's identifier, so blocking it forever won't hurt real users.
 
-      // Tier 3: permanent IP ban after 10 fails from same IP.
+      // Tier 3: permanent IP ban. Threshold tightens to 3 in attack mode.
       if (clientIp && clientIp !== 'unknown') {
+        const ipMaxAttempts = underAttack ? 3 : 10
         const { data: ipAllowed } = await supabase.rpc('check_rate_limit', {
           p_action: 'otp_verify',
           p_key: `ip:${clientIp}`,
-          p_max_attempts: 10,
+          p_max_attempts: ipMaxAttempts,
           p_window: '1 hour',
         })
         if (ipAllowed === false) {
           await supabase.from('blocked_ips').upsert(
-            { ip_address: clientIp, reason: 'brute_force_otp: 10+ failed verifications from same IP in 1 hour' },
+            {
+              ip_address: clientIp,
+              reason: underAttack
+                ? `attack_mode_active: ${ipMaxAttempts}+ failed verifications`
+                : `brute_force_otp: ${ipMaxAttempts}+ failed verifications from same IP in 1 hour`,
+            },
             { onConflict: 'ip_address' }
           )
-          console.warn('IP permanently blocked for brute-force:', clientIp)
+          console.warn('IP permanently blocked:', clientIp, 'underAttack:', underAttack)
+
+          // Attack-pattern detection: if 3+ IPs blocked in the last hour,
+          // auto-block their /24 subnets and enable 24h attack mode.
+          const { data: attackDetected } = await supabase.rpc('check_and_activate_attack_mode')
+          if (attackDetected === true) {
+            console.error('🚨 ATTACK PATTERN DETECTED — /24 subnets auto-blocked, 24h high-alert mode ON')
+          }
+
           return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
         }
       }
