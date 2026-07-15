@@ -43,6 +43,41 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action')
     const body = await req.json()
 
+    // Rate limit sensitive actions by IP to block enumeration / bot abuse.
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      req.headers.get('cf-connecting-ip') ||
+      'unknown'
+    const rateLimited: Record<string, { max: number; window: string }> = {
+      register: { max: 5, window: '1 hour' },
+      login: { max: 10, window: '1 hour' },
+      'auto-login': { max: 60, window: '1 hour' },
+      'link-from-order': { max: 5, window: '1 hour' },
+      'set-favorite': { max: 30, window: '1 hour' },
+      'update-name': { max: 10, window: '1 hour' },
+      logout: { max: 30, window: '1 hour' },
+      'logout-all': { max: 10, window: '1 hour' },
+    }
+    const rl = action ? rateLimited[action] : null
+    if (rl) {
+      const rlAction = `customer-auth:${action}`
+      const { data: allowed } = await supabase.rpc('check_rate_limit', {
+        p_action: rlAction,
+        p_key: ip,
+        p_max_attempts: rl.max,
+        p_window: rl.window,
+      })
+      if (allowed === false) {
+        return json({ error: 'יותר מדי ניסיונות. נסו שוב מאוחר יותר.' }, 429)
+      }
+      await supabase.rpc('record_rate_limit_attempt', {
+        p_action: rlAction,
+        p_key: ip,
+        p_ip_address: ip,
+      })
+    }
+
+
     // ─── Register: after OTP verified, save customer + return token ───
     if (action === 'register') {
       const parsed = RegisterSchema.safeParse(body)
