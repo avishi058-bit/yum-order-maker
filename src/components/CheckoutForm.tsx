@@ -14,6 +14,7 @@ import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
+import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
 
