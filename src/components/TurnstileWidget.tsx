@@ -21,13 +21,16 @@ export default function TurnstileWidget({ onVerify, onError, onExpire, action }:
     setLoaded(false);
     setVerified(false);
     setFailed(false);
+  }, [reloadKey]);
 
+  useEffect(() => {
+    if (loaded || verified || failed) return;
     const timeout = window.setTimeout(() => {
-      if (!verified) setFailed(true);
+      setFailed(true);
     }, 8000);
 
     return () => window.clearTimeout(timeout);
-  }, [reloadKey, verified]);
+  }, [reloadKey, loaded, verified, failed]);
 
   const handleError = useCallback((error: unknown) => {
     console.error("Turnstile error", error);
