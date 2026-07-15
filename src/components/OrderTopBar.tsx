@@ -51,15 +51,9 @@ const OrderTopBar = () => {
     return () => window.removeEventListener("track-order", handler as EventListener);
   }, []);
 
-  // Track status transitions for sound/notification effect below, and
-  // auto-dismiss the tracker 30s after the order reaches a terminal state.
+  // Auto-dismiss the tracker 30s after the order reaches a terminal state.
   useEffect(() => {
     if (!order) return;
-    setPrevStatus((prev) => {
-      // Only overwrite when the status actually changed, so the "status change"
-      // effect below can compare prev vs current.
-      return prev === null ? order.status : prev;
-    });
     if (order.status === "completed" || order.status === "cancelled") {
       const t = setTimeout(() => {
         setTracked(null);
