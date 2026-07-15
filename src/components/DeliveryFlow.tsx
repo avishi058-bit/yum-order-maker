@@ -102,6 +102,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
             } catch (e) { console.warn("notify failed", e); }
             onApproved({
               requestId,
+              clientToken: clientToken ?? "",
               address,
               fee: matchedZone?.price ?? 0,
               zoneName: matchedZone?.name ?? "",
