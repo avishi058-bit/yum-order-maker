@@ -1,21 +1,97 @@
 // Edit an existing order: swap items, change quantities, add/remove items.
 // Restores fridge inventory for removed items and pulls fridge for new ones
 // via DB triggers. Returns requires_reprint=true if any non-drink item changed.
+//
+// SECURITY: prices are ALWAYS recomputed server-side from the shared
+// menu-pricing module — client-supplied `price` values are ignored. An
+// optional `discount` field is allowed but must be non-negative, capped
+// at the recomputed total, and is only accepted from admin callers.
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import {
+  MENU_ITEMS_PRICING,
+  TOPPINGS_PRICING,
+  MEAL_SIDES_PRICING,
+  MEAL_DRINKS_PRICING,
+  DEAL_DRINKS_PRICING,
+  MEAL_UPGRADE_PRICE,
+} from "../_shared/menu-pricing.ts";
 
 interface EditItem {
   item_id: string;
   item_name: string;
-  price: number;
+  price?: number; // IGNORED — server always recomputes.
   quantity: number;
-  toppings?: string[];
+  toppings?: string[]; // stored as Hebrew names on existing order_items
   removals?: string[];
   with_meal?: boolean;
-  meal_side?: string | null;
-  meal_drink?: string | null;
+  meal_side?: string | null; // Hebrew name
+  meal_drink?: string | null; // Hebrew name
   deal_burgers?: any;
-  deal_drinks?: any;
+  deal_drinks?: any; // array of { name?: string; optionId?: string }
+}
+
+// Name → price lookups for names stored on order_items (they went in as
+// resolved Hebrew names by create-order).
+const MENU_BY_ID = new Map(MENU_ITEMS_PRICING.map((m) => [m.id, m]));
+const TOPPING_BY_NAME = new Map(TOPPINGS_PRICING.map((t) => [t.name, t]));
+const MEAL_SIDE_BY_NAME = new Map(MEAL_SIDES_PRICING.map((s) => [s.name, s]));
+const MEAL_DRINK_BY_NAME = new Map(MEAL_DRINKS_PRICING.map((d) => [d.name, d]));
+const DEAL_DRINK_BY_ID = new Map(DEAL_DRINKS_PRICING.map((d) => [d.id, d]));
+const DEAL_DRINK_BY_NAME = new Map(DEAL_DRINKS_PRICING.map((d) => [d.name, d]));
+
+function priceLine(it: EditItem): { unit: number; error?: string } {
+  const menu = MENU_BY_ID.get(it.item_id);
+  if (!menu) return { unit: 0, error: `unknown item: ${it.item_id}` };
+  let unit = menu.price;
+
+  // Toppings (paid burger add-ons) — stored as Hebrew names on order_items.
+  for (const t of it.toppings ?? []) {
+    const found = TOPPING_BY_NAME.get(t);
+    if (found) unit += found.price;
+    // Unknown names (custom toppings, sauce lines, etc.) count as 0 —
+    // never treat unknowns as free-price overrides from the client.
+  }
+
+  // Meal upgrade — only when the base is a plain burger.
+  if (it.with_meal && menu.category === "burger") {
+    unit += MEAL_UPGRADE_PRICE;
+  }
+
+  // Meal side / meal drink — stored as Hebrew names.
+  if (it.meal_side) {
+    const s = MEAL_SIDE_BY_NAME.get(it.meal_side);
+    if (s) unit += s.price;
+  }
+  if (it.meal_drink) {
+    const d = MEAL_DRINK_BY_NAME.get(it.meal_drink);
+    if (d) unit += d.price;
+  }
+
+  // Deal drinks — support both id and name, since older rows use either.
+  if (Array.isArray(it.deal_drinks)) {
+    for (const dd of it.deal_drinks) {
+      const key = (dd && (dd.optionId || dd.id || dd.name)) as string | undefined;
+      if (!key) continue;
+      const found = DEAL_DRINK_BY_ID.get(key) ?? DEAL_DRINK_BY_NAME.get(key);
+      if (found) unit += found.price;
+    }
+  }
+
+  // Deal burgers — extra paid toppings inside a deal (stored as Hebrew names).
+  if (Array.isArray(it.deal_burgers)) {
+    for (const b of it.deal_burgers) {
+      if (Array.isArray(b?.toppings)) {
+        for (const t of b.toppings) {
+          const found = TOPPING_BY_NAME.get(t);
+          if (found) unit += found.price;
+        }
+      }
+    }
+  }
+
+  return { unit };
 }
 
 Deno.serve(async (req) => {
@@ -58,10 +134,20 @@ Deno.serve(async (req) => {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const isAdmin = roles.includes("admin");
 
     const body = await req.json();
     const orderId: string = body.order_id;
     const newItems: EditItem[] = body.items ?? [];
+    // Optional manual discount (₪), admin-only, non-negative, capped at total.
+    const rawDiscount = Number(body.discount);
+    const requestedDiscount = Number.isFinite(rawDiscount) && rawDiscount > 0 ? rawDiscount : 0;
+    if (requestedDiscount > 0 && !isAdmin) {
+      return new Response(JSON.stringify({ error: "Only admins can apply discounts" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!orderId || !Array.isArray(newItems) || newItems.length === 0) {
       return new Response(JSON.stringify({ error: "Missing order_id or items" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -86,6 +172,18 @@ Deno.serve(async (req) => {
     }
 
     const oldItems: any[] = order.order_items ?? [];
+
+    // ---- Server-side re-price. Reject unknown menu ids upfront. ----
+    const priced: Array<{ item: EditItem; unit: number }> = [];
+    for (const it of newItems) {
+      const p = priceLine(it);
+      if (p.error) {
+        return new Response(JSON.stringify({ error: p.error }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      priced.push({ item: it, unit: p.unit });
+    }
 
     // Compute requires_reprint: any added/removed/changed item that's not pure drink-swap
     const drinkPrefixes = ["drink-", "can", "bottle", "water", "flavored-water", "soda", "beer-"];
@@ -129,12 +227,12 @@ Deno.serve(async (req) => {
       .eq("order_id", orderId);
     if (delErr) throw delErr;
 
-    // Insert new order_items (trigger will pull fridge automatically)
-    const rowsToInsert = newItems.map((it) => ({
+    // Insert new order_items with server-computed prices.
+    const rowsToInsert = priced.map(({ item: it, unit }) => ({
       order_id: orderId,
       item_id: it.item_id,
       item_name: it.item_name,
-      price: it.price,
+      price: unit, // server-computed, NOT client-supplied
       quantity: it.quantity,
       toppings: it.toppings ?? [],
       removals: it.removals ?? [],
@@ -147,13 +245,26 @@ Deno.serve(async (req) => {
     const { error: insErr } = await admin.from("order_items").insert(rowsToInsert);
     if (insErr) throw insErr;
 
-    // Update orders.total
-    const newTotal = newItems.reduce((s, it) => s + Number(it.price) * Number(it.quantity), 0);
-    await admin.from("orders").update({ total: newTotal, updated_at: new Date().toISOString() }).eq("id", orderId);
+    // Server-computed total, minus a bounded admin discount.
+    const gross = priced.reduce((s, { unit, item }) => s + unit * Number(item.quantity), 0);
+    const discount = Math.min(requestedDiscount, gross);
+    const newTotal = Math.round((gross - discount) * 100) / 100;
 
-    return new Response(JSON.stringify({ ok: true, requires_reprint: requiresReprint, total: newTotal }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    await admin
+      .from("orders")
+      .update({ total: newTotal, updated_at: new Date().toISOString() })
+      .eq("id", orderId);
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        requires_reprint: requiresReprint,
+        total: newTotal,
+        gross,
+        discount,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("[edit-order] error", e);
     return new Response(JSON.stringify({ error: String((e as Error)?.message ?? e) }), {
