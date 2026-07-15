@@ -14,6 +14,35 @@ const jsonResponse = (body: Record<string, unknown>, status = 200) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
 
+async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
+  const secret = Deno.env.get('TURNSTILE_SECRET_KEY')
+  if (!secret) {
+    console.warn('TURNSTILE_SECRET_KEY not configured; skipping verification')
+    return true
+  }
+
+  try {
+    const params = new URLSearchParams()
+    params.append('secret', secret)
+    params.append('response', token)
+    if (remoteIp && remoteIp !== 'unknown') params.append('remoteip', remoteIp)
+
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: params,
+    })
+    const data = await res.json()
+    if (!data.success) {
+      console.warn('Turnstile verification failed', data)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('Turnstile verification error', err)
+    return false
+  }
+}
+
 const normalizePhoneNumber = (value: string) => {
   const sanitized = value.trim().replace(/^whatsapp:/i, '').replace(/[\s-]/g, '')
   if (!sanitized) return null
@@ -34,6 +63,7 @@ const normalizePhoneNumber = (value: string) => {
 
 const SendSchema = z.object({
   phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
+  turnstileToken: z.string().min(1).max(2048),
 })
 
 const VerifySchema = z.object({
@@ -64,10 +94,16 @@ Deno.serve(async (req) => {
     if (action === 'send') {
       const parsed = SendSchema.safeParse(body)
       if (!parsed.success) {
-        return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)
+        return jsonResponse({ error: 'מספר טלפון לא תקין או חסר אימות אבטחה' }, 400)
       }
 
-      const { phone } = parsed.data
+      const { phone, turnstileToken } = parsed.data
+      const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+      const turnstileOk = await verifyTurnstileToken(turnstileToken, clientIp)
+      if (!turnstileOk) {
+        return jsonResponse({ error: 'אימות האבטחה נכשל. נסה שוב.' }, 403)
+      }
+
       const formattedPhone = normalizePhoneNumber(phone)
       if (!formattedPhone) {
         return jsonResponse({ error: 'מספר טלפון לא תקין' }, 400)

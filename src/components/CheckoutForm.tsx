@@ -97,6 +97,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [saveFavoritePromptOpen, setSaveFavoritePromptOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [otpTurnstileToken, setOtpTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
   // Preorder scheduling — pick a future pickup time within the allowed window.
   const [preorderEnabled, setPreorderEnabled] = useState(false);
@@ -128,6 +129,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
+    if (!otpTurnstileToken) {
+      toast({ title: "יש לאמת את תיבת \"אני לא רובוט\" לפני שליחת הקוד", variant: "destructive" });
+      return;
+    }
 
     setSendingOtp(true);
     try {
@@ -139,7 +144,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ phone: form.phone }),
+          body: JSON.stringify({ phone: form.phone, turnstileToken: otpTurnstileToken }),
         }
       );
       const result = await response.json();
@@ -606,12 +611,22 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 dir="ltr"
               />
             </div>
+            <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
+              <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
+              <TurnstileWidget
+                action="send-otp"
+                onVerify={setOtpTurnstileToken}
+                onExpire={() => setOtpTurnstileToken(null)}
+                onError={() => setOtpTurnstileToken(null)}
+              />
+              <p className="text-xs text-muted-foreground">יש לאמת את התיבה למעלה כדי לקבל קוד.</p>
+            </div>
             <div className="flex gap-3 pt-2">
               <motion.button
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={sendingOtp}
+                whileHover={{ scale: otpTurnstileToken && !sendingOtp ? 1.02 : undefined }}
+                whileTap={{ scale: otpTurnstileToken && !sendingOtp ? 0.98 : undefined }}
+                disabled={sendingOtp || !otpTurnstileToken}
                 onClick={handleSendOtp}
                 className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
               >
