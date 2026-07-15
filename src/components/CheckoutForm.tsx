@@ -900,6 +900,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </span>
             </label>
 
+            {/* Cloudflare Turnstile — anti-bot verification before payment */}
+            {!isKiosk && (
+              <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
+                <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
+                <TurnstileWidget
+                  action="submit-order"
+                  onVerify={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => setTurnstileToken(null)}
+                />
+                <p className="text-xs text-muted-foreground">יש לאמת את התיבה למעלה כדי להשלים את ההזמנה.</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-3">
               {availablePaymentMethods.cash && (
                 <motion.button
