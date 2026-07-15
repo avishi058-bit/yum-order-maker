@@ -1190,6 +1190,7 @@ export type Database = {
       cleanup_old_rate_limit_attempts: { Args: never; Returns: undefined }
       cleanup_old_verification_codes: { Args: never; Returns: undefined }
       current_courier_id: { Args: never; Returns: string }
+      generate_daily_order_number: { Args: never; Returns: number }
       get_webhook_secret: { Args: never; Returns: string }
       has_role: {
         Args: {
