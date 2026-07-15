@@ -24,6 +24,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify caller is the site's own DB trigger (or admin) via shared secret.
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const provided = req.headers.get("x-internal-secret");
+    const { data: expected } = await supabase.rpc("get_webhook_secret");
+    if (!provided || !expected || provided !== expected) {
+      console.warn("[notify-kitchen] unauthorized call");
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { order_id } = await req.json();
     if (!order_id || typeof order_id !== "string") {
       return new Response(JSON.stringify({ error: "order_id required" }), {
@@ -31,11 +45,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     const { data: order } = await supabase
       .from("orders")

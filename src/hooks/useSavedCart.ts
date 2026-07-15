@@ -4,6 +4,7 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import type { CartItem } from "@/components/CartDrawer";
 
 const GUEST_ID_KEY = "habakta_guest_id";
+const DEVICE_TOKEN_KEY = "habakta_device_token";
 const SAVE_DEBOUNCE_MS = 800;
 const MAX_AGE_HOURS = 48;
 
@@ -50,12 +51,23 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
   const phone = customer?.phone ?? null;
   const guestId = getOrCreateGuestId();
 
+  // When a phone is present, the edge function requires the customer's
+  // device_token to prove ownership. Guests are keyed by their private guest_id.
+  const identityBody = () => {
+    if (phone) {
+      const token = localStorage.getItem(DEVICE_TOKEN_KEY);
+      return { phone, device_token: token, guest_id: null };
+    }
+    return { phone: null, device_token: null, guest_id: guestId };
+  };
+
+
   // ── Initial fetch ────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data: result } = await supabase.functions.invoke("manage-saved-cart", {
-        body: { action: "get", phone, guest_id: phone ? null : guestId },
+        body: { action: "get", ...identityBody() },
       });
       if (cancelled) return;
 
@@ -75,7 +87,7 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
         } else if (ageHours > MAX_AGE_HOURS) {
           // Expired — best-effort cleanup
           await supabase.functions.invoke("manage-saved-cart", {
-            body: { action: "delete", phone, guest_id: phone ? null : guestId },
+            body: { action: "delete", ...identityBody() },
           });
         }
       }
@@ -95,7 +107,7 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
   const persistCart = useCallback(async (itemsToPersist: CartItem[]) => {
     if (itemsToPersist.length === 0) {
       await supabase.functions.invoke("manage-saved-cart", {
-        body: { action: "delete", phone, guest_id: phone ? null : guestId },
+        body: { action: "delete", ...identityBody() },
       });
       return;
     }
@@ -103,14 +115,15 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
     await supabase.functions.invoke("manage-saved-cart", {
       body: {
         action: "upsert",
-        phone,
-        guest_id: phone ? null : guestId,
+        ...identityBody(),
         customer_name: customer?.name ?? null,
         items: itemsToPersist,
         dine_in: dineIn,
         total,
       },
     });
+    // identityBody reads localStorage each call; deps only reflect stable inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, guestId, customer?.name, dineIn, total]);
 
   // ── Persist on cart change (debounced) ───────────────────────────────────
@@ -157,7 +170,7 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
     setSavedCart(null);
     try {
       await supabase.functions.invoke("manage-saved-cart", {
-        body: { action: "mark", phone, guest_id: phone ? null : guestId, last_action: "resumed" },
+        body: { action: "mark", ...identityBody(), last_action: "resumed" },
       });
     } catch {}
   }, [savedCart, phone, guestId]);
@@ -166,7 +179,7 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
     setSavedCart(null);
     try {
       await supabase.functions.invoke("manage-saved-cart", {
-        body: { action: "delete", phone, guest_id: phone ? null : guestId },
+        body: { action: "delete", ...identityBody() },
       });
     } catch {}
   }, [phone, guestId]);

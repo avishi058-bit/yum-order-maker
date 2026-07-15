@@ -7,7 +7,6 @@ import { z } from 'https://esm.sh/zod@3.22.4'
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio'
 const OTP_EXPIRY_MS = 5 * 60 * 1000
-const DEV_BYPASS_CODE = '1234'
 
 const jsonResponse = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -92,13 +91,11 @@ Deno.serve(async (req) => {
       })
 
       if (!twilioConfigured) {
-        // Dev/test mode: only insert a static bypass code when WhatsApp is not
-        // configured. In production this path must never be reachable.
-        await supabase.from('verification_codes').insert({
-          phone,
-          code: DEV_BYPASS_CODE,
-          expires_at: new Date(Date.now() + OTP_EXPIRY_MS).toISOString(),
-        })
+        // Production hardening: no static bypass codes are ever inserted.
+        // If Twilio is misconfigured, we fail loudly instead of silently
+        // letting anyone in with a well-known code.
+        console.error('OTP send failed: Twilio not configured')
+        return jsonResponse({ error: 'שירות שליחת קודים אינו זמין כרגע. נסו שוב מאוחר יותר.' }, 503)
       } else {
         // Production: send a real OTP via WhatsApp.
         const formattedWhatsappFrom = normalizePhoneNumber(whatsappFrom!)
@@ -157,6 +154,18 @@ Deno.serve(async (req) => {
 
       const { phone, code } = parsed.data
 
+      // Rate limit verify: max 5 failed attempts per phone per 10 minutes.
+      // Blocks brute-force of the 4-digit code (10,000 combos).
+      const { data: allowed } = await supabase.rpc('check_rate_limit', {
+        p_action: 'otp_verify',
+        p_key: phone,
+        p_max_attempts: 5,
+        p_window: '10 minutes',
+      })
+      if (allowed === false) {
+        return jsonResponse({ error: 'יותר מדי ניסיונות. נסו שוב בעוד 10 דקות.' }, 429)
+      }
+
       const { data: record } = await supabase
         .from('verification_codes')
         .select('*')
@@ -169,6 +178,12 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (!record) {
+        // Record a failed attempt so brute-force counts.
+        await supabase.rpc('record_rate_limit_attempt', {
+          p_action: 'otp_verify',
+          p_key: phone,
+          p_ip_address: req.headers.get('x-forwarded-for') || null,
+        })
         return jsonResponse({ error: 'קוד שגוי או שפג תוקפו' }, 400)
       }
 

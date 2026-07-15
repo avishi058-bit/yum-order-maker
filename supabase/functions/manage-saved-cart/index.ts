@@ -1,15 +1,14 @@
 /**
  * manage-saved-cart
  * Single endpoint for all saved-cart operations (get/upsert/delete).
- * Identity is established by `guest_id` (from localStorage) OR `phone`
- * (for logged-in customers). The function uses service role to bypass
- * the locked-down RLS, but enforces ownership via the request body.
  *
- * Action contract:
- *   { action: "get",    guest_id?, phone? }
- *   { action: "upsert", guest_id?, phone?, items, dine_in, total, customer_name }
- *   { action: "delete", guest_id?, phone? }
- *   { action: "mark",   guest_id?, phone?, last_action }
+ * SECURITY:
+ * - Guest access uses guest_id (an opaque client-generated UUID from localStorage
+ *   — an attacker cannot enumerate guests).
+ * - Phone-based access REQUIRES a matching device_token proving the caller is
+ *   the customer who registered that phone. Without a valid device_token,
+ *   requests keyed by phone are rejected. This prevents anyone from reading,
+ *   modifying, or deleting a customer's saved cart just by knowing their phone.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
@@ -23,6 +22,7 @@ interface Body {
   action: "get" | "upsert" | "delete" | "mark";
   guest_id?: string | null;
   phone?: string | null;
+  device_token?: string | null;
   items?: unknown[];
   dine_in?: boolean | null;
   total?: number;
@@ -44,20 +44,41 @@ Deno.serve(async (req) => {
 
   try {
     const body = (await req.json()) as Body;
-    const { action, guest_id, phone } = body;
-
-    // Identity is mandatory — either a phone or a guest id
-    const identityColumn = phone ? "phone" : "guest_id";
-    const identityValue = phone ?? guest_id;
-
-    if (!identityValue || typeof identityValue !== "string" || identityValue.length < 4) {
-      return jsonResponse({ error: "missing_identity" }, 400);
-    }
+    const { action, guest_id, phone, device_token } = body;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Establish identity: phone (auth) requires proof; guest_id is a private UUID.
+    let identityColumn: "phone" | "guest_id";
+    let identityValue: string;
+
+    if (phone) {
+      if (
+        !device_token ||
+        typeof device_token !== "string" ||
+        device_token.length < 32
+      ) {
+        return jsonResponse({ error: "unauthorized" }, 401);
+      }
+      // Verify device_token belongs to this phone.
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("phone")
+        .eq("device_token", device_token)
+        .eq("phone", phone)
+        .maybeSingle();
+      if (!customer) return jsonResponse({ error: "unauthorized" }, 401);
+      identityColumn = "phone";
+      identityValue = phone;
+    } else if (guest_id && typeof guest_id === "string" && guest_id.length >= 8) {
+      identityColumn = "guest_id";
+      identityValue = guest_id;
+    } else {
+      return jsonResponse({ error: "missing_identity" }, 400);
+    }
 
     if (action === "get") {
       const { data } = await supabase

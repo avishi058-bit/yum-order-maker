@@ -18,14 +18,22 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { request_id } = await req.json();
-    if (!request_id) {
-      return new Response(JSON.stringify({ error: "request_id required" }), { status: 400, headers: corsHeaders });
-    }
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Only the site's DB trigger can invoke this.
+    const provided = req.headers.get("x-internal-secret");
+    const { data: expected } = await supabase.rpc("get_webhook_secret");
+    if (!provided || !expected || provided !== expected) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+
+    const { request_id } = await req.json();
+    if (!request_id) {
+      return new Response(JSON.stringify({ error: "request_id required" }), { status: 400, headers: corsHeaders });
+    }
 
     const { data: reqRow } = await supabase
       .from("delivery_requests")

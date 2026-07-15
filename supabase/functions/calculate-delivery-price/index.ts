@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_maps';
 const ORIGIN_ADDRESS = 'דרך ערבי נחל 21, תושיה, ישראל';
@@ -16,6 +17,35 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    // ── Rate limit by IP: 30 requests / 10 minutes.
+    // Prevents abuse of the paid Google Maps API.
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('x-real-ip') ||
+      'unknown';
+
+    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      p_action: 'delivery_price',
+      p_key: ip,
+      p_max_attempts: 30,
+      p_window: '10 minutes',
+    });
+    if (allowed === false) {
+      return new Response(JSON.stringify({ error: 'rate_limited', message: 'יותר מדי ניסיונות. נסו שוב מאוחר יותר.' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    await supabase.rpc('record_rate_limit_attempt', {
+      p_action: 'delivery_price',
+      p_key: ip,
+      p_ip_address: ip,
+    });
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const GOOGLE_MAPS_API_KEY = Deno.env.get('GOOGLE_MAPS_API_KEY');
     if (!LOVABLE_API_KEY || !GOOGLE_MAPS_API_KEY) {
@@ -27,7 +57,6 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     let body: any = {};
     try { body = rawBody ? JSON.parse(rawBody) : {}; } catch { body = {}; }
-    console.log('calculate-delivery-price body:', rawBody);
 
     const address = String(body?.address ?? '').trim();
     const latNum = Number(body?.lat);
@@ -36,13 +65,11 @@ Deno.serve(async (req) => {
     const lat = hasCoords ? latNum : null;
     const lng = hasCoords ? lngNum : null;
     if (!hasCoords && address.length < 5) {
-      console.error('invalid_address, parsed body:', body);
-      return new Response(JSON.stringify({ error: 'invalid_address', received: body }), {
+      return new Response(JSON.stringify({ error: 'invalid_address' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // If we got coords, reverse-geocode so we can echo a human-readable address
     let resolvedAddress = address;
     if (hasCoords) {
       try {
@@ -81,11 +108,10 @@ Deno.serve(async (req) => {
       }),
     });
 
-
     if (!routesRes.ok) {
       const details = await routesRes.text();
       console.error('Routes API failed', routesRes.status, details);
-      return new Response(JSON.stringify({ error: 'routes_failed', status: routesRes.status, details }), {
+      return new Response(JSON.stringify({ error: 'routes_failed', status: routesRes.status }), {
         status: routesRes.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -99,13 +125,12 @@ Deno.serve(async (req) => {
     }
 
     const distanceMeters: number = route.distanceMeters ?? 0;
-    const durationStr: string = route.duration ?? '0s'; // e.g. "1234s"
+    const durationStr: string = route.duration ?? '0s';
     const durationSec = parseInt(String(durationStr).replace('s', ''), 10) || 0;
 
     const km = distanceMeters / 1000;
     const minutes = durationSec / 60;
 
-    // Only deliver within 25 minutes driving from origin
     if (minutes > 25) {
       return new Response(JSON.stringify({
         error: 'out_of_range',
@@ -130,7 +155,7 @@ Deno.serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e: any) {
     console.error('calculate-delivery-price error', e);
-    return new Response(JSON.stringify({ error: 'server_error', details: String(e?.message ?? e) }), {
+    return new Response(JSON.stringify({ error: 'server_error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

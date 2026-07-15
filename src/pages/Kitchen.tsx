@@ -869,13 +869,9 @@ const Kitchen = () => {
       return;
     }
 
-    // Fire push notification when order becomes ready (non-blocking)
-    if (newStatus === "ready") {
-      supabase.functions.invoke("send-order-ready-push", { body: { order_id: orderId } })
-        .then(({ error: pushErr }) => {
-          if (pushErr) console.warn("[Kitchen] push send failed", pushErr);
-        });
-    }
+    // Push notification is sent automatically by the DB trigger
+    // (public.notify_order_ready) — no client call needed. Removed to keep
+    // the send-order-ready-push endpoint restricted to server-side callers.
   };
 
   const printOrder = (order: Order) => {
