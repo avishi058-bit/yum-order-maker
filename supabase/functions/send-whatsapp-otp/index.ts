@@ -190,17 +190,26 @@ Deno.serve(async (req) => {
 
       const { phone, code } = parsed.data
 
-      // Rate limit verify: max 3 failed attempts per phone per 30 minutes.
-      // Tight lock — a legitimate user rarely mistypes 3 times; anything more
-      // is almost certainly an attacker brute-forcing the 4-digit code.
-      const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      // Two-tier rate limit for OTP verification:
+      // Tier 1 (soft — human mistakes): 6 failed attempts per 15 minutes → short wait.
+      // Tier 2 (hard — brute-force attack): 15 failed attempts per 2 hours → long block.
+      const { data: hardAllowed } = await supabase.rpc('check_rate_limit', {
         p_action: 'otp_verify',
         p_key: phone,
-        p_max_attempts: 3,
-        p_window: '30 minutes',
+        p_max_attempts: 15,
+        p_window: '2 hours',
       })
-      if (allowed === false) {
-        return jsonResponse({ error: 'יותר מדי ניסיונות. נסו שוב בעוד 30 דקות.' }, 429)
+      if (hardAllowed === false) {
+        return jsonResponse({ error: 'המספר נחסם עקב ניסיונות חשודים. פנו לתמיכה או נסו שוב בעוד שעתיים.' }, 429)
+      }
+      const { data: softAllowed } = await supabase.rpc('check_rate_limit', {
+        p_action: 'otp_verify',
+        p_key: phone,
+        p_max_attempts: 6,
+        p_window: '15 minutes',
+      })
+      if (softAllowed === false) {
+        return jsonResponse({ error: 'יותר מדי ניסיונות. נסו שוב בעוד 15 דקות.' }, 429)
       }
 
       const { data: record } = await supabase
