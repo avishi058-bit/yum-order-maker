@@ -57,6 +57,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
   const [matchedZone, setMatchedZone] = useState<DeliveryZone | null>(null);
   const [ackDelivery, setAckDelivery] = useState(false);
   const [requestId, setRequestId] = useState<string | null>(null);
+  const [clientToken, setClientToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
