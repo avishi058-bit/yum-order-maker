@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
+// xlsx is dynamically imported inside exportExcel() to keep it out of the initial bundle
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
