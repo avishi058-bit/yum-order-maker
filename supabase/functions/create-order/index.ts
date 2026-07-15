@@ -304,6 +304,25 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "יותר מדי הזמנות בזמן קצר. נסו שוב מאוחר יותר." }, 429);
   }
 
+  // Duplicate-submit guard: block a second order from the same phone/IP within
+  // a short window (10 seconds). Prevents accidental double-clicks and two
+  // simultaneous orders from the same source.
+  const { data: dupAllowed, error: dupErr } = await supabase.rpc("check_rate_limit", {
+    p_action: "order_create_dup",
+    p_key: rateLimitKey,
+    p_max_attempts: 1,
+    p_window: "10 seconds",
+  });
+  if (dupErr || dupAllowed === false) {
+    console.warn("Duplicate order blocked", { rateLimitKey });
+    return jsonResponse({ error: "כבר נשלחה הזמנה זהה כרגע. המתינו רגע ונסו שוב." }, 429);
+  }
+  await supabase.rpc("record_rate_limit_attempt", {
+    p_action: "order_create_dup",
+    p_key: rateLimitKey,
+    p_ip_address: clientIp,
+  });
+
   await supabase.rpc("record_rate_limit_attempt", {
     p_action: rateLimitAction,
     p_key: rateLimitKey,
