@@ -4,6 +4,7 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import type { CartItem } from "@/components/CartDrawer";
 
 const GUEST_ID_KEY = "habakta_guest_id";
+const DEVICE_TOKEN_KEY = "habakta_device_token";
 const SAVE_DEBOUNCE_MS = 800;
 const MAX_AGE_HOURS = 48;
 
