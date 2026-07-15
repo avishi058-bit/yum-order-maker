@@ -175,6 +175,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       toast({ title: "אנא הכנס קוד בן 4 ספרות", variant: "destructive" });
       return;
     }
+    // If server previously asked for CAPTCHA (attack mode), require it here.
+    if (verifyCaptchaRequired && !verifyTurnstileToken) {
+      toast({ title: "יש להשלים את אימות \"אני לא רובוט\"", variant: "destructive" });
+      return;
+    }
 
     setVerifying(true);
     try {
@@ -186,12 +191,26 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ phone: form.phone, code: otpCode }),
+          body: JSON.stringify({
+            phone: form.phone,
+            code: otpCode,
+            ...(verifyTurnstileToken ? { turnstileToken: verifyTurnstileToken } : {}),
+          }),
         }
       );
       const result = await response.json();
 
       if (!response.ok) {
+        if (response.status === 428 && result?.requiresCaptcha) {
+          setVerifyCaptchaRequired(true);
+          setVerifyTurnstileToken(null);
+          toast({
+            title: "נדרש אימות אבטחה נוסף",
+            description: "אנא סמן \"אני לא רובוט\" ונסה שוב",
+            variant: "destructive",
+          });
+          return;
+        }
         throw new Error(result.error || "קוד שגוי");
       }
 
@@ -200,6 +219,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     } catch (error: any) {
       console.error("Verify error:", error);
       toast({ title: error.message || "קוד שגוי", variant: "destructive" });
+      // Force a fresh CAPTCHA token per attempt when captcha is required.
+      if (verifyCaptchaRequired) setVerifyTurnstileToken(null);
     } finally {
       setVerifying(false);
     }
