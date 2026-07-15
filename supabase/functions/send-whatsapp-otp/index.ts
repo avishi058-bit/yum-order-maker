@@ -91,6 +91,18 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action')
     const body = await req.json()
 
+    // Permanent block check — phones added to blocked_phones after brute-force are locked out forever.
+    if (typeof body?.phone === 'string') {
+      const { data: blocked } = await supabase
+        .from('blocked_phones')
+        .select('phone')
+        .eq('phone', body.phone)
+        .maybeSingle()
+      if (blocked) {
+        return jsonResponse({ error: 'המספר נחסם לצמיתות עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
+      }
+    }
+
     if (action === 'send') {
       const parsed = SendSchema.safeParse(body)
       if (!parsed.success) {
