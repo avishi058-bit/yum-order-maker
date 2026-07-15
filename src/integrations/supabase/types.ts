@@ -540,23 +540,32 @@ export type Database = {
       inventory_access_tokens: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
           label: string | null
           last_used_at: string | null
+          revoked_at: string | null
+          scope: string
           token: string
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           label?: string | null
           last_used_at?: string | null
+          revoked_at?: string | null
+          scope?: string
           token: string
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           label?: string | null
           last_used_at?: string | null
+          revoked_at?: string | null
+          scope?: string
           token?: string
         }
         Relationships: []

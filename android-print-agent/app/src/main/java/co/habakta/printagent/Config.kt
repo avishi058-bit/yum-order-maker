@@ -38,5 +38,16 @@ object Config {
     /** Serial Port Profile UUID — standard for ESC/POS + Star SPP BT printers. */
     const val SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB"
 
-    const val VERSION = "1.1.0"
+    /**
+     * Shared secret the browser client must send in `X-Agent-Secret` on every
+     * /print-raw call. Loopback binding already blocks the remote network,
+     * but any web page the tablet visits can also reach 127.0.0.1 — without
+     * this header, such a page could trigger nuisance prints (CSRF).
+     *
+     * MUST match the value at `src/lib/localPrintAgent.ts:AGENT_SECRET`.
+     * Change both together whenever you rotate this.
+     */
+    const val AGENT_SECRET = "kitchen-agent-fd6b0e29-4a1c-4d3e-9c7b-8f1a2e5d0c47"
+
+    const val VERSION = "1.2.0"
 }

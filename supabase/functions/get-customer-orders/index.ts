@@ -11,6 +11,17 @@ function normalizePhone(p: string): string {
   return p.replace(/\D/g, "").replace(/^972/, "0");
 }
 
+/** All plausible stored representations of a phone number, so an old
+ *  order saved as "+972..." still matches a "05..." lookup. */
+function phoneVariants(phone: string): string[] {
+  const digits = phone.replace(/\D/g, "");
+  const local = digits.replace(/^972/, "0"); // 0501234567
+  const noZero = local.startsWith("0") ? local.slice(1) : local; // 501234567
+  const intl = "972" + noZero; // 972501234567
+  const plusIntl = "+" + intl; // +972501234567
+  return Array.from(new Set([phone, local, intl, plusIntl, digits]));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -42,11 +53,14 @@ Deno.serve(async (req) => {
     }
 
     const phoneDigits = normalizePhone(customer.phone);
+    const variants = phoneVariants(customer.phone);
 
-    // Fetch by exact phone first
+    // Filter by phone in the SQL query itself, then keep the in-function
+    // normalized-match as a safety net for exotic stored formats.
     const { data: orders, error } = await supabase
       .from("orders")
       .select("id, order_number, status, total, created_at, payment_method, notes, customer_phone")
+      .in("customer_phone", variants)
       .order("created_at", { ascending: false })
       .limit(50);
 

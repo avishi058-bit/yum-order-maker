@@ -1,13 +1,9 @@
 // Sends Web Push notifications to all subscribers of a given order.
-// Triggered by the Kitchen UI when an order's status changes to "ready".
+// Triggered by DB triggers when an order transitions status. Not called from
+// the browser — the Kitchen UI updates the order row and the trigger fires this.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { internalCorsHeaders as corsHeaders } from "../_shared/cors.ts";
 
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";

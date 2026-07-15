@@ -1,11 +1,8 @@
 // Fires web push to all approved couriers when a new delivery_request is created.
+// INTERNAL-ONLY: invoked by a pg_net webhook from a DB trigger. No browser calls.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { internalCorsHeaders as corsHeaders } from "../_shared/cors.ts";
 
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";

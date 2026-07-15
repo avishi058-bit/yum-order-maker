@@ -22,6 +22,11 @@ import type { ReceiptOrder, RoundOrder } from "./kitchenReceipt";
 const AGENT_BASE = "http://127.0.0.1:9100";
 const HEALTH_TIMEOUT_MS = 1500;
 const PRINT_TIMEOUT_MS = 8000;
+// Shared secret with the Android print agent. Bound to loopback already, but
+// this header stops other websites the tablet visits from triggering prints
+// via CSRF against 127.0.0.1:9100. MUST match Config.kt:AGENT_SECRET in the
+// android-print-agent module.
+const AGENT_SECRET = "kitchen-agent-fd6b0e29-4a1c-4d3e-9c7b-8f1a2e5d0c47";
 
 export interface AgentHealth {
   ok: boolean;
@@ -99,7 +104,10 @@ export async function sendBytesToAgent(bytes: Uint8Array): Promise<AgentPrintRes
     const res = await withTimeout(
       fetch(`${AGENT_BASE}/print-raw`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Agent-Secret": AGENT_SECRET,
+        },
         body: JSON.stringify({ b64 }),
       }),
       PRINT_TIMEOUT_MS,
