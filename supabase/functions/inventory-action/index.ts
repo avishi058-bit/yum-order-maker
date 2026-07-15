@@ -500,6 +500,93 @@ Deno.serve(async (req) => {
         return json({ ok: true });
       }
 
+      // ---- Token management (admin-scope only) ----
+      case "list_tokens": {
+        const { data, error } = await supabase
+          .from("inventory_access_tokens")
+          .select("id, label, scope, expires_at, revoked_at, created_at, last_used_at")
+          .order("created_at", { ascending: false });
+        if (error) return json({ error: error.message }, 500);
+        return json({ tokens: data ?? [] });
+      }
+
+      case "create_token": {
+        const { label, scope, expires_in_days } = body as {
+          label?: string;
+          scope?: TokenScope;
+          expires_in_days?: number;
+        };
+        const nextScope: TokenScope = scope === "inventory" ? "inventory" : "admin";
+        const days = typeof expires_in_days === "number" && expires_in_days > 0
+          ? Math.min(365, Math.floor(expires_in_days))
+          : null;
+        const expires_at = days ? new Date(Date.now() + days * 86400_000).toISOString() : null;
+        // Cryptographically random URL-safe token (~44 chars).
+        const buf = new Uint8Array(32);
+        crypto.getRandomValues(buf);
+        const newToken = btoa(String.fromCharCode(...buf))
+          .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        const { data, error } = await supabase
+          .from("inventory_access_tokens")
+          .insert({ token: newToken, label: label ?? null, scope: nextScope, expires_at })
+          .select("id, label, scope, expires_at, created_at")
+          .single();
+        if (error) return json({ error: error.message }, 500);
+        // Return the token value ONCE — caller must save it now.
+        return json({ ok: true, token: newToken, record: data });
+      }
+
+      case "revoke_token": {
+        const { token_id } = body as { token_id?: string };
+        if (!token_id) return json({ error: "bad_params" }, 400);
+        const { error } = await supabase
+          .from("inventory_access_tokens")
+          .update({ revoked_at: new Date().toISOString() })
+          .eq("id", token_id);
+        if (error) return json({ error: error.message }, 500);
+        return json({ ok: true });
+      }
+
+      case "rotate_token": {
+        // Convenience: create a new token with the same scope/label as an
+        // existing one, then revoke the old. Caller receives the new value.
+        const { token_id, expires_in_days } = body as {
+          token_id?: string;
+          expires_in_days?: number;
+        };
+        if (!token_id) return json({ error: "bad_params" }, 400);
+        const { data: prev } = await supabase
+          .from("inventory_access_tokens")
+          .select("label, scope")
+          .eq("id", token_id)
+          .maybeSingle();
+        if (!prev) return json({ error: "not_found" }, 404);
+        const days = typeof expires_in_days === "number" && expires_in_days > 0
+          ? Math.min(365, Math.floor(expires_in_days))
+          : null;
+        const expires_at = days ? new Date(Date.now() + days * 86400_000).toISOString() : null;
+        const buf = new Uint8Array(32);
+        crypto.getRandomValues(buf);
+        const newToken = btoa(String.fromCharCode(...buf))
+          .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        const { data, error } = await supabase
+          .from("inventory_access_tokens")
+          .insert({
+            token: newToken,
+            label: prev.label,
+            scope: prev.scope,
+            expires_at,
+          })
+          .select("id, label, scope, expires_at, created_at")
+          .single();
+        if (error) return json({ error: error.message }, 500);
+        await supabase
+          .from("inventory_access_tokens")
+          .update({ revoked_at: new Date().toISOString() })
+          .eq("id", token_id);
+        return json({ ok: true, token: newToken, record: data });
+      }
+
       default:
         return json({ error: "unknown_action" }, 400);
     }
