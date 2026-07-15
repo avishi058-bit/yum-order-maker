@@ -104,7 +104,10 @@ export async function sendBytesToAgent(bytes: Uint8Array): Promise<AgentPrintRes
     const res = await withTimeout(
       fetch(`${AGENT_BASE}/print-raw`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Agent-Secret": AGENT_SECRET,
+        },
         body: JSON.stringify({ b64 }),
       }),
       PRINT_TIMEOUT_MS,
