@@ -190,6 +190,7 @@ export type Database = {
         Row: {
           address: string
           claimed_at: string | null
+          client_token: string
           courier_id: string | null
           created_at: string
           customer_name: string | null
@@ -208,6 +209,7 @@ export type Database = {
         Insert: {
           address: string
           claimed_at?: string | null
+          client_token?: string
           courier_id?: string | null
           created_at?: string
           customer_name?: string | null
@@ -226,6 +228,7 @@ export type Database = {
         Update: {
           address?: string
           claimed_at?: string | null
+          client_token?: string
           courier_id?: string | null
           created_at?: string
           customer_name?: string | null
