@@ -55,6 +55,14 @@ Deno.serve(async (req) => {
     let identityColumn: "phone" | "guest_id";
     let identityValue: string;
 
+    // A valid guest_id must look like a UUID or a hex/base64url string of
+    // adequate length. This blocks trivial short strings, sequential ids
+    // (e.g. "guest-1"), and other low-entropy values.
+    const GUEST_ID_UUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    const GUEST_ID_TOKEN = /^[A-Za-z0-9_-]{24,128}$/;
+    const isValidGuestId = (v: string) =>
+      GUEST_ID_UUID.test(v) || GUEST_ID_TOKEN.test(v);
+
     if (phone) {
       if (
         !device_token ||
@@ -73,7 +81,7 @@ Deno.serve(async (req) => {
       if (!customer) return jsonResponse({ error: "unauthorized" }, 401);
       identityColumn = "phone";
       identityValue = phone;
-    } else if (guest_id && typeof guest_id === "string" && guest_id.length >= 8) {
+    } else if (guest_id && typeof guest_id === "string" && isValidGuestId(guest_id)) {
       identityColumn = "guest_id";
       identityValue = guest_id;
     } else {
