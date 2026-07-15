@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { Turnstile } from "react-turnstile";
 
 interface TurnstileWidgetProps {
@@ -10,7 +11,20 @@ interface TurnstileWidgetProps {
 const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 export default function TurnstileWidget({ onVerify, onError, onExpire, action }: TurnstileWidgetProps) {
-  // In development, render a placeholder so the UI works without a real key.
+  const [reloadKey, setReloadKey] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  const handleError = useCallback((error: unknown) => {
+    console.error("Turnstile error", error);
+    setFailed(true);
+    onError?.();
+  }, [onError]);
+
+  const handleReload = () => {
+    setFailed(false);
+    setReloadKey((k) => k + 1);
+  };
+
   if (!siteKey) {
     return (
       <div className="p-3 rounded-xl border border-dashed border-border bg-secondary/40 text-center text-xs text-muted-foreground">
@@ -20,21 +34,33 @@ export default function TurnstileWidget({ onVerify, onError, onExpire, action }:
   }
 
   return (
-    <div className="flex justify-center min-h-[65px]" dir="ltr">
+    <div className="flex flex-col items-center gap-2 min-h-[75px] w-full" dir="ltr">
       <Turnstile
+        key={reloadKey}
         sitekey={siteKey}
-        onVerify={onVerify}
-        onError={(error) => {
-          console.error("Turnstile error", error);
-          onError?.();
+        onVerify={(token) => {
+          setFailed(false);
+          onVerify(token);
         }}
+        onError={handleError}
         onExpire={onExpire}
         action={action || "submit-order"}
-        theme="auto"
-        language="auto"
+        theme="light"
+        language="he"
         retry="auto"
-        className="overflow-hidden rounded-xl"
+        refreshExpired="auto"
+        fixedSize={true}
       />
+      {failed && (
+        <button
+          type="button"
+          onClick={handleReload}
+          className="text-xs text-primary underline"
+          dir="rtl"
+        >
+          לא נטען? לחץ כאן לרענון האימות
+        </button>
+      )}
     </div>
   );
 }
