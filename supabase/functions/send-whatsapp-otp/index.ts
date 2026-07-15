@@ -91,7 +91,23 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action')
     const body = await req.json()
 
-    // Permanent block check — phones added to blocked_phones after brute-force are locked out forever.
+    // Extract client IP (first entry in x-forwarded-for is the real client).
+    const rawFwd = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
+    const clientIp = rawFwd.split(',')[0].trim() || 'unknown'
+
+    // Permanent IP block — attackers are identified by IP, so this is safe to keep forever.
+    if (clientIp && clientIp !== 'unknown') {
+      const { data: ipBlocked } = await supabase
+        .from('blocked_ips')
+        .select('ip_address')
+        .eq('ip_address', clientIp)
+        .maybeSingle()
+      if (ipBlocked) {
+        return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
+      }
+    }
+
+    // Phone block check (kept for existing entries; new brute-force events block IP instead).
     if (typeof body?.phone === 'string') {
       const { data: blocked } = await supabase
         .from('blocked_phones')
@@ -99,7 +115,7 @@ Deno.serve(async (req) => {
         .eq('phone', body.phone)
         .maybeSingle()
       if (blocked) {
-        return jsonResponse({ error: 'המספר נחסם לצמיתות עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
+        return jsonResponse({ error: 'המספר נחסם עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
       }
     }
 
