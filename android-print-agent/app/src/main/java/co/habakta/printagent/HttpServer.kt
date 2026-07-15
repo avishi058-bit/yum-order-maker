@@ -20,12 +20,13 @@ class HttpServer(
 
     override fun serve(session: IHTTPSession): Response {
         // CORS — the website is on https://yum-order-maker.lovable.app /
-        // https://*.lovableproject.com etc. Allow any origin since this
-        // server is bound to loopback only.
+        // https://*.lovableproject.com etc. The server is bound to loopback
+        // only, but we also require an X-Agent-Secret header on /print-raw
+        // so a random webpage the tablet visits can't trigger prints.
         val cors = mapOf(
             "Access-Control-Allow-Origin" to "*",
             "Access-Control-Allow-Methods" to "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers" to "Content-Type",
+            "Access-Control-Allow-Headers" to "Content-Type, X-Agent-Secret",
         )
 
         if (session.method == Method.OPTIONS) {
@@ -35,7 +36,21 @@ class HttpServer(
         return try {
             when {
                 session.method == Method.GET && session.uri == "/health" -> health(cors)
-                session.method == Method.POST && session.uri == "/print-raw" -> printRaw(session, cors)
+                session.method == Method.POST && session.uri == "/print-raw" -> {
+                    val provided = session.headers["x-agent-secret"]
+                        ?: session.headers["X-Agent-Secret"]
+                    if (provided != Config.AGENT_SECRET) {
+                        return addHeaders(
+                            newFixedLengthResponse(
+                                Response.Status.UNAUTHORIZED,
+                                "application/json",
+                                JSONObject().put("error", "invalid_agent_secret").toString(),
+                            ),
+                            cors,
+                        )
+                    }
+                    printRaw(session, cors)
+                }
                 else -> addHeaders(
                     newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "not found"),
                     cors,
