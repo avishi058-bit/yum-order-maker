@@ -281,6 +281,29 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false } }
   );
 
+  // Rate limit: prevent bots from flooding orders.
+  // Website orders use the phone as key; station/kiosk orders fall back to IP.
+  const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  const rateLimitKey = (body.customerPhone && body.customerPhone.length >= 7)
+    ? body.customerPhone
+    : `ip:${clientIp}`;
+  const rateLimitAction = (body.orderSource === "kiosk" || body.orderSource === "station")
+    ? "order_create_station"
+    : "order_create";
+  const maxOrderAttempts = (body.orderSource === "kiosk" || body.orderSource === "station") ? 30 : 5;
+  const orderWindow = "15 minutes";
+
+  const { data: allowed, error: rateErr } = await supabase.rpc("check_rate_limit", {
+    p_action: rateLimitAction,
+    p_key: rateLimitKey,
+    p_max_attempts: maxOrderAttempts,
+    p_window: orderWindow,
+  });
+  if (rateErr || allowed === false) {
+    console.warn("Order rate limit exceeded", { rateLimitKey, rateLimitAction, rateErr });
+    return jsonResponse({ error: "יותר מדי הזמנות בזמן קצר. נסו שוב מאוחר יותר." }, 429);
+  }
+
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
