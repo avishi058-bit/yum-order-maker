@@ -304,6 +304,12 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "יותר מדי הזמנות בזמן קצר. נסו שוב מאוחר יותר." }, 429);
   }
 
+  await supabase.rpc("record_rate_limit_attempt", {
+    p_action: rateLimitAction,
+    p_key: rateLimitKey,
+    p_ip_address: clientIp,
+  });
+
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
