@@ -190,16 +190,17 @@ Deno.serve(async (req) => {
 
       const { phone, code } = parsed.data
 
-      // Rate limit verify: max 5 failed attempts per phone per 10 minutes.
-      // Blocks brute-force of the 4-digit code (10,000 combos).
+      // Rate limit verify: max 3 failed attempts per phone per 30 minutes.
+      // Tight lock — a legitimate user rarely mistypes 3 times; anything more
+      // is almost certainly an attacker brute-forcing the 4-digit code.
       const { data: allowed } = await supabase.rpc('check_rate_limit', {
         p_action: 'otp_verify',
         p_key: phone,
-        p_max_attempts: 5,
-        p_window: '10 minutes',
+        p_max_attempts: 3,
+        p_window: '30 minutes',
       })
       if (allowed === false) {
-        return jsonResponse({ error: 'יותר מדי ניסיונות. נסו שוב בעוד 10 דקות.' }, 429)
+        return jsonResponse({ error: 'יותר מדי ניסיונות. נסו שוב בעוד 30 דקות.' }, 429)
       }
 
       const { data: record } = await supabase
