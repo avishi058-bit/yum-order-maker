@@ -20,17 +20,19 @@ export default function TurnstileWidget({ onVerify, onError, onExpire, action }:
   }
 
   return (
-    <div className="flex justify-center" dir="ltr">
+    <div className="flex justify-center min-h-[65px]" dir="ltr">
       <Turnstile
         sitekey={siteKey}
         onVerify={onVerify}
-        onError={onError}
+        onError={(error) => {
+          console.error("Turnstile error", error);
+          onError?.();
+        }}
         onExpire={onExpire}
         action={action || "submit-order"}
         theme="auto"
-        language="he"
+        language="auto"
         retry="auto"
-        fixedSize={true}
         className="overflow-hidden rounded-xl"
       />
     </div>
