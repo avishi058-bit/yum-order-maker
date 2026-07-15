@@ -136,6 +136,35 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
+  const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
+  if (!secret) {
+    console.warn("TURNSTILE_SECRET_KEY not configured; skipping verification");
+    return true;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.append("secret", secret);
+    params.append("response", token);
+    if (remoteIp && remoteIp !== "unknown") params.append("remoteip", remoteIp);
+
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: params,
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.warn("Turnstile verification failed", data);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Turnstile verification error", err);
+    return false;
+  }
+}
+
 interface PricedLine {
   itemId: string;
   name: string;
