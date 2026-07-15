@@ -1,109 +1,130 @@
-# Performance & Code Quality Review — Findings Only
+# Intent Investigation — Are the Findings Real Debt or Deliberate Tradeoffs?
 
-No code changes made. Prioritized list below, with plain-language impact estimates. Numbers are order-of-magnitude, based on file sizes, patterns, and dependency inspection.
+Read-only investigation, no changes made. Sources: code comments, `.lovable/memory/*`, git history, and cross-file references.
 
----
-
-## 🔴 Critical — visible user impact today
-
-### C1. Uncompressed PNG assets in the bundle (~25 MB in `src/assets`)
-Many source images are 500 KB–2.3 MB PNGs (`extra-patty.png` 2.3 MB, `onion-jam.png` 2.0 MB, `doneness-well-done.png` 1.5 MB, `fries-regular.png` 1.4 MB, `add-to-home-screen-ios.png` 1.2 MB, `drink-maccabi.png` 1.1 MB, `kosher-certificate.jpeg` 959 KB, and many more). WebP versions exist for *some* (e.g. `hero-burger.webp` 183 KB vs `.jpg` 395 KB; `onion-jam.webp` 186 KB vs `.png` 2 MB) but the heavy PNGs still exist and are likely still referenced.
-
-**Impact:** On a 4G phone this alone can add **3–8 seconds** to first meaningful paint, and burns customer mobile data. On the kiosk tablet over Wi-Fi it's less painful but still slows cold start noticeably.
-
-**Fix direction:** convert every remaining PNG to WebP (or AVIF), keep PNG only where transparency + old-Safari support both matter, and audit `preloadSelectorIcons.ts` — it currently preloads ~30 PNGs at boot.
-
-### C2. Giant "God components" hurting maintainability and re-render cost
-- `src/pages/Kitchen.tsx` — **2,684 lines**, 51 `useEffect/useState` calls, multiple `setInterval`s (1s tick, alert loop, poll loop). Every state change re-renders the whole kitchen screen.
-- `src/components/ItemCustomizer.tsx` — **1,625 lines**
-- `src/pages/Inventory.tsx` — **1,244 lines**
-- `src/components/FavoriteOrderModal.tsx` — **1,196 lines**
-- `src/components/CheckoutForm.tsx` — **1,099 lines**
-- `src/pages/Index.tsx` — **922 lines**, 30 hook calls
-
-**Impact:** Kitchen screen re-renders far more than needed (every 1-second tick re-renders all order cards); on lower-end tablets this shows up as sluggish tap response and dropped animations. Also makes bugs much harder to isolate — a common source of regressions.
-
-**Fix direction:** split each into focused sub-components + `React.memo` on order cards; move the 1-second "elapsed time" tick into a small child that owns its own state so the parent doesn't re-render.
-
-### C3. Public menu page (`/`) not code-split
-`Index`, `NotFound`, `Login`, `Install` are eager-imported in `App.tsx`. That's fine for `Index` itself, but `Index.tsx` in turn imports the full menu, `CheckoutForm` (1,099 lines), all customizers, `framer-motion`, etc., all in the initial bundle. Admin/kitchen routes are lazy — good — but the customer path is where bundle size hurts most.
-
-**Impact:** Slower Time-to-Interactive on the actual page 99% of users see. Estimate 30–40% of initial JS is code the guest ordering flow doesn't need until they open a customizer or the cart.
-
-**Fix direction:** lazy-load `CheckoutForm`, `ItemCustomizer`, `DealCustomizer`, `FamilyDealCustomizer`, `LocationPickerModal` — only mount when the user actually opens them.
+Verdict per item:
 
 ---
 
-## 🟠 High — clear waste, not user-blocking yet
+## 1. Polling on customer + courier + kitchen screens
 
-### H1. Multiple 1-second polling timers on Kitchen + Tracking
-- `Kitchen.tsx` — 1-second re-render tick + additional polls
-- `OrderTracking.tsx` — fetches order every 10s **and** re-renders every 1s
-- `OrderLiveTracker.tsx` + `OrderTopBar.tsx` — each polls orders every 8s and ticks every 1s (so two components polling the same order in parallel on the same page)
-- `Courier.tsx` — polls every 5s
+### 🟢 INTENTIONAL — do NOT rip out
+**`OrderTracking.tsx`, `OrderLiveTracker.tsx`, `OrderTopBar.tsx` (customer side):**
+Explicit comments in the code:
+- `OrderTracking.tsx:47` — *"Poll every 10s — realtime would expose channel access; polling is safer here"*
+- `OrderLiveTracker.tsx:50` — *"Poll every 8s instead of realtime (no public DB channel access)"*
+- `OrderTopBar.tsx:83` — same comment
 
-**Impact:** Battery drain on courier phones and kitchen tablets, and duplicated network requests (probably 2× the DB hits needed on the customer tracking screen because TopBar + LiveTracker both poll). Realtime subscriptions already exist for some tables — polling on top is redundant.
+These pages read orders via the **`get-order-by-token` edge function** (secure, token-scoped) — they deliberately do NOT open a Supabase realtime channel because that would require broader table read access for anon users. This is a **security decision from the earlier RLS hardening pass**, consistent with `.lovable/memory/standards/code-quality.md` ("Always validate permissions server-side… Never expose sensitive data to client"). Recommendation from the previous report to "consolidate with realtime invalidation" was wrong for these screens — leave the polling.
 
-**Fix direction:** Consolidate to one shared "current order" query via React Query with realtime invalidation; drop the 1-second re-render ticks (use CSS `@keyframes` for elapsed-time animations, or a single top-level ticker that publishes to context).
+**`Kitchen.tsx` polling fallback:**
+`Kitchen.tsx:655-661` has an explicit comment:
+> *"Polling fallback — realtime already pushes updates instantly, so we only need a slow safety-net poll (every 10s) to catch dropped events. A tight 3s poll on top of realtime kept re-fetching the whole orders table and made status-button taps feel unresponsive."*
 
-### H2. Heavy libraries loaded eagerly
-`xlsx`, `jspdf`, `html2canvas`, `recharts`, `framer-motion`, `canvas-confetti`, `qrcode`, `react-signature-canvas` — several are only used in admin/kitchen/report screens but end up in shared chunks if imported at module top.
+Kitchen already has realtime subscriptions on `orders`, `menu_availability`, `custom_toppings`. The 10s poll is a **deliberately-tuned safety net for dropped websocket events on tablets**. Additional guards (`pauseRefreshRef`, `localMutationUntilRef`, visibility listeners) show this is battle-tested code — do NOT touch.
 
-**Impact:** `xlsx` alone is ~400 KB gzipped; `jspdf`+`html2canvas` ~200 KB; `recharts` ~150 KB. Together potentially **~1 MB** of JS that guests never need.
+**`Courier.tsx` 5s poll:** No comment, but the loop only runs while `courier.status !== "approved"` — it's waiting for admin approval and then stops. Intentional, narrow.
 
-**Fix direction:** dynamic `import()` these inside the click handler that uses them ("Export to Excel", "Download PDF", chart page).
+### 🟡 PARTIALLY UNINTENTIONAL — safe to improve
+**Duplicate polling `OrderTopBar` + `OrderLiveTracker`:** No comment justifies both polling independently. They're mounted in different contexts (persistent mini-bar vs expanded modal), but on `/track` both can be alive simultaneously → 2× the edge-function calls. **Safe to share one query** (e.g. lift into a hook or React Query key keyed by `orderNumber+phone`). Keep the polling itself.
 
-### H3. `any` types concentrated in critical files
-15 in `Kitchen.tsx`, 11 in `LocationPickerModal.tsx`, 10 in `EventsKitchen`/`EventsKitchenPanel`, plus scattered across print/checkout libs. Order objects, print payloads, and location data are all loosely typed.
-
-**Impact:** Category of bug the audit already caught (client-supplied prices in `edit-order`) is exactly the kind of thing types would surface earlier. Also makes refactors risky.
-
-### H4. Duplicated logic across pages
-- OTP normalization / phone variants — logic now exists in `get-customer-orders` but similar variants are re-implemented in `send-whatsapp-otp`, `customer-auth`, `CheckoutForm`.
-- Order fetching & 1s tick duplicated between `OrderLiveTracker` and `OrderTopBar` (near-identical code).
-- Print/receipt building: `kitchenReceipt.ts`, `btReceiptOps.ts`, `bluetoothPrinter.ts`, `rawbtPrinter.ts`, `localPrintAgent.ts` — pipeline is right but has repeated formatting code.
+**1-second re-render ticks** (Kitchen line 432, OrderTracking line 65, OrderLiveTracker line 108, OrderTopBar line 131): No comment. They're for updating displayed elapsed time / countdown. On Kitchen this ticks the whole page — probably organic, safe to isolate into a tiny `<ElapsedTime>` child so the parent doesn't re-render every second. Low risk.
 
 ---
 
-## 🟡 Medium — quality wins, low user impact
+## 2. Uncompressed PNGs in `src/assets/`
 
-### M1. Loading states are minimal
-`App.tsx` uses a single spinner for lazy routes. No skeletons on menu, order tracking, or checkout — user sees blank then pop-in. Menu especially would benefit from skeleton cards while `custom_toppings` + `menu_availability` load.
+### 🔴 UNINTENTIONAL DEBT — most of them are DEAD ASSETS
+Grep for actual references to the biggest offenders:
 
-### M2. Waterfall requests on boot
-On the home page: menu image preload → custom toppings fetch → ingredient availability fetch → site settings → business hours → customer auth check. Several of these are sequential in effect because components mount in a chain. Batching the "first render prerequisites" into one parallel `Promise.all` at the root would shave ~200–500 ms.
+| File | Size | References in src/ |
+|---|---|---|
+| `extra-patty.png` | 2.3 MB | **0** |
+| `onion-jam.png` | 2.0 MB | **0** (webp version exists) |
+| `doneness-well-done.png` | 1.5 MB | **0** |
+| `doneness-medium-well.png` | 1.3 MB | **0** |
+| `doneness-medium.png` | 1.2 MB | **0** |
+| `fries-regular.png` | 1.4 MB | **0** (webp used instead) |
+| `add-to-home-screen-ios.png` | 1.2 MB | **0** (`.jpeg` version used) |
+| `waffle-fries.png` | 885 KB | **0** (webp used) |
+| `garlic-confit.png` | 837 KB | **0** |
+| `tomato.png` | 807 KB | **0** |
+| `onion-rings.png` | 791 KB | **0** (webp used) |
+| `drink-maccabi.png` | 1.1 MB | 1 (still live) |
+| `kosher-certificate.jpeg` | 959 KB | 1 (still live) |
+| `cart-burger-icon.png` | 752 KB | 1 (still live) |
 
-### M3. Realtime subscriptions not scoped tightly
-`ingredientAvailability.ts` and `customToppingsStore.ts` subscribe to `*` events on entire tables. For a busy kitchen those channels carry every update. Fine today, worth watching as data grows.
+**~14 MB of the 25 MB in `src/assets/` is unused files left behind after WebP conversions.** Vite tree-shakes unimported imports, so they don't reach the browser — but they inflate the repo, slow `npm install`/CI, and confuse future edits.
 
-### M4. `useMemo`/`useCallback` used sparsely (only 36 files) relative to the size of the top components
-Not a blanket "add memo everywhere" recommendation, but the kitchen order list, customizer topping grids, and menu section absolutely should memoize their per-row renders.
+The ~3 MB that IS still shipped (`drink-maccabi`, `kosher-certificate`, `cart-burger-icon`, ~30 preloaded drink PNGs) is unintentional too — same conversion just wasn't finished. No memory note about a device that requires PNG. Safe to convert.
 
-### M5. Edge functions doing extra round-trips
-`inventory-action` (596 lines) and `create-order` (582 lines) each perform multiple sequential `select` → `update` calls that could be RPCs or single `.select(...).eq(...)` batched queries. Not slow at current volume; will bite at scale or during rushes.
-
-### M6. Missing indexes to verify
-Frequent query columns worth confirming have indexes: `orders(phone)`, `orders(created_at desc)`, `orders(status)`, `order_tracking_tokens(token)`, `customer_devices(device_token)`, `delivery_requests(courier_id, status)`. A quick `EXPLAIN` on the top-10 slow queries would confirm.
-
----
-
-## 🟢 Low — nice-to-have
-
-- `preloadSelectorIcons.ts` preloads ~30 PNGs at idle. Once C1 is done, keep this; before then it's amplifying the image weight problem.
-- `index.html` CSP allows `'unsafe-inline'` + `'unsafe-eval'` in scripts — needed for Vite dev but should be tightened in production build.
-- No `<link rel="preload" as="image">` for the LCP hero image — cheap fix.
-- Service worker (`public/sw.js`) is push-only, no caching. That's actually the right call today (avoids stale-menu bugs) — flag only if you later want offline kiosk mode.
-- Some `console.log`s remain in production paths (against your own stated standard). Audit and drop.
+**Correction to the previous report:** The impact number (3–8s slower FMP) was overstated because dead files don't ship. Real impact is on the ~30 preloaded drink PNGs and the referenced ones.
 
 ---
 
-## Suggested greenlight order (best ROI first)
+## 3. Kitchen.tsx being 2,684 lines
 
-1. **C1 image compression** — biggest single win for real customers, low risk, one PR.
-2. **C3 + H2 lazy-load heavy stuff on customer path** — faster first load, invisible to admin.
-3. **H1 kill duplicate polling + 1s re-renders** — battery + smoothness on tablets/couriers.
-4. **C2 split Kitchen.tsx** — invest here before adding more kitchen features.
-5. **H3/H4 typing + dedup** — ongoing maintainability.
-6. Everything under Medium/Low — opportunistic, alongside related feature work.
+### 🟡 ORGANIC GROWTH, cautious to split
+No memory note about keeping it monolithic. But the file contains many hard-won edge-case handlers (visibility listeners, local-mutation suppression window, auto-print race retry, ringtone alert interval, realtime + polling coordination). Comments like:
+- *"Race: orders INSERT realtime fires before order_items rows finish writing…"*
+- *"Suppress background refetches for a short window after a local mutation… otherwise the button feels frozen…"*
 
-Tell me which of these you want me to actually implement (e.g. "1, 2, 3") and I'll switch to build mode.
+These interlock across `useEffect`s. Splitting is worth doing but **must be careful** — this is exactly the type of file where a naive extract breaks subtle timing. Memory rule "Don't touch what already works unless explicitly asked" applies with extra weight here. Recommend splitting only extractable islands first (order card, settings modal, events panel) — not the realtime/polling core.
+
+---
+
+## 4. Other items
+
+### C3 — lazy-load `CheckoutForm`, `ItemCustomizer`, customizers
+🟢 **Unintentional.** No comment explains why they're eager on `/`. Admin routes were already lazy-loaded (App.tsx does this correctly), which shows the author knows the pattern. Safe to apply the same treatment to modals that only open on user interaction. Low risk.
+
+### H2 — heavy libs (`xlsx`, `jspdf`, `html2canvas`, `recharts`)
+🟢 **Unintentional.** Usage is confined to admin-only files:
+- `xlsx` → `DashboardView.tsx`, `InventoryStats.tsx`
+- `jspdf` → `bluetoothPrinter.ts`, `btReceiptOps.ts`, `eventContract.ts`
+- `recharts` → `DashboardView.tsx`, `InventoryStats.tsx`, `ui/chart.tsx`
+
+Guest bundle should never touch these. Dynamic `import()` inside the click handler is safe and standard. However: **print-related jspdf usage** touches the kitchen bon pipeline — memory rule *"Kitchen bons ALWAYS route through BT/agent/rawbt/browser pipeline"* means lazy-loading in printer code needs care (import once and cache, don't add latency to the first print). Handle print libs separately from the admin export libs.
+
+### H3 — `any` types
+🟢 **Unintentional.** No comments defending `any`. `.lovable/memory/standards/code-quality.md` says "Clear names… Strict separation UI/logic/data." Improving types aligns with stated standards. Low-risk to fix incrementally, high-risk to do in a big-bang PR — do file-by-file.
+
+### H4 — duplicated logic
+- **Phone-variant normalization duplicated across edge functions:** unintentional. Prior audit already added `normalizePhone` in `get-customer-orders`; the other functions haven't been updated yet. Safe to extract into `supabase/functions/_shared/`.
+- **OrderTopBar ≈ OrderLiveTracker:** unintentional, safe to unify (see item 1).
+- **Print/receipt libs (`kitchenReceipt.ts`, `btReceiptOps.ts`, `bluetoothPrinter.ts`, `rawbtPrinter.ts`, `localPrintAgent.ts`):** These look duplicated but each targets a different transport (Web Bluetooth vs RawBT app vs local HTTP agent vs browser print). The memory rule explicitly requires all four transports remain in the pipeline. Consolidation should be **content-building shared, transport-specific kept separate**. Medium risk.
+
+### M1 — loading states / skeletons
+🟢 Unintentional. No design memory says "avoid skeletons." Free to add.
+
+### M2 — request waterfalls on boot
+🟢 Unintentional. Sequential mounting rather than a design choice.
+
+### M3 — realtime subscriptions `*` on whole tables
+🟡 Mixed. `customToppingsStore` and `ingredientAvailability` need cross-table awareness for the kitchen availability system (see memory note `menu-item-inventory-end-to-end` — new items must be wired to kitchen availability). Broad subscription is defensible; narrowing to specific event types (`INSERT`/`UPDATE`) is safe but not urgent.
+
+### M4 — sparse `React.memo`/`useMemo`
+🟢 Unintentional. Only `KioskWelcome` uses `React.memo`. No standard about avoiding memoization. Adding it to Kitchen order cards and menu items is safe.
+
+### M5 — edge functions doing extra round-trips
+🟡 Mostly organic. Some sequential queries in `create-order`/`inventory-action` are order-dependent (must read stock before decrementing). Safe wins exist (batching independent selects) but each function needs individual review — not a blanket fix.
+
+### M6 — missing indexes
+🟢 Unintentional. No memory note. Safe to add, but should be verified with actual `EXPLAIN` before creating.
+
+---
+
+## Revised recommendation
+
+Compared to the original report, adjust as follows:
+
+| Item | Original priority | Revised |
+|---|---|---|
+| **C1 (images)** | Critical | High — mostly dead assets; delete unused, convert the ~3 remaining referenced PNGs |
+| **C2 (Kitchen.tsx)** | Critical | Medium — split *around* the realtime/polling core, not through it |
+| **C3 (lazy customer modals)** | Critical | Critical — confirmed safe |
+| **H1 (polling)** | High — "kill it" | **Do NOT remove polling.** Only: (a) share OrderTopBar+LiveTracker source, (b) isolate 1s ticks into small children |
+| **H2 (heavy libs)** | High | High — safe, but treat print libs (jspdf) separately from admin libs (xlsx/recharts) |
+| **H3, H4, M1–M6** | Various | Unchanged, all safe |
+
+Want me to proceed to build mode with the revised plan? Say which items (e.g. "C1 dead-asset cleanup, C3, H1 dedupe, H2 lazy load") and I'll implement.
