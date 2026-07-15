@@ -40,6 +40,7 @@
         document.write('<link rel="manifest" href="' + (isKitchen ? '/kitchen.webmanifest' : '/manifest.webmanifest') + '" />');
         if (isKitchen) {
           document.title = 'מטבח - הבקתה';
+          window.__HABAKTA_KITCHEN_INSTALL__ = true;
         }
       })();
     </script>
@@ -55,6 +56,15 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="הבקתה" />
+    <script>
+      (function () {
+        if (!window.__HABAKTA_KITCHEN_INSTALL__) return;
+        var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        var appName = document.querySelector('meta[name="application-name"]');
+        if (appleTitle) appleTitle.setAttribute('content', 'מטבח');
+        if (appName) appName.setAttribute('content', 'מטבח - הבקתה');
+      })();
+    </script>
 
     <link rel="canonical" href="https://yum-order-maker.lovable.app/" />
     <meta property="og:type" content="website" />
