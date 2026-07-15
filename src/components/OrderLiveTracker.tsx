@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+// supabase client no longer imported here — order fetch goes through the shared useOrderPoll hook
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPush, getExistingSubscription } from "@/lib/push";
@@ -8,6 +8,7 @@ import IosInstallModal from "@/components/IosInstallModal";
 import SmartPushPrompt from "@/components/SmartPushPrompt";
 import GoogleReviewCard from "@/components/GoogleReviewCard";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useOrderPoll } from "@/hooks/useOrderPoll";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
@@ -20,7 +21,8 @@ const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869
 
 const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
   const { settings } = useSiteSettings();
-  const [order, setOrder] = useState<any>(null);
+  // Shared polling hook — dedupes with OrderTopBar when both are mounted on /track.
+  const order = useOrderPoll(orderNumber, phone);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -29,32 +31,14 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const [showSmartPrompt, setShowSmartPrompt] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
-  // Fetch order via secure edge function (no direct DB access)
-  useEffect(() => {
-    const fetchOrder = async () => {
-      const { data } = await supabase.functions.invoke("get-order-by-token", {
-        body: { order_number: orderNumber, phone },
-      });
-      const fetched = data?.order;
-      if (fetched) {
-        setOrder((prev: any) => {
-          if (prev && prev.status !== fetched.status) {
-            setPrevStatus(prev.status);
-          }
-          return fetched;
-        });
-      }
-    };
-
-    fetchOrder();
-    // Poll every 8s instead of realtime (no public DB channel access)
-    const interval = setInterval(fetchOrder, 8000);
-    return () => clearInterval(interval);
-  }, [orderNumber]);
-
   // Play sound & send notification on status change
   useEffect(() => {
-    if (!order || !prevStatus || prevStatus === order.status) return;
+    if (!order) return;
+    if (prevStatus === null) {
+      setPrevStatus(order.status);
+      return;
+    }
+    if (prevStatus === order.status) return;
 
     const statusLabels: Record<string, string> = {
       preparing: "ההזמנה שלך בהכנה! 👨‍🍳",
@@ -63,6 +47,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     };
 
     const message = statusLabels[order.status];
+    setPrevStatus(order.status);
     if (!message) return;
 
     // Play sound

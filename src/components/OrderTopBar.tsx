@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, X, Bell, BellOff, Volume2 } from "lucide-react";
+import { useOrderPoll } from "@/hooks/useOrderPoll";
 
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
@@ -35,7 +35,7 @@ export const setTrackedOrder = (order: TrackedOrder | null) => {
 
 const OrderTopBar = () => {
   const [tracked, setTracked] = useState<TrackedOrder | null>(getTrackedOrder);
-  const [order, setOrder] = useState<any>(null);
+  const order = useOrderPoll(tracked?.orderNumber, tracked?.phone);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -51,43 +51,27 @@ const OrderTopBar = () => {
     return () => window.removeEventListener("track-order", handler as EventListener);
   }, []);
 
-  // Fetch order data + realtime
+  // Auto-dismiss the tracker 30s after the order reaches a terminal state.
   useEffect(() => {
-    if (!tracked) return;
-
-    const fetchOrder = async () => {
-      // Secure path — requires phone token. Older saved trackers without phone
-      // gracefully stop fetching (will be cleared on next manual close).
-      if (!tracked.phone) return;
-      const { data } = await supabase.functions.invoke("get-order-by-token", {
-        body: { order_number: tracked.orderNumber, phone: tracked.phone },
-      });
-      const fetched = data?.order;
-      if (fetched) {
-        setOrder((prev: any) => {
-          if (prev && prev.status !== fetched.status) {
-            setPrevStatus(prev.status);
-          }
-          return fetched;
-        });
-        if (fetched.status === "completed" || fetched.status === "cancelled") {
-          setTimeout(() => {
-            setTracked(null);
-            setTrackedOrder(null);
-          }, 30000);
-        }
-      }
-    };
-
-    fetchOrder();
-    // Poll every 8s instead of realtime (no public DB channel access)
-    const interval = setInterval(fetchOrder, 8000);
-    return () => clearInterval(interval);
-  }, [tracked?.orderNumber, tracked?.phone]);
+    if (!order) return;
+    if (order.status === "completed" || order.status === "cancelled") {
+      const t = setTimeout(() => {
+        setTracked(null);
+        setTrackedOrder(null);
+      }, 30000);
+      return () => clearTimeout(t);
+    }
+  }, [order?.status]);
 
   // Sound & notification on status change
   useEffect(() => {
-    if (!order || !prevStatus || prevStatus === order.status || !tracked) return;
+    if (!order || !tracked) return;
+    if (prevStatus === null) {
+      // First observation for this order — seed prevStatus without notifying.
+      setPrevStatus(order.status);
+      return;
+    }
+    if (prevStatus === order.status) return;
 
     const statusLabels: Record<string, string> = {
       preparing: "ההזמנה שלך בהכנה! 👨‍🍳",
@@ -96,6 +80,7 @@ const OrderTopBar = () => {
     };
 
     const message = statusLabels[order.status];
+    setPrevStatus(order.status);
     if (!message) return;
 
     if (tracked.soundEnabled) {

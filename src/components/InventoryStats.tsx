@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import * as XLSX from "xlsx";
+// xlsx is dynamically imported inside exportExcel() to keep it out of the initial bundle
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,7 +120,8 @@ export function InventoryStats({
     return `${f} - ${t}`;
   }, [dates]);
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
+    const XLSX = await import("xlsx");
     if (!stats) return;
     const wb = XLSX.utils.book_new();
 
