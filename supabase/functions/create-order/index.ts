@@ -513,6 +513,17 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "שגיאה ביצירת פריטי ההזמנה" }, 500);
   }
 
+  // Finalize the delivery request server-side, verifying the client_token.
+  // Without a matching token the update is refused — no client can mark
+  // another customer's pending request as completed.
+  if (body.deliveryRequestId && body.deliveryRequestClientToken) {
+    await supabase
+      .from("delivery_requests")
+      .update({ status: "completed", order_id: order.id })
+      .eq("id", body.deliveryRequestId)
+      .eq("client_token", body.deliveryRequestClientToken);
+  }
+
   return jsonResponse({
     orderId: order.id,
     orderNumber: order.order_number,
