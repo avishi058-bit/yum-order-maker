@@ -35,6 +35,7 @@ interface CheckoutFormProps {
   /** When set, this is a delivery order. Adds required legal ack + passes delivery data to create-order. */
   delivery?: {
     requestId: string;
+    clientToken: string;
     address: string;
     fee: number;
     zoneName: string;
