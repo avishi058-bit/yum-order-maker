@@ -14,6 +14,7 @@ import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
+import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
 
@@ -95,6 +96,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [saveFavoritePromptOpen, setSaveFavoritePromptOpen] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
   // Preorder scheduling — pick a future pickup time within the allowed window.
   const [preorderEnabled, setPreorderEnabled] = useState(false);
@@ -239,6 +241,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       });
       return;
     }
+    // Anti-bot gate: Turnstile required for website orders (kiosk is a trusted device).
+    if (!isKiosk && !turnstileToken) {
+      toast({
+        title: "יש לאמת את תיבת \"אני לא רובוט\"",
+        variant: "destructive",
+      });
+      return;
+    }
     // Delivery: force ack before any payment path
     if (delivery && !deliveryAck) {
       toast({
@@ -355,6 +365,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         deliveryRequestClientToken: delivery?.clientToken ?? null,
         deliveryAddress: delivery?.address ?? null,
         deliveryFee: delivery?.fee ?? null,
+        // Cloudflare Turnstile anti-bot token (verified server-side).
+        turnstileToken: turnstileToken || undefined,
       },
     });
 
@@ -543,6 +555,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     cash: restaurantStatus.cash_enabled,
     credit: restaurantStatus.credit_enabled,
   };
+
+  // Payment buttons require terms + Turnstile (website only; kiosk is a trusted local device).
+  const canSubmit = termsAccepted && (isKiosk || !!turnstileToken);
 
   return (
     <motion.div
@@ -896,16 +911,30 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </span>
             </label>
 
+            {/* Cloudflare Turnstile — anti-bot verification before payment */}
+            {!isKiosk && (
+              <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
+                <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
+                <TurnstileWidget
+                  action="submit-order"
+                  onVerify={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => setTurnstileToken(null)}
+                />
+                <p className="text-xs text-muted-foreground">יש לאמת את התיבה למעלה כדי להשלים את ההזמנה.</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-3">
               {availablePaymentMethods.cash && (
                 <motion.button
-                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("cash")}
-                  disabled={submitting || !termsAccepted}
+                  disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "cash"}
-                  aria-disabled={!termsAccepted}
-                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -922,13 +951,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
               {availablePaymentMethods.credit && (
                 <motion.button
-                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("credit")}
-                  disabled={submitting || !termsAccepted}
+                  disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "credit"}
-                  aria-disabled={!termsAccepted}
-                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -947,13 +976,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   Sends order to kitchen immediately; customer pays in person. */}
               {RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
                 <motion.button
-                  whileHover={!submitting && termsAccepted ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && termsAccepted ? { scale: 0.98 } : undefined}
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
                   onClick={() => handlePaymentSelect("counter")}
-                  disabled={submitting || !termsAccepted}
+                  disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "counter"}
-                  aria-disabled={!termsAccepted}
-                  title={!termsAccepted ? "יש לאשר את תנאי השימוש כדי להמשיך" : undefined}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
                   <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">

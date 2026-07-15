@@ -123,6 +123,8 @@ const BodySchema = z.object({
   // stores them as a synthetic order_item line for the kitchen receipt.
   sauces: z.array(SauceSchema).max(20).optional().default([]),
   freeSauces: z.number().int().min(0).max(100).optional().default(0),
+  // Cloudflare Turnstile anti-bot token. Required for website orders.
+  turnstileToken: z.string().min(1).max(2048).optional(),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
@@ -132,6 +134,35 @@ function jsonResponse(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
+  const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
+  if (!secret) {
+    console.warn("TURNSTILE_SECRET_KEY not configured; skipping verification");
+    return true;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.append("secret", secret);
+    params.append("response", token);
+    if (remoteIp && remoteIp !== "unknown") params.append("remoteip", remoteIp);
+
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: params,
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.warn("Turnstile verification failed", data);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Turnstile verification error", err);
+    return false;
+  }
 }
 
 interface PricedLine {
@@ -277,6 +308,19 @@ Deno.serve(async (req: Request) => {
     );
   }
   const body = parsed.data;
+
+  // Cloudflare Turnstile verification: required for website orders to block bots.
+  // Kiosk/station are trusted local devices and skip this check.
+  if (body.orderSource === "website") {
+    if (!body.turnstileToken) {
+      return jsonResponse({ error: "חסר אימות אבטחה. נסה לרענן את הדף." }, 400);
+    }
+    const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const ok = await verifyTurnstileToken(body.turnstileToken, clientIp);
+    if (!ok) {
+      return jsonResponse({ error: "אימות האבטחה נכשל. נסה שוב." }, 403);
+    }
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
