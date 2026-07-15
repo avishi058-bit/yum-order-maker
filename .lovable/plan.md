@@ -1,81 +1,109 @@
+# Performance & Code Quality Review — Findings Only
 
-# Security Audit — Findings Only
-
-Read-only audit against the repo's current state + linter + security scanner. No code changes proposed here; each finding lists the concrete file/table so you can decide what to fix.
-
-Overall posture is **good**: earlier permissive "Anyone can read/write" RLS policies on `orders`, `order_items`, `customers`, `verification_codes`, `delivery_requests`, `event_bookings`, etc. were dropped and replaced with role/`auth.uid()`-scoped policies in later migrations. Payment flow (`create-order` → `create-payment` → `payment-callback`) recomputes prices from a shared server module and verifies a shared-secret callback token. `.env` and the client bundle are clean of private secrets.
-
-Remaining issues below.
+No code changes made. Prioritized list below, with plain-language impact estimates. Numbers are order-of-magnitude, based on file sizes, patterns, and dependency inspection.
 
 ---
 
-## 🔴 Critical
-None currently exploitable **assuming all committed hardening migrations were applied**. If any of the "drop old permissive policy" migrations failed to run in production, several of the Medium items below jump to Critical. Verifiable with a live `pg_policies` query — flagged as an open question, not a code fix.
+## 🔴 Critical — visible user impact today
 
-## 🟠 High
+### C1. Uncompressed PNG assets in the bundle (~25 MB in `src/assets`)
+Many source images are 500 KB–2.3 MB PNGs (`extra-patty.png` 2.3 MB, `onion-jam.png` 2.0 MB, `doneness-well-done.png` 1.5 MB, `fries-regular.png` 1.4 MB, `add-to-home-screen-ios.png` 1.2 MB, `drink-maccabi.png` 1.1 MB, `kosher-certificate.jpeg` 959 KB, and many more). WebP versions exist for *some* (e.g. `hero-burger.webp` 183 KB vs `.jpg` 395 KB; `onion-jam.webp` 186 KB vs `.png` 2 MB) but the heavy PNGs still exist and are likely still referenced.
 
-**H1. `edit-order` trusts client-supplied prices**
-File: `supabase/functions/edit-order/index.ts` (~L133–152)
-`rowsToInsert` copies `it.price` from the request and `newTotal = Σ (it.price × it.quantity)`. Unlike `create-order`, it does **not** call the shared `menu-pricing.ts` module. An admin/kitchen session (the role check on ~L56 is the only gate) can submit an edit with an arbitrary low price and permanently rewrite `orders.total`. Insider-risk, but breaks the "server recomputes prices" invariant.
+**Impact:** On a 4G phone this alone can add **3–8 seconds** to first meaningful paint, and burns customer mobile data. On the kiosk tablet over Wi-Fi it's less painful but still slows cold start noticeably.
 
-**H2. `inventory-action` token model is coarse and long-lived**
-Files: `supabase/functions/inventory-action/index.ts` (L1–52, L246–256), `src/App.tsx:109–110`, `src/pages/Inventory.tsx`
-Full inventory CRUD + financial stats (reads `orders`/`order_items` totals) is gated by a single opaque bearer token from `inventory_access_tokens`. No per-token scoping, no expiry, no rate-limit on token guessing, and the token lives in the URL (`/inventory/:token`). Any leak of that URL (screenshot, browser history, referrer to the print agent, chat share) grants indefinite full inventory write + financial read. Route is intentionally outside `ProtectedRoute`, so this token *is* the only control.
+**Fix direction:** convert every remaining PNG to WebP (or AVIF), keep PNG only where transparency + old-Safari support both matter, and audit `preloadSelectorIcons.ts` — it currently preloads ~30 PNGs at boot.
 
-**H3. Historical window on `inventory_access_tokens` readability**
-Files: `supabase/migrations/20260614001343…sql:67–76`, `20260714235500…sql:20`
-The initial migration created the tokens table without a `REVOKE`; a later migration added `REVOKE SELECT … FROM anon, authenticated`. If the intermediate state was live in production, tokens were briefly listable by any authenticated session. Needs confirmation against production `information_schema.role_table_grants`.
+### C2. Giant "God components" hurting maintainability and re-render cost
+- `src/pages/Kitchen.tsx` — **2,684 lines**, 51 `useEffect/useState` calls, multiple `setInterval`s (1s tick, alert loop, poll loop). Every state change re-renders the whole kitchen screen.
+- `src/components/ItemCustomizer.tsx` — **1,625 lines**
+- `src/pages/Inventory.tsx` — **1,244 lines**
+- `src/components/FavoriteOrderModal.tsx` — **1,196 lines**
+- `src/components/CheckoutForm.tsx` — **1,099 lines**
+- `src/pages/Index.tsx` — **922 lines**, 30 hook calls
 
-## 🟡 Medium
+**Impact:** Kitchen screen re-renders far more than needed (every 1-second tick re-renders all order cards); on lower-end tablets this shows up as sluggish tap response and dropped animations. Also makes bugs much harder to isolate — a common source of regressions.
 
-**M1. Wildcard CORS on every edge function, including internal ones**
-Files: `supabase/functions/notify-couriers-new-delivery/index.ts:6`, `notify-kitchen-new-order/index.ts:9`, `send-order-ready-push/index.ts:8`, `inventory-action/index.ts:7`, and all others.
-`Access-Control-Allow-Origin: *`. These endpoints are also gated by `x-internal-secret` / bearer token, so CORS `*` doesn't itself grant access, but it lets any origin probe response shape/timing. Recommend locking privileged endpoints to your own origin(s).
+**Fix direction:** split each into focused sub-components + `React.memo` on order cards; move the 1-second "elapsed time" tick into a small child that owns its own state so the parent doesn't re-render.
 
-**M2. Delivery-requests UPDATE policy is column-unrestricted** *(from security scanner)*
-Table: `public.delivery_requests` — policy `courier claim own`.
-Approved couriers can `UPDATE` pending or self-claimed rows with no column whitelist, so they can rewrite `price`, `payout`, `customer_phone`, `customer_name`, `address`, etc., not just `status`/`courier_id`. Needs a `WITH CHECK` that pins non-status columns or a `BEFORE UPDATE` trigger.
+### C3. Public menu page (`/`) not code-split
+`Index`, `NotFound`, `Login`, `Install` are eager-imported in `App.tsx`. That's fine for `Index` itself, but `Index.tsx` in turn imports the full menu, `CheckoutForm` (1,099 lines), all customizers, `framer-motion`, etc., all in the initial bundle. Admin/kitchen routes are lazy — good — but the customer path is where bundle size hurts most.
 
-**M3. `get-customer-orders` scans a global 50-row window**
-File: `supabase/functions/get-customer-orders/index.ts:47–63`
-Fetches the latest 50 orders across **all** customers and then filters by normalized phone in-function. Not an authz bypass (filtering happens before response), but a customer's older orders silently disappear once the shop is busy, and it wastes DB work. Recommend filtering by phone in the SQL query.
+**Impact:** Slower Time-to-Interactive on the actual page 99% of users see. Estimate 30–40% of initial JS is code the guest ordering flow doesn't need until they open a customizer or the cart.
 
-**M4. `manage-saved-cart` guest identity is client-provided**
-File: `supabase/functions/manage-saved-cart/index.ts:76–81`
-Trusts any `guest_id` string ≥8 chars as identity. Security depends purely on UUID entropy — no cookie/IP binding. A leaked/logged `guest_id` (analytics, referrer, error log) allows read/overwrite of that cart. Low probability but zero defense-in-depth.
-
-**M5. Android print agent has no auth token, only loopback binding**
-File: `android-print-agent/app/src/main/java/co/habakta/printagent/HttpServer.kt:1–29`
-`Access-Control-Allow-Origin: *` and no shared-secret header on `/print-raw`. Loopback binding blocks remote-network abuse, but any webpage the tablet visits, or any local app, can POST base64 ESC/POS bytes and cause paper-waste / disruptive prints (CSRF-from-localhost). Add a shared-secret header the browser client also sends.
-
-## 🟢 Low / Informational
-
-**L1. `get-order-by-token` name is misleading**
-File: `supabase/functions/get-order-by-token/index.ts`
-No HMAC token — ownership is `{order_number, phone}` + 10/15-min IP rate limit + generic `not_found` response. Control is sound; name is confusing.
-
-**L2. `dangerouslySetInnerHTML` usage is safe**
-File: `src/components/ui/chart.tsx:70` — injects a static `<style>` block built from config keys, not user input. No XSS.
-
-**L3. `.env` and client bundle are clean**
-Only `VITE_SUPABASE_URL`, `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_PUBLISHABLE_KEY` (anon JWT), `VITE_TURNSTILE_SITE_KEY`, and a Google Maps *browser* key. No `SERVICE_ROLE`, `TWILIO_API_KEY`, `ZCREDIT_*`, `VAPID_PRIVATE_KEY`, `INTERNAL_WEBHOOK_SECRET`, or `TURNSTILE_SECRET_KEY` anywhere in `src/` or `public/`.
-
-**L4. Admin/staff routing is properly role-gated**
-`src/App.tsx`: `AdminSettings`, `AdminAvailability`, `AdminCouriers`, `EventsAdmin`, `StationSetup` → `<ProtectedRoute requiredRole="admin">`. `Kitchen`, `EventsKitchen` → `["kitchen","admin"]`. `Courier` implements its own in-page Supabase auth backed by `auth.uid()`-scoped RLS on `couriers` / `courier_locations` — functionally protected.
-
-**L5. Payment integrity is correctly server-side**
-`create-order/index.ts` computes totals from `_shared/menu-pricing.ts`; `create-payment` uses the DB total; `payment-callback` verifies a Z-Credit shared-secret token before flipping status. No client `total` is trusted along this path (only along the `edit-order` path — see H1).
-
-**L6. RLS linter output**
-Supabase linter reported 4 × "RLS enabled, no policy" INFO findings (tables not named in output). Not exploitable on its own (no policies = deny-all through Data API), but means those tables are unreachable except via `service_role`, which may be intentional (e.g., `inventory_movements`, `inventory_recipes`, `inventory_access_tokens`, `courier_locations` history) — worth eyeballing to confirm each is intentional.
+**Fix direction:** lazy-load `CheckoutForm`, `ItemCustomizer`, `DealCustomizer`, `FamilyDealCustomizer`, `LocationPickerModal` — only mount when the user actually opens them.
 
 ---
 
-## Open questions before deciding fixes
+## 🟠 High — clear waste, not user-blocking yet
 
-1. Have all committed migrations actually been applied in production, in order? (query `pg_policies` to confirm none of the old permissive policies survive)
-2. For **H1** — does the order-edit UI ever legitimately send a price different from menu price (e.g., manual discounts), or should the server always recompute from `menu-pricing.ts`?
-3. For **H2** — how many inventory tokens are live, are they per-user, and is there a rotation policy? This drives whether H2 should be Critical.
-4. For **M5** — do you want a shared-secret header on the print agent, or is loopback-only acceptable for your kiosk hardware?
+### H1. Multiple 1-second polling timers on Kitchen + Tracking
+- `Kitchen.tsx` — 1-second re-render tick + additional polls
+- `OrderTracking.tsx` — fetches order every 10s **and** re-renders every 1s
+- `OrderLiveTracker.tsx` + `OrderTopBar.tsx` — each polls orders every 8s and ticks every 1s (so two components polling the same order in parallel on the same page)
+- `Courier.tsx` — polls every 5s
 
-Tell me which findings you want addressed and in what order, and I'll switch to build mode and fix them.
+**Impact:** Battery drain on courier phones and kitchen tablets, and duplicated network requests (probably 2× the DB hits needed on the customer tracking screen because TopBar + LiveTracker both poll). Realtime subscriptions already exist for some tables — polling on top is redundant.
+
+**Fix direction:** Consolidate to one shared "current order" query via React Query with realtime invalidation; drop the 1-second re-render ticks (use CSS `@keyframes` for elapsed-time animations, or a single top-level ticker that publishes to context).
+
+### H2. Heavy libraries loaded eagerly
+`xlsx`, `jspdf`, `html2canvas`, `recharts`, `framer-motion`, `canvas-confetti`, `qrcode`, `react-signature-canvas` — several are only used in admin/kitchen/report screens but end up in shared chunks if imported at module top.
+
+**Impact:** `xlsx` alone is ~400 KB gzipped; `jspdf`+`html2canvas` ~200 KB; `recharts` ~150 KB. Together potentially **~1 MB** of JS that guests never need.
+
+**Fix direction:** dynamic `import()` these inside the click handler that uses them ("Export to Excel", "Download PDF", chart page).
+
+### H3. `any` types concentrated in critical files
+15 in `Kitchen.tsx`, 11 in `LocationPickerModal.tsx`, 10 in `EventsKitchen`/`EventsKitchenPanel`, plus scattered across print/checkout libs. Order objects, print payloads, and location data are all loosely typed.
+
+**Impact:** Category of bug the audit already caught (client-supplied prices in `edit-order`) is exactly the kind of thing types would surface earlier. Also makes refactors risky.
+
+### H4. Duplicated logic across pages
+- OTP normalization / phone variants — logic now exists in `get-customer-orders` but similar variants are re-implemented in `send-whatsapp-otp`, `customer-auth`, `CheckoutForm`.
+- Order fetching & 1s tick duplicated between `OrderLiveTracker` and `OrderTopBar` (near-identical code).
+- Print/receipt building: `kitchenReceipt.ts`, `btReceiptOps.ts`, `bluetoothPrinter.ts`, `rawbtPrinter.ts`, `localPrintAgent.ts` — pipeline is right but has repeated formatting code.
+
+---
+
+## 🟡 Medium — quality wins, low user impact
+
+### M1. Loading states are minimal
+`App.tsx` uses a single spinner for lazy routes. No skeletons on menu, order tracking, or checkout — user sees blank then pop-in. Menu especially would benefit from skeleton cards while `custom_toppings` + `menu_availability` load.
+
+### M2. Waterfall requests on boot
+On the home page: menu image preload → custom toppings fetch → ingredient availability fetch → site settings → business hours → customer auth check. Several of these are sequential in effect because components mount in a chain. Batching the "first render prerequisites" into one parallel `Promise.all` at the root would shave ~200–500 ms.
+
+### M3. Realtime subscriptions not scoped tightly
+`ingredientAvailability.ts` and `customToppingsStore.ts` subscribe to `*` events on entire tables. For a busy kitchen those channels carry every update. Fine today, worth watching as data grows.
+
+### M4. `useMemo`/`useCallback` used sparsely (only 36 files) relative to the size of the top components
+Not a blanket "add memo everywhere" recommendation, but the kitchen order list, customizer topping grids, and menu section absolutely should memoize their per-row renders.
+
+### M5. Edge functions doing extra round-trips
+`inventory-action` (596 lines) and `create-order` (582 lines) each perform multiple sequential `select` → `update` calls that could be RPCs or single `.select(...).eq(...)` batched queries. Not slow at current volume; will bite at scale or during rushes.
+
+### M6. Missing indexes to verify
+Frequent query columns worth confirming have indexes: `orders(phone)`, `orders(created_at desc)`, `orders(status)`, `order_tracking_tokens(token)`, `customer_devices(device_token)`, `delivery_requests(courier_id, status)`. A quick `EXPLAIN` on the top-10 slow queries would confirm.
+
+---
+
+## 🟢 Low — nice-to-have
+
+- `preloadSelectorIcons.ts` preloads ~30 PNGs at idle. Once C1 is done, keep this; before then it's amplifying the image weight problem.
+- `index.html` CSP allows `'unsafe-inline'` + `'unsafe-eval'` in scripts — needed for Vite dev but should be tightened in production build.
+- No `<link rel="preload" as="image">` for the LCP hero image — cheap fix.
+- Service worker (`public/sw.js`) is push-only, no caching. That's actually the right call today (avoids stale-menu bugs) — flag only if you later want offline kiosk mode.
+- Some `console.log`s remain in production paths (against your own stated standard). Audit and drop.
+
+---
+
+## Suggested greenlight order (best ROI first)
+
+1. **C1 image compression** — biggest single win for real customers, low risk, one PR.
+2. **C3 + H2 lazy-load heavy stuff on customer path** — faster first load, invisible to admin.
+3. **H1 kill duplicate polling + 1s re-renders** — battery + smoothness on tablets/couriers.
+4. **C2 split Kitchen.tsx** — invest here before adding more kitchen features.
+5. **H3/H4 typing + dedup** — ongoing maintainability.
+6. Everything under Medium/Low — opportunistic, alongside related feature work.
+
+Tell me which of these you want me to actually implement (e.g. "1, 2, 3") and I'll switch to build mode.
