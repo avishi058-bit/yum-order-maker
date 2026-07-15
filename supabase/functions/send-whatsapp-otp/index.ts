@@ -69,6 +69,7 @@ const SendSchema = z.object({
 const VerifySchema = z.object({
   phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
   code: z.string().length(4),
+  turnstileToken: z.string().min(1).max(2048).optional(),
 })
 
 Deno.serve(async (req) => {
@@ -216,17 +217,37 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'קוד לא תקין' }, 400)
       }
 
-      const { phone, code } = parsed.data
+      const { phone, code, turnstileToken } = parsed.data
+
+      // During active attack mode, require a fresh Turnstile CAPTCHA on every
+      // verify. Real customers pass ("I'm not a robot"); bots can't → blocked.
+      // This also protects legitimate users from the tighter IP threshold.
+      if (underAttack) {
+        if (!turnstileToken) {
+          return jsonResponse(
+            { error: 'נדרש אימות אבטחה נוסף', requiresCaptcha: true },
+            428
+          )
+        }
+        const captchaOk = await verifyTurnstileToken(turnstileToken, clientIp)
+        if (!captchaOk) {
+          return jsonResponse(
+            { error: 'אימות האבטחה נכשל. נסה שוב.', requiresCaptcha: true },
+            428
+          )
+        }
+      }
 
       // Three-tier defense for OTP verification:
       // Tier 1 (soft — human mistakes): 6 failed attempts per phone / 15 min → short wait.
       // Tier 2 (phone lockout): 15 failed attempts per phone / 2 hours → temporary block.
       // Tier 3 (IP hard block): 10 failed attempts per IP / 1 hour → PERMANENT IP BAN.
-      //   IP is the attacker's identifier, so blocking it forever won't hurt real users.
+      //   In attack mode, the IP threshold tightens to 5 (still allows for
+      //   normal human error) and CAPTCHA gating (above) filters out bots.
 
-      // Tier 3: permanent IP ban. Threshold tightens to 3 in attack mode.
+      // Tier 3: permanent IP ban. Threshold tightens to 5 in attack mode.
       if (clientIp && clientIp !== 'unknown') {
-        const ipMaxAttempts = underAttack ? 3 : 10
+        const ipMaxAttempts = underAttack ? 5 : 10
         const { data: ipAllowed } = await supabase.rpc('check_rate_limit', {
           p_action: 'otp_verify',
           p_key: `ip:${clientIp}`,

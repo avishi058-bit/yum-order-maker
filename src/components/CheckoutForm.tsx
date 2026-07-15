@@ -98,6 +98,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [saveFavoritePromptOpen, setSaveFavoritePromptOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [otpTurnstileToken, setOtpTurnstileToken] = useState<string | null>(null);
+  const [verifyCaptchaRequired, setVerifyCaptchaRequired] = useState(false);
+  const [verifyTurnstileToken, setVerifyTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
   // Preorder scheduling — pick a future pickup time within the allowed window.
   const [preorderEnabled, setPreorderEnabled] = useState(false);
@@ -173,6 +175,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       toast({ title: "אנא הכנס קוד בן 4 ספרות", variant: "destructive" });
       return;
     }
+    // If server previously asked for CAPTCHA (attack mode), require it here.
+    if (verifyCaptchaRequired && !verifyTurnstileToken) {
+      toast({ title: "יש להשלים את אימות \"אני לא רובוט\"", variant: "destructive" });
+      return;
+    }
 
     setVerifying(true);
     try {
@@ -184,12 +191,26 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             "Content-Type": "application/json",
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ phone: form.phone, code: otpCode }),
+          body: JSON.stringify({
+            phone: form.phone,
+            code: otpCode,
+            ...(verifyTurnstileToken ? { turnstileToken: verifyTurnstileToken } : {}),
+          }),
         }
       );
       const result = await response.json();
 
       if (!response.ok) {
+        if (response.status === 428 && result?.requiresCaptcha) {
+          setVerifyCaptchaRequired(true);
+          setVerifyTurnstileToken(null);
+          toast({
+            title: "נדרש אימות אבטחה נוסף",
+            description: "אנא סמן \"אני לא רובוט\" ונסה שוב",
+            variant: "destructive",
+          });
+          return;
+        }
         throw new Error(result.error || "קוד שגוי");
       }
 
@@ -198,6 +219,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     } catch (error: any) {
       console.error("Verify error:", error);
       toast({ title: error.message || "קוד שגוי", variant: "destructive" });
+      // Force a fresh CAPTCHA token per attempt when captcha is required.
+      if (verifyCaptchaRequired) setVerifyTurnstileToken(null);
     } finally {
       setVerifying(false);
     }
@@ -663,12 +686,25 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 placeholder="____"
               />
             </div>
+            {verifyCaptchaRequired && (
+              <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                <p className="text-xs text-muted-foreground mb-2 text-center">
+                  זוהתה פעילות חריגה במערכת. אנא השלם אימות אבטחה.
+                </p>
+                <TurnstileWidget
+                  onVerify={setVerifyTurnstileToken}
+                  onExpire={() => setVerifyTurnstileToken(null)}
+                  onError={() => setVerifyTurnstileToken(null)}
+                  action="verify-otp"
+                />
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={verifying}
+                disabled={verifying || (verifyCaptchaRequired && !verifyTurnstileToken)}
                 onClick={handleVerifyOtp}
                 className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
               >
