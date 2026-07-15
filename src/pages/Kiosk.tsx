@@ -145,6 +145,12 @@ const Kiosk = () => {
   // progressive flicker, no layout settle, no scroll jump.
   const [imagesReady, setImagesReady] = useState(false);
   useEffect(() => {
+    // Additive: warm the lazy customizer/checkout chunks + their icons while
+    // the Welcome screen is idle. Does not affect imagesReady/pendingStart —
+    // it's fire-and-forget.
+    prefetchCustomerFlow();
+
+
     let cancelled = false;
     const unique = Array.from(new Set(Object.values(menuImages)));
     Promise.all(
