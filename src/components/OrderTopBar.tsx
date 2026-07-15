@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { ChefHat, CheckCircle, Package, X, Bell, BellOff, Volume2 } from "lucide-react";
+import { useOrderPoll } from "@/hooks/useOrderPoll";
 
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
