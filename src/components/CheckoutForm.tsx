@@ -556,6 +556,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     credit: restaurantStatus.credit_enabled,
   };
 
+  // Payment buttons require terms + Turnstile (website only; kiosk is a trusted local device).
+  const canSubmit = termsAccepted && (isKiosk || !!turnstileToken);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
