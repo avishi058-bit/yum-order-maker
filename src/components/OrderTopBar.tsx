@@ -35,7 +35,7 @@ export const setTrackedOrder = (order: TrackedOrder | null) => {
 
 const OrderTopBar = () => {
   const [tracked, setTracked] = useState<TrackedOrder | null>(getTrackedOrder);
-  const [order, setOrder] = useState<any>(null);
+  const order = useOrderPoll(tracked?.orderNumber, tracked?.phone);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -51,39 +51,23 @@ const OrderTopBar = () => {
     return () => window.removeEventListener("track-order", handler as EventListener);
   }, []);
 
-  // Fetch order data + realtime
+  // Track status transitions for sound/notification effect below, and
+  // auto-dismiss the tracker 30s after the order reaches a terminal state.
   useEffect(() => {
-    if (!tracked) return;
-
-    const fetchOrder = async () => {
-      // Secure path — requires phone token. Older saved trackers without phone
-      // gracefully stop fetching (will be cleared on next manual close).
-      if (!tracked.phone) return;
-      const { data } = await supabase.functions.invoke("get-order-by-token", {
-        body: { order_number: tracked.orderNumber, phone: tracked.phone },
-      });
-      const fetched = data?.order;
-      if (fetched) {
-        setOrder((prev: any) => {
-          if (prev && prev.status !== fetched.status) {
-            setPrevStatus(prev.status);
-          }
-          return fetched;
-        });
-        if (fetched.status === "completed" || fetched.status === "cancelled") {
-          setTimeout(() => {
-            setTracked(null);
-            setTrackedOrder(null);
-          }, 30000);
-        }
-      }
-    };
-
-    fetchOrder();
-    // Poll every 8s instead of realtime (no public DB channel access)
-    const interval = setInterval(fetchOrder, 8000);
-    return () => clearInterval(interval);
-  }, [tracked?.orderNumber, tracked?.phone]);
+    if (!order) return;
+    setPrevStatus((prev) => {
+      // Only overwrite when the status actually changed, so the "status change"
+      // effect below can compare prev vs current.
+      return prev === null ? order.status : prev;
+    });
+    if (order.status === "completed" || order.status === "cancelled") {
+      const t = setTimeout(() => {
+        setTracked(null);
+        setTrackedOrder(null);
+      }, 30000);
+      return () => clearTimeout(t);
+    }
+  }, [order?.status]);
 
   // Sound & notification on status change
   useEffect(() => {
