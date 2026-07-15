@@ -309,6 +309,19 @@ Deno.serve(async (req: Request) => {
   }
   const body = parsed.data;
 
+  // Cloudflare Turnstile verification: required for website orders to block bots.
+  // Kiosk/station are trusted local devices and skip this check.
+  if (body.orderSource === "website") {
+    if (!body.turnstileToken) {
+      return jsonResponse({ error: "חסר אימות אבטחה. נסה לרענן את הדף." }, 400);
+    }
+    const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const ok = await verifyTurnstileToken(body.turnstileToken, clientIp);
+    if (!ok) {
+      return jsonResponse({ error: "אימות האבטחה נכשל. נסה שוב." }, 403);
+    }
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
