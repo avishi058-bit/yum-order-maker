@@ -536,27 +536,29 @@ const Kiosk = () => {
 
       <AnimatePresence>
         {checkoutOpen && (
-          <CheckoutForm
-            items={cart}
-            total={getTotal()}
-            sauces={selectedSauces}
-            freeSauces={freeSauces}
-            onClose={() => setCheckoutOpen(false)}
-            onSuccess={(orderNumber, _phone, method) => {
-              setCheckoutOpen(false);
-              setOrderSuccess(orderNumber ?? 0);
-              setSuccessPaymentMethod(method ?? null);
-              // Fire confetti
-              import("canvas-confetti").then(({ default: confetti }) => {
-                confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
-              });
-              setTimeout(() => {
-                setOrderSuccess(null);
-                setSuccessPaymentMethod(null);
-                resetOrder();
-              }, 2000);
-            }}
-          />
+          <Suspense fallback={null}>
+            <CheckoutForm
+              items={cart}
+              total={getTotal()}
+              sauces={selectedSauces}
+              freeSauces={freeSauces}
+              onClose={() => setCheckoutOpen(false)}
+              onSuccess={(orderNumber, _phone, method) => {
+                setCheckoutOpen(false);
+                setOrderSuccess(orderNumber ?? 0);
+                setSuccessPaymentMethod(method ?? null);
+                // Fire confetti
+                import("canvas-confetti").then(({ default: confetti }) => {
+                  confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+                });
+                setTimeout(() => {
+                  setOrderSuccess(null);
+                  setSuccessPaymentMethod(null);
+                  resetOrder();
+                }, 2000);
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
