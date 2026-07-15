@@ -14,12 +14,12 @@
     <!-- Content Security Policy: restricts where scripts, styles, images, and network calls may come from -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.gpteng.co;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://maps.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.gpteng.co;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' data: https://fonts.gstatic.com;
       img-src 'self' data: blob: https:;
-      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com https://api.zcredit.co.il;
-      frame-src 'self' https://*.zcredit.co.il;
+      connect-src 'self' https://challenges.cloudflare.com https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com https://api.zcredit.co.il;
+      frame-src 'self' https://challenges.cloudflare.com https://*.zcredit.co.il;
       worker-src 'self' blob:;
       object-src 'none';
       base-uri 'self';
