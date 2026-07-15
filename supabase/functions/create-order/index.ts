@@ -165,6 +165,10 @@ async function verifyTurnstileToken(token: string, remoteIp: string): Promise<bo
   }
 }
 
+function shouldRequireWebsiteTurnstile(): boolean {
+  return Deno.env.get("WEBSITE_REQUIRE_TURNSTILE") === "true";
+}
+
 interface PricedLine {
   itemId: string;
   name: string;
@@ -309,9 +313,11 @@ Deno.serve(async (req: Request) => {
   }
   const body = parsed.data;
 
-  // Cloudflare Turnstile verification: required for website orders to block bots.
+  // Cloudflare Turnstile verification: optional during soft launch because some
+  // mobile in-app browsers leave the Cloudflare iframe blank. Set
+  // WEBSITE_REQUIRE_TURNSTILE=true to enforce it again.
   // Kiosk/station are trusted local devices and skip this check.
-  if (body.orderSource === "website") {
+  if (body.orderSource === "website" && shouldRequireWebsiteTurnstile()) {
     if (!body.turnstileToken) {
       return jsonResponse({ error: "חסר אימות אבטחה. נסה לרענן את הדף." }, 400);
     }

@@ -246,8 +246,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       });
       return;
     }
-    // Anti-bot gate: Turnstile required for website orders (kiosk is a trusted device).
-    if (!isKiosk && !turnstileToken) {
+    // Anti-bot gate: Turnstile can be disabled during soft launch for mobile
+    // browsers where the Cloudflare iframe stays blank.
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && !turnstileToken) {
       toast({
         title: "יש לאמת את תיבת \"אני לא רובוט\"",
         variant: "destructive",
@@ -370,8 +371,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         deliveryRequestClientToken: delivery?.clientToken ?? null,
         deliveryAddress: delivery?.address ?? null,
         deliveryFee: delivery?.fee ?? null,
-        // Cloudflare Turnstile anti-bot token (verified server-side).
-        turnstileToken: turnstileToken || undefined,
+        // Cloudflare Turnstile anti-bot token (verified server-side when enabled).
+        turnstileToken: RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE ? (turnstileToken || undefined) : undefined,
       },
     });
 
@@ -561,8 +562,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     credit: restaurantStatus.credit_enabled,
   };
 
-  // Payment buttons require terms + Turnstile (website only; kiosk is a trusted local device).
-  const canSubmit = termsAccepted && (isKiosk || !!turnstileToken);
+  // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.
+  const canSubmit = termsAccepted && (isKiosk || !RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE || !!turnstileToken);
 
   return (
     <motion.div
@@ -927,7 +928,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             </label>
 
             {/* Cloudflare Turnstile — anti-bot verification before payment */}
-            {!isKiosk && (
+            {!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && (
               <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
                 <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
                 <TurnstileWidget
