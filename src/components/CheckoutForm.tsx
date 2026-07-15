@@ -349,6 +349,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         })(),
         // Delivery order (website only). Delivery fee NOT collected here.
         deliveryRequestId: delivery?.requestId ?? null,
+        // Ownership proof — server verifies this before marking the delivery
+        // request completed. Without it the server won't touch the row.
+        deliveryRequestClientToken: delivery?.clientToken ?? null,
         deliveryAddress: delivery?.address ?? null,
         deliveryFee: delivery?.fee ?? null,
       },
