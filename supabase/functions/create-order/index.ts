@@ -112,6 +112,9 @@ const BodySchema = z.object({
   // Delivery (website only). When set, order is a delivery order — customer pays
   // for the food here; delivery fee is paid directly to the courier (Bit/cash).
   deliveryRequestId: z.string().uuid().nullable().optional(),
+  // Ownership proof for delivery_requests: only the client that created the
+  // request (and therefore holds its client_token) may finalize it.
+  deliveryRequestClientToken: z.string().uuid().nullable().optional(),
   deliveryAddress: z.string().max(500).nullable().optional(),
   deliveryFee: z.number().min(0).max(10000).nullable().optional(),
   items: z.array(CartItemSchema).min(1).max(50),
