@@ -34,7 +34,15 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      (function () {
+        var isKitchen = window.location.pathname.indexOf('/kitchen') === 0;
+        document.write('<link rel="manifest" href="' + (isKitchen ? '/kitchen.webmanifest' : '/manifest.webmanifest') + '" />');
+        if (isKitchen) {
+          document.title = 'מטבח - הבקתה';
+        }
+      })();
+    </script>
     <meta name="theme-color" content="#ffffff" />
     <meta name="application-name" content="הבקתה" />
 
