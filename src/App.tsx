@@ -16,6 +16,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Install from "./pages/Install";
+import KitchenInstall from "./pages/KitchenInstall";
 
 // Lazy load admin/staff pages
 const Kitchen = lazy(() => import("./pages/Kitchen"));
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/index" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/kitchen/install" element={<KitchenInstall />} />
               <Route path="/track" element={<OrderTracking />} />
               <Route path="/kiosk" element={<Kiosk />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
