@@ -8,6 +8,7 @@ import IosInstallModal from "@/components/IosInstallModal";
 import SmartPushPrompt from "@/components/SmartPushPrompt";
 import GoogleReviewCard from "@/components/GoogleReviewCard";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useOrderPoll } from "@/hooks/useOrderPoll";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
