@@ -1,92 +1,93 @@
-# Kiosk Preload Intent — Corrected Findings
+# IDOR / BOLA audit — findings only (no code changes proposed)
 
-Read-only re-investigation. Two important corrections to prior reports.
-
----
-
-## 1. Preload logic — YES, kiosk-intentional (but wider than I first thought)
-
-Two separate preload systems exist:
-
-**A. `preloadSelectorIcons()` — `src/main.tsx:9`**
-Runs on **every app boot** (customer, kiosk, admin — anyone loading the SPA), scheduled via `requestIdleCallback`. Preloads ~30 files: sides + drinks. Comment in the file:
-> *"Preload all drink and side (fries/onion) selector icons at app startup so that by the time the user opens the drink or side picker the images are already in the browser cache and appear instantly."*
-
-Purpose is universal "instant selector open," not kiosk-specific.
-
-**B. Kiosk mount preload — `src/pages/Kiosk.tsx:136-163`**
-Explicit block preloads **all `menuImages`** (burger tiles, meal tiles, drink tiles) using `new Image()` + `img.decode()`, tracked with an `imagesReady` flag. If the customer taps "התחל הזמנה" before decoding completes, the tap is **queued** (`pendingStart`) and auto-advances the view once ready. Comment:
-> *"Preload + decode all menu images on kiosk mount (runs during the Welcome screen too, since this component mounts immediately). By the time the user taps 'התחל הזמנה' the bitmaps are already in memory & decoded — no progressive flicker, no layout settle, no scroll jump."*
-
-Your recollection is exactly right — this is a deliberate kiosk-UX guarantee. `KioskWelcome` is even wrapped in `React.memo` with a stability comment saying it must not re-render during idle.
-
-**What is NOT preloaded today:** the customizer-only topping/doneness/ingredient icons (extra-patty, onion-jam, garlic-confit, doneness-*, tomato, pickles, maple, aioli, onion, fried-onion). Those are pulled in as eager `import`s inside `ItemCustomizer.tsx` (46 imports). The browser only fetches them when React first renders an `<img>` (i.e., when someone opens the customizer). Today that's fine because ItemCustomizer's JS is in the initial bundle, so the images are known to the browser very early.
+Scope: every customer-facing edge function + tables reachable via public URLs. Staff-only endpoints (`edit-order`, `create-order` admin paths, `inventory-action` under `admin` scope) are noted where relevant but not the primary focus.
 
 ---
 
-## 2. "Dead PNGs" — corrected, but the conclusion still holds
+## 1. Object-level authorization (does the caller own THIS record?)
 
-The prior report used `rg "<basename>.png|<basename>.jpe?g"` which correctly showed no imports of the `.png` versions. What I missed to explain: **the same base names ARE imported, but as `.webp`**. Verified for every file I flagged:
+### ✅ Solid
+- **`get-order-by-token`** — requires `order_number` **AND** matching `customer_phone` on the row. Rate-limited 10/15min per IP. Wrong phone returns the same `not_found` as missing order (no oracle). Strips `customer_phone` from the response.
+- **`get-customer-orders`** — requires a valid `deviceToken` (≥32 chars) → resolves the customer row → filters `orders` by that customer's phone (with all phone-format variants). No way to pass an order id/phone parameter.
+- **`manage-saved-cart`** — phone-keyed access requires `device_token` proving ownership of that phone (verified against `customers`). Guest-keyed access requires a `guest_id` that matches a UUID/high-entropy regex, blocking sequential guesses like `guest-1`. Guest_id is generated with `crypto.randomUUID` on the client.
+- **`cancel-delivery-request`** — requires `id` + matching `client_token` (UUID stored on the row) and only touches rows still in `pending`/`claimed`. Direct anon UPDATE on the table is blocked by RLS.
+- **`edit-order`** — validates a real Supabase JWT, resolves the user, and requires `admin` or `kitchen` role from `user_roles`. Manual discount field is admin-only. Prices are always recomputed server-side; client-supplied `price` is ignored.
+- **`customer-auth`** — every sensitive action is rate-limited by IP (`register` 5/h, `login` 10/h, `auto-login` 60/h, `link-from-order` 5/h). Device tokens are 32 random bytes.
+- **`inventory-action`** — every call requires a row in `inventory_access_tokens` that isn't revoked/expired; financial actions (`stats`, token management) require `scope='admin'`. This is a shared-admin-token model rather than per-user, which is fine for a single-tenant kitchen tool.
+- **Table RLS** — `customers`, `orders`, `order_items`, `saved_carts`, `delivery_requests`, `courier_locations`, `couriers`, `user_roles`, `blocked_ips` are all closed to anon; role-scoped for authenticated. The `enforce_courier_delivery_update` trigger blocks couriers from mutating anything on `delivery_requests` besides `status`/`courier_id` — a real column-level defence.
 
-| Base name | `.png` in assets | `.webp` in assets | Which is imported |
-|---|---|---|---|
-| `extra-patty` | ✓ (2.3 MB) | ✓ | `.webp` (ItemCustomizer) |
-| `onion-jam` | ✓ (2.0 MB) | ✓ | `.webp` (ItemCustomizer) |
-| `garlic-confit` | ✓ (837 KB) | ✓ | `.webp` (ItemCustomizer) |
-| `fried-onion` | ✓ (673 KB) | ✓ | `.webp` (ItemCustomizer) |
-| `doneness-medium/-mw/-wd` | ✓ | ✓ | `.webp` (ItemCustomizer) |
-| `tomato`, `pickles`, `onion`, `maple`, `aioli-sauce` | ✓ | ✓ | `.webp` (ItemCustomizer) |
-| `fries-regular`, `onion-rings`, `waffle-fries`, `tempura-onion-rings` | ✓ | ✓ | `.webp` (preloadSelectorIcons + ItemCustomizer) |
-| `add-to-home-screen-ios` | ✓ (1.2 MB) + `.jpeg` (214 KB) | — | **NEITHER imported** — check InstallGuide/IosInstallModal |
+### ⚠️ Real gaps
 
-**No template-string or dynamic asset paths anywhere in the codebase** — grep for `` `@/assets/${` ``, `` `../assets/` ``, `new URL(...assets...)`, `import.meta.glob`, `require(...assets...)` all returned nothing. Every asset reference is a static import string. Vite tree-shakes unimported files at build time.
+**G1. `create-payment` has no ownership check on the target order.**
+It looks up `orders` by `orderId` and verifies `total` matches, but does **not** verify the caller is the customer who placed that order (no `customer_phone`/device_token/JWT check).
+- Impact: anyone who guesses an order UUID (unpredictable, so hard) can spawn a Z-Credit checkout session pointing at that order id. Because the success/callback URLs are hard-coded server-side and `payment-callback` requires a shared secret, they cannot hijack the payment result — but they *could* pay someone else's order or use the endpoint to generate arbitrary Z-Credit sessions with a target's name/phone in `AdditionalText`.
+- Severity: **low** (needs the UUID, and worst case is "someone paid your bill"), but it's the one endpoint that fetches-by-id without proving relationship. Worth documenting or tightening.
 
-**Verdict:** the `.png` duplicates ARE safe to delete — nothing (static or dynamic) imports them. They just clutter the repo. Confirm `add-to-home-screen-ios.*` isn't referenced by `StepInstallGuide.tsx` or `IosInstallModal.tsx` before deleting those two specifically (I flagged, didn't fully verify).
+**G2. `create-delivery-request` accepts arbitrary customer_name/phone/address from the caller.**
+No ownership check — that's by design (guest checkout creates the row and gets back a `client_token`). But it means an attacker can spam pending delivery rows tied to *any* phone/name they choose. Only mitigation today is IP rate-limit (10/10min).
+- Severity: **low** (nuisance / social-engineering seed), not a classical IDOR.
 
----
-
-## 3. C3 lazy-loading — your instinct is right, my recommendation was too blunt
-
-The kiosk flow is: **Welcome → tap "Start Order" → menu → tap item → ItemCustomizer / DealCustomizer / FamilyDealCustomizer opens**.
-
-If I `React.lazy` these customizers, then on **first item tap** the browser has to:
-1. Fetch the customizer JS chunk
-2. Parse + evaluate it
-3. Fetch the 46 topping/doneness `.webp` files it references
-4. Render + decode
-
-On a kiosk tablet with warm WiFi that's ~200–500 ms of visible delay on the very first tap of the session — exactly the "feels laggy" moment you're trying to avoid. On subsequent taps it's cached and instant. Same problem hits customer phones on 4G, worse.
-
-**So the naive lazy-load is a regression for the kiosk-instant feel.** But there's a clean middle path:
-
-### Recommended approach — prefetch during idle screens
-
-Use `React.lazy` + **prefetch the chunk during idle time** so the JS + images are already warmed up by the time the user taps an item:
-
-- **Kiosk:** trigger `import("@/components/ItemCustomizer")`, `import("@/components/DealCustomizer")`, `import("@/components/FamilyDealCustomizer")` from inside the existing kiosk preload effect (right where `menuImages` are decoded). Also warm the customizer's topping/ingredient/doneness `.webp` images the same way — extend the `menuImages` preload set to include the ingredient/doneness map from ItemCustomizer.
-- **Customer web:** trigger the same dynamic imports from `requestIdleCallback` in `main.tsx` (same slot where `preloadSelectorIcons` lives today). First page load stays small; by the time the user browses to a burger and taps it, the customizer chunk is already in memory.
-- **Admin/kitchen routes:** irrelevant — never open customizers.
-
-This gives us:
-- Initial guest bundle ~20–30% smaller (measurable win)
-- Kiosk still feels instant (chunk warmed during welcome screen)
-- Zero regression on tap latency
-- Safe rollout — if prefetch fails, `React.lazy` will just fetch on demand (current behavior for the first opener)
-
-Same treatment fits `CheckoutForm.tsx` (1,099 lines): prefetch when the cart is opened (not when checkout is tapped) — cart open is the earliest signal a user is likely to check out.
+**G3. `inventory-action` — single shared token, no per-actor identity.**
+If any admin token leaks (URL bookmark, screenshot, browser history), full stock control + P&L stats are exposed. Tokens support `expires_at`/`revoked_at`/`scope`, so mitigation exists, but there is no per-user attribution in `inventory_movements` for token-authenticated writes.
+- Severity: **medium** — token model, not IDOR per se, but worth flagging in the same category.
 
 ---
 
-## Summary — what's actually safe
+## 2. Data minimization (are responses returning only what the screen needs?)
 
-| Item | Safe as-originally-proposed? | Corrected recommendation |
-|---|---|---|
-| Delete unused `.png` duplicates (extra-patty, onion-jam, doneness-*, garlic-confit, fried-onion, tomato, pickles, maple, aioli-sauce, onion, fried-onion, fries-regular, onion-rings, waffle-fries, tempura-onion-rings) | ✅ Yes | Straight delete; every one has a live `.webp` sibling. `add-to-home-screen-ios.*` — verify first, likely also unused. |
-| Convert still-live PNGs (`drink-maccabi`, `kosher-certificate`, `cart-burger-icon`, ~30 preloaded drink PNGs in preloadSelectorIcons) to `.webp` | ✅ Yes | Cheap win; kiosk preload still runs on the WebP versions. |
-| Lazy-load `ItemCustomizer`, `DealCustomizer`, `FamilyDealCustomizer`, `CheckoutForm` (C3) | ❌ No, not naively | Use `React.lazy` + **prefetch during kiosk welcome idle** + `requestIdleCallback` on customer web. Also extend the kiosk `menuImages` preload set to include the topping/doneness/ingredient WebPs. |
-| H2 heavy libs (`xlsx`, `recharts`, `jspdf`) | ✅ Yes | Dynamic import in click handlers; these are admin/kitchen only, no kiosk-instant concern. |
-| H3 `any` types, H4 dedup, M1–M6 | ✅ Yes | Unchanged from previous review. |
-| H1 polling | Same as before | Do NOT remove polling. Only share OrderTopBar+OrderLiveTracker source and isolate 1s ticks. |
-| C2 splitting Kitchen.tsx | Same as before | Only extract leaf components, don't touch the realtime/polling core. |
+### ✅ Solid
+- **`get-order-by-token`** — response explicitly `delete`s `customer_phone` before sending. Fields returned are exactly what the tracker renders (name, status, total, estimated_ready_at, timestamps).
+- **`get-customer-orders`** — returns only the customer's own rows; item projection is a whitelist (`item_id, item_name, price, quantity, toppings, removals, with_meal, meal_side, meal_drink, deal_burgers, deal_drinks`). No `cost`, no internal notes about *other* customers.
+- **`manage-saved-cart`** returns the caller's own saved cart only (filtered by `identityColumn`/`identityValue`).
+- **`inventory-action` list actions** — financial fields (`unit_cost`, revenue in `stats`) gated behind `scope='admin'`. `inventory` scope tokens cannot read P&L.
 
-Tell me which of these you want me to execute (e.g. "delete dead PNGs + convert live PNGs + lazy-with-prefetch customizers + lazy admin libs") and I'll switch to build mode.
+### ⚠️ Real gaps
+
+**M1. `get-customer-orders` returns `notes` and `payment_method`.**
+These are the customer's *own* fields, so it's not a cross-tenant leak, but `notes` sometimes contains staff/internal free text written from the kitchen UI. If kitchen ever writes non-customer-facing remarks there, the customer sees them. Confirm intent, or split into `customer_notes` vs `internal_notes`.
+- Severity: **low**, depends on how staff use the field.
+
+**M2. `manage-saved-cart` "get" uses `select("*")`.**
+Returns every column of the row (including `resumed_count`, `last_action`) to the client. Not sensitive today, but a `SELECT *` shape is fragile — any future column added to `saved_carts` is exposed automatically.
+- Severity: **low** (hygiene).
+
+**M3. Courier reads via RLS (not an edge function).**
+`delivery_requests` policy for couriers grants full-row SELECT on rows they claimed (or are pending for their approval). That includes `payout` and `price`, meaning a courier sees both what the customer paid and what they get — which may or may not be desired (margin transparency). Also `customer_phone` and `address` are exposed post-claim (necessary), but the entire row is exposed pre-claim on pending rows in some flows. Worth reviewing the exact `USING` clauses if you want to hide margin.
+- Severity: **low** (business decision, not a security bug).
+
+---
+
+## 3. Unpredictable IDs on public-facing lookups
+
+### ✅ Solid
+- `orders.id`, `delivery_requests.id`, `delivery_requests.client_token`, `saved_carts.id`, `customers.id`, `customers.device_token` — all UUID / 32-byte random.
+- `inventory_access_tokens.token` — server-generated (min 16 char guard on the reader).
+- `guest_id` in localStorage — `crypto.randomUUID()`, and the server-side regex rejects short/sequential guesses.
+
+### ⚠️ Real gaps
+
+**I1. `orders.order_number` is a 4-digit integer per day (`1000-9999`).**
+This is what appears in the public tracking URL (`/track?order=1234&phone=...`). Alone it's guessable, but the lookup requires a matching `customer_phone` and IP rate-limit is 10/15min. So it is defence-in-depth, not defence-alone.
+- Severity: **low** (mitigated by phone match + rate limit + attack-mode auto-block), but by strict "unpredictable IDs" criterion this is the one guessable public identifier.
+
+**I2. `guest_id` lives in `localStorage`.**
+UUIDs are unpredictable, but anyone who reads the device (shared kiosk, XSS in a third-party script) can steal a guest's cart. Not IDOR — noted for completeness.
+
+**I3. `inventory_access_tokens.token` length not enforced by CHECK/GENERATED.**
+The reader requires ≥16 chars but the column is free `text`. If a token were ever inserted manually with a short value it would pass. Add a length/format constraint.
+- Severity: **very low** (operational).
+
+---
+
+## Summary — one-line verdicts
+
+| Concern | Verdict |
+|---|---|
+| Object-level auth on customer-facing reads | Strong (phone+order_number, device_token, client_token, RLS). |
+| Object-level auth on customer-facing writes | Strong for edits (staff-only) and cancellations (client_token). |
+| Object-level auth on `create-payment` | **Gap G1** — no ownership binding beyond order-total match. |
+| Data minimization on lookup APIs | Mostly explicit whitelists; two `SELECT *` / free-text notes gotchas (M1, M2). |
+| Data minimization for couriers | Full-row RLS SELECT includes `payout`/`price` (M3). |
+| Public IDs unpredictable | UUIDs everywhere except `order_number` (4-digit, phone-gated, rate-limited) (I1). |
+
+No changes made — this is a findings-only report. Say the word if you want me to switch to build mode and address any of G1–I3 specifically.
