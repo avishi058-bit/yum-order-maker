@@ -25,9 +25,15 @@ const BodySchema = z.object({
   total: z.number().positive().max(1_000_000),
   items: z.array(CartItemSchema).min(1).max(100),
   customerName: z.string().max(200).optional().default(""),
-  customerPhone: z.string().max(30).optional().default(""),
+  // customerPhone is now REQUIRED — used to prove the caller owns the order.
+  customerPhone: z.string().min(6).max(30),
   orderId: z.string().uuid(),
 });
+
+// Normalize phone representations so "+972...", "972...", and "05..." all match.
+function normalizePhone(p: string): string {
+  return p.replace(/\D/g, "").replace(/^972/, "0");
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -53,24 +59,25 @@ Deno.serve(async (req) => {
     }
     const body = parsed.data;
 
-    // Verify order exists and total matches. Prevents an attacker from creating
-    // a checkout session for an amount unrelated to a real order.
+    // Verify order exists, belongs to this caller (phone match), and total
+    // matches. The phone check binds this session to the customer who placed
+    // the order — without it any UUID guess could open a checkout session for
+    // someone else's bill. Ownership + total mismatch both return the same
+    // generic "order_not_found" so an attacker cannot distinguish the two.
     const supabase = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: order, error: ordErr } = await supabase
       .from("orders")
-      .select("id, total, status")
+      .select("id, total, status, customer_phone")
       .eq("id", body.orderId)
       .maybeSingle();
-    if (ordErr || !order) {
+    if (
+      ordErr ||
+      !order ||
+      normalizePhone(order.customer_phone ?? "") !== normalizePhone(body.customerPhone) ||
+      Math.abs(Number(order.total) - body.total) > 0.01
+    ) {
       return new Response(JSON.stringify({ error: "order_not_found" }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    // Allow a 1-agora tolerance on total rounding.
-    if (Math.abs(Number(order.total) - body.total) > 0.01) {
-      return new Response(JSON.stringify({ error: "total_mismatch" }), {
-        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

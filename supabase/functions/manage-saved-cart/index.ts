@@ -91,11 +91,12 @@ Deno.serve(async (req) => {
     if (action === "get") {
       const { data } = await supabase
         .from("saved_carts")
-        .select("*")
+        .select("id, items, dine_in, total, customer_name, updated_at")
         .eq(identityColumn, identityValue)
         .maybeSingle();
       return jsonResponse({ cart: data ?? null });
     }
+
 
     if (action === "upsert") {
       const { items, dine_in, total, customer_name } = body;
