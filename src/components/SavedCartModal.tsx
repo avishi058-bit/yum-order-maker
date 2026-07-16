@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw } from "lucide-react";
 import type { SavedCart } from "@/hooks/useSavedCart";
-import cartBurgerIcon from "@/assets/cart-burger-icon.png";
+import cartBurgerIcon from "@/assets/cart-burger-icon.webp";
 
 interface SavedCartModalProps {
   open: boolean;

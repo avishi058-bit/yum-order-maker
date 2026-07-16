@@ -38,7 +38,16 @@ const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const Courier = lazy(() => import("./pages/Courier"));
 const AdminCouriers = lazy(() => import("./pages/AdminCouriers"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000, // 1 minute — avoid refetching on every remount
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false, // don't refetch on every tab switch
+      retry: 1,
+    },
+  },
+});
 
 const Loading = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
