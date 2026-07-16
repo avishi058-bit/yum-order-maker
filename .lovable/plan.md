@@ -1,83 +1,49 @@
-# "Edit order" feature — removal investigation (findings only)
+# Client-side exposure audit (dev-tools / network / storage)
 
-## 1. Where it's surfaced in the UI
+Scope: what an anonymous or normally-authenticated visitor sees via browser dev tools during normal use — no crafted requests. Findings only; nothing changed yet.
 
-**One entry point**, on each order card in `src/pages/Kitchen.tsx`:
+## Summary table
 
-- **File:** `src/pages/Kitchen.tsx` around line 2252
-- **Trigger:** a small pencil icon button (Lucide `<Pencil size={16} />`) in the order card's top-right button strip, with title tooltip **"ערוך הזמנה"** ("edit order").
-- **Visibility gate:** only rendered when `order.status === "new" || order.status === "preparing"` — you cannot edit an order once it's ready/completed.
-- **Onclick:** `setEditingOrder(order)` opens the modal.
+| # | Where | What leaks | Severity | Real risk |
+|---|---|---|---|---|
+| F1 | `delivery_requests` read on courier page — `select("*")` | `client_token` (customer's private tracking token) visible to every approved courier for every pending/own request | **Medium-High** | A courier can impersonate/track any customer's delivery via the tracking link |
+| F2 | `event_settings` — public `select("*")` on `/events` booking page | `kitchen_prep` (internal kitchen prep notes) served to anon visitors | Low-Medium | Internal ops text exposed; not a credential |
+| F3 | `couriers` — `select("*")` on courier's own row | `approved_by` (admin's user UUID), `user_id` sent to the courier's browser | Low | UUID enumeration only; not directly exploitable |
+| F4 | `site_settings` — `select("*")` in `useSiteSettings.ts` | All 22 columns to anon | **None** | Every column is public-facing theme/hours/banner config — verified, no secrets |
+| F5 | `localStorage` `habakta_customer` | Full customer object incl. `phone`, `loginCount`, `lastLoginAt`, `favoriteItems`, `device_token` (separate key) | Low (by design) | Standard device-token auth; only readable by same-origin JS. Worth being aware but not a bug |
+| F6 | `menu.ts` bundled data | Only `id/name/price/description/weight/badge/image` — no cost, no margin, no SKU | **None** | Clean |
+| F7 | `OrderTracking` network (`get-order-by-token`) | Already stripped `customer_phone` in prior audit | **None** | Fine |
+| F8 | `custom_toppings`, `menu_availability`, `delivery_zones`, `restaurant_status` anon reads | Explicit column whitelists, no PII columns exist | **None** | Fine |
+| F9 | Supabase Storage | No buckets exist in the project | **None** | N/A |
+| F10 | Direct `.select("*")` calls on `event_bookings`, `orders`, `inventory_items`, `couriers` list, `event_blocked_dates`, `courier_locations` | All gated by RLS to admin/kitchen/approved-courier roles — anon sees nothing | **None** | Fine, but wide columns still reach staff browsers (not a leak to outsiders) |
 
-The modal itself lives at `src/components/EditOrderModal.tsx` (221 lines) and is rendered from Kitchen.tsx around line 2648 when `editingOrder` state is set.
+## Details on the two real findings
 
-Related state in Kitchen.tsx:
-- `const [editingOrder, setEditingOrder] = useState<Order | null>(null);` (line 342)
+### F1 — `client_token` leaked to couriers (Medium-High)
 
-**Nothing else surfaces this** — no admin page, no station page, no courier page invokes the modal or the edge function.
+`src/pages/Courier.tsx:126-127` does `select("*")` on `delivery_requests`. RLS lets an approved courier see every row where `status='pending'` OR `courier_id = current_courier_id()`. That row includes `client_token` — the private token the customer uses on the public delivery tracking link. Any courier browsing the deliveries screen can read every pending customer's tracking token in the Network tab and later access/track that delivery as if they were the customer.
 
-## 2. What edit-order lets staff actually change
+Fix (later, on approval): replace both `select("*")` calls with an explicit whitelist of the fields the UI actually renders (id, customer_name, customer_phone, address, zone_name, price, payout, status, order_id, created_at, courier_id, claimed_at, lat, lng) — deliberately omit `client_token`.
 
-Per `supabase/functions/edit-order/index.ts` header comment + body:
+### F2 — `kitchen_prep` leaked on public booking page (Low-Medium)
 
-**Yes, changes:**
-- Swap items, change quantities, add/remove items on the order.
-- Toppings, removals, with_meal / meal_side / meal_drink, deal_burgers / deal_drinks.
-- Total is recomputed server-side from the shared pricing module (client-supplied `price` is ignored).
-- **Optional `discount`** — admin-only, non-negative, capped at recomputed total. This is currently the ONLY way for staff to apply a manual price discount to an existing order.
-- Triggers fridge inventory restore for removed items and pull for new ones.
-- Returns `requires_reprint=true` → Kitchen.tsx auto-prints an updated bon.
+`src/pages/EventBooking.tsx:73` calls `event_settings.select("*").eq("id",1)`. That table's SELECT policy is `qual: true` for `public` (anon). The row includes `kitchen_prep` — internal kitchen preparation instructions — which the public booking page has no reason to render. Anon visitor can see it in the Network tab.
 
-**No, doesn't change:**
-- **Status** (new / preparing / ready / completed / cancelled) — handled separately by direct `supabase.from("orders").update({ status: ... })` calls elsewhere in Kitchen.tsx (lines 809, 850, etc.), gated by RLS + role. **Untouched by removing edit-order.**
-- **Notes / customer_name / customer_phone / customer_address** — edit-order doesn't touch them.
-- **ETA (estimated_ready_at)** — updated separately in Kitchen.tsx (line 1168).
-- **Payment method / delivery fields** — not editable via edit-order.
+Fix (later, on approval): change the public call to `select("contract_template, minimum_amount")` (only what EventBooking actually uses). The kitchen/admin pages that legitimately need `kitchen_prep` already select it explicitly.
 
-## 3. Dependencies — does anything else break?
+## Non-findings worth being explicit about
 
-Grep of the entire codebase for `edit-order`:
+- **`site_settings.select("*")`** was flagged in your friend's likely list, but I inspected every column: id, kiosk_font_scale, website_font_scale, primary_color, background_color, menu_item_overrides, menu_order, banner_text, banner_enabled, business_hours, kiosk_* layout knobs, google_review_url. All of this is either rendered client-side or intentionally public. No admin passwords, no secrets, no cost data. Safe as-is.
+- **`localStorage.habakta_device_token`** — this is the auth material for the phone-OTP device-token flow. Storing it in localStorage is the standard tradeoff (same as any JWT-in-localStorage app). Only same-origin JS can read it; a friend "glancing at dev tools" seeing it on their own device is not a leak of anyone else's data.
+- **`customer_phone` on `OrderTracking`** — already fixed in a previous pass (`get-order-by-token` strips it). Confirmed still stripped.
+- **No Storage buckets exist**, so Storage-URL leakage / EXIF concerns don't apply.
+- **`menu.ts` bundle** — no internal fields; only what the UI shows.
 
-```
-src/pages/Kitchen.tsx          (import + render of EditOrderModal only)
-src/components/EditOrderModal.tsx  (the modal itself; single caller of the edge function)
-supabase/functions/edit-order/index.ts  (the function)
-```
+## Proposed follow-up (awaiting your go-ahead)
 
-**Nothing else depends on it.** No admin panel, no cron job, no other edge function, no DB trigger references `edit-order`.
+Two small, targeted fixes, both frontend-only (no schema changes):
 
-Removing the button, the modal, and the edge function is fully self-contained. Deleting:
-- `src/components/EditOrderModal.tsx`
-- the import + `editingOrder` state + pencil button + modal render in `Kitchen.tsx`
-- `supabase/functions/edit-order/` folder
+1. `Courier.tsx` — replace both `select("*")` on `delivery_requests` with explicit column list (drop `client_token`).
+2. `EventBooking.tsx` — narrow the `event_settings` select to `contract_template, minimum_amount`.
 
-…leaves everything else — status transitions, printing, ETA, cancel, inventory triggers on order_items change, fridge pull/restore, delivery, kiosk, admin — completely intact.
-
-**One tiny side effect to be aware of:** the fridge auto-pull trigger `apply_order_item_to_fridge` runs on `INSERT` of `order_items`; the auto-restore path today is invoked by `edit-order` via `restore_fridge_for_order_item` and by the `apply_order_to_inventory` cancel path. If staff never edit orders anymore, `restore_fridge_for_order_item` becomes unused code but harmless (still called by cancel flow indirectly? — cancel uses `apply_order_to_inventory`, a separate function, so `restore_fridge_for_order_item` becomes fully orphaned). It's fine to keep the RPC function in the DB; removing it is optional cleanup.
-
-## 4. Real-world use cases that would be lost
-
-Realistic scenarios staff currently handle via this modal:
-
-1. **"Customer wants to add a side / drink after ordering"** — today: open edit, add the line, save, updated bon auto-prints. After removal: staff would have to (a) take a second separate order, or (b) verbally add it and adjust cash on the spot with no system record.
-2. **"Wrong topping / typo on an item"** — today: swap the topping, resave, reprint. After removal: no way to correct; the bon that already printed is what the kitchen makes.
-3. **"Customer changes their mind about a burger they haven't started cooking"** — today: edit + reprint. After removal: cancel the whole order and take a new one (loses order_number, loses history continuity, resets ETA).
-4. **"Applying a manual discount"** (admin-only path today) — today: enter a discount in the modal, total updates. After removal: **no path in the app to manually discount a placed order at all.** Staff would either eat the difference in cash or refund out-of-band.
-5. **"Undercharging fix"** — today: add the missing paid topping / meal upgrade to reflect what was actually served. After removal: no correction path.
-
-**Adjacent capabilities that stay working** (do NOT confuse with edit-order):
-- Cancelling an order → still works.
-- Marking preparing/ready/completed → still works.
-- Reprinting the same bon → still works.
-- Updating ETA → still works.
-- Adding a completely new second order for the same customer → still works.
-
-## Bottom line
-
-- **Scope of change to remove it:** 3 places — one button + state + modal render in `Kitchen.tsx`, one component file, one edge function. Zero collateral damage to other flows.
-- **What staff lose:** the ability to modify items/quantities/toppings on an already-placed order, and the admin's ability to apply a manual discount (that discount path exists nowhere else in the app today).
-- **What staff keep:** all status transitions, cancelling, reprinting, ETA changes, and creating fresh orders.
-
-If losing the discount path is a problem, the user may want to keep a stripped-down version (discount only, no item edits) — worth confirming before deletion. If losing item-correction is acceptable (typical answer: staff will just cancel + reorder), removal is safe and clean.
-
-No changes made. Confirm removal and I'll switch to build mode and delete: `EditOrderModal.tsx`, the pencil button + `editingOrder` state + modal render in `Kitchen.tsx`, and the `edit-order` edge function.
+Everything else in the audit is already clean. Say the word and I'll implement just those two.

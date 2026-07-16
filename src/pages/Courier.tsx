@@ -123,8 +123,8 @@ const CourierApp = () => {
   const loadDeliveries = async () => {
     if (!courier || courier.status !== "approved") return;
     const [openRes, mineRes] = await Promise.all([
-      supabase.from("delivery_requests").select("*").eq("status", "pending").order("created_at", { ascending: false }),
-      supabase.from("delivery_requests").select("*").eq("courier_id", courier.id).order("created_at", { ascending: false }).limit(50),
+      supabase.from("delivery_requests").select("id, customer_name, customer_phone, address, zone_id, zone_name, price, payout, status, order_id, created_at, updated_at, lat, lng, courier_id, claimed_at").eq("status", "pending").order("created_at", { ascending: false }),
+      supabase.from("delivery_requests").select("id, customer_name, customer_phone, address, zone_id, zone_name, price, payout, status, order_id, created_at, updated_at, lat, lng, courier_id, claimed_at").eq("courier_id", courier.id).order("created_at", { ascending: false }).limit(50),
     ]);
     setOpenReqs((openRes.data as DeliveryReq[]) ?? []);
     setMyReqs((mineRes.data as DeliveryReq[]) ?? []);
