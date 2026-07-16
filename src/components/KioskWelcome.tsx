@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
-import heroBurger from "@/assets/hero-burger.jpg";
+import heroBurger from "@/assets/hero-burger.webp";
 
 /**
  * Welcome screen for the kiosk. Wrapped in React.memo so background re-renders

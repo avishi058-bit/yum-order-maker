@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
-import kosherCertificate from "@/assets/kosher-certificate.jpeg";
+import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface HeroSectionProps {
