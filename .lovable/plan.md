@@ -1,140 +1,83 @@
-# Remaining security-checklist audit — findings only
+# "Edit order" feature — removal investigation (findings only)
 
-## 1. Rate limiting coverage
+## 1. Where it's surfaced in the UI
 
-**✅ Already throttled** (via `check_rate_limit` RPC, per-IP or per-phone):
-- `customer-auth` — every action (register/login/auto-login/link-from-order/set-favorite/update-name/logout).
-- `send-whatsapp-otp` — multi-layer: IP block check, attack-mode check, per-phone + per-IP hard/soft caps, auto-activates 24h attack mode.
-- `get-order-by-token` — 10 / 15 min per IP.
-- `create-order` — has both a submit cap and a duplicate-order cap.
-- `create-delivery-request` — 10 / 10 min per IP.
-- `calculate-delivery-price` — 30 / 10 min per IP.
+**One entry point**, on each order card in `src/pages/Kitchen.tsx`:
 
-**⚠️ Gaps — unthrottled customer-facing endpoints:**
+- **File:** `src/pages/Kitchen.tsx` around line 2252
+- **Trigger:** a small pencil icon button (Lucide `<Pencil size={16} />`) in the order card's top-right button strip, with title tooltip **"ערוך הזמנה"** ("edit order").
+- **Visibility gate:** only rendered when `order.status === "new" || order.status === "preparing"` — you cannot edit an order once it's ready/completed.
+- **Onclick:** `setEditingOrder(order)` opens the modal.
 
-- **`manage-saved-cart`** — no rate limit at all. Guest_id/device_token-gated, but a valid caller could hammer upsert/get in a loop. Low abuse risk (cost is a single row per identity, unique index prevents fanout), but no ceiling on request volume. **Real gap — low severity.**
-- **`cancel-delivery-request`** — no rate limit. Requires `id` + matching `client_token` (UUID), so an attacker without the token cannot cancel anyone's delivery, but a malicious client that DID create a request can spam cancel attempts. **Very low — not really exploitable.**
-- **`create-payment`** — no rate limit. Requires order UUID + matching customer_phone + matching total (after G1 fix). Realistic abuse: someone with a valid pending order spawning many Z-Credit sessions. Z-Credit is the paying-party here so cost isn't ours, but it's noise. **Low.**
-- **`edit-order`** — no rate limit, but requires staff JWT + role. Not customer-facing. **Not a gap.**
-- **`inventory-action`** — no rate limit, gated by admin/inventory token. **Not a gap.**
+The modal itself lives at `src/components/EditOrderModal.tsx` (221 lines) and is rendered from Kitchen.tsx around line 2648 when `editingOrder` state is set.
 
-**Recommendation if you want to fix later:** add `check_rate_limit`/`record_rate_limit_attempt` to `manage-saved-cart` (say 120 / 10 min per IP) and `create-payment` (10 / 10 min per IP). Skip `cancel-delivery-request`.
+Related state in Kitchen.tsx:
+- `const [editingOrder, setEditingOrder] = useState<Order | null>(null);` (line 342)
 
-## 2. Password / credential storage
+**Nothing else surfaces this** — no admin page, no station page, no courier page invokes the modal or the edge function.
 
-- **Staff (admin/kitchen)** — `useAuth` uses `supabase.auth.signInWithPassword`. Supabase Auth stores password hashes with **bcrypt** in the managed `auth.users` table; the app never sees the hash and never handles a plaintext password beyond the login form. `Login.tsx` sends the plaintext to `signInWithPassword` over HTTPS/TLS — standard and correct.
-- **Couriers** — `Courier.tsx` also uses `signInWithPassword` / `signUp`. Same guarantees.
-- **Customers** — no password at all. Phone + WhatsApp OTP, with a 64-hex-char device token stored client-side for auto-login. Tokens are minted from `crypto.getRandomValues(32 bytes)`.
-- **No custom password table exists** — no `passwords`, `credentials`, `secrets` columns anywhere in `public`. Grep of `password` in `src/` matches only form inputs. No plaintext storage.
-- **HIBP leaked-password check** — cannot see from here whether it's enabled in the Auth config. Worth confirming in the backend Auth settings (Cloud → Users → Auth Settings → activate *Password HIBP Check*). Not a bug if off, but a nice-to-have.
+## 2. What edit-order lets staff actually change
 
-**Verdict: solid, no plaintext anywhere.** Only open item is the HIBP toggle.
+Per `supabase/functions/edit-order/index.ts` header comment + body:
 
-## 3. HTTPS enforcement
+**Yes, changes:**
+- Swap items, change quantities, add/remove items on the order.
+- Toppings, removals, with_meal / meal_side / meal_drink, deal_burgers / deal_drinks.
+- Total is recomputed server-side from the shared pricing module (client-supplied `price` is ignored).
+- **Optional `discount`** — admin-only, non-negative, capped at recomputed total. This is currently the ONLY way for staff to apply a manual price discount to an existing order.
+- Triggers fridge inventory restore for removed items and pull for new ones.
+- Returns `requires_reprint=true` → Kitchen.tsx auto-prints an updated bon.
 
-- Deployed on Lovable hosting → HTTPS-only by platform default. Both custom domain and `lovable.app` domain are served over TLS with automatic HTTP→HTTPS redirect at the edge.
-- `index.html` CSP includes `upgrade-insecure-requests`, so any accidental `http://` reference is upgraded by the browser.
-- No mixed content: every third-party origin in CSP (`connect-src`/`script-src`/`frame-src`) is `https://`, no bare-http entries.
+**No, doesn't change:**
+- **Status** (new / preparing / ready / completed / cancelled) — handled separately by direct `supabase.from("orders").update({ status: ... })` calls elsewhere in Kitchen.tsx (lines 809, 850, etc.), gated by RLS + role. **Untouched by removing edit-order.**
+- **Notes / customer_name / customer_phone / customer_address** — edit-order doesn't touch them.
+- **ETA (estimated_ready_at)** — updated separately in Kitchen.tsx (line 1168).
+- **Payment method / delivery fields** — not editable via edit-order.
 
-**Verdict: fine, handled by hosting + CSP.**
+## 3. Dependencies — does anything else break?
 
-## 4. Security headers
+Grep of the entire codebase for `edit-order`:
 
-Set via `<meta http-equiv>` in `index.html`:
-- ✅ `X-Content-Type-Options: nosniff`
-- ✅ `X-Frame-Options: DENY` (also `frame-ancestors 'none'` in CSP)
-- ✅ `Referrer-Policy: strict-origin-when-cross-origin`
-- ✅ CSP with tight `default-src 'self'`, allow-listed script/style/connect origins (Cloudflare Turnstile, Google Maps, Google Analytics, Z-Credit, Supabase, GPT-Engineer)
-- ⚠️ `script-src` includes `'unsafe-inline'` and `'unsafe-eval'` — required by GPT-Engineer's dev script and some analytics vendors. Not tightenable without breaking those integrations.
-- ⚠️ **HSTS is not set here** — but HSTS *must* be an HTTP response header, not a `<meta>` tag (browsers ignore HSTS in meta). Lovable hosting sets this at the edge; you can't set it from the app.
+```
+src/pages/Kitchen.tsx          (import + render of EditOrderModal only)
+src/components/EditOrderModal.tsx  (the modal itself; single caller of the edge function)
+supabase/functions/edit-order/index.ts  (the function)
+```
 
-**Verdict:** good baseline. `'unsafe-inline'`/`'unsafe-eval'` is a known trade-off, not a gap you can easily close. HSTS is a hosting-platform responsibility — worth confirming with Lovable support if you need documentation for compliance.
+**Nothing else depends on it.** No admin panel, no cron job, no other edge function, no DB trigger references `edit-order`.
 
-## 5. SQL injection surface
+Removing the button, the modal, and the edge function is fully self-contained. Deleting:
+- `src/components/EditOrderModal.tsx`
+- the import + `editingOrder` state + pencil button + modal render in `Kitchen.tsx`
+- `supabase/functions/edit-order/` folder
 
-- All edge functions use `@supabase/supabase-js` client with `.from().select/.eq/.update/.insert` — parameterized. No `execute_sql`-style RPC exists.
-- All `.rpc()` calls pass named parameters (`p_action`, `p_key`, `p_ip_address`, `p_order_id`, etc.), not concatenated strings.
-- Every DB function (`has_role`, `check_rate_limit`, `resolve_fridge_menu_ids`, `pull_fridge_for_menu_id`, `is_ip_blocked`, etc.) is SQL/PLPGSQL with named args; no `EXECUTE` of a dynamic string built from user input. `is_ip_blocked` uses parameterized `LIKE p_ip || '%'` — safe.
-- Migrations are static DDL. No user input reaches them.
+…leaves everything else — status transitions, printing, ETA, cancel, inventory triggers on order_items change, fridge pull/restore, delivery, kiosk, admin — completely intact.
 
-**Verdict: no SQLi surface.**
+**One tiny side effect to be aware of:** the fridge auto-pull trigger `apply_order_item_to_fridge` runs on `INSERT` of `order_items`; the auto-restore path today is invoked by `edit-order` via `restore_fridge_for_order_item` and by the `apply_order_to_inventory` cancel path. If staff never edit orders anymore, `restore_fridge_for_order_item` becomes unused code but harmless (still called by cancel flow indirectly? — cancel uses `apply_order_to_inventory`, a separate function, so `restore_fridge_for_order_item` becomes fully orphaned). It's fine to keep the RPC function in the DB; removing it is optional cleanup.
 
-## 6. XSS surface
+## 4. Real-world use cases that would be lost
 
-Two `innerHTML`/`dangerouslySetInnerHTML` sites:
-- ✅ **`src/components/ui/chart.tsx`** — shadcn chart component. Injects a static CSS string built from a chart config object; no user data reaches it.
-- ✅ **`src/lib/eventContract.ts`** — renders the signed event contract to PDF. All interpolations use `escapeHtml()` (`bookingId`, `contractText`, `signedAt`, `clientIp`). Signature images are data-URLs generated locally from `<canvas>`, not user URLs.
+Realistic scenarios staff currently handle via this modal:
 
-Everywhere else, user text (customer name, notes, address, admin messages) is rendered as normal React children → auto-escaped by React. Sample check on Kitchen.tsx confirms `{order.notes}`, `{order.customer_name}`, etc. use JSX text nodes.
+1. **"Customer wants to add a side / drink after ordering"** — today: open edit, add the line, save, updated bon auto-prints. After removal: staff would have to (a) take a second separate order, or (b) verbally add it and adjust cash on the spot with no system record.
+2. **"Wrong topping / typo on an item"** — today: swap the topping, resave, reprint. After removal: no way to correct; the bon that already printed is what the kitchen makes.
+3. **"Customer changes their mind about a burger they haven't started cooking"** — today: edit + reprint. After removal: cancel the whole order and take a new one (loses order_number, loses history continuity, resets ETA).
+4. **"Applying a manual discount"** (admin-only path today) — today: enter a discount in the modal, total updates. After removal: **no path in the app to manually discount a placed order at all.** Staff would either eat the difference in cash or refund out-of-band.
+5. **"Undercharging fix"** — today: add the missing paid topping / meal upgrade to reflect what was actually served. After removal: no correction path.
 
-**Verdict: no XSS surface.**
+**Adjacent capabilities that stay working** (do NOT confuse with edit-order):
+- Cancelling an order → still works.
+- Marking preparing/ready/completed → still works.
+- Reprinting the same bon → still works.
+- Updating ETA → still works.
+- Adding a completely new second order for the same customer → still works.
 
-## 7. CSRF
+## Bottom line
 
-- Staff auth uses Supabase JWT via localStorage → sent explicitly in `Authorization: Bearer …` headers by the Supabase client. No cookie-borne auth for the app's API calls.
-- Customer auth uses a device token (localStorage) sent in JSON request bodies.
-- Edge functions verify identity via header/body tokens, not cookies.
-- Two `document.cookie` sites: `CustomerAuthContext` for a **non-security** UX cookie (`SameSite=Lax`) and the shadcn sidebar open/closed state cookie. Neither authorizes anything server-side.
-- Third-party CSRF: Z-Credit callback is verified with a shared secret in the URL, not a cookie, so a browser CSRF cannot forge it.
+- **Scope of change to remove it:** 3 places — one button + state + modal render in `Kitchen.tsx`, one component file, one edge function. Zero collateral damage to other flows.
+- **What staff lose:** the ability to modify items/quantities/toppings on an already-placed order, and the admin's ability to apply a manual discount (that discount path exists nowhere else in the app today).
+- **What staff keep:** all status transitions, cancelling, reprinting, ETA changes, and creating fresh orders.
 
-**Verdict: not vulnerable — token/header-based end to end.**
+If losing the discount path is a problem, the user may want to keep a stripped-down version (discount only, no item edits) — worth confirming before deletion. If losing item-correction is acceptable (typical answer: staff will just cancel + reorder), removal is safe and clean.
 
-## 8. Dependency vulnerabilities
-
-Ran `code--dependency_scan` (npm audit under the hood):
-
-> **No high or critical severity vulnerabilities found in dependencies.**
-
-Moderate/low advisories were not surfaced by the scanner. Re-run before every deploy is cheap; no action needed today.
-
-## 9. Backups / point-in-time recovery
-
-Cannot determine from here. Lovable Cloud runs on Supabase, which provides **daily automated backups on all paid plans and PITR on Pro+**. Whether PITR is on for this specific project is a project-plan setting.
-
-**Outside my visibility — check the Lovable backend settings for backup/PITR status.**
-
-## 10. Logging / monitoring
-
-Existing signals:
-- **`rate_limit_attempts` table** — every rate-limited action records action + key + IP. This IS your failed-auth log (customer registrations, OTP sends, order lookups, etc.).
-- **`blocked_ips`** — persistent record of IPs auto-blocked, with reason and timestamp.
-- **`internal_config.attack_mode_until`** — timestamp of the last attack-mode activation.
-- **`inventory_movements`** — every stock change is logged with `reason`, `note`, `order_id`, and (for purchases) `unit_cost`. This is the inventory audit trail.
-- **`customers.login_count`**, `last_login_at`, `device_token_created_at` — audit fields on customer logins.
-- Edge function `console.error`/`console.warn` calls go to Supabase edge logs (visible in the backend logs page).
-
-**Gaps:**
-- **No `inventory_access_tokens.last_used_at` write-log with IP.** The column is updated but not paired with a movement/audit row. A leaked token would leave no forensic trail beyond a single `last_used_at` timestamp.
-- **No admin/kitchen login audit table.** Supabase Auth logs sign-in events internally, viewable in the backend Auth → Logs page, but there's no app-side audit table you can query alongside orders. **Real gap if you need to trace "who edited order X".** `edit-order` doesn't record `edited_by` on the order itself.
-- **No `edited_by` / `cancelled_by` column on `orders`.** If a kitchen user cancels or edits an order, there's no way to prove which staff account did it from the DB alone.
-
-**Verdict:** rate-limit and inventory logging is genuinely good. Order-edit audit trail and admin-token usage logging are the two real gaps.
-
----
-
-## Summary table
-
-| # | Area | Status |
-|---|---|---|
-| 1 | Rate limiting | ⚠️ `manage-saved-cart`, `create-payment` uncapped (low-severity) |
-| 2 | Passwords | ✅ Supabase bcrypt for staff; no customer passwords; HIBP toggle unverified |
-| 3 | HTTPS | ✅ Platform-enforced + CSP upgrade |
-| 4 | Security headers | ✅ CSP/XFO/nosniff/referrer set; HSTS is hosting-side |
-| 5 | SQLi | ✅ Parameterized everywhere, no dynamic EXECUTE |
-| 6 | XSS | ✅ Both innerHTML sites are static/escaped |
-| 7 | CSRF | ✅ Token/header auth, not cookies |
-| 8 | Dependencies | ✅ No high/critical advisories today |
-| 9 | Backups / PITR | ❓ Outside my visibility — check backend |
-| 10 | Logging | ⚠️ Missing order-edit `edited_by` and admin-token usage log |
-
-**Real gaps worth fixing later (all optional, none urgent):**
-1. Add rate limits to `manage-saved-cart` and `create-payment`.
-2. Turn on HIBP leaked-password check in Auth settings.
-3. Add `edited_by` / `cancelled_by` columns on `orders` (populated by `edit-order`).
-4. Log inventory-token uses with action + IP for forensic trail.
-
-**Outside my visibility:**
-- Backup / PITR status → check Lovable Cloud backend project settings.
-- Hosting-level HSTS header → confirm with Lovable if a compliance auditor asks.
-
-No changes made. Tell me which of the four gaps (if any) you want me to fix and I'll switch to build mode.
+No changes made. Confirm removal and I'll switch to build mode and delete: `EditOrderModal.tsx`, the pencil button + `editingOrder` state + modal render in `Kitchen.tsx`, and the `edit-order` edge function.
