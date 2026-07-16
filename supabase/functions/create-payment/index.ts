@@ -25,9 +25,15 @@ const BodySchema = z.object({
   total: z.number().positive().max(1_000_000),
   items: z.array(CartItemSchema).min(1).max(100),
   customerName: z.string().max(200).optional().default(""),
-  customerPhone: z.string().max(30).optional().default(""),
+  // customerPhone is now REQUIRED — used to prove the caller owns the order.
+  customerPhone: z.string().min(6).max(30),
   orderId: z.string().uuid(),
 });
+
+// Normalize phone representations so "+972...", "972...", and "05..." all match.
+function normalizePhone(p: string): string {
+  return p.replace(/\D/g, "").replace(/^972/, "0");
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
