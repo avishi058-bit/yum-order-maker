@@ -830,8 +830,6 @@ const Index = () => {
             <a href="/cookie-policy" className="hover:text-foreground transition-colors">מדיניות עוגיות</a>
             <span>·</span>
             <a href="/accessibility-statement" className="hover:text-foreground transition-colors">הצהרת נגישות</a>
-            <span>·</span>
-            <a href="/preferences" className="hover:text-foreground transition-colors">העדפות תקשורת</a>
           </div>
         </footer>
       )}

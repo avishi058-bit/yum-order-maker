@@ -80,7 +80,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/accessibility-statement" element={<AccessibilityStatement />} />
-              <Route path="/preferences" element={<Preferences />} />
+              
               <Route path="/courier" element={<Courier />} />
               <Route
                 path="/admin/couriers"
