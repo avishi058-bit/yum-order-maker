@@ -52,6 +52,30 @@ Deno.serve(async (req) => {
       req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('cf-connecting-ip') ||
       'unknown'
+    const userAgent = req.headers.get('user-agent') || null
+
+    // Insert a consent audit event. Best-effort — logging failure must NOT block the auth flow.
+    const logConsent = async (opts: {
+      customer_id?: string | null
+      phone: string
+      action: 'granted' | 'revoked'
+      consent_type?: string
+    }) => {
+      try {
+        await supabase.from('consent_events').insert({
+          customer_id: opts.customer_id ?? null,
+          phone: opts.phone,
+          consent_type: opts.consent_type ?? 'marketing_whatsapp',
+          action: opts.action,
+          consent_text_version: CONSENT_TEXT_VERSION,
+          ip_address: ip,
+          user_agent: userAgent,
+        })
+      } catch (e) {
+        console.error('consent-log failure:', e)
+      }
+    }
+
     const rateLimited: Record<string, { max: number; window: string }> = {
       register: { max: 5, window: '1 hour' },
       login: { max: 10, window: '1 hour' },
@@ -59,6 +83,8 @@ Deno.serve(async (req) => {
       'link-from-order': { max: 5, window: '1 hour' },
       'set-favorite': { max: 30, window: '1 hour' },
       'update-name': { max: 10, window: '1 hour' },
+      'update-marketing-consent': { max: 20, window: '1 hour' },
+      'get-preferences': { max: 60, window: '1 hour' },
       logout: { max: 30, window: '1 hour' },
       'logout-all': { max: 10, window: '1 hour' },
     }
