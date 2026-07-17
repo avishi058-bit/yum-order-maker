@@ -1576,7 +1576,7 @@ const Kitchen = () => {
               <span>התראות</span>
             </button>
             {showNotifMenu && createPortal(<>
-              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowNotifMenu(false)} />
+              <div role="button" tabIndex={0} aria-label="סגור תפריט התראות" onClick={() => setShowNotifMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowNotifMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   התראות וצלצולים
@@ -1642,7 +1642,7 @@ const Kitchen = () => {
               <span>זמינות</span>
             </button>
             {showAvailMenu && createPortal(<>
-              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAvailMenu(false)} />
+              <div role="button" tabIndex={0} aria-label="סגור תפריט זמינות" onClick={() => setShowAvailMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowAvailMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   זמינות הזמנות ותשלום
@@ -1812,7 +1812,7 @@ const Kitchen = () => {
               <span>הדפסה</span>
             </button>
             {showPrintMenu && createPortal(<>
-              <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowPrintMenu(false)} />
+              <div role="button" tabIndex={0} aria-label="סגור תפריט הדפסה" onClick={() => setShowPrintMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowPrintMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
                 <div className="text-xs font-bold text-muted-foreground px-1 pb-1 border-b border-border">
                   הגדרות הדפסה ובדיקות
