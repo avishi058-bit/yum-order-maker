@@ -18,9 +18,6 @@ const generateToken = () => {
   return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Bump this whenever the wording of the marketing-consent checkbox changes.
-// Stored on every consent event so we can prove what the customer actually saw.
-const CONSENT_TEXT_VERSION = 'v1-2026-04-marketing-whatsapp'
 
 // --- Schemas ---
 const RegisterSchema = z.object({
