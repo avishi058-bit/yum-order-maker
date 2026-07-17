@@ -65,6 +65,50 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_events: {
+        Row: {
+          action: string
+          consent_text_version: string | null
+          consent_type: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          ip_address: string | null
+          phone: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          consent_text_version?: string | null
+          consent_type: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          phone?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          consent_text_version?: string | null
+          consent_type?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          phone?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_locations: {
         Row: {
           courier_id: string
