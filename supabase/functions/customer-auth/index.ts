@@ -175,6 +175,13 @@ Deno.serve(async (req) => {
         customer = created
       }
 
+      // Audit log the consent decision (granted OR revoked, so we can prove the choice later).
+      await logConsent({
+        customer_id: customer?.id,
+        phone,
+        action: marketingConsent ? 'granted' : 'revoked',
+      })
+
       return json({
         success: true,
         deviceToken,
