@@ -18,9 +18,6 @@ const generateToken = () => {
   return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// Bump this whenever the wording of the marketing-consent checkbox changes.
-// Stored on every consent event so we can prove what the customer actually saw.
-const CONSENT_TEXT_VERSION = 'v1-2026-04-marketing-whatsapp'
 
 // --- Schemas ---
 const RegisterSchema = z.object({
@@ -52,30 +49,6 @@ Deno.serve(async (req) => {
       req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('cf-connecting-ip') ||
       'unknown'
-    const userAgent = req.headers.get('user-agent') || null
-
-    // Insert a consent audit event. Best-effort — logging failure must NOT block the auth flow.
-    const logConsent = async (opts: {
-      customer_id?: string | null
-      phone: string
-      action: 'granted' | 'revoked'
-      consent_type?: string
-    }) => {
-      try {
-        await supabase.from('consent_events').insert({
-          customer_id: opts.customer_id ?? null,
-          phone: opts.phone,
-          consent_type: opts.consent_type ?? 'marketing_whatsapp',
-          action: opts.action,
-          consent_text_version: CONSENT_TEXT_VERSION,
-          ip_address: ip,
-          user_agent: userAgent,
-        })
-      } catch (e) {
-        console.error('consent-log failure:', e)
-      }
-    }
-
     const rateLimited: Record<string, { max: number; window: string }> = {
       register: { max: 5, window: '1 hour' },
       login: { max: 10, window: '1 hour' },
@@ -83,8 +56,6 @@ Deno.serve(async (req) => {
       'link-from-order': { max: 5, window: '1 hour' },
       'set-favorite': { max: 30, window: '1 hour' },
       'update-name': { max: 10, window: '1 hour' },
-      'update-marketing-consent': { max: 20, window: '1 hour' },
-      'get-preferences': { max: 60, window: '1 hour' },
       logout: { max: 30, window: '1 hour' },
       'logout-all': { max: 10, window: '1 hour' },
     }
@@ -175,12 +146,7 @@ Deno.serve(async (req) => {
         customer = created
       }
 
-      // Audit log the consent decision (granted OR revoked, so we can prove the choice later).
-      await logConsent({
-        customer_id: customer?.id,
-        phone,
-        action: marketingConsent ? 'granted' : 'revoked',
-      })
+
 
       return json({
         success: true,
@@ -444,68 +410,6 @@ Deno.serve(async (req) => {
         return json({ error: 'שגיאה בעדכון השם' }, 500)
       }
       return json({ success: true, name: updated.name })
-    }
-
-    // ─── Get preferences: return the logged-in customer's current consent state ───
-    if (action === 'get-preferences') {
-      const parsed = AutoLoginSchema.safeParse(body)
-      if (!parsed.success) return json({ error: 'טוקן לא תקין' }, 400)
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('id, name, phone, marketing_consent')
-        .eq('device_token', parsed.data.deviceToken)
-        .maybeSingle()
-      if (!customer) return json({ error: 'לא מורשה' }, 401)
-      return json({
-        success: true,
-        customer: {
-          name: customer.name,
-          phone: customer.phone,
-          marketing_consent: !!customer.marketing_consent,
-        },
-      })
-    }
-
-    // ─── Update marketing consent (customer-facing unsubscribe/re-subscribe) ───
-    if (action === 'update-marketing-consent') {
-      const Schema = z.object({
-        deviceToken: z.string().min(32).max(128),
-        marketingConsent: z.boolean(),
-      })
-      const parsed = Schema.safeParse(body)
-      if (!parsed.success) return json({ error: 'נתונים לא תקינים' }, 400)
-
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('id, phone, marketing_consent')
-        .eq('device_token', parsed.data.deviceToken)
-        .maybeSingle()
-      if (!customer) return json({ error: 'לא מורשה' }, 401)
-
-      const now = new Date().toISOString()
-      const next = parsed.data.marketingConsent
-
-      const { error } = await supabase
-        .from('customers')
-        .update({
-          marketing_consent: next,
-          // Keep the timestamp of the LAST grant — clear it on revoke.
-          marketing_consent_at: next ? now : null,
-        })
-        .eq('id', customer.id)
-      if (error) {
-        console.error('update-marketing-consent error:', error)
-        return json({ error: 'שגיאה בעדכון' }, 500)
-      }
-
-      // Always append to the audit log — this is the whole point of the endpoint.
-      await logConsent({
-        customer_id: customer.id,
-        phone: customer.phone,
-        action: next ? 'granted' : 'revoked',
-      })
-
-      return json({ success: true, marketing_consent: next })
     }
 
     return json({ error: 'Invalid action' }, 400)
