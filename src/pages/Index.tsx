@@ -34,7 +34,7 @@ const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomize
 const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
 const ArayesCustomizer = lazy(() => import("@/components/ArayesCustomizer"));
 const SauceSelector = lazy(() => import("@/components/SauceSelector"));
-const AccessibilityWidget = lazy(() => import("@/components/AccessibilityWidget"));
+// AccessibilityWidget is now mounted globally in App.tsx via AccessibilityWidgetGlobal.
 const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
 const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
 const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
@@ -837,7 +837,6 @@ const Index = () => {
       )}
 
       <Suspense fallback={null}>
-        <AccessibilityWidget />
         {authModalOpen && (
           <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
         )}

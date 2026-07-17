@@ -22,11 +22,19 @@ const PrivacyModal = ({ open, onClose, isKiosk = false }: PrivacyModalProps) => 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
           // z-[60] sits above the CheckoutForm overlay (z-50)
           className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           dir="rtl"
         >
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="סגור חלון מדיניות פרטיות"
+            onClick={onClose}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); onClose(); } }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          />
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -44,7 +52,7 @@ const PrivacyModal = ({ open, onClose, isKiosk = false }: PrivacyModalProps) => 
                 onClick={onClose}
                 aria-label="סגור"
                 className={`rounded-full hover:bg-secondary transition-colors flex items-center justify-center ${
-                  isKiosk ? "w-12 h-12" : "w-9 h-9"
+                  isKiosk ? "w-12 h-12" : "w-11 h-11"
                 }`}
               >
                 <X size={isKiosk ? 28 : 20} />

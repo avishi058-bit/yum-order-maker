@@ -125,7 +125,14 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="absolute inset-0 bg-black/60" onClick={handleClose} />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="סגור בחירת משקה"
+              onClick={handleClose}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); handleClose(); } }}
+              className="absolute inset-0 bg-black/60"
+            />
             <motion.div
               className={`relative w-full bg-card overflow-y-auto ${
                 isKiosk
@@ -140,9 +147,10 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
             >
               <button
                 onClick={handleClose}
-                className="absolute left-4 top-4 w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
+                aria-label="סגור"
+                className="absolute left-4 top-4 w-11 h-11 rounded-full bg-secondary flex items-center justify-center"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
 
               <h3 className={`font-bold mb-1 ${isKiosk ? "text-4xl" : "text-xl"}`}>{item.name}</h3>
