@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
+import AccessibilityWidgetGlobal from "@/components/AccessibilityWidgetGlobal";
 import PostInstallPermissionModal from "@/components/PostInstallPermissionModal";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
@@ -35,6 +36,8 @@ const EventsKitchen = lazy(() => import("./pages/EventsKitchen"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const AccessibilityStatement = lazy(() => import("./pages/AccessibilityStatement"));
+const Preferences = lazy(() => import("./pages/Preferences"));
 const Courier = lazy(() => import("./pages/Courier"));
 const AdminCouriers = lazy(() => import("./pages/AdminCouriers"));
 
@@ -76,6 +79,8 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/accessibility-statement" element={<AccessibilityStatement />} />
+              <Route path="/preferences" element={<Preferences />} />
               <Route path="/courier" element={<Courier />} />
               <Route
                 path="/admin/couriers"
@@ -140,6 +145,7 @@ const App = () => (
             </Routes>
           </Suspense>
           <CookieBanner />
+          <AccessibilityWidgetGlobal />
           <PostInstallPermissionModal />
         </BrowserRouter>
       </SkibidiGuardProvider>
