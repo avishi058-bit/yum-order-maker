@@ -34,7 +34,7 @@ const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomize
 const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
 const ArayesCustomizer = lazy(() => import("@/components/ArayesCustomizer"));
 const SauceSelector = lazy(() => import("@/components/SauceSelector"));
-const AccessibilityWidget = lazy(() => import("@/components/AccessibilityWidget"));
+// AccessibilityWidget is now mounted globally in App.tsx via AccessibilityWidgetGlobal.
 const CustomerAuthModal = lazy(() => import("@/components/CustomerAuthModal"));
 const SavedCartModal = lazy(() => import("@/components/SavedCartModal"));
 const AlcoholConsentModal = lazy(() => import("@/components/AlcoholConsentModal"));
@@ -822,18 +822,21 @@ const Index = () => {
             <Phone size={14} />
             058-4633-555
           </a>
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground pt-2">
             <a href="/privacy" className="hover:text-foreground transition-colors">מדיניות פרטיות</a>
             <span>·</span>
             <a href="/terms" className="hover:text-foreground transition-colors">תנאי שימוש</a>
             <span>·</span>
             <a href="/cookie-policy" className="hover:text-foreground transition-colors">מדיניות עוגיות</a>
+            <span>·</span>
+            <a href="/accessibility-statement" className="hover:text-foreground transition-colors">הצהרת נגישות</a>
+            <span>·</span>
+            <a href="/preferences" className="hover:text-foreground transition-colors">העדפות תקשורת</a>
           </div>
         </footer>
       )}
 
       <Suspense fallback={null}>
-        <AccessibilityWidget />
         {authModalOpen && (
           <CustomerAuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
         )}

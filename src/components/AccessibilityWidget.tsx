@@ -201,6 +201,12 @@ const AccessibilityWidget = () => {
                   <RotateCcw size={16} />
                   איפוס הגדרות
                 </button>
+                <a
+                  href="/accessibility-statement"
+                  className="block w-full text-center py-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-sm"
+                >
+                  קרא את הצהרת הנגישות המלאה →
+                </a>
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
                   אתר זה מונגש בהתאם לתקן הישראלי 5568 ולהנחיות WCAG 2.1 ברמה AA
                 </p>

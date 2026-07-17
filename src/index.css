@@ -22,7 +22,8 @@
     --secondary-foreground: 40 30% 92%;
 
     --muted: 20 8% 18%;
-    --muted-foreground: 30 10% 55%;
+    /* Bumped from 55% → 68% to reach ≥4.5:1 contrast vs --background for WCAG AA. */
+    --muted-foreground: 30 12% 68%;
 
     --accent: 0 72% 50%;
     --accent-foreground: 40 30% 95%;
@@ -62,8 +63,57 @@
 }
 
 /* Accessibility styles */
+
+/* Global keyboard focus indicator — visible outline on every interactive
+   element when navigating with the Tab key. Uses the primary color for
+   contrast against both light and dark surfaces. */
+:focus-visible {
+  outline: 3px solid hsl(32, 95%, 52%) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* Real high-contrast mode per IS 5568 — replaces the CSS `filter` approximation
+   with an actual black-on-yellow palette. Overrides the theme tokens for the
+   entire tree so both Tailwind utilities that read the tokens AND any raw
+   colors on the page are forced to the high-contrast pair. */
 .accessibility-high-contrast {
-  filter: contrast(1.5) !important;
+  --background: 60 100% 50%;    /* yellow */
+  --foreground: 0 0% 0%;        /* black */
+  --card: 60 100% 50%;
+  --card-foreground: 0 0% 0%;
+  --popover: 60 100% 50%;
+  --popover-foreground: 0 0% 0%;
+  --primary: 0 0% 0%;
+  --primary-foreground: 60 100% 50%;
+  --secondary: 60 100% 50%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 60 100% 50%;
+  --muted-foreground: 0 0% 0%;
+  --accent: 0 0% 0%;
+  --accent-foreground: 60 100% 50%;
+  --border: 0 0% 0%;
+  --input: 0 0% 0%;
+  --ring: 0 0% 0%;
+  background-color: hsl(60, 100%, 50%) !important;
+  color: #000 !important;
+}
+.accessibility-high-contrast * {
+  background-color: transparent !important;
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+.accessibility-high-contrast a,
+.accessibility-high-contrast button {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+.accessibility-high-contrast img,
+.accessibility-high-contrast video,
+.accessibility-high-contrast svg {
+  background-color: #fff !important;
 }
 
 .accessibility-invert {
