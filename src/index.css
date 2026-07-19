@@ -73,51 +73,84 @@
   border-radius: 4px;
 }
 
-/* Real high-contrast mode per IS 5568 — replaces the CSS `filter` approximation
-   with an actual black-on-yellow palette. Overrides the theme tokens for the
-   entire tree so both Tailwind utilities that read the tokens AND any raw
-   colors on the page are forced to the high-contrast pair. */
+/* Real high-contrast mode per IS 5568 — yellow-on-black palette with
+   distinct button/link colors so the page keeps visual hierarchy instead
+   of collapsing into a single flat color block. */
 .accessibility-high-contrast {
-  --background: 60 100% 50%;    /* yellow */
-  --foreground: 0 0% 0%;        /* black */
-  --card: 60 100% 50%;
-  --card-foreground: 0 0% 0%;
-  --popover: 60 100% 50%;
-  --popover-foreground: 0 0% 0%;
-  --primary: 0 0% 0%;
-  --primary-foreground: 60 100% 50%;
-  --secondary: 60 100% 50%;
-  --secondary-foreground: 0 0% 0%;
-  --muted: 60 100% 50%;
-  --muted-foreground: 0 0% 0%;
-  --accent: 0 0% 0%;
-  --accent-foreground: 60 100% 50%;
-  --border: 0 0% 0%;
-  --input: 0 0% 0%;
-  --ring: 0 0% 0%;
-  background-color: hsl(60, 100%, 50%) !important;
-  color: #000 !important;
+  --background: 0 0% 0%;         /* black */
+  --foreground: 60 100% 50%;     /* yellow */
+  --card: 0 0% 0%;
+  --card-foreground: 60 100% 50%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 60 100% 50%;
+  --primary: 60 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 0%;
+  --secondary-foreground: 60 100% 50%;
+  --muted: 0 0% 0%;
+  --muted-foreground: 60 100% 50%;
+  --accent: 60 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 60 100% 50%;
+  --destructive-foreground: 0 0% 0%;
+  --border: 60 100% 50%;
+  --input: 60 100% 50%;
+  --ring: 60 100% 50%;
+  background-color: #000 !important;
+  color: hsl(60, 100%, 50%) !important;
 }
-.accessibility-high-contrast * {
-  background-color: hsl(60, 100%, 50%) !important;
+.accessibility-high-contrast *:not(button):not([role="button"]):not(.btn):not(a) {
+  background-color: #000 !important;
   background-image: none !important;
-  color: #000 !important;
-  border-color: #000 !important;
+  color: hsl(60, 100%, 50%) !important;
+  border-color: hsl(60, 100%, 50%) !important;
   text-shadow: none !important;
   box-shadow: none !important;
   filter: none !important;
   backdrop-filter: none !important;
 }
-.accessibility-high-contrast a,
-.accessibility-high-contrast button {
+.accessibility-high-contrast button,
+.accessibility-high-contrast [role="button"],
+.accessibility-high-contrast .btn {
+  background-color: hsl(60, 100%, 50%) !important;
+  background-image: none !important;
   color: #000 !important;
+  border: 2px solid hsl(60, 100%, 50%) !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+.accessibility-high-contrast button *,
+.accessibility-high-contrast [role="button"] *,
+.accessibility-high-contrast .btn * {
+  background-color: transparent !important;
+  color: #000 !important;
+}
+.accessibility-high-contrast a {
+  background-color: transparent !important;
+  color: hsl(180, 100%, 60%) !important;
   text-decoration: underline !important;
 }
-.accessibility-high-contrast img,
-.accessibility-high-contrast video,
-.accessibility-high-contrast svg {
-  background-color: #fff !important;
+.accessibility-high-contrast a * {
+  background-color: transparent !important;
+  color: hsl(180, 100%, 60%) !important;
 }
+.accessibility-high-contrast img,
+.accessibility-high-contrast video {
+  background-color: transparent !important;
+  filter: none !important;
+}
+.accessibility-high-contrast svg {
+  background-color: transparent !important;
+  color: hsl(60, 100%, 50%) !important;
+  fill: currentColor !important;
+}
+.accessibility-high-contrast button svg,
+.accessibility-high-contrast [role="button"] svg,
+.accessibility-high-contrast .btn svg,
+.accessibility-high-contrast a svg {
+  color: inherit !important;
+}
+
 
 .accessibility-invert {
   filter: invert(1) hue-rotate(180deg) !important;
