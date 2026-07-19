@@ -18,6 +18,37 @@ const generateToken = () => {
   return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('')
 }
 
+// Version bump this string whenever the marketing consent text changes.
+const MARKETING_CONSENT_TEXT_VERSION = '2026-07-19'
+
+async function logConsent(
+  supabase: ReturnType<typeof createClient>,
+  params: {
+    customer_id?: string | null
+    phone?: string | null
+    action: 'granted' | 'revoked'
+    method: string
+    consent_type?: string
+    ip?: string | null
+    user_agent?: string | null
+  },
+) {
+  try {
+    await supabase.from('consent_events').insert({
+      customer_id: params.customer_id ?? null,
+      phone: params.phone ?? null,
+      consent_type: params.consent_type ?? 'marketing',
+      action: params.action,
+      method: params.method,
+      consent_text_version: MARKETING_CONSENT_TEXT_VERSION,
+      ip_address: params.ip ?? null,
+      user_agent: params.user_agent ?? null,
+    })
+  } catch (e) {
+    console.error('logConsent failed:', e)
+  }
+}
+
 
 // --- Schemas ---
 const RegisterSchema = z.object({
