@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CookieBanner from "@/components/CookieBanner";
 import AccessibilityWidgetGlobal from "@/components/AccessibilityWidgetGlobal";
 import PostInstallPermissionModal from "@/components/PostInstallPermissionModal";
+import GeoGate from "@/components/GeoGate";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 import { SkibidiGuardProvider } from "@/components/SkibidiGuard";
