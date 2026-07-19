@@ -69,6 +69,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GeoGate>
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Index />} />
