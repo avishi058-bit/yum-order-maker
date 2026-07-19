@@ -177,7 +177,27 @@ Deno.serve(async (req) => {
         customer = created
       }
 
-
+      // Log marketing consent event (audit trail per Israeli Spam Law תיקון 40).
+      if (marketingConsent) {
+        await logConsent(supabase, {
+          customer_id: customer.id,
+          phone: customer.phone,
+          action: 'granted',
+          method: existing ? 'register_returning_checkbox' : 'register_signup_checkbox',
+          ip: ip,
+          user_agent: req.headers.get('user-agent'),
+        })
+      } else if (existing) {
+        // Returning customer un-checked marketing on re-registration → revoke event.
+        await logConsent(supabase, {
+          customer_id: customer.id,
+          phone: customer.phone,
+          action: 'revoked',
+          method: 'register_returning_checkbox',
+          ip: ip,
+          user_agent: req.headers.get('user-agent'),
+        })
+      }
 
       return json({
         success: true,
