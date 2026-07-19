@@ -99,11 +99,14 @@
   color: #000 !important;
 }
 .accessibility-high-contrast * {
-  background-color: transparent !important;
+  background-color: hsl(60, 100%, 50%) !important;
+  background-image: none !important;
   color: #000 !important;
   border-color: #000 !important;
   text-shadow: none !important;
   box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
 }
 .accessibility-high-contrast a,
 .accessibility-high-contrast button {
