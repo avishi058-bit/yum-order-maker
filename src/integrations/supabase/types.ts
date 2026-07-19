@@ -74,6 +74,7 @@ export type Database = {
           customer_id: string | null
           id: string
           ip_address: string | null
+          method: string | null
           phone: string | null
           user_agent: string | null
         }
@@ -85,6 +86,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           ip_address?: string | null
+          method?: string | null
           phone?: string | null
           user_agent?: string | null
         }
@@ -96,6 +98,7 @@ export type Database = {
           customer_id?: string | null
           id?: string
           ip_address?: string | null
+          method?: string | null
           phone?: string | null
           user_agent?: string | null
         }

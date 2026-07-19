@@ -1,0 +1,1 @@
+ALTER TABLE public.consent_events ADD COLUMN IF NOT EXISTS method TEXT;

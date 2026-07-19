@@ -18,6 +18,37 @@ const generateToken = () => {
   return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('')
 }
 
+// Version bump this string whenever the marketing consent text changes.
+const MARKETING_CONSENT_TEXT_VERSION = '2026-07-19'
+
+async function logConsent(
+  supabase: ReturnType<typeof createClient>,
+  params: {
+    customer_id?: string | null
+    phone?: string | null
+    action: 'granted' | 'revoked'
+    method: string
+    consent_type?: string
+    ip?: string | null
+    user_agent?: string | null
+  },
+) {
+  try {
+    await supabase.from('consent_events').insert({
+      customer_id: params.customer_id ?? null,
+      phone: params.phone ?? null,
+      consent_type: params.consent_type ?? 'marketing',
+      action: params.action,
+      method: params.method,
+      consent_text_version: MARKETING_CONSENT_TEXT_VERSION,
+      ip_address: params.ip ?? null,
+      user_agent: params.user_agent ?? null,
+    })
+  } catch (e) {
+    console.error('logConsent failed:', e)
+  }
+}
+
 
 // --- Schemas ---
 const RegisterSchema = z.object({
@@ -146,7 +177,27 @@ Deno.serve(async (req) => {
         customer = created
       }
 
-
+      // Log marketing consent event (audit trail per Israeli Spam Law תיקון 40).
+      if (marketingConsent) {
+        await logConsent(supabase, {
+          customer_id: customer.id,
+          phone: customer.phone,
+          action: 'granted',
+          method: existing ? 'register_returning_checkbox' : 'register_signup_checkbox',
+          ip: ip,
+          user_agent: req.headers.get('user-agent'),
+        })
+      } else if (existing) {
+        // Returning customer un-checked marketing on re-registration → revoke event.
+        await logConsent(supabase, {
+          customer_id: customer.id,
+          phone: customer.phone,
+          action: 'revoked',
+          method: 'register_returning_checkbox',
+          ip: ip,
+          user_agent: req.headers.get('user-agent'),
+        })
+      }
 
       return json({
         success: true,
@@ -410,6 +461,37 @@ Deno.serve(async (req) => {
         return json({ error: 'שגיאה בעדכון השם' }, 500)
       }
       return json({ success: true, name: updated.name })
+    }
+
+    // ─── Revoke marketing consent (authenticated via deviceToken) ───
+    if (action === 'revoke-marketing') {
+      const parsed = AutoLoginSchema.safeParse(body)
+      if (!parsed.success) return json({ error: 'טוקן לא תקין' }, 400)
+
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id, phone, marketing_consent')
+        .eq('device_token', parsed.data.deviceToken)
+        .maybeSingle()
+      if (!customer) return json({ error: 'לא מורשה' }, 401)
+
+      const { error } = await supabase
+        .from('customers')
+        .update({ marketing_consent: false, marketing_consent_at: null })
+        .eq('id', customer.id)
+      if (error) return json({ error: 'שגיאה בעדכון' }, 500)
+
+      if (customer.marketing_consent) {
+        await logConsent(supabase, {
+          customer_id: customer.id,
+          phone: customer.phone,
+          action: 'revoked',
+          method: 'preferences_page',
+          ip,
+          user_agent: req.headers.get('user-agent'),
+        })
+      }
+      return json({ success: true })
     }
 
     return json({ error: 'Invalid action' }, 400)

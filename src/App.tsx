@@ -37,6 +37,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/AccessibilityStatement"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
 const Courier = lazy(() => import("./pages/Courier"));
 const AdminCouriers = lazy(() => import("./pages/AdminCouriers"));
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/accessibility-statement" element={<AccessibilityStatement />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               
               <Route path="/courier" element={<Courier />} />
               <Route
