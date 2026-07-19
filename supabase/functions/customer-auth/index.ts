@@ -463,6 +463,37 @@ Deno.serve(async (req) => {
       return json({ success: true, name: updated.name })
     }
 
+    // ─── Revoke marketing consent (authenticated via deviceToken) ───
+    if (action === 'revoke-marketing') {
+      const parsed = AutoLoginSchema.safeParse(body)
+      if (!parsed.success) return json({ error: 'טוקן לא תקין' }, 400)
+
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id, phone, marketing_consent')
+        .eq('device_token', parsed.data.deviceToken)
+        .maybeSingle()
+      if (!customer) return json({ error: 'לא מורשה' }, 401)
+
+      const { error } = await supabase
+        .from('customers')
+        .update({ marketing_consent: false, marketing_consent_at: null })
+        .eq('id', customer.id)
+      if (error) return json({ error: 'שגיאה בעדכון' }, 500)
+
+      if (customer.marketing_consent) {
+        await logConsent(supabase, {
+          customer_id: customer.id,
+          phone: customer.phone,
+          action: 'revoked',
+          method: 'preferences_page',
+          ip,
+          user_agent: req.headers.get('user-agent'),
+        })
+      }
+      return json({ success: true })
+    }
+
     return json({ error: 'Invalid action' }, 400)
   } catch (err) {
     console.error('customer-auth error:', err)
