@@ -140,11 +140,22 @@
 }
 
 .accessibility-stop-animations,
-.accessibility-stop-animations * {
-  animation-duration: 0s !important;
+.accessibility-stop-animations *,
+.accessibility-stop-animations *::before,
+.accessibility-stop-animations *::after {
+  animation: none !important;
+  animation-duration: 0.0001s !important;
   animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
   transition-duration: 0s !important;
   transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+.accessibility-stop-animations video,
+.accessibility-stop-animations [class*="animate-"] {
+  animation: none !important;
 }
 
 .accessibility-readable-font,
