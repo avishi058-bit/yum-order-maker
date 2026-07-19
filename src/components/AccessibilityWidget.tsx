@@ -77,8 +77,10 @@ const AccessibilityWidget = () => {
     // Stop animations
     if (s.stopAnimations) {
       body.classList.add("accessibility-stop-animations");
+      document.documentElement.classList.add("accessibility-stop-animations");
     } else {
       body.classList.remove("accessibility-stop-animations");
+      document.documentElement.classList.remove("accessibility-stop-animations");
     }
 
     // Readable font
