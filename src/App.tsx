@@ -151,6 +151,7 @@ const App = () => (
           <CookieBanner />
           <AccessibilityWidgetGlobal />
           <PostInstallPermissionModal />
+          </GeoGate>
         </BrowserRouter>
       </SkibidiGuardProvider>
       </FlyToCartProvider>
