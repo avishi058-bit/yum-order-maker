@@ -33,6 +33,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "special-hadegel", name: "ספיישל הדגל", price: 73, category: "burger" },
   { id: "napoleon", name: "נפוליאון", price: 78, category: "burger" },
   { id: "haf-mifsha", name: "חף מפשע", price: 55, category: "burger" },
+  { id: "crispy-chicken", name: "קריספי צ׳יקן", price: 58, category: "burger" },
   // Meals
   { id: "meal-classic", name: "ארוחת קלאסי", price: 75, category: "meal" },
   { id: "meal-smash-moshavnikim", name: "ארוחת סמאש של מושבניקים", price: 81, category: "meal" },
@@ -43,6 +44,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "meal-special-hadegel", name: "ארוחת ספיישל הדגל", price: 96, category: "meal" },
   { id: "meal-napoleon", name: "ארוחת נפוליאון", price: 101, category: "meal" },
   { id: "meal-haf-mifsha", name: "ארוחת חף מפשע", price: 78, category: "meal" },
+  { id: "meal-crispy-chicken", name: "ארוחת קריספי צ׳יקן", price: 81, category: "meal" },
   // Sides
   { id: "fries", name: "צ׳יפס", price: 20, category: "side" },
   { id: "sweet-potato-fries", name: "וופל צ׳יפס", price: 25, category: "side" },
