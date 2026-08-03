@@ -76,6 +76,7 @@ export interface ChefSummary {
   regularPatties: number;
   smashPatties: number;
   veganPatties: number;
+  chickenFillets: number; // קריספי צ׳יקן — חזה עוף בציפוי
   // Built-in extras
   eggs: number;
   roastbeef: number;
@@ -104,6 +105,10 @@ const isDoubleName = (name: string): boolean => /כפולה/.test(name);
 
 const isVeganBurgerName = (name: string): boolean =>
   /חף\s*מפשע|haf[-\s]?mifsha/i.test(name);
+
+// קריספי צ׳יקן — חזה עוף, לא קציצת בקר ואין לו מידת עשייה
+const isCrispyChickenName = (name: string): boolean =>
+  /קריספי\s*צ׳?\'?יקן|crispy[-\s]?chicken/i.test(name);
 
 // "Avishai" burger ships with egg + roastbeef built-in.
 const isAvishai = (name: string): boolean => /אבישי|שחוט לי פרה/.test(name);
@@ -423,7 +428,7 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
     if (Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0) {
       for (const b of it.deal_burgers) {
         const bn = String(b?.name || "");
-        if (isSmashName(bn) || isVeganBurgerName(bn)) continue;
+        if (isSmashName(bn) || isVeganBurgerName(bn) || isCrispyChickenName(bn)) continue;
         // "כפולה" within a deal counts as 2 patties for doneness
         const multiplier = isDoubleName(bn) ? 2 : 1;
         add(extractDonenessKey(b?.removals), qty * multiplier);
@@ -434,7 +439,7 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
     // Skip non-burgers, smash, vegan
     if (isDrinkOrMisc(name)) continue;
     if (detectFried(name)) continue;
-    if (isSmashName(name) || isVeganBurgerName(name)) continue;
+    if (isSmashName(name) || isVeganBurgerName(name) || isCrispyChickenName(name)) continue;
 
     // "כפולה" = 2 patties → 2× the doneness count
     const multiplier = isDoubleName(name) ? 2 : 1;
@@ -470,6 +475,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let regularPatties = 0;
   let smashPatties = 0;
   let veganPatties = 0;
+  let chickenFillets = 0;
   let eggs = 0;
   let roastbeef = 0;
   let regularBuns = 0;
@@ -510,7 +516,8 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
       for (const b of it.deal_burgers) {
         const bn = String(b?.name || "");
-        if (isVeganBurgerName(bn)) veganPatties += qty;
+        if (isCrispyChickenName(bn)) chickenFillets += qty;
+        else if (isVeganBurgerName(bn)) veganPatties += qty;
         else if (isSmashName(bn)) smashPatties += qty;
         else if (isDoubleName(bn)) regularPatties += 2 * qty;
         else regularPatties += qty;
@@ -545,7 +552,8 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
 
 
     // ---- patties (by type) ----
-    if (isVeganBurgerName(name)) veganPatties += qty;
+    if (isCrispyChickenName(name)) chickenFillets += qty;
+    else if (isVeganBurgerName(name)) veganPatties += qty;
     else if (isSmashName(name)) smashPatties += qty;
     else if (isDoubleName(name)) regularPatties += 2 * qty;
     else regularPatties += qty;
@@ -604,6 +612,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     regularPatties,
     smashPatties,
     veganPatties,
+    chickenFillets,
     eggs,
     roastbeef,
     regularBuns,
@@ -774,6 +783,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.regularPatties > 0) pattyRows.push(row("רגיל", summary.regularPatties));
   if (summary.smashPatties > 0) pattyRows.push(row("סמאש", summary.smashPatties));
   if (summary.veganPatties > 0) pattyRows.push(row("טבעוני (חף מפשע)", summary.veganPatties));
+  if (summary.chickenFillets > 0) pattyRows.push(row("קריספי צ׳יקן (עוף)", summary.chickenFillets));
 
   // Buns
   const bunRows: string[] = [];
@@ -1240,6 +1250,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   if (summary.regularPatties > 0) pattyRows.push(sumRow("רגיל", summary.regularPatties));
   if (summary.smashPatties > 0) pattyRows.push(sumRow("סמאש", summary.smashPatties));
   if (summary.veganPatties > 0) pattyRows.push(sumRow("טבעוני (חף מפשע)", summary.veganPatties));
+  if (summary.chickenFillets > 0) pattyRows.push(sumRow("קריספי צ׳יקן (עוף)", summary.chickenFillets));
 
   const bunRows: string[] = [];
   if (summary.regularBuns > 0) bunRows.push(sumRow("לחמנייה רגילה", summary.regularBuns));
@@ -1555,6 +1566,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   if (summary.regularPatties > 0) pattyRows.push(sumRow("רגיל", summary.regularPatties));
   if (summary.smashPatties > 0) pattyRows.push(sumRow("סמאש", summary.smashPatties));
   if (summary.veganPatties > 0) pattyRows.push(sumRow("טבעוני (חף מפשע)", summary.veganPatties));
+  if (summary.chickenFillets > 0) pattyRows.push(sumRow("קריספי צ׳יקן (עוף)", summary.chickenFillets));
 
   const bunRows: string[] = [];
   if (summary.regularBuns > 0) bunRows.push(sumRow("לחמנייה רגילה", summary.regularBuns));
