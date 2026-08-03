@@ -576,6 +576,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
   // חף מפשע (צמחוני) — ללא בחירת מידת עשייה
   const isVegan = (item.baseBurgerId || item.id) === "haf-mifsha";
+  // קריספי צ׳יקן — עוף, ללא בחירת מידת עשייה
+  const isChicken = (item.baseBurgerId || item.id) === "crispy-chicken";
 
   const VEGAN_CHEDDAR_MAX = 6;
 
@@ -882,7 +884,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                     )}
 
                     {/* Doneness selector — only for non-smash burgers, only if category is available */}
-                    {isBurger && !isSmash && !isVegan && (!isAvailable || isAvailable("doneness-category")) && (() => {
+                    {isBurger && !isSmash && !isVegan && !isChicken && (!isAvailable || isAvailable("doneness-category")) && (() => {
                       const visibleOptions = donenessOptions.filter(d => !isAvailable || isAvailable(d.id));
                       if (visibleOptions.length === 0) return null;
                       return (

@@ -18,6 +18,7 @@ import beerShapiraImg from "@/assets/menu/beer-shapira.webp";
 import beerMaccabiImg from "@/assets/menu/beer-maccabi.webp";
 import hafMifsha from "@/assets/menu/haf-mifsha.webp";
 import napoleon from "@/assets/menu/napoleon.jpg";
+import crispyChicken from "@/assets/menu/crispy-chicken.jpeg";
 import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
 import sodaTempoAsset from "@/assets/menu/soda-tempo.webp.asset.json";
 import flavoredWaterAsset from "@/assets/menu/flavored-water-grape.png.asset.json";
@@ -54,6 +55,7 @@ export const menuImages: Record<string, string> = {
   double: doubleImg,
   "haf-mifsha": hafMifsha,
   napoleon: napoleon,
+  "crispy-chicken": crispyChicken,
   // Meals - using burger images temporarily
   "meal-classic": classicImg,
   "meal-smash-moshavnikim": smashMoshavnikim,
@@ -64,4 +66,5 @@ export const menuImages: Record<string, string> = {
   "meal-double": doubleImg,
   "meal-haf-mifsha": hafMifsha,
   "meal-napoleon": napoleon,
+  "meal-crispy-chicken": crispyChicken,
 };

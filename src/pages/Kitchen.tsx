@@ -129,8 +129,8 @@ const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "t
 
 // Fixed order of items within each category to match the menu
 const itemOrder: Record<string, string[]> = {
-  burger: ["classic", "smash-moshavnikim", "avishai", "double", "crazy-smash", "smash-double-cheese", "special-hadegel", "haf-mifsha"],
-  meal: ["meal-classic", "meal-smash-moshavnikim", "meal-avishai", "meal-double", "meal-crazy-smash", "meal-smash-double-cheese", "meal-special-hadegel", "meal-haf-mifsha"],
+  burger: ["classic", "smash-moshavnikim", "avishai", "double", "crazy-smash", "smash-double-cheese", "special-hadegel", "haf-mifsha", "crispy-chicken"],
+  meal: ["meal-classic", "meal-smash-moshavnikim", "meal-avishai", "meal-double", "meal-crazy-smash", "meal-smash-double-cheese", "meal-special-hadegel", "meal-haf-mifsha", "meal-crispy-chicken"],
   side: ["fries", "sweet-potato-fries", "onion-rings", "tempura-onion", "friends-mix"],
   drink: [
     "drink-cola", "drink-zero", "drink-fanta", "drink-fanta-grape", "drink-fanta-exotic",
@@ -161,6 +161,7 @@ const burgerToMeal: Record<string, string> = {
   "smash-double-cheese": "meal-smash-double-cheese",
   "special-hadegel": "meal-special-hadegel",
   "haf-mifsha": "meal-haf-mifsha",
+  "crispy-chicken": "meal-crispy-chicken",
 };
 
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];

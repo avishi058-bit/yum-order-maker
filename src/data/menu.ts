@@ -26,6 +26,7 @@ export interface MenuItem {
   baseBurgerId?: string;
   popular?: boolean;
   specialOfMonth?: boolean;
+  special?: boolean;
 }
 
 export interface Topping {
@@ -50,6 +51,7 @@ interface MenuItemUIOverlay {
   baseBurgerId?: string;
   popular?: boolean;
   specialOfMonth?: boolean;
+  special?: boolean;
 }
 
 const MENU_UI: Record<string, MenuItemUIOverlay> = {
@@ -61,6 +63,8 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "smash-double-cheese": { description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני (הולך טוב עם ריבת בצל או חמאת בוטנים)", weight: "220 גרם", badge: "🧀", popular: true },
   "special-hadegel": { description: "קציצת בקר, כל הירקות, איולי הבית, שתי טבעות בצל ביתיות, ריבת בצל ביין וקונפי שום", weight: "220 גרם" },
   napoleon: { description: "קציצת בקר 220, גבינה כחולה טבעונית, ריבת בצל ביין, חסה, עגבנייה, בצל, חמוצים", weight: "220 גרם", specialOfMonth: true },
+  "crispy-chicken": { description: "חזה עוף בציפוי קריספי, חסה, עגבנייה, בצל, חמוצים ואיולי הבית", weight: "", special: true },
+  "meal-crispy-chicken": { description: "קריספי צ׳יקן + צ׳יפס + שתייה", weight: "", baseBurgerId: "crispy-chicken", special: true },
   "haf-mifsha": { description: "המבורגר צמחוני - חסה, עגבנייה, בצל, חמוצים ואיולי (מבושל באיזור בשרי, אין הפרדה מוחלטת)", weight: "", badge: "🌱" },
   "meal-classic": { description: "קלאסי + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "classic" },
   "meal-smash-moshavnikim": { description: "סמאש של מושבניקים + צ׳יפס + שתייה", weight: "220 גרם", baseBurgerId: "smash-moshavnikim" },
@@ -102,6 +106,7 @@ export const menuItems: MenuItem[] = MENU_ITEMS_PRICING.map((m) => ({
   baseBurgerId: MENU_UI[m.id]?.baseBurgerId,
   popular: MENU_UI[m.id]?.popular,
   specialOfMonth: MENU_UI[m.id]?.specialOfMonth,
+  special: MENU_UI[m.id]?.special,
 }));
 
 export { MEAL_UPGRADE_PRICE };
@@ -227,6 +232,7 @@ export const excludedToppingsByItem: Record<string, string[]> = {
   "crazy-smash": ["maple", "hot-pepper-jam"],
   "napoleon": ["vegan-blue-cheese", "onion-jam"],
   "haf-mifsha": ["extra-patty"],
+  "crispy-chicken": ["extra-patty", "extra-smash-patty", "extra-vegan-patty", "roastbeef"],
 };
 
 export const mealUpgrade = {
