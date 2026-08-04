@@ -1263,11 +1263,6 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
 
-  const sauceRows: string[] = [];
-  for (const [name, qty] of summary.sauces.entries()) {
-    if (qty > 0) sauceRows.push(sumRow(name, qty));
-  }
-
   // Doneness aggregation (excludes smash + vegan)
   const donenessRows: string[] = formatDonenessRows(computeDonenessSummary(allItems)).map((r) =>
     sumRow(r.label, r.n),
@@ -1578,11 +1573,6 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
-
-  const sauceRows: string[] = [];
-  for (const [name, qty] of summary.sauces.entries()) {
-    if (qty > 0) sauceRows.push(sumRow(name, qty));
-  }
 
   // Doneness aggregation (excludes smash + vegan)
   const donenessRows: string[] = formatDonenessRows(computeDonenessSummary(allItems)).map((r) =>
