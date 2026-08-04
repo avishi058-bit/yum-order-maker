@@ -127,8 +127,12 @@
   [class*="bg-background"], [class*="bg-card"], [class*="bg-popover"],
   [class*="bg-secondary"], [class*="bg-muted"],
   [class*="fixed"], [class*="sticky"]
-):not(button):not([role="button"]):not(a):not(svg):not(img) {
+):not(button):not([role="button"]):not(a):not(svg):not(img):not([class*="pointer-events-none"]):not([class*="inset-0"]):not([class*="overlay"]):not([class*="backdrop"]) {
   background-color: #000 !important;
+}
+/* Full-bleed decorative layers (fly-to-cart canvas, scrims) stay transparent */
+.accessibility-high-contrast [class*="pointer-events-none"][class*="inset-0"] {
+  background-color: transparent !important;
 }
 
 /* Scrim/overlay layers stay dark but must not become an opaque black sheet
