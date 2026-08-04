@@ -697,7 +697,7 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.regularPatties > 0) rows.push(["קציצה רגיל", s.regularPatties]);
   if (s.smashPatties > 0) rows.push(["קציצה סמאש", s.smashPatties]);
   if (s.veganPatties > 0) rows.push(["קציצה טבעוני", s.veganPatties]);
-  if (s.chickenFillets > 0) rows.push(["קריספי צ'יקן (עוף)", s.chickenFillets]);
+  if (s.chickenFillets > 0) rows.push(["חתיכות קריספי צ׳יקן", s.chickenFillets]);
   if (s.regularBuns > 0) rows.push(["לחמנייה רגילה", s.regularBuns]);
   if (s.glutenFreeBuns > 0) rows.push(["לחמנייה ל\"ג", s.glutenFreeBuns]);
   if (s.fries > 0) rows.push(["צ'יפס", s.fries]);
