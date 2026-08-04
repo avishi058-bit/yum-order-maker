@@ -936,7 +936,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
                           <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>מה במנה שלך</h3>
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>לחץ כדי להוסיף או להוריד</p>
                           <div className="space-y-0">
-                            {ingredients.map((ing) => {
+                            {ingredients.filter((ing) => !(isChicken && ing.id === "tomato")).map((ing) => {
                               const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
                               const ingredientUnavailable = isAvailable ? !isAvailable(ing.id) : false;
                               if (ingredientUnavailable) return null;
