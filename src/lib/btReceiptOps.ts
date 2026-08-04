@@ -697,6 +697,7 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.regularPatties > 0) rows.push(["קציצה רגיל", s.regularPatties]);
   if (s.smashPatties > 0) rows.push(["קציצה סמאש", s.smashPatties]);
   if (s.veganPatties > 0) rows.push(["קציצה טבעוני", s.veganPatties]);
+  if (s.chickenFillets > 0) rows.push(["קריספי צ'יקן (עוף)", s.chickenFillets]);
   if (s.regularBuns > 0) rows.push(["לחמנייה רגילה", s.regularBuns]);
   if (s.glutenFreeBuns > 0) rows.push(["לחמנייה ל\"ג", s.glutenFreeBuns]);
   if (s.fries > 0) rows.push(["צ'יפס", s.fries]);
@@ -707,7 +708,6 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.friendsMix > 0) rows.push(["מיקס חברים", s.friendsMix]);
   if (s.eggs > 0) rows.push(["ביצי עין", s.eggs]);
   if (s.roastbeef > 0) rows.push(["רוסטביף", s.roastbeef]);
-  for (const [name, qty] of s.sauces.entries()) if (qty > 0) rows.push([name, qty]);
 
   if (rows.length === 0) return out;
 
