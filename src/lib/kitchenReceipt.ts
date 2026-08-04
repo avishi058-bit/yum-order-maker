@@ -552,7 +552,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
 
 
     // ---- patties (by type) ----
-    if (isCrispyChickenName(name)) chickenFillets += qty;
+    if (isCrispyChickenName(name)) chickenFillets += 2 * qty; // כל מנה = 2 חתיכות עוף בלחמנייה אחת
     else if (isVeganBurgerName(name)) veganPatties += qty;
     else if (isSmashName(name)) smashPatties += qty;
     else if (isDoubleName(name)) regularPatties += 2 * qty;
