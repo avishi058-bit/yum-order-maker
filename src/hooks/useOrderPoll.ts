@@ -22,7 +22,14 @@ interface Entry {
   listeners: Set<Listener>;
   intervalId: ReturnType<typeof setInterval> | null;
   inflight: Promise<void> | null;
+  failures: number;
+  stopped: boolean;
 }
+
+/** Give up after this many consecutive failed lookups (404 / 429 / network).
+ *  Without this the tracker keeps polling a bad order forever and burns the
+ *  server-side rate-limit budget for the whole IP. */
+const MAX_FAILURES = 3;
 
 const registry = new Map<string, Entry>();
 
@@ -35,16 +42,29 @@ const fetchOnce = async (
   phone: string,
 ): Promise<void> => {
   if (entry.inflight) return entry.inflight;
+  if (entry.stopped) return;
   entry.inflight = (async () => {
     try {
-      const { data } = await supabase.functions.invoke("get-order-by-token", {
+      const { data, error } = await supabase.functions.invoke("get-order-by-token", {
         body: { order_number: orderNumber, phone },
       });
       const fetched = data?.order;
       if (fetched) {
+        entry.failures = 0;
         entry.order = fetched;
         entry.listeners.forEach((l) => l(fetched));
+      } else if (error || !data) {
+        entry.failures += 1;
+        if (entry.failures >= MAX_FAILURES) {
+          entry.stopped = true;
+          if (entry.intervalId) {
+            clearInterval(entry.intervalId);
+            entry.intervalId = null;
+          }
+        }
       }
+    } catch {
+      entry.failures += 1;
     } finally {
       entry.inflight = null;
     }
@@ -69,7 +89,7 @@ export function useOrderPoll(
     const key = keyFor(orderNumber, phone);
     let entry = registry.get(key);
     if (!entry) {
-      entry = { order: null, listeners: new Set(), intervalId: null, inflight: null };
+      entry = { order: null, listeners: new Set(), intervalId: null, inflight: null, failures: 0, stopped: false };
       registry.set(key, entry);
     }
 
@@ -84,7 +104,7 @@ export function useOrderPoll(
     }
 
     // Start the shared interval only for the first subscriber.
-    if (!entry.intervalId) {
+    if (!entry.intervalId && !entry.stopped) {
       entry.intervalId = setInterval(() => {
         fetchOnce(entry!, orderNumber, phone);
       }, POLL_INTERVAL_MS);
