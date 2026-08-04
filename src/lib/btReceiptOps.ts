@@ -476,7 +476,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           ops.push(asLine("- - - - - - - - - - - - - -", { align: "C", bold: false, size: 22 }));
           ops.push(feed(1.0));
         }
-        ops.push(asLine(`מנה ${i + 1}: ${b.name || ""}`.trim(), { align: "R", bold: true, size: 28 }));
+        dishNo += 1;
+        ops.push(asLine(`${dishNo}. מנה ${i + 1}: ${b.name || ""}`.trim(), { align: "R", bold: true, size: 28 }));
+
         ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
         if (isCustomizableBurger(b.name || "")) {
