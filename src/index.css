@@ -99,8 +99,15 @@
   background-color: #000 !important;
   color: hsl(60, 100%, 50%) !important;
 }
-.accessibility-high-contrast *:not(button):not([role="button"]):not(.btn):not(a) {
+.accessibility-high-contrast body {
   background-color: #000 !important;
+  background-image: none !important;
+}
+/* Keep element backgrounds transparent instead of solid black: forcing black
+   on every node turns full-screen overlays/gradients into opaque black sheets
+   that cover the whole page. The black page color comes from html/body. */
+.accessibility-high-contrast *:not(button):not([role="button"]):not(.btn):not(a) {
+  background-color: transparent !important;
   background-image: none !important;
   color: hsl(60, 100%, 50%) !important;
   border-color: hsl(60, 100%, 50%) !important;
@@ -108,7 +115,9 @@
   box-shadow: none !important;
   filter: none !important;
   backdrop-filter: none !important;
+  opacity: 1 !important;
 }
+
 .accessibility-high-contrast button,
 .accessibility-high-contrast [role="button"],
 .accessibility-high-contrast .btn {
