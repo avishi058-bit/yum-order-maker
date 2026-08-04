@@ -121,6 +121,17 @@ const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.te
 const isDrinkOrMisc = (name: string): boolean =>
   /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
+/** Dishes that get a running number on the bon (mains). Fries/sides, drinks
+ *  and the synthetic sauces line are never numbered. */
+export const isNumberableDish = (name: string | undefined | null): boolean => {
+  const n = String(name || "").trim();
+  if (!n || n === "רטבים") return false;
+  if (/צ['׳]?יפס|בטטה|טבעות|טמפורה|מיקס\s*חברים/.test(n)) return false;
+  if (isDrinkOrMisc(n)) return false;
+  return true;
+};
+
+
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
@@ -698,6 +709,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     }
   }
 
+  // Running dish number (mains only — never fries/drinks).
+  let dishNo = 0;
+
   const itemsHtml = merged
     .map((line) => {
       const it = line.item;
@@ -706,13 +720,22 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       // Pull owner-name and doneness out of the removals array.
       const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
 
+      const isDealLine = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
+      let numPrefix = "";
+      if (!isDealLine && isNumberableDish(it.item_name)) {
+        const start = dishNo + 1;
+        dishNo += line.totalQty;
+        numPrefix = line.totalQty > 1 ? `${start}-${dishNo}. ` : `${start}. `;
+      }
+
       let html = `<div class="line">`;
 
       if (ownerName) {
         html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
       }
 
-      html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+      html += `<div class="line-name">${numPrefix}${escapeHtml(it.item_name)}${qtyStr}</div>`;
+
 
       if (doneness) {
         html += `<div class="sub" style="font-weight:900;">🔥 ${escapeHtml(doneness)}</div>`;
@@ -740,7 +763,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       }
       if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
         it.deal_burgers.forEach((b: any, i: number) => {
-          const bName = `${i + 1}. ${b.name || ""}`;
+          dishNo += 1;
+          const bName = `${dishNo}. מנה ${i + 1}: ${b.name || ""}`.trim();
+
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
             const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);

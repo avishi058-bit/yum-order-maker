@@ -386,6 +386,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ? groups.filter((g) => !isStandaloneDrinkItem(g.item))
     : groups;
 
+  // Running dish number — printed on every main dish (burgers/mains) so the
+  // kitchen can write the same number on the wrapped dish. Fries/sides and
+  // drinks are intentionally NOT numbered.
+  let dishNo = 0;
 
   // 3) Items
   printedGroups.forEach((g, gi) => {
@@ -393,6 +397,14 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     const totalQty = g.qty;
     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
     const donShort = shortDoneness(doneness);
+    const isDealItem = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
+    const numberable = !isDealItem && isCustomizableBurger(it.item_name);
+    let numPrefix = "";
+    if (numberable) {
+      const start = dishNo + 1;
+      dishNo += totalQty;
+      numPrefix = totalQty > 1 ? `${start}-${dishNo}. ` : `${start}. `;
+    }
 
     if (ownerName) {
       ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 24 }));
@@ -406,8 +418,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     const displayName = it.with_meal && !it.item_name.startsWith("ארוחת")
       ? `ארוחת ${it.item_name}`
       : it.item_name;
-    ops.push(asLine(`${displayName}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
+    ops.push(asLine(`${numPrefix}${displayName}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
     ops.push(feed(LINE_GAP));
+
 
     // Changes
     const isDeal = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
@@ -463,7 +476,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           ops.push(asLine("- - - - - - - - - - - - - -", { align: "C", bold: false, size: 22 }));
           ops.push(feed(1.0));
         }
-        ops.push(asLine(`מנה ${i + 1}: ${b.name || ""}`.trim(), { align: "R", bold: true, size: 28 }));
+        dishNo += 1;
+        ops.push(asLine(`${dishNo}. מנה ${i + 1}: ${b.name || ""}`.trim(), { align: "R", bold: true, size: 28 }));
+
         ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
         if (isCustomizableBurger(b.name || "")) {
