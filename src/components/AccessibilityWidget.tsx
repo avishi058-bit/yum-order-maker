@@ -179,6 +179,7 @@ const AccessibilityWidget = () => {
                   <button
                     key={btn.key}
                     onClick={() => toggle(btn.key)}
+                    aria-pressed={btn.active}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-right ${
                       btn.active
                         ? "border-primary bg-primary/10 text-primary"
