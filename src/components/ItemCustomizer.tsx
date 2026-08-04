@@ -218,7 +218,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setSelectedSide(initialState.mealSideId || "side-fries");
       setSelectedDrink(initialState.mealDrinkId || "drink-cola");
       setOwnerName(initialState.ownerName || "");
-      setOwnerNameEnabled(!!(initialState.ownerName && initialState.ownerName.length > 0));
+      setNameStepOpen(false);
       setStep("customize");
     } else {
       // Fresh open — set defaults
