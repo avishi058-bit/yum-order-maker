@@ -102,30 +102,25 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
               בחר כדי להתחיל בהזמנה👇🏽
             </motion.p>
             <div className="w-full max-w-md flex flex-col gap-3">
-              <div className="flex w-full rounded-[2rem] overflow-hidden shadow-2xl border-2 border-border/30">
+              <div className="flex w-full rounded-full overflow-hidden shadow-2xl">
                 <button
                   onClick={() => onDineInChoice(true)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 h-32 font-black transition-all ${
-                    dineIn === true
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  className={`flex-1 h-24 font-black text-3xl bg-primary text-primary-foreground transition-all ${
+                    dineIn === true ? "ring-4 ring-inset ring-primary-foreground/40" : "hover:brightness-110"
                   }`}
                 >
-                  <span className="text-4xl">🪑</span>
-                  <span className="text-2xl">לשבת</span>
+                  לשבת
                 </button>
                 <button
                   onClick={() => onDineInChoice(false)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 h-32 font-black transition-all ${
-                    dineIn === false
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  className={`flex-1 h-24 font-black text-3xl bg-secondary text-secondary-foreground transition-all ${
+                    dineIn === false ? "ring-4 ring-inset ring-primary" : "hover:brightness-125"
                   }`}
                 >
-                  <span className="text-4xl">🥡</span>
-                  <span className="text-2xl">לקחת</span>
+                  לקחת
                 </button>
               </div>
+
               {showDelivery && onDeliveryChoice && (
                 <button
                   onClick={() => onDeliveryChoice()}
