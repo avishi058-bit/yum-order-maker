@@ -103,10 +103,11 @@
   background-color: #000 !important;
   background-image: none !important;
 }
-/* Base: neutralize decorative styling, keep backgrounds transparent so the
-   black page color from html/body shows through. */
+/* Base: every element gets an OPAQUE black background. This is the only
+   reliable way to stop page content from showing through modals, drawers and
+   sticky bars, since we cannot enumerate every surface class in the app. */
 .accessibility-high-contrast * {
-  background-color: transparent !important;
+  background-color: #000 !important;
   background-image: none !important;
   color: hsl(60, 100%, 50%) !important;
   border-color: hsl(60, 100%, 50%) !important;
@@ -117,42 +118,31 @@
   opacity: 1 !important;
 }
 
-/* Any layered surface (modal, drawer, sticky bar, popover, card, landmark)
-   must be fully opaque — otherwise page content shows through it. */
-.accessibility-high-contrast :is(
-  header, footer, nav, main, section, aside, dialog, form,
-  [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="tooltip"],
-  [data-radix-popper-content-wrapper], [data-state="open"],
-  [class*="card"], [class*="Card"], [class*="panel"], [class*="sheet"], [class*="modal"],
-  [class*="bg-background"], [class*="bg-card"], [class*="bg-popover"],
-  [class*="bg-secondary"], [class*="bg-muted"],
-  [class*="fixed"], [class*="sticky"]
-):not(button):not([role="button"]):not(a):not(svg):not(img):not([class*="pointer-events-none"]):not([class*="inset-0"]):not([class*="overlay"]):not([class*="backdrop"]) {
-  background-color: #000 !important;
-}
-/* Full-bleed decorative layers (fly-to-cart canvas, scrims) stay transparent */
-.accessibility-high-contrast [class*="pointer-events-none"][class*="inset-0"] {
+/* Decorative full-bleed layers (fly-to-cart canvas, gradients, scrims) must
+   NOT become an opaque black sheet on top of the UI. */
+.accessibility-high-contrast [class*="pointer-events-none"],
+.accessibility-high-contrast [aria-hidden="true"][class*="absolute"],
+.accessibility-high-contrast [class*="gradient"] {
   background-color: transparent !important;
 }
 
-/* Scrim/overlay layers stay dark but must not become an opaque black sheet
-   that hides the dialog itself. */
+/* Modal scrims: dark but semi-transparent, never covering the dialog */
 .accessibility-high-contrast [data-radix-dialog-overlay],
+.accessibility-high-contrast [data-radix-alert-dialog-overlay],
 .accessibility-high-contrast [class*="overlay"],
 .accessibility-high-contrast [class*="backdrop"] {
-  background-color: rgba(0, 0, 0, 0.9) !important;
+  background-color: rgba(0, 0, 0, 0.92) !important;
 }
 
-/* Hide decorative full-bleed background photos/videos behind content layers */
-.accessibility-high-contrast [class*="inset-0"] img,
-.accessibility-high-contrast [class*="inset-0"] video,
-.accessibility-high-contrast img[class*="inset-0"],
-.accessibility-high-contrast video[class*="inset-0"],
-.accessibility-high-contrast video[class*="absolute"],
-.accessibility-high-contrast video[class*="fixed"],
-.accessibility-high-contrast img[class*="absolute"][class*="object-cover"] {
+/* Decorative photos/videos add visual noise and reduce legibility in
+   high-contrast mode — hide media that is purely background/illustrative. */
+.accessibility-high-contrast img,
+.accessibility-high-contrast video,
+.accessibility-high-contrast picture,
+.accessibility-high-contrast canvas {
   display: none !important;
 }
+
 
 /* Controls: outlined, not filled. Large yellow fills over a whole screen are
    what made the page look like one flat yellow block; an outline keeps
