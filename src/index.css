@@ -117,6 +117,26 @@
   backdrop-filter: none !important;
   opacity: 1 !important;
 }
+/* Real surfaces (panels, dialogs, cards, landmarks) get an opaque black
+   background so text never sits on top of photos or video. */
+.accessibility-high-contrast :is(
+  header, footer, nav, main, section, aside, dialog, form,
+  [role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper],
+  [class*="card"], [class*="Card"], [class*="panel"], [class*="sheet"],
+  [class*="bg-background"], [class*="bg-card"], [class*="bg-popover"],
+  [class*="bg-secondary"], [class*="bg-muted"]
+):not(button):not([role="button"]):not(a) {
+  background-color: #000 !important;
+}
+/* Hide decorative background photos/videos behind content layers */
+.accessibility-high-contrast [class*="absolute"] img,
+.accessibility-high-contrast [class*="absolute"] video,
+.accessibility-high-contrast [class*="fixed"] img,
+.accessibility-high-contrast [class*="fixed"] video {
+  display: none !important;
+}
+
+
 
 .accessibility-high-contrast button,
 .accessibility-high-contrast [role="button"],
