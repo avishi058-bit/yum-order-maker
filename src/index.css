@@ -194,11 +194,6 @@
 .accessibility-high-contrast a {
   text-decoration: underline !important;
 }
-.accessibility-high-contrast img,
-.accessibility-high-contrast video {
-  background-color: transparent !important;
-  filter: none !important;
-}
 
 .accessibility-high-contrast svg {
   background-color: transparent !important;
