@@ -481,19 +481,16 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
         ops.push(feed(LINE_GAP));
         const bRem = b.removals || [];
-        if (isCustomizableBurger(b.name || "")) {
-          const { veg, others } = buildVeggieSummary(
-            b.name || "",
-            extractOwnerName(bRem).cleanedRemovals,
-          );
-          ops.push(asLine(veg, { align: "R", bold: true, size: 26 }));
-          ops.push(feed(LINE_GAP));
-          for (const o of others) {
-            ops.push(asLine(o, { align: "R", bold: true, size: 24 }));
-            ops.push(feed(LINE_GAP));
-          }
-        } else if (bRem.length > 0) {
-          ops.push(asLine(`- ${bRem.join(", ")}`, { align: "R", bold: true, size: 24 }));
+        // Deal burgers are always classic burgers; b.name is the optional
+        // owner-name label, so we pass the real burger type to the summary.
+        const { veg, others } = buildVeggieSummary(
+          "קלאסי",
+          extractOwnerName(bRem).cleanedRemovals,
+        );
+        ops.push(asLine(veg, { align: "R", bold: true, size: 26 }));
+        ops.push(feed(LINE_GAP));
+        for (const o of others) {
+          ops.push(asLine(o, { align: "R", bold: true, size: 24 }));
           ops.push(feed(LINE_GAP));
         }
         const bTops = (b as any).toppings;
