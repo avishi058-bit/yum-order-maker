@@ -1489,10 +1489,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
               className={`bg-white text-black w-full rounded-3xl shadow-2xl ${isKiosk ? "max-w-2xl p-10" : "max-w-md p-6"}`}
             >
               <h3 className={`font-black text-center ${isKiosk ? "text-[36px] mb-2" : "text-xl mb-1"}`}>
-                👤 שם על המנה
+                של מי המנה? :)
               </h3>
               <p className={`text-gray-500 text-center ${isKiosk ? "text-[22px] mb-6" : "text-sm mb-4"}`}>
-                כדי שנדע למי המנה כשמגיעים לאסוף (אפשר לדלג)
+                נכתוב את השם על המנה כדי למנוע בלבולים (אפשר לדלג)
               </p>
               <input
                 ref={ownerInputRef}
