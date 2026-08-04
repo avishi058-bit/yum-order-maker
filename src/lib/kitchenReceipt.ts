@@ -763,7 +763,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       }
       if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
         it.deal_burgers.forEach((b: any, i: number) => {
-          const bName = `${i + 1}. ${b.name || ""}`;
+          dishNo += 1;
+          const bName = `${dishNo}. מנה ${i + 1}: ${b.name || ""}`.trim();
+
           html += `<div class="sub">${escapeHtml(bName)}</div>`;
           if (b.removals?.length > 0) {
             const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
