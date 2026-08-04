@@ -121,6 +121,17 @@ const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.te
 const isDrinkOrMisc = (name: string): boolean =>
   /פחית|בקבוק|בירה|ויינשטפאן|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|קאלסברג|קלסטברג|לאפ|לאף|גינס|אנפילטר|הוגרדן|מים|מוחיטו|אבטיח/.test(name);
 
+/** Dishes that get a running number on the bon (mains). Fries/sides, drinks
+ *  and the synthetic sauces line are never numbered. */
+export const isNumberableDish = (name: string | undefined | null): boolean => {
+  const n = String(name || "").trim();
+  if (!n || n === "רטבים") return false;
+  if (/צ['׳]?יפס|בטטה|טבעות|טמפורה|מיקס\s*חברים/.test(n)) return false;
+  if (isDrinkOrMisc(n)) return false;
+  return true;
+};
+
+
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
