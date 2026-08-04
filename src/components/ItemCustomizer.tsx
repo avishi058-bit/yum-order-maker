@@ -689,8 +689,17 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     }
   };
 
-  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string) => {
-    const trimmedOwner = ownerNameEnabled ? ownerName.trim() : "";
+  /** Take-away burgers get an optional "name on the dish" step right before
+   *  the item is added to the cart. */
+  const nameStepEnabled = isBurger && dineIn === false;
+
+  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string, skipNameStep = false) => {
+    if (nameStepEnabled && !skipNameStep) {
+      setPendingFinish({ withMeal, sideId, drinkId });
+      setNameStepOpen(true);
+      return;
+    }
+    const trimmedOwner = ownerName.trim();
     const donenessCategoryOn = !isAvailable || isAvailable("doneness-category");
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
     const includeDoneness = isBurger && !isSmash && !isVegan && donenessCategoryOn && donenessOptionOn;
