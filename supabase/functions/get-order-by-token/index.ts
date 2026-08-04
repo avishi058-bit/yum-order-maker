@@ -55,15 +55,20 @@ Deno.serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
-    await supabase.rpc("record_rate_limit_attempt", {
-      p_action: "order_lookup",
-      p_key: ip,
-      p_ip_address: ip,
-    });
+    // NOTE: attempts are recorded ONLY for failed lookups (below). Successful
+    // lookups must not consume the budget — the tracking page polls every 8s
+    // and would otherwise rate-limit a legitimate customer within ~80 seconds.
+    const recordFailure = () =>
+      supabase.rpc("record_rate_limit_attempt", {
+        p_action: "order_lookup",
+        p_key: ip,
+        p_ip_address: ip,
+      });
 
     const { order_number, phone } = (await req.json()) as Body;
 
     if (!order_number || !phone || typeof phone !== "string") {
+      await recordFailure();
       return new Response(
         JSON.stringify({ error: "missing_params" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -79,6 +84,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!order || normalizePhone(order.customer_phone) !== normalizePhone(phone)) {
+      await recordFailure();
       return new Response(
         JSON.stringify({ error: "not_found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
