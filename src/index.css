@@ -187,6 +187,8 @@
 .accessibility-high-contrast button[data-state="checked"] *,
 .accessibility-high-contrast [aria-selected="true"] * {
   color: #000 !important;
+  border-color: #000 !important;
+  fill: #000 !important;
 }
 .accessibility-high-contrast :is(button, [role="button"], a, input, select, textarea):focus-visible {
   outline: 3px solid hsl(180, 100%, 60%) !important;
