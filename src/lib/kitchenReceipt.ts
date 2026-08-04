@@ -808,23 +808,14 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
 
-  // Sauces
-  const sauceRows: string[] = [];
-  for (const [name, qty] of summary.sauces.entries()) {
-    if (qty > 0) sauceRows.push(row(name, qty));
-  }
-
-  // Sauces only appear in the per-bon chef summary for takeaway orders —
-  // dine-in (kiosk/station) doesn't need an aggregated sauce list.
-  const isTakeawayForSauces =
-    order.order_source !== "kiosk" && order.order_source !== "station";
+  // Sauces are intentionally NOT aggregated in the chef summary (per request).
 
   const summaryBody =
     section("קציצות", pattyRows) +
     section("לחמניות", bunRows) +
     section("מטוגנים", friedRows) +
-    section("תוספות מעל ההמבורגר", toppingRows) +
-    (isTakeawayForSauces ? section("רטבים", sauceRows) : "");
+    section("תוספות מעל ההמבורגר", toppingRows);
+
 
   const summaryHtml = summaryBody
     ? `<div class="summary">
