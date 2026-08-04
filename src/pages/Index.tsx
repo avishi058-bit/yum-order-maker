@@ -642,6 +642,7 @@ const Index = () => {
             }}
             onConfirm={handleCustomizerConfirm}
             isAvailable={isAvailable}
+            dineIn={dineIn}
             initialState={customizerInitial}
           />
         )}
