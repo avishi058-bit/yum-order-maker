@@ -134,12 +134,19 @@
   background-color: rgba(0, 0, 0, 0.92) !important;
 }
 
-/* Decorative photos/videos add visual noise and reduce legibility in
-   high-contrast mode — hide media that is purely background/illustrative. */
+/* Keep content images visible (they hold real information), but hide
+   full-bleed decorative background media that sits behind text. */
 .accessibility-high-contrast img,
 .accessibility-high-contrast video,
 .accessibility-high-contrast picture,
 .accessibility-high-contrast canvas {
+  background-color: transparent !important;
+}
+.accessibility-high-contrast [class*="inset-0"] img,
+.accessibility-high-contrast [class*="inset-0"] video,
+.accessibility-high-contrast img[class*="inset-0"],
+.accessibility-high-contrast video[class*="absolute"],
+.accessibility-high-contrast video[class*="fixed"] {
   display: none !important;
 }
 
