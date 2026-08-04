@@ -132,6 +132,8 @@ interface ItemCustomizerProps {
   onClose: () => void;
   onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number }>) => void;
   isAvailable?: (id: string) => boolean;
+  /** Take-away (false) shows the optional "name on the dish" step at the end. */
+  dineIn?: boolean | null;
   /** When set, the customizer opens with these values prefilled — used for
    *  editing an item already in the cart. */
   initialState?: ItemCustomizerInitialState;
