@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, Utensils } from "lucide-react";
+import { X, Minus, Plus, Utensils, Check } from "lucide-react";
 import { MenuItem, menuItems, toppings as staticToppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS, excludedToppingsByItem } from "@/data/menu";
 import { useCustomToppings } from "@/lib/customToppingsStore";
 import { findTopping } from "@/lib/toppingsLookup";
