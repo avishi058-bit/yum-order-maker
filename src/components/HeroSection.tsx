@@ -101,39 +101,42 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
             >
               בחר כדי להתחיל בהזמנה👇🏽
             </motion.p>
-            <div className="flex gap-3 flex-wrap justify-center max-w-md">
-              <button
-                onClick={() => onDineInChoice(true)}
-                className={`flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl font-bold transition-all border-2 ${
-                  dineIn === true
-                    ? "bg-primary text-primary-foreground border-primary shadow-xl scale-105"
-                    : "bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60 hover:scale-105"
-                }`}
-              >
-                <span className="text-3xl">🪑</span>
-                <span className="text-sm">לשבת</span>
-              </button>
-              <button
-                onClick={() => onDineInChoice(false)}
-                className={`flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl font-bold transition-all border-2 ${
-                  dineIn === false
-                    ? "bg-primary text-primary-foreground border-primary shadow-xl scale-105"
-                    : "bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60 hover:scale-105"
-                }`}
-              >
-                <span className="text-3xl">🥡</span>
-                <span className="text-sm">לקחת</span>
-              </button>
+            <div className="w-full max-w-md flex flex-col gap-3">
+              <div className="flex w-full rounded-[2rem] overflow-hidden shadow-2xl border-2 border-border/30">
+                <button
+                  onClick={() => onDineInChoice(true)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 h-32 font-black transition-all ${
+                    dineIn === true
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  <span className="text-4xl">🪑</span>
+                  <span className="text-2xl">לשבת</span>
+                </button>
+                <button
+                  onClick={() => onDineInChoice(false)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 h-32 font-black transition-all ${
+                    dineIn === false
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  <span className="text-4xl">🥡</span>
+                  <span className="text-2xl">לקחת</span>
+                </button>
+              </div>
               {showDelivery && onDeliveryChoice && (
                 <button
                   onClick={() => onDeliveryChoice()}
-                  className="flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-2xl font-bold transition-all border-2 bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60 hover:scale-105"
+                  className="w-full flex items-center justify-center gap-3 h-16 rounded-[2rem] font-black text-xl transition-all border-2 bg-secondary/80 backdrop-blur-sm text-foreground border-border/40 hover:border-primary/60"
                 >
                   <span className="text-3xl">🛵</span>
-                  <span className="text-sm">משלוח</span>
+                  <span>משלוח</span>
                 </button>
               )}
             </div>
+
           </motion.div>
         ) : (
           <motion.div
