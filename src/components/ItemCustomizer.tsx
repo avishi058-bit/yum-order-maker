@@ -732,7 +732,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     setStep("customize");
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
-    setOwnerNameEnabled(false);
+    setNameStepOpen(false);
+    setPendingFinish(null);
     setOwnerName("");
     setToppingsSeen(false);
     setSideItemCounts({});
