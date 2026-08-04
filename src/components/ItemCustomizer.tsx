@@ -160,7 +160,7 @@ const readKioskHeroHeight = () => {
 const DRAG_CLOSE_THRESHOLD = 120; // px the user must drag down to close
 const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
 
-const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }: ItemCustomizerProps) => {
+const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initialState }: ItemCustomizerProps) => {
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
@@ -171,10 +171,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, initialState }:
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
   const [selectedDoneness, setSelectedDoneness] = useState<string>(DEFAULT_DONENESS);
   // Optional "owner name" — chef sees who each dish belongs to.
-  // Toggle controls whether the input is shown; only sent if non-empty.
-  const [ownerNameEnabled, setOwnerNameEnabled] = useState(false);
+  // Asked as the LAST step, and only for take-away orders.
   const [ownerName, setOwnerName] = useState("");
+  const [nameStepOpen, setNameStepOpen] = useState(false);
+  const [pendingFinish, setPendingFinish] = useState<{ withMeal: boolean; sideId?: string; drinkId?: string } | null>(null);
   const ownerInputRef = useRef<HTMLInputElement>(null);
+
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
