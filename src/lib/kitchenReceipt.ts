@@ -709,6 +709,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     }
   }
 
+  // Running dish number (mains only — never fries/drinks).
+  let dishNo = 0;
+
   const itemsHtml = merged
     .map((line) => {
       const it = line.item;
@@ -717,13 +720,22 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       // Pull owner-name and doneness out of the removals array.
       const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
 
+      const isDealLine = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
+      let numPrefix = "";
+      if (!isDealLine && isNumberableDish(it.item_name)) {
+        const start = dishNo + 1;
+        dishNo += line.totalQty;
+        numPrefix = line.totalQty > 1 ? `${start}-${dishNo}. ` : `${start}. `;
+      }
+
       let html = `<div class="line">`;
 
       if (ownerName) {
         html += `<div class="owner">👤 ${escapeHtml(ownerName)}</div>`;
       }
 
-      html += `<div class="line-name">${escapeHtml(it.item_name)}${qtyStr}</div>`;
+      html += `<div class="line-name">${numPrefix}${escapeHtml(it.item_name)}${qtyStr}</div>`;
+
 
       if (doneness) {
         html += `<div class="sub" style="font-weight:900;">🔥 ${escapeHtml(doneness)}</div>`;
