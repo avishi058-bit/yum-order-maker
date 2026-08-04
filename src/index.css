@@ -148,6 +148,13 @@
   background-color: transparent !important;
   filter: none !important;
 }
+/* Hide decorative full-bleed background media so yellow text stays readable */
+.accessibility-high-contrast video[class*="absolute"],
+.accessibility-high-contrast video[class*="fixed"],
+.accessibility-high-contrast img[class*="absolute"][class*="object-cover"] {
+  display: none !important;
+}
+
 .accessibility-high-contrast svg {
   background-color: transparent !important;
   color: hsl(60, 100%, 50%) !important;
