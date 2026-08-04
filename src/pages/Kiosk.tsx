@@ -444,7 +444,7 @@ const Kiosk = () => {
           chunks are prefetched during Welcome (see prefetchCustomerFlow), so
           in practice they are already resident when opened. */}
       <Suspense fallback={null}>
-        <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} initialState={customizerInitial} />
+        <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} dineIn={dineIn} initialState={customizerInitial} />
         <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
         <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
       </Suspense>
