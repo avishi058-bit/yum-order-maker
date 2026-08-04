@@ -1471,6 +1471,83 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       )}
       </AnimatePresence>
 
+      {/* Final step (take-away only): optional name on the dish. */}
+      <AnimatePresence>
+        {nameStepOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4"
+            dir="rtl"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.18 }}
+              className={`bg-white text-black w-full rounded-3xl shadow-2xl ${isKiosk ? "max-w-2xl p-10" : "max-w-md p-6"}`}
+            >
+              <h3 className={`font-black text-center ${isKiosk ? "text-[36px] mb-2" : "text-xl mb-1"}`}>
+                👤 שם על המנה
+              </h3>
+              <p className={`text-gray-500 text-center ${isKiosk ? "text-[22px] mb-6" : "text-sm mb-4"}`}>
+                כדי שנדע למי המנה כשמגיעים לאסוף (אפשר לדלג)
+              </p>
+              <input
+                ref={ownerInputRef}
+                autoFocus
+                type="text"
+                value={ownerName}
+                onChange={(e) => {
+                  const raw = e.target.value.slice(0, 30);
+                  if (containsSixtySeven(raw)) {
+                    triggerSkibidi();
+                    setOwnerName("");
+                    return;
+                  }
+                  setOwnerName(raw);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleFinish(pendingFinish?.withMeal ?? false, pendingFinish?.sideId, pendingFinish?.drinkId, true);
+                }}
+                placeholder="שם (למשל: יוסי)"
+                maxLength={30}
+                inputMode="text"
+                enterKeyHint="done"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
+                spellCheck={false}
+                name="dish-owner-name"
+                dir="rtl"
+                style={{ fontSize: isKiosk ? "26px" : "16px" }}
+                className={`w-full bg-white border-2 border-gray-200 rounded-xl text-right focus:outline-none focus:border-primary transition-colors ${isKiosk ? "px-5 py-5" : "px-4 py-3"}`}
+              />
+              <div className={`${isKiosk ? "space-y-4 mt-8" : "space-y-3 mt-5"}`}>
+                <button
+                  onClick={() => handleFinish(pendingFinish?.withMeal ?? false, pendingFinish?.sideId, pendingFinish?.drinkId, true)}
+                  className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-6 text-[30px]" : "py-4 text-lg"}`}
+                >
+                  הוספה להזמנה 🍔
+                </button>
+                <button
+                  onClick={() => {
+                    setOwnerName("");
+                    handleFinish(pendingFinish?.withMeal ?? false, pendingFinish?.sideId, pendingFinish?.drinkId, true);
+                  }}
+                  className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[24px]" : "py-3 text-base"}`}
+                >
+                  דלג
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+
       {/* Alcohol-consent gate for beer chosen as a meal-deal drink.
           Rendered as a sibling of <AnimatePresence> — NOT as its child —
           so framer-motion does not try to forward a ref to a plain function
