@@ -168,6 +168,7 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
                     <button
                       key={opt.id}
                       disabled={unavailable}
+                      aria-pressed={selected === opt.id}
                       onClick={() => !unavailable && setSelected(opt.id)}
                       className={`w-full text-right rounded-xl border transition-all ${
                         isKiosk ? "px-6 py-5" : "px-4 py-3"

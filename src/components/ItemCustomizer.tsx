@@ -1209,6 +1209,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         return (
                           <button
                             key={side.id}
+                            aria-pressed={active}
                             onClick={() => !unavailable && setSelectedSide(side.id)}
                             disabled={unavailable}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${

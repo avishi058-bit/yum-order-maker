@@ -351,6 +351,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                             <button
                               key={t.id}
                               disabled={unavailable}
+                              aria-pressed={active}
                               onClick={() => !unavailable && toggleBurgerTopping(t.id)}
                               className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
@@ -469,6 +470,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                             <button
                               key={drink.id}
                               disabled={unavailable}
+                              aria-pressed={active}
                               onClick={() => !unavailable && handleDrinkSelect(currentDrinkIndex, drink.id)}
                               className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
@@ -500,6 +502,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                             <button
                               key={drink.id}
                               disabled={unavailable}
+                              aria-pressed={active}
                               onClick={() => !unavailable && handleDrinkSelect(currentDrinkIndex, drink.id)}
                               className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
