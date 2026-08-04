@@ -158,8 +158,6 @@
 .accessibility-high-contrast button[aria-pressed="true"],
 .accessibility-high-contrast [role="button"][aria-pressed="true"] {
   box-shadow: inset 0 0 0 3px #000 !important;
-  outline: 3px solid hsl(60, 100%, 50%) !important;
-  outline-offset: 2px !important;
 }
 /* Links: cyan text for distinction */
 .accessibility-high-contrast a {
