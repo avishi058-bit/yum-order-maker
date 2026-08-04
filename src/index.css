@@ -128,13 +128,14 @@
 ):not(button):not([role="button"]):not(a) {
   background-color: #000 !important;
 }
-/* Hide decorative background photos/videos behind content layers */
-.accessibility-high-contrast [class*="absolute"] img,
-.accessibility-high-contrast [class*="absolute"] video,
-.accessibility-high-contrast [class*="fixed"] img,
-.accessibility-high-contrast [class*="fixed"] video {
+/* Hide decorative full-bleed background photos/videos behind content layers */
+.accessibility-high-contrast [class*="inset-0"] img,
+.accessibility-high-contrast [class*="inset-0"] video,
+.accessibility-high-contrast img[class*="inset-0"],
+.accessibility-high-contrast video[class*="inset-0"] {
   display: none !important;
 }
+
 
 
 
