@@ -516,7 +516,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     if (it.deal_burgers && Array.isArray(it.deal_burgers)) {
       for (const b of it.deal_burgers) {
         const bn = String(b?.name || "");
-        if (isCrispyChickenName(bn)) chickenFillets += qty;
+        if (isCrispyChickenName(bn)) chickenFillets += 2 * qty; // כל מנה = 2 חתיכות עוף
         else if (isVeganBurgerName(bn)) veganPatties += qty;
         else if (isSmashName(bn)) smashPatties += qty;
         else if (isDoubleName(bn)) regularPatties += 2 * qty;
