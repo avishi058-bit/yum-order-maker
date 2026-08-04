@@ -1080,6 +1080,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                 <button
                                   key={t.id}
                                   onClick={() => toggleTopping(t.id)}
+                                  aria-pressed={active}
                                   className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                 >
                                   <div className="flex items-center gap-3">
@@ -1088,7 +1089,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                         active ? "border-primary bg-primary" : "border-gray-300"
                                       }`}
                                     >
-                                      {active && <div className="w-3 h-3 rounded-full bg-white" />}
+                                      {active && <Check size={isKiosk ? 20 : 16} className="text-primary-foreground" strokeWidth={4} />}
                                     </div>
                                     <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
