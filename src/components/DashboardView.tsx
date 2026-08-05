@@ -6,6 +6,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, LineChart, Line, Legend, AreaChart, Area
 } from "recharts";
+import { excludeTestOrders } from "@/lib/testCustomers";
 import { TrendingUp, ShoppingBag, DollarSign, Clock, Globe, Monitor } from "lucide-react";
 
 interface Order {
@@ -16,6 +17,8 @@ interface Order {
   created_at: string;
   payment_method: string | null;
   order_source: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
 }
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444", "#eab308"];
@@ -34,11 +37,11 @@ const DashboardView = () => {
 
     const { data } = await supabase
       .from("orders")
-      .select("id, order_number, total, status, created_at, payment_method, order_source")
+      .select("id, order_number, total, status, created_at, payment_method, order_source, customer_name, customer_phone")
       .gte("created_at", thirtyDaysAgo.toISOString())
       .order("created_at", { ascending: true });
 
-    if (data) setOrders(data as Order[]);
+    if (data) setOrders(excludeTestOrders(data as Order[]));
   };
 
   const filteredOrders = useMemo(() => {
