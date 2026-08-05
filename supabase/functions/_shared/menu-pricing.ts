@@ -90,6 +90,8 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים)", price: 4 },
   { id: "arayes-extra-quarter", name: "רבע עראיס נוסף", price: 15 },
   { id: "lotus-spread", name: "ממרח לוטוס", price: 6 },
+  { id: "pickled-jalapeno", name: "חלפניו מוחמץ (הכנה ביתית)", price: 3 },
+  { id: "pickled-jalapeno-side", name: "חלפניו מוחמץ בצד", price: 3 },
 ];
 
 // ===== Meal upgrade =====

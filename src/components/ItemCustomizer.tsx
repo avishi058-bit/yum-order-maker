@@ -992,6 +992,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => t.id !== "arayes-extra-quarter")
+                              .filter((t: Topping) => t.id !== "pickled-jalapeno-side")
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
                               .filter((t: Topping) => {
                                 // Per-item topping exclusions (e.g. don't offer onion jam on a burger that already has it)
@@ -1017,8 +1018,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               })
                               .map((t: Topping) => {
                               const isCheddar = t.id === "vegan-cheddar";
+                              const isJalapeno = t.id === "pickled-jalapeno";
+                              const jalapenoSide = selectedToppings.includes("pickled-jalapeno-side");
                               const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === "vegan-cheddar").length : 0;
-                              const active = isCheddar ? cheddarCount > 0 : selectedToppings.includes(t.id);
+                              const active = isCheddar
+                                ? cheddarCount > 0
+                                : isJalapeno
+                                  ? selectedToppings.includes("pickled-jalapeno") || jalapenoSide
+                                  : selectedToppings.includes(t.id);
                               const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
 
                               if (isCheddar) {
@@ -1073,6 +1080,59 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                         </span>
                                       )}
                                     </div>
+                                  </div>
+                                );
+                              }
+
+                              if (isJalapeno) {
+                                const setJalapeno = (mode: "none" | "in" | "side") =>
+                                  setSelectedToppings((prev) => {
+                                    const rest = prev.filter((id) => id !== "pickled-jalapeno" && id !== "pickled-jalapeno-side");
+                                    if (mode === "none") return rest;
+                                    return [...rest, mode === "in" ? "pickled-jalapeno" : "pickled-jalapeno-side"];
+                                  });
+                                const inDish = selectedToppings.includes("pickled-jalapeno");
+                                return (
+                                  <div
+                                    key={t.id}
+                                    className={`w-full border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                  >
+                                    <button
+                                      onClick={() => setJalapeno(active ? "none" : dineIn ? "in" : "in")}
+                                      aria-pressed={active}
+                                      className="w-full flex items-center justify-between"
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div
+                                          className={`rounded-full border-2 flex items-center justify-center transition-colors ${isKiosk ? "w-9 h-9" : "w-7 h-7"} ${
+                                            active ? "border-primary bg-primary" : "border-gray-300"
+                                          }`}
+                                        >
+                                          {active && <Check size={isKiosk ? 20 : 16} className="text-primary-foreground" strokeWidth={4} />}
+                                        </div>
+                                        <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
+                                      </div>
+                                      <span className={`font-bold ${isKiosk ? "text-[30px]" : "text-lg"}`}>{t.name} 🌶️</span>
+                                    </button>
+                                    {active && dineIn && (
+                                      <div className="flex items-center justify-end gap-2 mt-2">
+                                        {([
+                                          { mode: "in" as const, label: "במנה", on: inDish },
+                                          { mode: "side" as const, label: "בצד", on: jalapenoSide },
+                                        ]).map((opt) => (
+                                          <button
+                                            key={opt.mode}
+                                            onClick={() => setJalapeno(opt.mode)}
+                                            aria-pressed={opt.on}
+                                            className={`rounded-full border-2 font-bold transition-colors ${isKiosk ? "px-5 py-2.5 text-[20px]" : "px-4 py-1.5 text-sm"} ${
+                                              opt.on ? "border-primary bg-primary text-primary-foreground" : "border-gray-300 text-gray-600"
+                                            }`}
+                                          >
+                                            {opt.label}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               }
