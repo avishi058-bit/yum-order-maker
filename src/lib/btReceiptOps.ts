@@ -110,10 +110,15 @@ function isSmashBurger(name: string): boolean {
   return /סמאש|קרייזי/.test(name || "");
 }
 
+// Crispy chicken never comes with tomato.
+function isChickenBurger(name: string): boolean {
+  return /קריספי/.test(name || "");
+}
+
 function defaultsForBurger(name: string): Set<string> {
-  return isSmashBurger(name)
-    ? new Set(["lettuce", "pickles", "aioli"])
-    : new Set(["lettuce", "tomato", "onion", "pickles", "aioli"]);
+  if (isSmashBurger(name)) return new Set(["lettuce", "pickles", "aioli"]);
+  if (isChickenBurger(name)) return new Set(["lettuce", "onion", "pickles", "aioli"]);
+  return new Set(["lettuce", "tomato", "onion", "pickles", "aioli"]);
 }
 
 function buildVeggieSummary(
@@ -144,9 +149,14 @@ function buildVeggieSummary(
   // Only applies when there are no add-ons that changed the default set
   // (e.g. add-tomato on a smash) — and only for non-smash burgers.
   if (!isSmashBurger(name)) {
-    const VEG4 = ["lettuce", "tomato", "onion", "pickles"] as const;
+    const chicken = isChickenBurger(name);
+    const VEG4 = (chicken
+      ? ["lettuce", "onion", "pickles"]
+      : ["lettuce", "tomato", "onion", "pickles"]) as readonly string[];
     const removedVeg = VEG4.filter((id) => !final.has(id));
-    const addedVeg = (["tomato", "onion"] as const).filter((id) => final.has(id) && !def.has(id));
+    const addedVeg = (chicken ? (["onion"] as const) : (["tomato", "onion"] as const)).filter(
+      (id) => final.has(id) && !def.has(id),
+    ) as readonly string[];
     const aioliRemoved = def.has("aioli") && !final.has("aioli");
     const aioliKept = final.has("aioli");
     const vegCount = removedVeg.length;
@@ -162,11 +172,11 @@ function buildVeggieSummary(
       return { veg: `להוסיף ${VEGGIE_HEBREW[addedVeg[0]]}`, others };
     }
 
-    // All 4 veggies + aioli removed → "יבש"
-    if (vegCount === 4 && aioliRemoved) return { veg: "יבש", others };
+    // All veggies + aioli removed → "יבש"
+    if (vegCount === VEG4.length && aioliRemoved) return { veg: "יבש", others };
 
-    // All 4 veggies removed, aioli kept → "רק איולי"
-    if (vegCount === 4 && aioliKept) return { veg: "רק איולי", others };
+    // All veggies removed, aioli kept → "רק איולי"
+    if (vegCount === VEG4.length && aioliKept) return { veg: "רק איולי", others };
 
     // 1 veggie removed only, aioli kept → "ללא X"
     if (vegCount === 1 && !aioliRemoved && addedVeg.length === 0) {
