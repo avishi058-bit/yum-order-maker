@@ -81,6 +81,8 @@ export interface ChefSummary {
   // Built-in extras
   eggs: number;
   roastbeef: number;
+  cheddarSlices: number;   // פרוסות צ׳דר טבעוני שנוספו כתוספת
+  blueCheese: number;      // גבינה כחולה טבעונית שנוספה כתוספת
   // Buns
   regularBuns: number;
   glutenFreeBuns: number;
@@ -495,6 +497,8 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let chickenFillets = 0;
   let eggs = 0;
   let roastbeef = 0;
+  let cheddarSlices = 0;
+  let blueCheese = 0;
   let regularBuns = 0;
   let glutenFreeBuns = 0;
   let fries = 0;
@@ -607,6 +611,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     // +1 smash patty in the chef summary.
     smashPatties += includesAny(it.toppings, ["קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
+    // פרוסות גבינה שנוספו כתוספת (על כל מנה שהיא)
+    cheddarSlices += includesAny(it.toppings, ["צ׳דר טבעוני", "צ'דר טבעוני", "צדר טבעוני"]) * qty;
+    blueCheese += includesAny(it.toppings, ["גבינה כחולה"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
     // Onion-rings TOPPING ("שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
     // ring units (3 per topping), aggregated together with rings from Special-Hadegel.
@@ -639,6 +646,8 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     chickenFillets,
     eggs,
     roastbeef,
+    cheddarSlices,
+    blueCheese,
     regularBuns,
     glutenFreeBuns,
     fries,
@@ -849,6 +858,10 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
+  if (summary.cheddarSlices > 0)
+    toppingRows.push(row("פרוסות צ׳דר טבעוני (תוספת)", summary.cheddarSlices));
+  if (summary.blueCheese > 0)
+    toppingRows.push(row("גבינה כחולה טבעונית (תוספת)", summary.blueCheese));
 
   // Sauces are intentionally NOT aggregated in the chef summary (per request).
 
@@ -1308,6 +1321,10 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
+  if (summary.cheddarSlices > 0)
+    toppingRows.push(sumRow("פרוסות צ׳דר טבעוני (תוספת)", summary.cheddarSlices));
+  if (summary.blueCheese > 0)
+    toppingRows.push(sumRow("גבינה כחולה טבעונית (תוספת)", summary.blueCheese));
 
   // Doneness aggregation (excludes smash + vegan)
   const donenessRows: string[] = formatDonenessRows(computeDonenessSummary(allItems)).map((r) =>
