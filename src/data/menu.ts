@@ -59,7 +59,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "smash-moshavnikim": { description: "חמוצים, חסה, איולי הבית, שתי קציצות של 110 גרם מעוכות מרושלות וקריספיות", weight: "220 גרם" },
   avishai: { description: "חסה, עגבנייה, בצל, חמוצים, קציצת בקר, רצועות רוסטביף מעושן, ביצת עין ואיולי הבית", weight: "220 גרם", popular: true },
   double: { description: "שתי קציצות של 220, בצל, עגבנייה, חסה, חמוצים ואיולי הבית", weight: "440 גרם" },
-  "crazy-smash": { description: "שתי קציצות סמאש, איולי, ריבת פלפלים חריפים, חמוצים ומייפל", weight: "220 גרם", badge: "🌶️" },
+  "crazy-smash": { description: "שתי קציצות סמאש, חסה, איולי, ריבת פלפלים חריפים, חמוצים ומייפל", weight: "220 גרם", badge: "🌶️" },
   "smash-double-cheese": { description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני (הולך טוב עם ריבת בצל או חמאת בוטנים)", weight: "220 גרם", badge: "🧀", popular: true },
   "special-hadegel": { description: "קציצת בקר, כל הירקות, איולי הבית, שתי טבעות בצל ביתיות, ריבת בצל ביין וקונפי שום", weight: "220 גרם" },
   "crispy-chicken": { description: "פילה עוף בציפוי קריספי, חסה, בצל, חמוצים ואיולי הבית", weight: "", special: true },
