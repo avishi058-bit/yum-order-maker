@@ -23,9 +23,6 @@ export const MENU_DEPENDENCIES: Record<string, string[]> = {
   "crazy-smash": ["hot-pepper-jam"],
   "meal-crazy-smash": ["hot-pepper-jam"],
 
-  // נפוליאון - דורש גבינה כחולה טבעונית וריבת בצל
-  "napoleon": ["vegan-blue-cheese", "onion-jam"],
-  "meal-napoleon": ["vegan-blue-cheese", "onion-jam"],
 };
 
 /**

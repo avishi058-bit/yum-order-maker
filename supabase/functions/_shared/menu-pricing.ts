@@ -32,7 +32,6 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "crazy-smash", name: "קרייזי סמאש", price: 64, category: "burger" },
   { id: "smash-double-cheese", name: "סמאש דאבל צ׳יז", price: 66, category: "burger" },
   { id: "special-hadegel", name: "ספיישל הדגל", price: 73, category: "burger" },
-  { id: "napoleon", name: "נפוליאון", price: 78, category: "burger" },
   { id: "haf-mifsha", name: "חף מפשע", price: 55, category: "burger" },
   // Meals
   { id: "meal-classic", name: "ארוחת קלאסי", price: 75, category: "meal" },
@@ -42,7 +41,6 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "meal-crazy-smash", name: "ארוחת קרייזי סמאש", price: 87, category: "meal" },
   { id: "meal-smash-double-cheese", name: "ארוחת סמאש דאבל צ׳יז", price: 89, category: "meal" },
   { id: "meal-special-hadegel", name: "ארוחת ספיישל הדגל", price: 96, category: "meal" },
-  { id: "meal-napoleon", name: "ארוחת נפוליאון", price: 101, category: "meal" },
   { id: "meal-haf-mifsha", name: "ארוחת חף מפשע", price: 78, category: "meal" },
   { id: "meal-crispy-chicken", name: "ארוחת קריספי צ׳יקן", price: 81, category: "meal" },
   // Sides
@@ -77,7 +75,6 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "roastbeef", name: "רצועות רוסטביף", price: 20 },
   { id: "egg", name: "ביצת עין", price: 8 },
   { id: "vegan-cheddar", name: "צ׳דר טבעוני", price: 7 },
-  { id: "vegan-blue-cheese", name: "גבינה כחולה טבעונית", price: 15 },
   { id: "hot-pepper-jam", name: "ריבת פלפלים", price: 8 },
   { id: "fried-onion", name: "בצל מטוגן", price: 7 },
   { id: "crispy-onion-chips", name: "שבבי בצל קריספי", price: 4 },
