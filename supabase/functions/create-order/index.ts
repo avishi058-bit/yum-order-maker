@@ -452,6 +452,7 @@ Deno.serve(async (req: Request) => {
   // regular sauces are billed at 1₪ per sauce above the free quota.
   const PREMIUM_SAUCE_PRICES: Record<string, number> = {
     "aioli-garlic-mint": 2,
+    "house-aioli-sauce": 2,
     "pickled-jalapeno-sauce": 3,
   };
   let regularSauceQty = 0;
