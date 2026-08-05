@@ -187,8 +187,11 @@ const DONENESS_LABELS: Record<string, string> = {
   "doneness-wd": "WD — וואל דאן",
 };
 const FAVORITE_MARKER = "__FAVORITE__";
+// Crispy chicken never comes with tomato, so "ללא עגבנייה" is noise on the bon.
+const isChickenName = (name?: string | null) => !!name && name.includes("קריספי");
 export const extractOwnerName = (
   removals: string[] | null | undefined,
+  itemName?: string | null,
 ): { ownerName: string | null; doneness: string | null; cleanedRemovals: string[] } => {
   if (!removals || removals.length === 0) return { ownerName: null, doneness: null, cleanedRemovals: [] };
   let ownerName: string | null = null;
@@ -202,6 +205,9 @@ export const extractOwnerName = (
       ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
     } else if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
       doneness = DONENESS_LABELS[r] || r;
+    } else if (isChickenName(itemName) && typeof r === "string" && r.includes("עגבני")) {
+      // Crispy chicken has no tomato by default — skip tomato removals.
+      continue;
     } else {
       cleaned.push(r);
     }
@@ -622,7 +628,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
 
     // ---- gluten-free bun swap ----
     // Use cleaned removals (without __OWNER__ sentinel) to avoid false matches.
-    const cleanedForGf = extractOwnerName(it.removals).cleanedRemovals;
+    const cleanedForGf = extractOwnerName(it.removals, it.item_name).cleanedRemovals;
     const gfFlag =
       includesAny(cleanedForGf, ["ללא גלוטן", "גלוטן"]) +
       includesAny(it.toppings, ["ללא גלוטן"]);
@@ -744,7 +750,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
 
       // Pull owner-name and doneness out of the removals array.
-      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
+      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals, it.item_name);
 
       const isDealLine = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
       let numPrefix = "";
@@ -1189,7 +1195,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
     .map((line) => {
       const it = line.item;
       const qtyStr = line.totalQty > 1 ? ` ×${line.totalQty}` : "";
-      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
+      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals, it.item_name);
 
       let html = `<div class="line">`;
       if (ownerName) {
