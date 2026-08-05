@@ -722,6 +722,8 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.friendsMix > 0) rows.push(["מיקס חברים", s.friendsMix]);
   if (s.eggs > 0) rows.push(["ביצי עין", s.eggs]);
   if (s.roastbeef > 0) rows.push(["רוסטביף", s.roastbeef]);
+  if (s.cheddarSlices > 0) rows.push(["פרוסות צ'דר (תוספת)", s.cheddarSlices]);
+  if (s.blueCheese > 0) rows.push(["גבינה כחולה (תוספת)", s.blueCheese]);
 
   if (rows.length === 0) return out;
 
