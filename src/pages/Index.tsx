@@ -771,6 +771,7 @@ const Index = () => {
         <AnimatePresence>
           {checkoutOpen && (
             <CheckoutForm
+              dineIn={dineIn}
               items={cart}
               total={getTotal()}
               sauces={selectedSauces}
