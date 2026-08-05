@@ -992,6 +992,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => t.id !== "arayes-extra-quarter")
+                              .filter((t: Topping) => t.id !== "pickled-jalapeno-side")
                               .filter((t: Topping) => !isAvailable || isAvailable(t.id))
                               .filter((t: Topping) => {
                                 // Per-item topping exclusions (e.g. don't offer onion jam on a burger that already has it)
