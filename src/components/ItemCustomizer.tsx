@@ -642,6 +642,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const computeRemovals = (): string[] => {
     const result: string[] = [];
     ingredients.forEach(ing => {
+      // Crispy chicken never has tomato — never emit a tomato removal/addition.
+      if (isChicken && ing.id === "tomato") return;
       const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
       const def = isSmash ? ing.defaultSmash : ing.defaultRegular;
       if (def && !isOn) {
