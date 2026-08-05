@@ -708,8 +708,6 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   const rows: Array<[string, number]> = [];
   if (s.regularPatties > 0) rows.push(["קציצה רגיל", s.regularPatties]);
   if (s.smashPatties > 0) rows.push(["קציצה סמאש", s.smashPatties]);
-  if (s.smashDoubleCheesePatties > 0)
-    rows.push(["  מתוכם דאבל צ'יז", s.smashDoubleCheesePatties]);
   if (s.veganPatties > 0) rows.push(["קציצה טבעוני", s.veganPatties]);
   if (s.chickenFillets > 0) rows.push(["חתיכות קריספי צ׳יקן", s.chickenFillets]);
   if (s.regularBuns > 0) rows.push(["לחמנייה רגילה", s.regularBuns]);
@@ -722,10 +720,25 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.friendsMix > 0) rows.push(["מיקס חברים", s.friendsMix]);
   if (s.eggs > 0) rows.push(["ביצי עין", s.eggs]);
   if (s.roastbeef > 0) rows.push(["רוסטביף", s.roastbeef]);
-  if (s.cheddarSlices > 0) rows.push(["פרוסות צ'דר (תוספת)", s.cheddarSlices]);
-  if (s.blueCheese > 0) rows.push(["גבינה כחולה (תוספת)", s.blueCheese]);
 
-  if (rows.length === 0) return out;
+  // Cheese counts get their own section, same style as doneness
+  const cheeseRows: Array<[string, number]> = [];
+  if (s.smashDoubleCheesePatties > 0) cheeseRows.push(["דאבל צ'יז", s.smashDoubleCheesePatties]);
+  if (s.cheddarSlices > 0) cheeseRows.push(["פרוסת צ'דר", s.cheddarSlices]);
+  if (s.blueCheese > 0) cheeseRows.push(["גבינה כחולה", s.blueCheese]);
+
+  if (rows.length === 0 && cheeseRows.length === 0) return out;
+  if (cheeseRows.length > 0) {
+    out.push(asLine(`== ${title} ==`, { align: "C", bold: true, size: 32 }));
+    for (const [label, n] of rows) {
+      out.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 34 }));
+    }
+    out.push(asLine("== גבינות ==", { align: "C", bold: true, size: 32 }));
+    for (const [label, n] of cheeseRows) {
+      out.push(asLine(`${label}: ${n}`, { align: "R", bold: true, size: 34 }));
+    }
+    return out;
+  }
 
   out.push(asLine(`== ${title} ==`, { align: "C", bold: true, size: 32 }));
   for (const [label, n] of rows) {
