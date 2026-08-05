@@ -384,6 +384,7 @@ const Kitchen = () => {
       created_at: previewOrder.created_at,
       payment_method: previewOrder.payment_method,
       order_source: previewOrder.order_source,
+      dine_in: previewOrder.dine_in,
       order_items: previewOrder.order_items,
     }).then((html) => {
       if (!cancelled) setPreviewHtml(html);
@@ -886,6 +887,7 @@ const Kitchen = () => {
       created_at: order.created_at,
       payment_method: order.payment_method,
       order_source: order.order_source,
+      dine_in: order.dine_in,
       order_items: order.order_items,
     };
     // If the direct Bluetooth connection is active, always use it first.
@@ -982,6 +984,7 @@ const Kitchen = () => {
       created_at: order.created_at,
       payment_method: order.payment_method,
       order_source: order.order_source,
+      dine_in: order.dine_in,
       order_items: order.order_items,
     };
 
