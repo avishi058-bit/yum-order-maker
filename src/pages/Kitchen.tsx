@@ -96,6 +96,7 @@ interface Order {
   updated_at: string;
   payment_method: string | null;
   order_source: string;
+  dine_in?: boolean | null;
   estimated_ready_at: string | null;
   order_items: OrderItem[];
 }
