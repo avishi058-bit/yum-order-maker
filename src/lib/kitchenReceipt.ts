@@ -68,6 +68,7 @@ export interface ReceiptOrder {
   created_at: string;
   payment_method: string | null;
   order_source: string;
+  dine_in: boolean | null;
   order_items: ReceiptOrderItem[];
 }
 
@@ -698,8 +699,11 @@ function mergeItems(items: ReceiptOrderItem[]): MergedLine[] {
 
 // ---------- HTML builder ----------
 
-const orderTypeLabel = (source: string): string => {
-  if (source === "kiosk" || source === "station") return "ישיבה במקום";
+const orderTypeLabel = (order: ReceiptOrder): string => {
+  // dine_in reflects the customer's actual choice; fallback to source-based inference for old orders.
+  if (order.dine_in === true) return "ישיבה במקום";
+  if (order.dine_in === false) return "איסוף עצמי";
+  if (order.order_source === "kiosk" || order.order_source === "station") return "ישיבה במקום";
   return "איסוף עצמי";
 };
 
@@ -938,11 +942,11 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   .order-num small { font-size: 11pt; font-weight: 700; display: block; margin-top: 1mm; }
   .type {
     text-align: center;
-    font-size: 14pt;
+    font-size: 18pt;
     font-weight: 900;
     background: #000; color: #fff;
-    padding: 2mm 0;
-    margin-bottom: 2mm;
+    padding: 3mm 0;
+    margin-bottom: 3mm;
     letter-spacing: 1px;
   }
   .customer {
