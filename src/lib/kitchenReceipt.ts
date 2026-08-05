@@ -261,6 +261,12 @@ export const applyVeggieShortcut = (
     if (a) { addedVeggies.add(a); continue; }
     other.push(r);
   }
+  // Crispy chicken has no tomato at all — it must never appear as "remaining".
+  const isChickenItem = isChickenName(itemName);
+  if (isChickenItem) removedVeggies.delete("עגבנייה");
+  const VEGGIES = isChickenItem
+    ? VEGGIE_HE_ORDER.filter((n) => n !== "עגבנייה")
+    : [...VEGGIE_HE_ORDER];
   const vegCount = removedVeggies.size;
   const isSmash = !!itemName && /סמאש|קרייזי/.test(itemName);
 
@@ -299,7 +305,7 @@ export const applyVeggieShortcut = (
   const totalRemovals = vegCount + (aioliRemoved ? 1 : 0);
 
   if (totalRemovals >= 2) {
-    const remainingVeg = VEGGIE_HE_ORDER.filter((n) => !removedVeggies.has(n));
+    const remainingVeg = VEGGIES.filter((n) => !removedVeggies.has(n));
     const remaining: string[] = [...remainingVeg];
     if (!aioliRemoved) remaining.push("איולי");
     const rest: string[] = [];
