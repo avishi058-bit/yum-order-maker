@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag, Pencil } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, Pencil, Trash2 } from "lucide-react";
 import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { findTopping } from "@/lib/toppingsLookup";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
@@ -227,6 +227,14 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
                           className={`${isKiosk ? 'w-12 h-12' : 'w-8 h-8'} rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors`}
                         >
                           <Plus size={isKiosk ? 22 : 14} />
+                        </button>
+                        <button
+                          onClick={() => onUpdateQuantity(item.id, -item.quantity)}
+                          className={`${isKiosk ? 'w-12 h-12' : 'w-8 h-8'} me-auto rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors`}
+                          aria-label="מחק מנה"
+                          title="מחק מנה"
+                        >
+                          <Trash2 size={isKiosk ? 22 : 14} />
                         </button>
                       </div>
                       {/* Edit button — only for items that go through ItemCustomizer
