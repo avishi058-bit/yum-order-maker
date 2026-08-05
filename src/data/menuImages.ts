@@ -3,7 +3,7 @@ import smashMoshavnikim from "@/assets/smash-moshavnikim.webp";
 import smashDoubleCheese from "@/assets/menu/smash-double-cheese.webp";
 import doubleImg from "@/assets/menu/double.webp";
 import avishai from "@/assets/menu/avishai.webp";
-import crazySmash from "@/assets/menu/crazy-smash.webp";
+import crazySmashAsset from "@/assets/menu/crazy-smash.jpeg.asset.json";
 import specialHadegel from "@/assets/menu/special-hadegel.webp";
 import fries from "@/assets/menu/fries.webp";
 import waffleFriesAsset from "@/assets/menu/waffle-fries.jpeg.asset.json";
@@ -23,6 +23,7 @@ import sodaTempoAsset from "@/assets/menu/soda-tempo.webp.asset.json";
 import flavoredWaterAsset from "@/assets/menu/flavored-water-grape.png.asset.json";
 import arayesSpecialAsset from "@/assets/menu/arayes-special.jpeg.asset.json";
 import arayesSpecial4Asset from "@/assets/menu/arayes-special-4.jpeg.asset.json";
+
 
 
 
