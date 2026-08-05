@@ -61,7 +61,8 @@ export const menuImages: Record<string, string> = {
   "meal-smash-moshavnikim": smashMoshavnikim,
   "meal-smash-double-cheese": smashDoubleCheese,
   "meal-avishai": avishai,
-  "meal-crazy-smash": crazySmash,
+  "meal-crazy-smash": crazySmashAsset.url,
+
   "meal-special-hadegel": specialHadegel,
   "meal-double": doubleImg,
   "meal-haf-mifsha": hafMifsha,
