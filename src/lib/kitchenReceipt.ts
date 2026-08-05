@@ -1294,11 +1294,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
 
   const pattyRows: string[] = [];
   if (summary.regularPatties > 0) pattyRows.push(sumRow("רגיל", summary.regularPatties));
-  if (summary.smashPatties > 0) {
-    pattyRows.push(sumRow("סמאש", summary.smashPatties));
-    if (summary.smashDoubleCheesePatties > 0)
-      pattyRows.push(sumRow("↳ מתוכם סמאש דאבל צ׳יז", summary.smashDoubleCheesePatties));
-  }
+  if (summary.smashPatties > 0) pattyRows.push(sumRow("סמאש", summary.smashPatties));
   if (summary.veganPatties > 0) pattyRows.push(sumRow("טבעוני (חף מפשע)", summary.veganPatties));
   if (summary.chickenFillets > 0) pattyRows.push(sumRow("חתיכות קריספי צ׳יקן", summary.chickenFillets));
 
@@ -1321,10 +1317,13 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
-  if (summary.cheddarSlices > 0)
-    toppingRows.push(sumRow("פרוסות צ׳דר טבעוני (תוספת)", summary.cheddarSlices));
-  if (summary.blueCheese > 0)
-    toppingRows.push(sumRow("גבינה כחולה טבעונית (תוספת)", summary.blueCheese));
+
+  // Cheeses — own section, same simple style as doneness
+  const cheeseRows: string[] = [];
+  if (summary.smashDoubleCheesePatties > 0)
+    cheeseRows.push(sumRow("דאבל צ׳יז", summary.smashDoubleCheesePatties));
+  if (summary.cheddarSlices > 0) cheeseRows.push(sumRow("פרוסת צ׳דר", summary.cheddarSlices));
+  if (summary.blueCheese > 0) cheeseRows.push(sumRow("גבינה כחולה", summary.blueCheese));
 
   // Doneness aggregation (excludes smash + vegan)
   const donenessRows: string[] = formatDonenessRows(computeDonenessSummary(allItems)).map((r) =>
@@ -1336,6 +1335,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
     sumSection("לחמניות", bunRows) +
     sumSection("מטוגנים", friedRows) +
     sumSection("תוספות מעל ההמבורגר", toppingRows) +
+    sumSection("גבינות", cheeseRows) +
     sumSection("מידות עשייה", donenessRows);
 
   const summaryHtml = sorted.length && summaryBody
