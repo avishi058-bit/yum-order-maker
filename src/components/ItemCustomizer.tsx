@@ -1018,8 +1018,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               })
                               .map((t: Topping) => {
                               const isCheddar = t.id === "vegan-cheddar";
+                              const isJalapeno = t.id === "pickled-jalapeno";
+                              const jalapenoSide = selectedToppings.includes("pickled-jalapeno-side");
                               const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === "vegan-cheddar").length : 0;
-                              const active = isCheddar ? cheddarCount > 0 : selectedToppings.includes(t.id);
+                              const active = isCheddar
+                                ? cheddarCount > 0
+                                : isJalapeno
+                                  ? selectedToppings.includes("pickled-jalapeno") || jalapenoSide
+                                  : selectedToppings.includes(t.id);
                               const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
 
                               if (isCheddar) {
