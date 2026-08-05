@@ -270,13 +270,13 @@ Deno.serve(async (req) => {
             .lt("created_at", toIso),
           supabase
             .from("orders")
-            .select("id,total,status,created_at")
+            .select("id,total,status,created_at,customer_name,customer_phone")
             .gte("created_at", fromIso)
             .lt("created_at", toIso)
             .neq("status", "cancelled"),
           supabase
             .from("order_items")
-            .select("item_id,item_name,quantity,price,created_at")
+            .select("order_id,item_id,item_name,quantity,price,created_at")
             .gte("created_at", fromIso)
             .lt("created_at", toIso),
         ]);
@@ -293,8 +293,23 @@ Deno.serve(async (req) => {
         };
         const items = (itemsRes.data ?? []) as Item[];
         const movs = movsRes.data ?? [];
-        const orders = ordersRes.data ?? [];
-        const orderItems = orderItemsRes.data ?? [];
+        // Exclude internal test customers from every calculation
+        const isTestCustomer = (name?: string | null, phone?: string | null) => {
+          const n = (name ?? "").trim().toLowerCase();
+          const p = (phone ?? "").replace(/[^0-9]/g, "");
+          const namePatterns = ["טסט", "test", "בדיקה", "בדקה", "אבישי שלזינגר"];
+          if (n && namePatterns.some((x) => n.includes(x.toLowerCase()))) return true;
+          if (p && ["0539311200", "0501234567"].some((x) => p.endsWith(x.slice(1)))) return true;
+          return false;
+        };
+        const allOrders = (ordersRes.data ?? []) as Array<{ id: string; total: number; customer_name?: string | null; customer_phone?: string | null }>;
+        const excludedOrderIds = new Set(
+          allOrders.filter((o) => isTestCustomer(o.customer_name, o.customer_phone)).map((o) => o.id),
+        );
+        const orders = allOrders.filter((o) => !excludedOrderIds.has(o.id));
+        const orderItems = ((orderItemsRes.data ?? []) as Array<{ order_id: string }>).filter(
+          (oi) => !excludedOrderIds.has(oi.order_id),
+        ) as any[];
 
         const perItem = items.map((it) => {
           const my = movs.filter((m: { inventory_item_id: string }) => m.inventory_item_id === it.id);
