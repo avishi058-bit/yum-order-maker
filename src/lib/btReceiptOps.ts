@@ -376,7 +376,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
   // Pre-compute drinks summary so we can avoid duplicating standalone drinks
   // both as a "dish" and in the bottom summary (takeaway only).
-  const isTakeawayPre = !(order.order_source === "kiosk" || order.order_source === "station");
+  const isTakeawayPre =
+    order.dine_in === false ||
+    (order.dine_in === null && order.order_source !== "kiosk" && order.order_source !== "station");
   const drinksSummaryEntries: Array<[string, number]> = [];
   if (isMultiItem && isTakeawayPre) {
     const drinks = computeDrinkSummary(order.order_items).drinks;
@@ -546,7 +548,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }
 
   // 5) Multi-item takeaway: aggregated order summary (drinks + sides) under one title
-  const isTakeaway = !(order.order_source === "kiosk" || order.order_source === "station");
+  const isTakeaway =
+    order.dine_in === false ||
+    (order.dine_in === null && order.order_source !== "kiosk" && order.order_source !== "station");
   if (isMultiItem && isTakeaway) {
     const detectFriedKind = (name: string): string | null => {
       if (!name) return null;
