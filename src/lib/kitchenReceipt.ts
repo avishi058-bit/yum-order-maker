@@ -884,8 +884,12 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     : "";
 
   // ---- Drink summary — TAKEAWAY ONLY ----
-  // Dine-in (kiosk/station) serves drinks on the spot, so no aggregation needed.
-  const isTakeaway = order.order_source !== "kiosk" && order.order_source !== "station";
+  // Dine-in serves drinks on the spot, so no aggregation needed.
+  const isTakeaway =
+    order.dine_in === false ||
+    (order.dine_in === null &&
+      order.order_source !== "kiosk" &&
+      order.order_source !== "station");
   let drinkSummaryHtml = "";
   if (isTakeaway) {
     const drinkSummary = computeDrinkSummary(order.order_items);
