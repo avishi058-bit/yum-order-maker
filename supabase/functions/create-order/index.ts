@@ -102,6 +102,7 @@ const BodySchema = z.object({
   notes: z.string().max(500).optional().nullable(),
   paymentMethod: z.enum(["cash", "credit", "counter"]),
   orderSource: z.enum(["website", "kiosk", "station"]).default("website"),
+  dineIn: z.boolean().nullable().optional(),
   status: z.enum(["new", "pending_payment"]).default("new"),
   // Required: legal proof that the customer accepted Terms + Privacy at order time.
   // Without this the order is rejected (no silent default).
@@ -489,6 +490,7 @@ Deno.serve(async (req: Request) => {
       status: body.status,
       payment_method: body.paymentMethod,
       order_source: body.orderSource,
+      dine_in: body.dineIn ?? null,
       terms_accepted_at: body.termsAcceptedAt,
       scheduled_for: body.scheduledFor ?? null,
       delivery_request_id: body.deliveryRequestId ?? null,

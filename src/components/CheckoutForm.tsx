@@ -33,6 +33,8 @@ interface CheckoutFormProps {
   onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter") => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
+  /** Customer's actual dining choice. Passed to the server so the kitchen receipt shows the real choice, not just the order source. */
+  dineIn?: boolean | null;
   /** When set, this is a delivery order. Adds required legal ack + passes delivery data to create-order. */
   delivery?: {
     requestId: string;
@@ -45,7 +47,7 @@ interface CheckoutFormProps {
   };
 }
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, delivery }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery }, ref) => {
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
@@ -366,6 +368,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         notes: form.notes || null,
         paymentMethod,
         orderSource,
+        dineIn: dineIn ?? null,
         status,
         // Server-recorded proof that the customer accepted the terms at order time
         termsAcceptedAt: new Date().toISOString(),

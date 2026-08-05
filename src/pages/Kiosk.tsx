@@ -538,6 +538,7 @@ const Kiosk = () => {
         {checkoutOpen && (
           <Suspense fallback={null}>
             <CheckoutForm
+              dineIn={dineIn}
               items={cart}
               total={getTotal()}
               sauces={selectedSauces}

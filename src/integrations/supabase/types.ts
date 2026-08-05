@@ -888,6 +888,7 @@ export type Database = {
           delivery_address: string | null
           delivery_fee: number | null
           delivery_request_id: string | null
+          dine_in: boolean | null
           estimated_ready_at: string | null
           id: string
           notes: string | null
@@ -910,6 +911,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number | null
           delivery_request_id?: string | null
+          dine_in?: boolean | null
           estimated_ready_at?: string | null
           id?: string
           notes?: string | null
@@ -932,6 +934,7 @@ export type Database = {
           delivery_address?: string | null
           delivery_fee?: number | null
           delivery_request_id?: string | null
+          dine_in?: boolean | null
           estimated_ready_at?: string | null
           id?: string
           notes?: string | null
