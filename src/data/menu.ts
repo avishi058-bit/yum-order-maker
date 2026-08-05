@@ -384,5 +384,5 @@ export const sauceOptions: SauceOption[] = [
   { id: "chili", name: "צ׳ילי חריף" },
   { id: "plum", name: "שזיפים", recommended: true },
   { id: "aioli-garlic-mint", name: "איולי שום נענע", price: 2 },
-  { id: "pickled-jalapeno-sauce", name: "חלפניו מוחמץ (הכנה ביתית)", price: 3 },
+  { id: "pickled-jalapeno-sauce", name: "חלפניו מוחמץ ביתי", price: 3 },
 ];
