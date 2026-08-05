@@ -1097,7 +1097,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 </head>
 <body>
   <div class="order-num">#${order.order_number}<small>${time}</small></div>
-  <div class="type">${orderTypeLabel(order.order_source)}</div>
+  <div class="type">${orderTypeLabel(order)}</div>
 
   <div class="customer">
     <div class="name">${escapeHtml(order.customer_name)}</div>
