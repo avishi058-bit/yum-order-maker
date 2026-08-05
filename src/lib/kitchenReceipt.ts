@@ -828,11 +828,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   // Patties
   const pattyRows: string[] = [];
   if (summary.regularPatties > 0) pattyRows.push(row("רגיל", summary.regularPatties));
-  if (summary.smashPatties > 0) {
-    pattyRows.push(row("סמאש", summary.smashPatties));
-    if (summary.smashDoubleCheesePatties > 0)
-      pattyRows.push(row("↳ מתוכם סמאש דאבל צ׳יז", summary.smashDoubleCheesePatties));
-  }
+  if (summary.smashPatties > 0) pattyRows.push(row("סמאש", summary.smashPatties));
   if (summary.veganPatties > 0) pattyRows.push(row("טבעוני (חף מפשע)", summary.veganPatties));
   if (summary.chickenFillets > 0) pattyRows.push(row("חתיכות קריספי צ׳יקן", summary.chickenFillets));
 
@@ -858,10 +854,13 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const toppingRows: string[] = [];
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
-  if (summary.cheddarSlices > 0)
-    toppingRows.push(row("פרוסות צ׳דר טבעוני (תוספת)", summary.cheddarSlices));
-  if (summary.blueCheese > 0)
-    toppingRows.push(row("גבינה כחולה טבעונית (תוספת)", summary.blueCheese));
+
+  // Cheeses — own section, same simple style as doneness
+  const cheeseRows: string[] = [];
+  if (summary.smashDoubleCheesePatties > 0)
+    cheeseRows.push(row("דאבל צ׳יז", summary.smashDoubleCheesePatties));
+  if (summary.cheddarSlices > 0) cheeseRows.push(row("פרוסת צ׳דר", summary.cheddarSlices));
+  if (summary.blueCheese > 0) cheeseRows.push(row("גבינה כחולה", summary.blueCheese));
 
   // Sauces are intentionally NOT aggregated in the chef summary (per request).
 
@@ -869,7 +868,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     section("קציצות", pattyRows) +
     section("לחמניות", bunRows) +
     section("מטוגנים", friedRows) +
-    section("תוספות מעל ההמבורגר", toppingRows);
+    section("תוספות מעל ההמבורגר", toppingRows) +
+    section("גבינות", cheeseRows);
 
 
   const summaryHtml = summaryBody
