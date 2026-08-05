@@ -3,7 +3,7 @@ import smashMoshavnikim from "@/assets/smash-moshavnikim.webp";
 import smashDoubleCheese from "@/assets/menu/smash-double-cheese.webp";
 import doubleImg from "@/assets/menu/double.webp";
 import avishai from "@/assets/menu/avishai.webp";
-import crazySmash from "@/assets/menu/crazy-smash.webp";
+import crazySmashAsset from "@/assets/menu/crazy-smash.jpeg.asset.json";
 import specialHadegel from "@/assets/menu/special-hadegel.webp";
 import fries from "@/assets/menu/fries.webp";
 import waffleFriesAsset from "@/assets/menu/waffle-fries.jpeg.asset.json";
@@ -26,12 +26,14 @@ import arayesSpecial4Asset from "@/assets/menu/arayes-special-4.jpeg.asset.json"
 
 
 
+
 export const menuImages: Record<string, string> = {
   classic: classicImg,
   "smash-moshavnikim": smashMoshavnikim,
   "smash-double-cheese": smashDoubleCheese,
   avishai: avishai,
-  "crazy-smash": crazySmash,
+  "crazy-smash": crazySmashAsset.url,
+
   "special-hadegel": specialHadegel,
   fries: fries,
   "sweet-potato-fries": waffleFriesAsset.url,
@@ -59,7 +61,8 @@ export const menuImages: Record<string, string> = {
   "meal-smash-moshavnikim": smashMoshavnikim,
   "meal-smash-double-cheese": smashDoubleCheese,
   "meal-avishai": avishai,
-  "meal-crazy-smash": crazySmash,
+  "meal-crazy-smash": crazySmashAsset.url,
+
   "meal-special-hadegel": specialHadegel,
   "meal-double": doubleImg,
   "meal-haf-mifsha": hafMifsha,
