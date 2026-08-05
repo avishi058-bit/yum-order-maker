@@ -102,21 +102,35 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
               בחר כדי להתחיל בהזמנה👇🏽
             </motion.p>
             <div className="w-full max-w-md flex flex-col gap-3">
-              <div className="flex w-full rounded-full overflow-hidden shadow-2xl">
+              <div className="relative flex w-full p-1.5 bg-muted rounded-2xl shadow-2xl select-none">
                 <button
                   onClick={() => onDineInChoice(true)}
-                  className={`flex-1 h-24 font-black text-3xl bg-primary text-primary-foreground transition-all ${
-                    dineIn === true ? "ring-4 ring-inset ring-primary-foreground/40" : "hover:brightness-110"
+                  className={`relative z-10 flex-1 py-5 text-center font-black text-2xl transition-colors duration-200 ${
+                    dineIn === true ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+                  {dineIn === true && (
+                    <motion.div
+                      layoutId="dine-mode-active"
+                      className="absolute inset-y-1.5 inset-x-1.5 bg-card rounded-xl shadow-sm border border-border/50 -z-10"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
                   לשבת
                 </button>
                 <button
                   onClick={() => onDineInChoice(false)}
-                  className={`flex-1 h-24 font-black text-3xl bg-secondary text-secondary-foreground transition-all ${
-                    dineIn === false ? "ring-4 ring-inset ring-primary" : "hover:brightness-125"
+                  className={`relative z-10 flex-1 py-5 text-center font-black text-2xl transition-colors duration-200 ${
+                    dineIn === false ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+                  {dineIn === false && (
+                    <motion.div
+                      layoutId="dine-mode-active"
+                      className="absolute inset-y-1.5 inset-x-1.5 bg-card rounded-xl shadow-sm border border-border/50 -z-10"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
                   לקחת
                 </button>
               </div>
