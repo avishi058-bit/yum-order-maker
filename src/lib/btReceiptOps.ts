@@ -400,7 +400,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   printedGroups.forEach((g, gi) => {
     const it = g.item;
     const totalQty = g.qty;
-    const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
+    const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals, it.item_name);
     const donShort = shortDoneness(doneness);
     const isDealItem = Array.isArray(it.deal_burgers) && it.deal_burgers.length > 0;
     const numberable = !isDealItem && isCustomizableBurger(it.item_name);
@@ -643,7 +643,7 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
     }
     for (const it of o.order_items || []) {
       if (it.item_name === "רטבים") continue;
-      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals);
+      const { ownerName, doneness, cleanedRemovals } = extractOwnerName(it.removals, it.item_name);
       const donShort = shortDoneness(doneness);
       if (ownerName) ops.push(asLine(`* ${ownerName}`, { align: "R", bold: true, size: 28 }));
       const qty = it.quantity > 1 ? ` x${it.quantity}` : "";
