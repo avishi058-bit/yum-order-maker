@@ -708,6 +708,8 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   const rows: Array<[string, number]> = [];
   if (s.regularPatties > 0) rows.push(["קציצה רגיל", s.regularPatties]);
   if (s.smashPatties > 0) rows.push(["קציצה סמאש", s.smashPatties]);
+  if (s.smashDoubleCheesePatties > 0)
+    rows.push(["  מתוכם דאבל צ'יז", s.smashDoubleCheesePatties]);
   if (s.veganPatties > 0) rows.push(["קציצה טבעוני", s.veganPatties]);
   if (s.chickenFillets > 0) rows.push(["חתיכות קריספי צ׳יקן", s.chickenFillets]);
   if (s.regularBuns > 0) rows.push(["לחמנייה רגילה", s.regularBuns]);
