@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles, Pencil } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import {
   toppings,
@@ -334,6 +334,14 @@ const KioskCartDrawer = ({
                               aria-label="הוסף"
                             >
                               <Plus size={sz.qtyIcon} />
+                            </button>
+                            <button
+                              onClick={() => onUpdateQuantity(item.id, -item.quantity)}
+                              className={`${sz.qtyBtn} me-auto rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center justify-center active:scale-95`}
+                              aria-label="מחק מנה"
+                              title="מחק מנה"
+                            >
+                              <Trash2 size={sz.qtyIcon} />
                             </button>
                           </div>
                         </div>
