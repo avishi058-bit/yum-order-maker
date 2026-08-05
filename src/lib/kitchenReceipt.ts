@@ -68,7 +68,7 @@ export interface ReceiptOrder {
   created_at: string;
   payment_method: string | null;
   order_source: string;
-  dine_in: boolean | null;
+  dine_in?: boolean | null;
   order_items: ReceiptOrderItem[];
 }
 
