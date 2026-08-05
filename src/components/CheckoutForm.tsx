@@ -368,6 +368,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         notes: form.notes || null,
         paymentMethod,
         orderSource,
+        dineIn: dineIn ?? null,
         status,
         // Server-recorded proof that the customer accepted the terms at order time
         termsAcceptedAt: new Date().toISOString(),
