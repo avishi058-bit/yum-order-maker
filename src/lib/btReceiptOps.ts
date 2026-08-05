@@ -273,8 +273,11 @@ function feed(n = 1): FastOp {
   return { kind: "feed", n };
 }
 
-const orderTypeLabel = (source: string): string =>
-  source === "kiosk" || source === "station" ? "לשבת" : "איסוף";
+const orderTypeLabel = (order: ReceiptOrder): string => {
+  if (order.dine_in === true) return "לשבת";
+  if (order.dine_in === false) return "איסוף";
+  return order.order_source === "kiosk" || order.order_source === "station" ? "לשבת" : "איסוף";
+};
 
 // Normalize legacy stored topping names so old orders print the new labels too.
 function normalizeToppingName(s: string): string {
@@ -338,7 +341,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   ops.push(sep());
 
   // 2) Order type (small) + optional note
-  ops.push(asLine(orderTypeLabel(order.order_source), { align: "C", bold: true, size: 26 }));
+  ops.push(asLine(orderTypeLabel(order), { align: "C", bold: true, size: 34 }));
   if (order.notes) {
     ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 26 }));
   }
