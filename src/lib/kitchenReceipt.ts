@@ -580,6 +580,15 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
           eggs += qty;
           roastbeef += qty;
         }
+        // צ׳דר שנוסף על המבורגר בתוך דיל — נספר לפי סוג הקציצה
+        addCheddar(
+          pattyLabelForName(bn),
+          includesAny((b as { toppings?: string[] })?.toppings, [
+            "צ׳דר טבעוני",
+            "צ'דר טבעוני",
+            "צדר טבעוני",
+          ]) * qty,
+        );
         regularBuns += qty;
       }
       // Deals include a "giant fries" which equals 3 regular fries portions
