@@ -86,6 +86,9 @@ interface OrderItem {
 interface Order {
   id: string;
   order_number: number;
+  /** Queue position — set when the order is marked paid. Null = still waiting for payment. */
+  queue_number?: number | null;
+  paid_at?: string | null;
   customer_name: string;
   customer_phone: string;
   customer_address: string | null;
