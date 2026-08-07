@@ -1497,6 +1497,16 @@ const Kitchen = () => {
               פעילות ({activeOrders.length})
             </button>
             <button
+              onClick={() => setViewMode("ready")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                viewMode === "ready"
+                  ? "bg-green-600 text-white"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              ✅ מוכנות ({readyOrders.length})
+            </button>
+            <button
               onClick={() => setViewMode("history")}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 viewMode === "history"
