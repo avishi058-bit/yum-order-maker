@@ -823,6 +823,33 @@ const Kitchen = () => {
     toast.success(`${readyIds.length} הזמנות הושלמו`);
   };
 
+  // Mark an order as paid → it gets the next position in today's queue and
+  // moves from the "waiting for payment" area into the preparation queue.
+  const markPaid = async (order: Order) => {
+    if (paidPendingIds.has(order.id) || order.queue_number) return;
+    setPaidPendingIds((s) => new Set(s).add(order.id));
+    const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
+    setPaidPendingIds((s) => {
+      const n = new Set(s);
+      n.delete(order.id);
+      return n;
+    });
+    if (error) {
+      console.error("[Kitchen] mark_order_paid failed:", error);
+      toast.error("שגיאה בסימון תשלום");
+      return;
+    }
+    const queueNumber = Number(data);
+    setOrders((curr) =>
+      curr.map((o) =>
+        o.id === order.id ? { ...o, queue_number: queueNumber, paid_at: new Date().toISOString() } : o,
+      ),
+    );
+    toast.success(`שולם ✅ נכנס לתור במקום ${queueNumber}`, { duration: 3000 });
+    fetchOrders();
+  };
+
+
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
     // Guard against double-clicks — if this order is already being updated,
     // ignore extra taps until the DB round-trip finishes.
