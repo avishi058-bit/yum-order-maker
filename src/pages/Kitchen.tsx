@@ -693,6 +693,9 @@ const Kitchen = () => {
   // poll cycle or for a manual confirmation.
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
+    // Only auto-print orders that already entered the queue (marked paid), so
+    // the printed bons always come out in queue order.
+    const printableOrders = newOrders.filter((o) => !!o.queue_number);
     if (autoPrint) {
       newOrders.forEach((order) => {
         if (printedOrdersRef.current.has(order.id)) return;
