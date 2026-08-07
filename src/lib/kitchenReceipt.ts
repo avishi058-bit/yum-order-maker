@@ -125,6 +125,16 @@ const isAvishai = (name: string): boolean => /אבישי|שחוט לי פרה/.t
 
 const isFriendsMix = (name: string): boolean => /מיקס\s*חברים/.test(name);
 
+/** תווית סוג הקציצה של מנה — משמשת לפירוט הצ׳דר בסיכום לטבח. */
+const pattyLabelForName = (name: string): string => {
+  const n = String(name || "");
+  if (isCrispyChickenName(n)) return "קריספי צ׳יקן";
+  if (isVeganBurgerName(n)) return "קציצה טבעונית";
+  if (isSmashName(n)) return "סמאש";
+  if (isDoubleName(n)) return "קציצה כפולה";
+  return "קציצה רגילה";
+};
+
 const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.test(name);
 
 // Drinks/non-burger items that don't add patty/bun.
