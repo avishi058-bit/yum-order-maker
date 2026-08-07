@@ -2213,6 +2213,11 @@ const Kitchen = () => {
                 <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
                   <div className="flex items-center gap-2">
                     {config.icon}
+                    {order.queue_number ? (
+                      <span className="bg-white text-black font-black text-base px-2 py-0.5 rounded-md">
+                        תור {order.queue_number}
+                      </span>
+                    ) : null}
                     <span className="font-bold">#{order.order_number}</span>
                     <span className="text-sm opacity-80">{config.label}</span>
                     {order.status === "new" && escLevel === 0 && (
