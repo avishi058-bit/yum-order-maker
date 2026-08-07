@@ -1223,14 +1223,18 @@ export interface RoundOrder {
 /**
  * Queue order: orders that already got a queue number come first (by number),
  * anything without one falls back to arrival time at the end.
+ * Newly paid orders receive the next queue number, so they are appended at the end.
  */
-export const sortByQueue = <T extends { queue_number?: number | null; created_at?: string | null }>(
+export const sortByQueue = <T extends { queue_number?: number | null; paid_at?: string | null; created_at?: string | null }>(
   orders: T[],
 ): T[] =>
   [...orders].sort((a, b) => {
     const qa = a.queue_number ?? Number.MAX_SAFE_INTEGER;
     const qb = b.queue_number ?? Number.MAX_SAFE_INTEGER;
     if (qa !== qb) return qa - qb;
+    const pa = a.paid_at ? new Date(a.paid_at).getTime() : 0;
+    const pb = b.paid_at ? new Date(b.paid_at).getTime() : 0;
+    if (pa !== pb) return pa - pb;
     const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
     const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
     return ta - tb;
