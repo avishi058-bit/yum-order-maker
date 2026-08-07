@@ -1374,7 +1374,8 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   const cheeseRows: string[] = [];
   if (summary.smashDoubleCheesePatties > 0)
     cheeseRows.push(sumRow("דאבל צ׳יז", summary.smashDoubleCheesePatties));
-  if (summary.cheddarSlices > 0) cheeseRows.push(sumRow("פרוסת צ׳דר", summary.cheddarSlices));
+  for (const [pattyLabel, n] of summary.cheddarByPatty)
+    if (n > 0) cheeseRows.push(sumRow(`${pattyLabel} עם צ׳דר`, n));
   if (summary.blueCheese > 0) cheeseRows.push(sumRow("גבינה כחולה", summary.blueCheese));
 
   // Doneness aggregation (excludes smash + vegan)
