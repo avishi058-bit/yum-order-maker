@@ -580,13 +580,18 @@ const Kiosk = () => {
               className="bg-card rounded-3xl p-12 text-center shadow-2xl max-w-lg mx-4 border border-border"
             >
               <p className="text-8xl mb-6">🎉</p>
-              <p className="text-4xl font-black text-foreground mb-3">
-                {successPaymentMethod === "counter" ? "הזמנתך התקבלה גש לשלם בקופה :)" : "הזמנתך התקבלה!"}
-              </p>
+              <p className="text-4xl font-black text-foreground mb-3">הזמנתך התקבלה!</p>
               <p className="text-5xl font-black text-primary mb-4">#{orderSuccess}</p>
-              <p className="text-2xl text-muted-foreground">
-                {successPaymentMethod === "counter" ? "מספר ההזמנה שלך למעלה" : "תודה רבה, ההזמנה בהכנה 🍔"}
-              </p>
+              <div className="rounded-2xl border-4 border-primary bg-primary/10 px-6 py-5 mb-4">
+                <p className="text-5xl font-black text-primary leading-tight">
+                  גש לשלם בקופה
+                </p>
+                <p className="text-3xl font-black text-foreground mt-2">
+                  באשראי או מזומן
+                </p>
+              </div>
+              <p className="text-2xl text-muted-foreground">מספר ההזמנה שלך למעלה</p>
+
             </motion.div>
           </motion.div>
         )}
