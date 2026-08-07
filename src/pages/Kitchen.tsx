@@ -1846,18 +1846,8 @@ const Kitchen = () => {
 
           {/* 🖨️ Print & Diagnostics group */}
           <div className="relative">
-            <button
-              onClick={() => { setShowPrintMenu(!showPrintMenu); setShowNotifMenu(false); }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-                agentHealth?.ok
-                  ? "bg-blue-500/20 text-blue-300"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              }`}
-              title="הגדרות הדפסה"
-            >
-              <Printer size={16} />
-              <span>הדפסה</span>
-            </button>
+            {/* Print settings live inside the ⚙️ settings panel — the old
+                toolbar button was removed as it cluttered the header. */}
             {showPrintMenu && createPortal(<>
               <div role="button" tabIndex={0} aria-label="סגור תפריט הדפסה" onClick={() => setShowPrintMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowPrintMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
@@ -2065,6 +2055,13 @@ const Kitchen = () => {
       {showSettings && (
         <div className="bg-card border-b border-border px-6 py-4">
           <div className="max-w-3xl mx-auto">
+            <button
+              onClick={() => { setShowSettings(false); setShowPrintMenu(true); setShowNotifMenu(false); }}
+              className="w-full mb-3 px-3 py-2 rounded-lg text-sm font-bold bg-muted text-foreground hover:bg-secondary flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2"><Printer size={16} /> הגדרות הדפסה ובדיקות</span>
+              <span className="text-muted-foreground text-xs">פתח</span>
+            </button>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <AlertTriangle size={16} className="text-yellow-400" />
