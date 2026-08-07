@@ -379,7 +379,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                         {/* Inner content */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <p className="text-[11px] text-muted-foreground mb-1">
-                            {isNew ? "ההזמנה התקבלה" : "מוכן בעוד"}
+                            {isNew ? "ההזמנה התקבלה" : "כמעט מוכן"}
                           </p>
                           <motion.div
                             key={timeLeft <= 0 ? "done" : "count"}
