@@ -82,7 +82,9 @@ export interface ChefSummary {
   // Built-in extras
   eggs: number;
   roastbeef: number;
-  cheddarSlices: number;   // פרוסות צ׳דר טבעוני שנוספו כתוספת
+  cheddarSlices: number;   // פרוסות צ׳דר טבעוני שנוספו כתוספת (סה"כ)
+  /** פירוט הצ׳דר לפי סוג הקציצה שעליה הוא נוסף — "קציצה רגילה" / "סמאש" / "קציצה טבעונית" / "קריספי צ׳יקן" */
+  cheddarByPatty: Map<string, number>;
   blueCheese: number;      // גבינה כחולה טבעונית שנוספה כתוספת
   // Buns
   regularBuns: number;
@@ -122,6 +124,16 @@ const isCrispyChickenName = (name: string): boolean =>
 const isAvishai = (name: string): boolean => /אבישי|שחוט לי פרה/.test(name);
 
 const isFriendsMix = (name: string): boolean => /מיקס\s*חברים/.test(name);
+
+/** תווית סוג הקציצה של מנה — משמשת לפירוט הצ׳דר בסיכום לטבח. */
+const pattyLabelForName = (name: string): string => {
+  const n = String(name || "");
+  if (isCrispyChickenName(n)) return "קריספי צ׳יקן";
+  if (isVeganBurgerName(n)) return "קציצה טבעונית";
+  if (isSmashName(n)) return "סמאש";
+  if (isDoubleName(n)) return "קציצה כפולה";
+  return "קציצה רגילה";
+};
 
 const isSpecialHadegel = (name: string): boolean => /ספיישל\s*הדגל/.test(name);
 
@@ -511,6 +523,12 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let eggs = 0;
   let roastbeef = 0;
   let cheddarSlices = 0;
+  const cheddarByPatty = new Map<string, number>();
+  const addCheddar = (label: string, n: number) => {
+    if (n <= 0) return;
+    cheddarSlices += n;
+    cheddarByPatty.set(label, (cheddarByPatty.get(label) || 0) + n);
+  };
   let blueCheese = 0;
   let regularBuns = 0;
   let glutenFreeBuns = 0;
@@ -562,6 +580,15 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
           eggs += qty;
           roastbeef += qty;
         }
+        // צ׳דר שנוסף על המבורגר בתוך דיל — נספר לפי סוג הקציצה
+        addCheddar(
+          pattyLabelForName(bn),
+          includesAny((b as { toppings?: string[] })?.toppings, [
+            "צ׳דר טבעוני",
+            "צ'דר טבעוני",
+            "צדר טבעוני",
+          ]) * qty,
+        );
         regularBuns += qty;
       }
       // Deals include a "giant fries" which equals 3 regular fries portions
@@ -625,7 +652,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     smashPatties += includesAny(it.toppings, ["קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     // פרוסות גבינה שנוספו כתוספת (על כל מנה שהיא)
-    cheddarSlices += includesAny(it.toppings, ["צ׳דר טבעוני", "צ'דר טבעוני", "צדר טבעוני"]) * qty;
+    addCheddar(
+      pattyLabelForName(name),
+      includesAny(it.toppings, ["צ׳דר טבעוני", "צ'דר טבעוני", "צדר טבעוני"]) * qty,
+    );
     blueCheese += includesAny(it.toppings, ["גבינה כחולה"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
     // Onion-rings TOPPING ("שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
@@ -660,6 +690,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     eggs,
     roastbeef,
     cheddarSlices,
+    cheddarByPatty,
     blueCheese,
     regularBuns,
     glutenFreeBuns,
@@ -875,7 +906,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const cheeseRows: string[] = [];
   if (summary.smashDoubleCheesePatties > 0)
     cheeseRows.push(row("דאבל צ׳יז", summary.smashDoubleCheesePatties));
-  if (summary.cheddarSlices > 0) cheeseRows.push(row("פרוסת צ׳דר", summary.cheddarSlices));
+  for (const [pattyLabel, n] of summary.cheddarByPatty)
+    if (n > 0) cheeseRows.push(row(`${pattyLabel} עם צ׳דר`, n));
   if (summary.blueCheese > 0) cheeseRows.push(row("גבינה כחולה", summary.blueCheese));
 
   // Sauces are intentionally NOT aggregated in the chef summary (per request).
@@ -1342,7 +1374,8 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   const cheeseRows: string[] = [];
   if (summary.smashDoubleCheesePatties > 0)
     cheeseRows.push(sumRow("דאבל צ׳יז", summary.smashDoubleCheesePatties));
-  if (summary.cheddarSlices > 0) cheeseRows.push(sumRow("פרוסת צ׳דר", summary.cheddarSlices));
+  for (const [pattyLabel, n] of summary.cheddarByPatty)
+    if (n > 0) cheeseRows.push(sumRow(`${pattyLabel} עם צ׳דר`, n));
   if (summary.blueCheese > 0) cheeseRows.push(sumRow("גבינה כחולה", summary.blueCheese));
 
   // Doneness aggregation (excludes smash + vegan)
