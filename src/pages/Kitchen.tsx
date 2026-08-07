@@ -1231,16 +1231,12 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  // Active board: orders still waiting for payment stay pinned on top (oldest
-  // first), then the preparation queue below. Newly paid orders get the next
-  // queue number and are appended at the end of the queue.
+  // Active board: single list, always ordered by arrival time. Paying an order
+  // only marks it as paid — it never changes position on the board.
   const activeOrders = useMemo(() => {
-    const active = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
-    const awaitingPayment = active
-      .filter((o) => !o.queue_number)
+    return orders
+      .filter((o) => ["new", "preparing", "ready"].includes(o.status))
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    const queue = sortByQueue(active.filter((o) => !!o.queue_number));
-    return [...awaitingPayment, ...queue];
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
@@ -2204,18 +2200,6 @@ const Kitchen = () => {
             const isAcceptedPendingPayment = order.status !== "new" && !order.queue_number;
             const awaitingPayment = viewMode === "active" && !order.queue_number;
 
-            // Section headers: "waiting for payment" block on top, queue below.
-            const prev = displayIndex > 0 ? displayOrders[displayIndex - 1] : null;
-            const prevAwaiting = !!prev && viewMode === "active" && !prev.queue_number;
-            const sectionHeader =
-              viewMode !== "active"
-                ? null
-                : displayIndex === 0 && awaitingPayment
-                ? { label: "⏳ ממתין לתשלום", cls: "text-amber-400 border-amber-500/40" }
-                : (displayIndex === 0 && !awaitingPayment) || (prevAwaiting && !awaitingPayment)
-                ? { label: "👨‍🍳 תור ההכנה — לפי סדר תשלום", cls: "text-green-400 border-green-500/40" }
-                : null;
-
             // Card visual escalation
             const cardClass = awaitingPayment
               ? isNewUnaccepted
@@ -2225,15 +2209,11 @@ const Kitchen = () => {
                   ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
                   : "border-red-500 border-2 shadow-lg shadow-red-500/20 animate-pulse bg-red-950/10"
                 : "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
-              : "border-border";
+              : "border-green-600/60 border-2";
 
             return (
               <React.Fragment key={order.id}>
-              {sectionHeader && (
-                <div className={`col-span-full mt-2 mb-1 pb-1 border-b font-black text-sm ${sectionHeader.cls}`}>
-                  {sectionHeader.label}
-                </div>
-              )}
+
               <div
                 className={`bg-card border rounded-xl overflow-hidden ${cardClass}`}
               >
@@ -2247,6 +2227,11 @@ const Kitchen = () => {
                       </span>
                     ) : null}
                     <span className="font-bold">#{order.order_number}</span>
+                    {order.queue_number ? (
+                      <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
+                        שולם ✓
+                      </span>
+                    ) : null}
                     <span className="text-sm opacity-80">{config.label}</span>
                     {order.status === "new" && escLevel === 0 && (
                       <span className="text-[10px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded-full animate-pulse">
