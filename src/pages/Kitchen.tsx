@@ -2273,8 +2273,8 @@ const Kitchen = () => {
                   <div className="flex items-center gap-2">
                     {config.icon}
                     {order.queue_number ? (
-                      <span className="bg-white text-black font-black text-base px-2 py-0.5 rounded-md">
-                        תור {order.queue_number}
+                      <span className="bg-white text-black font-bold text-xs px-1.5 py-0.5 rounded">
+                        {order.queue_number}
                       </span>
                     ) : null}
                     <span className="font-bold">#{order.order_number}</span>

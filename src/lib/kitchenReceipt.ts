@@ -1147,7 +1147,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 </head>
 <body>
   ${order.queue_number
-    ? `<div style="text-align:center;font-size:34pt;font-weight:900;line-height:1;border:3px solid #000;border-radius:3mm;padding:2mm 0;margin-bottom:2mm;">תור ${order.queue_number}</div>`
+    ? `<div style="text-align:center;font-size:12pt;font-weight:700;line-height:1;margin-bottom:1mm;">${order.queue_number}</div>`
     : ""}
   <div class="order-num">#${order.order_number}<small>${time}</small></div>
   <div class="type">${orderTypeLabel(order)}</div>
@@ -1322,7 +1322,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
 
   return `<div class="order-block">
     <div class="order-head">
-      <div class="order-num">${order.queue_number ? `תור ${order.queue_number}` : index + 1}. הזמנה #${order.order_number}</div>
+      <div class="order-num">${order.queue_number ?? index + 1}. הזמנה #${order.order_number}</div>
       <div class="order-meta">
         <span class="cust">${escapeHtml(order.customer_name || "")}</span>
         ${time ? `<span class="time">⏱ ${escapeHtml(time)}</span>` : ""}

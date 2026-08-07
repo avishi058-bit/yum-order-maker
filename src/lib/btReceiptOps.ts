@@ -340,7 +340,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
   // 0) Queue position — printed big at the very top so bons stay in order.
   if (order.queue_number) {
-    ops.push(asLine(`תור ${order.queue_number}`, { align: "C", bold: true, size: 60 }));
+    ops.push(asLine(`${order.queue_number}`, { align: "C", bold: true, size: 0 }));
     ops.push(sep());
   }
 
@@ -652,7 +652,7 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
 
   for (const o of sorted) {
     if (o.queue_number) {
-      ops.push(asLine(`תור ${o.queue_number}`, { align: "R", bold: true, size: 40 }));
+      ops.push(asLine(`${o.queue_number}`, { align: "R", bold: true, size: 0 }));
     }
     ops.push({ kind: "text", text: `#${o.order_number}`, align: "R", size: 1 });
     if (o.customer_name) {
