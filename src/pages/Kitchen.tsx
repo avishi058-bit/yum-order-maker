@@ -2200,18 +2200,6 @@ const Kitchen = () => {
             const isAcceptedPendingPayment = order.status !== "new" && !order.queue_number;
             const awaitingPayment = viewMode === "active" && !order.queue_number;
 
-            // Section headers: "waiting for payment" block on top, queue below.
-            const prev = displayIndex > 0 ? displayOrders[displayIndex - 1] : null;
-            const prevAwaiting = !!prev && viewMode === "active" && !prev.queue_number;
-            const sectionHeader =
-              viewMode !== "active"
-                ? null
-                : displayIndex === 0 && awaitingPayment
-                ? { label: "⏳ ממתין לתשלום", cls: "text-amber-400 border-amber-500/40" }
-                : (displayIndex === 0 && !awaitingPayment) || (prevAwaiting && !awaitingPayment)
-                ? { label: "👨‍🍳 תור ההכנה — לפי סדר תשלום", cls: "text-green-400 border-green-500/40" }
-                : null;
-
             // Card visual escalation
             const cardClass = awaitingPayment
               ? isNewUnaccepted
@@ -2221,15 +2209,11 @@ const Kitchen = () => {
                   ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
                   : "border-red-500 border-2 shadow-lg shadow-red-500/20 animate-pulse bg-red-950/10"
                 : "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
-              : "border-border";
+              : "border-green-600/60 border-2";
 
             return (
               <React.Fragment key={order.id}>
-              {sectionHeader && (
-                <div className={`col-span-full mt-2 mb-1 pb-1 border-b font-black text-sm ${sectionHeader.cls}`}>
-                  {sectionHeader.label}
-                </div>
-              )}
+
               <div
                 className={`bg-card border rounded-xl overflow-hidden ${cardClass}`}
               >
