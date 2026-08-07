@@ -338,6 +338,13 @@ function cleanDrinkName(s: string): string {
 export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const ops: FastOp[] = [];
 
+  // 0) Queue position — printed big at the very top so bons stay in order.
+  if (order.queue_number) {
+    ops.push(asLine(`תור ${order.queue_number}`, { align: "C", bold: true, size: 60 }));
+    ops.push(sep());
+  }
+
+
   // 1) TOP: customer name (big bold) + phone next to it (large, thin), centered.
   if (order.customer_name || order.customer_phone) {
     ops.push({
