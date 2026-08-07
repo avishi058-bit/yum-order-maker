@@ -681,6 +681,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     eggs,
     roastbeef,
     cheddarSlices,
+    cheddarByPatty,
     blueCheese,
     regularBuns,
     glutenFreeBuns,
