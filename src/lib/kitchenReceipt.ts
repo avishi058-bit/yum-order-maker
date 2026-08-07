@@ -82,7 +82,9 @@ export interface ChefSummary {
   // Built-in extras
   eggs: number;
   roastbeef: number;
-  cheddarSlices: number;   // פרוסות צ׳דר טבעוני שנוספו כתוספת
+  cheddarSlices: number;   // פרוסות צ׳דר טבעוני שנוספו כתוספת (סה"כ)
+  /** פירוט הצ׳דר לפי סוג הקציצה שעליה הוא נוסף — "קציצה רגילה" / "סמאש" / "קציצה טבעונית" / "קריספי צ׳יקן" */
+  cheddarByPatty: Map<string, number>;
   blueCheese: number;      // גבינה כחולה טבעונית שנוספה כתוספת
   // Buns
   regularBuns: number;
