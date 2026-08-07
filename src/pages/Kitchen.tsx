@@ -1234,9 +1234,9 @@ const Kitchen = () => {
   const activeOrders = useMemo(() => {
     const active = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
     const awaitingPayment = active
-      .filter((o) => o.status === "new" && !o.queue_number)
+      .filter((o) => !o.queue_number)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    const queue = sortByQueue(active.filter((o) => !(o.status === "new" && !o.queue_number)));
+    const queue = sortByQueue(active.filter((o) => !!o.queue_number));
     return [...awaitingPayment, ...queue];
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
