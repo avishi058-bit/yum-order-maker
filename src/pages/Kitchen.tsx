@@ -1231,16 +1231,12 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  // Active board: orders still waiting for payment stay pinned on top (oldest
-  // first), then the preparation queue below. Newly paid orders get the next
-  // queue number and are appended at the end of the queue.
+  // Active board: single list, always ordered by arrival time. Paying an order
+  // only marks it as paid — it never changes position on the board.
   const activeOrders = useMemo(() => {
-    const active = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
-    const awaitingPayment = active
-      .filter((o) => !o.queue_number)
+    return orders
+      .filter((o) => ["new", "preparing", "ready"].includes(o.status))
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    const queue = sortByQueue(active.filter((o) => !!o.queue_number));
-    return [...awaitingPayment, ...queue];
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
