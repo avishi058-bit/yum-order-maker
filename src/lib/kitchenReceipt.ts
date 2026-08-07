@@ -633,7 +633,10 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     smashPatties += includesAny(it.toppings, ["קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     // פרוסות גבינה שנוספו כתוספת (על כל מנה שהיא)
-    cheddarSlices += includesAny(it.toppings, ["צ׳דר טבעוני", "צ'דר טבעוני", "צדר טבעוני"]) * qty;
+    addCheddar(
+      pattyLabelForName(name),
+      includesAny(it.toppings, ["צ׳דר טבעוני", "צ'דר טבעוני", "צדר טבעוני"]) * qty,
+    );
     blueCheese += includesAny(it.toppings, ["גבינה כחולה"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
     // Onion-rings TOPPING ("שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
