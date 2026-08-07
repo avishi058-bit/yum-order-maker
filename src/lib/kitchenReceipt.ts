@@ -513,6 +513,12 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
   let eggs = 0;
   let roastbeef = 0;
   let cheddarSlices = 0;
+  const cheddarByPatty = new Map<string, number>();
+  const addCheddar = (label: string, n: number) => {
+    if (n <= 0) return;
+    cheddarSlices += n;
+    cheddarByPatty.set(label, (cheddarByPatty.get(label) || 0) + n);
+  };
   let blueCheese = 0;
   let regularBuns = 0;
   let glutenFreeBuns = 0;
