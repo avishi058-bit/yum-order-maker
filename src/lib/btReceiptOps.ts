@@ -741,7 +741,8 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   // Cheese counts get their own section, same style as doneness
   const cheeseRows: Array<[string, number]> = [];
   if (s.smashDoubleCheesePatties > 0) cheeseRows.push(["דאבל צ'יז", s.smashDoubleCheesePatties]);
-  if (s.cheddarSlices > 0) cheeseRows.push(["פרוסת צ'דר", s.cheddarSlices]);
+  for (const [pattyLabel, n] of s.cheddarByPatty)
+    if (n > 0) cheeseRows.push([`${pattyLabel} עם צ'דר`, n]);
   if (s.blueCheese > 0) cheeseRows.push(["גבינה כחולה", s.blueCheese]);
 
   if (rows.length === 0 && cheeseRows.length === 0) return out;
