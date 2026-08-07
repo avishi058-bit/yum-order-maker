@@ -1198,29 +1198,36 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  const activeOrders = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
+  // Active board: orders still waiting for payment stay pinned on top, then the
+  // preparation queue itself, ordered by the position assigned at payment time.
+  const activeOrders = useMemo(() => {
+    const active = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
+    const awaitingPayment = active
+      .filter((o) => o.status === "new" && !o.queue_number)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const queue = sortByQueue(active.filter((o) => !(o.status === "new" && !o.queue_number)));
+    return [...awaitingPayment, ...queue];
+  }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
 
-  // Active orders feeding the round bon — every order not yet completed/cancelled.
-  // Sorted oldest → newest so the customer who ordered first appears first
-  // (and gets prepared first).
+  // Active orders feeding the round bon — every order not yet completed/cancelled,
+  // sorted by queue position so the bon matches the physical order of work.
   const activeRoundOrders = useMemo(
     () =>
-      orders
-        .filter((o) => ["new", "preparing"].includes(o.status))
-        .map((o) => ({
-          id: o.id,
-          order_number: o.order_number,
-          customer_name: o.customer_name,
-          created_at: o.created_at,
-          status: o.status,
-          order_items: o.order_items,
-        }))
-        .sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-        ),
+      sortByQueue(
+        orders
+          .filter((o) => ["new", "preparing"].includes(o.status))
+          .map((o) => ({
+            id: o.id,
+            order_number: o.order_number,
+            queue_number: o.queue_number ?? null,
+            customer_name: o.customer_name,
+            created_at: o.created_at,
+            status: o.status,
+            order_items: o.order_items,
+          })),
+      ),
     [orders],
   );
 
