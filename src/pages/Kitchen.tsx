@@ -1231,8 +1231,9 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  // Active board: orders still waiting for payment stay pinned on top, then the
-  // preparation queue itself, ordered by the position assigned at payment time.
+  // Active board: orders still waiting for payment stay pinned on top (oldest
+  // first), then the preparation queue below. Newly paid orders get the next
+  // queue number and are appended at the end of the queue.
   const activeOrders = useMemo(() => {
     const active = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
     const awaitingPayment = active
