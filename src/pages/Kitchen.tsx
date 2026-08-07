@@ -2444,7 +2444,7 @@ const Kitchen = () => {
                         ↩ חזור להכנה
                       </button>
                     )}
-                    {next && (
+                    {next && !(order.status === "new" && !order.queue_number) && (
                       next === "preparing" ? (
                         order.order_source === "kiosk" ? (
                           <button
