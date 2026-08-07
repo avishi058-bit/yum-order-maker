@@ -1317,6 +1317,7 @@ const Kitchen = () => {
     const single: RoundOrder[] = [{
       id: order.id,
       order_number: order.order_number,
+      queue_number: order.queue_number ?? null,
       customer_name: order.customer_name,
       created_at: order.created_at,
       status: order.status,
