@@ -2509,6 +2509,7 @@ const Kitchen = () => {
                   </div>
                 )}
               </div>
+              </React.Fragment>
             );
           })}
           </div>
