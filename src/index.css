@@ -48,6 +48,10 @@
 
     --warm-glow: 32 95% 52%;
     --smoke: 20 5% 40%;
+
+    --green: 142 76% 36%;
+    --green-foreground: 0 0% 100%;
+    --green-glow: 142 76% 54%;
   }
 }
 
