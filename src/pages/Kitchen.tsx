@@ -2508,7 +2508,7 @@ const Kitchen = () => {
                         ↩ חזור להכנה
                       </button>
                     )}
-                    {next && !(order.status === "new" && !order.queue_number) && (
+                    {next && (
                       next === "preparing" ? (
                         order.order_source === "kiosk" ? (
                           <button
@@ -2529,11 +2529,18 @@ const Kitchen = () => {
                         )
                       ) : (
                         <button
-                          onClick={() => updateStatus(order.id, next)}
-                          disabled={isPending}
-                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
+                          onClick={() => {
+                            if (next === "completed" && !order.queue_number) {
+                              toast.error("צריך לסמן 'שולם 💵' לפני סיום ההזמנה");
+                              return;
+                            }
+                            updateStatus(order.id, next);
+                          }}
+                          disabled={isPending || (next === "completed" && !order.queue_number)}
+                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                          title={next === "completed" && !order.queue_number ? "יש לסמן שולם קודם" : undefined}
                         >
-                          {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : "הושלמה ✅")}
+                          {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : (order.queue_number ? "הושלמה ✅" : "הושלמה 🔒"))}
                         </button>
                       )
                     )}
