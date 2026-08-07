@@ -1968,14 +1968,14 @@ const Kitchen = () => {
           <button
             onClick={printChefBon}
             disabled={activeRoundOrders.length === 0}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-3 rounded-xl transition-all duration-150 flex items-center gap-1.5 ${
               activeRoundOrders.length === 0
-                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-                : "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
+                ? "bg-green/20 text-green-foreground/40 cursor-not-allowed"
+                : "bg-green text-green-foreground shadow-[0_0_20px_hsl(var(--green-glow)/0.6)] hover:shadow-[0_0_30px_hsl(var(--green-glow)/0.85)] hover:scale-105 active:scale-95 active:brightness-110"
             }`}
             title="הדפס סיכום סבב לטבח"
           >
-            <Printer size={20} />
+            <Printer size={28} />
           </button>
 
           <div className="text-sm text-muted-foreground ml-auto">
