@@ -1232,14 +1232,21 @@ const Kitchen = () => {
   };
 
   // Active board: single list, always ordered by arrival time. Paying an order
-  // only marks it as paid — it never changes position on the board.
+  // only marks it as paid — it never changes position on the board. Orders
+  // marked "ready" leave the board and move to the dedicated ready tab.
   const activeOrders = useMemo(() => {
     return orders
-      .filter((o) => ["new", "preparing", "ready"].includes(o.status))
+      .filter((o) => ["new", "preparing"].includes(o.status))
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [orders]);
+  const readyOrders = useMemo(() => {
+    return orders
+      .filter((o) => o.status === "ready")
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
-  const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
+  const displayOrders =
+    viewMode === "active" ? activeOrders : viewMode === "ready" ? readyOrders : historyOrders;
 
   // Active orders feeding the round bon — every order not yet completed/cancelled,
   // sorted by queue position so the bon matches the physical order of work.
