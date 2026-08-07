@@ -697,7 +697,7 @@ const Kitchen = () => {
     // the printed bons always come out in queue order.
     const printableOrders = newOrders.filter((o) => !!o.queue_number);
     if (autoPrint) {
-      newOrders.forEach((order) => {
+      printableOrders.forEach((order) => {
         if (printedOrdersRef.current.has(order.id)) return;
         const hasItems = Array.isArray(order.order_items) && order.order_items.length > 0;
         if (hasItems) {
