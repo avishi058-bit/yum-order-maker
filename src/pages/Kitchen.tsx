@@ -2232,12 +2232,13 @@ const Kitchen = () => {
             const config = statusConfig[order.status];
             const next = nextStatus[order.status];
             const escLevel = order.status === "new" ? getEscalationLevel(order.created_at) : 0;
-            const awaitingPayment = viewMode === "active" && order.status === "new" && !order.queue_number;
+            const isNewUnaccepted = order.status === "new" && !order.queue_number;
+            const isAcceptedPendingPayment = order.status !== "new" && !order.queue_number;
+            const awaitingPayment = viewMode === "active" && !order.queue_number;
 
             // Section headers: "waiting for payment" block on top, queue below.
             const prev = displayIndex > 0 ? displayOrders[displayIndex - 1] : null;
-            const prevAwaiting =
-              !!prev && viewMode === "active" && prev.status === "new" && !prev.queue_number;
+            const prevAwaiting = !!prev && viewMode === "active" && !prev.queue_number;
             const sectionHeader =
               viewMode !== "active"
                 ? null
@@ -2249,13 +2250,11 @@ const Kitchen = () => {
 
             // Card visual escalation
             const cardClass = awaitingPayment
-              ? "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
+              ? isNewUnaccepted
+                ? "border-red-500 border-2 shadow-lg shadow-red-500/20 animate-pulse"
+                : "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
               : order.status !== "new"
                 ? "border-border"
-                : escLevel === 2
-                ? "border-red-600 border-2 shadow-2xl shadow-red-600/50 animate-pulse bg-red-950/20"
-                : escLevel === 1
-                ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
                 : "border-red-500 shadow-lg shadow-red-500/20 animate-pulse";
 
             return (
