@@ -1322,7 +1322,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
 
   return `<div class="order-block">
     <div class="order-head">
-      <div class="order-num">${index + 1}. הזמנה #${order.order_number}</div>
+      <div class="order-num">${order.queue_number ? `תור ${order.queue_number}` : index + 1}. הזמנה #${order.order_number}</div>
       <div class="order-meta">
         <span class="cust">${escapeHtml(order.customer_name || "")}</span>
         ${time ? `<span class="time">⏱ ${escapeHtml(time)}</span>` : ""}
