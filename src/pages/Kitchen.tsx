@@ -2490,7 +2490,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {order.status === "new" && !order.queue_number && (
+                    {order.status !== "new" && !order.queue_number && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
