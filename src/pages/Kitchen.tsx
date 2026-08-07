@@ -361,6 +361,7 @@ const Kitchen = () => {
   // Track orders currently being mutated to disable buttons + show feedback,
   // and to prevent double-clicks that queue up multiple updates.
   const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
+  const [paidPendingIds, setPaidPendingIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
     pauseRefreshRef.current = open;
