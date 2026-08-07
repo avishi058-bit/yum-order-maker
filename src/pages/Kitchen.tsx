@@ -107,7 +107,7 @@ interface Order {
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
-type ViewMode = "active" | "history" | "availability" | "dashboard";
+type ViewMode = "active" | "ready" | "history" | "availability" | "dashboard";
 
 interface AvailabilityItem {
   id: string;
