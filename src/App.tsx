@@ -68,6 +68,7 @@ const App = () => (
       <SkibidiGuardProvider>
         <Toaster />
         <Sonner />
+        <OfflineBanner />
         <BrowserRouter>
           <GeoGate>
           <Suspense fallback={<Loading />}>
