@@ -20,7 +20,7 @@ const OfflineBanner = () => {
     <div
       role="alert"
       aria-live="assertive"
-      className="fixed top-0 inset-x-0 z-[100] bg-destructive text-destructive-foreground shadow-lg animate-pulse-slow"
+      className="fixed top-0 inset-x-0 z-[100] bg-destructive text-destructive-foreground shadow-lg"
       dir="rtl"
     >
       <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-sm font-bold">
