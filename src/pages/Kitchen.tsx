@@ -2251,11 +2251,13 @@ const Kitchen = () => {
             // Card visual escalation
             const cardClass = awaitingPayment
               ? isNewUnaccepted
-                ? "border-red-500 border-2 shadow-lg shadow-red-500/20 animate-pulse"
+                ? escLevel === 2
+                  ? "border-red-600 border-2 shadow-2xl shadow-red-600/50 animate-pulse bg-red-950/20"
+                  : escLevel === 1
+                  ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
+                  : "border-red-500 border-2 shadow-lg shadow-red-500/20 animate-pulse bg-red-950/10"
                 : "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
-              : order.status !== "new"
-                ? "border-border"
-                : "border-red-500 shadow-lg shadow-red-500/20 animate-pulse";
+              : "border-border";
 
             return (
               <React.Fragment key={order.id}>
