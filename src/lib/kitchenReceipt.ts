@@ -61,6 +61,8 @@ export interface ReceiptOrderItem {
 
 export interface ReceiptOrder {
   order_number: number;
+  /** Position in today's preparation queue — assigned when the order is marked paid. */
+  queue_number?: number | null;
   customer_name: string;
   customer_phone: string;
   notes: string | null;
