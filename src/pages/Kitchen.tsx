@@ -2227,6 +2227,11 @@ const Kitchen = () => {
                       </span>
                     ) : null}
                     <span className="font-bold">#{order.order_number}</span>
+                    {order.queue_number ? (
+                      <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
+                        שולם ✓
+                      </span>
+                    ) : null}
                     <span className="text-sm opacity-80">{config.label}</span>
                     {order.status === "new" && escLevel === 0 && (
                       <span className="text-[10px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded-full animate-pulse">
