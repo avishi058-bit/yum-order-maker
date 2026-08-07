@@ -2248,7 +2248,7 @@ const Kitchen = () => {
                     </button>
                     <button
                       onClick={() => printChefForOrder(order)}
-                      className="p-3 rounded-xl bg-green text-green-foreground shadow-[0_0_20px_hsl(var(--green-glow)/0.6)] hover:shadow-[0_0_30px_hsl(var(--green-glow)/0.85)] hover:scale-105 transition-all"
+                      className="p-3 rounded-xl bg-green text-green-foreground shadow-[0_0_20px_hsl(var(--green-glow)/0.6)] hover:shadow-[0_0_30px_hsl(var(--green-glow)/0.85)] hover:scale-105 active:scale-95 active:brightness-110 transition-all duration-150"
                       title="הדפס סיכום לטבח להזמנה זו"
                     >
                       <ChefHat size={28} />
