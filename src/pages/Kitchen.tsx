@@ -732,7 +732,7 @@ const Kitchen = () => {
         })();
       });
     }
-    prevOrderCountRef.current = newOrders.length;
+    prevOrderCountRef.current = printableOrders.length;
   }, [orders, autoPrint]);
 
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
