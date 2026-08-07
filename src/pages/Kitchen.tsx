@@ -1316,41 +1316,6 @@ const Kitchen = () => {
     printRoundChefSummary(activeRoundOrders);
   };
 
-  // Print chef summary for a single order — reuses the exact same transport
-  // pipeline as the round-chef summary so it goes out through the same printer.
-  const printChefForOrder = (order: Order) => {
-    const single: RoundOrder[] = [{
-      id: order.id,
-      order_number: order.order_number,
-      queue_number: order.queue_number ?? null,
-      customer_name: order.customer_name,
-      created_at: order.created_at,
-      status: order.status,
-      order_items: order.order_items,
-    }];
-    if (isPrinterConnected()) {
-      printBluetoothRoundChef(single).catch((err) => {
-        console.warn("[Kitchen] BT chef print failed", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
-      });
-      return;
-    }
-    if (printMode === "bt") {
-      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
-      return;
-    }
-    if (printMode === "agent") {
-      printAgentRoundChef(single).then((info) => {
-        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
-      });
-      return;
-    }
-    if (printMode === "rawbt") {
-      printRawBTRoundChef(single).then((info) => setRawbtDebug(info));
-      return;
-    }
-    printRoundChefSummary(single);
-  };
 
   const printFridgeRefillBon = async () => {
     try {
@@ -2312,13 +2277,6 @@ const Kitchen = () => {
                       title="הדפס שוב"
                     >
                       <Printer size={16} />
-                    </button>
-                    <button
-                      onClick={() => printChefForOrder(order)}
-                      className="p-3 rounded-xl bg-green text-green-foreground shadow-[0_0_20px_hsl(var(--green-glow)/0.6)] hover:shadow-[0_0_30px_hsl(var(--green-glow)/0.85)] hover:scale-105 active:scale-95 active:brightness-110 transition-all duration-150"
-                      title="הדפס סיכום לטבח להזמנה זו"
-                    >
-                      <ChefHat size={28} />
                     </button>
                     {(order.status === "new" || order.status === "preparing") && (
                       <button
