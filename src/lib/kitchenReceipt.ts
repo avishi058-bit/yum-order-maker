@@ -1336,12 +1336,8 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
 
 export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interactive?: boolean } = {}): string {
   const interactive = !!options.interactive;
-  // Sort oldest → newest so first orderer is served first.
-  const sorted = [...orders].sort((a, b) => {
-    const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return ta - tb;
-  });
+  // Sort by queue position (payment order), falling back to arrival time.
+  const sorted = sortByQueue(orders);
 
   const time = new Date().toLocaleTimeString("he-IL", {
     hour: "2-digit",
