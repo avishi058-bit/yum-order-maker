@@ -16,6 +16,7 @@ import {
   computeDonenessSummary,
   formatDonenessRows,
   extractOwnerName,
+  sortByQueue,
   type ReceiptOrder,
   type ReceiptOrderItem,
   type RoundOrder,
