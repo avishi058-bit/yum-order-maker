@@ -906,7 +906,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const cheeseRows: string[] = [];
   if (summary.smashDoubleCheesePatties > 0)
     cheeseRows.push(row("דאבל צ׳יז", summary.smashDoubleCheesePatties));
-  if (summary.cheddarSlices > 0) cheeseRows.push(row("פרוסת צ׳דר", summary.cheddarSlices));
+  for (const [pattyLabel, n] of summary.cheddarByPatty)
+    if (n > 0) cheeseRows.push(row(`${pattyLabel} עם צ׳דר`, n));
   if (summary.blueCheese > 0) cheeseRows.push(row("גבינה כחולה", summary.blueCheese));
 
   // Sauces are intentionally NOT aggregated in the chef summary (per request).
