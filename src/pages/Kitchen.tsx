@@ -2204,8 +2204,8 @@ const Kitchen = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayOrders.length === 0 && (
             <div className="col-span-full text-center py-20 text-muted-foreground">
-              <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : "📋"}</p>
-              <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : "אין היסטוריה עדיין"}</p>
+              <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : viewMode === "ready" ? "✅" : "📋"}</p>
+              <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : viewMode === "ready" ? "אין הזמנות מוכנות" : "אין היסטוריה עדיין"}</p>
             </div>
           )}
 
