@@ -16,6 +16,7 @@ import {
   computeDonenessSummary,
   formatDonenessRows,
   extractOwnerName,
+  sortByQueue,
   type ReceiptOrder,
   type ReceiptOrderItem,
   type RoundOrder,
@@ -337,6 +338,13 @@ function cleanDrinkName(s: string): string {
 export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const ops: FastOp[] = [];
 
+  // 0) Queue position — printed big at the very top so bons stay in order.
+  if (order.queue_number) {
+    ops.push(asLine(`תור ${order.queue_number}`, { align: "C", bold: true, size: 60 }));
+    ops.push(sep());
+  }
+
+
   // 1) TOP: customer name (big bold) + phone next to it (large, thin), centered.
   if (order.customer_name || order.customer_phone) {
     ops.push({
@@ -640,13 +648,12 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
   ops.push(asLine(`הזמנות פעילות ${time}`, { align: "C", bold: true, size: 36 }));
   ops.push(sep());
 
-  const sorted = [...orders].sort((a, b) => {
-    const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return ta - tb;
-  });
+  const sorted = sortByQueue(orders);
 
   for (const o of sorted) {
+    if (o.queue_number) {
+      ops.push(asLine(`תור ${o.queue_number}`, { align: "R", bold: true, size: 40 }));
+    }
     ops.push({ kind: "text", text: `#${o.order_number}`, align: "R", size: 1 });
     if (o.customer_name) {
       ops.push(asLine(o.customer_name, { align: "R", bold: true, size: 34 }));

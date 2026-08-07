@@ -894,7 +894,9 @@ export type Database = {
           notes: string | null
           order_number: number
           order_source: string
+          paid_at: string | null
           payment_method: string | null
+          queue_number: number | null
           scheduled_for: string | null
           status: string
           ten_min_notified_at: string | null
@@ -917,7 +919,9 @@ export type Database = {
           notes?: string | null
           order_number?: number
           order_source?: string
+          paid_at?: string | null
           payment_method?: string | null
+          queue_number?: number | null
           scheduled_for?: string | null
           status?: string
           ten_min_notified_at?: string | null
@@ -940,7 +944,9 @@ export type Database = {
           notes?: string | null
           order_number?: number
           order_source?: string
+          paid_at?: string | null
           payment_method?: string | null
+          queue_number?: number | null
           scheduled_for?: string | null
           status?: string
           ten_min_notified_at?: string | null
@@ -1314,6 +1320,7 @@ export type Database = {
       is_approved_courier: { Args: { _uid: string }; Returns: boolean }
       is_attack_mode_active: { Args: never; Returns: boolean }
       is_ip_blocked: { Args: { p_ip: string }; Returns: boolean }
+      mark_order_paid: { Args: { p_order_id: string }; Returns: number }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, Pencil } from "lucide-react";
@@ -11,7 +11,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName, type RoundOrder } from "@/lib/kitchenReceipt";
+import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName, sortByQueue, type RoundOrder } from "@/lib/kitchenReceipt";
 import {
   isWebBluetoothSupported,
   isPrinterConnected,
@@ -86,6 +86,9 @@ interface OrderItem {
 interface Order {
   id: string;
   order_number: number;
+  /** Queue position — set when the order is marked paid. Null = still waiting for payment. */
+  queue_number?: number | null;
+  paid_at?: string | null;
   customer_name: string;
   customer_phone: string;
   customer_address: string | null;
@@ -358,6 +361,7 @@ const Kitchen = () => {
   // Track orders currently being mutated to disable buttons + show feedback,
   // and to prevent double-clicks that queue up multiple updates.
   const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
+  const [paidPendingIds, setPaidPendingIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
     pauseRefreshRef.current = open;
@@ -689,8 +693,11 @@ const Kitchen = () => {
   // poll cycle or for a manual confirmation.
   useEffect(() => {
     const newOrders = orders.filter((o) => o.status === "new");
+    // Only auto-print orders that already entered the queue (marked paid), so
+    // the printed bons always come out in queue order.
+    const printableOrders = newOrders.filter((o) => !!o.queue_number);
     if (autoPrint) {
-      newOrders.forEach((order) => {
+      printableOrders.forEach((order) => {
         if (printedOrdersRef.current.has(order.id)) return;
         const hasItems = Array.isArray(order.order_items) && order.order_items.length > 0;
         if (hasItems) {
@@ -818,6 +825,33 @@ const Kitchen = () => {
     }
     toast.success(`${readyIds.length} הזמנות הושלמו`);
   };
+
+  // Mark an order as paid → it gets the next position in today's queue and
+  // moves from the "waiting for payment" area into the preparation queue.
+  const markPaid = async (order: Order) => {
+    if (paidPendingIds.has(order.id) || order.queue_number) return;
+    setPaidPendingIds((s) => new Set(s).add(order.id));
+    const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
+    setPaidPendingIds((s) => {
+      const n = new Set(s);
+      n.delete(order.id);
+      return n;
+    });
+    if (error) {
+      console.error("[Kitchen] mark_order_paid failed:", error);
+      toast.error("שגיאה בסימון תשלום");
+      return;
+    }
+    const queueNumber = Number(data);
+    setOrders((curr) =>
+      curr.map((o) =>
+        o.id === order.id ? { ...o, queue_number: queueNumber, paid_at: new Date().toISOString() } : o,
+      ),
+    );
+    toast.success(`שולם ✅ נכנס לתור במקום ${queueNumber}`, { duration: 3000 });
+    fetchOrders();
+  };
+
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
     // Guard against double-clicks — if this order is already being updated,
@@ -1195,29 +1229,36 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  const activeOrders = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
+  // Active board: orders still waiting for payment stay pinned on top, then the
+  // preparation queue itself, ordered by the position assigned at payment time.
+  const activeOrders = useMemo(() => {
+    const active = orders.filter((o) => ["new", "preparing", "ready"].includes(o.status));
+    const awaitingPayment = active
+      .filter((o) => o.status === "new" && !o.queue_number)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const queue = sortByQueue(active.filter((o) => !(o.status === "new" && !o.queue_number)));
+    return [...awaitingPayment, ...queue];
+  }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
   const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
 
-  // Active orders feeding the round bon — every order not yet completed/cancelled.
-  // Sorted oldest → newest so the customer who ordered first appears first
-  // (and gets prepared first).
+  // Active orders feeding the round bon — every order not yet completed/cancelled,
+  // sorted by queue position so the bon matches the physical order of work.
   const activeRoundOrders = useMemo(
     () =>
-      orders
-        .filter((o) => ["new", "preparing"].includes(o.status))
-        .map((o) => ({
-          id: o.id,
-          order_number: o.order_number,
-          customer_name: o.customer_name,
-          created_at: o.created_at,
-          status: o.status,
-          order_items: o.order_items,
-        }))
-        .sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-        ),
+      sortByQueue(
+        orders
+          .filter((o) => ["new", "preparing"].includes(o.status))
+          .map((o) => ({
+            id: o.id,
+            order_number: o.order_number,
+            queue_number: o.queue_number ?? null,
+            customer_name: o.customer_name,
+            created_at: o.created_at,
+            status: o.status,
+            order_items: o.order_items,
+          })),
+      ),
     [orders],
   );
 
@@ -1279,6 +1320,7 @@ const Kitchen = () => {
     const single: RoundOrder[] = [{
       id: order.id,
       order_number: order.order_number,
+      queue_number: order.queue_number ?? null,
       customer_name: order.customer_name,
       created_at: order.created_at,
       status: order.status,
@@ -2189,14 +2231,29 @@ const Kitchen = () => {
             </div>
           )}
 
-          {displayOrders.map((order) => {
+          {displayOrders.map((order, displayIndex) => {
             const config = statusConfig[order.status];
             const next = nextStatus[order.status];
             const escLevel = order.status === "new" ? getEscalationLevel(order.created_at) : 0;
+            const awaitingPayment = viewMode === "active" && order.status === "new" && !order.queue_number;
+
+            // Section headers: "waiting for payment" block on top, queue below.
+            const prev = displayIndex > 0 ? displayOrders[displayIndex - 1] : null;
+            const prevAwaiting =
+              !!prev && viewMode === "active" && prev.status === "new" && !prev.queue_number;
+            const sectionHeader =
+              viewMode !== "active"
+                ? null
+                : displayIndex === 0 && awaitingPayment
+                ? { label: "⏳ ממתין לתשלום", cls: "text-amber-400 border-amber-500/40" }
+                : (displayIndex === 0 && !awaitingPayment) || (prevAwaiting && !awaitingPayment)
+                ? { label: "👨‍🍳 תור ההכנה — לפי סדר תשלום", cls: "text-green-400 border-green-500/40" }
+                : null;
 
             // Card visual escalation
-            const cardClass =
-              order.status !== "new"
+            const cardClass = awaitingPayment
+              ? "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
+              : order.status !== "new"
                 ? "border-border"
                 : escLevel === 2
                 ? "border-red-600 border-2 shadow-2xl shadow-red-600/50 animate-pulse bg-red-950/20"
@@ -2205,14 +2262,24 @@ const Kitchen = () => {
                 : "border-red-500 shadow-lg shadow-red-500/20 animate-pulse";
 
             return (
+              <React.Fragment key={order.id}>
+              {sectionHeader && (
+                <div className={`col-span-full mt-2 mb-1 pb-1 border-b font-black text-sm ${sectionHeader.cls}`}>
+                  {sectionHeader.label}
+                </div>
+              )}
               <div
-                key={order.id}
                 className={`bg-card border rounded-xl overflow-hidden ${cardClass}`}
               >
                 {/* Order header */}
                 <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
                   <div className="flex items-center gap-2">
                     {config.icon}
+                    {order.queue_number ? (
+                      <span className="bg-white text-black font-black text-base px-2 py-0.5 rounded-md">
+                        תור {order.queue_number}
+                      </span>
+                    ) : null}
                     <span className="font-bold">#{order.order_number}</span>
                     <span className="text-sm opacity-80">{config.label}</span>
                     {order.status === "new" && escLevel === 0 && (
@@ -2425,6 +2492,15 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
+                    {order.status === "new" && !order.queue_number && (
+                      <button
+                        onClick={() => markPaid(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-6 py-3 rounded-lg bg-green-600 text-white font-black text-lg hover:bg-green-500 transition-all active:scale-95 shadow-md shadow-green-600/40 disabled:opacity-60 disabled:cursor-wait"
+                      >
+                        {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
+                      </button>
+                    )}
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
@@ -2435,7 +2511,7 @@ const Kitchen = () => {
                         ↩ חזור להכנה
                       </button>
                     )}
-                    {next && (
+                    {next && !(order.status === "new" && !order.queue_number) && (
                       next === "preparing" ? (
                         order.order_source === "kiosk" ? (
                           <button
@@ -2509,6 +2585,7 @@ const Kitchen = () => {
                   </div>
                 )}
               </div>
+              </React.Fragment>
             );
           })}
           </div>
