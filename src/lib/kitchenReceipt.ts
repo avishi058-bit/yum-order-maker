@@ -1212,11 +1212,30 @@ export async function printReceipt(order: ReceiptOrder) {
 export interface RoundOrder {
   id?: string;
   order_number: number;
+  /** Position in today's preparation queue — assigned when the order is marked paid. */
+  queue_number?: number | null;
   customer_name?: string | null;
   created_at?: string | null;
   status?: string | null;
   order_items: ReceiptOrderItem[];
 }
+
+/**
+ * Queue order: orders that already got a queue number come first (by number),
+ * anything without one falls back to arrival time at the end.
+ */
+export const sortByQueue = <T extends { queue_number?: number | null; created_at?: string | null }>(
+  orders: T[],
+): T[] =>
+  [...orders].sort((a, b) => {
+    const qa = a.queue_number ?? Number.MAX_SAFE_INTEGER;
+    const qb = b.queue_number ?? Number.MAX_SAFE_INTEGER;
+    if (qa !== qb) return qa - qb;
+    const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return ta - tb;
+  });
+
 
 const statusLabel = (s?: string | null): string => {
   if (s === "new") return "חדשה";
