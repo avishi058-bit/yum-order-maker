@@ -107,7 +107,7 @@ interface Order {
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
-type ViewMode = "active" | "history" | "availability" | "dashboard";
+type ViewMode = "active" | "ready" | "history" | "availability" | "dashboard";
 
 interface AvailabilityItem {
   id: string;
@@ -1232,14 +1232,21 @@ const Kitchen = () => {
   };
 
   // Active board: single list, always ordered by arrival time. Paying an order
-  // only marks it as paid — it never changes position on the board.
+  // only marks it as paid — it never changes position on the board. Orders
+  // marked "ready" leave the board and move to the dedicated ready tab.
   const activeOrders = useMemo(() => {
     return orders
-      .filter((o) => ["new", "preparing", "ready"].includes(o.status))
+      .filter((o) => ["new", "preparing"].includes(o.status))
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [orders]);
+  const readyOrders = useMemo(() => {
+    return orders
+      .filter((o) => o.status === "ready")
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
-  const displayOrders = viewMode === "active" ? activeOrders : historyOrders;
+  const displayOrders =
+    viewMode === "active" ? activeOrders : viewMode === "ready" ? readyOrders : historyOrders;
 
   // Active orders feeding the round bon — every order not yet completed/cancelled,
   // sorted by queue position so the bon matches the physical order of work.
@@ -1488,6 +1495,16 @@ const Kitchen = () => {
             >
               <Clock size={14} className="inline ml-1" />
               פעילות ({activeOrders.length})
+            </button>
+            <button
+              onClick={() => setViewMode("ready")}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                viewMode === "ready"
+                  ? "bg-green-600 text-white"
+                  : "bg-muted text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              ✅ מוכנות ({readyOrders.length})
             </button>
             <button
               onClick={() => setViewMode("history")}
@@ -2187,8 +2204,8 @@ const Kitchen = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayOrders.length === 0 && (
             <div className="col-span-full text-center py-20 text-muted-foreground">
-              <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : "📋"}</p>
-              <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : "אין היסטוריה עדיין"}</p>
+              <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : viewMode === "ready" ? "✅" : "📋"}</p>
+              <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : viewMode === "ready" ? "אין הזמנות מוכנות" : "אין היסטוריה עדיין"}</p>
             </div>
           )}
 
