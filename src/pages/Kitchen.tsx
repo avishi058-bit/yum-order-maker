@@ -2425,6 +2425,15 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
+                    {order.status === "new" && !order.queue_number && (
+                      <button
+                        onClick={() => markPaid(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-6 py-3 rounded-lg bg-green-600 text-white font-black text-lg hover:bg-green-500 transition-all active:scale-95 shadow-md shadow-green-600/40 disabled:opacity-60 disabled:cursor-wait"
+                      >
+                        {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
+                      </button>
+                    )}
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
