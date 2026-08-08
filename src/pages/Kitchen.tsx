@@ -1478,7 +1478,9 @@ const Kitchen = () => {
     const handler = (e: MessageEvent) => {
       const data = e.data as { type?: string; id?: string } | undefined;
       if (data?.type === "kitchen:order-ready" && data.id) {
-        updateStatus(data.id, "completed");
+        // Mark the order as ready (it moves to the "מוכנות" tab). It cannot be
+        // completed from there until it is paid.
+        updateStatus(data.id, "ready");
       }
     };
     window.addEventListener("message", handler);
