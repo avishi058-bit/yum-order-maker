@@ -739,13 +739,13 @@ const Kitchen = () => {
         if (printedOrdersRef.current.has(order.id)) return;
         const hasItems = Array.isArray(order.order_items) && order.order_items.length > 0;
         if (hasItems) {
-          printedOrdersRef.current.add(order.id);
+          printedOrdersRef.current.add(order.id); persistPrintedOrder(order.id, true);
           setTimeout(() => printOrder(order), 200);
           return;
         }
         // Reserve the slot immediately so we don't fire multiple fetch loops
         // for the same order across re-renders.
-        printedOrdersRef.current.add(order.id);
+        printedOrdersRef.current.add(order.id); persistPrintedOrder(order.id, true);
         (async () => {
           for (let attempt = 0; attempt < 8; attempt++) {
             await new Promise((r) => setTimeout(r, 250 + attempt * 150));
@@ -764,7 +764,7 @@ const Kitchen = () => {
           }
           // Gave up: clear the reservation so a manual reprint can still work.
           console.warn("[Kitchen] auto-print: order_items never arrived for", order.id);
-          printedOrdersRef.current.delete(order.id);
+          printedOrdersRef.current.delete(order.id); persistPrintedOrder(order.id, false);
         })();
       });
     }
@@ -1036,7 +1036,7 @@ const Kitchen = () => {
 
   // Manual reprint: bypasses the once-per-order dedup guard.
   const reprintOrder = (order: Order) => {
-    printedOrdersRef.current.add(order.id);
+    printedOrdersRef.current.add(order.id); persistPrintedOrder(order.id, true);
     printOrder(order);
   };
 
@@ -2759,7 +2759,7 @@ const Kitchen = () => {
               .eq("id", editingOrder.id)
               .maybeSingle();
             if (requires_reprint && data) {
-              printedOrdersRef.current.add(data.id);
+              printedOrdersRef.current.add(data.id); persistPrintedOrder(data.id, true);
               printOrder(data as Order);
               toast.info("מדפיס בון מעודכן למטבח");
             }
