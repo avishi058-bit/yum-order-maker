@@ -1598,16 +1598,16 @@ const Kitchen = () => {
             </button>
             <button
               onClick={completeAllReady}
-              disabled={!orders.some((o) => o.status === "ready")}
+              disabled={!orders.some((o) => o.status === "ready" && o.queue_number)}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                orders.some((o) => o.status === "ready")
+                orders.some((o) => o.status === "ready" && o.queue_number)
                   ? "bg-green-600 text-white hover:bg-green-700"
                   : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
               }`}
-              title="העבר את כל ההזמנות המוכנות לסטטוס הושלמה"
+              title="העבר את כל ההזמנות המוכנות ששולמו לסטטוס הושלמה"
             >
               <CheckCircle size={14} className="inline ml-1" />
-              השלם הכל ({orders.filter((o) => o.status === "ready").length})
+              השלם הכל ({orders.filter((o) => o.status === "ready" && o.queue_number).length})
             </button>
           </div>
         </div>
