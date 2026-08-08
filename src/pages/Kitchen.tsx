@@ -280,6 +280,37 @@ const POLLING_FALLBACK_MS = 10000;
 const AGGRESSIVE_RING_MS = 2000;
 const NORMAL_RING_MS = 5000;
 
+// --- Printed-orders persistence -------------------------------------------
+// Auto-print must never repeat a bon just because the tablet reloaded, so the
+// set of already-printed order ids lives in localStorage (entries older than
+// 24h are pruned on load).
+const PRINTED_KEY = "kitchen-printed-orders";
+const PRINTED_TTL_MS = 24 * 60 * 60 * 1000;
+// How long a freshly accepted order stays pinned at the top of the board.
+const ACCEPTED_PIN_MS = 60_000;
+
+function loadPrintedOrders(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRINTED_KEY) || "{}") as Record<string, number>;
+    const cutoff = Date.now() - PRINTED_TTL_MS;
+    const fresh = Object.entries(raw).filter(([, ts]) => ts > cutoff);
+    localStorage.setItem(PRINTED_KEY, JSON.stringify(Object.fromEntries(fresh)));
+    return new Set(fresh.map(([id]) => id));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistPrintedOrder(id: string, printed: boolean) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRINTED_KEY) || "{}") as Record<string, number>;
+    if (printed) raw[id] = Date.now();
+    else delete raw[id];
+    localStorage.setItem(PRINTED_KEY, JSON.stringify(raw));
+  } catch {}
+}
+
+
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
