@@ -843,25 +843,26 @@ const Kitchen = () => {
     .filter((g) => g.items.length > 0);
 
   const completeAllReady = async () => {
-    const readyIds = orders.filter((o) => o.status === "ready").map((o) => o.id);
-    if (readyIds.length === 0) {
-      toast.info("אין הזמנות מוכנות");
+    const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number).map((o) => o.id);
+    const unpaidReadyCount = orders.filter((o) => o.status === "ready" && !o.queue_number).length;
+    if (paidReadyIds.length === 0) {
+      toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו — סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
       return;
     }
     const prevOrders = orders;
     setOrders((curr) =>
-      curr.map((o) => (readyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
+      curr.map((o) => (paidReadyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
     );
     const { error } = await supabase
       .from("orders")
       .update({ status: "completed" })
-      .in("id", readyIds);
+      .in("id", paidReadyIds);
     if (error) {
       toast.error(`שגיאה: ${error.message}`);
       setOrders(prevOrders);
       return;
     }
-    toast.success(`${readyIds.length} הזמנות הושלמו`);
+    toast.success(`${paidReadyIds.length} הזמנות ששולמו הושלמו${unpaidReadyCount > 0 ? ` (${unpaidReadyCount} נותרו ללא תשלום)` : ""}`);
   };
 
   // Mark an order as paid → it gets the next position in today's queue and
