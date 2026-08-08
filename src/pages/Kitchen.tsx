@@ -330,7 +330,12 @@ const Kitchen = () => {
   const [showAvailMenu, setShowAvailMenu] = useState(false);
   const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const printedOrdersRef = useRef<Set<string>>(new Set());
+  // Printed-orders memory persisted across page refreshes so reloading the
+  // kitchen tablet never re-prints bons that already came out of the printer.
+  const printedOrdersRef = useRef<Set<string>>(loadPrintedOrders());
+  // When an order was accepted (status → preparing) in this session. New /
+  // just-accepted orders stay pinned at the top of the board for a minute.
+  const acceptedAtRef = useRef<Map<string, number>>(new Map());
   const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
