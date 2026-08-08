@@ -900,6 +900,11 @@ const Kitchen = () => {
     if (newStatus === "preparing" && prepMinutes) {
       updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
     }
+    // Keep a just-accepted order pinned to the top of the board for a minute.
+    if (newStatus === "preparing" && !acceptedAtRef.current.has(orderId)) {
+      acceptedAtRef.current.set(orderId, Date.now());
+    }
+
 
     // Optimistic update — flip the card immediately so the user sees instant
     // feedback. We snapshot the prior state so we can roll back on error.
