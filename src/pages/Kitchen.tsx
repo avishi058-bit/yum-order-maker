@@ -1267,14 +1267,27 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  // Active board: single list, always ordered by arrival time. Paying an order
-  // only marks it as paid — it never changes position on the board. Orders
-  // marked "ready" leave the board and move to the dedicated ready tab.
+  // Active board: brand-new (unaccepted) orders are pinned to the top so they
+  // can't be missed. Once accepted they stay pinned for one more minute and
+  // then slide down into their normal chronological place in the queue.
   const activeOrders = useMemo(() => {
+    const nowMs = Date.now();
+    const isPinned = (o: Order) => {
+      if (o.status === "new") return true;
+      const acceptedAt = acceptedAtRef.current.get(o.id);
+      return !!acceptedAt && nowMs - acceptedAt < ACCEPTED_PIN_MS;
+    };
     return orders
       .filter((o) => ["new", "preparing"].includes(o.status))
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  }, [orders]);
+      .sort((a, b) => {
+        const pa = isPinned(a) ? 0 : 1;
+        const pb = isPinned(b) ? 0 : 1;
+        if (pa !== pb) return pa - pb;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+    // `tick` (1s timer) keeps the pinned window re-evaluated.
+  }, [orders, tick]);
+
   const readyOrders = useMemo(() => {
     return orders
       .filter((o) => o.status === "ready")
