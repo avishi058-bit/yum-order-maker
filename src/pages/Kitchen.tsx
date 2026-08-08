@@ -471,7 +471,7 @@ const Kitchen = () => {
   useEffect(() => { localStorage.setItem("kitchen-aggressive-after", String(aggressiveAfter)); }, [aggressiveAfter]);
 
   // Tick every second so escalation re-evaluates without re-fetching
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     const i = setInterval(() => setTick((t) => (t + 1) % 1000000), 1000);
     return () => clearInterval(i);
