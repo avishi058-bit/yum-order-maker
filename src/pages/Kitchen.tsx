@@ -280,6 +280,37 @@ const POLLING_FALLBACK_MS = 10000;
 const AGGRESSIVE_RING_MS = 2000;
 const NORMAL_RING_MS = 5000;
 
+// --- Printed-orders persistence -------------------------------------------
+// Auto-print must never repeat a bon just because the tablet reloaded, so the
+// set of already-printed order ids lives in localStorage (entries older than
+// 24h are pruned on load).
+const PRINTED_KEY = "kitchen-printed-orders";
+const PRINTED_TTL_MS = 24 * 60 * 60 * 1000;
+// How long a freshly accepted order stays pinned at the top of the board.
+const ACCEPTED_PIN_MS = 60_000;
+
+function loadPrintedOrders(): Set<string> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRINTED_KEY) || "{}") as Record<string, number>;
+    const cutoff = Date.now() - PRINTED_TTL_MS;
+    const fresh = Object.entries(raw).filter(([, ts]) => ts > cutoff);
+    localStorage.setItem(PRINTED_KEY, JSON.stringify(Object.fromEntries(fresh)));
+    return new Set(fresh.map(([id]) => id));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistPrintedOrder(id: string, printed: boolean) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRINTED_KEY) || "{}") as Record<string, number>;
+    if (printed) raw[id] = Date.now();
+    else delete raw[id];
+    localStorage.setItem(PRINTED_KEY, JSON.stringify(raw));
+  } catch {}
+}
+
+
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
@@ -330,7 +361,12 @@ const Kitchen = () => {
   const [showAvailMenu, setShowAvailMenu] = useState(false);
   const [audioActivated, setAudioActivated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const printedOrdersRef = useRef<Set<string>>(new Set());
+  // Printed-orders memory persisted across page refreshes so reloading the
+  // kitchen tablet never re-prints bons that already came out of the printer.
+  const printedOrdersRef = useRef<Set<string>>(loadPrintedOrders());
+  // When an order was accepted (status → preparing) in this session. New /
+  // just-accepted orders stay pinned at the top of the board for a minute.
+  const acceptedAtRef = useRef<Map<string, number>>(new Map());
   const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
@@ -435,7 +471,7 @@ const Kitchen = () => {
   useEffect(() => { localStorage.setItem("kitchen-aggressive-after", String(aggressiveAfter)); }, [aggressiveAfter]);
 
   // Tick every second so escalation re-evaluates without re-fetching
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     const i = setInterval(() => setTick((t) => (t + 1) % 1000000), 1000);
     return () => clearInterval(i);
@@ -692,24 +728,24 @@ const Kitchen = () => {
   // few times) and print as soon as items appear — no waiting for the next
   // poll cycle or for a manual confirmation.
   useEffect(() => {
-    // Auto-print any order that has entered the queue (marked paid). With the
-    // new workflow an order is accepted first (status becomes preparing/ready),
-    // then paid and assigned a queue_number, so we look at all active orders.
-    const printableOrders = orders.filter(
-      (o) => ["new", "preparing", "ready"].includes(o.status) && !!o.queue_number,
+    // Auto-print every order as soon as it arrives — payment is marked later
+    // (sometimes only at pickup), so the bon must not wait for a queue number.
+    const printableOrders = orders.filter((o) =>
+      ["new", "preparing", "ready"].includes(o.status),
     );
+
     if (autoPrint) {
       printableOrders.forEach((order) => {
         if (printedOrdersRef.current.has(order.id)) return;
         const hasItems = Array.isArray(order.order_items) && order.order_items.length > 0;
         if (hasItems) {
-          printedOrdersRef.current.add(order.id);
+          printedOrdersRef.current.add(order.id); persistPrintedOrder(order.id, true);
           setTimeout(() => printOrder(order), 200);
           return;
         }
         // Reserve the slot immediately so we don't fire multiple fetch loops
         // for the same order across re-renders.
-        printedOrdersRef.current.add(order.id);
+        printedOrdersRef.current.add(order.id); persistPrintedOrder(order.id, true);
         (async () => {
           for (let attempt = 0; attempt < 8; attempt++) {
             await new Promise((r) => setTimeout(r, 250 + attempt * 150));
@@ -728,7 +764,7 @@ const Kitchen = () => {
           }
           // Gave up: clear the reservation so a manual reprint can still work.
           console.warn("[Kitchen] auto-print: order_items never arrived for", order.id);
-          printedOrdersRef.current.delete(order.id);
+          printedOrdersRef.current.delete(order.id); persistPrintedOrder(order.id, false);
         })();
       });
     }
@@ -864,6 +900,11 @@ const Kitchen = () => {
     if (newStatus === "preparing" && prepMinutes) {
       updateData.estimated_ready_at = new Date(Date.now() + prepMinutes * 60 * 1000).toISOString();
     }
+    // Keep a just-accepted order pinned to the top of the board for a minute.
+    if (newStatus === "preparing" && !acceptedAtRef.current.has(orderId)) {
+      acceptedAtRef.current.set(orderId, Date.now());
+    }
+
 
     // Optimistic update — flip the card immediately so the user sees instant
     // feedback. We snapshot the prior state so we can roll back on error.
@@ -1000,7 +1041,7 @@ const Kitchen = () => {
 
   // Manual reprint: bypasses the once-per-order dedup guard.
   const reprintOrder = (order: Order) => {
-    printedOrdersRef.current.add(order.id);
+    printedOrdersRef.current.add(order.id); persistPrintedOrder(order.id, true);
     printOrder(order);
   };
 
@@ -1231,14 +1272,27 @@ const Kitchen = () => {
     return `${mins}:${String(secs).padStart(2, "0")} דק׳`;
   };
 
-  // Active board: single list, always ordered by arrival time. Paying an order
-  // only marks it as paid — it never changes position on the board. Orders
-  // marked "ready" leave the board and move to the dedicated ready tab.
+  // Active board: brand-new (unaccepted) orders are pinned to the top so they
+  // can't be missed. Once accepted they stay pinned for one more minute and
+  // then slide down into their normal chronological place in the queue.
   const activeOrders = useMemo(() => {
+    const nowMs = Date.now();
+    const isPinned = (o: Order) => {
+      if (o.status === "new") return true;
+      const acceptedAt = acceptedAtRef.current.get(o.id);
+      return !!acceptedAt && nowMs - acceptedAt < ACCEPTED_PIN_MS;
+    };
     return orders
       .filter((o) => ["new", "preparing"].includes(o.status))
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  }, [orders]);
+      .sort((a, b) => {
+        const pa = isPinned(a) ? 0 : 1;
+        const pb = isPinned(b) ? 0 : 1;
+        if (pa !== pb) return pa - pb;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+    // `tick` (1s timer) keeps the pinned window re-evaluated.
+  }, [orders, tick]);
+
   const readyOrders = useMemo(() => {
     return orders
       .filter((o) => o.status === "ready")
@@ -2453,7 +2507,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {order.status === "preparing" && !order.queue_number && (
+                    {["preparing", "ready"].includes(order.status) && !order.queue_number && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
@@ -2723,7 +2777,7 @@ const Kitchen = () => {
               .eq("id", editingOrder.id)
               .maybeSingle();
             if (requires_reprint && data) {
-              printedOrdersRef.current.add(data.id);
+              printedOrdersRef.current.add(data.id); persistPrintedOrder(data.id, true);
               printOrder(data as Order);
               toast.info("מדפיס בון מעודכן למטבח");
             }
