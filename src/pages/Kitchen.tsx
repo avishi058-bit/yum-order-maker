@@ -843,25 +843,26 @@ const Kitchen = () => {
     .filter((g) => g.items.length > 0);
 
   const completeAllReady = async () => {
-    const readyIds = orders.filter((o) => o.status === "ready").map((o) => o.id);
-    if (readyIds.length === 0) {
-      toast.info("אין הזמנות מוכנות");
+    const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number).map((o) => o.id);
+    const unpaidReadyCount = orders.filter((o) => o.status === "ready" && !o.queue_number).length;
+    if (paidReadyIds.length === 0) {
+      toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו — סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
       return;
     }
     const prevOrders = orders;
     setOrders((curr) =>
-      curr.map((o) => (readyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
+      curr.map((o) => (paidReadyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
     );
     const { error } = await supabase
       .from("orders")
       .update({ status: "completed" })
-      .in("id", readyIds);
+      .in("id", paidReadyIds);
     if (error) {
       toast.error(`שגיאה: ${error.message}`);
       setOrders(prevOrders);
       return;
     }
-    toast.success(`${readyIds.length} הזמנות הושלמו`);
+    toast.success(`${paidReadyIds.length} הזמנות ששולמו הושלמו${unpaidReadyCount > 0 ? ` (${unpaidReadyCount} נותרו ללא תשלום)` : ""}`);
   };
 
   // Mark an order as paid → it gets the next position in today's queue and
@@ -1477,7 +1478,9 @@ const Kitchen = () => {
     const handler = (e: MessageEvent) => {
       const data = e.data as { type?: string; id?: string } | undefined;
       if (data?.type === "kitchen:order-ready" && data.id) {
-        updateStatus(data.id, "completed");
+        // Mark the order as ready (it moves to the "מוכנות" tab). It cannot be
+        // completed from there until it is paid.
+        updateStatus(data.id, "ready");
       }
     };
     window.addEventListener("message", handler);
@@ -1595,16 +1598,16 @@ const Kitchen = () => {
             </button>
             <button
               onClick={completeAllReady}
-              disabled={!orders.some((o) => o.status === "ready")}
+              disabled={!orders.some((o) => o.status === "ready" && o.queue_number)}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                orders.some((o) => o.status === "ready")
+                orders.some((o) => o.status === "ready" && o.queue_number)
                   ? "bg-green-600 text-white hover:bg-green-700"
                   : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
               }`}
-              title="העבר את כל ההזמנות המוכנות לסטטוס הושלמה"
+              title="העבר את כל ההזמנות המוכנות ששולמו לסטטוס הושלמה"
             >
               <CheckCircle size={14} className="inline ml-1" />
-              השלם הכל ({orders.filter((o) => o.status === "ready").length})
+              השלם הכל ({orders.filter((o) => o.status === "ready" && o.queue_number).length})
             </button>
           </div>
         </div>
