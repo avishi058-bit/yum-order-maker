@@ -728,12 +728,12 @@ const Kitchen = () => {
   // few times) and print as soon as items appear — no waiting for the next
   // poll cycle or for a manual confirmation.
   useEffect(() => {
-    // Auto-print any order that has entered the queue (marked paid). With the
-    // new workflow an order is accepted first (status becomes preparing/ready),
-    // then paid and assigned a queue_number, so we look at all active orders.
-    const printableOrders = orders.filter(
-      (o) => ["new", "preparing", "ready"].includes(o.status) && !!o.queue_number,
+    // Auto-print every order as soon as it arrives — payment is marked later
+    // (sometimes only at pickup), so the bon must not wait for a queue number.
+    const printableOrders = orders.filter((o) =>
+      ["new", "preparing", "ready"].includes(o.status),
     );
+
     if (autoPrint) {
       printableOrders.forEach((order) => {
         if (printedOrdersRef.current.has(order.id)) return;
