@@ -76,8 +76,8 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: b
           className="flex flex-row-reverse items-center gap-6"
         >
           {[
-            { label: "לשבת", emoji: "🪑", dineIn: true },
-            { label: "לקחת", emoji: "🥡", dineIn: false },
+            { label: "לשבת", dineIn: true },
+            { label: "לקחת", dineIn: false },
           ].map((opt, i) => (
             <motion.button
               key={opt.label}
@@ -85,12 +85,12 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: b
               transition={{ duration: 1.6, delay: 1.5 + i * 0.2, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => onStart(opt.dineIn)}
-              className="min-w-[13rem] md:min-w-[16rem] bg-card/95 text-foreground border border-border font-black text-4xl md:text-5xl px-12 py-10 rounded-[3rem] shadow-2xl backdrop-blur-sm transition-shadow hover:shadow-primary/30"
+              className="min-w-[14rem] md:min-w-[18rem] bg-card text-foreground font-bold text-5xl md:text-6xl px-14 py-12 rounded-full shadow-2xl transition-shadow hover:shadow-primary/30"
             >
-              <span className="block text-3xl md:text-4xl mb-2">{opt.emoji}</span>
               {opt.label}
             </motion.button>
           ))}
+
         </motion.div>
       </div>
     </div>
