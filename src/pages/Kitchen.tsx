@@ -467,6 +467,14 @@ const Kitchen = () => {
     return isNaN(v) ? DEFAULT_AGGRESSIVE_AFTER : v;
   });
 
+  // Auto-accept mode — new orders are accepted automatically after 2 seconds
+  const [autoAccept, setAutoAccept] = useState<boolean>(
+    () => localStorage.getItem("kitchen-auto-accept") === "1"
+  );
+  useEffect(() => {
+    localStorage.setItem("kitchen-auto-accept", autoAccept ? "1" : "0");
+  }, [autoAccept]);
+
   useEffect(() => { localStorage.setItem("kitchen-red-after", String(redAfter)); }, [redAfter]);
   useEffect(() => { localStorage.setItem("kitchen-aggressive-after", String(aggressiveAfter)); }, [aggressiveAfter]);
 
@@ -476,6 +484,21 @@ const Kitchen = () => {
     const i = setInterval(() => setTick((t) => (t + 1) % 1000000), 1000);
     return () => clearInterval(i);
   }, []);
+
+  // When auto-accept is on, accept every "new" order 2s after it appears.
+  const autoAcceptedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!autoAccept) return;
+    const timers = orders
+      .filter((o) => o.status === "new" && !autoAcceptedRef.current.has(o.id))
+      .map((o) => {
+        autoAcceptedRef.current.add(o.id);
+        return setTimeout(() => {
+          updateStatus(o.id, "preparing");
+        }, 2000);
+      });
+    return () => timers.forEach(clearTimeout);
+  }, [orders, autoAccept]);
 
   // Swap the document <link rel="manifest"> to the kitchen manifest so the
   // browser offers "install" with the kitchen icon/name/start_url=/kitchen.
@@ -2100,6 +2123,23 @@ const Kitchen = () => {
               <span className="flex items-center gap-2"><Printer size={16} /> הגדרות הדפסה ובדיקות</span>
               <span className="text-muted-foreground text-xs">פתח</span>
             </button>
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-lg bg-muted/40 p-3">
+              <div>
+                <p className="text-sm font-bold text-foreground">אישור אוטומטי אחרי 2 שניות</p>
+                <p className="text-xs text-muted-foreground">הזמנות חדשות יתקבלו אוטומטית ללא לחיצה</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={autoAccept}
+                onClick={() => setAutoAccept((v) => !v)}
+                className={`relative h-7 w-14 shrink-0 rounded-full transition-colors ${autoAccept ? "bg-green-500" : "bg-muted-foreground/40"}`}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${autoAccept ? "right-1" : "right-8"}`}
+                />
+              </button>
+            </div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <AlertTriangle size={16} className="text-yellow-400" />
