@@ -14,8 +14,6 @@ import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 import { SkibidiGuardProvider } from "@/components/SkibidiGuard";
 
-// Keep the kiosk entry lightweight: the customer storefront is one of the
-const Index = lazy(() => import("./pages/Index"));
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Install from "./pages/Install";
