@@ -276,7 +276,7 @@ export function startPrinterKeepAlive() {
   _keepAliveTimer = setInterval(() => {
     if (_warmDisabled) return;
     if (typeof document !== "undefined" && document.hidden) return;
-    if (getQueueDepth() > 0) return;
+    if (getPrintQueueDepth() > 0) return;
     if (cachedDevice && !cachedDevice.gatt?.connected) {
       scheduleWarmReconnect();
       return;
