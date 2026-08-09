@@ -309,9 +309,11 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 
 // WoR chunk size — BLE Web API does not expose negotiated MTU, and writing
 // larger than the link MTU silently truncates on some stacks → printer gets
-// a mangled byte stream and prints gibberish. Start at 244 (max payload for
-// MTU 247, the BLE 5.0 default on Android/Chrome) and auto-shrink on error.
-let _worChunkSize = 244;
+// a mangled byte stream and prints gibberish. Start optimistically at 512
+// (Android negotiates MTU 517 with most printers, giving a 512-byte payload)
+// and auto-shrink to 244 → 180 on the first failure. Bigger chunks mean far
+// fewer BLE packets and round-trips → dramatically faster bons.
+let _worChunkSize = 512;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
@@ -324,16 +326,17 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
     let i = 0;
     while (i < data.length) {
       const end = Math.min(i + _worChunkSize, data.length);
-      const slice = data.slice(i, end);
+      const slice = data.subarray(i, end);
       try {
         await writeWoR(slice);
         i = end;
       } catch (e) {
         // MTU likely too big — shrink and retry this slice.
         if (_worChunkSize > 180) {
-          _worChunkSize = Math.max(180, Math.floor(_worChunkSize / 2));
+          _worChunkSize = _worChunkSize > 244 ? 244 : 180;
           continue;
         }
+
         // Already small — brief breather + one more try, then fall through.
         await new Promise((r) => setTimeout(r, 8));
         try { await writeWoR(slice); i = end; }
