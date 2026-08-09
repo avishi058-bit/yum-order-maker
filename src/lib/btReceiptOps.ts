@@ -10,6 +10,7 @@
 // and avoids the dense black areas that bog down thermal printers.
 
 import type { FastOp } from "./bluetoothPrinter";
+import { getUnavailableIngredientIds } from "@/lib/ingredientAvailability";
 import {
   computeChefSummary,
   computeDrinkSummary,
@@ -116,10 +117,24 @@ function isChickenBurger(name: string): boolean {
   return /קריספי/.test(name || "");
 }
 
+// Ingredients that are out of stock are simply not on the bun — they must
+// never be printed as remaining, nor as "ללא X".
+function soldOutVeg(): Set<string> {
+  const out = new Set<string>();
+  for (const id of getUnavailableIngredientIds()) {
+    if (VEGGIE_HEBREW[id]) out.add(id);
+  }
+  return out;
+}
+
 function defaultsForBurger(name: string): Set<string> {
-  if (isSmashBurger(name)) return new Set(["lettuce", "pickles", "aioli"]);
-  if (isChickenBurger(name)) return new Set(["lettuce", "onion", "pickles", "aioli"]);
-  return new Set(["lettuce", "tomato", "onion", "pickles", "aioli"]);
+  const base = isSmashBurger(name)
+    ? new Set(["lettuce", "pickles", "aioli"])
+    : isChickenBurger(name)
+    ? new Set(["lettuce", "onion", "pickles", "aioli"])
+    : new Set(["lettuce", "tomato", "onion", "pickles", "aioli"]);
+  for (const id of soldOutVeg()) base.delete(id);
+  return base;
 }
 
 function buildVeggieSummary(
@@ -128,14 +143,18 @@ function buildVeggieSummary(
 ): { veg: string; others: string[] } {
   const def = defaultsForBurger(name);
   const final = new Set(def);
+  const soldOut = soldOutVeg();
   const others: string[] = [];
   for (const r of removalsRaw) {
     const normalized = String(r || "").trim();
     const removeVeg = REM_TO_VEG[normalized] || HEBREW_REMOVE_TO_VEG[normalized];
     const addVeg = ADD_TO_VEG[normalized] || HEBREW_ADD_TO_VEG[normalized];
     if (removeVeg) {
+      // Ignore removals of ingredients that are out of stock anyway.
+      if (soldOut.has(removeVeg)) continue;
       final.delete(removeVeg);
     } else if (addVeg) {
+      if (soldOut.has(addVeg)) continue;
       final.add(addVeg);
     } else {
       const m = ING_LOOKUP[normalized];
@@ -151,9 +170,11 @@ function buildVeggieSummary(
   // (e.g. add-tomato on a smash) — and only for non-smash burgers.
   if (!isSmashBurger(name)) {
     const chicken = isChickenBurger(name);
-    const VEG4 = (chicken
+    const VEG4 = ((chicken
       ? ["lettuce", "onion", "pickles"]
-      : ["lettuce", "tomato", "onion", "pickles"]) as readonly string[];
+      : ["lettuce", "tomato", "onion", "pickles"]) as readonly string[]).filter(
+      (id) => !soldOut.has(id),
+    );
     const removedVeg = VEG4.filter((id) => !final.has(id));
     const addedVeg = (chicken ? (["onion"] as const) : (["tomato", "onion"] as const)).filter(
       (id) => final.has(id) && !def.has(id),
@@ -193,7 +214,7 @@ function buildVeggieSummary(
     if (vegCount + (aioliRemoved ? 1 : 0) >= 2 && addedVeg.length === 0) {
       const remaining = VEG_ORDER.filter((id) => final.has(id)).map((id) => VEGGIE_HEBREW[id]);
       if (remaining.length === 0) return { veg: "יבש", others };
-      if (remaining.length === 1 && remaining[0] === "איולי") return { veg: "רק איולי", others };
+      if (remaining.length === 1) return { veg: `רק ${remaining[0]}`, others };
       return { veg: remaining.join(" "), others };
     }
 
@@ -206,7 +227,9 @@ function buildVeggieSummary(
 
   // ===== Smash burger — new spec =====
   // Default = lettuce + pickles + aioli. Optional adds: tomato, onion.
-  const SMASH_DEF = ["lettuce", "pickles", "aioli"] as const;
+  const SMASH_DEF = (["lettuce", "pickles", "aioli"] as readonly string[]).filter(
+    (id) => !soldOut.has(id),
+  );
   const removedSmash = SMASH_DEF.filter((id) => !final.has(id));
   const addedSmash = (["tomato", "onion"] as const).filter((id) => final.has(id));
   const aioliRemovedS = !final.has("aioli");
@@ -215,11 +238,11 @@ function buildVeggieSummary(
   // No customer changes
   if (removeCount === 0 && addedSmash.length === 0) {
     if (others.length === 0) return { veg: "ללא שינויים", others };
-    return { veg: "חסה, חמוצים, איולי", others };
+    return { veg: SMASH_DEF.map((id) => VEGGIE_HEBREW[id]).join(", "), others };
   }
 
   // All 3 removed → "יבש"
-  if (removeCount === 3) return { veg: "יבש", others };
+  if (removeCount === SMASH_DEF.length) return { veg: "יבש", others };
 
   // Added both tomato + onion (no removals) → "כל הירקות + איולי"
   if (addedSmash.length === 2 && removeCount === 0) {
@@ -248,6 +271,7 @@ function buildVeggieSummary(
       .filter((id) => final.has(id))
       .map((id) => VEGGIE_HEBREW[id]);
     if (remaining.length === 0) return { veg: "יבש", others };
+    if (remaining.length === 1) return { veg: `רק ${remaining[0]}`, others };
     return { veg: remaining.join(", "), others };
   }
 
