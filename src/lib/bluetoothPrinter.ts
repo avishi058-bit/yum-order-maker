@@ -1058,7 +1058,7 @@ function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   const ROWS = 255;
   // Detect runs of all-blank rows and replace them with ESC J motor feed —
   // ~5-10x faster than sending blank scan rows, and saves widthBytes per row.
-  const MIN_BLANK_RUN = 6;
+  const MIN_BLANK_RUN = 3;
   const rowBlank = (y: number): boolean => {
     const off = y * widthBytes;
     for (let i = 0; i < widthBytes; i++) if (bytes[off + i] !== 0) return false;
