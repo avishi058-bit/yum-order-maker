@@ -136,25 +136,23 @@ const Kiosk = () => {
     }
   }, []);
 
-  // Warm the ordering flow only when the browser is idle. Previously startup
-  // fetched and decoded every menu image at high priority and blocked entry to
-  // the menu until all of them finished, which made the kiosk feel frozen.
+  // Warm only the menu code while the welcome screen is idle. Do not prefetch
+  // customizers or their many images here: on kiosk hardware that saturated
+  // the network and delayed both the welcome screen and menu images.
   useEffect(() => {
     let timer: number | undefined;
     let idleId: number | undefined;
     const warm = () => {
-      void import("@/lib/prefetchCustomerFlow").then(({ prefetchCustomerFlow }) =>
-        prefetchCustomerFlow()
-      );
+      void import("@/components/MenuSection");
     };
     const browser = window as typeof window & {
       requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
       cancelIdleCallback?: (id: number) => void;
     };
     if (browser.requestIdleCallback) {
-      idleId = browser.requestIdleCallback(warm, { timeout: 3000 });
+      idleId = browser.requestIdleCallback(warm, { timeout: 1200 });
     } else {
-      timer = window.setTimeout(warm, 1500);
+      timer = window.setTimeout(warm, 800);
     }
     return () => {
       if (timer !== undefined) window.clearTimeout(timer);

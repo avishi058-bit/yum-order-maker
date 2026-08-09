@@ -7,7 +7,12 @@ import { preloadSelectorIcons } from "./lib/preloadSelectorIcons";
 import { prefetchCustomerFlow } from "./lib/prefetchCustomerFlow";
 
 initIngredientAvailability().catch(() => {});
-preloadSelectorIcons();
+// Do not fetch dozens of selector images while the kiosk is trying to show its
+// first screen. Kiosk loads each selector on demand; customer web keeps the
+// existing idle preload behaviour.
+if (!window.location.pathname.startsWith("/kiosk")) {
+  preloadSelectorIcons();
+}
 
 // Warm the customer ordering flow (customizer/checkout chunks + their icons)
 // on idle, so the first item tap feels instant. Skipped on kiosk (Kiosk.tsx
