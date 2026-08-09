@@ -12,15 +12,16 @@ import heroBurger from "@/assets/hero-burger.webp";
 const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: boolean) => void; imagesReady?: boolean }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" dir="rtl">
-      {/* Background */}
+      {/* Background - bright overlay so the burger photo stays visible */}
       <div className="absolute inset-0">
         <img
           src={heroBurger}
           alt="המבורגר הבקתה"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-white/20" />
       </div>
+
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-8">
