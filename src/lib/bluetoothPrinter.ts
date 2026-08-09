@@ -309,9 +309,11 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 
 // WoR chunk size — BLE Web API does not expose negotiated MTU, and writing
 // larger than the link MTU silently truncates on some stacks → printer gets
-// a mangled byte stream and prints gibberish. Start at 244 (max payload for
-// MTU 247, the BLE 5.0 default on Android/Chrome) and auto-shrink on error.
-let _worChunkSize = 244;
+// a mangled byte stream and prints gibberish. Start optimistically at 512
+// (Android negotiates MTU 517 with most printers, giving a 512-byte payload)
+// and auto-shrink to 244 → 180 on the first failure. Bigger chunks mean far
+// fewer BLE packets and round-trips → dramatically faster bons.
+let _worChunkSize = 512;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
@@ -324,16 +326,17 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
     let i = 0;
     while (i < data.length) {
       const end = Math.min(i + _worChunkSize, data.length);
-      const slice = data.slice(i, end);
+      const slice = data.subarray(i, end);
       try {
         await writeWoR(slice);
         i = end;
       } catch (e) {
         // MTU likely too big — shrink and retry this slice.
         if (_worChunkSize > 180) {
-          _worChunkSize = Math.max(180, Math.floor(_worChunkSize / 2));
+          _worChunkSize = _worChunkSize > 244 ? 244 : 180;
           continue;
         }
+
         // Already small — brief breather + one more try, then fall through.
         await new Promise((r) => setTimeout(r, 8));
         try { await writeWoR(slice); i = end; }
@@ -404,6 +407,37 @@ export function getPrintRotate180(): boolean {
 export function setPrintRotate180(on: boolean) {
   try { localStorage.setItem(ROTATE_KEY, on ? "1" : "0"); } catch {}
 }
+
+// ---------- Fast print mode (printer-side speed) ----------
+// Thermal printers default to a conservative heating profile: long heating
+// time + long cooling interval + medium motor speed. On a long bon that is
+// the single biggest source of slowness — the BLE transfer is usually done
+// long before the paper stops moving.
+// Fast mode raises the heating-dot count (more head segments fire at once),
+// shortens the heating interval and asks for the printer's maximum speed.
+const FAST_KEY = "bt-printer-fast-mode";
+export function getPrintFastMode(): boolean {
+  try { return localStorage.getItem(FAST_KEY) !== "0"; } catch { return true; }
+}
+export function setPrintFastMode(on: boolean) {
+  try { localStorage.setItem(FAST_KEY, on ? "1" : "0"); } catch {}
+}
+
+// Emitted right after ESC @ on every job.
+function printerSpeedCmds(): number[] {
+  if (!getPrintFastMode()) return [];
+  return [
+    // ESC 7 n1 n2 n3 — max heating dots ((n1+1)*8), heating time (n2*10us),
+    // heating interval (n3*10us). Defaults are ~(7, 80, 2).
+    ESC, 0x37, 0x0f, 0x50, 0x01,
+    // GS ( K pL pH fn m — fn=50 print speed, m=0 => fastest supported.
+    GS, 0x28, 0x4b, 0x02, 0x00, 0x32, 0x00,
+    // DC2 # n — print density (Xprinter/GOOJPRT): keep legible while fast.
+    0x12, 0x23, 0x08,
+  ];
+}
+
+
 
 // Render arbitrary HTML inside a hidden offscreen iframe to a canvas.
 async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTMLCanvasElement> {
@@ -1024,7 +1058,7 @@ function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   const ROWS = 255;
   // Detect runs of all-blank rows and replace them with ESC J motor feed —
   // ~5-10x faster than sending blank scan rows, and saves widthBytes per row.
-  const MIN_BLANK_RUN = 6;
+  const MIN_BLANK_RUN = 3;
   const rowBlank = (y: number): boolean => {
     const off = y * widthBytes;
     for (let i = 0; i < widthBytes; i++) if (bytes[off + i] !== 0) return false;
@@ -1176,6 +1210,8 @@ function _renderNativeLineToMono(
 function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
+  buf.pushArr(printerSpeedCmds());
+
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
   const monos: Mono[] = [];
   let cut = false;
@@ -1261,6 +1297,8 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   if (getPrintRotate180()) return _buildOpsBytesRotated(ops, width);
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
+  buf.pushArr(printerSpeedCmds());
+
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
@@ -1281,7 +1319,9 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
       case "init":
         flush();
         buf.pushArr(CMD_INIT);
+        buf.pushArr(printerSpeedCmds());
         break;
+
       case "sep":
         flush();
         buf.pushArr(_align("L")); buf.pushArr(_size(1)); buf.pushArr(_bold(false));

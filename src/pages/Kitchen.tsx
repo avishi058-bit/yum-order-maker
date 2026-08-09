@@ -32,6 +32,8 @@ import {
   setPaperWidthDots,
   getPrintRotate180,
   setPrintRotate180,
+  getPrintFastMode,
+  setPrintFastMode,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 import {
@@ -1225,6 +1227,14 @@ const Kitchen = () => {
   const [encoding, setEncodingState] = useState<EncodingProfile>(() => getEncoding());
   const [paperWidth, setPaperWidthState] = useState<number>(() => getPaperWidthDots());
   const [rotate180, setRotate180State] = useState<boolean>(() => getPrintRotate180());
+  const [fastPrint, setFastPrintState] = useState<boolean>(() => getPrintFastMode());
+
+  const handleFastPrintToggle = () => {
+    const next = !fastPrint;
+    setPrintFastMode(next);
+    setFastPrintState(next);
+    toast.success(next ? "הדפסה מהירה הופעלה" : "הדפסה מהירה כבויה");
+  };
 
   const handleRotateToggle = () => {
     const next = !rotate180;
@@ -2004,6 +2014,17 @@ const Kitchen = () => {
                     >
                       <span>הפוך הדפסה 180°</span>
                       <span>{rotate180 ? "✓ פעיל" : "כבוי"}</span>
+                    </button>
+                    <button
+                      onClick={handleFastPrintToggle}
+                      className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                        fastPrint
+                          ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <span>⚡ הדפסה מהירה</span>
+                      <span>{fastPrint ? "✓ פעיל" : "כבוי"}</span>
                     </button>
                   </>
                 )}
