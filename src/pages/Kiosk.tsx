@@ -187,7 +187,8 @@ const Kiosk = () => {
   // re-renders (e.g. realtime availability/settings updates).
   const imagesReadyRef = useRef(imagesReady);
   imagesReadyRef.current = imagesReady;
-  const handleWelcomeStart = useCallback(() => {
+  const handleWelcomeStart = useCallback((choice: boolean) => {
+    setDineIn(choice);
     if (imagesReadyRef.current) {
       setView("menu");
     } else {
@@ -504,7 +505,13 @@ const Kiosk = () => {
         }}
         onCheckout={() => {
           setCartOpen(false);
-          setDineInSelectorOpen(true);
+          if (dineIn === null) {
+            setDineInSelectorOpen(true);
+          } else if (!dineIn && freeSauces > 0) {
+            setSauceSelectorOpen(true);
+          } else {
+            setCheckoutOpen(true);
+          }
         }}
       />
 
