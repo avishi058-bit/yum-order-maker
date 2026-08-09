@@ -868,8 +868,8 @@ const Kitchen = () => {
     .filter((g) => g.items.length > 0);
 
   const completeAllReady = async () => {
-    const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number).map((o) => o.id);
-    const unpaidReadyCount = orders.filter((o) => o.status === "ready" && !o.queue_number).length;
+    const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number != null).map((o) => o.id);
+    const unpaidReadyCount = orders.filter((o) => o.status === "ready" && o.queue_number == null).length;
     if (paidReadyIds.length === 0) {
       toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו — סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
       return;
@@ -893,7 +893,7 @@ const Kitchen = () => {
   // Mark an order as paid → it gets the next position in today's queue and
   // moves from the "waiting for payment" area into the preparation queue.
   const markPaid = async (order: Order) => {
-    if (paidPendingIds.has(order.id) || order.queue_number) return;
+    if (paidPendingIds.has(order.id) || order.queue_number != null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
     setPaidPendingIds((s) => {
@@ -1322,7 +1322,7 @@ const Kitchen = () => {
           ["new", "preparing"].includes(o.status) ||
           // A "ready" order that hasn't been paid yet stays on the active board
           // so the payment button is always reachable — otherwise it looked stuck.
-          (o.status === "ready" && !o.queue_number),
+          (o.status === "ready" && o.queue_number == null),
       )
       .sort((a, b) => {
         const pa = isPinned(a) ? 0 : 1;
@@ -1335,7 +1335,7 @@ const Kitchen = () => {
 
   const readyOrders = useMemo(() => {
     return orders
-      .filter((o) => o.status === "ready" && !!o.queue_number)
+      .filter((o) => o.status === "ready" && !o.queue_number == null)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
@@ -1637,16 +1637,16 @@ const Kitchen = () => {
             </button>
             <button
               onClick={completeAllReady}
-              disabled={!orders.some((o) => o.status === "ready" && o.queue_number)}
+              disabled={!orders.some((o) => o.status === "ready" && o.queue_number != null)}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                orders.some((o) => o.status === "ready" && o.queue_number)
+                orders.some((o) => o.status === "ready" && o.queue_number != null)
                   ? "bg-green-600 text-white hover:bg-green-700"
                   : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
               }`}
               title="העבר את כל ההזמנות המוכנות ששולמו לסטטוס הושלמה"
             >
               <CheckCircle size={14} className="inline ml-1" />
-              השלם הכל ({orders.filter((o) => o.status === "ready" && o.queue_number).length})
+              השלם הכל ({orders.filter((o) => o.status === "ready" && o.queue_number != null).length})
             </button>
           </div>
         </div>
@@ -2337,9 +2337,9 @@ const Kitchen = () => {
             const config = statusConfig[order.status];
             const next = nextStatus[order.status];
             const escLevel = order.status === "new" ? getEscalationLevel(order.created_at) : 0;
-            const isNewUnaccepted = order.status === "new" && !order.queue_number;
-            const isAcceptedPendingPayment = order.status !== "new" && !order.queue_number;
-            const awaitingPayment = viewMode === "active" && !order.queue_number;
+            const isNewUnaccepted = order.status === "new" && order.queue_number == null;
+            const isAcceptedPendingPayment = order.status !== "new" && order.queue_number == null;
+            const awaitingPayment = viewMode === "active" && order.queue_number == null;
 
             // Card visual escalation
             const cardClass = awaitingPayment
@@ -2362,13 +2362,13 @@ const Kitchen = () => {
                 <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
                   <div className="flex items-center gap-2">
                     {config.icon}
-                    {order.queue_number ? (
+                    {order.queue_number != null ? (
                       <span className="bg-white text-black font-bold text-xs px-1.5 py-0.5 rounded">
                         {order.queue_number}
                       </span>
                     ) : null}
                     <span className="font-bold">#{order.order_number}</span>
-                    {order.queue_number ? (
+                    {order.queue_number != null ? (
                       <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
                         שולם ✓
                       </span>
@@ -2577,7 +2577,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["preparing", "ready"].includes(order.status) && !order.queue_number && (
+                    {["preparing", "ready"].includes(order.status) && order.queue_number == null && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
@@ -2618,17 +2618,17 @@ const Kitchen = () => {
                       ) : (
                         <button
                           onClick={() => {
-                            if (next === "completed" && !order.queue_number) {
+                            if (next === "completed" && order.queue_number == null) {
                               toast.error("צריך לסמן 'שולם 💵' לפני סיום ההזמנה");
                               return;
                             }
                             updateStatus(order.id, next);
                           }}
-                          disabled={isPending || (next === "completed" && !order.queue_number)}
+                          disabled={isPending || (next === "completed" && order.queue_number == null)}
                           className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
-                          title={next === "completed" && !order.queue_number ? "יש לסמן שולם קודם" : undefined}
+                          title={next === "completed" && order.queue_number == null ? "יש לסמן שולם קודם" : undefined}
                         >
-                          {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : (order.queue_number ? "הושלמה ✅" : "הושלמה 🔒"))}
+                          {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : (order.queue_number != null ? "הושלמה ✅" : "הושלמה 🔒"))}
                         </button>
                       )
                     )}
