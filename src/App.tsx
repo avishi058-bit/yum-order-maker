@@ -15,7 +15,7 @@ import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 import { SkibidiGuardProvider } from "@/components/SkibidiGuard";
 
 // Keep the kiosk entry lightweight: the customer storefront is one of the
-// largest routes and must not be downloaded before /kiosk can render.
+const Index = lazy(() => import("./pages/Index"));
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Install from "./pages/Install";
