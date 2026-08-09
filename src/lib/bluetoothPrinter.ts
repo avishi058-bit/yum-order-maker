@@ -282,14 +282,9 @@ export function startPrinterKeepAlive() {
       return;
     }
     if (!cachedChar) return;
-    // ESC = 1 → "select printer" no-op. Keeps the GATT link and the printer's
-    // radio awake without emitting any paper output.
-    const ping = new Uint8Array([0x1b, 0x3d, 0x01]);
-    const c: any = cachedChar;
-    const p = c.properties?.writeWithoutResponse
-      ? c.writeValueWithoutResponse(ping)
-      : c.writeValue(ping);
-    Promise.resolve(p).catch(() => { scheduleWarmReconnect(); });
+    // No bytes are sent to the printer — writing a keep-alive command could
+    // interleave with a job and corrupt the stream. We only verify the GATT
+    // link is still up and reconnect when it drops.
   }, KEEPALIVE_MS);
 }
 
@@ -376,7 +371,7 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 // (Android negotiates MTU 517 with most printers, giving a 512-byte payload)
 // and auto-shrink to 244 → 180 on the first failure. Bigger chunks mean far
 // fewer BLE packets and round-trips → dramatically faster bons.
-let _worChunkSize = 512;
+let _worChunkSize = 244;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it — typically 3-5x
@@ -396,7 +391,7 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
       } catch (e) {
         // MTU likely too big — shrink and retry this slice.
         if (_worChunkSize > 180) {
-          _worChunkSize = _worChunkSize > 244 ? 244 : 180;
+          _worChunkSize = 180;
           continue;
         }
 
@@ -487,17 +482,11 @@ export function setPrintFastMode(on: boolean) {
 }
 
 // Emitted right after ESC @ on every job.
+// DISABLED: the heating/speed/density commands (ESC 7, GS ( K, DC2 #) are not
+// understood by every printer — some interpret the trailing bytes as data and
+// print gibberish. Reverted to the printer's own default profile.
 function printerSpeedCmds(): number[] {
-  if (!getPrintFastMode()) return [];
-  return [
-    // ESC 7 n1 n2 n3 — max heating dots ((n1+1)*8), heating time (n2*10us),
-    // heating interval (n3*10us). Defaults are ~(7, 80, 2).
-    ESC, 0x37, 0x0f, 0x50, 0x01,
-    // GS ( K pL pH fn m — fn=50 print speed, m=0 => fastest supported.
-    GS, 0x28, 0x4b, 0x02, 0x00, 0x32, 0x00,
-    // DC2 # n — print density (Xprinter/GOOJPRT): keep legible while fast.
-    0x12, 0x23, 0x08,
-  ];
+  return [];
 }
 
 
