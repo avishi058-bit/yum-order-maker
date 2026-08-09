@@ -78,6 +78,7 @@ const GeoGate = ({ children }: { children: ReactNode }) => {
     return () => { cancelled = true; };
   }, []);
 
+  if (status === "checking" && window.location.pathname.startsWith("/kiosk")) return <>{children}</>;
   if (status === "checking") return null;
 
   if (status === "blocked") {
