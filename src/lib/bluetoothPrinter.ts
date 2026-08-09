@@ -1319,7 +1319,9 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
       case "init":
         flush();
         buf.pushArr(CMD_INIT);
+        buf.pushArr(printerSpeedCmds());
         break;
+
       case "sep":
         flush();
         buf.pushArr(_align("L")); buf.pushArr(_size(1)); buf.pushArr(_bold(false));
