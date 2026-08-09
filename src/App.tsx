@@ -14,14 +14,15 @@ import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
 import { SkibidiGuardProvider } from "@/components/SkibidiGuard";
 
-// Eager load public pages
-import Index from "./pages/Index";
+// Keep the kiosk entry lightweight: the customer storefront is one of the
+const Index = lazy(() => import("./pages/Index"));
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Install from "./pages/Install";
 import KitchenInstall from "./pages/KitchenInstall";
 
-// Lazy load admin/staff pages
+// Lazy load route pages
+const Index = lazy(() => import("./pages/Index"));
 const Kitchen = lazy(() => import("./pages/Kitchen"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const AdminAvailability = lazy(() => import("./pages/AdminAvailability"));

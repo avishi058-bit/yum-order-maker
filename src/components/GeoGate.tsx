@@ -39,23 +39,26 @@ const GeoGate = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Persistent allow cache. A kiosk app is frequently restarted, so a
+      // sessionStorage-only cache forced a new auth + edge-function roundtrip
+      // on every launch. Only reuse an allowed result here; blocked visitors
+      // still continue to the staff-session bypass below.
+      try {
+        const raw = localStorage.getItem(CACHE_KEY) ?? sessionStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { allowed: boolean; country: string | null; ts: number };
+          if (parsed.allowed && Date.now() - parsed.ts < CACHE_TTL_MS) {
+            setCountry(parsed.country);
+            setStatus("allowed");
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+
       // Authenticated staff bypass.
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) { setStatus("allowed"); return; }
-      } catch { /* ignore */ }
-
-      // Session cache.
-      try {
-        const raw = sessionStorage.getItem(CACHE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as { allowed: boolean; country: string | null; ts: number };
-          if (Date.now() - parsed.ts < CACHE_TTL_MS) {
-            setCountry(parsed.country);
-            setStatus(parsed.allowed ? "allowed" : "blocked");
-            return;
-          }
-        }
       } catch { /* ignore */ }
 
       try {
@@ -65,7 +68,9 @@ const GeoGate = ({ children }: { children: ReactNode }) => {
         if (cancelled) return;
         if (error || !data) { setStatus("allowed"); return; } // fail open
         try {
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, ts: Date.now() }));
+          const cached = JSON.stringify({ ...data, ts: Date.now() });
+          localStorage.setItem(CACHE_KEY, cached);
+          sessionStorage.setItem(CACHE_KEY, cached);
         } catch { /* ignore */ }
         setCountry(data.country);
         setStatus(data.allowed ? "allowed" : "blocked");
@@ -78,6 +83,7 @@ const GeoGate = ({ children }: { children: ReactNode }) => {
     return () => { cancelled = true; };
   }, []);
 
+  if (status === "checking" && window.location.pathname.startsWith("/kiosk")) return <>{children}</>;
   if (status === "checking") return null;
 
   if (status === "blocked") {

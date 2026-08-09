@@ -5,19 +5,16 @@ import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import KioskWelcome from "@/components/KioskWelcome";
-import MenuSection from "@/components/MenuSection";
-import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
-import KioskCartDrawer from "@/components/KioskCartDrawer";
+import type { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
-import DrinkSelector from "@/components/DrinkSelector";
-import ArayesCustomizer from "@/components/ArayesCustomizer";
-import SauceSelector from "@/components/SauceSelector";
-import { menuImages } from "@/data/menuImages";
-import { prefetchCustomerFlow } from "@/lib/prefetchCustomerFlow";
 
-// Heavy modals: lazy so the initial kiosk bundle stays small. Prefetched
-// during the Welcome-screen preload effect below, so by the time the user
-// taps an item the chunks are already resident in memory — no first-tap jank.
+// Everything below the welcome screen is loaded after first paint. This keeps
+// kiosk startup fast even on an older Android tablet or a cold network cache.
+const MenuSection = lazy(() => import("@/components/MenuSection"));
+const KioskCartDrawer = lazy(() => import("@/components/KioskCartDrawer"));
+const DrinkSelector = lazy(() => import("@/components/DrinkSelector"));
+const ArayesCustomizer = lazy(() => import("@/components/ArayesCustomizer"));
+const SauceSelector = lazy(() => import("@/components/SauceSelector"));
 const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
 const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
 const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
@@ -59,8 +56,8 @@ const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: 
     </AnimatePresence>
   );
 };
-import ItemPreview from "@/components/ItemPreview";
-import KioskKeyboard from "@/components/KioskKeyboard";
+const ItemPreview = lazy(() => import("@/components/ItemPreview"));
+const KioskKeyboard = lazy(() => import("@/components/KioskKeyboard"));
 import { MenuItem, menuItems, toppings, mealSideOptions, mealDrinkOptions, drinkSubOptions, sauceOptions } from "@/data/menu";
 import { computeCartItemTotal } from "@/lib/cartPricing";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -139,61 +136,35 @@ const Kiosk = () => {
     }
   }, []);
 
-  // Preload + decode all menu images on kiosk mount (runs during the Welcome
-  // screen too, since this component mounts immediately). By the time the user
-  // taps "התחל הזמנה" the bitmaps are already in memory & decoded — no
-  // progressive flicker, no layout settle, no scroll jump.
-  const [imagesReady, setImagesReady] = useState(false);
+  // Warm only the menu code while the welcome screen is idle. Do not prefetch
+  // customizers or their many images here: on kiosk hardware that saturated
+  // the network and delayed both the welcome screen and menu images.
   useEffect(() => {
-    // Additive: warm the lazy customizer/checkout chunks + their icons while
-    // the Welcome screen is idle. Does not affect imagesReady/pendingStart —
-    // it's fire-and-forget.
-    prefetchCustomerFlow();
-
-
-    let cancelled = false;
-    const unique = Array.from(new Set(Object.values(menuImages)));
-    Promise.all(
-      unique.map(
-        (src) =>
-          new Promise<void>((resolve) => {
-            const img = new Image();
-            img.decoding = "async";
-            (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = "high";
-            const done = () => resolve();
-            img.onload = () => {
-              img.decode().then(done, done);
-            };
-            img.onerror = done;
-            img.src = src;
-          })
-      )
-    ).then(() => {
-      if (!cancelled) setImagesReady(true);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  // If user tapped "Start" before images finished, auto-advance once ready.
-  const [pendingStart, setPendingStart] = useState(false);
-  useEffect(() => {
-    if (pendingStart && imagesReady) {
-      setView("menu");
-      setPendingStart(false);
+    let timer: number | undefined;
+    let idleId: number | undefined;
+    const warm = () => {
+      void import("@/components/MenuSection");
+    };
+    const browser = window as typeof window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (browser.requestIdleCallback) {
+      idleId = browser.requestIdleCallback(warm, { timeout: 1200 });
+    } else {
+      timer = window.setTimeout(warm, 800);
     }
-  }, [pendingStart, imagesReady]);
+    return () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      if (idleId !== undefined) browser.cancelIdleCallback?.(idleId);
+    };
+  }, []);
 
   // Stable callback so memoized <KioskWelcome> never re-renders when the parent
   // re-renders (e.g. realtime availability/settings updates).
-  const imagesReadyRef = useRef(imagesReady);
-  imagesReadyRef.current = imagesReady;
   const handleWelcomeStart = useCallback((choice: boolean) => {
     setDineIn(choice);
-    if (imagesReadyRef.current) {
-      setView("menu");
-    } else {
-      setPendingStart(true);
-    }
+    setView("menu");
   }, []);
 
   const alcoholConsent = useAlcoholConsent();
@@ -397,7 +368,6 @@ const Kiosk = () => {
   if (view === "welcome") {
     return (
       <KioskWelcome
-        imagesReady={imagesReady}
         onStart={handleWelcomeStart}
       />
     );
@@ -417,7 +387,9 @@ const Kiosk = () => {
 
       {/* Scrollable menu - all categories */}
       <div className="flex-1 overflow-y-auto">
-        <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk />
+        <Suspense fallback={<div className="h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">טוען תפריט…</div>}>
+          <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk />
+        </Suspense>
       </div>
 
       {/* Floating green "סיום הזמנה" button — same as website */}
@@ -448,10 +420,9 @@ const Kiosk = () => {
         <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} dineIn={dineIn} initialState={customizerInitial} />
         <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
         <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
-      </Suspense>
-      <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} isKiosk />
-      <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
-      <ArayesCustomizer
+        <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} isKiosk />
+        <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
+        <ArayesCustomizer
         item={arayesItem}
         isKiosk
         onClose={() => setArayesItem(null)}
@@ -472,7 +443,7 @@ const Kiosk = () => {
           setArayesItem(null);
           flyFromCenter();
         }}
-      />
+        />
 
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}
@@ -481,7 +452,7 @@ const Kiosk = () => {
         onCancel={alcoholConsent.cancel}
       />
 
-      <KioskCartDrawer
+        <KioskCartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         items={cart}
@@ -513,7 +484,7 @@ const Kiosk = () => {
             setCheckoutOpen(true);
           }
         }}
-      />
+        />
 
       <DineInSelector
         open={dineInSelectorOpen}
@@ -528,7 +499,7 @@ const Kiosk = () => {
         }}
       />
 
-      <SauceSelector
+        <SauceSelector
         open={sauceSelectorOpen}
         freeSauces={freeSauces}
         isAvailable={isAvailable}
@@ -538,7 +509,8 @@ const Kiosk = () => {
           setSauceSelectorOpen(false);
           setCheckoutOpen(true);
         }}
-      />
+        />
+      </Suspense>
 
 
       <AnimatePresence>
@@ -646,7 +618,9 @@ const Kiosk = () => {
       </AnimatePresence>
 
       {/* On-screen keyboard for kiosk — auto shows on input focus */}
-      <KioskKeyboard />
+      <Suspense fallback={null}>
+        <KioskKeyboard />
+      </Suspense>
     </div>
   );
 };
