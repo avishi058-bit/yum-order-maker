@@ -9,7 +9,7 @@ import heroBurger from "@/assets/hero-burger.webp";
  * site_settings) do NOT re-render this component or restart its animations.
  * The screen must stay perfectly stable until the user touches it.
  */
-const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: () => void; imagesReady?: boolean }) => {
+const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: boolean) => void; imagesReady?: boolean }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" dir="rtl">
       {/* Background */}
@@ -60,22 +60,38 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: () => void
           המבורגר של מושבניקים · כשר בהשגחת הרבנות
         </motion.p>
 
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ 
-            opacity: 1, 
-            scale: [1, 1.06, 1],
-          }}
-          transition={{ 
-            opacity: { duration: 0.6, delay: 0.8 },
-            scale: { duration: 1.5, delay: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" },
-          }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onStart}
-          className="bg-orange-500 text-white font-black text-3xl md:text-4xl px-20 py-8 rounded-full shadow-2xl shadow-orange-500/50 hover:shadow-orange-500/70 transition-shadow"
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.75 }}
+          className="text-2xl md:text-3xl font-bold text-foreground mb-6"
         >
-          {imagesReady ? "לחץ להתחיל הזמנה 👆" : "טוען תפריט… ⏳"}
-        </motion.button>
+          {imagesReady ? "איך תרצו את ההזמנה?" : "טוען תפריט… ⏳"}
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.85 }}
+          className="flex flex-row-reverse items-center gap-6"
+        >
+          {[
+            { label: "לשבת", emoji: "🪑", dineIn: true },
+            { label: "לקחת", emoji: "🥡", dineIn: false },
+          ].map((opt, i) => (
+            <motion.button
+              key={opt.label}
+              animate={{ scale: [1, 1.04, 1] }}
+              transition={{ duration: 1.6, delay: 1.5 + i * 0.2, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onStart(opt.dineIn)}
+              className="min-w-[13rem] md:min-w-[16rem] bg-card/95 text-foreground border border-border font-black text-4xl md:text-5xl px-12 py-10 rounded-[3rem] shadow-2xl backdrop-blur-sm transition-shadow hover:shadow-primary/30"
+            >
+              <span className="block text-3xl md:text-4xl mb-2">{opt.emoji}</span>
+              {opt.label}
+            </motion.button>
+          ))}
+        </motion.div>
       </div>
     </div>
   );
