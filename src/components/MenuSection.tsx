@@ -64,8 +64,10 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
     <div
       ref={cardRef}
       onClick={handleAdd}
-      className={`bg-card group relative overflow-hidden cursor-pointer active:bg-secondary/50 transition-colors border-b border-border flex items-center ${
-        isKiosk ? "py-6 px-5 gap-6" : "py-4 px-2 gap-4"
+      className={`group relative overflow-hidden cursor-pointer transition-colors border-b flex items-center ${
+        isKiosk
+          ? "bg-white text-gray-900 active:bg-gray-100 border-gray-200 py-6 px-5 gap-6"
+          : "bg-card text-foreground active:bg-secondary/50 border-border py-4 px-2 gap-4"
       }`}
       dir="rtl"
       style={{
@@ -82,7 +84,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
           {item.badge && <span className={`flex-shrink-0 ${isKiosk ? "text-3xl" : "text-lg"}`}>{item.badge}</span>}
           <h3 className="font-bold break-words" style={{ fontSize: `${(isKiosk ? 24 : 16) * fontScale}px` }}>{displayName}</h3>
           {item.weight && (
-            <span className={`flex-shrink-0 text-muted-foreground bg-secondary px-2 py-0.5 rounded-full ${isKiosk ? "text-base" : "text-xs"}`}>
+            <span className={`flex-shrink-0 px-2 py-0.5 rounded-full ${isKiosk ? "text-base bg-gray-200 text-gray-700" : "text-xs text-muted-foreground bg-secondary"}`}>
               {item.weight}
             </span>
           )}
@@ -106,7 +108,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
           )}
         </div>
         <p
-          className="text-muted-foreground leading-relaxed line-clamp-2"
+          className={`leading-relaxed line-clamp-2 ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}
           style={{
             fontSize: `${(isKiosk ? 18 : 14) * fontScale}px`,
             marginBottom: isKiosk ? 12 : 8,
@@ -150,7 +152,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
           ) : (
             // Placeholder keeps the same fixed footprint as a real image,
             // so cards without an image don't change the row height.
-            <span className={`text-muted-foreground/60 ${isKiosk ? "text-5xl" : "text-3xl"}`} aria-hidden>
+            <span className={`${isKiosk ? "text-gray-400/60 text-5xl" : "text-muted-foreground/60 text-3xl"}`} aria-hidden>
               {item.badge || "🍽️"}
             </span>
           )}
@@ -255,7 +257,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32' : 'mx-auto max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing).
@@ -325,7 +327,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             className="mb-10 scroll-mt-28"
           >
             <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 36 : 24) * fontScale}px` }}>{cat.label}</h3>
-            <div className="divide-y divide-border">
+            <div className={`divide-y ${isKiosk ? "divide-gray-200" : "divide-border"}`}>
               {items.map((item) => (
                 <MenuCard
                   key={`${cat.key}-${item.id}`}
