@@ -1317,7 +1317,13 @@ const Kitchen = () => {
       return !!acceptedAt && nowMs - acceptedAt < ACCEPTED_PIN_MS;
     };
     return orders
-      .filter((o) => ["new", "preparing"].includes(o.status))
+      .filter(
+        (o) =>
+          ["new", "preparing"].includes(o.status) ||
+          // A "ready" order that hasn't been paid yet stays on the active board
+          // so the payment button is always reachable — otherwise it looked stuck.
+          (o.status === "ready" && !o.queue_number),
+      )
       .sort((a, b) => {
         const pa = isPinned(a) ? 0 : 1;
         const pb = isPinned(b) ? 0 : 1;
@@ -1329,7 +1335,7 @@ const Kitchen = () => {
 
   const readyOrders = useMemo(() => {
     return orders
-      .filter((o) => o.status === "ready")
+      .filter((o) => o.status === "ready" && !!o.queue_number)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
