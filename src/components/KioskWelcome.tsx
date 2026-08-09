@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import logo from "@/assets/logo.png";
 import heroBurger from "@/assets/hero-burger.webp";
+
 
 /**
  * Welcome screen for the kiosk. Wrapped in React.memo so background re-renders
@@ -26,41 +26,14 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: b
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-8">
         <div style={{ textShadow: "0 2px 8px rgba(0,0,0,0.65)" }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, type: "spring", stiffness: 150 }}
-            className="w-48 h-48 mb-8"
-          >
-            <img src={logo} alt="הבקתה לוגו" className="w-full h-full object-contain drop-shadow-2xl" />
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-6xl md:text-8xl font-black mb-4 tracking-tight text-foreground"
+            className="text-6xl md:text-8xl font-black mb-6 tracking-tight text-foreground"
           >
             ברוכים הבאים
           </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-3xl md:text-4xl text-primary font-bold mb-2"
-          >
-            להמבורגר הַבִּקְתָּה 🐄
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.65 }}
-            className="text-xl text-muted-foreground mb-12"
-          >
-            המבורגר של מושבניקים · כשר בהשגחת הרבנות
-          </motion.p>
 
           <motion.p
             initial={{ opacity: 0 }}
@@ -71,6 +44,7 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: b
             {imagesReady ? "איך תרצו את ההזמנה?" : "טוען תפריט… ⏳"}
           </motion.p>
         </div>
+
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
