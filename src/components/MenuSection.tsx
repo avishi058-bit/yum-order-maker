@@ -265,7 +265,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
           scrolling content underneath, producing jitter on the kiosk. Solid
           background is cheaper and visually equivalent here. */}
       <div
-        className={`sticky z-50 bg-background border-b border-border ${
+        className={`sticky z-50 ${isKiosk ? "bg-white border-b border-gray-200" : "bg-background border-b border-border"} ${
           isKiosk
             ? "top-0 -mx-4 px-4 pt-5 pb-4 mb-6"
             : "top-0 -mx-4 px-4 pb-3 mb-6"
