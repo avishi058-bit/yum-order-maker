@@ -2,6 +2,26 @@
 // 80mm thermal printers (printable area ~72mm). Black & white only.
 import QRCode from "qrcode";
 import { menuItems } from "@/data/menu";
+import { getUnavailableIngredientIds } from "@/lib/ingredientAvailability";
+
+// Hebrew names of the bun veggies, keyed by the ingredient id used in
+// menu_availability. Out-of-stock ingredients are never printed as part of
+// the bun (a sold-out ingredient simply is not on the burger).
+const VEG_ID_TO_HE: Record<string, string> = {
+  lettuce: "חסה",
+  tomato: "עגבנייה",
+  onion: "בצל",
+  pickles: "חמוצים",
+  aioli: "איולי",
+};
+export const unavailableVeggieHebrew = (): Set<string> => {
+  const out = new Set<string>();
+  for (const id of getUnavailableIngredientIds()) {
+    const he = VEG_ID_TO_HE[id];
+    if (he) out.add(he);
+  }
+  return out;
+};
 
 // Burger/meal item names — used to decide whether to print "ללא שינויים" when
 // the item has no removals, no additions and no toppings.
@@ -278,9 +298,15 @@ export const applyVeggieShortcut = (
   // Crispy chicken has no tomato at all — it must never appear as "remaining".
   const isChickenItem = isChickenName(itemName);
   if (isChickenItem) removedVeggies.delete("עגבנייה");
-  const VEGGIES = isChickenItem
+  // Out-of-stock ingredients aren't on the bun at all — never list them as
+  // "remaining" and never print "ללא X" for them.
+  const soldOut = unavailableVeggieHebrew();
+  for (const n of soldOut) removedVeggies.delete(n);
+  if (soldOut.has("איולי")) aioliRemoved = false;
+  const VEGGIES = (isChickenItem
     ? VEGGIE_HE_ORDER.filter((n) => n !== "עגבנייה")
-    : [...VEGGIE_HE_ORDER];
+    : [...VEGGIE_HE_ORDER]
+  ).filter((n) => !soldOut.has(n));
   const vegCount = removedVeggies.size;
   const isSmash = !!itemName && /סמאש|קרייזי/.test(itemName);
 
@@ -297,8 +323,17 @@ export const applyVeggieShortcut = (
       const wasRemoved = removedVeggies.has(v);
       if ((inDefault && !wasRemoved) || (!inDefault && wasAdded)) finalVeg.push(v);
     }
-    if (!aioliRemoved) finalVeg.push("איולי");
-    return { label: finalVeg.length > 0 ? finalVeg.join(" ") : "יבש", rest: other };
+    if (!aioliRemoved && !soldOut.has("איולי")) finalVeg.push("איולי");
+    const finalVegStock = finalVeg.filter((n) => !soldOut.has(n));
+    return {
+      label:
+        finalVegStock.length === 0
+          ? "יבש"
+          : finalVegStock.length === 1
+          ? `רק ${finalVegStock[0]}`
+          : finalVegStock.join(" "),
+      rest: other,
+    };
   }
 
   // ----- Addition shortcut (smash burgers default to no onion/tomato) -----
@@ -321,13 +356,13 @@ export const applyVeggieShortcut = (
   if (totalRemovals >= 2) {
     const remainingVeg = VEGGIES.filter((n) => !removedVeggies.has(n));
     const remaining: string[] = [...remainingVeg];
-    if (!aioliRemoved) remaining.push("איולי");
+    if (!aioliRemoved && !soldOut.has("איולי")) remaining.push("איולי");
     const rest: string[] = [];
     for (const v of addedVeggies) rest.push(`להוסיף ${v}`);
     rest.push(...other);
     let label: string;
     if (remaining.length === 0) label = "יבש";
-    else if (remaining.length === 1 && remaining[0] === "איולי") label = "רק איולי";
+    else if (remaining.length === 1) label = `רק ${remaining[0]}`;
     else label = remaining.join(" ");
     return { label, rest };
   }
