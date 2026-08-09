@@ -242,17 +242,78 @@ async function findWritableCharacteristic(server: BluetoothRemoteGATTServer): Pr
 
 async function connectDevice(device: BluetoothDevice): Promise<BluetoothRemoteGATTCharacteristic> {
   if (!device.gatt) throw new Error("אין GATT למדפסת");
-  device.addEventListener("gattserverdisconnected", () => {
-    cachedChar = null;
-    notify(false);
-  });
+  if (!(device as any).__lovableDiscHooked) {
+    (device as any).__lovableDiscHooked = true;
+    device.addEventListener("gattserverdisconnected", () => {
+      cachedChar = null;
+      notify(false);
+      // Warm connection: try to come back immediately instead of paying the
+      // 2-4s reconnect penalty on the next print.
+      scheduleWarmReconnect();
+    });
+  }
   const server = await device.gatt.connect();
   const char = await findWritableCharacteristic(server);
   cachedDevice = device;
   cachedChar = char;
   try { localStorage.setItem(STORAGE_KEY, device.id); } catch {}
   notify(true);
+  startPrinterKeepAlive();
   return char;
+}
+
+// ---------- Keep-warm: keep the BLE link alive so prints start instantly ----------
+let _keepAliveTimer: ReturnType<typeof setInterval> | null = null;
+let _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let _reconnectAttempts = 0;
+let _warmDisabled = false;
+
+const KEEPALIVE_MS = 20000;
+
+export function startPrinterKeepAlive() {
+  _warmDisabled = false;
+  if (_keepAliveTimer) return;
+  _keepAliveTimer = setInterval(() => {
+    if (_warmDisabled) return;
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (getQueueDepth() > 0) return;
+    if (cachedDevice && !cachedDevice.gatt?.connected) {
+      scheduleWarmReconnect();
+      return;
+    }
+    if (!cachedChar) return;
+    // ESC = 1 → "select printer" no-op. Keeps the GATT link and the printer's
+    // radio awake without emitting any paper output.
+    const ping = new Uint8Array([0x1b, 0x3d, 0x01]);
+    const c: any = cachedChar;
+    const p = c.properties?.writeWithoutResponse
+      ? c.writeValueWithoutResponse(ping)
+      : c.writeValue(ping);
+    Promise.resolve(p).catch(() => { scheduleWarmReconnect(); });
+  }, KEEPALIVE_MS);
+}
+
+export function stopPrinterKeepAlive() {
+  _warmDisabled = true;
+  if (_keepAliveTimer) { clearInterval(_keepAliveTimer); _keepAliveTimer = null; }
+  if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
+}
+
+function scheduleWarmReconnect() {
+  if (_warmDisabled || _reconnectTimer) return;
+  const delay = Math.min(1000 * Math.pow(2, _reconnectAttempts), 30000);
+  _reconnectTimer = setTimeout(async () => {
+    _reconnectTimer = null;
+    if (_warmDisabled) return;
+    if (isPrinterConnected()) { _reconnectAttempts = 0; return; }
+    _reconnectAttempts++;
+    try {
+      if (cachedDevice) await connectDevice(cachedDevice);
+      else await tryAutoReconnect();
+    } catch {}
+    if (isPrinterConnected()) _reconnectAttempts = 0;
+    else scheduleWarmReconnect();
+  }, delay);
 }
 
 export async function pairPrinter(): Promise<void> {
@@ -290,6 +351,7 @@ export async function tryAutoReconnect(): Promise<boolean> {
 }
 
 export async function disconnectPrinter(): Promise<void> {
+  stopPrinterKeepAlive();
   try { cachedDevice?.gatt?.disconnect(); } catch {}
   cachedDevice = null;
   cachedChar = null;
@@ -306,6 +368,7 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
   if (reconnected && cachedChar) return cachedChar;
   throw new Error("המדפסת לא מחוברת. לחץ על 'חיבור מדפסת' כדי לבחור אותה.");
 }
+
 
 // WoR chunk size — BLE Web API does not expose negotiated MTU, and writing
 // larger than the link MTU silently truncates on some stacks → printer gets
