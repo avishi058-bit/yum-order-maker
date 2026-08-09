@@ -408,6 +408,37 @@ export function setPrintRotate180(on: boolean) {
   try { localStorage.setItem(ROTATE_KEY, on ? "1" : "0"); } catch {}
 }
 
+// ---------- Fast print mode (printer-side speed) ----------
+// Thermal printers default to a conservative heating profile: long heating
+// time + long cooling interval + medium motor speed. On a long bon that is
+// the single biggest source of slowness — the BLE transfer is usually done
+// long before the paper stops moving.
+// Fast mode raises the heating-dot count (more head segments fire at once),
+// shortens the heating interval and asks for the printer's maximum speed.
+const FAST_KEY = "bt-printer-fast-mode";
+export function getPrintFastMode(): boolean {
+  try { return localStorage.getItem(FAST_KEY) !== "0"; } catch { return true; }
+}
+export function setPrintFastMode(on: boolean) {
+  try { localStorage.setItem(FAST_KEY, on ? "1" : "0"); } catch {}
+}
+
+// Emitted right after ESC @ on every job.
+function printerSpeedCmds(): number[] {
+  if (!getPrintFastMode()) return [];
+  return [
+    // ESC 7 n1 n2 n3 — max heating dots ((n1+1)*8), heating time (n2*10us),
+    // heating interval (n3*10us). Defaults are ~(7, 80, 2).
+    ESC, 0x37, 0x0f, 0x50, 0x01,
+    // GS ( K pL pH fn m — fn=50 print speed, m=0 => fastest supported.
+    GS, 0x28, 0x4b, 0x02, 0x00, 0x32, 0x00,
+    // DC2 # n — print density (Xprinter/GOOJPRT): keep legible while fast.
+    0x12, 0x23, 0x08,
+  ];
+}
+
+
+
 // Render arbitrary HTML inside a hidden offscreen iframe to a canvas.
 async function renderHtmlToCanvas(html: string, widthCssPx: number): Promise<HTMLCanvasElement> {
   const iframe = document.createElement("iframe");
