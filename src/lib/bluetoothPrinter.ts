@@ -1210,6 +1210,8 @@ function _renderNativeLineToMono(
 function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
+  buf.pushArr(printerSpeedCmds());
+
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
   const monos: Mono[] = [];
   let cut = false;
