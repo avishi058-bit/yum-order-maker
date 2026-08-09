@@ -1297,6 +1297,8 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   if (getPrintRotate180()) return _buildOpsBytesRotated(ops, width);
   const buf = new ByteBuf(8192);
   buf.pushArr(CMD_INIT);
+  buf.pushArr(printerSpeedCmds());
+
 
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
