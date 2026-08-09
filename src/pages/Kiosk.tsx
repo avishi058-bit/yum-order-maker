@@ -374,16 +374,17 @@ const Kiosk = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden" dir="rtl">
+    <div className="fixed inset-0 bg-white text-gray-900 flex flex-col overflow-hidden" dir="rtl">
       {/* Top bar */}
-      <div className="flex-none flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-        <button onClick={resetOrder} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+      <div className="flex-none flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+        <button onClick={resetOrder} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
           <ArrowRight size={28} />
           <span className="text-lg font-bold">חזרה</span>
         </button>
         <h1 className="text-2xl font-black text-primary">הבקתה 🐄</h1>
         <div /> {/* spacer */}
       </div>
+
 
       {/* Scrollable menu - all categories */}
       <div className="flex-1 overflow-y-auto">
