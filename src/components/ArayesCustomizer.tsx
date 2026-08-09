@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus } from "lucide-react";
 import { MenuItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
-import arayesExtraAsset from "@/assets/menu/arayes-special-extra.jpeg.asset.json";
+import arayesExtraAsset from "@/assets/menu/arayes-special-extra-opt.webp";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 const EXTRA_QUARTER_PRICE = 15;
@@ -31,7 +31,7 @@ const ArayesCustomizer = ({ item, onClose, onConfirm, isKiosk = false }: Props) 
 
   const unit = item.price + extras * EXTRA_QUARTER_PRICE;
   const total = unit * qty;
-  const image = swapImage && extras > 0 ? arayesExtraAsset.url : menuImages[item.id];
+  const image = swapImage && extras > 0 ? arayesExtraAsset : menuImages[item.id];
 
   const handleConfirm = () => {
     const toppings = Array(extras).fill(EXTRA_QUARTER_TOPPING_ID);

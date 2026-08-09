@@ -3,12 +3,12 @@ import smashMoshavnikim from "@/assets/smash-moshavnikim.webp";
 import smashDoubleCheese from "@/assets/menu/smash-double-cheese.webp";
 import doubleImg from "@/assets/menu/double.webp";
 import avishai from "@/assets/menu/avishai.webp";
-import crazySmashAsset from "@/assets/menu/crazy-smash.jpeg.asset.json";
+import crazySmashAsset from "@/assets/menu/crazy-smash-opt.webp";
 import specialHadegel from "@/assets/menu/special-hadegel.webp";
 import fries from "@/assets/menu/fries.webp";
-import waffleFriesAsset from "@/assets/menu/waffle-fries.jpeg.asset.json";
+import waffleFriesAsset from "@/assets/menu/waffle-fries-opt.webp";
 import tempuraOnion from "@/assets/menu/tempura-onion.webp";
-import friendsMixAsset from "@/assets/menu/friends-mix.jpeg.asset.json";
+import friendsMixAsset from "@/assets/menu/friends-mix-opt.webp";
 import canDrink from "@/assets/menu/coca-cola-can.webp";
 import beerImg from "@/assets/menu/beer-goldstar.webp";
 import bottleImg from "@/assets/menu/bottle-prigat.webp";
@@ -17,12 +17,12 @@ import beerWeissImg from "@/assets/menu/beer-weihenstephaner.webp";
 import beerShapiraImg from "@/assets/menu/beer-shapira.webp";
 import beerMaccabiImg from "@/assets/menu/beer-maccabi.webp";
 import hafMifsha from "@/assets/menu/haf-mifsha.webp";
-import crispyChickenAsset from "@/assets/menu/crispy-chicken.jpeg.asset.json";
-import waterAsset from "@/assets/menu/water-bottle.webp.asset.json";
-import sodaTempoAsset from "@/assets/menu/soda-tempo.webp.asset.json";
-import flavoredWaterAsset from "@/assets/menu/flavored-water-grape.png.asset.json";
-import arayesSpecialAsset from "@/assets/menu/arayes-special.jpeg.asset.json";
-import arayesSpecial4Asset from "@/assets/menu/arayes-special-4.jpeg.asset.json";
+import crispyChickenAsset from "@/assets/menu/crispy-chicken-opt.webp";
+import waterAsset from "@/assets/menu/water-bottle-opt.webp";
+import sodaTempoAsset from "@/assets/menu/soda-tempo-opt.webp";
+import flavoredWaterAsset from "@/assets/menu/flavored-water-grape-opt.webp";
+import arayesSpecialAsset from "@/assets/menu/arayes-special-opt.webp";
+import arayesSpecial4Asset from "@/assets/menu/arayes-special-4-opt.webp";
 
 
 
@@ -32,20 +32,20 @@ export const menuImages: Record<string, string> = {
   "smash-moshavnikim": smashMoshavnikim,
   "smash-double-cheese": smashDoubleCheese,
   avishai: avishai,
-  "crazy-smash": crazySmashAsset.url,
+  "crazy-smash": crazySmashAsset,
 
   "special-hadegel": specialHadegel,
   fries: fries,
-  "sweet-potato-fries": waffleFriesAsset.url,
+  "sweet-potato-fries": waffleFriesAsset,
   "tempura-onion": tempuraOnion,
-  "friends-mix": friendsMixAsset.url,
-  "arayes-special": arayesSpecialAsset.url,
-  "arayes-special-4": arayesSpecial4Asset.url,
+  "friends-mix": friendsMixAsset,
+  "arayes-special": arayesSpecialAsset,
+  "arayes-special-4": arayesSpecial4Asset,
   can: canDrink,
   bottle: bottleImg,
-  water: waterAsset.url,
-  "flavored-water": flavoredWaterAsset.url,
-  soda: sodaTempoAsset.url,
+  water: waterAsset,
+  "flavored-water": flavoredWaterAsset,
+  soda: sodaTempoAsset,
 
 
   "beer-regular": beerImg,
@@ -55,16 +55,16 @@ export const menuImages: Record<string, string> = {
   "beer-maccabi": beerMaccabiImg,
   double: doubleImg,
   "haf-mifsha": hafMifsha,
-  "crispy-chicken": crispyChickenAsset.url,
+  "crispy-chicken": crispyChickenAsset,
   // Meals - using burger images temporarily
   "meal-classic": classicImg,
   "meal-smash-moshavnikim": smashMoshavnikim,
   "meal-smash-double-cheese": smashDoubleCheese,
   "meal-avishai": avishai,
-  "meal-crazy-smash": crazySmashAsset.url,
+  "meal-crazy-smash": crazySmashAsset,
 
   "meal-special-hadegel": specialHadegel,
   "meal-double": doubleImg,
   "meal-haf-mifsha": hafMifsha,
-  "meal-crispy-chicken": crispyChickenAsset.url,
+  "meal-crispy-chicken": crispyChickenAsset,
 };
