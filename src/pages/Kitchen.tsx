@@ -1335,7 +1335,7 @@ const Kitchen = () => {
 
   const readyOrders = useMemo(() => {
     return orders
-      .filter((o) => o.status === "ready" && !o.queue_number == null)
+      .filter((o) => o.status === "ready" && o.queue_number != null)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [orders]);
   const historyOrders = orders.filter((o) => ["completed", "cancelled"].includes(o.status));
