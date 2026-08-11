@@ -147,8 +147,17 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
               // High fetch priority on kiosk so images aren't deprioritized
               // behind fonts / chunks when the menu first paints.
               {...(isKiosk ? { fetchpriority: "high" as const } : {})}
+              // Stale PWA/browser caches can hold a dead asset URL — retry once
+              // with a cache-busting query before giving up.
+              onError={(e) => {
+                const el = e.currentTarget;
+                if (el.dataset.retried) return;
+                el.dataset.retried = "1";
+                el.src = `${image}${image.includes("?") ? "&" : "?"}v=${Date.now()}`;
+              }}
               style={isKiosk ? { transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" } : undefined}
             />
+
           ) : (
             // Placeholder keeps the same fixed footprint as a real image,
             // so cards without an image don't change the row height.
