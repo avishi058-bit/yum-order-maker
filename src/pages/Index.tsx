@@ -576,7 +576,7 @@ const Index = () => {
         </div>
       )}
 
-      {!isClosed && totalItems > 0 && !cartOpen && (
+      {totalItems > 0 && !cartOpen && (
         <div ref={cartButtonCallbackRef} className={uiPositions.cartButton.position}>
           <button
             onClick={() => setCartOpen(true)}
@@ -589,7 +589,7 @@ const Index = () => {
                 {totalItems}
               </span>
             </span>
-            <span className="text-base">סיום הזמנה</span>
+            <span className="text-base">{isClosed ? "ההזמנה שלי" : "סיום הזמנה"}</span>
           </button>
         </div>
       )}
@@ -642,7 +642,7 @@ const Index = () => {
         <Suspense fallback={null}>
           <div className="pb-10">
             <p className="text-center text-sm font-bold text-muted-foreground px-6 mb-2">
-              תצוגת תפריט בלבד · לא ניתן להזמין כרגע
+              אפשר להרכיב הזמנה עכשיו — היא תישמר ותוכלו לשלוח אותה ברגע שנפתח 🕒
             </p>
             <MenuSection
               onAddItem={() => {}}
@@ -650,7 +650,6 @@ const Index = () => {
               onDineInChange={() => {}}
               isAvailable={isAvailable}
               isKiosk={isStation}
-              browseOnly
             />
           </div>
         </Suspense>
@@ -736,6 +735,14 @@ const Index = () => {
             items={cart}
             onUpdateQuantity={updateQuantity}
             onCheckout={() => {
+              if (isClosed) {
+                setCartOpen(false);
+                toast({
+                  title: "ההזמנה נשמרה 💾",
+                  description: "האתר סגור להזמנות כרגע. ההזמנה שלכם שמורה ותחכה לכם כאן ברגע שנפתח.",
+                });
+                return;
+              }
               if (deliveryInfo && getTotal() < 300) {
                 toast({
                   title: "מינימום הזמנה למשלוח 300₪",
