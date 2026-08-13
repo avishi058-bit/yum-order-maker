@@ -34,7 +34,7 @@ const availabilityIdFor = (id: string) => menuItemAvailabilityAlias[id] ?? id;
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
 
-const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, descOverride }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean; fontScale?: number; nameOverride?: string; descOverride?: string }) => {
+const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, descOverride, browseOnly = false }: { item: MenuItem; onAdd: (item: MenuItem) => void; isKiosk?: boolean; fontScale?: number; nameOverride?: string; descOverride?: string; browseOnly?: boolean }) => {
   const image = menuImages[item.id];
   const displayName = nameOverride || item.name;
   const displayDesc = descOverride || item.description;
@@ -42,6 +42,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   const { flyToCart } = useFlyToCart();
 
   const handleAdd = () => {
+    if (browseOnly) return;
     // For simple items (no customization step), the item is added directly to
     // the cart — fire the fly animation from the card's image rect so the user
     // sees the item "land" in the cart icon. Skipped for items that open a
@@ -64,7 +65,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
     <div
       ref={cardRef}
       onClick={handleAdd}
-      className={`group relative overflow-hidden cursor-pointer transition-colors border-b flex items-center ${
+      className={`group relative overflow-hidden transition-colors border-b flex items-center ${browseOnly ? "cursor-default" : "cursor-pointer"} ${
         isKiosk
           ? "bg-white text-gray-900 active:bg-gray-100 border-gray-200 py-6 px-5 gap-6"
           : "bg-card text-foreground active:bg-secondary/50 border-border py-4 px-2 gap-4"
@@ -189,7 +190,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   );
 };
 
-const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean }) => {
+const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false, browseOnly = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean; browseOnly?: boolean }) => {
   const { settings } = useSiteSettings();
   const fontScale = isKiosk ? settings.kiosk_font_scale : settings.website_font_scale;
   type CategoryKey = typeof categories[number]["key"];
@@ -343,6 +344,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
                   item={item}
                   onAdd={onAddItem}
                   isKiosk={isKiosk}
+                  browseOnly={browseOnly}
                   fontScale={fontScale}
                   nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
                   descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
