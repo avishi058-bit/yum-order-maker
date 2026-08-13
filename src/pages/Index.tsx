@@ -608,14 +608,10 @@ const Index = () => {
           <p className="text-2xl font-black text-foreground mb-2">
             {isManualClosure ? "האתר סגור כרגע עקב עומס" : "ההזמנות סגורות כרגע"}
           </p>
-          <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-            {isManualClosure
-              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם. השאירו לנו מספר ונעדכן אתכם ברגע שנפתח שוב 🙏"
-              : "נחזור בקרוב!"}
-          </p>
-          <div className="mb-6">
+          <div className="mb-4">
             <button
               onClick={() => {
+                setDineIn(false);
                 setBrowseMenuOpen(true);
                 setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
               }}
@@ -624,6 +620,11 @@ const Index = () => {
               👀 עיין בתפריט
             </button>
           </div>
+          <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+            {isManualClosure
+              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם. השאירו לנו מספר ונעדכן אתכם ברגע שנפתח שוב 🙏"
+              : "נחזור בקרוב!"}
+          </p>
           {!isStation && (
             <button
               onClick={() => setReopenModalOpen(true)}
@@ -645,7 +646,7 @@ const Index = () => {
               אפשר להרכיב הזמנה עכשיו — היא תישמר ותוכלו לשלוח אותה ברגע שנפתח 🕒
             </p>
             <MenuSection
-              onAddItem={() => {}}
+              onAddItem={handleAddItem}
               dineIn={false}
               onDineInChange={() => {}}
               isAvailable={isAvailable}
@@ -671,7 +672,7 @@ const Index = () => {
             }}
             onConfirm={handleCustomizerConfirm}
             isAvailable={isAvailable}
-            dineIn={dineIn}
+            dineIn={isClosed ? false : dineIn}
             initialState={customizerInitial}
           />
         )}
