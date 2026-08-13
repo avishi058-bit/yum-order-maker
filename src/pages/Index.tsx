@@ -71,6 +71,7 @@ const Index = () => {
   const isStation = localStorage.getItem("habakta_station") === "true";
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   // Manual closure = admin closed website while business hours say we should be open
+  const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
   const isManualClosure = !isStation && isClosed && businessStatus.isOpen;
   const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
@@ -621,10 +622,39 @@ const Index = () => {
               עדכנו אותי כשנפתח שוב
             </button>
           )}
+          <div className="mt-4">
+            <button
+              onClick={() => {
+                setBrowseMenuOpen(true);
+                setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
+              }}
+              className="inline-flex items-center gap-2 border border-border bg-background text-foreground font-bold px-6 py-3 rounded-xl hover:bg-accent transition-colors"
+            >
+              👀 עיין בתפריט
+            </button>
+          </div>
         </div>
       ) : dineIn !== null ? (
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
       ) : null}
+
+      {isClosed && browseMenuOpen && (
+        <Suspense fallback={null}>
+          <div className="pb-10">
+            <p className="text-center text-sm font-bold text-muted-foreground px-6 mb-2">
+              תצוגת תפריט בלבד · לא ניתן להזמין כרגע
+            </p>
+            <MenuSection
+              onAddItem={() => {}}
+              dineIn={false}
+              onDineInChange={() => {}}
+              isAvailable={isAvailable}
+              isKiosk={isStation}
+              browseOnly
+            />
+          </div>
+        </Suspense>
+      )}
 
       <Suspense fallback={null}>
         {customizerItem && (
