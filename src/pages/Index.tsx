@@ -613,6 +613,17 @@ const Index = () => {
               ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם. השאירו לנו מספר ונעדכן אתכם ברגע שנפתח שוב 🙏"
               : "נחזור בקרוב!"}
           </p>
+          <div className="mb-6">
+            <button
+              onClick={() => {
+                setBrowseMenuOpen(true);
+                setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
+              }}
+              className="inline-flex items-center gap-2 border border-green-500/30 bg-green-500/10 text-green-600 font-bold px-6 py-3 rounded-xl hover:bg-green-500/20 transition-colors"
+            >
+              👀 עיין בתפריט
+            </button>
+          </div>
           {!isStation && (
             <button
               onClick={() => setReopenModalOpen(true)}
@@ -622,17 +633,6 @@ const Index = () => {
               עדכנו אותי כשנפתח שוב
             </button>
           )}
-          <div className="mt-4">
-            <button
-              onClick={() => {
-                setBrowseMenuOpen(true);
-                setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
-              }}
-              className="inline-flex items-center gap-2 border border-border bg-background text-foreground font-bold px-6 py-3 rounded-xl hover:bg-accent transition-colors"
-            >
-              👀 עיין בתפריט
-            </button>
-          </div>
         </div>
       ) : dineIn !== null ? (
         <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
