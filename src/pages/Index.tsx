@@ -603,32 +603,35 @@ const Index = () => {
         />
       )}
       {isClosed ? (
-        <div className="py-16 text-center px-6">
+        <div className="py-12 text-center px-6">
           <p className="text-6xl mb-4">{isManualClosure ? "⏸️" : "🔒"}</p>
           <p className="text-2xl font-black text-foreground mb-2">
             {isManualClosure ? "האתר סגור כרגע עקב עומס" : "ההזמנות סגורות כרגע"}
           </p>
-          <div className="mb-4">
+          <p className="text-base text-muted-foreground mb-6 max-w-md mx-auto">
+            {isManualClosure
+              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם."
+              : "המטבח סגור להזמנות כרגע — נשמח לראות אתכם בפעם הבאה!"}
+          </p>
+
+          <div className="mb-6">
             <button
               onClick={() => {
                 setDineIn(false);
                 setBrowseMenuOpen(true);
                 setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
               }}
-              className="inline-flex items-center gap-2 border border-green-500/30 bg-green-500/10 text-green-600 font-bold px-6 py-3 rounded-xl hover:bg-green-500/20 transition-colors"
+              className="inline-flex flex-col items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-black px-8 py-5 rounded-2xl shadow-xl shadow-green-600/30 hover:scale-105 transition-transform"
             >
-              👀 עיין בתפריט
+              <span className="text-xl">📝 הרכיבו הזמנה לפתיחה</span>
+              <span className="text-sm font-normal opacity-90">תישמר אצלכם ותישלח כשנפתח</span>
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-            {isManualClosure
-              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם. השאירו לנו מספר ונעדכן אתכם ברגע שנפתח שוב 🙏"
-              : "נחזור בקרוב!"}
-          </p>
+
           {!isStation && (
             <button
               onClick={() => setReopenModalOpen(true)}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-black px-6 py-3 rounded-xl shadow-lg shadow-primary/30 hover:scale-105 transition-transform"
+              className="inline-flex items-center gap-2 border border-primary/30 bg-primary/10 text-primary font-bold px-6 py-3 rounded-xl hover:bg-primary/20 transition-colors"
             >
               <Bell size={20} />
               עדכנו אותי כשנפתח שוב
@@ -642,9 +645,11 @@ const Index = () => {
       {isClosed && browseMenuOpen && (
         <Suspense fallback={null}>
           <div className="pb-10">
-            <p className="text-center text-sm font-bold text-muted-foreground px-6 mb-2">
-              אפשר להרכיב הזמנה עכשיו — היא תישמר ותוכלו לשלוח אותה ברגע שנפתח 🕒
-            </p>
+            <div className="sticky top-[72px] z-40 bg-amber-100 dark:bg-amber-950 border-y border-amber-200 dark:border-amber-800 py-3 px-4">
+              <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
+                ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. ההזמנה תישמר ותישלח רק כשנפתח.
+              </p>
+            </div>
             <MenuSection
               onAddItem={handleAddItem}
               dineIn={false}
