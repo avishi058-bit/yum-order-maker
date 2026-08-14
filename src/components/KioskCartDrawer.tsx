@@ -229,6 +229,14 @@ const KioskCartDrawer = ({
               </button>
             </div>
 
+            {isClosed && (
+              <div className="flex-none bg-amber-100 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-5 py-3">
+                <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
+                  ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. תישמר ותישלח רק כשנפתח.
+                </p>
+              </div>
+            )}
+
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto pb-40">
               {/* Cart items */}
