@@ -33,6 +33,8 @@ interface KioskCartDrawerProps {
   onEditItem?: (id: string) => void;
   /** Kiosk uses larger sizes; website uses compact sizes. */
   isKiosk?: boolean;
+  /** When true, ordering is not possible right now; the drawer saves a future order. */
+  isClosed?: boolean;
 }
 
 /**
