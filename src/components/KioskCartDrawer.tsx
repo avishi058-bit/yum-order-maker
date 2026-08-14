@@ -56,6 +56,7 @@ const KioskCartDrawer = ({
   isAvailable,
   onEditItem,
   isKiosk = false,
+  isClosed = false,
 }: KioskCartDrawerProps) => {
   useBodyScrollLock(open);
   const getItemTotal = (item: CartItem) => computeCartItemTotal(item);
