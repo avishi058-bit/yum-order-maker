@@ -33,6 +33,8 @@ interface KioskCartDrawerProps {
   onEditItem?: (id: string) => void;
   /** Kiosk uses larger sizes; website uses compact sizes. */
   isKiosk?: boolean;
+  /** When true, ordering is not possible right now; the drawer saves a future order. */
+  isClosed?: boolean;
 }
 
 /**
@@ -54,6 +56,7 @@ const KioskCartDrawer = ({
   isAvailable,
   onEditItem,
   isKiosk = false,
+  isClosed = false,
 }: KioskCartDrawerProps) => {
   useBodyScrollLock(open);
   const getItemTotal = (item: CartItem) => computeCartItemTotal(item);
@@ -225,6 +228,14 @@ const KioskCartDrawer = ({
                 <X size={sz.closeIcon} />
               </button>
             </div>
+
+            {isClosed && (
+              <div className="flex-none bg-amber-100 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-5 py-3">
+                <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
+                  ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. תישמר ותישלח רק כשנפתח.
+                </p>
+              </div>
+            )}
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto pb-40">
@@ -439,9 +450,13 @@ const KioskCartDrawer = ({
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     onClick={onCheckout}
-                    className={`bg-primary text-primary-foreground font-black ${sz.ckBtn} rounded-2xl shadow-lg shadow-primary/30 active:opacity-90`}
+                    className={`font-black ${sz.ckBtn} rounded-2xl shadow-lg active:opacity-90 ${
+                      isClosed
+                        ? "bg-amber-500 text-white shadow-amber-500/30"
+                        : "bg-primary text-primary-foreground shadow-primary/30"
+                    }`}
                   >
-                    מעבר לתשלום ←
+                    {isClosed ? "שמור הזמנה לפתיחה 💾" : "מעבר לתשלום ←"}
                   </motion.button>
                 </div>
               </div>
