@@ -450,9 +450,13 @@ const KioskCartDrawer = ({
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     onClick={onCheckout}
-                    className={`bg-primary text-primary-foreground font-black ${sz.ckBtn} rounded-2xl shadow-lg shadow-primary/30 active:opacity-90`}
+                    className={`font-black ${sz.ckBtn} rounded-2xl shadow-lg active:opacity-90 ${
+                      isClosed
+                        ? "bg-amber-500 text-white shadow-amber-500/30"
+                        : "bg-primary text-primary-foreground shadow-primary/30"
+                    }`}
                   >
-                    מעבר לתשלום ←
+                    {isClosed ? "שמור הזמנה לפתיחה 💾" : "מעבר לתשלום ←"}
                   </motion.button>
                 </div>
               </div>
