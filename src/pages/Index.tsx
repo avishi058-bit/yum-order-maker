@@ -785,6 +785,7 @@ const Index = () => {
             isAvailable={isAvailable}
             onEditItem={handleEditCartItem}
             isKiosk={isStation}
+            isClosed={isClosed}
           />
         )}
 
