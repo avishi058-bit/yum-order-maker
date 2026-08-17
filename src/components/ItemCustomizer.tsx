@@ -178,6 +178,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
+  // Names of paid toppings auto-removed because they contain gluten
+  const [glutenRemovedNotice, setGlutenRemovedNotice] = useState<string[]>([]);
   const [toppingsSeen, setToppingsSeen] = useState(false);
   const toppingsRef = useRef<HTMLDivElement>(null);
   // Optional "side dishes" the user can add alongside a burger (arayes 3/4).
