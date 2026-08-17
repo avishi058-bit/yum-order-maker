@@ -607,6 +607,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setGlutenConfirmOpen(true);
       return;
     }
+    if (id === "gluten-free-bun") setGlutenRemovedNotice([]);
+
     setSelectedToppings((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
