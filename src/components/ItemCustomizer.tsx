@@ -1152,12 +1152,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                 );
                               }
 
+                              const glutenBlocked = isGlutenFree && GLUTEN_TOPPING_IDS.includes(t.id);
+
                               return (
                                 <button
                                   key={t.id}
                                   onClick={() => toggleTopping(t.id)}
                                   aria-pressed={active}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                  disabled={glutenBlocked}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"} ${glutenBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div
@@ -1170,13 +1173,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                     <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
+                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"} ${glutenBlocked ? "line-through text-gray-400" : ""}`}>
                                       {t.name}
                                       {t.image && ingredientImages[t.image] ? (
                                         <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${t.image === "extra-patty" ? (isKiosk ? "w-[60px] h-[60px]" : "w-12 h-12") : (isKiosk ? "w-9 h-9" : "w-7 h-7")}`} />
                                       ) : null}
                                     </span>
-                                    {showRecommended && (
+                                    {glutenBlocked && (
+                                      <span className={`font-bold bg-amber-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
+                                        ⚠️ מכיל גלוטן
+                                      </span>
+                                    )}
+                                    {showRecommended && !glutenBlocked && (
                                       <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                         🔥 הולך טוב עם המנה
                                       </span>
@@ -1184,6 +1192,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                   </div>
                                 </button>
                               );
+
                             })}
                           </div>
                         </div>
