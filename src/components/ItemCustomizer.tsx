@@ -1288,12 +1288,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
+                    {isGlutenFree && (
+                      <div className={`rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-right mb-4 ${isKiosk ? "p-4 text-[20px]" : "p-3 text-sm"}`}>
+                        ⚠️ בחרת לחמנייה ללא גלוטן: הצ׳יפס מטוגן בשמן שבו מטוגנים גם מוצרים המכילים גלוטן. טבעות הבצל וטבעות הבצל בטמפורה מכילות גלוטן.
+                      </div>
+                    )}
                     <div className="space-y-0">
                       {mealSideOptions.map((side) => {
                         const unavailable = isSideUnavailable(side.id);
                         // Hide tempura onion rings entirely when out of stock; other sides still show "אזל"
                         if (unavailable && side.id === "tempura-onion") return null;
                         const active = selectedSide === side.id && !unavailable;
+                        // Allergen marking (shown once a GF bun was chosen)
+                        const sideGlutenLabel = !isGlutenFree
+                          ? null
+                          : side.id === "side-onion-rings" || side.id === "side-tempura"
+                            ? "⚠️ מכיל גלוטן"
+                            : side.id === "side-fries" || side.id === "side-sweet-potato"
+                              ? "⚠️ מטוגן בשמן עם גלוטן"
+                              : null;
+
 
                         return (
                           <button
