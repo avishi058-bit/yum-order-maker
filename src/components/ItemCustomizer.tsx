@@ -585,7 +585,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
   const VEGAN_CHEDDAR_MAX = 6;
 
+  // Paid toppings that contain gluten — blocked once a GF bun is chosen.
+  const GLUTEN_TOPPING_IDS = ["onion-rings-topping", "crispy-onion-chips"];
+  const isGlutenFree = selectedToppings.includes("gluten-free-bun");
+  const toppingNameById = (id: string) => toppings.find((t) => t.id === id)?.name || id;
+
   const toggleTopping = (id: string) => {
+    if (isGlutenFree && GLUTEN_TOPPING_IDS.includes(id) && !selectedToppings.includes(id)) {
+      // Contains gluten — not selectable alongside a gluten-free bun
+      return;
+    }
     if (id === "vegan-cheddar") {
       // Vegan cheddar supports multiple slices (counted by occurrences in the array)
       setSelectedToppings((prev) =>
@@ -604,11 +613,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   };
 
   const confirmGlutenFreeBun = () => {
-    setSelectedToppings((prev) =>
-      prev.includes("gluten-free-bun") ? prev : [...prev, "gluten-free-bun"]
-    );
+    const removed = selectedToppings.filter((t) => GLUTEN_TOPPING_IDS.includes(t));
+    setSelectedToppings((prev) => [
+      ...prev.filter((t) => !GLUTEN_TOPPING_IDS.includes(t)),
+      ...(prev.includes("gluten-free-bun") ? [] : ["gluten-free-bun"]),
+    ]);
+    setGlutenRemovedNotice(Array.from(new Set(removed)).map(toppingNameById));
     setGlutenConfirmOpen(false);
   };
+
 
   const addCheddarSlice = () => {
     setSelectedToppings((prev) => {
