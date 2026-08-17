@@ -178,6 +178,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   const alcoholConsent = useAlcoholConsent();
   const [glutenConfirmOpen, setGlutenConfirmOpen] = useState(false);
+  // Names of paid toppings auto-removed because they contain gluten
+  const [glutenRemovedNotice, setGlutenRemovedNotice] = useState<string[]>([]);
   const [toppingsSeen, setToppingsSeen] = useState(false);
   const toppingsRef = useRef<HTMLDivElement>(null);
   // Optional "side dishes" the user can add alongside a burger (arayes 3/4).
@@ -583,7 +585,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
   const VEGAN_CHEDDAR_MAX = 6;
 
+  // Paid toppings that contain gluten — blocked once a GF bun is chosen.
+  const GLUTEN_TOPPING_IDS = ["onion-rings-topping", "crispy-onion-chips"];
+  const isGlutenFree = selectedToppings.includes("gluten-free-bun");
+  const toppingNameById = (id: string) => toppings.find((t) => t.id === id)?.name || id;
+
   const toggleTopping = (id: string) => {
+    if (isGlutenFree && GLUTEN_TOPPING_IDS.includes(id) && !selectedToppings.includes(id)) {
+      // Contains gluten — not selectable alongside a gluten-free bun
+      return;
+    }
     if (id === "vegan-cheddar") {
       // Vegan cheddar supports multiple slices (counted by occurrences in the array)
       setSelectedToppings((prev) =>
@@ -596,17 +607,23 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setGlutenConfirmOpen(true);
       return;
     }
+    if (id === "gluten-free-bun") setGlutenRemovedNotice([]);
+
     setSelectedToppings((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
   };
 
   const confirmGlutenFreeBun = () => {
-    setSelectedToppings((prev) =>
-      prev.includes("gluten-free-bun") ? prev : [...prev, "gluten-free-bun"]
-    );
+    const removed = selectedToppings.filter((t) => GLUTEN_TOPPING_IDS.includes(t));
+    setSelectedToppings((prev) => [
+      ...prev.filter((t) => !GLUTEN_TOPPING_IDS.includes(t)),
+      ...(prev.includes("gluten-free-bun") ? [] : ["gluten-free-bun"]),
+    ]);
+    setGlutenRemovedNotice(Array.from(new Set(removed)).map(toppingNameById));
     setGlutenConfirmOpen(false);
   };
+
 
   const addCheddarSlice = () => {
     setSelectedToppings((prev) => {
@@ -989,6 +1006,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`} ref={toppingsRef}>
                           <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
+                          {glutenRemovedNotice.length > 0 && (
+                            <div className={`rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-right mb-3 ${isKiosk ? "p-4 text-[20px]" : "p-3 text-sm"}`}>
+                              ⚠️ הוסרו אוטומטית: {glutenRemovedNotice.join(", ")} — מכילים גלוטן ולכן לא ניתן להוסיף אותם עם לחמנייה ללא גלוטן.
+                            </div>
+                          )}
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => t.id !== "arayes-extra-quarter")
@@ -1137,12 +1159,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                 );
                               }
 
+                              const glutenBlocked = isGlutenFree && GLUTEN_TOPPING_IDS.includes(t.id);
+
                               return (
                                 <button
                                   key={t.id}
                                   onClick={() => toggleTopping(t.id)}
                                   aria-pressed={active}
-                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
+                                  disabled={glutenBlocked}
+                                  className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"} ${glutenBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <div
@@ -1155,13 +1180,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                     <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
+                                    <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"} ${glutenBlocked ? "line-through text-gray-400" : ""}`}>
                                       {t.name}
                                       {t.image && ingredientImages[t.image] ? (
                                         <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${t.image === "extra-patty" ? (isKiosk ? "w-[60px] h-[60px]" : "w-12 h-12") : (isKiosk ? "w-9 h-9" : "w-7 h-7")}`} />
                                       ) : null}
                                     </span>
-                                    {showRecommended && (
+                                    {glutenBlocked && (
+                                      <span className={`font-bold bg-amber-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
+                                        ⚠️ מכיל גלוטן
+                                      </span>
+                                    )}
+                                    {showRecommended && !glutenBlocked && (
                                       <span className={`font-bold bg-green-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-xs px-2 py-1"}`}>
                                         🔥 הולך טוב עם המנה
                                       </span>
@@ -1169,6 +1199,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                   </div>
                                 </button>
                               );
+
                             })}
                           </div>
                         </div>
@@ -1259,12 +1290,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
+                    {isGlutenFree && (
+                      <div className={`rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-right mb-4 ${isKiosk ? "p-4 text-[20px]" : "p-3 text-sm"}`}>
+                        ⚠️ בחרת לחמנייה ללא גלוטן: הצ׳יפס מטוגן בשמן שבו מטוגנים גם מוצרים המכילים גלוטן. טבעות הבצל וטבעות הבצל בטמפורה מכילות גלוטן.
+                      </div>
+                    )}
                     <div className="space-y-0">
                       {mealSideOptions.map((side) => {
                         const unavailable = isSideUnavailable(side.id);
                         // Hide tempura onion rings entirely when out of stock; other sides still show "אזל"
                         if (unavailable && side.id === "tempura-onion") return null;
                         const active = selectedSide === side.id && !unavailable;
+                        // Allergen marking (shown once a GF bun was chosen)
+                        const sideGlutenLabel = !isGlutenFree
+                          ? null
+                          : side.id === "side-onion-rings" || side.id === "side-tempura"
+                            ? "⚠️ מכיל גלוטן"
+                            : side.id === "side-fries" || side.id === "side-sweet-potato"
+                              ? "⚠️ מטוגן בשמן עם גלוטן"
+                              : null;
+
 
                         return (
                           <button
@@ -1292,7 +1337,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               )}
                             </div>
                             <div className="flex items-center gap-3">
+                              {sideGlutenLabel && (
+                                <span className={`font-bold bg-amber-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-[11px] px-2 py-1"}`}>
+                                  {sideGlutenLabel}
+                                </span>
+                              )}
                               <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+
                               {mealSideImages[side.id] && (
                                 <img
                                   src={mealSideImages[side.id]}
@@ -1653,9 +1704,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
               <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
                 המנה מוכנה באזור עם גלוטן ואינה סטרילית ב-100% מגלוטן. ייתכן זיהום צולב.
               </p>
+              <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
+                שימו לב: הצ׳יפס מטוגן בשמן שבו מטוגנים גם מוצרים עם גלוטן. טבעות בצל וטבעות בצל בטמפורה מכילות גלוטן.
+              </p>
+              <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
+                תוספות המכילות גלוטן (שלוש טבעות בצל ביתיות / שבבי בצל קריספי) יוסרו אוטומטית ולא ניתן להוסיף אותן.
+              </p>
               <p className={`text-muted-foreground text-right leading-relaxed mb-5 ${isKiosk ? "text-base" : "text-sm"}`}>
                 הוספת לחמנייה ללא גלוטן בעלות של ₪4.
               </p>
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setGlutenConfirmOpen(false)}
