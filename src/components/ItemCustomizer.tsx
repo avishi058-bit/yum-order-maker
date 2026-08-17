@@ -1702,9 +1702,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
               <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
                 המנה מוכנה באזור עם גלוטן ואינה סטרילית ב-100% מגלוטן. ייתכן זיהום צולב.
               </p>
+              <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
+                שימו לב: הצ׳יפס מטוגן בשמן שבו מטוגנים גם מוצרים עם גלוטן. טבעות בצל וטבעות בצל בטמפורה מכילות גלוטן.
+              </p>
+              <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
+                תוספות המכילות גלוטן (שלוש טבעות בצל ביתיות / שבבי בצל קריספי) יוסרו אוטומטית ולא ניתן להוסיף אותן.
+              </p>
               <p className={`text-muted-foreground text-right leading-relaxed mb-5 ${isKiosk ? "text-base" : "text-sm"}`}>
                 הוספת לחמנייה ללא גלוטן בעלות של ₪4.
               </p>
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setGlutenConfirmOpen(false)}
