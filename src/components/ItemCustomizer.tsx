@@ -1335,7 +1335,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               )}
                             </div>
                             <div className="flex items-center gap-3">
+                              {sideGlutenLabel && (
+                                <span className={`font-bold bg-amber-500 text-white rounded-full whitespace-nowrap ${isKiosk ? "text-[16px] px-3 py-1.5" : "text-[11px] px-2 py-1"}`}>
+                                  {sideGlutenLabel}
+                                </span>
+                              )}
                               <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"} ${unavailable ? "line-through text-gray-400" : ""}`}>{side.name}</span>
+
                               {mealSideImages[side.id] && (
                                 <img
                                   src={mealSideImages[side.id]}
