@@ -1004,6 +1004,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         <div className={`px-5 ${isKiosk ? "px-8 py-6" : "py-4"}`} ref={toppingsRef}>
                           <h3 className={`font-black text-right mb-1 ${isKiosk ? "text-[30px] mb-3" : "text-lg"}`}>תוספות בתשלום</h3>
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
+                          {glutenRemovedNotice.length > 0 && (
+                            <div className={`rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-right mb-3 ${isKiosk ? "p-4 text-[20px]" : "p-3 text-sm"}`}>
+                              ⚠️ הוסרו אוטומטית: {glutenRemovedNotice.join(", ")} — מכילים גלוטן ולכן לא ניתן להוסיף אותם עם לחמנייה ללא גלוטן.
+                            </div>
+                          )}
                           <div className="space-y-0">
                             {toppings
                               .filter((t: Topping) => t.id !== "arayes-extra-quarter")
