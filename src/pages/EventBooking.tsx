@@ -165,6 +165,7 @@ const EventBooking = () => {
       if (!customerEmail.includes("@")) return "אימייל לא תקין";
       if (!eventType) return "יש לבחור סוג אירוע";
       if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
+      if (atVenue && !seatingPreference) return "יש לבחור סוג ישיבה לאירוע אצלנו";
       if (needsDrinkSelection && drinksTotal !== guests) {
         return `בחירת שתייה: נבחרו ${drinksTotal} מתוך ${guests} — יש להתאים לפי מספר האורחים`;
       }
