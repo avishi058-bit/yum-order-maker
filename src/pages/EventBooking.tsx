@@ -18,6 +18,7 @@ import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES, EVENT_DRINK_OPTIONS, PACKAGE
 import { fillTemplate, generateContractPdf, downloadBlob, fetchClientIp, type ContractData } from "@/lib/eventContract";
 import { cn } from "@/lib/utils";
 import EventStoryGallery from "@/components/EventStoryGallery";
+import { BUSINESS_SIGNATURE_SRC, getBusinessSignatureDataUrl } from "@/config/businessSignature";
 
 const VENUE_ADDRESS = "המבורגר הבקתה — האירוע אצלנו במקום";
 const supa = supabase as any;
