@@ -101,6 +101,14 @@ const EventBooking = () => {
   const addonQty = (a: typeof EVENT_ADDONS[number]) =>
     a.partial ? Math.min(guests, Math.max(0, addonQuantities[a.id] ?? 0)) : guests;
 
+  const venueAllowed = guests > VENUE_MIN_GUESTS;
+  useEffect(() => {
+    if (!venueAllowed && atVenue) {
+      setAtVenue(false);
+      setSeatingPreference("");
+    }
+  }, [venueAllowed, atVenue]);
+
   const packageIncludesDrinks = PACKAGES_WITH_DRINKS.has(packageId);
   const needsDrinkSelection = packageIncludesDrinks && !atVenue;
   const drinksTotal = useMemo(
