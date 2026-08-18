@@ -445,6 +445,7 @@ export type Database = {
           package_name: string
           package_price_per_person: number
           pdf_url: string | null
+          seating_preference: string | null
           signed_at: string | null
           start_time: string
           status: string
@@ -488,6 +489,7 @@ export type Database = {
           package_name: string
           package_price_per_person: number
           pdf_url?: string | null
+          seating_preference?: string | null
           signed_at?: string | null
           start_time: string
           status?: string
@@ -531,6 +533,7 @@ export type Database = {
           package_name?: string
           package_price_per_person?: number
           pdf_url?: string | null
+          seating_preference?: string | null
           signed_at?: string | null
           start_time?: string
           status?: string

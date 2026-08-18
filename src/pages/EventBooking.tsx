@@ -20,7 +20,13 @@ import { cn } from "@/lib/utils";
 import EventStoryGallery from "@/components/EventStoryGallery";
 import { BUSINESS_SIGNATURE_SRC, getBusinessSignatureDataUrl } from "@/config/businessSignature";
 
-const VENUE_ADDRESS = "המבורגר הבקתה — האירוע אצלנו במקום";
+const VENUE_ADDRESS = "אצלינו במקום (המבורגר הבקתה)";
+const VENUE_MIN_GUESTS = 25;
+const SEATING_OPTIONS = [
+  { value: "mats", label: "🧺 ישיבה על הדשא עם מחצלות (יש צל)" },
+  { value: "tables", label: "🪑 ישיבה על הדשא עם כיסאות ושולחנות" },
+  { value: "any", label: "🤷 לא משנה לי" },
+] as const;
 const supa = supabase as any;
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -55,6 +61,7 @@ const EventBooking = () => {
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState("");
   const [atVenue, setAtVenue] = useState(false);
+  const [seatingPreference, setSeatingPreference] = useState<string>("");
   const [eventAddress, setEventAddress] = useState("");
   const [guests, setGuests] = useState<number>(50);
   const [packageId, setPackageId] = useState<string>("premium");
@@ -93,6 +100,14 @@ const EventBooking = () => {
   );
   const addonQty = (a: typeof EVENT_ADDONS[number]) =>
     a.partial ? Math.min(guests, Math.max(0, addonQuantities[a.id] ?? 0)) : guests;
+
+  const venueAllowed = guests > VENUE_MIN_GUESTS;
+  useEffect(() => {
+    if (!venueAllowed && atVenue) {
+      setAtVenue(false);
+      setSeatingPreference("");
+    }
+  }, [venueAllowed, atVenue]);
 
   const packageIncludesDrinks = PACKAGES_WITH_DRINKS.has(packageId);
   const needsDrinkSelection = packageIncludesDrinks && !atVenue;
@@ -150,6 +165,7 @@ const EventBooking = () => {
       if (!customerEmail.includes("@")) return "אימייל לא תקין";
       if (!eventType) return "יש לבחור סוג אירוע";
       if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
+      if (atVenue && !seatingPreference) return "יש לבחור סוג ישיבה לאירוע אצלנו";
       if (needsDrinkSelection && drinksTotal !== guests) {
         return `בחירת שתייה: נבחרו ${drinksTotal} מתוך ${guests} — יש להתאים לפי מספר האורחים`;
       }
@@ -186,6 +202,9 @@ const EventBooking = () => {
         event_type: EVENT_TYPES.find((t) => t.value === eventType)?.label || eventType,
         event_address: atVenue ? VENUE_ADDRESS : eventAddress,
         at_venue: atVenue,
+        seating_preference: atVenue
+          ? (SEATING_OPTIONS.find((o) => o.value === seatingPreference)?.label ?? null)
+          : null,
         business_id: businessId || null,
         invoice_name: invoiceName || customerName,
         guests_count: guests,
@@ -448,10 +467,24 @@ const EventBooking = () => {
                   </Select>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10">
-                    <Checkbox checked={atVenue} onCheckedChange={(v) => setAtVenue(!!v)} />
-                    <span className="font-medium">🏠 האירוע אצלכם — במבורגר הבקתה</span>
-                  </label>
+                  {venueAllowed && (
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10">
+                      <Checkbox checked={atVenue} onCheckedChange={(v) => { setAtVenue(!!v); if (!v) setSeatingPreference(""); }} />
+                      <span className="font-medium">🏠 {VENUE_ADDRESS}</span>
+                    </label>
+                  )}
+                  {atVenue && (
+                    <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-3 space-y-2">
+                      <Label>סוג ישיבה באירוע אצלנו</Label>
+                      <Select value={seatingPreference} onValueChange={setSeatingPreference}>
+                        <SelectTrigger><SelectValue placeholder="בחרו סוג ישיבה..." /></SelectTrigger>
+                        <SelectContent>
+                          {SEATING_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   {!atVenue && (
                     <div><Label>כתובת האירוע</Label><Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="עיר, רחוב ומספר" /></div>
                   )}

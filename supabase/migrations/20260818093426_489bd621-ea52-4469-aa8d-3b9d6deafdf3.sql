@@ -1,0 +1,1 @@
+ALTER TABLE public.event_bookings ADD COLUMN IF NOT EXISTS seating_preference text;
