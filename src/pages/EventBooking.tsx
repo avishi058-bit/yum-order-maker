@@ -166,13 +166,10 @@ const EventBooking = () => {
     if (!customerSigRef.current || customerSigRef.current.isEmpty()) {
       toast.error("חסרה חתימת לקוח"); return;
     }
-    if (!businessSigRef.current || businessSigRef.current.isEmpty()) {
-      toast.error("חסרה חתימת בעל העסק"); return;
-    }
     setSubmitting(true);
     try {
       const customerSig = customerSigRef.current.getCanvas().toDataURL("image/png");
-      const businessSig = businessSigRef.current.getCanvas().toDataURL("image/png");
+      const businessSig = await getBusinessSignatureDataUrl();
       const ip = await fetchClientIp();
       const signedAt = new Date().toISOString();
 
