@@ -64,6 +64,7 @@ const EventBooking = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
+  const [businessSignature, setBusinessSignature] = useState<string>("");
   
 
   useEffect(() => {
