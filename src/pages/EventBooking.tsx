@@ -64,7 +64,7 @@ const EventBooking = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
-  const businessSigRef = useRef<SignatureCanvas | null>(null);
+  
 
   useEffect(() => {
     document.title = "הזמנת אירועים | המבורגר הבקתה";
