@@ -202,6 +202,9 @@ const EventBooking = () => {
         event_type: EVENT_TYPES.find((t) => t.value === eventType)?.label || eventType,
         event_address: atVenue ? VENUE_ADDRESS : eventAddress,
         at_venue: atVenue,
+        seating_preference: atVenue
+          ? (SEATING_OPTIONS.find((o) => o.value === seatingPreference)?.label ?? null)
+          : null,
         business_id: businessId || null,
         invoice_name: invoiceName || customerName,
         guests_count: guests,
