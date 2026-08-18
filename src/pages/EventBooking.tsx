@@ -172,7 +172,7 @@ const EventBooking = () => {
     setSubmitting(true);
     try {
       const customerSig = customerSigRef.current.getCanvas().toDataURL("image/png");
-      const businessSig = await getBusinessSignatureDataUrl();
+      const businessSig = businessSignature || (await getBusinessSignatureDataUrl());
       const ip = await fetchClientIp();
       const signedAt = new Date().toISOString();
 
