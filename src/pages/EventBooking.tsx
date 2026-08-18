@@ -20,7 +20,13 @@ import { cn } from "@/lib/utils";
 import EventStoryGallery from "@/components/EventStoryGallery";
 import { BUSINESS_SIGNATURE_SRC, getBusinessSignatureDataUrl } from "@/config/businessSignature";
 
-const VENUE_ADDRESS = "המבורגר הבקתה — האירוע אצלנו במקום";
+const VENUE_ADDRESS = "אצלינו במקום (המבורגר הבקתה)";
+const VENUE_MIN_GUESTS = 25;
+const SEATING_OPTIONS = [
+  { value: "mats", label: "🧺 ישיבה על הדשא עם מחצלות (יש צל)" },
+  { value: "tables", label: "🪑 ישיבה על הדשא עם כיסאות ושולחנות" },
+  { value: "any", label: "🤷 לא משנה לי" },
+] as const;
 const supa = supabase as any;
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
