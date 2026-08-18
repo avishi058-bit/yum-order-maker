@@ -61,6 +61,7 @@ const EventBooking = () => {
   const [endTime, setEndTime] = useState("");
   const [eventType, setEventType] = useState("");
   const [atVenue, setAtVenue] = useState(false);
+  const [seatingPreference, setSeatingPreference] = useState<string>("");
   const [eventAddress, setEventAddress] = useState("");
   const [guests, setGuests] = useState<number>(50);
   const [packageId, setPackageId] = useState<string>("premium");
