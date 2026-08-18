@@ -1,0 +1,1 @@
+ALTER TABLE public.event_settings ADD COLUMN IF NOT EXISTS business_signature TEXT;

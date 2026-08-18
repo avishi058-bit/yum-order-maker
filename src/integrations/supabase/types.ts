@@ -544,6 +544,7 @@ export type Database = {
       }
       event_settings: {
         Row: {
+          business_signature: string | null
           contract_template: string
           id: number
           kitchen_prep: Json
@@ -551,6 +552,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_signature?: string | null
           contract_template?: string
           id?: number
           kitchen_prep?: Json
@@ -558,6 +560,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_signature?: string | null
           contract_template?: string
           id?: number
           kitchen_prep?: Json
