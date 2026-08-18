@@ -185,6 +185,23 @@ const EventsAdmin = () => {
                 </div>
                 <Textarea rows={20} value={contractTemplate} onChange={(e) => setContractTemplate(e.target.value)} className="font-mono text-sm" />
                 <Button onClick={saveSettings}>שמור</Button>
+
+                <div className="border-t pt-4 space-y-2">
+                  <label className="text-sm font-medium block">חתימת בעל העסק (נחתמת אוטומטית בכל חוזה)</label>
+                  {savedSignature && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">החתימה השמורה:</span>
+                      <img src={savedSignature} alt="חתימת בעל העסק השמורה" className="h-16 bg-white rounded border" />
+                    </div>
+                  )}
+                  <div className="border-2 border-dashed rounded-lg bg-white">
+                    <SignatureCanvas ref={sigRef} canvasProps={{ className: "w-full h-40" }} penColor="black" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => sigRef.current?.clear()}>נקה</Button>
+                    <Button onClick={saveSignature}>שמור חתימה</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
