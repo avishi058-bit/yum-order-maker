@@ -539,7 +539,7 @@ const EventBooking = () => {
                 <Label className="mb-2 block">חתימת בעל העסק (חתומה מראש)</Label>
                 <div className="border rounded-lg bg-white flex items-center justify-center h-40">
                   <img
-                    src={BUSINESS_SIGNATURE_SRC}
+                    src={businessSignature || BUSINESS_SIGNATURE_SRC}
                     alt="חתימת בעל העסק"
                     loading="lazy"
                     className="max-h-32 object-contain"
