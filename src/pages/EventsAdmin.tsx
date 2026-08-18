@@ -25,6 +25,24 @@ const EventsAdmin = () => {
   const [contractTemplate, setContractTemplate] = useState("");
   const [minAmount, setMinAmount] = useState(2000);
   const [prep, setPrep] = useState<KitchenPrepSettings>(DEFAULT_PREP_SETTINGS);
+  const [savedSignature, setSavedSignature] = useState<string>("");
+  const sigRef = useRef<SignatureCanvas | null>(null);
+
+  const saveSignature = async () => {
+    if (!sigRef.current || sigRef.current.isEmpty()) {
+      toast.error("צייר קודם חתימה");
+      return;
+    }
+    const dataUrl = sigRef.current.getCanvas().toDataURL("image/png");
+    const { error } = await supa.from("event_settings").update({
+      business_signature: dataUrl,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
+    if (error) { toast.error(error.message); return; }
+    setSavedSignature(dataUrl);
+    sigRef.current.clear();
+    toast.success("החתימה נשמרה");
+  };
 
   const load = async () => {
     const [b, bd, s] = await Promise.all([
