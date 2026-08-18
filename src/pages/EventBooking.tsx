@@ -467,10 +467,24 @@ const EventBooking = () => {
                   </Select>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                  <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10">
-                    <Checkbox checked={atVenue} onCheckedChange={(v) => setAtVenue(!!v)} />
-                    <span className="font-medium">🏠 האירוע אצלכם — במבורגר הבקתה</span>
-                  </label>
+                  {venueAllowed && (
+                    <label className="flex items-center gap-2 p-3 rounded-lg border-2 border-primary/40 bg-primary/5 cursor-pointer hover:bg-primary/10">
+                      <Checkbox checked={atVenue} onCheckedChange={(v) => { setAtVenue(!!v); if (!v) setSeatingPreference(""); }} />
+                      <span className="font-medium">🏠 {VENUE_ADDRESS}</span>
+                    </label>
+                  )}
+                  {atVenue && (
+                    <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-3 space-y-2">
+                      <Label>סוג ישיבה באירוע אצלנו</Label>
+                      <Select value={seatingPreference} onValueChange={setSeatingPreference}>
+                        <SelectTrigger><SelectValue placeholder="בחרו סוג ישיבה..." /></SelectTrigger>
+                        <SelectContent>
+                          {SEATING_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   {!atVenue && (
                     <div><Label>כתובת האירוע</Label><Input value={eventAddress} onChange={(e) => setEventAddress(e.target.value)} placeholder="עיר, רחוב ומספר" /></div>
                   )}
