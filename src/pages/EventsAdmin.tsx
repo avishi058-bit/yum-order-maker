@@ -56,6 +56,7 @@ const EventsAdmin = () => {
       setContractTemplate(s.data.contract_template || "");
       setMinAmount(Number(s.data.minimum_amount) || 2000);
       setSavedSignature(s.data.business_signature || "");
+      if (s.data.kitchen_prep) setPrep({ ...DEFAULT_PREP_SETTINGS, ...s.data.kitchen_prep });
     }
   };
   useEffect(() => { load(); }, []);
