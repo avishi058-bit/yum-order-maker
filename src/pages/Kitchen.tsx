@@ -1388,10 +1388,10 @@ const Kitchen = () => {
     printRoundSummary(activeRoundOrders);
   };
 
-  const printChefBon = () => {
-    if (activeRoundOrders.length === 0) return;
+  const printChefBonFor = (orders: RoundOrder[]) => {
+    if (orders.length === 0) return;
     if (isPrinterConnected()) {
-      printBluetoothRoundChef(activeRoundOrders).catch((err) => {
+      printBluetoothRoundChef(orders).catch((err) => {
         console.warn("[Kitchen] BT chef print failed", err);
         toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
       });
@@ -1402,19 +1402,21 @@ const Kitchen = () => {
       return;
     }
     if (printMode === "agent") {
-      printAgentRoundChef(activeRoundOrders).then((info) => {
+      printAgentRoundChef(orders).then((info) => {
         if (info.status === "error") toast.error("Agent לא זמין להדפסה");
       });
       return;
     }
     if (printMode === "rawbt") {
-      printRawBTRoundChef(activeRoundOrders).then((info) => setRawbtDebug(info));
+      printRawBTRoundChef(orders).then((info) => setRawbtDebug(info));
       return;
     }
-    printRoundChefSummary(activeRoundOrders);
+    printRoundChefSummary(orders);
   };
 
 
+
+  const printChefBon = () => printChefBonFor(activeRoundOrders);
   const printFridgeRefillBon = async () => {
     try {
       const [itemsRes, availRes] = await Promise.all([
@@ -2404,6 +2406,13 @@ const Kitchen = () => {
                       title="הדפס שוב"
                     >
                       <Printer size={16} />
+                    </button>
+                    <button
+                      onClick={() => printChefBonFor([order as unknown as RoundOrder])}
+                      className="p-1.5 rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-white transition-colors"
+                      title="הדפס כמויות לטבח (הזמנה זו)"
+                    >
+                      <ChefHat size={16} />
                     </button>
                     {(order.status === "new" || order.status === "preparing") && (
                       <button
