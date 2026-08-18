@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import SignatureCanvas from "react-signature-canvas";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -24,6 +25,24 @@ const EventsAdmin = () => {
   const [contractTemplate, setContractTemplate] = useState("");
   const [minAmount, setMinAmount] = useState(2000);
   const [prep, setPrep] = useState<KitchenPrepSettings>(DEFAULT_PREP_SETTINGS);
+  const [savedSignature, setSavedSignature] = useState<string>("");
+  const sigRef = useRef<SignatureCanvas | null>(null);
+
+  const saveSignature = async () => {
+    if (!sigRef.current || sigRef.current.isEmpty()) {
+      toast.error("צייר קודם חתימה");
+      return;
+    }
+    const dataUrl = sigRef.current.getCanvas().toDataURL("image/png");
+    const { error } = await supa.from("event_settings").update({
+      business_signature: dataUrl,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
+    if (error) { toast.error(error.message); return; }
+    setSavedSignature(dataUrl);
+    sigRef.current.clear();
+    toast.success("החתימה נשמרה");
+  };
 
   const load = async () => {
     const [b, bd, s] = await Promise.all([
@@ -36,6 +55,7 @@ const EventsAdmin = () => {
     if (s.data) {
       setContractTemplate(s.data.contract_template || "");
       setMinAmount(Number(s.data.minimum_amount) || 2000);
+      setSavedSignature(s.data.business_signature || "");
       if (s.data.kitchen_prep) setPrep({ ...DEFAULT_PREP_SETTINGS, ...s.data.kitchen_prep });
     }
   };
@@ -185,6 +205,23 @@ const EventsAdmin = () => {
                 </div>
                 <Textarea rows={20} value={contractTemplate} onChange={(e) => setContractTemplate(e.target.value)} className="font-mono text-sm" />
                 <Button onClick={saveSettings}>שמור</Button>
+
+                <div className="border-t pt-4 space-y-2">
+                  <label className="text-sm font-medium block">חתימת בעל העסק (נחתמת אוטומטית בכל חוזה)</label>
+                  {savedSignature && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">החתימה השמורה:</span>
+                      <img src={savedSignature} alt="חתימת בעל העסק השמורה" className="h-16 bg-white rounded border" />
+                    </div>
+                  )}
+                  <div className="border-2 border-dashed rounded-lg bg-white">
+                    <SignatureCanvas ref={sigRef} canvasProps={{ className: "w-full h-40" }} penColor="black" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => sigRef.current?.clear()}>נקה</Button>
+                    <Button onClick={saveSignature}>שמור חתימה</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

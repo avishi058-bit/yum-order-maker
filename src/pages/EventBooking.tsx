@@ -64,6 +64,7 @@ const EventBooking = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
+  const [businessSignature, setBusinessSignature] = useState<string>("");
   
 
   useEffect(() => {
@@ -71,12 +72,13 @@ const EventBooking = () => {
     (async () => {
       const [{ data: blocked }, { data: settings }] = await Promise.all([
         supa.from("event_blocked_dates").select("blocked_date"),
-        supa.from("event_settings").select("contract_template, minimum_amount").eq("id", 1).maybeSingle(),
+        supa.from("event_settings").select("contract_template, minimum_amount, business_signature").eq("id", 1).maybeSingle(),
       ]);
       if (blocked) setBlockedDates(blocked.map((r: any) => new Date(r.blocked_date + "T00:00:00")));
       if (settings) {
         setContractTemplate(settings.contract_template || "");
         setMinimumAmount(Number(settings.minimum_amount) || 2000);
+        if (settings.business_signature) setBusinessSignature(settings.business_signature);
       }
     })();
   }, []);
@@ -170,7 +172,7 @@ const EventBooking = () => {
     setSubmitting(true);
     try {
       const customerSig = customerSigRef.current.getCanvas().toDataURL("image/png");
-      const businessSig = await getBusinessSignatureDataUrl();
+      const businessSig = businessSignature || (await getBusinessSignatureDataUrl());
       const ip = await fetchClientIp();
       const signedAt = new Date().toISOString();
 
@@ -537,7 +539,7 @@ const EventBooking = () => {
                 <Label className="mb-2 block">חתימת בעל העסק (חתומה מראש)</Label>
                 <div className="border rounded-lg bg-white flex items-center justify-center h-40">
                   <img
-                    src={BUSINESS_SIGNATURE_SRC}
+                    src={businessSignature || BUSINESS_SIGNATURE_SRC}
                     alt="חתימת בעל העסק"
                     loading="lazy"
                     className="max-h-32 object-contain"
