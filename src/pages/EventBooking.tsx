@@ -18,6 +18,7 @@ import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES, EVENT_DRINK_OPTIONS, PACKAGE
 import { fillTemplate, generateContractPdf, downloadBlob, fetchClientIp, type ContractData } from "@/lib/eventContract";
 import { cn } from "@/lib/utils";
 import EventStoryGallery from "@/components/EventStoryGallery";
+import { BUSINESS_SIGNATURE_SRC, getBusinessSignatureDataUrl } from "@/config/businessSignature";
 
 const VENUE_ADDRESS = "המבורגר הבקתה — האירוע אצלנו במקום";
 const supa = supabase as any;
@@ -63,7 +64,7 @@ const EventBooking = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
-  const businessSigRef = useRef<SignatureCanvas | null>(null);
+  
 
   useEffect(() => {
     document.title = "הזמנת אירועים | המבורגר הבקתה";
@@ -166,13 +167,10 @@ const EventBooking = () => {
     if (!customerSigRef.current || customerSigRef.current.isEmpty()) {
       toast.error("חסרה חתימת לקוח"); return;
     }
-    if (!businessSigRef.current || businessSigRef.current.isEmpty()) {
-      toast.error("חסרה חתימת בעל העסק"); return;
-    }
     setSubmitting(true);
     try {
       const customerSig = customerSigRef.current.getCanvas().toDataURL("image/png");
-      const businessSig = businessSigRef.current.getCanvas().toDataURL("image/png");
+      const businessSig = await getBusinessSignatureDataUrl();
       const ip = await fetchClientIp();
       const signedAt = new Date().toISOString();
 
@@ -536,11 +534,15 @@ const EventBooking = () => {
                 <Button variant="ghost" size="sm" onClick={() => customerSigRef.current?.clear()} className="mt-1">נקה</Button>
               </div>
               <div>
-                <Label className="mb-2 block">חתימת בעל העסק</Label>
-                <div className="border-2 border-dashed rounded-lg bg-white">
-                  <SignatureCanvas ref={businessSigRef} canvasProps={{ className: "w-full h-40" }} penColor="black" />
+                <Label className="mb-2 block">חתימת בעל העסק (חתומה מראש)</Label>
+                <div className="border rounded-lg bg-white flex items-center justify-center h-40">
+                  <img
+                    src={BUSINESS_SIGNATURE_SRC}
+                    alt="חתימת בעל העסק"
+                    loading="lazy"
+                    className="max-h-32 object-contain"
+                  />
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => businessSigRef.current?.clear()} className="mt-1">נקה</Button>
               </div>
               <Button onClick={submitBooking} disabled={submitting} className="w-full" size="lg">
                 {submitting ? "שומר..." : "חתום וסיים"}
