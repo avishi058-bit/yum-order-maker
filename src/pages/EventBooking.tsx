@@ -534,11 +534,15 @@ const EventBooking = () => {
                 <Button variant="ghost" size="sm" onClick={() => customerSigRef.current?.clear()} className="mt-1">נקה</Button>
               </div>
               <div>
-                <Label className="mb-2 block">חתימת בעל העסק</Label>
-                <div className="border-2 border-dashed rounded-lg bg-white">
-                  <SignatureCanvas ref={businessSigRef} canvasProps={{ className: "w-full h-40" }} penColor="black" />
+                <Label className="mb-2 block">חתימת בעל העסק (חתומה מראש)</Label>
+                <div className="border rounded-lg bg-white flex items-center justify-center h-40">
+                  <img
+                    src={BUSINESS_SIGNATURE_SRC}
+                    alt="חתימת בעל העסק"
+                    loading="lazy"
+                    className="max-h-32 object-contain"
+                  />
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => businessSigRef.current?.clear()} className="mt-1">נקה</Button>
               </div>
               <Button onClick={submitBooking} disabled={submitting} className="w-full" size="lg">
                 {submitting ? "שומר..." : "חתום וסיים"}
