@@ -9,6 +9,7 @@ interface SauceSelectorProps {
   onClose: () => void;
   onConfirm: (sauces: { id: string; name: string; quantity: number }[]) => void;
   isAvailable?: (id: string) => boolean;
+  isKiosk?: boolean;
 }
 
 const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: SauceSelectorProps) => {
