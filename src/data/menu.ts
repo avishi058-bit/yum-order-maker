@@ -91,6 +91,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "beer-weiss": { description: "בירת חיטה גרמנית" },
   "beer-shapira": { description: "בירת קראפט ירושלמית — Pale Ale 5%" },
   "beer-maccabi": { description: "בירת לאגר חזקה 7.9%" },
+  "fuze-tea": { description: "תה קרח פיוז טי" },
 
   "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
   "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
