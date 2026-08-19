@@ -165,7 +165,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKi
                       {regularSauces.length > 0 && (
                         <div className="mb-1">
                           <h3 className={`text-sm font-bold ${textMuted} text-right py-2`}>רטבים חינמיים</h3>
-                          <div className={`divide-y divide-${borderColor}/50`}>{regularSauces.map(renderSauce)}</div>
+                          <div className={`divide-y ${isKiosk ? "divide-gray-200/50" : "divide-border/50"}`}>{regularSauces.map(renderSauce)}</div>
                         </div>
                       )}
                       {regularSauces.length > 0 && premiumSauces.length > 0 && (
@@ -174,7 +174,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKi
                       {premiumSauces.length > 0 && (
                         <div className="mb-1">
                           <h3 className={`text-sm font-bold ${textMuted} text-right py-2`}>רטבים בתשלום</h3>
-                          <div className={`divide-y divide-${borderColor}/50`}>{premiumSauces.map(renderSauce)}</div>
+                          <div className={`divide-y ${isKiosk ? "divide-gray-200/50" : "divide-border/50"}`}>{premiumSauces.map(renderSauce)}</div>
                         </div>
                       )}
                     </>
