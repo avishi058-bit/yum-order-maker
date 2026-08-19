@@ -374,6 +374,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "fam-corona": "drink-corona", "fam-carlsberg": "drink-carlsberg",
   "fam-laffe": "drink-laffe", "fam-unfiltered": "drink-unfiltered", "fam-guinness": "drink-guinness",
   "fam-shapira": "drink-shapira", "fam-maccabi": "drink-maccabi",
+  "fam-fuze-tea": "fuze-tea",
 };
 
 
