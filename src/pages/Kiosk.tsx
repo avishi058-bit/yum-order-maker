@@ -502,15 +502,16 @@ const Kiosk = () => {
       />
 
         <SauceSelector
-        open={sauceSelectorOpen}
-        freeSauces={freeSauces}
-        isAvailable={isAvailable}
-        onClose={() => setSauceSelectorOpen(false)}
-        onConfirm={(sauces) => {
-          setSelectedSauces(sauces);
-          setSauceSelectorOpen(false);
-          setCheckoutOpen(true);
-        }}
+          open={sauceSelectorOpen}
+          freeSauces={freeSauces}
+          isAvailable={isAvailable}
+          isKiosk
+          onClose={() => setSauceSelectorOpen(false)}
+          onConfirm={(sauces) => {
+            setSelectedSauces(sauces);
+            setSauceSelectorOpen(false);
+            setCheckoutOpen(true);
+          }}
         />
       </Suspense>
 

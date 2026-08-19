@@ -9,9 +9,10 @@ interface SauceSelectorProps {
   onClose: () => void;
   onConfirm: (sauces: { id: string; name: string; quantity: number }[]) => void;
   isAvailable?: (id: string) => boolean;
+  isKiosk?: boolean;
 }
 
-const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: SauceSelectorProps) => {
+const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKiosk }: SauceSelectorProps) => {
   // Hide sauces the kitchen has marked out-of-stock so customers can't pick them.
   const visibleSauces = sauceOptions.filter((s) =>
     isAvailable ? isAvailable(s.id) : true,
@@ -65,6 +66,16 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
     onClose();
   };
 
+  // Kiosk uses a light theme for readability on the kiosk screen.
+  const surfaceBg = isKiosk ? "bg-white" : "bg-card";
+  const textMain = isKiosk ? "text-gray-900" : "text-foreground";
+  const textMuted = isKiosk ? "text-gray-500" : "text-muted-foreground";
+  const mutedBg = isKiosk ? "bg-gray-100" : "bg-muted";
+  const borderColor = isKiosk ? "border-gray-200" : "border-border";
+  const secondaryBg = isKiosk ? "bg-gray-50" : "bg-secondary/50";
+  const hoverBg = isKiosk ? "hover:bg-gray-200" : "hover:bg-border";
+  const skipText = isKiosk ? "text-gray-500" : "text-muted-foreground";
+
   return (
     <AnimatePresence>
       {open && (
@@ -81,29 +92,29 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl max-h-[85vh] flex flex-col"
+            className={`fixed bottom-0 left-0 right-0 z-50 ${surfaceBg} rounded-t-3xl max-h-[85vh] flex flex-col`}
             dir="rtl"
           >
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-muted" />
+              <div className={`w-10 h-1.5 rounded-full ${mutedBg}`} />
             </div>
 
-            <div className="flex items-center justify-between px-5 pb-4 border-b border-border">
-              <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+            <div className={`flex items-center justify-between px-5 pb-4 border-b ${borderColor}`}>
+              <button onClick={handleClose} className={`w-9 h-9 rounded-full ${mutedBg} flex items-center justify-center`}>
                 <X size={18} />
               </button>
-              <h2 className="text-lg font-bold flex-1 text-center">בחירת רטבים בצד 🥫</h2>
+              <h2 className={`text-lg font-bold flex-1 text-center ${textMain}`}>בחירת רטבים בצד 🥫</h2>
               <div className="w-9" />
             </div>
 
-            <div className="px-5 py-3 bg-secondary/50 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className={`px-5 py-3 ${secondaryBg} text-center`}>
+              <p className={`text-sm ${textMuted}`}>
                 מגיע לך <span className="text-primary font-bold">{freeSauces}</span> רטבים בחינם!
                 {extraSauces > 0 && (
-                  <span className="text-foreground"> · תוספת: <span className="text-primary font-bold">₪{extraCost}</span></span>
+                  <span className={textMain}> · תוספת: <span className="text-primary font-bold">₪{extraCost}</span></span>
                 )}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">כל רוטב מעבר ל-{freeSauces} — ₪1</p>
+              <p className={`text-xs ${textMuted} mt-1`}>כל רוטב מעבר ל-{freeSauces} — ₪1</p>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -116,25 +127,25 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
                     return (
                       <div
                         key={sauce.id}
-                        className="flex items-center justify-between py-3.5 border-b border-border/50 last:border-b-0"
+                        className={`flex items-center justify-between py-3.5 border-b ${isKiosk ? "border-gray-200/50" : "border-border/50"} last:border-b-0`}
                       >
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => updateSauce(sauce.id, -1)}
-                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
+                            className={`w-8 h-8 rounded-full ${mutedBg} flex items-center justify-center ${hoverBg} transition-colors`}
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="font-bold text-lg w-6 text-center">{qty}</span>
+                          <span className={`font-bold text-lg w-6 text-center ${textMain}`}>{qty}</span>
                           <button
                             onClick={() => updateSauce(sauce.id, 1)}
-                            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-border transition-colors"
+                            className={`w-8 h-8 rounded-full ${mutedBg} flex items-center justify-center ${hoverBg} transition-colors`}
                           >
                             <Plus size={14} />
                           </button>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-base">{sauce.name}</span>
+                          <span className={`font-medium text-base ${textMain}`}>{sauce.name}</span>
                           {sauce.price ? (
                             <span className="text-[11px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
                               +₪{sauce.price}
@@ -153,17 +164,17 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
                     <>
                       {regularSauces.length > 0 && (
                         <div className="mb-1">
-                          <h3 className="text-sm font-bold text-muted-foreground text-right py-2">רטבים חינמיים</h3>
-                          <div className="divide-y divide-border/50">{regularSauces.map(renderSauce)}</div>
+                          <h3 className={`text-sm font-bold ${textMuted} text-right py-2`}>רטבים חינמיים</h3>
+                          <div className={`divide-y ${isKiosk ? "divide-gray-200/50" : "divide-border/50"}`}>{regularSauces.map(renderSauce)}</div>
                         </div>
                       )}
                       {regularSauces.length > 0 && premiumSauces.length > 0 && (
-                        <div className="my-3 border-t border-border" />
+                        <div className={`my-3 border-t ${borderColor}`} />
                       )}
                       {premiumSauces.length > 0 && (
                         <div className="mb-1">
-                          <h3 className="text-sm font-bold text-muted-foreground text-right py-2">רטבים בתשלום</h3>
-                          <div className="divide-y divide-border/50">{premiumSauces.map(renderSauce)}</div>
+                          <h3 className={`text-sm font-bold ${textMuted} text-right py-2`}>רטבים בתשלום</h3>
+                          <div className={`divide-y ${isKiosk ? "divide-gray-200/50" : "divide-border/50"}`}>{premiumSauces.map(renderSauce)}</div>
                         </div>
                       )}
                     </>
@@ -172,7 +183,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
               </div>
             </div>
 
-            <div className="p-5 border-t border-border space-y-3">
+            <div className={`p-5 border-t ${borderColor} space-y-3`}>
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleConfirm}
@@ -184,7 +195,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: Sa
               </motion.button>
               <button
                 onClick={() => { onConfirm([]); setSauces({}); }}
-                className="w-full text-muted-foreground text-sm py-2"
+                className={`w-full ${skipText} text-sm py-2`}
               >
                 דלג — לא צריך רטבים בצד
               </button>
