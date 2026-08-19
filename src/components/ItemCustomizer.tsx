@@ -94,7 +94,7 @@ const mealDrinkImages: Record<string, string> = {
   "drink-grapes": drinkGrapesImg,
   "drink-oranges": drinkOrangesImg,
   "drink-apples": drinkOrangesImg,
-  "drink-fuze-tea": fuzeTeaAsset.url,
+  "drink-fuze-tea": fuzeTeaAsset,
 };
 
 const donenessImages: Record<string, string> = {
