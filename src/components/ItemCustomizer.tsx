@@ -1409,6 +1409,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               >
                                 {active && !unavailable && <div className="w-3 h-3 rounded-full bg-white" />}
                               </div>
+                              {drink.price > 0 && !unavailable && (
+                                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-base"}`}>+₪{drink.price}</span>
+                              )}
                               {unavailable && <span className={`text-destructive ${isKiosk ? "text-[18px]" : "text-sm"}`}>(אזל מהמלאי)</span>}
                             </div>
                             <div className="flex items-center gap-3">
