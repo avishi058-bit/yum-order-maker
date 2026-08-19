@@ -53,6 +53,7 @@ export const menuImages: Record<string, string> = {
   "beer-weiss": beerWeissImg,
   "beer-shapira": beerShapiraImg,
   "beer-maccabi": beerMaccabiImg,
+  "fuze-tea": fuzeTeaAsset.url,
   double: doubleImg,
   "haf-mifsha": hafMifsha,
   "crispy-chicken": crispyChickenAsset,
