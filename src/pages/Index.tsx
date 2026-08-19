@@ -794,6 +794,7 @@ const Index = () => {
             open={sauceSelectorOpen}
             freeSauces={freeSauces}
             isAvailable={isAvailable}
+            isKiosk={isStation}
             onClose={() => setSauceSelectorOpen(false)}
             onConfirm={(sauces) => {
               setSelectedSauces(sauces);
