@@ -62,6 +62,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "beer-weiss", name: "ויינשטפאן (חצי)", price: 25, category: "drink" },
   { id: "beer-shapira", name: "בירת שפירא", price: 25, category: "drink" },
   { id: "beer-maccabi", name: "בירה מכבי 7.9%", price: 20, category: "drink" },
+  { id: "fuze-tea", name: "פיוז טי", price: 14, category: "drink" },
 
   // Deals
   { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
