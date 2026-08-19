@@ -170,6 +170,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-guinness", name: "גינס", price: 12 },
   { id: "deal-shapira", name: "שפירא", price: 15 },
   { id: "deal-maccabi", name: "מכבי 7.9%", price: 10 },
+  { id: "deal-fuze-tea", name: "פיוז טי", price: 2 },
   { id: "deal-water", name: "מים (בקבוק)", price: 0 },
   { id: "deal-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-cola", name: "קולה", price: 0 },
