@@ -133,6 +133,7 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-shapira", name: "שפירא", price: 15 },
   { id: "drink-maccabi", name: "מכבי 7.9%", price: 10 },
   { id: "drink-guinness", name: "גינס", price: 12 },
+  { id: "drink-fuze-tea", name: "פיוז טי", price: 2 },
   { id: "drink-water", name: "מים (בקבוק)", price: 0 },
   { id: "drink-flavored-water-apple", name: "מים בטעם תפוח", price: 0 },
   { id: "drink-flavored-water-grape", name: "מים בטעם ענבים", price: 0 },
