@@ -56,7 +56,7 @@ import drinkFlavoredWaterAppleImg from "@/assets/drink-flavored-water-apple.png"
 import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.png";
 import drinkGrapesImg from "@/assets/drink-grapes.png";
 import drinkOrangesImg from "@/assets/drink-apples.png";
-import fuzeTeaAsset from "@/assets/menu/fuze-tea.png.asset.json";
+import fuzeTeaAsset from "@/assets/menu/fuze-tea.png";
 
 const mealSideImages: Record<string, string> = {
   "side-fries": friesRegularImg,
