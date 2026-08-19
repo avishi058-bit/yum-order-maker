@@ -12,7 +12,7 @@ interface SauceSelectorProps {
   isKiosk?: boolean;
 }
 
-const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable }: SauceSelectorProps) => {
+const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKiosk }: SauceSelectorProps) => {
   // Hide sauces the kitchen has marked out-of-stock so customers can't pick them.
   const visibleSauces = sauceOptions.filter((s) =>
     isAvailable ? isAvailable(s.id) : true,
