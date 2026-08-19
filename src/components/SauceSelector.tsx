@@ -127,7 +127,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKi
                     return (
                       <div
                         key={sauce.id}
-                        className={`flex items-center justify-between py-3.5 border-b ${borderColor}/50 last:border-b-0`}
+                        className={`flex items-center justify-between py-3.5 border-b ${isKiosk ? "border-gray-200/50" : "border-border/50"} last:border-b-0`}
                       >
                         <div className="flex items-center gap-3">
                           <button
