@@ -23,7 +23,7 @@ import sodaTempoAsset from "@/assets/menu/soda-tempo-opt.webp";
 import flavoredWaterAsset from "@/assets/menu/flavored-water-grape-opt.webp";
 import arayesSpecialAsset from "@/assets/menu/arayes-special-opt.webp";
 import arayesSpecial4Asset from "@/assets/menu/arayes-special-4-opt.webp";
-
+import fuzeTeaAsset from "@/assets/menu/fuze-tea.png.asset.json";
 
 
 
@@ -53,6 +53,7 @@ export const menuImages: Record<string, string> = {
   "beer-weiss": beerWeissImg,
   "beer-shapira": beerShapiraImg,
   "beer-maccabi": beerMaccabiImg,
+  "fuze-tea": fuzeTeaAsset.url,
   double: doubleImg,
   "haf-mifsha": hafMifsha,
   "crispy-chicken": crispyChickenAsset,

@@ -62,6 +62,7 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "beer-weiss", name: "ויינשטפאן (חצי)", price: 25, category: "drink" },
   { id: "beer-shapira", name: "בירת שפירא", price: 25, category: "drink" },
   { id: "beer-maccabi", name: "בירה מכבי 7.9%", price: 20, category: "drink" },
+  { id: "fuze-tea", name: "פיוז טי", price: 14, category: "drink" },
 
   // Deals
   { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
@@ -132,6 +133,7 @@ export const MEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "drink-shapira", name: "שפירא", price: 15 },
   { id: "drink-maccabi", name: "מכבי 7.9%", price: 10 },
   { id: "drink-guinness", name: "גינס", price: 12 },
+  { id: "drink-fuze-tea", name: "פיוז טי", price: 2 },
   { id: "drink-water", name: "מים (בקבוק)", price: 0 },
   { id: "drink-flavored-water-apple", name: "מים בטעם תפוח", price: 0 },
   { id: "drink-flavored-water-grape", name: "מים בטעם ענבים", price: 0 },
@@ -168,6 +170,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "deal-guinness", name: "גינס", price: 12 },
   { id: "deal-shapira", name: "שפירא", price: 15 },
   { id: "deal-maccabi", name: "מכבי 7.9%", price: 10 },
+  { id: "deal-fuze-tea", name: "פיוז טי", price: 2 },
   { id: "deal-water", name: "מים (בקבוק)", price: 0 },
   { id: "deal-soda", name: "סודה (בקבוק)", price: 0 },
   { id: "fam-cola", name: "קולה", price: 0 },
@@ -191,6 +194,7 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
   { id: "fam-guinness", name: "גינס", price: 12 },
   { id: "fam-shapira", name: "שפירא", price: 15 },
   { id: "fam-maccabi", name: "מכבי 7.9%", price: 10 },
+  { id: "fam-fuze-tea", name: "פיוז טי", price: 2 },
 ];
 
 
