@@ -2646,6 +2646,18 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
                       </button>
                     )}
+                    {order.queue_number != null && undoablePaid[order.id] && (
+                      <button
+                        onClick={() => unmarkPaid(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-4 py-3 rounded-lg bg-yellow-600 text-white font-black text-base hover:bg-yellow-500 transition-all active:scale-95 shadow-md shadow-yellow-600/40 disabled:opacity-60 disabled:cursor-wait"
+                        title="ביטול אפשרי רק 30 שניות לאחר סימון השולם"
+                      >
+                        {paidPendingIds.has(order.id)
+                          ? "מעדכן..."
+                          : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
+                      </button>
+                    )}
                     {order.status === "ready" && (
                       <button
                         onClick={() => updateStatus(order.id, "preparing")}
