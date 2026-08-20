@@ -88,6 +88,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Set when the server detects an identical order sent minutes ago — we ask
+  // the customer to confirm before creating a second one.
+  const [duplicateInfo, setDuplicateInfo] = useState<{ orderNumber?: number; method: "cash" | "credit" | "counter" } | null>(null);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(
