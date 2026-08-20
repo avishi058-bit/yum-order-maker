@@ -52,6 +52,7 @@ import drinkPaulanerImg from "@/assets/drink-paulaner.png";
 import drinkWeissImg from "@/assets/drink-weiss.png";
 import drinkShapiraImg from "@/assets/drink-shapira.webp";
 import drinkMaccabiImg from "@/assets/drink-maccabi.webp";
+import drinkUnfilteredImg from "@/assets/drink-unfiltered.webp";
 import drinkFlavoredWaterAppleImg from "@/assets/drink-flavored-water-apple.png";
 import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.png";
 import drinkGrapesImg from "@/assets/drink-grapes.png";
@@ -89,6 +90,7 @@ const mealDrinkImages: Record<string, string> = {
   "drink-weiss": drinkWeissImg,
   "drink-shapira": drinkShapiraImg,
   "drink-maccabi": drinkMaccabiImg,
+  "drink-unfiltered": drinkUnfilteredImg,
   "drink-flavored-water-apple": drinkFlavoredWaterAppleImg,
   "drink-flavored-water-grape": drinkFlavoredWaterGrapeImg,
   "drink-grapes": drinkGrapesImg,

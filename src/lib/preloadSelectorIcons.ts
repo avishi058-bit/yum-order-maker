@@ -24,6 +24,7 @@ import drinkBluMojitoImg from "@/assets/drink-blu-mojito.png";
 import drinkBluDayImg from "@/assets/drink-blu-day.png";
 import drinkBluMelonAppleImg from "@/assets/drink-blu-melon-apple.png";
 import drinkGoldstarImg from "@/assets/drink-goldstar.png";
+import drinkUnfilteredImg from "@/assets/drink-unfiltered.webp";
 import drinkStellaImg from "@/assets/drink-stella.png";
 import drinkHeinekenImg from "@/assets/drink-heineken.png";
 import drinkCoronaImg from "@/assets/drink-corona.png";
@@ -55,6 +56,7 @@ const SELECTOR_ICONS: string[] = [
   drinkBluDayImg,
   drinkBluMelonAppleImg,
   drinkGoldstarImg,
+  drinkUnfilteredImg,
   drinkStellaImg,
   drinkHeinekenImg,
   drinkCoronaImg,
