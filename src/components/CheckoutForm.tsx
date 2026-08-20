@@ -571,10 +571,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
   };
 
-  const submitOrder = async (method: "cash" | "credit" | "counter") => {
+  const submitOrder = async (method: "cash" | "credit" | "counter", allowDuplicate = false) => {
     setSubmitting(true);
     try {
-      const order = await callCreateOrder(method, "new");
+      const order = await callCreateOrder(method, "new", allowDuplicate);
       // Silently link/create customer from the order details so the next visit
       // auto-logs in (no OTP needed).
       if (!isLoggedIn && form.phone && form.name) {
@@ -592,11 +592,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       onSuccess(order.orderNumber, form.phone, method);
     } catch (error: any) {
       console.error("Order error:", error);
-      toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+      if (error?.duplicate) {
+        // Same order was already received minutes ago — ask before sending again.
+        setDuplicateInfo({ orderNumber: error.existingOrderNumber, method });
+      } else {
+        toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const availablePaymentMethods = {
     cash: restaurantStatus.cash_enabled,
