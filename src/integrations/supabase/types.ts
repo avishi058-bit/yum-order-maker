@@ -1346,6 +1346,7 @@ export type Database = {
         Args: { p_order_id: string; p_row: Json }
         Returns: undefined
       }
+      unmark_order_paid: { Args: { p_order_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "kitchen" | "courier"

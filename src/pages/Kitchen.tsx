@@ -400,6 +400,22 @@ const Kitchen = () => {
   // and to prevent double-clicks that queue up multiple updates.
   const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
   const [paidPendingIds, setPaidPendingIds] = useState<Set<string>>(new Set());
+  // Orders marked paid within the last 30 seconds — staff can undo an accidental tap.
+  const [undoablePaid, setUndoablePaid] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (Object.keys(undoablePaid).length === 0) return;
+    const id = setInterval(() => {
+      const now = Date.now();
+      setUndoablePaid((curr) => {
+        const next: Record<string, number> = {};
+        for (const [orderId, deadline] of Object.entries(curr)) {
+          if (deadline > now) next[orderId] = deadline;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [undoablePaid]);
   useEffect(() => {
     const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
     pauseRefreshRef.current = open;
@@ -675,6 +691,22 @@ const Kitchen = () => {
       }
 
       setOrders(fetched);
+
+      // Re-hydrate undoable paid orders after refresh: any order paid within
+      // the last 30 seconds should still show the undo button.
+      const now = Date.now();
+      setUndoablePaid((curr) => {
+        const next = { ...curr };
+        for (const o of fetched) {
+          if (o.paid_at && o.queue_number != null) {
+            const paidTime = new Date(o.paid_at).getTime();
+            if (now - paidTime < 30_000) {
+              next[o.id] = Math.max(next[o.id] || 0, paidTime + 30_000);
+            }
+          }
+        }
+        return next;
+      });
     }
   }, []);
   fetchOrdersRef.current = fetchOrders;
@@ -912,7 +944,37 @@ const Kitchen = () => {
         o.id === order.id ? { ...o, queue_number: queueNumber, paid_at: new Date().toISOString() } : o,
       ),
     );
+    // Allow undo for 30 seconds in case the staff tapped by mistake.
+    setUndoablePaid((curr) => ({ ...curr, [order.id]: Date.now() + 30_000 }));
     toast.success(`שולם ✅ נכנס לתור במקום ${queueNumber}`, { duration: 3000 });
+    fetchOrders();
+  };
+
+  const unmarkPaid = async (order: Order) => {
+    if (paidPendingIds.has(order.id) || order.queue_number == null) return;
+    setPaidPendingIds((s) => new Set(s).add(order.id));
+    const { data, error } = await supabase.rpc("unmark_order_paid", { p_order_id: order.id });
+    setPaidPendingIds((s) => {
+      const n = new Set(s);
+      n.delete(order.id);
+      return n;
+    });
+    if (error) {
+      console.error("[Kitchen] unmark_order_paid failed:", error);
+      toast.error("שגיאה בביטול תשלום");
+      return;
+    }
+    setUndoablePaid((curr) => {
+      const next = { ...curr };
+      delete next[order.id];
+      return next;
+    });
+    setOrders((curr) =>
+      curr.map((o) =>
+        o.id === order.id ? { ...o, queue_number: null, paid_at: null } : o,
+      ),
+    );
+    toast.info("סימון השולם בוטל", { duration: 3000 });
     fetchOrders();
   };
 
@@ -2596,6 +2658,18 @@ const Kitchen = () => {
                         className="px-6 py-3 rounded-lg bg-green-600 text-white font-black text-lg hover:bg-green-500 transition-all active:scale-95 shadow-md shadow-green-600/40 disabled:opacity-60 disabled:cursor-wait"
                       >
                         {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
+                      </button>
+                    )}
+                    {order.queue_number != null && undoablePaid[order.id] && (
+                      <button
+                        onClick={() => unmarkPaid(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-4 py-3 rounded-lg bg-yellow-600 text-white font-black text-base hover:bg-yellow-500 transition-all active:scale-95 shadow-md shadow-yellow-600/40 disabled:opacity-60 disabled:cursor-wait"
+                        title="ביטול אפשרי רק 30 שניות לאחר סימון השולם"
+                      >
+                        {paidPendingIds.has(order.id)
+                          ? "מעדכן..."
+                          : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
                       </button>
                     )}
                     {order.status === "ready" && (
