@@ -437,10 +437,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
-  const handleCreditPayment = async () => {
+  const handleCreditPayment = async (allowDuplicate = false) => {
     setSubmitting(true);
     try {
-      const order = await callCreateOrder("credit", "pending_payment");
+      const order = await callCreateOrder("credit", "pending_payment", allowDuplicate);
       // Silently link/create customer so the next visit auto-logs in.
       if (!isLoggedIn && form.phone && form.name) {
         await linkFromOrder(form.phone, form.name).catch(() => {});
