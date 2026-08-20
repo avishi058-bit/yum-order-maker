@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, X, Check } from "lucide-react";
 import { MenuItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useState, useRef } from "react";
@@ -131,6 +131,30 @@ const ItemPreview = ({ item, onClose, onAdd, cartButtonRef }: ItemPreviewProps) 
               הוסף לסל
             </motion.button>
           </div>
+
+          {/* Confirmation — shown only after the user actually presses "הוסף לסל" */}
+          <AnimatePresence>
+            {flyAnim && (
+              <motion.div
+                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-green-500/10"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                aria-hidden
+              >
+                <motion.div
+                  className="flex items-center gap-2 rounded-full bg-green-500 text-white font-bold px-6 py-3 text-xl shadow-lg shadow-green-500/40"
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 20 }}
+                >
+                  <Check size={24} strokeWidth={3} />
+                  נוסף לסל
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </motion.div>
     </AnimatePresence>
