@@ -180,41 +180,6 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
         )}
       </div>
 
-      {/* "Added to cart" confirmation — simple items only (no customizer modal) */}
-      <AnimatePresence>
-        {justAdded && (
-          <motion.div
-            key="added"
-            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            aria-hidden
-          >
-            <div className={`absolute inset-0 ${isKiosk ? "bg-green-500/10" : "bg-primary/10"}`} />
-            <motion.div
-              className={`relative flex items-center gap-2 rounded-full font-bold shadow-lg ${
-                isKiosk ? "px-8 py-4 text-2xl" : "px-5 py-2.5 text-base"
-              } bg-green-500 text-white shadow-green-500/40`}
-              initial={{ scale: 0.6, y: 10, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: -14, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 420, damping: 20 }}
-            >
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.05, type: "spring", stiffness: 500, damping: 14 }}
-                className="flex items-center justify-center"
-              >
-                <Check size={isKiosk ? 30 : 20} strokeWidth={3} />
-              </motion.span>
-              נוסף לסל
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
