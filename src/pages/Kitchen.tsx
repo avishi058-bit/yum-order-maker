@@ -930,7 +930,37 @@ const Kitchen = () => {
         o.id === order.id ? { ...o, queue_number: queueNumber, paid_at: new Date().toISOString() } : o,
       ),
     );
+    // Allow undo for 30 seconds in case the staff tapped by mistake.
+    setUndoablePaid((curr) => ({ ...curr, [order.id]: Date.now() + 30_000 }));
     toast.success(`שולם ✅ נכנס לתור במקום ${queueNumber}`, { duration: 3000 });
+    fetchOrders();
+  };
+
+  const unmarkPaid = async (order: Order) => {
+    if (paidPendingIds.has(order.id) || order.queue_number == null) return;
+    setPaidPendingIds((s) => new Set(s).add(order.id));
+    const { data, error } = await supabase.rpc("unmark_order_paid", { p_order_id: order.id });
+    setPaidPendingIds((s) => {
+      const n = new Set(s);
+      n.delete(order.id);
+      return n;
+    });
+    if (error) {
+      console.error("[Kitchen] unmark_order_paid failed:", error);
+      toast.error("שגיאה בביטול תשלום");
+      return;
+    }
+    setUndoablePaid((curr) => {
+      const next = { ...curr };
+      delete next[order.id];
+      return next;
+    });
+    setOrders((curr) =>
+      curr.map((o) =>
+        o.id === order.id ? { ...o, queue_number: null, paid_at: null } : o,
+      ),
+    );
+    toast.info("סימון השולם בוטל", { duration: 3000 });
     fetchOrders();
   };
 
