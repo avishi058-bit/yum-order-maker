@@ -389,8 +389,10 @@ const Index = () => {
         name: `${item.name} — ${selectedDrink}`,
         _menuItemId: item.id,
       } as MenuItem & { _menuItemId?: string });
+      // Same fly-to-cart cue as the kiosk so the customer sees the can was added.
+      flyFromCenter();
     },
-    [addToCartDirect]
+    [addToCartDirect, flyFromCenter]
   );
 
   const updateQuantity = useCallback((id: string, delta: number) => {
