@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, X, Check } from "lucide-react";
 import { MenuItem } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useState, useRef } from "react";
