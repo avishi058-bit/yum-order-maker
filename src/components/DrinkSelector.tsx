@@ -18,6 +18,7 @@ import drinkBluMojitoImg from "@/assets/drink-blu-mojito.png";
 import drinkBluDayImg from "@/assets/drink-blu-day.png";
 import drinkBluMelonAppleImg from "@/assets/drink-blu-melon-apple.png";
 import drinkGoldstarImg from "@/assets/drink-goldstar.png";
+import drinkUnfilteredImg from "@/assets/drink-unfiltered.webp";
 import drinkStellaImg from "@/assets/drink-stella.png";
 import drinkHeinekenImg from "@/assets/drink-heineken.png";
 import drinkCoronaImg from "@/assets/drink-corona.png";
@@ -47,6 +48,7 @@ const drinkOptionImages: Record<string, string> = {
   "flavored-water-apple": drinkFlavoredWaterAppleImg,
   "flavored-water-grape": drinkFlavoredWaterGrapeImg,
   "beer-goldstar": drinkGoldstarImg,
+  "beer-unfiltered": drinkUnfilteredImg,
   "beer-heineken": drinkHeinekenImg,
   "beer-corona": drinkCoronaImg,
   "beer-carlsberg": drinkCarlsbergImg,
