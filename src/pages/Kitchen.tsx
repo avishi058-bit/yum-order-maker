@@ -2577,9 +2577,12 @@ const Kitchen = () => {
                   <span className="font-bold text-lg text-primary">₪{order.total}</span>
                   <div className="flex gap-2">
                     {(() => { const isPending = pendingStatusIds.has(order.id); return (<>
-                    {order.status === "new" && (
+                    {["new", "preparing", "ready"].includes(order.status) && (
                       <button
-                        onClick={() => updateStatus(order.id, "cancelled")}
+                        onClick={() => {
+                          if (order.status !== "new" && !window.confirm(`לבטל את הזמנה #${order.order_number}?`)) return;
+                          updateStatus(order.id, "cancelled");
+                        }}
                         disabled={isPending}
                         className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-60 disabled:cursor-wait"
                       >
