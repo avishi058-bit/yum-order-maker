@@ -691,6 +691,22 @@ const Kitchen = () => {
       }
 
       setOrders(fetched);
+
+      // Re-hydrate undoable paid orders after refresh: any order paid within
+      // the last 30 seconds should still show the undo button.
+      const now = Date.now();
+      setUndoablePaid((curr) => {
+        const next = { ...curr };
+        for (const o of fetched) {
+          if (o.paid_at && o.queue_number != null) {
+            const paidTime = new Date(o.paid_at).getTime();
+            if (now - paidTime < 30_000) {
+              next[o.id] = Math.max(next[o.id] || 0, paidTime + 30_000);
+            }
+          }
+        }
+        return next;
+      });
     }
   }, []);
   fetchOrdersRef.current = fetchOrders;
