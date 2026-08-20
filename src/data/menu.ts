@@ -225,7 +225,7 @@ export const toppings: Topping[] = TOPPINGS_PRICING_SHARED.map((t) => ({
 /** Toppings to hide entirely from the customizer for specific burger items.
  *  Keyed by burger id (the meal variant inherits via baseBurgerId). */
 export const excludedToppingsByItem: Record<string, string[]> = {
-  "special-hadegel": ["onion-jam", "garlic-confit", "onion-rings-topping"],
+  "special-hadegel": ["onion-jam", "garlic-confit", "onion-rings-topping", "gluten-free-bun"],
   "avishai": ["egg"],
   "crazy-smash": ["maple", "hot-pepper-jam"],
   "haf-mifsha": ["extra-patty"],
