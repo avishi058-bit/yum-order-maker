@@ -23,6 +23,7 @@ import SideMenu from "@/components/SideMenu";
 import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
 import ItemPreview from "@/components/ItemPreview";
+import OrderSuccessModal from "@/components/OrderSuccessModal";
 
 // Lazy-loaded: only needed once the user opens a modal/customizer/checkout.
 // This trims the initial JS bundle significantly (ItemCustomizer alone ~1300 lines).
@@ -130,6 +131,8 @@ const Index = () => {
   }, []);
 
   const [liveTrackerOrder, setLiveTrackerOrder] = useState<{ orderNumber: number; phone: string } | null>(null);
+  // Big confirmation shown right after an order is created (prevents double orders).
+  const [successOrder, setSuccessOrder] = useState<{ orderNumber: number; note?: string } | null>(null);
 
   // Auto-open the live tracker/timer when the customer returns to the site
   // and still has an active order saved in localStorage. Skip in kiosk/station mode.
@@ -843,6 +846,7 @@ const Index = () => {
                   setTrackedOrder(trackedOrder);
                   setLiveTrackerOrder({ orderNumber, phone: phone ?? "" });
                   window.dispatchEvent(new CustomEvent("track-order", { detail: trackedOrder }));
+                  setSuccessOrder({ orderNumber });
                   // Offer push notifications to users who haven't decided yet
                   if (typeof Notification !== "undefined" && Notification.permission === "default") {
                     setTimeout(() => {
@@ -922,6 +926,14 @@ const Index = () => {
               setCart((prev) => [...prev, ...newItems]);
               setCartOpen(true);
             }}
+          />
+        )}
+
+        {successOrder && (
+          <OrderSuccessModal
+            orderNumber={successOrder.orderNumber}
+            note={successOrder.note}
+            onClose={() => setSuccessOrder(null)}
           />
         )}
 
