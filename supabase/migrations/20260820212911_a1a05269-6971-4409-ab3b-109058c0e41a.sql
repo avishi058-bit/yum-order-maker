@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_daily_sales_summary() FROM PUBLIC, anon, authenticated;
