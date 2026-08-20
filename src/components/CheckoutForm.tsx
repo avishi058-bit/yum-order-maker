@@ -88,6 +88,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Set when the server detects an identical order sent minutes ago — we ask
+  // the customer to confirm before creating a second one.
+  const [duplicateInfo, setDuplicateInfo] = useState<{ orderNumber?: number; method: "cash" | "credit" | "counter" } | null>(null);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(
@@ -351,7 +354,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     };
   };
 
-  const callCreateOrder = async (paymentMethod: "cash" | "credit" | "counter", status: "new" | "pending_payment") => {
+  const callCreateOrder = async (
+    paymentMethod: "cash" | "credit" | "counter",
+    status: "new" | "pending_payment",
+    allowDuplicate = false,
+  ) => {
     const isStation = localStorage.getItem("habakta_station") === "true";
     const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
@@ -399,6 +406,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         deliveryFee: delivery?.fee ?? null,
         // Cloudflare Turnstile anti-bot token (verified server-side when enabled).
         turnstileToken: RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE ? (turnstileToken || undefined) : undefined,
+        // True only when the customer confirmed they really want to resend an
+        // identical order (duplicate guard).
+        allowDuplicate,
       },
     });
 
@@ -409,9 +419,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         const ctx: any = (error as any).context;
         if (ctx && typeof ctx.json === "function") {
           const parsed = await ctx.json();
+          if (parsed?.duplicate) {
+            const dupErr: any = new Error(parsed.error || "הזמנה זהה כבר נשלחה");
+            dupErr.duplicate = true;
+            dupErr.existingOrderNumber = parsed.existingOrderNumber;
+            throw dupErr;
+          }
           if (parsed?.error) serverMsg = parsed.error;
         }
-      } catch { /* ignore */ }
+      } catch (e: any) {
+        if (e?.duplicate) throw e;
+      }
       throw new Error(serverMsg);
     }
     if (data?.error) throw new Error(data.error);
@@ -422,10 +440,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
-  const handleCreditPayment = async () => {
+  const handleCreditPayment = async (allowDuplicate = false) => {
     setSubmitting(true);
     try {
-      const order = await callCreateOrder("credit", "pending_payment");
+      const order = await callCreateOrder("credit", "pending_payment", allowDuplicate);
       // Silently link/create customer so the next visit auto-logs in.
       if (!isLoggedIn && form.phone && form.name) {
         await linkFromOrder(form.phone, form.name).catch(() => {});
@@ -550,16 +568,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       window.location.href = result.sessionUrl;
     } catch (error: any) {
       console.error("Credit payment error:", error);
-      toast({ title: error.message || "שגיאה בתשלום באשראי", variant: "destructive" });
+      if (error?.duplicate) {
+        setDuplicateInfo({ orderNumber: error.existingOrderNumber, method: "credit" });
+      } else {
+        toast({ title: error.message || "שגיאה בתשלום באשראי", variant: "destructive" });
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  const submitOrder = async (method: "cash" | "credit" | "counter") => {
+  const submitOrder = async (method: "cash" | "credit" | "counter", allowDuplicate = false) => {
     setSubmitting(true);
     try {
-      const order = await callCreateOrder(method, "new");
+      const order = await callCreateOrder(method, "new", allowDuplicate);
       // Silently link/create customer from the order details so the next visit
       // auto-logs in (no OTP needed).
       if (!isLoggedIn && form.phone && form.name) {
@@ -577,11 +599,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       onSuccess(order.orderNumber, form.phone, method);
     } catch (error: any) {
       console.error("Order error:", error);
-      toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+      if (error?.duplicate) {
+        // Same order was already received minutes ago — ask before sending again.
+        setDuplicateInfo({ orderNumber: error.existingOrderNumber, method });
+      } else {
+        toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
+      }
     } finally {
       setSubmitting(false);
     }
   };
+
 
   const availablePaymentMethods = {
     cash: restaurantStatus.cash_enabled,
@@ -1093,6 +1121,46 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           setStep("payment");
         }}
       />
+
+      {/* Duplicate-order confirmation — prevents accidentally ordering twice */}
+      {duplicateInfo && (
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4" dir="rtl">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setDuplicateInfo(null)} />
+          <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl">
+            <div className="text-5xl">🤔</div>
+            <h3 className="text-xl font-black">כבר קיבלנו הזמנה זהה</h3>
+            <p className="text-muted-foreground text-sm">
+              {duplicateInfo.orderNumber
+                ? `הזמנה #${duplicateInfo.orderNumber} על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.`
+                : "הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול."}
+              <br />
+              לשלוח הזמנה נוספת בכל זאת?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setDuplicateInfo(null)}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-black"
+              >
+                לא, ההזמנה שלי כבר נשלחה ✅
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => {
+                  const method = duplicateInfo.method;
+                  setDuplicateInfo(null);
+                  if (method === "credit") void handleCreditPayment(true);
+                  else void submitOrder(method, true);
+                }}
+                className="w-full py-3 rounded-xl border border-border text-muted-foreground font-bold disabled:opacity-60"
+              >
+                כן, שלח הזמנה נוספת
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 });

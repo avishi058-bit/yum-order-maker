@@ -126,6 +126,9 @@ const BodySchema = z.object({
   freeSauces: z.number().int().min(0).max(100).optional().default(0),
   // Cloudflare Turnstile anti-bot token. Required for website orders.
   turnstileToken: z.string().min(1).max(2048).optional(),
+  // Set to true only after the customer explicitly confirmed they want to send
+  // an identical order again (duplicate-order guard below).
+  allowDuplicate: z.boolean().optional().default(false),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
@@ -478,6 +481,36 @@ Deno.serve(async (req: Request) => {
       .from("customers")
       .upsert({ phone: body.customerPhone, name: body.customerName }, { onConflict: "phone" });
     if (custErr) console.warn("customer upsert non-fatal", custErr);
+  }
+
+  // ── Duplicate-order guard ────────────────────────────────────────────────
+  // Customers sometimes resend the same order because they aren't sure the
+  // first one went through. If an identical order (same phone + same total)
+  // was created in the last 10 minutes and is still active, ask for explicit
+  // confirmation instead of silently creating a second one.
+  if (!body.allowDuplicate && body.customerPhone && body.customerPhone.length >= 7) {
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: recent } = await supabase
+      .from("orders")
+      .select("order_number, created_at, status")
+      .eq("customer_phone", phoneForOrder)
+      .eq("total", finalTotal)
+      .gte("created_at", since)
+      .not("status", "in", '("cancelled","completed")')
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const existing = recent?.[0];
+    if (existing) {
+      return jsonResponse(
+        {
+          duplicate: true,
+          existingOrderNumber: existing.order_number,
+          existingStatus: existing.status,
+          error: `כבר קיימת הזמנה זהה על שמך (#${existing.order_number}) שנשלחה לפני רגע.`,
+        },
+        409,
+      );
+    }
   }
 
   // Insert order
