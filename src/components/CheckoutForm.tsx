@@ -1121,6 +1121,46 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           setStep("payment");
         }}
       />
+
+      {/* Duplicate-order confirmation — prevents accidentally ordering twice */}
+      {duplicateInfo && (
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4" dir="rtl">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setDuplicateInfo(null)} />
+          <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl">
+            <div className="text-5xl">🤔</div>
+            <h3 className="text-xl font-black">כבר קיבלנו הזמנה זהה</h3>
+            <p className="text-muted-foreground text-sm">
+              {duplicateInfo.orderNumber
+                ? `הזמנה #${duplicateInfo.orderNumber} על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.`
+                : "הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול."}
+              <br />
+              לשלוח הזמנה נוספת בכל זאת?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setDuplicateInfo(null)}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-black"
+              >
+                לא, ההזמנה שלי כבר נשלחה ✅
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => {
+                  const method = duplicateInfo.method;
+                  setDuplicateInfo(null);
+                  if (method === "credit") void handleCreditPayment(true);
+                  else void submitOrder(method, true);
+                }}
+                className="w-full py-3 rounded-xl border border-border text-muted-foreground font-bold disabled:opacity-60"
+              >
+                כן, שלח הזמנה נוספת
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 });
