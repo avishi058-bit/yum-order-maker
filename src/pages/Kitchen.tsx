@@ -400,6 +400,24 @@ const Kitchen = () => {
   // and to prevent double-clicks that queue up multiple updates.
   const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
   const [paidPendingIds, setPaidPendingIds] = useState<Set<string>>(new Set());
+  // Orders marked paid within the last 30 seconds — staff can undo an accidental tap.
+  const [undoablePaid, setUndoablePaid] = useState<Record<string, number>>({});
+  const [undoTick, setUndoTick] = useState(0);
+  useEffect(() => {
+    if (Object.keys(undoablePaid).length === 0) return;
+    const id = setInterval(() => {
+      const now = Date.now();
+      setUndoablePaid((curr) => {
+        const next: Record<string, number> = {};
+        for (const [orderId, deadline] of Object.entries(curr)) {
+          if (deadline > now) next[orderId] = deadline;
+        }
+        return next;
+      });
+      setUndoTick((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [undoablePaid]);
   useEffect(() => {
     const open = showRoundSummary || showRoundChefSummary || !!previewOrder;
     pauseRefreshRef.current = open;
