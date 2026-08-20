@@ -39,26 +39,12 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   const displayName = nameOverride || item.name;
   const displayDesc = descOverride || item.description;
   const cardRef = useRef<HTMLDivElement>(null);
-  const { flyToCart } = useFlyToCart();
-  // Local "added to cart" confirmation shown only for simple (no-modal) items.
-  const [justAdded, setJustAdded] = useState(false);
-  const addedTimer = useRef<number | null>(null);
-  useEffect(() => () => { if (addedTimer.current) window.clearTimeout(addedTimer.current); }, []);
 
+  // Tapping a card only OPENS the item flow (preview / customizer).
+  // No "added to cart" feedback here — the confirmation animation belongs to
+  // the actual add action inside the preview/customizer modal.
   const handleAdd = () => {
     if (browseOnly) return;
-    // For simple items (no customization step), the item is added directly to
-    // the cart — fire the fly animation from the card's image rect so the user
-    // sees the item "land" in the cart icon. Skipped for items that open a
-    // modal first; those fire the animation on confirm via the parent page.
-    if (!needsCustomization(item) && cardRef.current) {
-      const imgEl = cardRef.current.querySelector("img");
-      const sourceRect = (imgEl ?? cardRef.current).getBoundingClientRect();
-      flyToCart({ sourceRect, imageUrl: image });
-      setJustAdded(true);
-      if (addedTimer.current) window.clearTimeout(addedTimer.current);
-      addedTimer.current = window.setTimeout(() => setJustAdded(false), 1200);
-    }
     onAdd(item);
   };
 
