@@ -126,6 +126,9 @@ const BodySchema = z.object({
   freeSauces: z.number().int().min(0).max(100).optional().default(0),
   // Cloudflare Turnstile anti-bot token. Required for website orders.
   turnstileToken: z.string().min(1).max(2048).optional(),
+  // Set to true only after the customer explicitly confirmed they want to send
+  // an identical order again (duplicate-order guard below).
+  allowDuplicate: z.boolean().optional().default(false),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
