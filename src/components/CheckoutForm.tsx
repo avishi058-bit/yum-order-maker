@@ -55,6 +55,31 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
 
+  // Kiosk uses a high-contrast light theme for readability on the kiosk screen.
+  const th = isKiosk
+    ? {
+        surface: "bg-white",
+        textMain: "text-gray-900",
+        textMuted: "text-gray-500",
+        secondary: "bg-gray-100",
+        secondarySoft: "bg-gray-50",
+        border: "border-gray-200",
+        inputBg: "bg-white",
+        inputBorder: "border-gray-300",
+        inputFocus: "focus:ring-primary/50",
+      }
+    : {
+        surface: "bg-card",
+        textMain: "text-foreground",
+        textMuted: "text-muted-foreground",
+        secondary: "bg-secondary",
+        secondarySoft: "bg-secondary/40",
+        border: "border-border",
+        inputBg: "bg-secondary",
+        inputBorder: "border-border",
+        inputFocus: "focus:ring-primary/50",
+      };
+
   // ─── Temporary soft-launch flow ───────────────────────────────────────────
   // Kiosk: never collect phone (KIOSK_SKIP_PHONE) → start at details.
   // Website: skip OTP entirely (WEBSITE_SKIP_OTP) → start at details (phone still required there).
@@ -638,11 +663,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="relative bg-card rounded-2xl p-6 w-full max-w-lg border border-border max-h-[90vh] overflow-y-auto"
+        className={`relative ${th.surface} rounded-2xl p-6 w-full max-w-lg border ${th.border} max-h-[90vh] overflow-y-auto`}
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-black mb-6">
+        <h2 className={`text-2xl font-black mb-6 ${th.textMain}`}>
           {step === "phone" && "הכנס מספר טלפון"}
           {step === "otp" && "הכנס קוד אימות"}
           {step === "details" && "סיום הזמנה"}
@@ -653,7 +678,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {step === "phone" && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>
                 מספר טלפון <span className="text-destructive">*</span>
               </label>
               <input
@@ -661,20 +686,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 required
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}"
                 placeholder="0501234567"
                 dir="ltr"
               />
             </div>
-            <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
-              <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
+            <div className="rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2">
+              <p className={`text-sm font-bold ${th.textMain}`}>אימות אבטחה</p>
               <TurnstileWidget
                 action="send-otp"
                 onVerify={setOtpTurnstileToken}
                 onExpire={() => setOtpTurnstileToken(null)}
                 onError={() => setOtpTurnstileToken(null)}
               />
-              <p className="text-xs text-muted-foreground">יש לאמת את התיבה למעלה כדי לקבל קוד.</p>
+              <p className={`text-xs ${th.textMuted}`}>יש לאמת את התיבה למעלה כדי לקבל קוד.</p>
             </div>
             <div className="flex gap-3 pt-2">
               <motion.button
@@ -690,7 +715,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
+                className={`px-6 py-3 rounded-full border ${th.border} ${th.textMuted} hover:${th.textMain} transition-colors`}
               >
                 ביטול
               </button>
@@ -704,9 +729,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             {customerName && (
               <p className="text-primary font-bold text-lg">כיף שחזרת, {customerName} :)</p>
             )}
-            <p className="text-muted-foreground text-sm">שלחנו קוד בן 4 ספרות לוואטסאפ למספר {form.phone}</p>
+            <p className={`${th.textMuted} text-sm`}>שלחנו קוד בן 4 ספרות לוואטסאפ למספר {form.phone}</p>
             <div>
-              <label className="block text-sm font-medium mb-1">קוד אימות</label>
+              <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>קוד אימות</label>
               <input
                 type="text"
                 maxLength={4}
@@ -718,7 +743,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               />
             </div>
             {verifyCaptchaRequired && (
-              <div className="rounded-lg bg-secondary/40 border border-border p-3">
+              <div className="rounded-lg ${th.secondarySoft} border ${th.border} p-3">
                 <p className="text-xs text-muted-foreground mb-2 text-center">
                   זוהתה פעילות חריגה במערכת. אנא השלם אימות אבטחה.
                 </p>
@@ -744,7 +769,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               <button
                 type="button"
                 onClick={() => { setStep("phone"); setOtpCode(""); }}
-                className="px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
+                className={`px-6 py-3 rounded-full border ${th.border} ${th.textMuted} hover:${th.textMain} transition-colors`}
               >
                 חזור
               </button>
@@ -753,7 +778,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               type="button"
               onClick={handleSendOtp}
               disabled={sendingOtp}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors underline"
+              className={`text-sm ${th.textMuted} hover:text-primary transition-colors underline`}
             >
               {sendingOtp ? "שולח..." : "שלח קוד חדש"}
             </button>
@@ -767,7 +792,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               <p className="text-primary font-bold text-lg mb-4">כיף שחזרת, {customerName} :)</p>
             )}
 
-            <div className="mb-6 bg-secondary/50 rounded-lg p-4 space-y-1">
+            <div className="mb-6 ${th.secondarySoft} rounded-lg p-4 space-y-1 border ${th.border}">
               {items.map((item) => {
                 const tCounts = new Map<string, number>();
                 item.toppings.forEach((tId) => tCounts.set(tId, (tCounts.get(tId) || 0) + 1));
@@ -783,13 +808,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     <span>
                       {item.name} x{item.quantity}
                       {toppingNames.length > 0 && (
-                        <span className="text-muted-foreground"> ({toppingNames.join(", ")})</span>
+                        <span className="${th.textMuted}"> ({toppingNames.join(", ")})</span>
                       )}
                     </span>
                   </div>
                 );
               })}
-              <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
+              <div className="border-t ${th.border} pt-2 mt-2 flex justify-between font-bold">
                 <span>סה״כ</span>
                 <span className="text-primary">₪{total}</span>
               </div>
@@ -798,7 +823,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             <form onSubmit={handleDetailsSubmit} className="space-y-4">
               {!isLoggedIn && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>
                     שם מלא <span className="text-destructive">*</span>
                   </label>
                   <input
@@ -822,7 +847,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                       }
                       setForm({ ...form, name: val });
                     }}
-                    className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}"
                   />
                 </div>
               )}
@@ -830,7 +855,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   Kiosk → phone is never collected. */}
               {!isKiosk && !isLoggedIn && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>
                     מספר טלפון <span className="text-destructive">*</span>
                   </label>
                   <input
@@ -838,14 +863,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}"
                     placeholder="0501234567"
                     dir="ltr"
                   />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium mb-1">הערות</label>
+                <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>הערות</label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => {
@@ -857,7 +882,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     }
                     setForm({ ...form, notes: val });
                   }}
-                  className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                  className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus} resize-none"
                   rows={2}
                   placeholder="הערות להזמנה"
                 />
@@ -872,7 +897,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onClose(); }}
-                  className="px-6 py-3 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  className={`px-6 py-3 rounded-full border ${th.border} ${th.textMuted} hover:${th.textMain} transition-colors`}
                 >
                   ביטול
                 </button>
@@ -895,7 +920,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   את דמי המשלוח (<b>{delivery.fee}₪</b> — {delivery.zoneName}) משלמים <b>ישירות לשליח</b> בעת קבלת ההזמנה.<br />
                   ניתן לשלם לשליח באמצעות <b>Bit</b> או במזומן בלבד.
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className={`text-xs ${th.textMuted}`}>
                   כתובת: {delivery.address}
                 </div>
                 <label className="flex items-start gap-2 cursor-pointer">
@@ -905,7 +930,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     onChange={(e) => setDeliveryAck(e.target.checked)}
                     className="mt-1 w-5 h-5 accent-primary"
                   />
-                  <span className="text-sm font-bold text-foreground">
+                  <span className={`text-sm font-bold ${th.textMain}`}>
                     קראתי והבנתי שהתשלום על המשלוח יתבצע ישירות לשליח.
                   </span>
                 </label>
@@ -930,7 +955,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   </label>
                   {preorderEnabled && (
                     <div className="mt-3 flex items-center gap-2 text-sm text-foreground">
-                      <span className="text-muted-foreground">שעת איסוף:</span>
+                      <span className="${th.textMuted}">שעת איסוף:</span>
                       <input
                         type="time"
                         min={start}
@@ -939,7 +964,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                         onChange={(e) => setPreorderTime(e.target.value)}
                         className="bg-secondary border border-border rounded px-3 py-2 text-foreground"
                       />
-                      <span className="text-xs text-muted-foreground">({start}–{end})</span>
+                      <span className={`text-xs ${th.textMuted}`}>({start}–{end})</span>
                     </div>
                   )}
                 </div>
@@ -996,15 +1021,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
             {/* Cloudflare Turnstile — anti-bot verification before payment */}
             {!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && (
-              <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-2">
-                <p className="text-sm font-bold text-foreground">אימות אבטחה</p>
+              <div className="rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2">
+                <p className={`text-sm font-bold ${th.textMain}`}>אימות אבטחה</p>
                 <TurnstileWidget
                   action="submit-order"
                   onVerify={setTurnstileToken}
                   onExpire={() => setTurnstileToken(null)}
                   onError={() => setTurnstileToken(null)}
                 />
-                <p className="text-xs text-muted-foreground">יש לאמת את התיבה למעלה כדי להשלים את ההזמנה.</p>
+                <p className={`text-xs ${th.textMuted}`}>יש לאמת את התיבה למעלה כדי להשלים את ההזמנה.</p>
               </div>
             )}
 
@@ -1129,7 +1154,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-sm text-center space-y-4 shadow-2xl">
             <div className="text-5xl">🤔</div>
             <h3 className="text-xl font-black">כבר קיבלנו הזמנה זהה</h3>
-            <p className="text-muted-foreground text-sm">
+            <p className={`${th.textMuted} text-sm`}>
               {duplicateInfo.orderNumber
                 ? `הזמנה #${duplicateInfo.orderNumber} על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.`
                 : "הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול."}

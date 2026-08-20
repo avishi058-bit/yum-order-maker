@@ -114,6 +114,50 @@ const KioskCartDrawer = ({
     onQuickAdd(item);
   };
 
+  // Theme tokens — kiosk uses a high-contrast light theme for visibility on
+  // the kiosk screen; website keeps the app theme.
+  const th = isKiosk
+    ? {
+        drawerBg: "bg-white",
+        cardBg: "bg-white",
+        headerBg: "bg-white",
+        border: "border-gray-200",
+        textMain: "text-gray-900",
+        textMuted: "text-gray-500",
+        secondary: "bg-gray-100",
+        secondaryHover: "hover:bg-gray-200",
+        qtySecondary: "bg-gray-100",
+        addMoreBg: "bg-gray-50",
+        addMoreBorder: "border-gray-200",
+        addMoreHover: "hover:bg-gray-100",
+        destructiveBg: "bg-red-50",
+        destructiveText: "text-red-600",
+        destructiveHover: "hover:bg-red-100",
+        closedBannerBg: "bg-amber-50",
+        closedBannerBorder: "border-amber-200",
+        closedBannerText: "text-amber-900",
+      }
+    : {
+        drawerBg: "bg-background",
+        cardBg: "bg-card",
+        headerBg: "bg-card",
+        border: "border-border",
+        textMain: "text-foreground",
+        textMuted: "text-muted-foreground",
+        secondary: "bg-secondary",
+        secondaryHover: "hover:bg-border",
+        qtySecondary: "bg-secondary",
+        addMoreBg: "bg-secondary",
+        addMoreBorder: "border-border",
+        addMoreHover: "hover:bg-border",
+        destructiveBg: "bg-destructive/10",
+        destructiveText: "text-destructive",
+        destructiveHover: "hover:bg-destructive/20",
+        closedBannerBg: "bg-amber-100 dark:bg-amber-950",
+        closedBannerBorder: "border-amber-200 dark:border-amber-800",
+        closedBannerText: "text-amber-900 dark:text-amber-100",
+      };
+
   // Size tokens — kiosk uses larger touch targets, website uses compact sizes
   const sz = isKiosk
     ? {
@@ -204,25 +248,25 @@ const KioskCartDrawer = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`fixed top-0 right-0 h-full ${drawerWidth} bg-background z-50 shadow-2xl flex flex-col pwa-safe-screen`}
+            className={`fixed top-0 right-0 h-full ${drawerWidth} ${th.drawerBg} z-50 shadow-2xl flex flex-col pwa-safe-screen`}
             dir="rtl"
           >
             {/* Header */}
-            <div className={`flex-none flex items-center justify-between ${sz.headerPad} bg-card border-b border-border`}>
+            <div className={`flex-none flex items-center justify-between ${sz.headerPad} ${th.headerBg} border-b ${th.border}`}>
               <button
                 onClick={onClose}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                className={`flex items-center gap-2 ${th.textMuted} hover:${th.textMain} transition-colors`}
               >
                 <ArrowRight size={sz.backIcon} />
                 <span className={`${sz.backText} font-bold`}>לתפריט</span>
               </button>
-              <h2 className={`${sz.title} font-black flex items-center gap-2`}>
+              <h2 className={`${sz.title} font-black flex items-center gap-2 ${th.textMain}`}>
                 <ShoppingBag size={sz.titleIcon} className="text-primary" />
                 ההזמנה שלך
               </h2>
               <button
                 onClick={onClose}
-                className="text-muted-foreground hover:text-foreground"
+                className={`${th.textMuted} hover:${th.textMain}`}
                 aria-label="סגור"
               >
                 <X size={sz.closeIcon} />
@@ -230,8 +274,8 @@ const KioskCartDrawer = ({
             </div>
 
             {isClosed && (
-              <div className="flex-none bg-amber-100 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-5 py-3">
-                <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
+              <div className={`flex-none ${th.closedBannerBg} border-b ${th.closedBannerBorder} px-5 py-3`}>
+                <p className={`text-center ${th.closedBannerText} font-black text-sm md:text-base`}>
                   ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. תישמר ותישלח רק כשנפתח.
                 </p>
               </div>
@@ -242,14 +286,14 @@ const KioskCartDrawer = ({
               {/* Cart items */}
               <div className={sz.contentPad}>
                 {items.length === 0 ? (
-                  <p className={`text-center text-muted-foreground ${sz.emptyText}`}>העגלה ריקה</p>
+                  <p className={`text-center ${th.textMuted} ${sz.emptyText}`}>העגלה ריקה</p>
                 ) : (
                   items.map((item) => {
                     const img = menuImages[item.menuItemId];
                     return (
                       <div
                         key={item.id}
-                        className={`bg-card rounded-2xl ${sz.cardPad} shadow-sm border border-border flex ${sz.cardGap}`}
+                        className={`${th.cardBg} rounded-2xl ${sz.cardPad} shadow-sm border ${th.border} flex ${sz.cardGap}`}
                       >
                         {/* Image */}
                         {img ? (
@@ -260,7 +304,7 @@ const KioskCartDrawer = ({
                             loading="lazy"
                           />
                         ) : (
-                          <div className={`${sz.img} bg-secondary flex items-center justify-center ${sz.imgFallbackText} flex-none`}>
+                          <div className={`${sz.img} ${th.secondary} flex items-center justify-center ${sz.imgFallbackText} flex-none`}>
                             🍔
                           </div>
                         )}
@@ -268,7 +312,7 @@ const KioskCartDrawer = ({
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className={`${sz.itemName} font-black leading-tight`}>{item.name}</h3>
+                            <h3 className={`${sz.itemName} font-black leading-tight ${th.textMain}`}>{item.name}</h3>
                             <span className={`${sz.itemPrice} font-black text-primary whitespace-nowrap`}>
                               ₪{getItemTotal(item)}
                             </span>
@@ -287,7 +331,7 @@ const KioskCartDrawer = ({
                               return (
                                 <>
                                   {removes.length > 0 && (
-                                    <p className={`${sz.modText} text-destructive`}>{removes.join(", ")}</p>
+                                    <p className={`${sz.modText} text-red-600`}>{removes.join(", ")}</p>
                                   )}
                                   {adds.length > 0 && (
                                     <p className={`${sz.modText} text-green-600`}>{adds.join(", ")}</p>
@@ -301,7 +345,7 @@ const KioskCartDrawer = ({
                               </p>
                             )}
                             {item.withMeal && (
-                              <p className={`${sz.modText} text-accent-foreground`}>
+                              <p className={`${sz.modText} ${th.textMain}`}>
                                 🍟🥤 ארוחה עסקית
                                 {item.mealSideId &&
                                   ` · ${mealSideOptions.find((s) => s.id === item.mealSideId)?.name}`}
@@ -310,7 +354,7 @@ const KioskCartDrawer = ({
                               </p>
                             )}
                             {item.dealBurgers && (
-                              <p className={`${sz.modText} text-muted-foreground`}>
+                              <p className={`${sz.modText} ${th.textMuted}`}>
                                 {item.dealBurgers.length} המבורגרים
                                 {item.dealDrinks && ` · ${item.dealDrinks.length} משקאות`}
                               </p>
@@ -322,7 +366,7 @@ const KioskCartDrawer = ({
                             {onEditItem && !item.dealBurgers && (
                               <button
                                 onClick={() => onEditItem(item.id)}
-                                className={`flex items-center gap-1.5 rounded-full bg-background border-2 border-border text-foreground hover:bg-secondary transition-colors font-bold ${isKiosk ? 'px-4 py-2.5 text-base' : 'px-3 py-1.5 text-xs'}`}
+                                className={`flex items-center gap-1.5 rounded-full ${isKiosk ? 'bg-gray-50 border-2 border-gray-200 text-gray-900 hover:bg-gray-100' : 'bg-background border-2 border-border text-foreground hover:bg-secondary'} transition-colors font-bold ${isKiosk ? 'px-4 py-2.5 text-base' : 'px-3 py-1.5 text-xs'}`}
                                 aria-label="ערוך מנה"
                               >
                                 <Pencil size={isKiosk ? 18 : 12} />
@@ -331,12 +375,12 @@ const KioskCartDrawer = ({
                             )}
                             <button
                               onClick={() => onUpdateQuantity(item.id, -1)}
-                              className={`${sz.qtyBtn} rounded-full bg-secondary hover:bg-border transition-colors flex items-center justify-center active:scale-95`}
+                              className={`${sz.qtyBtn} rounded-full ${th.qtySecondary} ${th.secondaryHover} transition-colors flex items-center justify-center active:scale-95 ${th.textMain}`}
                               aria-label="הפחת"
                             >
                               <Minus size={sz.qtyIcon} />
                             </button>
-                            <span className={`font-black ${sz.qtyNum} text-center`}>
+                            <span className={`font-black ${sz.qtyNum} text-center ${th.textMain}`}>
                               {item.quantity}
                             </span>
                             <button
@@ -348,7 +392,7 @@ const KioskCartDrawer = ({
                             </button>
                             <button
                               onClick={() => onUpdateQuantity(item.id, -item.quantity)}
-                              className={`${sz.qtyBtn} me-auto rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex items-center justify-center active:scale-95`}
+                              className={`${sz.qtyBtn} me-auto rounded-full ${th.destructiveBg} ${th.destructiveText} ${th.destructiveHover} transition-colors flex items-center justify-center active:scale-95`}
                               aria-label="מחק מנה"
                               title="מחק מנה"
                             >
@@ -368,7 +412,7 @@ const KioskCartDrawer = ({
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={onBackToMenu}
-                    className={`w-full bg-secondary hover:bg-border text-foreground font-black ${sz.addMoreBtn} rounded-2xl border-2 border-dashed border-border flex items-center justify-center gap-3 transition-colors`}
+                    className={`w-full ${th.addMoreBg} ${th.addMoreHover} ${th.textMain} font-black ${sz.addMoreBtn} rounded-2xl border-2 border-dashed ${th.addMoreBorder} flex items-center justify-center gap-3 transition-colors`}
                   >
                     <Plus size={sz.addMoreIcon} />
                     הוסף עוד מנה
@@ -381,7 +425,7 @@ const KioskCartDrawer = ({
                 <div className={isKiosk ? "mt-8" : "mt-6"}>
                   <div className={`${sz.recHeaderPad} flex items-center gap-2`}>
                     <Sparkles size={sz.recIcon} className="text-primary" />
-                    <h3 className={`${sz.recTitle} font-black`}>ממליצים לך להוסיף</h3>
+                    <h3 className={`${sz.recTitle} font-black ${th.textMain}`}>ממליצים לך להוסיף</h3>
                   </div>
 
                   {/* Horizontal scroll for quick browsing */}
@@ -393,10 +437,10 @@ const KioskCartDrawer = ({
                         return (
                           <div
                             key={rec.id}
-                            className={`flex-none ${sz.recCardWidth} bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col`}
+                            className={`flex-none ${sz.recCardWidth} ${th.cardBg} rounded-2xl shadow-sm border ${th.border} overflow-hidden flex flex-col`}
                           >
                             {/* Image */}
-                            <div className="aspect-square bg-secondary flex items-center justify-center overflow-hidden">
+                            <div className={`aspect-square ${th.secondary} flex items-center justify-center overflow-hidden`}>
                               {img ? (
                                 <img
                                   src={img}
@@ -413,7 +457,7 @@ const KioskCartDrawer = ({
 
                             {/* Info */}
                             <div className={`${isKiosk ? "p-3" : "p-2.5"} flex-1 flex flex-col`}>
-                              <p className={`font-black ${sz.recName} leading-tight mb-1 line-clamp-2`}>
+                              <p className={`font-black ${sz.recName} leading-tight mb-1 line-clamp-2 ${th.textMain}`}>
                                 {rec.name}
                               </p>
                               <p className={`text-primary font-black ${sz.recPrice} mt-auto`}>
@@ -441,11 +485,11 @@ const KioskCartDrawer = ({
 
             {/* Sticky bottom bar */}
             {items.length > 0 && (
-              <div className={`flex-none ${sz.bottomPad} bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pwa-checkout-bar`}>
+              <div className={`flex-none ${sz.bottomPad} ${th.cardBg} border-t ${th.border} shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pwa-checkout-bar`}>
                 <div className="flex items-center justify-between mb-1">
                   <div>
-                    <p className={`${sz.bottomCount} text-muted-foreground`}>{totalCount} פריטים</p>
-                    <p className={`${sz.bottomTotal} font-black`}>₪{total}</p>
+                    <p className={`${sz.bottomCount} ${th.textMuted}`}>{totalCount} פריטים</p>
+                    <p className={`${sz.bottomTotal} font-black ${th.textMain}`}>₪{total}</p>
                   </div>
                   <motion.button
                     whileTap={{ scale: 0.96 }}

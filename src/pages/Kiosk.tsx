@@ -36,11 +36,11 @@ const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: 
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.8, opacity: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 200 }}
-          className="bg-card rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border border-border"
+          className="bg-white rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border border-gray-200"
         >
           <p className="text-5xl mb-6">🍔</p>
-          <h2 className="text-3xl font-black text-foreground mb-2">איך תרצה את ההזמנה?</h2>
-          <p className="text-lg text-muted-foreground mb-8">בחר אופציה כדי להמשיך</p>
+          <h2 className="text-3xl font-black text-gray-900 mb-2">איך תרצה את ההזמנה?</h2>
+          <p className="text-lg text-gray-500 mb-8">בחר אופציה כדי להמשיך</p>
           <div className="flex gap-4">
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => onSelect(true)}
               className="flex-1 bg-primary text-primary-foreground rounded-2xl py-6 px-6 text-2xl font-black shadow-lg hover:opacity-90 transition-opacity">
@@ -559,20 +559,20 @@ const Kiosk = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: -20 }}
               transition={{ type: "spring", damping: 18, stiffness: 200 }}
-              className="bg-card rounded-3xl p-12 text-center shadow-2xl max-w-lg mx-4 border border-border"
+              className="bg-white rounded-3xl p-12 text-center shadow-2xl max-w-lg mx-4 border border-gray-200"
             >
               <p className="text-8xl mb-6">🎉</p>
-              <p className="text-4xl font-black text-foreground mb-3">הזמנתך התקבלה!</p>
+              <p className="text-4xl font-black text-gray-900 mb-3">הזמנתך התקבלה!</p>
               <p className="text-5xl font-black text-primary mb-4">#{orderSuccess}</p>
               <div className="rounded-2xl border-4 border-primary bg-primary/10 px-6 py-5 mb-4">
                 <p className="text-5xl font-black text-primary leading-tight">
                   גש לשלם בקופה
                 </p>
-                <p className="text-3xl font-black text-foreground mt-2">
+                <p className="text-3xl font-black text-gray-900 mt-2">
                   באשראי או מזומן
                 </p>
               </div>
-              <p className="text-2xl text-muted-foreground">מספר ההזמנה שלך למעלה</p>
+              <p className="text-2xl text-gray-500">מספר ההזמנה שלך למעלה</p>
 
             </motion.div>
           </motion.div>
