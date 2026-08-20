@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Star, Check } from "lucide-react";
+import { ShoppingBag, Star } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useFlyToCart } from "@/contexts/FlyToCartContext";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
