@@ -2653,7 +2653,7 @@ const Kitchen = () => {
                       >
                         {paidPendingIds.has(order.id)
                           ? "מעדכן..."
-                          : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now() - undoTick * 0) / 1000))}s)`}
+                          : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
                       </button>
                     )}
                     {order.status === "ready" && (
