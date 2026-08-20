@@ -565,7 +565,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       window.location.href = result.sessionUrl;
     } catch (error: any) {
       console.error("Credit payment error:", error);
-      toast({ title: error.message || "שגיאה בתשלום באשראי", variant: "destructive" });
+      if (error?.duplicate) {
+        setDuplicateInfo({ orderNumber: error.existingOrderNumber, method: "credit" });
+      } else {
+        toast({ title: error.message || "שגיאה בתשלום באשראי", variant: "destructive" });
+      }
     } finally {
       setSubmitting(false);
     }
