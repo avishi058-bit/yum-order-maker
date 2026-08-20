@@ -351,7 +351,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     };
   };
 
-  const callCreateOrder = async (paymentMethod: "cash" | "credit" | "counter", status: "new" | "pending_payment") => {
+  const callCreateOrder = async (
+    paymentMethod: "cash" | "credit" | "counter",
+    status: "new" | "pending_payment",
+    allowDuplicate = false,
+  ) => {
     const isStation = localStorage.getItem("habakta_station") === "true";
     const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
