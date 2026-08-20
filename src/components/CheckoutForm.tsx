@@ -399,6 +399,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         deliveryFee: delivery?.fee ?? null,
         // Cloudflare Turnstile anti-bot token (verified server-side when enabled).
         turnstileToken: RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE ? (turnstileToken || undefined) : undefined,
+        // True only when the customer confirmed they really want to resend an
+        // identical order (duplicate guard).
+        allowDuplicate,
       },
     });
 
@@ -409,9 +412,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         const ctx: any = (error as any).context;
         if (ctx && typeof ctx.json === "function") {
           const parsed = await ctx.json();
+          if (parsed?.duplicate) {
+            const dupErr: any = new Error(parsed.error || "הזמנה זהה כבר נשלחה");
+            dupErr.duplicate = true;
+            dupErr.existingOrderNumber = parsed.existingOrderNumber;
+            throw dupErr;
+          }
           if (parsed?.error) serverMsg = parsed.error;
         }
-      } catch { /* ignore */ }
+      } catch (e: any) {
+        if (e?.duplicate) throw e;
+      }
       throw new Error(serverMsg);
     }
     if (data?.error) throw new Error(data.error);
