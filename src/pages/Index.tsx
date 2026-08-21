@@ -759,9 +759,9 @@ const Index = () => {
             onCheckout={() => {
               if (isClosed) {
                 setCartOpen(false);
-                toast({
-                  title: "ההזמנה נשמרה להזמנה עתידית 💾",
-                  description: "האתר סגור להזמנות כרגע. ההזמנה שלכם תישמר אצלכם ותישלח רק כשנפתח — לא לעכשיו!",
+                toast.success("ההזמנה נשמרה אצלכם 💾", {
+                  description: "אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם.",
+                  duration: 8000,
                 });
                 return;
               }
