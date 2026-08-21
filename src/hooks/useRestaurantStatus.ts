@@ -51,8 +51,13 @@ export const useRestaurantStatus = () => {
         .select(SELECT_COLS)
         .limit(1)
         .single();
-      if (data) setStatus(data as RestaurantStatus);
+      if (data) {
+        setStatus(data as RestaurantStatus);
+        writeCache(data as RestaurantStatus);
+      }
+      setResolved(true);
       setLoading(false);
+
     };
 
     fetch();
