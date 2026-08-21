@@ -605,7 +605,7 @@ const Index = () => {
                 {totalItems}
               </span>
             </span>
-            <span className="text-base">{isClosed ? "שמור הזמנה לפתיחה" : "סיום הזמנה"}</span>
+            <span className="text-base">{isClosed ? "שמור הזמנה לשליחה מאוחרת" : "סיום הזמנה"}</span>
           </button>
         </div>
       )}
