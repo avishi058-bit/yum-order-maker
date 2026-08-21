@@ -15,10 +15,34 @@ export interface RestaurantStatus {
 
 const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled";
 
+const CACHE_KEY = "habakta_restaurant_status";
+
+const DEFAULT_STATUS: RestaurantStatus = { website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false };
+
+// Read the last known status synchronously so a closed restaurant never
+// flashes as "open" for the ~1.5s the network request takes.
+const readCache = (): RestaurantStatus | null => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return { ...DEFAULT_STATUS, ...JSON.parse(raw) } as RestaurantStatus;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (s: RestaurantStatus) => {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+};
+
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false });
+  const cached = useRef(readCache());
+  const [status, setStatus] = useState<RestaurantStatus>(cached.current ?? DEFAULT_STATUS);
   const [loading, setLoading] = useState(true);
+  // True until we have a trustworthy value (fresh fetch, or a cached one).
+  const [resolved, setResolved] = useState(cached.current !== null);
   const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
+
 
   useEffect(() => {
     const fetch = async () => {
