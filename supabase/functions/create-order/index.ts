@@ -17,6 +17,7 @@ import {
   MEAL_UPGRADE_PRICE as SHARED_MEAL_UPGRADE_PRICE,
   toLookup,
 } from "../_shared/menu-pricing.ts";
+import { recordConsent } from "../_shared/consent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
