@@ -914,6 +914,38 @@ const Index = () => {
           <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
         )}
 
+        {savedConfirmOpen && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" dir="rtl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSavedConfirmOpen(false)}
+              className="absolute inset-0 bg-black/60"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              className="relative bg-card text-card-foreground rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center"
+            >
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-4">
+                <Check size={32} className="text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-2xl font-black mb-2">ההזמנה נשמרה אצלכם ✅</h3>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם — ההזמנה לא תישלח אוטומטית.
+              </p>
+              <button
+                onClick={() => setSavedConfirmOpen(false)}
+                className="w-full rounded-2xl py-3.5 font-black text-white bg-primary hover:bg-primary/90 transition-colors"
+              >
+                הבנתי
+              </button>
+            </motion.div>
+          </div>
+        )}
+
         {/* SaveAsFavoriteModal moved into CheckoutForm (pre-payment). */}
 
         {!!savedCart && cart.length === 0 && !checkoutOpen && !isStation && savedCart.items.reduce((s, i) => s + (i.quantity || 0), 0) >= 3 && (
