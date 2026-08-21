@@ -760,10 +760,7 @@ const Index = () => {
             onCheckout={() => {
               if (isClosed) {
                 setCartOpen(false);
-                toast.success("ההזמנה נשמרה אצלכם 💾", {
-                  description: "אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם.",
-                  duration: 8000,
-                });
+                setSavedConfirmOpen(true);
                 return;
               }
               if (deliveryInfo && getTotal() < 300) {
