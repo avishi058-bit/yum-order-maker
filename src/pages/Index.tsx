@@ -66,7 +66,7 @@ import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
-  const { status: restaurantStatus } = useRestaurantStatus();
+  const { status: restaurantStatus, resolved: statusResolved } = useRestaurantStatus();
   const { status: businessStatus } = useBusinessHours();
   const { isLoggedIn, customer, loading: authLoading, favoriteItems } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";
