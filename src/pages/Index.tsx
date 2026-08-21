@@ -75,6 +75,7 @@ const Index = () => {
   const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
   const isManualClosure = !isStation && isClosed && businessStatus.isOpen;
   const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [savedConfirmOpen, setSavedConfirmOpen] = useState(false);
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
