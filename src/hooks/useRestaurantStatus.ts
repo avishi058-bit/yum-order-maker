@@ -157,5 +157,5 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, delivery_enabled: on }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
+  return { status, loading, resolved, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
 };
