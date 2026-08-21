@@ -663,7 +663,7 @@ const Index = () => {
           <div className="pb-10">
             <div className="sticky top-[72px] z-40 bg-amber-100 dark:bg-amber-950 border-y border-amber-200 dark:border-amber-800 py-3 px-4">
               <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
-                ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. ההזמנה תישמר ותישלח רק כשנפתח.
+                ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם — חזרו ושלחו אותה בעצמכם כשנפתח.
               </p>
             </div>
             <MenuSection
