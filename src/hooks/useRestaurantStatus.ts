@@ -15,10 +15,34 @@ export interface RestaurantStatus {
 
 const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled";
 
+const CACHE_KEY = "habakta_restaurant_status";
+
+const DEFAULT_STATUS: RestaurantStatus = { website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false };
+
+// Read the last known status synchronously so a closed restaurant never
+// flashes as "open" for the ~1.5s the network request takes.
+const readCache = (): RestaurantStatus | null => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return { ...DEFAULT_STATUS, ...JSON.parse(raw) } as RestaurantStatus;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (s: RestaurantStatus) => {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+};
+
 export const useRestaurantStatus = () => {
-  const [status, setStatus] = useState<RestaurantStatus>({ website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false });
+  const cached = useRef(readCache());
+  const [status, setStatus] = useState<RestaurantStatus>(cached.current ?? DEFAULT_STATUS);
   const [loading, setLoading] = useState(true);
+  // True until we have a trustworthy value (fresh fetch, or a cached one).
+  const [resolved, setResolved] = useState(cached.current !== null);
   const channelId = useRef(`restaurant-status-${Math.random().toString(36).slice(2)}`);
+
 
   useEffect(() => {
     const fetch = async () => {
@@ -27,8 +51,13 @@ export const useRestaurantStatus = () => {
         .select(SELECT_COLS)
         .limit(1)
         .single();
-      if (data) setStatus(data as RestaurantStatus);
+      if (data) {
+        setStatus(data as RestaurantStatus);
+        writeCache(data as RestaurantStatus);
+      }
+      setResolved(true);
       setLoading(false);
+
     };
 
     fetch();
@@ -40,17 +69,22 @@ export const useRestaurantStatus = () => {
         { event: "UPDATE", schema: "public", table: "restaurant_status" },
         (payload) => {
           const n = payload.new as Partial<RestaurantStatus>;
-          setStatus((prev) => ({
-            website_open: n.website_open ?? prev.website_open,
-            station_open: n.station_open ?? prev.station_open,
-            cash_enabled: n.cash_enabled ?? prev.cash_enabled,
-            credit_enabled: n.credit_enabled ?? prev.credit_enabled,
-            high_load: n.high_load ?? prev.high_load,
-            preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
-            preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
-            preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
-            delivery_enabled: n.delivery_enabled ?? prev.delivery_enabled,
-          }));
+          setStatus((prev) => {
+            const next: RestaurantStatus = {
+              website_open: n.website_open ?? prev.website_open,
+              station_open: n.station_open ?? prev.station_open,
+              cash_enabled: n.cash_enabled ?? prev.cash_enabled,
+              credit_enabled: n.credit_enabled ?? prev.credit_enabled,
+              high_load: n.high_load ?? prev.high_load,
+              preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
+              preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
+              preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
+              delivery_enabled: n.delivery_enabled ?? prev.delivery_enabled,
+            };
+            writeCache(next);
+            return next;
+          });
+
         }
       )
       .subscribe();
@@ -123,5 +157,5 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, delivery_enabled: on }));
   };
 
-  return { status, loading, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
+  return { status, loading, resolved, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
 };
