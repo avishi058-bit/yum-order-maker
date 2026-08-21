@@ -600,6 +600,31 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "שגיאה ביצירת פריטי ההזמנה" }, 500);
   }
 
+  // ===== Legal consent proof (clickwrap "digital signature") =====
+  // Persist exactly what the customer approved, with IP + user-agent, so the
+  // business has evidence if a claim is ever raised.
+  const userAgent = req.headers.get("user-agent") || null;
+  const consentBase = {
+    supabase,
+    phone: phoneForOrder,
+    customerName: body.customerName,
+    orderId: order.id,
+    source: body.orderSource,
+    ip: clientIp,
+    userAgent,
+  };
+
+  await recordConsent({ ...consentBase, kind: "terms", createdAt: body.termsAcceptedAt });
+
+  // Gluten-free disclaimer — recorded per dish that used a gluten-free bun.
+  const glutenItems = body.items
+    .filter((it) => (it.toppings ?? []).includes("gluten-free-bun"))
+    .map((it) => it.nameOverride || MENU_BY_ID.get(it.itemId)?.name || it.itemId);
+  for (const itemRef of glutenItems) {
+    await recordConsent({ ...consentBase, kind: "gluten_free", itemRef });
+  }
+
+
   // Finalize the delivery request server-side, verifying the client_token.
   // Without a matching token the update is refused — no client can mark
   // another customer's pending request as completed.
