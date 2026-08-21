@@ -500,7 +500,7 @@ const KioskCartDrawer = ({
                         : "bg-primary text-primary-foreground shadow-primary/30"
                     }`}
                   >
-                    {isClosed ? "שמור הזמנה לפתיחה 💾" : "מעבר לתשלום ←"}
+                    {isClosed ? "שמור הזמנה לשליחה מאוחרת 💾" : "מעבר לתשלום ←"}
                   </motion.button>
                 </div>
               </div>
