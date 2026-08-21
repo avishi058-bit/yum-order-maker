@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
-import { AnimatePresence } from "framer-motion";
-import { ShoppingBag, Phone, LogIn, Smartphone } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ShoppingBag, Phone, LogIn, Smartphone, Check } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
@@ -60,7 +60,7 @@ import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
@@ -75,6 +75,7 @@ const Index = () => {
   const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
   const isManualClosure = !isStation && isClosed && businessStatus.isOpen;
   const [reopenModalOpen, setReopenModalOpen] = useState(false);
+  const [savedConfirmOpen, setSavedConfirmOpen] = useState(false);
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -493,7 +494,7 @@ const Index = () => {
     setDeliveryInfo(data);
     setDeliveryFlowOpen(false);
     setDineIn(false); // treat like takeaway for menu/pricing
-    toast({ title: "נמצא שליח! 🛵", description: "אפשר להתחיל להזמין" });
+    toast.success("נמצא שליח! 🛵", { description: "אפשר להתחיל להזמין" });
     setTimeout(() => {
       document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
@@ -605,7 +606,7 @@ const Index = () => {
                 {totalItems}
               </span>
             </span>
-            <span className="text-base">{isClosed ? "שמור הזמנה לפתיחה" : "סיום הזמנה"}</span>
+            <span className="text-base">{isClosed ? "שמור הזמנה לשליחה מאוחרת" : "סיום הזמנה"}</span>
           </button>
         </div>
       )}
@@ -639,8 +640,8 @@ const Index = () => {
               }}
               className="inline-flex flex-col items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-black px-8 py-5 rounded-2xl shadow-xl shadow-green-600/30 hover:scale-105 transition-transform"
             >
-              <span className="text-xl">📝 הרכיבו הזמנה לפתיחה</span>
-              <span className="text-sm font-normal opacity-90">תישמר אצלכם ותישלח כשנפתח</span>
+              <span className="text-xl">📝 הרכיבו הזמנה לשמירה</span>
+              <span className="text-sm font-normal opacity-90">תישמר אצלכם — תצטרכו לחזור ולשלוח אותה כשנפתח</span>
             </button>
           </div>
 
@@ -663,7 +664,7 @@ const Index = () => {
           <div className="pb-10">
             <div className="sticky top-[72px] z-40 bg-amber-100 dark:bg-amber-950 border-y border-amber-200 dark:border-amber-800 py-3 px-4">
               <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
-                ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. ההזמנה תישמר ותישלח רק כשנפתח.
+                ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם — חזרו ושלחו אותה בעצמכם כשנפתח.
               </p>
             </div>
             <MenuSection
@@ -759,17 +760,12 @@ const Index = () => {
             onCheckout={() => {
               if (isClosed) {
                 setCartOpen(false);
-                toast({
-                  title: "ההזמנה נשמרה להזמנה עתידית 💾",
-                  description: "האתר סגור להזמנות כרגע. ההזמנה שלכם תישמר אצלכם ותישלח רק כשנפתח — לא לעכשיו!",
-                });
+                setSavedConfirmOpen(true);
                 return;
               }
               if (deliveryInfo && getTotal() < 300) {
-                toast({
-                  title: "מינימום הזמנה למשלוח 300₪",
+                toast.error("מינימום הזמנה למשלוח 300₪", {
                   description: `הסכום הנוכחי: ${getTotal()}₪. יש להוסיף עוד ${Math.max(0, 300 - getTotal())}₪`,
-                  variant: "destructive",
                 });
                 return;
               }
@@ -916,6 +912,38 @@ const Index = () => {
 
         {reopenModalOpen && (
           <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+        )}
+
+        {savedConfirmOpen && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" dir="rtl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSavedConfirmOpen(false)}
+              className="absolute inset-0 bg-black/60"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              className="relative bg-card text-card-foreground rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center"
+            >
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-4">
+                <Check size={32} className="text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-2xl font-black mb-2">ההזמנה נשמרה אצלכם ✅</h3>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם — ההזמנה לא תישלח אוטומטית.
+              </p>
+              <button
+                onClick={() => setSavedConfirmOpen(false)}
+                className="w-full rounded-2xl py-3.5 font-black text-white bg-primary hover:bg-primary/90 transition-colors"
+              >
+                הבנתי
+              </button>
+            </motion.div>
+          </div>
         )}
 
         {/* SaveAsFavoriteModal moved into CheckoutForm (pre-payment). */}

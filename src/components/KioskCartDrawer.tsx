@@ -276,7 +276,7 @@ const KioskCartDrawer = ({
             {isClosed && (
               <div className={`flex-none ${th.closedBannerBg} border-b ${th.closedBannerBorder} px-5 py-3`}>
                 <p className={`text-center ${th.closedBannerText} font-black text-sm md:text-base`}>
-                  ⚠️ זוהי הזמנה עתידית — המטבח סגור כרגע. תישמר ותישלח רק כשנפתח.
+                  ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם — חזרו ושלחו אותה בעצמכם כשנפתח.
                 </p>
               </div>
             )}
@@ -500,7 +500,7 @@ const KioskCartDrawer = ({
                         : "bg-primary text-primary-foreground shadow-primary/30"
                     }`}
                   >
-                    {isClosed ? "שמור הזמנה לפתיחה 💾" : "מעבר לתשלום ←"}
+                    {isClosed ? "שמור הזמנה לשליחה מאוחרת 💾" : "מעבר לתשלום ←"}
                   </motion.button>
                 </div>
               </div>
