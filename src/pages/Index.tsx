@@ -766,10 +766,8 @@ const Index = () => {
                 return;
               }
               if (deliveryInfo && getTotal() < 300) {
-                toast({
-                  title: "מינימום הזמנה למשלוח 300₪",
+                toast.error("מינימום הזמנה למשלוח 300₪", {
                   description: `הסכום הנוכחי: ${getTotal()}₪. יש להוסיף עוד ${Math.max(0, 300 - getTotal())}₪`,
-                  variant: "destructive",
                 });
                 return;
               }
