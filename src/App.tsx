@@ -121,6 +121,15 @@ const App = () => (
                 }
               />
               <Route
+                path="/admin/consents"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminConsents />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="/station-setup"
                 element={
                   <ProtectedRoute requiredRole="admin">
