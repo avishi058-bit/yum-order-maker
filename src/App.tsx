@@ -25,6 +25,7 @@ const Kitchen = lazy(() => import("./pages/Kitchen"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
 const AdminAvailability = lazy(() => import("./pages/AdminAvailability"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
+const AdminConsents = lazy(() => import("./pages/AdminConsents"));
 const StationSetup = lazy(() => import("./pages/StationSetup"));
 const Kiosk = lazy(() => import("./pages/Kiosk"));
 const Inventory = lazy(() => import("./pages/Inventory"));
