@@ -68,38 +68,53 @@ export type Database = {
       consent_events: {
         Row: {
           action: string
+          consent_text: string | null
           consent_text_version: string | null
           consent_type: string
           created_at: string
           customer_id: string | null
+          customer_name: string | null
           id: string
           ip_address: string | null
+          item_ref: string | null
           method: string | null
+          order_id: string | null
           phone: string | null
+          source: string | null
           user_agent: string | null
         }
         Insert: {
           action: string
+          consent_text?: string | null
           consent_text_version?: string | null
           consent_type: string
           created_at?: string
           customer_id?: string | null
+          customer_name?: string | null
           id?: string
           ip_address?: string | null
+          item_ref?: string | null
           method?: string | null
+          order_id?: string | null
           phone?: string | null
+          source?: string | null
           user_agent?: string | null
         }
         Update: {
           action?: string
+          consent_text?: string | null
           consent_text_version?: string | null
           consent_type?: string
           created_at?: string
           customer_id?: string | null
+          customer_name?: string | null
           id?: string
           ip_address?: string | null
+          item_ref?: string | null
           method?: string | null
+          order_id?: string | null
           phone?: string | null
+          source?: string | null
           user_agent?: string | null
         }
         Relationships: [
@@ -108,6 +123,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
