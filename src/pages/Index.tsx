@@ -499,7 +499,18 @@ const Index = () => {
     }, 100);
   };
 
+  // Until the open/closed state is known (first ever visit, no cached value),
+  // show a spinner instead of optimistically rendering the "open" UI.
+  if (!statusResolved) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
+
     <div className="min-h-screen bg-background">
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
