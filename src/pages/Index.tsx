@@ -493,7 +493,7 @@ const Index = () => {
     setDeliveryInfo(data);
     setDeliveryFlowOpen(false);
     setDineIn(false); // treat like takeaway for menu/pricing
-    toast({ title: "נמצא שליח! 🛵", description: "אפשר להתחיל להזמין" });
+    toast.success("נמצא שליח! 🛵", { description: "אפשר להתחיל להזמין" });
     setTimeout(() => {
       document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
