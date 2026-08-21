@@ -639,8 +639,8 @@ const Index = () => {
               }}
               className="inline-flex flex-col items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-black px-8 py-5 rounded-2xl shadow-xl shadow-green-600/30 hover:scale-105 transition-transform"
             >
-              <span className="text-xl">📝 הרכיבו הזמנה לפתיחה</span>
-              <span className="text-sm font-normal opacity-90">תישמר אצלכם ותישלח כשנפתח</span>
+              <span className="text-xl">📝 הרכיבו הזמנה לשמירה</span>
+              <span className="text-sm font-normal opacity-90">תישמר אצלכם — תצטרכו לחזור ולשלוח אותה כשנפתח</span>
             </button>
           </div>
 
