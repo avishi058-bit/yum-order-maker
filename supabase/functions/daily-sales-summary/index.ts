@@ -74,7 +74,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const since = jerusalemDayStartIso();
+    const body = await req.json().catch(() => ({})) as unknown;
+    const since = parseBusinessDayStart(body) ?? jerusalemDayStartIso();
+
     const { data: orders, error: ordErr } = await supabase
       .from("orders")
       .select("total, status, customer_name, customer_phone")
