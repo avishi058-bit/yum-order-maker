@@ -1115,6 +1115,7 @@ export type Database = {
           delivery_enabled: boolean
           high_load: boolean
           id: string
+          last_opened_at: string | null
           preorder_enabled: boolean
           preorder_end_time: string
           preorder_start_time: string
@@ -1128,6 +1129,7 @@ export type Database = {
           delivery_enabled?: boolean
           high_load?: boolean
           id?: string
+          last_opened_at?: string | null
           preorder_enabled?: boolean
           preorder_end_time?: string
           preorder_start_time?: string
@@ -1141,6 +1143,7 @@ export type Database = {
           delivery_enabled?: boolean
           high_load?: boolean
           id?: string
+          last_opened_at?: string | null
           preorder_enabled?: boolean
           preorder_end_time?: string
           preorder_start_time?: string
