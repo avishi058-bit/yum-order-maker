@@ -26,7 +26,7 @@ const isTestCustomer = (name?: string | null, phone?: string | null): boolean =>
   return false;
 };
 
-/** Start of the current Jerusalem day, as a UTC ISO string. */
+/** Fallback start of the current Jerusalem day, as a UTC ISO string. */
 const jerusalemDayStartIso = (): string => {
   const now = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -40,6 +40,18 @@ const jerusalemDayStartIso = (): string => {
     Math.floor(now.getTime() / 1000) * 1000;
   const localMidnightUtc = Date.UTC(get("year"), get("month") - 1, get("day"), 0, 0, 0) - offsetMs;
   return new Date(localMidnightUtc).toISOString();
+};
+
+const parseBusinessDayStart = (body: unknown): string | null => {
+  try {
+    if (!body || typeof body !== "object") return null;
+    const raw = (body as Record<string, unknown>).businessDayStart;
+    if (!raw) return null;
+    const d = new Date(raw as string);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  } catch {
+    return null;
+  }
 };
 
 Deno.serve(async (req) => {
@@ -62,7 +74,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const since = jerusalemDayStartIso();
+    const body = await req.json().catch(() => ({})) as unknown;
+    const since = parseBusinessDayStart(body) ?? jerusalemDayStartIso();
+
     const { data: orders, error: ordErr } = await supabase
       .from("orders")
       .select("total, status, customer_name, customer_phone")
