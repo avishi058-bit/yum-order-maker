@@ -1,30 +1,86 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Accessibility, Type, Sun, MousePointer, Link2, Pause, RotateCcw, ZoomIn, ZoomOut, Underline, AlignRight } from "lucide-react";
+import {
+  X,
+  Accessibility,
+  Type,
+  Sun,
+  MousePointer,
+  Link2,
+  Pause,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  Underline,
+  AlignRight,
+  Contrast,
+  Droplet,
+  Heading,
+  Image as ImageIcon,
+  Minus,
+  Plus,
+  Maximize2,
+  Minimize2,
+  MessageSquareWarning,
+  Moon,
+} from "lucide-react";
 import { uiPositions, drawerAnimations, getSlideAnimation } from "@/config/uiConfig";
 
+type ColorMode = "none" | "highContrast" | "invert" | "monochrome" | "sepia" | "blackYellow";
+
 interface AccessibilityState {
-  fontSize: number; // 0 = normal, 1 = large, 2 = larger
-  highContrast: boolean;
-  invertColors: boolean;
+  fontSize: number; // 0..4  (100% .. 180%)
+  zoom: number; // 0..3    (100% .. 130%)
+  colorMode: ColorMode;
   highlightLinks: boolean;
   bigCursor: boolean;
   stopAnimations: boolean;
   readableFont: boolean;
   lineHeight: boolean;
   textSpacing: boolean;
+  headingEmphasis: boolean;
+  imageDescriptions: boolean;
 }
 
 const defaultState: AccessibilityState = {
   fontSize: 0,
-  highContrast: false,
-  invertColors: false,
+  zoom: 0,
+  colorMode: "none",
   highlightLinks: false,
   bigCursor: false,
   stopAnimations: false,
   readableFont: false,
   lineHeight: false,
   textSpacing: false,
+  headingEmphasis: false,
+  imageDescriptions: false,
+};
+
+const FONT_SIZES = ["100%", "115%", "130%", "150%", "180%"];
+const ZOOM_LEVELS = [1, 1.1, 1.2, 1.3];
+
+const COLOR_CLASSES: Record<Exclude<ColorMode, "none">, string> = {
+  highContrast: "accessibility-high-contrast",
+  invert: "accessibility-invert",
+  monochrome: "accessibility-monochrome",
+  sepia: "accessibility-sepia",
+  blackYellow: "accessibility-black-yellow",
+};
+
+const CAPTION_CLASS = "a11y-alt-caption";
+
+const applyImageCaptions = (enabled: boolean) => {
+  document.querySelectorAll<HTMLElement>(`.${CAPTION_CLASS}`).forEach((el) => el.remove());
+  if (!enabled) return;
+  document.querySelectorAll<HTMLImageElement>("img[alt]").forEach((img) => {
+    const alt = img.getAttribute("alt");
+    if (!alt) return;
+    img.title = alt;
+    const caption = document.createElement("span");
+    caption.className = CAPTION_CLASS;
+    caption.textContent = alt;
+    img.insertAdjacentElement("afterend", caption);
+  });
 };
 
 const AccessibilityWidget = () => {
@@ -42,67 +98,35 @@ const AccessibilityWidget = () => {
     const root = document.documentElement;
     const body = document.body;
 
-    // Font size
-    const sizes = ["100%", "120%", "140%"];
-    root.style.fontSize = sizes[s.fontSize];
+    root.style.fontSize = FONT_SIZES[s.fontSize] ?? "100%";
 
-    // High contrast
-    if (s.highContrast) {
-      body.classList.add("accessibility-high-contrast");
-    } else {
-      body.classList.remove("accessibility-high-contrast");
-    }
+    // Page zoom (separate from font size)
+    const zoom = ZOOM_LEVELS[s.zoom] ?? 1;
+    body.style.zoom = zoom === 1 ? "" : String(zoom);
 
-    // Invert colors
-    if (s.invertColors) {
-      body.classList.add("accessibility-invert");
-    } else {
-      body.classList.remove("accessibility-invert");
-    }
+    // Color modes — mutually exclusive
+    Object.values(COLOR_CLASSES).forEach((cls) => {
+      body.classList.remove(cls);
+      root.classList.remove(cls);
+    });
+    if (s.colorMode !== "none") body.classList.add(COLOR_CLASSES[s.colorMode]);
 
-    // Highlight links
-    if (s.highlightLinks) {
-      body.classList.add("accessibility-highlight-links");
-    } else {
-      body.classList.remove("accessibility-highlight-links");
-    }
+    const toggleClass = (cond: boolean, cls: string) => {
+      body.classList.toggle(cls, cond);
+    };
 
-    // Big cursor
-    if (s.bigCursor) {
-      body.classList.add("accessibility-big-cursor");
-    } else {
-      body.classList.remove("accessibility-big-cursor");
-    }
+    toggleClass(s.highlightLinks, "accessibility-highlight-links");
+    toggleClass(s.bigCursor, "accessibility-big-cursor");
+    toggleClass(s.readableFont, "accessibility-readable-font");
+    toggleClass(s.lineHeight, "accessibility-line-height");
+    toggleClass(s.textSpacing, "accessibility-text-spacing");
+    toggleClass(s.headingEmphasis, "accessibility-heading-emphasis");
+    toggleClass(s.imageDescriptions, "accessibility-img-desc");
 
-    // Stop animations
-    if (s.stopAnimations) {
-      body.classList.add("accessibility-stop-animations");
-      document.documentElement.classList.add("accessibility-stop-animations");
-    } else {
-      body.classList.remove("accessibility-stop-animations");
-      document.documentElement.classList.remove("accessibility-stop-animations");
-    }
+    body.classList.toggle("accessibility-stop-animations", s.stopAnimations);
+    root.classList.toggle("accessibility-stop-animations", s.stopAnimations);
 
-    // Readable font
-    if (s.readableFont) {
-      body.classList.add("accessibility-readable-font");
-    } else {
-      body.classList.remove("accessibility-readable-font");
-    }
-
-    // Line height
-    if (s.lineHeight) {
-      body.classList.add("accessibility-line-height");
-    } else {
-      body.classList.remove("accessibility-line-height");
-    }
-
-    // Text spacing
-    if (s.textSpacing) {
-      body.classList.add("accessibility-text-spacing");
-    } else {
-      body.classList.remove("accessibility-text-spacing");
-    }
+    applyImageCaptions(s.imageDescriptions);
   }, []);
 
   useEffect(() => {
@@ -112,29 +136,58 @@ const AccessibilityWidget = () => {
     } catch {}
   }, [state, applyStyles]);
 
-  const toggle = (key: keyof AccessibilityState) => {
-    if (key === "fontSize") {
-      setState((prev) => ({ ...prev, fontSize: (prev.fontSize + 1) % 3 }));
-    } else {
-      setState((prev) => ({ ...prev, [key]: !prev[key] }));
-    }
-  };
+  // Re-apply image captions when new images render (SPA navigation, lazy content)
+  useEffect(() => {
+    if (!state.imageDescriptions) return;
+    const observer = new MutationObserver(() => applyImageCaptions(true));
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [state.imageDescriptions]);
 
-  const reset = () => {
-    setState(defaultState);
-  };
+  const setColorMode = (mode: Exclude<ColorMode, "none">) =>
+    setState((p) => ({ ...p, colorMode: p.colorMode === mode ? "none" : mode }));
 
-  const buttons: { key: keyof AccessibilityState; label: string; icon: React.ReactNode; active: boolean }[] = [
-    { key: "fontSize", label: state.fontSize === 0 ? "הגדלת טקסט" : state.fontSize === 1 ? "טקסט גדול" : "טקסט גדול מאוד", icon: <Type size={20} />, active: state.fontSize > 0 },
-    { key: "highContrast", label: "ניגודיות גבוהה", icon: <Sun size={20} />, active: state.highContrast },
-    { key: "invertColors", label: "היפוך צבעים", icon: <ZoomIn size={20} />, active: state.invertColors },
-    { key: "highlightLinks", label: "הדגשת קישורים", icon: <Link2 size={20} />, active: state.highlightLinks },
-    { key: "bigCursor", label: "סמן גדול", icon: <MousePointer size={20} />, active: state.bigCursor },
-    { key: "stopAnimations", label: "עצירת אנימציות", icon: <Pause size={20} />, active: state.stopAnimations },
-    { key: "readableFont", label: "גופן קריא", icon: <AlignRight size={20} />, active: state.readableFont },
-    { key: "lineHeight", label: "מרווח שורות", icon: <ZoomOut size={20} />, active: state.lineHeight },
-    { key: "textSpacing", label: "מרווח אותיות", icon: <Underline size={20} />, active: state.textSpacing },
+  const toggleFlag = (key: keyof AccessibilityState) =>
+    setState((p) => ({ ...p, [key]: !p[key] }));
+
+  const step = (key: "fontSize" | "zoom", dir: 1 | -1) =>
+    setState((p) => {
+      const max = key === "fontSize" ? FONT_SIZES.length - 1 : ZOOM_LEVELS.length - 1;
+      return { ...p, [key]: Math.min(max, Math.max(0, p[key] + dir)) };
+    });
+
+  const reset = () => setState(defaultState);
+
+  const colorButtons: { mode: Exclude<ColorMode, "none">; label: string; icon: React.ReactNode }[] = [
+    { mode: "highContrast", label: "ניגודיות גבוהה", icon: <Contrast size={20} /> },
+    { mode: "invert", label: "היפוך צבעים", icon: <Moon size={20} /> },
+    { mode: "monochrome", label: "מונוכרום", icon: <Droplet size={20} /> },
+    { mode: "sepia", label: "ספיה", icon: <Sun size={20} /> },
+    { mode: "blackYellow", label: "שחור־צהוב", icon: <Contrast size={20} /> },
   ];
+
+  const toggles: { key: keyof AccessibilityState; label: string; icon: React.ReactNode }[] = [
+    { key: "headingEmphasis", label: "הדגשת כותרות", icon: <Heading size={20} /> },
+    { key: "highlightLinks", label: "הדגשת קישורים", icon: <Link2 size={20} /> },
+    { key: "imageDescriptions", label: "תיאור תמונות", icon: <ImageIcon size={20} /> },
+    { key: "readableFont", label: "גופן קריא", icon: <AlignRight size={20} /> },
+    { key: "lineHeight", label: "מרווח שורות", icon: <ZoomOut size={20} /> },
+    { key: "textSpacing", label: "מרווח אותיות", icon: <Underline size={20} /> },
+    { key: "bigCursor", label: "סמן גדול", icon: <MousePointer size={20} /> },
+    { key: "stopAnimations", label: "ביטול הבהובים ואנימציות", icon: <Pause size={20} /> },
+  ];
+
+  const cardClass = (active: boolean) =>
+    `w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-right ${
+      active
+        ? "border-primary bg-primary/10 text-primary"
+        : "border-border bg-background text-foreground hover:bg-secondary"
+    }`;
+
+  const iconBox = (active: boolean) =>
+    `w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+      active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+    }`;
 
   return (
     <>
@@ -163,37 +216,111 @@ const AccessibilityWidget = () => {
               transition={drawerAnimations.accessibilityPanel.transition}
               className={`fixed top-0 ${uiPositions.accessibility.panelSide === 'left' ? 'left-0' : 'right-0'} bottom-0 w-80 max-w-[90vw] z-[70] bg-card shadow-2xl flex flex-col`}
               dir="rtl"
+              role="dialog"
+              aria-label="תפריט נגישות"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Accessibility size={20} className="text-primary" />
-                  <h2 className="text-lg font-bold">הצהרת נגישות</h2>
+                  <h2 className="text-lg font-bold">תפריט נגישות</h2>
                 </div>
-                <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <button
+                  onClick={() => setOpen(false)}
+                  aria-label="סגור תפריט נגישות"
+                  className="w-11 h-11 rounded-full bg-muted flex items-center justify-center"
+                >
                   <X size={16} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-                {buttons.map((btn) => (
-                  <button
-                    key={btn.key}
-                    onClick={() => toggle(btn.key)}
-                    aria-pressed={btn.active}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-right ${
-                      btn.active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-background text-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      btn.active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    }`}>
-                      {btn.icon}
-                    </div>
-                    <span className="font-medium text-sm">{btn.label}</span>
-                  </button>
-                ))}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                {/* Font size */}
+                <div className="rounded-xl border border-border p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Type size={18} className="text-primary" />
+                    <span className="text-sm font-bold">גודל טקסט — {FONT_SIZES[state.fontSize]}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => step("fontSize", 1)}
+                      aria-label="הגדלת גופן"
+                      className="flex-1 h-11 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center gap-1"
+                    >
+                      <Plus size={16} /> הגדלה
+                    </button>
+                    <button
+                      onClick={() => step("fontSize", -1)}
+                      aria-label="הקטנת גופן"
+                      className="flex-1 h-11 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center gap-1"
+                    >
+                      <Minus size={16} /> הקטנה
+                    </button>
+                  </div>
+                </div>
+
+                {/* Zoom */}
+                <div className="rounded-xl border border-border p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ZoomIn size={18} className="text-primary" />
+                    <span className="text-sm font-bold">
+                      גודל תצוגה — {Math.round(ZOOM_LEVELS[state.zoom] * 100)}%
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => step("zoom", 1)}
+                      aria-label="הגדלת מסך"
+                      className="flex-1 h-11 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center gap-1"
+                    >
+                      <Maximize2 size={16} /> הגדלת מסך
+                    </button>
+                    <button
+                      onClick={() => step("zoom", -1)}
+                      aria-label="הקטנת מסך"
+                      className="flex-1 h-11 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center gap-1"
+                    >
+                      <Minimize2 size={16} /> הקטנת מסך
+                    </button>
+                  </div>
+                </div>
+
+                {/* Color modes */}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground px-1">התאמת צבעים</p>
+                  {colorButtons.map((btn) => {
+                    const active = state.colorMode === btn.mode;
+                    return (
+                      <button
+                        key={btn.mode}
+                        onClick={() => setColorMode(btn.mode)}
+                        aria-pressed={active}
+                        className={cardClass(active)}
+                      >
+                        <div className={iconBox(active)}>{btn.icon}</div>
+                        <span className="font-medium text-sm">{btn.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Toggles */}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground px-1">התאמות תוכן</p>
+                  {toggles.map((btn) => {
+                    const active = Boolean(state[btn.key]);
+                    return (
+                      <button
+                        key={btn.key}
+                        onClick={() => toggleFlag(btn.key)}
+                        aria-pressed={active}
+                        className={cardClass(active)}
+                      >
+                        <div className={iconBox(active)}>{btn.icon}</div>
+                        <span className="font-medium text-sm">{btn.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="px-4 py-4 border-t border-border space-y-3">
@@ -204,12 +331,23 @@ const AccessibilityWidget = () => {
                   <RotateCcw size={16} />
                   איפוס הגדרות
                 </button>
-                <a
-                  href="/accessibility-statement"
-                  className="block w-full text-center py-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-sm"
-                >
-                  קרא את הצהרת הנגישות המלאה →
-                </a>
+                <div className="flex gap-2">
+                  <a
+                    href="/accessibility-statement"
+                    className="flex-1 text-center py-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold text-xs"
+                  >
+                    הצהרת נגישות
+                  </a>
+                  <a
+                    href="https://wa.me/972584633555?text=%D7%93%D7%99%D7%95%D7%95%D7%97%20%D7%A2%D7%9C%20%D7%91%D7%A2%D7%99%D7%99%D7%AA%20%D7%A0%D7%92%D7%99%D7%A9%D7%95%D7%AA%20%D7%91%D7%90%D7%AA%D7%A8"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1 py-3 rounded-xl bg-muted text-foreground hover:bg-secondary transition-colors font-bold text-xs"
+                  >
+                    <MessageSquareWarning size={14} />
+                    דיווח על בעיה
+                  </a>
+                </div>
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
                   אתר זה מונגש בהתאם לתקן הישראלי 5568 ולהנחיות WCAG 2.1 ברמה AA
                 </p>
