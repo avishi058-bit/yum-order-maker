@@ -294,19 +294,36 @@
 
 body.accessibility-black-yellow {
   background: #000 !important;
-}
-
-body.accessibility-black-yellow *:not(svg):not(path):not(img):not(video) {
-  background-color: #000 !important;
   background-image: none !important;
   color: #ff0 !important;
+}
+
+/* Make every element see-through so the black body shows through.
+   (Forcing background-color:#000 here turned decorative overlays into
+   opaque black sheets that covered the whole page.) */
+body.accessibility-black-yellow *:not(svg):not(path):not(img):not(video):not(canvas) {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  color: #ff0 !important;
+  -webkit-text-fill-color: #ff0 !important;
   border-color: #ff0 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
 }
 
 body.accessibility-black-yellow svg {
   color: #ff0 !important;
   fill: currentColor !important;
 }
+
+/* Dim photos so yellow text stays readable on top of them */
+body.accessibility-black-yellow :is(img, video, canvas) {
+  filter: grayscale(1) brightness(0.35) contrast(0.9) !important;
+}
+
+
 
 
 /* ─── Heading emphasis ────────────────────────────────────────────── */
