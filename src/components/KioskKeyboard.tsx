@@ -142,20 +142,54 @@ const KioskKeyboard = () => {
     cancelBlur();
   }, []);
 
+  /**
+   * Typing (especially a space that wraps a word to a new line) can make the
+   * browser scroll the focused field into view, which visually "jumps" the
+   * dialog up to the field above. Freeze every scrollable ancestor around the
+   * edit so the view stays exactly where the user left it.
+   */
+  const withFrozenScroll = useCallback((el: HTMLElement, fn: () => void) => {
+    const nodes: { node: HTMLElement; top: number; left: number }[] = [];
+    let p: HTMLElement | null = el.parentElement;
+    while (p) {
+      if (p.scrollHeight > p.clientHeight || p.scrollWidth > p.clientWidth) {
+        nodes.push({ node: p, top: p.scrollTop, left: p.scrollLeft });
+      }
+      p = p.parentElement;
+    }
+    const winX = window.scrollX;
+    const winY = window.scrollY;
+
+    fn();
+
+    const restore = () => {
+      nodes.forEach(({ node, top, left }) => {
+        if (node.scrollTop !== top) node.scrollTop = top;
+        if (node.scrollLeft !== left) node.scrollLeft = left;
+      });
+      if (window.scrollX !== winX || window.scrollY !== winY) {
+        window.scrollTo(winX, winY);
+      }
+    };
+    restore();
+    requestAnimationFrame(restore);
+  }, []);
+
   const press = useCallback((char: string) => {
     const el = targetRef.current;
     if (!el) return;
     // Re-focus the input in case blur fired
     el.focus({ preventScroll: true });
-    insertText(el, char);
-  }, []);
+    withFrozenScroll(el, () => insertText(el, char));
+  }, [withFrozenScroll]);
 
   const onBackspace = useCallback(() => {
     const el = targetRef.current;
     if (!el) return;
     el.focus({ preventScroll: true });
-    backspace(el);
-  }, []);
+    withFrozenScroll(el, () => backspace(el));
+  }, [withFrozenScroll]);
+
 
   const onSpace = useCallback(() => press(" "), [press]);
 
