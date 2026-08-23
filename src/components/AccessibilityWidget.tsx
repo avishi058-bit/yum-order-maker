@@ -70,18 +70,21 @@ const COLOR_CLASSES: Record<Exclude<ColorMode, "none">, string> = {
 const CAPTION_CLASS = "a11y-alt-caption";
 
 const applyImageCaptions = (enabled: boolean) => {
-  document.querySelectorAll<HTMLElement>(`.${CAPTION_CLASS}`).forEach((el) => el.remove());
-  if (!enabled) return;
+  if (!enabled) {
+    document.querySelectorAll<HTMLElement>(`.${CAPTION_CLASS}`).forEach((el) => el.remove());
+    return;
+  }
   document.querySelectorAll<HTMLImageElement>("img[alt]").forEach((img) => {
     const alt = img.getAttribute("alt");
     if (!alt) return;
+    // idempotent — never re-insert a caption that already exists
+    if (img.nextElementSibling?.classList.contains(CAPTION_CLASS)) return;
     img.title = alt;
     const caption = document.createElement("span");
     caption.className = CAPTION_CLASS;
     caption.textContent = alt;
     img.insertAdjacentElement("afterend", caption);
-  });
-};
+
 
 const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
