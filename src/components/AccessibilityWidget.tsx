@@ -84,6 +84,10 @@ const applyImageCaptions = (enabled: boolean) => {
     caption.className = CAPTION_CLASS;
     caption.textContent = alt;
     img.insertAdjacentElement("afterend", caption);
+  });
+};
+
+
 
 
 const AccessibilityWidget = () => {
