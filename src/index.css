@@ -318,6 +318,12 @@ body.accessibility-black-yellow svg {
   fill: currentColor !important;
 }
 
+/* Dim photos so yellow text stays readable on top of them */
+body.accessibility-black-yellow :is(img, video, canvas) {
+  filter: grayscale(1) brightness(0.35) contrast(0.9) !important;
+}
+
+
 
 
 /* ─── Heading emphasis ────────────────────────────────────────────── */
