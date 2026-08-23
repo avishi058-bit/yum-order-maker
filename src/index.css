@@ -283,7 +283,7 @@
   word-spacing: 0.16em !important;
 }
 
-/* ─── Color filters (mutually exclusive, applied on <html>) ───────── */
+/* ─── Color filters (mutually exclusive, applied on <body>) ───────── */
 .accessibility-monochrome {
   filter: grayscale(1) !important;
 }
@@ -292,24 +292,22 @@
   filter: sepia(0.85) contrast(1.05) !important;
 }
 
-.accessibility-black-yellow {
-  filter: invert(1) hue-rotate(180deg) !important;
-}
-
-.accessibility-black-yellow body {
+body.accessibility-black-yellow {
   background: #000 !important;
 }
 
-.accessibility-black-yellow body *:not(svg):not(path) {
+body.accessibility-black-yellow *:not(svg):not(path):not(img):not(video) {
   background-color: #000 !important;
+  background-image: none !important;
   color: #ff0 !important;
   border-color: #ff0 !important;
 }
 
-.accessibility-black-yellow img,
-.accessibility-black-yellow video {
-  filter: invert(1) hue-rotate(180deg) !important;
+body.accessibility-black-yellow svg {
+  color: #ff0 !important;
+  fill: currentColor !important;
 }
+
 
 /* ─── Heading emphasis ────────────────────────────────────────────── */
 .accessibility-heading-emphasis :is(h1, h2, h3, h4, h5, h6) {
