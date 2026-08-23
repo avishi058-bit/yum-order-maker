@@ -146,10 +146,22 @@ const AccessibilityWidget = () => {
   // Re-apply image captions when new images render (SPA navigation, lazy content)
   useEffect(() => {
     if (!state.imageDescriptions) return;
-    const observer = new MutationObserver(() => applyImageCaptions(true));
+    let queued = false;
+    const observer = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      // debounce to the next frame so our own DOM inserts don't loop
+      requestAnimationFrame(() => {
+        queued = false;
+        observer.disconnect();
+        applyImageCaptions(true);
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+    });
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [state.imageDescriptions]);
+
 
   const setColorMode = (mode: Exclude<ColorMode, "none">) =>
     setState((p) => ({ ...p, colorMode: p.colorMode === mode ? "none" : mode }));
