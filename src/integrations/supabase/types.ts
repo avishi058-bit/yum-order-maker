@@ -567,6 +567,42 @@ export type Database = {
         }
         Relationships: []
       }
+      event_leads: {
+        Row: {
+          created_at: string
+          full_name: string
+          group_type: string | null
+          guests_count: number | null
+          id: string
+          notes: string | null
+          phone: string
+          preferred_date: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          group_type?: string | null
+          guests_count?: number | null
+          id?: string
+          notes?: string | null
+          phone: string
+          preferred_date?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          group_type?: string | null
+          guests_count?: number | null
+          id?: string
+          notes?: string | null
+          phone?: string
+          preferred_date?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       event_settings: {
         Row: {
           business_signature: string | null
