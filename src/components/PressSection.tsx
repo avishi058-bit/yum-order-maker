@@ -128,9 +128,9 @@ const ITEMS: PressItem[] = [
 ];
 
 const SOCIALS = [
-  { label: "אינסטגרם", href: "https://www.instagram.com/habikta_burgers/", Icon: Instagram },
+  { label: "אינסטגרם", href: "https://www.instagram.com/habikta_burgers/", Icon: InstagramIcon },
   { label: "טיקטוק", href: "https://www.tiktok.com/@habikta", Icon: null },
-  { label: "יוטיוב", href: VIDEO_URL, Icon: Youtube },
+  { label: "יוטיוב", href: VIDEO_URL, Icon: YoutubeIcon },
 ];
 
 const TikTokIcon = ({ className }: { className?: string }) => (
