@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import PressSection from "@/components/PressSection";
 
 const PHONE = "058-4633555";
 const WHATSAPP = "https://wa.me/972584633555?text=%D7%94%D7%99%D7%99%2C%20%D7%90%D7%A0%D7%97%D7%A0%D7%95%20%D7%9E%D7%A2%D7%95%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D%20%D7%9C%D7%AA%D7%90%D7%9D%20%D7%94%D7%92%D7%A2%D7%94%20%D7%A9%D7%9C%20%D7%A7%D7%91%D7%95%D7%A6%D7%94";
@@ -242,6 +243,8 @@ const Groups = () => {
             כתובת: דרך ערבי נחל 23, מושב תושיה, מועצה אזורית שדות נגב.
           </p>
         </Section>
+
+        <PressSection />
 
         <LeadForm id="lead-bottom" />
       </main>
