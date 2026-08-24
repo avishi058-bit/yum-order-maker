@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Helmet } from "react-helmet-async";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone, MessageCircle, MapPin, Users, Clock, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -111,20 +110,28 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 
 const Groups = () => {
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "קבוצות וסיורים בעוטף | המבורגר הבקתה";
+    const desc = document.querySelector('meta[name="description"]');
+    const prevDesc = desc?.getAttribute("content") || "";
+    desc?.setAttribute(
+      "content",
+      "המבורגר הבקתה — עצירת אוכל לקבוצות, משלחות וסיורים בעוטף עזה. תיאום מראש, המבורגר סמאש טרי, ישיבה בחוץ. השאירו פרטים ונחזור אליכם."
+    );
+    const canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    canonical.href = "https://yum-order-maker.lovable.app/groups";
+    document.head.appendChild(canonical);
+    return () => {
+      document.title = prevTitle;
+      desc?.setAttribute("content", prevDesc);
+      canonical.remove();
+    };
+  }, []);
+
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <Helmet>
-        <title>קבוצות וסיורים בעוטף | המבורגר הבקתה</title>
-        <meta
-          name="description"
-          content="המבורגר הבקתה — עצירת אוכל לקבוצות, משלחות וסיורים בעוטף עזה. תיאום מראש לקבוצות, תפריט המבורגר סמאש טרי, ישיבה על הדשא. השאירו פרטים ונחזור אליכם."
-        />
-        <link rel="canonical" href="https://yum-order-maker.lovable.app/groups" />
-        <meta property="og:title" content="קבוצות וסיורים בעוטף | המבורגר הבקתה" />
-        <meta property="og:description" content="עצירת אוכל לקבוצות ומשלחות בסיור בעוטף — תיאום מראש, תפריט המבורגר סמאש טרי, ישיבה בחוץ." />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
 
       <header className="bg-gradient-to-b from-primary/10 to-background border-b">
         <div className="max-w-3xl mx-auto px-4 py-10 space-y-4">
