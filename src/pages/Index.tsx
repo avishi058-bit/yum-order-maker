@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, Phone, LogIn, Smartphone, Check } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import MenuSection from "@/components/MenuSection";
+import PressSection from "@/components/PressSection";
 import { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
 
@@ -870,6 +871,8 @@ const Index = () => {
           )}
         </AnimatePresence>
       </Suspense>
+
+      {!isStation && <PressSection />}
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-3">
