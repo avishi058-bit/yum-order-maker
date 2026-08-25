@@ -53,7 +53,36 @@
     --green-foreground: 0 0% 100%;
     --green-glow: 142 76% 54%;
   }
+
+  /* Bright "warm sand" scope — used by the groups landing page */
+  .theme-sand {
+    --background: 40 33% 98%;
+    --foreground: 24 12% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 24 12% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 12% 12%;
+
+    --primary: 13 79% 57%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 36 30% 94%;
+    --secondary-foreground: 24 12% 12%;
+
+    --muted: 36 25% 95%;
+    --muted-foreground: 24 8% 42%;
+
+    --accent: 13 79% 57%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 33 25% 89%;
+    --input: 33 25% 89%;
+    --ring: 13 79% 57%;
+  }
 }
+
 
 @layer base {
   * {
