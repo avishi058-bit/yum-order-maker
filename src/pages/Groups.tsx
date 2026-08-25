@@ -8,12 +8,12 @@ import {
   Clock,
   Utensils,
   Bus,
-  Flame,
   Leaf,
   Shield,
   Trees,
   Globe2,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PressSection from "@/components/PressSection";
+import logo from "@/assets/logo.png";
+import heroBurger from "@/assets/hero-burger.webp";
+import event1 from "@/assets/events/event1.jpeg.asset.json";
+import event2 from "@/assets/events/event2.jpeg.asset.json";
+import event3 from "@/assets/events/event3.jpeg.asset.json";
+import event4 from "@/assets/events/event4.jpeg.asset.json";
+import event5 from "@/assets/events/event5.jpeg.asset.json";
+import arayes from "@/assets/menu/arayes-special-opt.webp";
 
 const PHONE = "058-4633555";
 const WHATSAPP = "https://wa.me/972584633555?text=%D7%94%D7%99%D7%99%2C%20%D7%90%D7%A0%D7%97%D7%A0%D7%95%20%D7%9E%D7%A2%D7%95%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D%20%D7%9C%D7%AA%D7%90%D7%9D%20%D7%94%D7%92%D7%A2%D7%94%20%D7%A9%D7%9C%20%D7%A7%D7%91%D7%95%D7%A6%D7%94";
@@ -62,9 +70,9 @@ const LeadForm = ({ id }: { id: string }) => {
 
   if (sent) {
     return (
-      <Card id={id} className="border-primary/40">
+      <Card id={id} className="border-primary/40 shadow-lg">
         <CardContent className="p-6 text-center space-y-2">
-          <p className="text-xl font-bold">קיבלנו את הפרטים 🙌</p>
+          <p className="text-xl font-black">קיבלנו את הפרטים 🙌</p>
           <p className="text-muted-foreground">נחזור אליכם בהקדם. אם זה דחוף, אפשר להתקשר {PHONE}.</p>
         </CardContent>
       </Card>
@@ -72,9 +80,9 @@ const LeadForm = ({ id }: { id: string }) => {
   }
 
   return (
-    <Card id={id} className="scroll-mt-24">
+    <Card id={id} className="scroll-mt-24 shadow-lg border-primary/20">
       <CardHeader>
-        <CardTitle>השאירו פרטים ונחזור אליכם</CardTitle>
+        <CardTitle className="text-2xl">השאירו פרטים ונחזור אליכם</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={submit} className="space-y-3">
@@ -100,7 +108,7 @@ const LeadForm = ({ id }: { id: string }) => {
             <Label htmlFor={`${id}-notes`}>הודעה / הערות</Label>
             <Textarea id={`${id}-notes`} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} placeholder="שעת הגעה משוערת, מסלול הסיור, תקציב, צרכים מיוחדים" />
           </div>
-          <Button type="submit" size="lg" className="w-full" disabled={sending}>
+          <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={sending}>
             {sending ? "שולח..." : "שלחו פרטים"}
           </Button>
           <p className="text-xs text-muted-foreground">
@@ -112,20 +120,85 @@ const LeadForm = ({ id }: { id: string }) => {
   );
 };
 
-const Section = ({
+/** Big photo card in the style of a tours landing page: image + title tag + short blurb + CTA */
+const PhotoCard = ({
+  image,
   title,
-  id,
-  children,
+  text,
+  ctaLabel,
+  href,
 }: {
+  image: string;
   title: string;
-  id?: string;
-  children: React.ReactNode;
+  text: string;
+  ctaLabel: string;
+  href: string;
 }) => (
-  <section id={id} className="space-y-3 scroll-mt-24">
-    <h2 className="text-2xl md:text-3xl font-black leading-snug">{title}</h2>
-    <div className="text-muted-foreground leading-relaxed space-y-3">{children}</div>
-  </section>
+  <article className="overflow-hidden rounded-3xl bg-card border border-border shadow-sm hover:shadow-xl transition-shadow">
+    <div className="relative">
+      <img
+        src={image}
+        alt={title}
+        loading="lazy"
+        className="w-full h-56 md:h-72 object-cover"
+      />
+      <h3 className="absolute bottom-4 right-0 bg-foreground/85 text-background text-xl md:text-2xl font-black px-5 py-2 rounded-r-none rounded-l-xl backdrop-blur-sm">
+        {title}
+      </h3>
+    </div>
+    <div className="p-5 space-y-4">
+      <p className="text-muted-foreground leading-relaxed">{text}</p>
+      <Button asChild size="lg" className="w-full text-base">
+        <a href={href}>{ctaLabel}</a>
+      </Button>
+    </div>
+  </article>
 );
+
+const CARDS = [
+  {
+    image: event2.url,
+    title: "קבוצות בסיור בעוטף",
+    text: "עצירת צהריים שמשתלבת במסלול — האוטובוס עוצר מולנו, המטבח נערך מראש, ובתיאום מתאים אפשר לסיים תוך 30-45 דקות ולהמשיך הלאה.",
+    ctaLabel: "לתאם עצירה לקבוצה",
+    href: "#lead-top",
+  },
+  {
+    image: heroBurger,
+    title: "המבורגר 220 גרם",
+    text: "קציצה עבה ועסיסית מתערובת בקר איכותית, עם צ׳יפס, וופל צ׳יפס, טבעות בצל, ירקות ורטבים. ארוחה אמיתית, לא ״מנת תיירים״.",
+    ctaLabel: "לתפריט ולהזמנה",
+    href: "/",
+  },
+  {
+    image: event3.url,
+    title: "עד 200 איש",
+    text: "בהזמנה מראש נערכים לאירוח והסעדה של קבוצות גדולות, עם מסלולים מתומחרים לפי אדם ולפי תקציב — מהמבורגר קלאסי ועד מסלול בשרים מלא.",
+    ctaLabel: "לקבל הצעה למסלול",
+    href: "#lead-top",
+  },
+  {
+    image: arayes,
+    title: "מסלול בשרים",
+    text: "אנטריקוט, פיקניה, עראיס, קבבים ושיפודים לצד מטוגנים, סלטים וצ׳ימיצ׳ורי — כ-0.5 ק״ג בשר ומעלה לאדם.",
+    ctaLabel: "לפרטים על מסלול הבשרים",
+    href: "#lead-bottom",
+  },
+  {
+    image: event4.url,
+    title: "מדשאה, מחצלות וצל",
+    text: "אנחנו בתוך מושב: מדשאות, עצים, סככה מקורה ואווירת פיקניק כפרית — או שולחנות וכיסאות, לפי אופי הקבוצה.",
+    ctaLabel: "לראות אפשרויות אירוח",
+    href: "#lead-bottom",
+  },
+  {
+    image: event5.url,
+    title: "אירועים פרטיים ועסקיים",
+    text: "ימי הולדת, אירועי חברה, משלחות וקבוצות — אצלנו בבקתה או באירוע חיצוני, בהתאמה לתקציב ולמספר המשתתפים.",
+    ctaLabel: "להזמנת אירוע",
+    href: "/events",
+  },
+];
 
 const HIGHLIGHTS: { icon: typeof MapPin; text: string }[] = [
   { icon: MapPin, text: "מיקום בכפר מימון שמשתלב במסלולי סיור בעוטף" },
@@ -174,6 +247,74 @@ const FAQ: { q: string; a: string }[] = [
   {
     q: "האם המקום נגיש?",
     a: "הגישה למקום אפשרית גם עבור אדם בכיסא גלגלים ברובה, אך קיימת מדרגה קטנה ולכן אין להציג את המקום כנגיש באופן מלא ללא בדיקה פרטנית של צורכי הקבוצה. במקום קיימים שני תאי שירותים — לנשים ולגברים.",
+  },
+];
+
+/** Long-form content — kept in the DOM for search/AI crawlers, collapsed for humans. */
+const LONG_CONTENT: { title: string; paragraphs: string[] }[] = [
+  {
+    title: "עצירת אוכל שמשתלבת במסלול הסיור",
+    paragraphs: [
+      "הבקתה — המבורגר של מושבניקים — נמצאת בכפר מימון שבמועצה האזורית שדות נגב, בלב עוטף עזה והנגב המערבי. המיקום שלנו משתלב בצורה נוחה במסלולי סיור בעוטף הכוללים את אזור תקומה, מגרש המכוניות השרופות, אתר הנובה ואתרים נוספים באזור.",
+      "אנחנו מכירים את הצרכים של קבוצות שנמצאות באמצע יום סיור: אוטובוס עם עשרות משתתפים, מדריך שצריך לעמוד בלוח זמנים וארוחת צהריים שצריכה להיות טובה — אבל גם יעילה.",
+      "לכן אנחנו עובדים בתיאום צמוד עם מדריך או מארגן הקבוצה לפני ההגעה, יודעים כמה אנשים מגיעים ומתי, ונערכים מראש כדי שהמטבח יעבוד בהתאם לזמן ההגעה של הקבוצה. לקבוצות שממהרות, בתיאום מתאים, ניתן לבצע עצירה של כ-30-45 דקות ולהמשיך בסיור.",
+    ],
+  },
+  {
+    title: "עד 200 איש בהזמנה מראש",
+    paragraphs: [
+      "הבקתה יכולה להיערך בהזמנה מראש לאירוח והסעדה של קבוצות גדולות של עד 200 איש, כולל הכנה והוצאה של כמות גדולה מאוד של המבורגרים בפרק זמן קצר.",
+      "קבוצה אצלנו מוגדרת מ-20 משתתפים ומעלה, מינימום ההזמנה הוא 2,000 ₪ כולל מע״מ, וקיבולת הישיבה הרגילה היא כ-35 איש — ולכן קבוצות גדולות יותר מקבלות היערכות מיוחדת בהתאם לגודל הקבוצה, מזג האוויר וסגנון האירוח שנבחר.",
+    ],
+  },
+  {
+    title: "תיירים מהארץ ומהעולם",
+    paragraphs: [
+      "הבקתה מארחת קבוצות, משלחות ומטיילים שמגיעים לסיור בעוטף עזה, ובהן קבוצות מארצות הברית, קנדה ואפילו מסין. חלק מהקבוצות מגיעות לארוחת צהריים כחלק מיום שבו הן מבקרות באתר הנובה, באזור תקומה ובאתרים נוספים בעוטף.",
+      "בשולחן אחד יכולה לשבת קבוצת תיירים שהגיעה מחצי עולם כדי להכיר את עוטף עזה, לידם משפחה שמטיילת באזור, ובשולחן אחר חיילי מילואים או סדיר שסיימו יום בגזרה. זו אחת הסיבות שהבקתה הפכה מבחינתנו להרבה יותר ממסעדת המבורגרים — היא נקודת מפגש מקומית בלב העוטף.",
+    ],
+  },
+  {
+    title: "מסלולים מיוחדים לקבוצות — לפי אדם ולפי תקציב",
+    paragraphs: [
+      "לקבוצות יש אצלנו תפריט ומסלולי אירוח ייעודיים, שאינם מוגבלים לתפריט הרגיל. המסלולים מתומחרים לפי אדם ומאפשרים למדריך, לחברת התיירות או למארגן לבחור מראש את רמת האירוח בהתאם לתקציב ולצרכים של הקבוצה — מארוחת המבורגר קלאסית ועד מסלולים מורחבים, מסלול ״הכל כלול״ ומסלול בשרים מלא.",
+      "אירוח קבוצות מאפשר לנו להציע גם מנות שאינן חלק קבוע מהתפריט היומי: סוכריות עראיס על מצע טחינה ופטרוזיליה, תוספות חמות, ריבת בצל, שום קונפי, פלפלים חריפים, בצל מטוגן, ביצת עין, רצועות רוסטביף וקינוחים כמו סלט פירות עונתיים. בהתאם למסלול ניתן לקבל רטבים בסקוויזרים לשולחן ללא הגבלה, מים קרים עם קרח ואפשרות לשתייה קלה ללא הגבלה.",
+      "במסלול הבשרים ניתן לכלול סטייק אנטריקוט, פיקניה, חצאי עראיס, קבבים במתכון אישי, שיפודי לבבות עוף ושיפודי פרגית בתיבול הבית, לצד מטוגנים, סלטים, צ׳ימיצ׳ורי, שום קונפי ופלפלים חריפים — כ-0.5 ק״ג בשר ומעלה לאדם. באירוח אצלנו הבשרים מוכנים במקום, ובאירועים חיצוניים ניתן להכין אותם על מנגל פחמים.",
+    ],
+  },
+  {
+    title: "מדשאה, מחצלות, עצים ואווירה של מושב",
+    paragraphs: [
+      "אנחנו לא אולם אירועים ולא מסעדה בתוך מרכז מסחרי. הבקתה נמצאת בתוך מושב, וזה חלק גדול מהחוויה: מדשאות, עצים, סככה מקורה ופתוחה בחלקה, ואפשרות לשבת על מחצלות מתחת לצל או על שולחנות וכיסאות.",
+      "אוטובוס יכול להגיע ממש מול המקום, כך שהקבוצה לא צריכה ללכת מרחק משמעותי מנקודת ההורדה. במקום קיימים שני תאי שירותים — לנשים ולגברים. הגישה אפשרית ברובה גם עבור אדם בכיסא גלגלים, אך קיימת מדרגה קטנה ולכן אין להציג את המקום כנגיש באופן מלא ללא בדיקה פרטנית.",
+    ],
+  },
+  {
+    title: "דרום אדום — המבורגר ליד יער שוקדה",
+    paragraphs: [
+      "הבקתה נמצאת במרחק של כקילומטר מיער שוקדה ומשתלבת באופן טבעי ביום טיול באזור בתקופת פסטיבל דרום אדום. במהלך חודש הפסטיבל אנחנו פותחים גם בשעות הצהריים כדי לארח את המטיילים.",
+      "״דרום אדום - הדף הרשמי״ המליץ בעבר על הבקתה במסגרת התמיכה בעסקים המקומיים ותיאר אותה כ״המבורגר בוטיק באווירה כפרית״ ואף כ״אחד ההמבורגרים הכי שווים בארץ״.",
+    ],
+  },
+  {
+    title: "החיילים הם חלק מהמשפחה שלנו",
+    paragraphs: [
+      "הקשר עם חיילי הסדיר והמילואים באזור קיבל משמעות מיוחדת אחרי 7 באוקטובר. בתקופה שבה חלק גדול מהאוכלוסייה האזרחית התפנה, חזרנו למקום, פתחנו את המטבח והכנו אוכל לעשרות חיילים ששמרו בגזרה — חלק מהפעילות בהתנדבות. הסיפור סוקר גם ב-mako.",
+      "גם היום חיילים מהמוצבים והבסיסים בסביבה מגיעים אלינו בערבים להמבורגר, בירה קרה וששבש, ואנחנו מבצעים גם משלוחים למוצבים והזמנות מרוכזות בתיאום.",
+    ],
+  },
+  {
+    title: "כשרות ורגישויות",
+    paragraphs: [
+      "הבקתה פועלת בכשרות רגילה בהשגחת הרבנות שדות נגב. קציצת ההמבורגר עשויה מבשר חלק רבנות והירקות הם גוש קטיף. תעודת הכשרות היא כשרות רגילה, בין היתר מכיוון שתוספת הרוסטביף האופציונלית אינה מבשר חלק.",
+      "קיימת אפשרות להמבורגר צמחוני/טבעוני, אך הוא מוכן על אותה פלנצ׳ה של הבשר, וקיימת אפשרות ללחמנייה ללא גלוטן שההכנה שלה נעשית בסביבה שבה קיים גלוטן. לקבוצות עם רגישויות מומלץ לעדכן אותנו מראש.",
+    ],
+  },
+  {
+    title: "כתבו עלינו",
+    paragraphs: [
+      "ב-mako סופר הסיפור של הבקתה בתקופת מלחמת חרבות ברזל, החזרה לפעילות והקשר עם החיילים באזור. מבקר האוכל של מקור ראשון פרסם ביקורת תחת הכותרת ״בכפר מימון מצאנו את ההמבורגר המנצח״, ומקור ראשון כלל את הבקתה גם בסיור קולינרי בעוטף עזה. הבקתה התארחה בכתבה מצולמת בתוכנית ״פותחים שישי״ בערוץ 13, והופיעה גם ב-ynet, ישראל היום, Wolt וגופי תיירות אזוריים.",
+    ],
   },
 ];
 
@@ -233,332 +374,94 @@ const Groups = () => {
   }, []);
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background">
-      <header className="bg-gradient-to-b from-primary/10 to-background border-b">
-        <div className="max-w-4xl mx-auto px-4 py-12 space-y-5">
-          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-bold">
-            <MapPin className="w-4 h-4 text-primary" /> כפר מימון · שדות נגב · עוטף עזה
-          </p>
-          <h1 className="text-3xl md:text-5xl font-black leading-tight">
-            הבקתה — המקום לאכול בו במהלך סיור בעוטף
-          </h1>
-          <p className="text-lg md:text-xl font-bold leading-relaxed">
-            אירוח קבוצות, משלחות וסיורים בעוטף עזה — בכפר מימון, בין תקומה לאזור הנובה
-          </p>
-          <p className="text-muted-foreground leading-relaxed">
-            אם אתם מתכננים סיור בעוטף ומחפשים מקום שבו קבוצה שלמה יכולה לעצור לארוחת צהריים טובה, בלי להפוך את
-            עצירת האוכל לחלק שמבזבז את היום — בשביל זה בדיוק אנחנו כאן.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer"><MessageCircle className="ml-2 w-5 h-5" /> דברו איתנו בוואטסאפ</a>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> התקשרו עכשיו {PHONE}</a>
-            </Button>
-            <Button asChild size="lg" variant="secondary">
-              <a href="#lead-top">השאירו פרטים ונחזור אליכם</a>
-            </Button>
+    <div dir="rtl" className="theme-sand min-h-screen bg-background text-foreground">
+      {/* Sticky top bar */}
+      <header className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-md">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <a
+              href={`tel:${PHONE}`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold"
+              aria-label={`התקשרו ${PHONE}`}
+            >
+              <Phone className="w-4 h-4" /> חייגו
+            </a>
+            <a
+              href={WHATSAPP}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold"
+            >
+              <MessageCircle className="w-4 h-4" /> וואטסאפ
+            </a>
           </div>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="הבקתה" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary-foreground/60" />
+          </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-10 space-y-12">
+      {/* Hero */}
+      <section className="relative">
+        <img src={event1.url} alt="אירוח קבוצות בבקתה בכפר מימון" className="w-full h-[58vh] min-h-[340px] object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/45 to-foreground/20" />
+        <div className="absolute inset-0 flex items-end">
+          <div className="max-w-5xl mx-auto w-full px-4 pb-8 space-y-3 text-background">
+            <p className="inline-flex items-center gap-2 rounded-full bg-background/20 backdrop-blur px-3 py-1 text-xs font-bold">
+              <MapPin className="w-4 h-4" /> כפר מימון · שדות נגב · עוטף עזה
+            </p>
+            <h1 className="text-3xl md:text-5xl font-black leading-tight drop-shadow">
+              המקום לאכול בו בסיור בעוטף
+            </h1>
+            <p className="text-base md:text-xl font-bold leading-relaxed max-w-2xl">
+              אירוח קבוצות, משלחות וסיורים — עד 200 איש, בתיאום מראש, בלי לשבור את לוח הזמנים.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <Button asChild size="lg" className="text-base h-12">
+                <a href="#lead-top">השאירו פרטים ונחזור אליכם</a>
+              </Button>
+              <Button asChild size="lg" variant="secondary" className="text-base h-12">
+                <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="ml-2 w-5 h-5" /> וואטסאפ
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick stats strip */}
+      <div className="bg-secondary">
+        <div className="max-w-5xl mx-auto px-4 py-5 grid grid-cols-3 gap-3 text-center">
+          {[
+            { k: "עד 200", v: "איש בהזמנה מראש" },
+            { k: "30-45 דק׳", v: "עצירה לקבוצה שממהרת" },
+            { k: "220 גרם", v: "קציצת המבורגר" },
+          ].map((s) => (
+            <div key={s.k}>
+              <p className="text-xl md:text-3xl font-black text-primary">{s.k}</p>
+              <p className="text-xs md:text-sm text-muted-foreground font-bold">{s.v}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <main className="max-w-5xl mx-auto px-4 py-10 space-y-12">
+        <h2 className="text-2xl md:text-4xl font-black text-center text-primary">
+          מה אפשר לעשות אצלנו
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {CARDS.map((c) => (
+            <PhotoCard key={c.title} {...c} />
+          ))}
+        </div>
+
         <LeadForm id="lead-top" />
 
-        <Section title="עצירת אוכל שמשתלבת במסלול הסיור">
-          <p>
-            הבקתה — המבורגר של מושבניקים — נמצאת בכפר מימון שבמועצה האזורית שדות נגב, בלב עוטף עזה והנגב המערבי.
-            המיקום שלנו משתלב בצורה נוחה במסלולי סיור בעוטף הכוללים את אזור תקומה, מגרש המכוניות השרופות, אתר הנובה
-            ואתרים נוספים באזור.
-          </p>
-          <p>אבל המיקום הוא רק חלק מהיתרון.</p>
-          <p>
-            אנחנו מכירים את הצרכים של קבוצות שנמצאות באמצע יום סיור: אוטובוס עם עשרות משתתפים, מדריך שצריך לעמוד
-            בלוח זמנים וארוחת צהריים שצריכה להיות טובה — אבל גם יעילה.
-          </p>
-          <p>
-            לכן אנחנו עובדים בתיאום צמוד עם מדריך או מארגן הקבוצה לפני ההגעה. אנחנו יודעים כמה אנשים מגיעים ומתי הם
-            צפויים להגיע, ונערכים מראש כדי שהמטבח יעבוד בהתאם לזמן ההגעה של הקבוצה.
-          </p>
-          <div className="grid sm:grid-cols-3 gap-4 pt-2">
-            {[
-              { icon: Clock, title: "30-45 דקות", text: "כאשר קבוצה ממהרת והכול מתואם מראש, ניתן לסיים אצלנו עצירת אוכל מלאה ולהמשיך לתחנה הבאה בסיור." },
-              { icon: Bus, title: "האוטובוס עוצר מולנו", text: "האוטובוס יכול להגיע ממש מול הבקתה ולהוריד את המשתתפים בסמוך למקום, ללא צורך להיכנס למרכז עיר ולחפש חניה לאוטובוס." },
-              { icon: Users, title: "עד 200 איש", text: "בהזמנה מראש אנחנו נערכים לאירוח והסעדה של קבוצות גדולות של עד 200 איש." },
-            ].map(({ icon: Icon, title, text }) => (
-              <Card key={title} className="border-primary/30">
-                <CardContent className="p-4 space-y-1">
-                  <Icon className="w-6 h-6 text-primary" />
-                  <h3 className="font-black text-foreground">{title}</h3>
-                  <p className="text-sm">{text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <p className="pt-1">
-            המטרה פשוטה: להגיע, לאכול טוב, ליהנות מהעצירה ולהמשיך בסיור בלי לבזבז זמן יקר.
-          </p>
-        </Section>
-
-        <Section title="עד 200 איש בהזמנה מראש">
-          <p>
-            הבקתה יכולה להיערך בהזמנה מראש לאירוח והסעדה של קבוצות גדולות של עד 200 איש. אנחנו מסוגלים להיערך מראש גם
-            להכנה והוצאה של כמות גדולה מאוד של המבורגרים בפרק זמן קצר, כאשר מספר המשתתפים ושעת ההגעה מתואמים איתנו.
-          </p>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              { title: "מ-20 משתתפים", text: "קבוצה אצלנו מוגדרת מ-20 משתתפים ומעלה." },
-              { title: "מינימום 2,000 ₪", text: "מינימום ההזמנה לקבוצה הוא 2,000 ₪ כולל מע״מ." },
-              { title: "כ-35 מקומות ישיבה", text: "קיבולת הישיבה הרגילה של הבקתה היא כ-35 איש, ולכן קבוצות גדולות יותר מקבלות היערכות מיוחדת בהתאם לגודל הקבוצה, מזג האוויר וסגנון האירוח שנבחר." },
-            ].map((c) => (
-              <Card key={c.title}>
-                <CardContent className="p-4 space-y-1">
-                  <h3 className="font-black text-foreground">{c.title}</h3>
-                  <p className="text-sm">{c.text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </Section>
-
-        <Section title="תיירים מהארץ ומהעולם">
-          <p>
-            הבקתה מארחת קבוצות, משלחות ומטיילים שמגיעים לסיור בעוטף עזה. כבר אירחנו אצלנו קבוצות תיירים מישראל ומחו״ל,
-            ובהן קבוצות מארצות הברית, קנדה ואפילו מסין.
-          </p>
-          <p>
-            חלק מהקבוצות מגיעות אלינו לארוחת צהריים כחלק מיום שבו הן מבקרות באתר הנובה, באזור תקומה ובאתרים נוספים
-            בעוטף.
-          </p>
-          <p>וכאן קורה משהו שאנחנו מאוד אוהבים בבקתה.</p>
-          <blockquote className="border-r-4 border-primary bg-card rounded-2xl p-5 text-foreground leading-relaxed">
-            בשולחן אחד יכולה לשבת קבוצת תיירים שהגיעה מחצי עולם כדי להכיר את עוטף עזה, לידם משפחה שמטיילת באזור,
-            ובשולחן אחר חיילי מילואים או סדיר שסיימו יום בגזרה. אנשים מעולמות שונים לחלוטין נפגשים כאן סביב אוכל.
-          </blockquote>
-          <p>
-            זו אחת הסיבות שהבקתה הפכה מבחינתנו להרבה יותר ממסעדת המבורגרים — היא נקודת מפגש מקומית בלב העוטף.
-          </p>
-        </Section>
-
-        <Section title="ארוחת צהריים שמתאימה ללוח הזמנים של הסיור">
-          <p>
-            מדריכי טיולים יודעים שעצירת צהריים לקבוצה גדולה יכולה בקלות להפוך לשעה וחצי או שעתיים. עשרות אנשים צריכים
-            לבחור מנות, לבצע הזמנה, לחכות להכנה ורק לאחר מכן להתחיל לאכול.
-          </p>
-          <p>אצלנו המטרה היא אחרת.</p>
-          <p>
-            לפני הגעת הקבוצה אנחנו נמצאים בתיאום עם המדריך או המארגן. מספר המשתתפים, המסלול שנבחר וזמן ההגעה ידועים
-            מראש, והמטבח נערך בהתאם.
-          </p>
-          <p>
-            כאשר האוטובוס מתקרב, אפשר לתזמן את העבודה כך שהמנות יתחילו לצאת סביב זמן ההגעה ולא להתחיל את כל תהליך
-            ההכנה רק לאחר שהקבוצה התיישבה.
-          </p>
-          <p>לקבוצות שממהרות, בתיאום מתאים, ניתן לבצע עצירה של כ-30-45 דקות ולהמשיך בסיור.</p>
-          <p>
-            עבור מדריך שמנהל יום שלם של סיור בעוטף, זה יכול להיות ההבדל בין ארוחת צהריים שמשבשת את המסלול לבין ארוחה
-            שמשתלבת בתוכו.
-          </p>
-        </Section>
-
-        <Section title="המבורגר 220 גרם — ארוחה שאף אחד לא אמור לצאת ממנה רעב">
-          <p>
-            בלב הארוחה נמצא ההמבורגר שלנו. אנחנו עובדים עם תערובת בקר איכותית ומגישים קציצה עבה ועסיסית במשקל 220 גרם.
-          </p>
-          <p>
-            אנחנו לא מנסים לתת לקבוצה ״מנת תיירים״ קטנה כדי לסמן וי על ארוחת הצהריים. הקבוצות מקבלות ארוחה אמיתית
-            ומשביעה.
-          </p>
-          <p>
-            לצד ההמבורגר ניתן להגיש צ׳יפס, וופל צ׳יפס, טבעות בצל, ירקות, רטבים ותוספות שונות — בהתאם למסלול שנבחר.
-          </p>
-        </Section>
-
-        <Section title="מסלולים מיוחדים לקבוצות — לפי אדם ולפי תקציב">
-          <p>
-            לקבוצות יש אצלנו תפריט ומסלולי אירוח ייעודיים, שאינם מוגבלים לתפריט הרגיל של הבקתה. המסלולים מתומחרים לפי
-            אדם ומאפשרים למדריך, לחברת התיירות או למארגן לבחור מראש את רמת האירוח בהתאם לתקציב ולצרכים של הקבוצה.
-          </p>
-          <p>
-            קיימות אפשרויות החל מארוחת המבורגר קלאסית ועד מסלולים מורחבים, מסלול ״הכל כלול״ ומסלול בשרים מלא.
-          </p>
-          <p>
-            אנחנו גם משתדלים להתגמש ולהתאים את המסלול להעדפות ולצרכים של הקבוצה בגבול האפשר, ולא מחייבים כל קבוצה
-            להיכנס בדיוק לאותה תבנית.
-          </p>
-        </Section>
-
-        <Section title="מנות מיוחדות שלא תמצאו בהכרח בתפריט הרגיל">
-          <p>אירוח קבוצות מאפשר לנו להציע גם מנות ותוספות שאינן חלק קבוע מהתפריט היומי.</p>
-          <p>
-            בין היתר ניתן לשלב במסלולים מיוחדים סוכריות עראיס המוגשות על מצע טחינה ופטרוזיליה, תוספות חמות, ריבת בצל,
-            שום קונפי, פלפלים חריפים, בצל מטוגן, ביצת עין, רצועות רוסטביף וקינוחים כמו סלט פירות עונתיים.
-          </p>
-          <p>
-            בהתאם למסלול ניתן לקבל רטבים בסקוויזרים לשולחן ללא הגבלה, מים קרים עם קרח ואפשרות לשתייה קלה ללא הגבלה.
-          </p>
-        </Section>
-
-        <Section title="מסלול בשרים לקבוצות ואירועים">
-          <p>לקבוצות שמחפשות ארוחה גדולה יותר מהמבורגר קיים גם מסלול בשרים.</p>
-          <p>
-            המסלול יכול לכלול סטייק אנטריקוט, פיקניה, חצאי עראיס, קבבים במתכון אישי, שיפודי לבבות עוף ושיפודי פרגית
-            בתיבול הבית, לצד מטוגנים, סלטים, צ׳ימיצ׳ורי, שום קונפי ופלפלים חריפים.
-          </p>
-          <p className="flex items-start gap-2 text-foreground font-bold">
-            <Flame className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-            במסלול זה מדובר בכמות נדיבה של כ-0.5 ק״ג ומעלה בשר לאדם.
-          </p>
-          <p>
-            באירוח המתקיים אצלנו הבשרים מוכנים במקום על ציוד הבישול שלנו, ובאירועים חיצוניים ניתן להכין את הבשרים על
-            מנגל פחמים.
-          </p>
-        </Section>
-
-        <Section title="מדשאה, מחצלות, עצים ואווירה של מושב">
-          <p>אנחנו לא אולם אירועים ולא מסעדה בתוך מרכז מסחרי.</p>
-          <p>הבקתה נמצאת בתוך מושב, וזה חלק גדול מהחוויה.</p>
-          <p>
-            מסביב יש מדשאות ועצים, ואפשר להתאים את צורת הישיבה לאופי הקבוצה. יש קבוצות שמעדיפות שולחנות וכיסאות, ויש
-            כאלה שמעדיפות לפרוס מחצלות על המדשאה, לשבת מתחת לצל העצים וליהנות מאווירת פיקניק כפרית עם מפות משובצות
-            אדום-לבן.
-          </p>
-          <p>
-            יש במקום סככה מקורה ופתוחה בחלקה, ובדרך כלל האוויר והבריזה של המושב יוצרים אווירה נעימה.
-          </p>
-          <p>
-            אוטובוס יכול להגיע ממש מול המקום, כך שהקבוצה לא צריכה ללכת מרחק משמעותי מנקודת ההורדה לארוחה.
-          </p>
-          <p>במקום קיימים שני תאי שירותים — לנשים ולגברים.</p>
-          <p>
-            הגישה למקום אפשרית גם עבור אדם בכיסא גלגלים ברובה, אך קיימת מדרגה קטנה ולכן אין להציג את המקום כנגיש
-            באופן מלא ללא בדיקה פרטנית של צורכי הקבוצה.
-          </p>
-        </Section>
-
-        <Section title="דרום אדום — המבורגר ליד יער שוקדה">
-          <p>
-            הבקתה נמצאת במרחק של כקילומטר מיער שוקדה, ולכן היא משתלבת באופן טבעי גם ביום טיול באזור בתקופת פסטיבל
-            דרום אדום.
-          </p>
-          <p>
-            בכל שנה מגיעים לאזור מטיילים ומשפחות כדי לראות את פריחת הכלניות, לטייל ביער שוקדה ובנגב המערבי וליהנות
-            מאירועי דרום אדום.
-          </p>
-          <p>במהלך חודש הפסטיבל אנחנו פותחים גם בשעות הצהריים כדי לארח את המטיילים.</p>
-          <p>
-            למי שמחפש מקום לאכול בדרום אדום, המבורגר ליד יער שוקדה או עצירת צהריים במהלך יום טיול באזור — הבקתה
-            נמצאת ממש בתוך אזור הטיול.
-          </p>
-          <blockquote className="border-r-4 border-primary bg-card rounded-2xl p-5 text-foreground leading-relaxed">
-            גם ״דרום אדום - הדף הרשמי״ המליץ בעבר על הבקתה במסגרת התמיכה בעסקים המקומיים ותיאר אותה כ״המבורגר בוטיק
-            באווירה כפרית״ ואף כ״אחד ההמבורגרים הכי שווים בארץ״.
-          </blockquote>
-        </Section>
-
-        <Section title="החיילים הם חלק מהמשפחה שלנו">
-          <p>אי אפשר לספר על הבקתה בלי לדבר על חיילי הסדיר והמילואים שמשרתים באזור.</p>
-          <p>הקשר הזה קיבל משמעות מיוחדת אחרי 7 באוקטובר.</p>
-          <p>
-            בתקופה שבה חלק גדול מהאוכלוסייה האזרחית באזור התפנה, הבקתה חזרה לפעילות גם עבור החיילים שנשארו בגזרה.
-          </p>
-          <p>
-            חיילים התקשרו ושאלו אם אנחנו פתוחים. חזרנו למקום, פתחנו את המטבח והכנו אוכל לעשרות חיילים ששמרו באזור,
-            כאשר חלק מהפעילות בתקופה הזאת נעשתה בהתנדבות.
-          </p>
-          <p>
-            הסיפור הזה סוקר גם ב-mako, שסיפר על החזרה של הבקתה לפעילות בתקופת המלחמה ועל הקשר שנוצר עם חיילי הסדיר
-            והמילואים.
-          </p>
-          <p>אבל הקשר לא הסתיים שם.</p>
-          <p>גם היום חיילי מילואים וסדיר מהמוצבים והבסיסים בסביבה מגיעים אלינו בערבים.</p>
-          <p>
-            אחרי יום בגזרה אפשר להגיע לבקתה, להזמין המבורגר ובירה קרה, לשבת, לפתוח ששבש ולדבר.
-          </p>
-          <p>
-            בתוך כל הטירוף של המציאות באזור, עבור חלק מהחיילים הבקתה היא פינה קטנה של שקט — מקום שאפשר לכמה רגעים
-            להוריד בו את הציוד, לאכול ולהרגיש קצת בבית.
-          </p>
-          <p>
-            אנחנו גם מבצעים משלוחים למוצבים באזור ונערכים להזמנות מרוכזות לחיילים בהתאם לתיאום ולאפשרויות הפעילות.
-          </p>
-          <p>
-            מבחינתנו, הרבה מהחיילים שחוזרים אלינו שוב ושוב כבר מזמן אינם רק לקוחות — הם חלק מהמשפחה של הבקתה.
-          </p>
-        </Section>
-
-        <Section title="הרבה מעבר להמבורגר">
-          <p>הבקתה היא מקום שאפשר להגיע אליו בגלל האוכל ולהישאר בו בגלל האווירה.</p>
-          <p>בסוף היום אפשר לקחת בירה קרה, לשבת עם החברים, לפתוח ששבש ולדבר.</p>
-          <p>אין כאן תחושה שצריך לסיים את המנה ולמהר לפנות את השולחן.</p>
-          <p>אנחנו רוצים שאנשים ירגישו בבית.</p>
-          <p>וזה יוצר מפגשים שקשה למצוא במקומות אחרים.</p>
-          <p>
-            תיירים מארצות הברית, קנדה או סין שעושים סיור בעוטף יכולים למצוא את עצמם אוכלים ליד מילואימניקים
-            מהמוצבים באזור. משפחה שחזרה מהכלניות ביער שוקדה יכולה לשבת ליד מושבניקים שמגיעים לכאן באופן קבוע.
-          </p>
-          <p>כל אחד הגיע מסיבה אחרת.</p>
-          <p className="text-foreground font-black text-lg">בסוף כולם יושבים באותה בקתה.</p>
-          <p>
-            זו הסיבה שאנחנו רואים בבקתה הרבה מעבר לעוד מקום שמוכר המבורגר — היא הפכה למעין מוסד קולינרי מקומי ונקודת
-            מפגש של האנשים שחיים, משרתים ומטיילים באזור.
-          </p>
-        </Section>
-
-        <Section title="כשרות ורגישויות">
-          <p>הבקתה פועלת בכשרות רגילה בהשגחת הרבנות שדות נגב.</p>
-          <p>קציצת ההמבורגר עצמה עשויה מבשר חלק רבנות והירקות הם גוש קטיף.</p>
-          <p>
-            חשוב לדייק: תעודת הכשרות של המקום היא כשרות רגילה, בין היתר מכיוון שתוספת הרוסטביף האופציונלית אינה מבשר
-            חלק.
-          </p>
-          <p>קיימת אפשרות להמבורגר צמחוני/טבעוני, אך הוא מוכן על אותה פלנצ׳ה של הבשר.</p>
-          <p>קיימת גם אפשרות ללחמנייה ללא גלוטן, אך ההכנה נעשית בסביבה שבה קיים גלוטן.</p>
-          <p>
-            לקבוצות עם רגישויות או העדפות מיוחדות מומלץ לעדכן אותנו מראש כדי שנוכל לבדוק מה ניתן להתאים.
-          </p>
-        </Section>
-
-        <Section title="אירועים פרטיים ועסקיים">
-          <p>הניסיון שלנו בהוצאת כמויות גדולות של אוכל מאפשר לנו לתת שירות גם לאירועים פרטיים ועסקיים.</p>
-          <p>
-            אנחנו מציעים מסלולי אירוח לאירועים, ימי הולדת, אירועי חברה, משלחות וקבוצות, עם אפשרות להתאים את סוג האוכל
-            והאירוח בהתאם לתקציב ולמספר המשתתפים.
-          </p>
-          <p>ניתן לקיים אירוח אצלנו בבקתה או, בהתאם לאירוע ולתיאום, להגיע גם לאירוע חיצוני.</p>
-          <p>בהזמנה מראש ניתן להיערך לאירועים ולקבוצות של עד 200 משתתפים.</p>
-          <div className="flex flex-wrap gap-3 pt-1">
-            <Button asChild variant="outline"><Link to="/events">הזמנת אירוע</Link></Button>
-            <Button asChild variant="outline"><Link to="/"><Utensils className="ml-2 w-4 h-4" /> לתפריט ולהזמנה</Link></Button>
-          </div>
-        </Section>
-
-        <Section title="כתבו עלינו">
-          <p>לאורך השנים הבקתה זכתה לסיקור בתקשורת, בביקורות אוכל ובגופי תיירות.</p>
-          <p>ב-mako סופר הסיפור של הבקתה בתקופת מלחמת חרבות ברזל, החזרה לפעילות והקשר עם החיילים באזור.</p>
-          <p>
-            מבקר האוכל של מקור ראשון הגיע לכפר מימון ופרסם ביקורת תחת הכותרת: ״בכפר מימון מצאנו את ההמבורגר המנצח״.
-          </p>
-          <p>מקור ראשון כלל את הבקתה גם במסגרת סיור קולינרי בעוטף עזה.</p>
-          <p>הבקתה התארחה גם בכתבה מצולמת בתוכנית ״פותחים שישי״ בערוץ 13.</p>
-          <p>
-            בנוסף הופיעה הבקתה בסיקורים ואזכורים של גופי תקשורת ואתרי תוכן נוספים, ובהם ynet, ישראל היום, Wolt וגופי
-            תיירות אזוריים.
-          </p>
-          <p>
-            ״דרום אדום - הדף הרשמי״ תיאר בעבר את הבקתה כ״המבורגר בוטיק באווירה כפרית״ ואף כ״אחד ההמבורגרים הכי שווים
-            בארץ״.
-          </p>
-        </Section>
-      </main>
-
-      <PressSection />
-
-      <div className="max-w-4xl mx-auto px-4 py-12 space-y-12">
-        <section className="scroll-mt-24">
-          <h2 className="text-2xl md:text-3xl font-black mb-5">
-            למה לבחור בבקתה לעצירת אוכל במהלך סיור בעוטף?
+        <section>
+          <h2 className="text-2xl md:text-4xl font-black text-center text-primary mb-6">
+            למה קבוצות בוחרות בבקתה
           </h2>
           <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {HIGHLIGHTS.map(({ icon: Icon, text }) => (
@@ -573,53 +476,67 @@ const Groups = () => {
           </ul>
         </section>
 
-        <section className="scroll-mt-24">
-          <h2 className="text-2xl md:text-3xl font-black mb-5">שאלות נפוצות</h2>
+        <section>
+          <h2 className="text-2xl md:text-4xl font-black text-center text-primary mb-6">שאלות נפוצות</h2>
           <div className="space-y-3">
             {FAQ.map((f) => (
               <details key={f.q} className="group rounded-2xl border border-border bg-card p-4">
                 <summary className="cursor-pointer font-black list-none flex items-center justify-between gap-3">
                   <h3 className="text-base">{f.q}</h3>
-                  <span className="text-primary transition-transform group-open:rotate-45 text-xl leading-none">+</span>
+                  <ChevronDown className="w-5 h-5 text-primary shrink-0 transition-transform group-open:rotate-180" />
                 </summary>
-                <p className="text-sm text-muted-foreground leading-relaxed pt-3">{f.a}</p>
+                <p className="pt-3 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
               </details>
             ))}
           </div>
         </section>
 
-        <section className="rounded-3xl border border-primary/40 bg-primary/5 p-6 md:p-10 text-center space-y-4 scroll-mt-24">
-          <h2 className="text-2xl md:text-3xl font-black leading-snug">
-            מתכננים סיור בעוטף? בואו נתאים לכם את עצירת הצהריים
-          </h2>
-          <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            ספרו לנו כמה אנשים מגיעים, מתי אתם צפויים להיות באזור ומה התקציב שלכם — ונבדוק איך אפשר להתאים לכם ארוחה
-            שתשתלב במסלול.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
-              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer"><MessageCircle className="ml-2 w-5 h-5" /> דברו איתנו בוואטסאפ</a>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> התקשרו עכשיו</a>
-            </Button>
-            <Button asChild size="lg" variant="secondary">
-              <a href="#lead-bottom">השאירו פרטים ונחזור אליכם</a>
-            </Button>
-          </div>
+        {/* Full story — collapsed for humans, present for crawlers */}
+        <section>
+          <details className="rounded-3xl border border-border bg-card p-5">
+            <summary className="cursor-pointer font-black text-lg list-none flex items-center justify-between gap-3">
+              הסיפור המלא של הבקתה ואירוח קבוצות
+              <ChevronDown className="w-5 h-5 text-primary shrink-0" />
+            </summary>
+            <div className="pt-5 space-y-6">
+              {LONG_CONTENT.map((s) => (
+                <article key={s.title} className="space-y-2">
+                  <h3 className="text-lg font-black">{s.title}</h3>
+                  {s.paragraphs.map((p, i) => (
+                    <p key={i} className="text-sm text-muted-foreground leading-relaxed">{p}</p>
+                  ))}
+                </article>
+              ))}
+            </div>
+          </details>
         </section>
+      </main>
 
+      <PressSection />
+
+      <section className="max-w-5xl mx-auto px-4 py-12 space-y-6">
+        <h2 className="text-2xl md:text-4xl font-black text-center text-primary">מתאמים הגעה?</h2>
         <LeadForm id="lead-bottom" />
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button asChild size="lg" variant="outline">
+            <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> {PHONE}</a>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link to="/"><Utensils className="ml-2 w-4 h-4" /> לתפריט ולהזמנה</Link>
+          </Button>
+        </div>
+      </section>
 
-        <section className="text-center text-sm text-muted-foreground space-y-1">
-          <h2 className="text-base font-black text-foreground">יצירת קשר</h2>
-          <p>
-            טלפון: <a className="text-primary underline" href={`tel:${PHONE}`}>{PHONE}</a> · וואטסאפ:{" "}
-            <a className="text-primary underline" href={WHATSAPP} target="_blank" rel="noopener noreferrer">שליחת הודעה</a>
-          </p>
-          <p>הבקתה — המבורגר של מושבניקים, כפר מימון, מועצה אזורית שדות נגב.</p>
-        </section>
-      </div>
+      {/* Floating WhatsApp */}
+      <a
+        href={WHATSAPP}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="שליחת הודעה בוואטסאפ"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl"
+      >
+        <MessageCircle className="w-7 h-7" />
+      </a>
     </div>
   );
 };
