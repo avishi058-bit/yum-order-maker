@@ -204,7 +204,7 @@ const CARDS = [
 const HIGHLIGHTS: { icon: typeof MapPin; text: string }[] = [
   { icon: MapPin, text: "מיקום בכפר מימון שמשתלב במסלולי סיור בעוטף" },
   { icon: MapPin, text: "מתאים למסלולים באזור תקומה והנובה" },
-  { icon: Bus, text: "אוטובוס יכול להגיע ממש מול הבקתה" },
+  { icon: Bus, text: "חניה קרובה ונוחה לאוטובוסים" },
   { icon: Users, text: "עבודה בתיאום צמוד עם מדריך הקבוצה" },
   { icon: Clock, text: "היערכות מראש לפי שעת ההגעה" },
   { icon: Clock, text: "עצירה של כ-30-45 דקות אפשרית לקבוצה שממהרת ובתיאום מתאים" },
