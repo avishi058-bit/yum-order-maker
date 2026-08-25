@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PressSection from "@/components/PressSection";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/habikta-logo.jpeg.asset.json";
 import heroBurger from "@/assets/hero-burger.webp";
 import event1 from "@/assets/events/event1.jpeg.asset.json";
 import event2 from "@/assets/events/event2.jpeg.asset.json";
@@ -397,7 +397,7 @@ const Groups = () => {
             </a>
           </div>
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="הבקתה" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary-foreground/60" />
+            <img src={logo.url} alt="הבקתה" className="h-12 w-12 object-contain rounded-full ring-2 ring-primary-foreground/60" />
           </Link>
         </div>
       </header>
