@@ -167,17 +167,34 @@ const PressSection = () => {
           </p>
         </header>
 
-        {/* Media wall */}
-        <ul className="flex md:flex-wrap gap-3 md:gap-6 justify-start md:justify-center overflow-x-auto pb-3 mb-10 -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {OUTLETS.map((name) => (
-            <li
-              key={name}
-              className="shrink-0 rounded-2xl border border-border bg-card/60 px-5 py-3 text-sm md:text-base font-black tracking-wide text-muted-foreground"
-            >
-              {name}
-            </li>
-          ))}
-        </ul>
+        {/* Media wall — mobile: smooth snap carousel with edge fades; desktop: centered wrap */}
+        <div className="relative mb-10">
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 z-10 md:hidden bg-gradient-to-l from-background to-transparent"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 w-10 z-10 md:hidden bg-gradient-to-r from-background to-transparent"
+            aria-hidden="true"
+          />
+          <ul
+            className="flex md:flex-wrap gap-3 md:gap-6 justify-start md:justify-center overflow-x-auto md:overflow-visible snap-x snap-mandatory scroll-smooth overscroll-x-contain pb-3 -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="כלי תקשורת שסיקרו את הבקתה"
+          >
+            {OUTLETS.map((name) => (
+              <li
+                key={name}
+                className="shrink-0 snap-center rounded-2xl border border-border bg-card/60 px-5 py-3 text-sm md:text-base font-black tracking-wide text-muted-foreground whitespace-nowrap"
+              >
+                {name}
+              </li>
+            ))}
+          </ul>
+          <p className="md:hidden text-center text-[11px] text-muted-foreground/70 -mt-1">
+            החליקו הצידה לעוד ←
+          </p>
+        </div>
+
 
         <div className="grid gap-5 md:grid-cols-3">
           {/* Featured video card */}
