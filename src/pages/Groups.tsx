@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PressSection from "@/components/PressSection";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/habikta-logo.jpeg.asset.json";
 import heroBurger from "@/assets/hero-burger.webp";
 import event1 from "@/assets/events/event1.jpeg.asset.json";
 import event2 from "@/assets/events/event2.jpeg.asset.json";
