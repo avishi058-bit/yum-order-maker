@@ -397,7 +397,7 @@ const Groups = () => {
             </a>
           </div>
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="הבקתה" className="h-11 w-11 rounded-full object-cover ring-2 ring-primary-foreground/60" />
+            <img src={logo.url} alt="הבקתה" className="h-12 w-12 object-contain rounded-full ring-2 ring-primary-foreground/60" />
           </Link>
         </div>
       </header>
