@@ -482,6 +482,7 @@ const Groups = () => {
           </div>
         </div>
       </section>
+      <main className="max-w-5xl mx-auto px-4 py-10 space-y-12">
         <h2 className="text-2xl md:text-4xl font-black text-center text-primary">
           מה אפשר לעשות אצלנו
         </h2>
