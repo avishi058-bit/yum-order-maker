@@ -207,6 +207,7 @@ const HIGHLIGHTS: { icon: typeof MapPin; text: string }[] = [
   { icon: Bus, text: "חניה קרובה ונוחה לאוטובוסים" },
   { icon: Users, text: "עבודה בתיאום צמוד עם מדריך הקבוצה" },
   { icon: Clock, text: "היערכות מראש לפי שעת ההגעה" },
+  { icon: Utensils, text: "שולחנות שוק מוכנים שניות לפני שהקבוצה מגיעה" },
   { icon: Clock, text: "עצירה של כ-30-45 דקות אפשרית לקבוצה שממהרת ובתיאום מתאים" },
   { icon: Users, text: "אירוח קבוצות של עד 200 איש בהזמנה מראש" },
   { icon: Utensils, text: "מסלולים מיוחדים לקבוצות לפי אדם ולפי תקציב" },
