@@ -14,6 +14,7 @@ import {
   Globe2,
   CheckCircle2,
   ChevronDown,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -446,6 +447,41 @@ const Groups = () => {
         </div>
       </div>
 
+      {/* Prominent group tour coordination pitch */}
+      <section className="bg-primary text-primary-foreground">
+        <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
+          <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+            <div className="shrink-0">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary-foreground/15 flex items-center justify-center">
+                <Bus className="w-9 h-9 md:w-11 md:h-11" />
+              </div>
+            </div>
+            <div className="flex-1 space-y-4">
+              <h2 className="text-2xl md:text-4xl font-black leading-tight">
+                קבוצות באמצע יום סיור? אנחנו מוכנים לכן.
+              </h2>
+              <p className="text-base md:text-xl font-bold leading-relaxed opacity-95 max-w-3xl">
+                אנחנו מכירים את הצרכים של קבוצות שנמצאות באמצע יום סיור: אוטובוס עם עשרות משתתפים, מדריך שצריך לעמוד בלוח זמנים וארוחת צהריים שצריכה להיות טובה — אבל גם יעילה.
+              </p>
+              <p className="text-base md:text-lg leading-relaxed opacity-90 max-w-3xl">
+                לכן אנחנו עובדים בתיאום צמוד עם מדריך או מארגן הקבוצה לפני ההגעה, יודעים כמה אנשים מגיעים ומתי, ונערכים מראש כדי שהמטבח יעבוד בהתאם לזמן ההגעה של הקבוצה. לקבוצות שממהרות, בתיאום מתאים, ניתן לבצע עצירה של כ-30-45 דקות ולהמשיך בסיור.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button asChild size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-base h-12">
+                  <Link to="/events">
+                    <Calendar className="ml-2 w-5 h-5" /> להזמנת קבוצה ואירוע
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 text-base h-12">
+                  <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="ml-2 w-5 h-5" /> לתיאום מהיר בוואטסאפ
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       <main className="max-w-5xl mx-auto px-4 py-10 space-y-12">
         <h2 className="text-2xl md:text-4xl font-black text-center text-primary">
           מה אפשר לעשות אצלנו
