@@ -878,6 +878,13 @@ const Index = () => {
         <footer className="py-8 text-center border-t border-border space-y-3">
           <p className="text-foreground font-bold">הַבִּקְתָּה — המבורגר של מושבניקים 🐄</p>
           <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
+          <address className="not-italic text-muted-foreground text-sm space-y-1">
+            <p>המבורגר הבקתה — שלזינגר אבישי-אברהם, עוסק מורשה 213877103</p>
+            <p>ערבי הנחל 22, תושיה, ישראל</p>
+            <p>
+              <a href="mailto:avishi058@gmail.com" className="text-primary hover:underline">avishi058@gmail.com</a>
+            </p>
+          </address>
           <a
             href="tel:058-4633-555"
             className="inline-flex items-center gap-2 text-primary hover:underline text-sm"
@@ -886,6 +893,8 @@ const Index = () => {
             058-4633-555
           </a>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground pt-2">
+            <a href="/about" className="hover:text-foreground transition-colors">אודות</a>
+            <span>·</span>
             <a href="/privacy" className="hover:text-foreground transition-colors">מדיניות פרטיות</a>
             <span>·</span>
             <a href="/terms" className="hover:text-foreground transition-colors">תנאי שימוש</a>
@@ -896,6 +905,7 @@ const Index = () => {
             <span>·</span>
             <a href="/unsubscribe" className="hover:text-foreground transition-colors">הסרה מרשימת תפוצה</a>
           </div>
+
         </footer>
       )}
 

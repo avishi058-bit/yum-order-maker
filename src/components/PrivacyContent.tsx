@@ -38,7 +38,7 @@ const PrivacyContent = () => (
 
     <h3 className="text-xl font-bold text-foreground pt-2">3. מסירת מידע לצדדים שלישיים</h3>
     <p>
-      העסק לא ימכור מידע אישי לצדדים שלישיים.
+      העסק מתחייב שלא למכור, להשכיר או להעביר פרטי לקוחות לצדדים שלישיים.
       מידע עשוי להיות מועבר לגורמים חיצוניים רק במקרים הבאים:
     </p>
     <ul className="list-disc pr-6 space-y-1">
@@ -101,6 +101,8 @@ const PrivacyContent = () => (
       📧 <a href="mailto:avishi058@gmail.com" className="text-primary hover:underline">avishi058@gmail.com</a>
       <br />
       📞 <a href="tel:058-4633555" className="text-primary hover:underline">058-4633555</a>
+      <br />
+      📍 ערבי הנחל 22, תושיה, ישראל
     </p>
   </div>
 );
