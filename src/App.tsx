@@ -38,6 +38,7 @@ const AdminLeads = lazy(() => import("./pages/AdminLeads"));
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const About = lazy(() => import("./pages/About"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/AccessibilityStatement"));
