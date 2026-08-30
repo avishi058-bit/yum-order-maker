@@ -120,7 +120,7 @@ const TermsContent = () => (
     <p>העסק שומר לעצמו את הזכות לשקול החזר או פיצוי לפי שיקול דעתו במקרים חריגים נוספים.</p>
 
 
-    <h2 className="text-xl font-bold text-foreground pt-2">10. מכירת אלכוהול</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">11. מכירת אלכוהול</h2>
     <p>מכירת משקאות אלכוהוליים מותרת לבני 18 ומעלה בלבד.</p>
     <p>בעת ביצוע הזמנה הכוללת אלכוהול, המשתמש מאשר כי הוא מעל גיל 18.</p>
     <p>בעת קבלת ההזמנה:</p>
@@ -130,7 +130,7 @@ const TermsContent = () => (
     </ul>
     <p>לא תתבצע מסירת אלכוהול לאחר השעה 23:00.</p>
 
-    <h2 className="text-xl font-bold text-foreground pt-2">11. אחריות מוגבלת</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">12. אחריות מוגבלת</h2>
     <p>העסק עושה מאמצים להבטיח את תקינות האתר, אך אינו מתחייב כי האתר יהיה נקי מתקלות או זמין בכל עת.</p>
     <p>העסק לא יישא באחריות ל:</p>
     <ul className="list-disc pr-6 space-y-1">
@@ -140,10 +140,10 @@ const TermsContent = () => (
       <li>נזקים ישירים או עקיפים הנובעים משימוש באתר</li>
     </ul>
 
-    <h2 className="text-xl font-bold text-foreground pt-2">12. קניין רוחני</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">13. קניין רוחני</h2>
     <p>כל התכנים באתר, לרבות עיצוב, תמונות, טקסטים וסימנים מסחריים, הינם רכוש העסק ואין לעשות בהם שימוש ללא אישור מראש.</p>
 
-    <h2 className="text-xl font-bold text-foreground pt-2">13. פרטיות ושימוש במידע</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">14. פרטיות ושימוש במידע</h2>
     <p>העסק אוסף מידע לצורך:</p>
     <ul className="list-disc pr-6 space-y-1">
       <li>תפעול הזמנות</li>
@@ -151,17 +151,17 @@ const TermsContent = () => (
       <li>ניתוח שימוש באתר</li>
     </ul>
     <p>שליחת הודעות שיווקיות תתבצע רק בכפוף להסכמת המשתמש.</p>
-    <p>העסק לא יעביר מידע אישי לצדדים שלישיים, למעט לצורך השלמת השירות או לפי דרישת חוק.</p>
+    <p>העסק מתחייב שלא למכור, להשכיר או להעביר פרטי לקוחות לצדדים שלישיים לצורכי שיווק או לכל מטרה אחרת, למעט לגורמים הנדרשים להשלמת השירות (כגון חברת סליקה או שליח) או לפי דרישת חוק.</p>
 
-    <h2 className="text-xl font-bold text-foreground pt-2">14. שימוש בעוגיות (Cookies)</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">15. שימוש בעוגיות (Cookies)</h2>
     <p>האתר עושה שימוש בעוגיות לצורך תפעול תקין, שיפור חוויית המשתמש וניתוח נתונים.</p>
     <p>המשך שימוש באתר מהווה הסכמה לשימוש בעוגיות בהתאם להגדרות הדפדפן של המשתמש.</p>
 
-    <h2 className="text-xl font-bold text-foreground pt-2">15. דין וסמכות שיפוט</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">16. דין וסמכות שיפוט</h2>
     <p>על תנאים אלו יחולו דיני מדינת ישראל בלבד.</p>
     <p>סמכות השיפוט הבלעדית נתונה לבתי המשפט המוסמכים בישראל.</p>
 
-    <h2 className="text-xl font-bold text-foreground pt-2">16. יצירת קשר</h2>
+    <h2 className="text-xl font-bold text-foreground pt-2">17. יצירת קשר</h2>
     <p>
       📧 <a href="mailto:avishi058@gmail.com" className="text-primary hover:underline">avishi058@gmail.com</a>
       <br />
