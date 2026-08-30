@@ -170,7 +170,7 @@ const burgerToMeal: Record<string, string> = {
   "crispy-chicken": "meal-crispy-chicken",
 };
 
-const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60, 75, 90, 120];
+const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   new: { label: "חדשה", color: "bg-red-500", icon: <Bell size={18} /> },
