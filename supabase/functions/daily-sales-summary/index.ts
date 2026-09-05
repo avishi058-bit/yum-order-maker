@@ -26,8 +26,12 @@ const isTestCustomer = (name?: string | null, phone?: string | null): boolean =>
   return false;
 };
 
-/** Fallback start of the current Jerusalem day, as a UTC ISO string. */
-const jerusalemDayStartIso = (): string => {
+/**
+ * Fallback start of the current BUSINESS day (not calendar day).
+ * The business day starts at 06:00 Jerusalem time, so closing at 02:00 still
+ * summarizes the evening that began the previous calendar day.
+ */
+const businessDayStartIso = (): string => {
   const now = new Date();
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Jerusalem",
@@ -35,11 +39,11 @@ const jerusalemDayStartIso = (): string => {
     hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
   }).formatToParts(now);
   const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
-  const offsetMs =
-    Date.UTC(get("year"), get("month") - 1, get("day"), get("hour") % 24, get("minute"), get("second")) -
-    Math.floor(now.getTime() / 1000) * 1000;
-  const localMidnightUtc = Date.UTC(get("year"), get("month") - 1, get("day"), 0, 0, 0) - offsetMs;
-  return new Date(localMidnightUtc).toISOString();
+  const localAsUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour") % 24, get("minute"), get("second"));
+  const offsetMs = localAsUtc - Math.floor(now.getTime() / 1000) * 1000;
+  let startLocal = Date.UTC(get("year"), get("month") - 1, get("day"), 6, 0, 0);
+  if ((get("hour") % 24) < 6) startLocal -= 24 * 60 * 60 * 1000;
+  return new Date(startLocal - offsetMs).toISOString();
 };
 
 const parseBusinessDayStart = (body: unknown): string | null => {
@@ -75,7 +79,14 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({})) as unknown;
-    const since = parseBusinessDayStart(body) ?? jerusalemDayStartIso();
+    const fallback = businessDayStartIso();
+    const provided_start = parseBusinessDayStart(body);
+    // Never look further back than 24h before the business-day start, so a
+    // stale "last opened" timestamp can't inflate the summary.
+    const floor = new Date(new Date(fallback).getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const since = provided_start && provided_start > floor && provided_start < new Date().toISOString()
+      ? provided_start
+      : fallback;
 
     const { data: orders, error: ordErr } = await supabase
       .from("orders")
