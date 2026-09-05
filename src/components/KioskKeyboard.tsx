@@ -160,8 +160,6 @@ const KioskKeyboard = () => {
     const winX = window.scrollX;
     const winY = window.scrollY;
 
-    fn();
-
     const restore = () => {
       nodes.forEach(({ node, top, left }) => {
         if (node.scrollTop !== top) node.scrollTop = top;
@@ -171,9 +169,24 @@ const KioskKeyboard = () => {
         window.scrollTo(winX, winY);
       }
     };
+
+    // Keep pinning the scroll for a short window — browsers (and smooth
+    // scrolling) can move the view a few frames after the edit lands.
+    const onScroll = () => restore();
+    document.addEventListener("scroll", onScroll, true);
+
+    fn();
+
     restore();
-    requestAnimationFrame(restore);
+    let frames = 0;
+    const tick = () => {
+      restore();
+      if (++frames < 20) requestAnimationFrame(tick);
+      else document.removeEventListener("scroll", onScroll, true);
+    };
+    requestAnimationFrame(tick);
   }, []);
+
 
   const press = useCallback((char: string) => {
     const el = targetRef.current;
