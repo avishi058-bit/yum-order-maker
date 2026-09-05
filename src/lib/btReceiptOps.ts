@@ -389,18 +389,8 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }
   ops.push(feed(1));
 
-  // Group identical "real" items so two of the same exact dish print once as x2.
   const realItems = order.order_items.filter((it) => it.item_name !== "רטבים");
-  const groupKey = (it: ReceiptOrderItem): string => JSON.stringify({
-    n: it.item_name,
-    r: it.removals || [],
-    t: it.toppings || [],
-    m: !!it.with_meal,
-    ms: it.meal_side || null,
-    md: it.meal_drink || null,
-    db: it.deal_burgers || null,
-    dd: it.deal_drinks || null,
-  });
+
   // Identical dishes are intentionally NOT merged — each cart line prints on
   // its own, per kitchen request.
   const groups: Array<{ item: ReceiptOrderItem; qty: number }> = realItems.map((it) => ({

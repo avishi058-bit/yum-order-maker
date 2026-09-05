@@ -751,17 +751,8 @@ interface MergedLine {
   totalQty: number;
 }
 
-const lineKey = (it: ReceiptOrderItem): string =>
-  JSON.stringify({
-    n: it.item_name,
-    t: [...(it.toppings || [])].sort(),
-    r: [...(it.removals || [])].sort(),
-    m: it.with_meal || false,
-    ms: it.meal_side || null,
-    md: it.meal_drink || null,
-    db: it.deal_burgers || null,
-    dd: it.deal_drinks || null,
-  });
+
+
 
 function mergeItems(items: ReceiptOrderItem[]): MergedLine[] {
   // Identical dishes are intentionally NOT merged — the kitchen asked for each
