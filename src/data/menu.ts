@@ -81,7 +81,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "friends-mix": { description: "ערימת צ׳יפסים: רגיל, טבעות בצל, וופל צ׳יפס" },
   "arayes-special": { description: "3 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
   "arayes-special-4": { description: "4 רבעי עראיס שמנים ועסיסיים בתוספת טחינה חוצפנית בצד" },
-  can: { description: "קולה, זירו, פאנטה, ספרייט, בלו, מוחיטו, אבטיח, ד״י, מלון תפוח" },
+  can: { description: "קולה, זירו, פאנטה, פירות יער, ספרייט, בלו, מוחיטו, אבטיח, ד״י, מלון תפוח" },
   bottle: { description: "ענבים / תפוזים" },
   water: { description: "בקבוק מים מינרליים" },
   "flavored-water": { description: "מים בטעם תפוח / ענבים" },
@@ -267,6 +267,7 @@ export const drinkSubOptions: Record<string, DrinkSubOption[]> = {
     { id: "can-fanta", name: "פאנטה" },
     { id: "can-fanta-grape", name: "פאנטה ענבים" },
     { id: "can-fanta-exotic", name: "פאנטה אקזוטי" },
+    { id: "can-fanta-wildberry", name: "פאנטה פירות יער" },
     { id: "can-sprite", name: "ספרייט" },
     { id: "can-sprite-zero", name: "ספרייט זירו" },
     { id: "can-blu", name: "בלו רגיל" },
@@ -319,6 +320,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   // can sub-options (DrinkSelector)
   "can-cola": "drink-cola", "can-zero": "drink-zero", "can-fanta": "drink-fanta",
   "can-fanta-grape": "drink-fanta-grape", "can-fanta-exotic": "drink-fanta-exotic",
+  "can-fanta-wildberry": "drink-fanta-wildberry",
   "can-sprite": "drink-sprite", "can-sprite-zero": "drink-sprite-zero", "can-blu": "drink-blu",
   "can-mojito": "drink-blu-mojito", "can-watermelon": "drink-watermelon", "can-day": "drink-blu-day",
   "can-melon-apple": "drink-blu-melon-apple",
@@ -334,6 +336,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   // meal drink options (ItemCustomizer)
   "drink-cola": "drink-cola", "drink-zero": "drink-zero", "drink-fanta": "drink-fanta",
   "drink-fanta-grape": "drink-fanta-grape", "drink-fanta-exotic": "drink-fanta-exotic",
+  "drink-fanta-wildberry": "drink-fanta-wildberry",
   "drink-sprite": "drink-sprite", "drink-sprite-zero": "drink-sprite-zero",
   "drink-blu": "drink-blu", "drink-blu-mojito": "drink-blu-mojito", "drink-blu-day": "drink-blu-day",
   "drink-blu-watermelon": "drink-watermelon", "drink-blu-melon-apple": "drink-blu-melon-apple",
@@ -352,6 +355,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   // deal drink options (DealCustomizer)
   "deal-cola": "drink-cola", "deal-zero": "drink-zero", "deal-fanta": "drink-fanta",
   "deal-fanta-grape": "drink-fanta-grape", "deal-fanta-exotic": "drink-fanta-exotic",
+  "deal-fanta-wildberry": "drink-fanta-wildberry",
   "deal-sprite": "drink-sprite", "deal-sprite-zero": "drink-sprite-zero",
   "deal-blu": "drink-blu", "deal-blu-mojito": "drink-blu-mojito", "deal-blu-day": "drink-blu-day",
   "deal-blu-watermelon": "drink-watermelon", "deal-blu-melon-apple": "drink-blu-melon-apple",
@@ -366,6 +370,7 @@ export const drinkToAvailabilityId: Record<string, string> = {
   "deal-fuze-tea": "fuze-tea",
   // family deal drink options (FamilyDealCustomizer)
   "fam-cola": "drink-cola", "fam-zero": "drink-zero", "fam-fanta": "drink-fanta",
+  "fam-fanta-wildberry": "drink-fanta-wildberry",
   "fam-sprite": "drink-sprite", "fam-blu": "drink-blu", "fam-blu-melon-apple": "drink-blu-melon-apple",
   "fam-grapes": "drink-grapes", "fam-apples": "drink-apples",
   "fam-flavored-water-apple": "drink-flavored-water-apple", "fam-flavored-water-grape": "drink-flavored-water-grape",
