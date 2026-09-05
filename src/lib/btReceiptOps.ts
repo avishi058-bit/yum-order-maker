@@ -401,18 +401,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     db: it.deal_burgers || null,
     dd: it.deal_drinks || null,
   });
-  const groups: Array<{ item: ReceiptOrderItem; qty: number }> = [];
-  const idxByKey = new Map<string, number>();
-  for (const it of realItems) {
-    const k = groupKey(it);
-    const existing = idxByKey.get(k);
-    if (existing !== undefined) {
-      groups[existing].qty += it.quantity;
-    } else {
-      idxByKey.set(k, groups.length);
-      groups.push({ item: it, qty: it.quantity });
-    }
-  }
+  // Identical dishes are intentionally NOT merged — each cart line prints on
+  // its own, per kitchen request.
+  const groups: Array<{ item: ReceiptOrderItem; qty: number }> = realItems.map((it) => ({
+    item: it,
+    qty: it.quantity,
+  }));
+
   const isMultiItem = groups.length > 1 || (groups.length === 1 && groups[0].qty > 1);
   const LINE_GAP = 2.0; // breathing room between lines within an item
 

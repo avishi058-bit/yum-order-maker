@@ -764,18 +764,13 @@ const lineKey = (it: ReceiptOrderItem): string =>
   });
 
 function mergeItems(items: ReceiptOrderItem[]): MergedLine[] {
-  const map = new Map<string, MergedLine>();
-  for (const it of items) {
-    // Don't merge the synthetic sauces line into the menu listing — it has its
-    // own block at the bottom of the receipt.
-    if (it.item_name === "רטבים") continue;
-    const k = lineKey(it);
-    const existing = map.get(k);
-    if (existing) existing.totalQty += it.quantity;
-    else map.set(k, { key: k, item: it, totalQty: it.quantity });
-  }
-  return Array.from(map.values());
+  // Identical dishes are intentionally NOT merged — the kitchen asked for each
+  // cart line to be printed separately, even when two lines are the same dish.
+  return items
+    .filter((it) => it.item_name !== "רטבים")
+    .map((it, i) => ({ key: `${i}-${it.item_name}`, item: it, totalQty: it.quantity }));
 }
+
 
 // ---------- HTML builder ----------
 
