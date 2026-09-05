@@ -45,9 +45,8 @@ const OrderSuccessModal = ({ orderNumber, note, onClose }: OrderSuccessModalProp
 
         <p className="mb-5 text-sm text-muted-foreground">
           אפשר לעקוב אחרי סטטוס ההזמנה בסרגל שבראש המסך.
-          <br />
-          <span className="font-bold text-foreground">אין צורך לשלוח את ההזמנה שוב.</span>
         </p>
+
 
         <button
           type="button"
