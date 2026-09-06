@@ -948,6 +948,7 @@ export type Database = {
       orders: {
         Row: {
           almost_ready_notified_at: string | null
+          bon_queue_number: number | null
           created_at: string
           customer_address: string | null
           customer_name: string
@@ -974,6 +975,7 @@ export type Database = {
         }
         Insert: {
           almost_ready_notified_at?: string | null
+          bon_queue_number?: number | null
           created_at?: string
           customer_address?: string | null
           customer_name: string
@@ -1000,6 +1002,7 @@ export type Database = {
         }
         Update: {
           almost_ready_notified_at?: string | null
+          bon_queue_number?: number | null
           created_at?: string
           customer_address?: string | null
           customer_name?: string
