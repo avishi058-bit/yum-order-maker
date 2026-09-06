@@ -380,6 +380,8 @@ const Kitchen = () => {
   const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+  const [showDayChecklist, setShowDayChecklist] = useState(false);
+  const [missingPrompt, setMissingPrompt] = useState<{ dishName: string; ingredients: IngredientOption[] } | null>(null);
   const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
   const [newTopName, setNewTopName] = useState("");
   const [newTopPrice, setNewTopPrice] = useState("");
