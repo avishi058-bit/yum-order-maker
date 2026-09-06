@@ -29,7 +29,7 @@ interface Entry {
 /** Give up after this many consecutive failed lookups (404 / 429 / network).
  *  Without this the tracker keeps polling a bad order forever and burns the
  *  server-side rate-limit budget for the whole IP. */
-const MAX_FAILURES = 3;
+const MAX_FAILURES = 5;
 
 const registry = new Map<string, Entry>();
 
@@ -103,6 +103,25 @@ export function useOrderPoll(
       fetchOnce(entry, orderNumber, phone);
     }
 
+    // Resume polling when the tab/app comes back to the foreground: a phone
+    // that was asleep may have failed a few fetches and stopped, which used to
+    // freeze the tracker (and the "I'm on the way" button) until a reload.
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const e = registry.get(key);
+      if (!e) return;
+      e.failures = 0;
+      if (e.stopped) {
+        e.stopped = false;
+        if (!e.intervalId) {
+          e.intervalId = setInterval(() => fetchOnce(e, orderNumber, phone), POLL_INTERVAL_MS);
+        }
+      }
+      fetchOnce(e, orderNumber, phone);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     // Start the shared interval only for the first subscriber.
     if (!entry.intervalId && !entry.stopped) {
       entry.intervalId = setInterval(() => {
@@ -111,6 +130,8 @@ export function useOrderPoll(
     }
 
     return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
       const e = registry.get(key);
       if (!e) return;
       e.listeners.delete(listener);
