@@ -1269,6 +1269,8 @@ const Kitchen = () => {
   const printOrder = (order: Order) => {
     const payload = {
       order_number: order.order_number,
+      bon_queue_number: order.bon_queue_number ?? null,
+      queue_number: order.queue_number ?? null,
       customer_name: order.customer_name,
       customer_phone: order.customer_phone,
       notes: order.notes,
