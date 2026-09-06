@@ -120,6 +120,8 @@ interface AvailabilityItem {
   item_name: string;
   category: string;
   available: boolean;
+  manually_disabled?: boolean;
+  archived?: boolean;
 }
 
 const availabilityCategoryLabels: Record<string, string> = {
