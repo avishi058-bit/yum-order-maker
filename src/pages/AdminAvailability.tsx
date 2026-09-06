@@ -71,7 +71,7 @@ const AdminAvailability = () => {
           setItems((prev) =>
             prev.map((item) =>
               item.item_id === updated.item_id
-                ? { ...item, available: updated.available, manually_disabled: updated.manually_disabled }
+                ? { ...item, available: updated.available, manually_disabled: updated.manually_disabled, archived: updated.archived }
                 : item
             )
           );
