@@ -662,12 +662,11 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
-  // פתיחת יום – מציג את שאלות הזמינות פעם ביום (יום עסקי מ-06:00),
-  // גם אם לא לחצו על "פתח הכל" (למשל האתר נשאר פתוח מהלילה)
+  // שאלות הזמינות מופיעות בכל פתיחה של מסך המטבח (פעם אחת בכל טעינת מסך)
   useEffect(() => {
     if (dayChecklistCheckedRef.current || availabilityItems.length === 0) return;
     dayChecklistCheckedRef.current = true;
-    if (shouldShowDayOpenChecklist()) setShowDayChecklist(true);
+    setShowDayChecklist(true);
   }, [availabilityItems.length]);
 
   const fetchCustomToppings = useCallback(async () => {
@@ -1049,10 +1048,10 @@ const Kitchen = () => {
     toast.success("נמחק");
   };
 
-  // שאלות פתיחת יום – מוצגות בלחיצה על "פתח הכל", פעם ביום
+  // שאלות פתיחת יום – מוצגות גם בלחיצה על "פתח הכל"
   const handleOpenAll = async () => {
     await openAll();
-    if (shouldShowDayOpenChecklist()) setShowDayChecklist(true);
+    setShowDayChecklist(true);
   };
 
   const availabilityGrouped = availabilityCategoryOrder
