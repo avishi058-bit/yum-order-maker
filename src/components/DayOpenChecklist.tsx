@@ -158,28 +158,15 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
               <div className="text-4xl text-center mb-3">📦</div>
               <h2 className="text-2xl font-black text-center text-foreground">פתיחת יום – עדכון מלאי</h2>
               <p className="text-center text-muted-foreground mt-2">
-                לפני שמתחילים, כדאי לעדכן את המלאי ואת המקרר.
+                לפני שמתחילים, כדאי לעדכן את המלאי ואת מילוי המקרר במסך המלאי.
               </p>
-              <div className="grid grid-cols-2 gap-2 mt-5">
-                <Link
-                  to="/inventory"
-                  className="text-center py-3 rounded-xl bg-primary text-primary-foreground font-bold"
-                >
-                  למסך מלאי
-                </Link>
-                <Link
-                  to="/inventory/fridge"
-                  className="text-center py-3 rounded-xl bg-secondary text-secondary-foreground font-bold"
-                >
-                  מילוי מקרר
-                </Link>
-              </div>
               <button
                 onClick={() => setIndex((i) => i + 1)}
-                className="w-full mt-3 py-3 rounded-xl bg-muted text-foreground font-bold"
+                className="w-full mt-5 py-3 rounded-xl bg-primary text-primary-foreground font-bold"
               >
                 המשך לבדיקת זמינות
               </button>
+
             </>
           ) : (
             <>
