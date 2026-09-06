@@ -159,12 +159,28 @@ const AdminAvailability = () => {
     }
   };
 
+  // מנות שבכיבוי שלהן יודעים בוודאות איזה מרכיב אזל – בלי לשאול
+  const AUTO_MISSING_INGREDIENT: Record<string, string> = {
+    "smash-double-cheese": "vegan-cheddar",
+    "meal-smash-double-cheese": "vegan-cheddar",
+  };
+
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
     const newValue = !currentValue;
     const updated = await setAvailability(itemId, newValue, items);
 
-    // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
     if (!newValue) {
+      // כיבוי דאבל צ'יז => הצ'דר הטבעוני אזל, ישירות
+      const autoId = AUTO_MISSING_INGREDIENT[itemId];
+      if (autoId) {
+        const ing = updated.find((i) => i.item_id === autoId);
+        if (ing?.available) {
+          await setAvailability(autoId, false, updated);
+        }
+        return;
+      }
+
+      // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
       const deps = getDishIngredients(itemId);
       const availableDeps = deps
         .map((id) => updated.find((i) => i.item_id === id))
@@ -178,6 +194,7 @@ const AdminAvailability = () => {
       }
     }
   };
+
 
 
   const grouped = categoryOrder
