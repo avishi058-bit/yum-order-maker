@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChefHat, CheckCircle, Package, X, Bell, BellOff, Volume2 } from "lucide-react";
 import { useOrderPoll } from "@/hooks/useOrderPoll";
+import OnWayButton from "@/components/OnWayButton";
 
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
@@ -278,6 +279,16 @@ const OrderTopBar = () => {
                   >
                     ההזמנה מוכנה! 🎉 אפשר לאסוף
                   </motion.p>
+                )}
+
+                {order.status === "ready" && tracked && (
+                  <OnWayButton
+                    orderNumber={tracked.orderNumber}
+                    phone={tracked.phone}
+                    alreadyOnWay={!!order.customer_on_way_at}
+                    compact
+                    className="mt-3"
+                  />
                 )}
 
                 {order.status === "completed" && (

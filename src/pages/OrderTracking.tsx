@@ -5,6 +5,7 @@ import { ChefHat, CheckCircle, Package, Bell, BellRing } from "lucide-react";
 
 import { toast } from "sonner";
 import GoogleReviewCard from "@/components/GoogleReviewCard";
+import OnWayButton from "@/components/OnWayButton";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   isPushSupported,
@@ -26,25 +27,7 @@ const OrderTracking = () => {
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [pushState, setPushState] = useState<"idle" | "subscribing" | "subscribed">("idle");
-  const [onWayLoading, setOnWayLoading] = useState(false);
   const { settings } = useSiteSettings();
-
-  // הלקוח מאשר שראה שההזמנה מוכנה והוא בדרך – המטבח רואה את זה
-  const markOnWay = async () => {
-    if (!orderNumber || !phone) return;
-    setOnWayLoading(true);
-    const { data, error } = await supabase.functions.invoke("get-order-by-token", {
-      body: { order_number: parseInt(orderNumber), phone, action: "on_way" },
-    });
-    setOnWayLoading(false);
-    if (error || !data?.order) {
-      toast.error("לא הצלחנו לעדכן, נסו שוב");
-      return;
-    }
-    setOrder(data.order);
-    toast.success("עדכנו את המטבח שאתם בדרך 🚗");
-  };
-
 
   useEffect(() => {
     if (!orderNumber || !phone) return;

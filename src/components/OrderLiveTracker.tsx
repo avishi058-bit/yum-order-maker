@@ -7,6 +7,7 @@ import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPu
 import IosInstallModal from "@/components/IosInstallModal";
 import SmartPushPrompt from "@/components/SmartPushPrompt";
 import GoogleReviewCard from "@/components/GoogleReviewCard";
+import OnWayButton from "@/components/OnWayButton";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useOrderPoll } from "@/hooks/useOrderPoll";
 
@@ -425,6 +426,12 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   >
                     <p className="text-xl font-bold text-green-400">ההזמנה מוכנה! 🎉</p>
                     <p className="text-xs text-muted-foreground mt-1">אפשר לאסוף</p>
+                    <OnWayButton
+                      orderNumber={orderNumber}
+                      phone={phone}
+                      alreadyOnWay={!!order.customer_on_way_at}
+                      className="mt-4"
+                    />
                   </motion.div>
                 )}
 

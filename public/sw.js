@@ -41,6 +41,7 @@ self.addEventListener("push", (event) => {
       url: data.url || "/",
       waze_url: data.waze_url,
       track_url: data.track_url,
+      on_way_url: data.on_way_url,
       order_number: data.order_number,
     },
   };
@@ -54,6 +55,7 @@ self.addEventListener("notificationclick", (event) => {
   let targetUrl = d.url || "/";
   if (event.action === "waze" && d.waze_url) targetUrl = d.waze_url;
   else if (event.action === "track" && d.track_url) targetUrl = d.track_url;
+  else if (event.action === "on_way" && d.on_way_url) targetUrl = d.on_way_url;
 
   const isExternal = /^https?:\/\//i.test(targetUrl) && !targetUrl.startsWith(self.location.origin);
 
