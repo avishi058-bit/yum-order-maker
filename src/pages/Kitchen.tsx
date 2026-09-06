@@ -660,6 +660,14 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
+  // פתיחת יום – מציג את שאלות הזמינות פעם ביום (יום עסקי מ-06:00),
+  // גם אם לא לחצו על "פתח הכל" (למשל האתר נשאר פתוח מהלילה)
+  useEffect(() => {
+    if (dayChecklistCheckedRef.current || availabilityItems.length === 0) return;
+    dayChecklistCheckedRef.current = true;
+    if (shouldShowDayOpenChecklist()) setShowDayChecklist(true);
+  }, [availabilityItems.length]);
+
   const fetchCustomToppings = useCallback(async () => {
     const { data } = await supabase
       .from("custom_toppings")
