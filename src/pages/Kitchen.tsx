@@ -838,10 +838,13 @@ const Kitchen = () => {
     prevOrderCountRef.current = printableOrders.length;
   }, [orders, autoPrint]);
 
-  // מסנכרן מנות שתלויות במרכיב שהשתנה (רקורסיבי)
+  // מסנכרן מנות שתלויות במרכיב שהשתנה (רקורסיבי).
+  // חשוב: הסנכרון הוא חד-כיווני – כיבוי מרכיב יכול רק לכבות מנות,
+  // והדלקת מרכיב יכולה רק להדליק מנות שכל המרכיבים שלהן זמינים.
   const syncDependentDishes = async (
     changedItemId: string,
     currentItems: AvailabilityItem[],
+    direction: boolean,
     seen: Set<string> = new Set(),
   ): Promise<AvailabilityItem[]> => {
     if (seen.has(changedItemId)) return currentItems;
@@ -852,10 +855,21 @@ const Kitchen = () => {
       const dish = working.find((i) => i.item_id === dishId);
       if (!dish || dish.manually_disabled) continue;
 
-      const shouldBeAvailable = isDishSatisfied(dishId, (ingId) => {
+      const isAvail = (ingId: string) => {
         const ing = working.find((i) => i.item_id === ingId);
         return ing ? ing.available : true;
-      });
+      };
+
+      let shouldBeAvailable = isDishSatisfied(dishId, isAvail);
+      // ארוחה עסקית לא תודלק אם ההמבורגר שלה כבוי
+      if (shouldBeAvailable && dishId.startsWith("meal-")) {
+        const burgerId = Object.keys(burgerToMeal).find((b) => burgerToMeal[b] === dishId);
+        if (burgerId && !isAvail(burgerId)) shouldBeAvailable = false;
+      }
+
+      // חד-כיווניות: לא מכבים בעקבות הדלקה ולא מדליקים בעקבות כיבוי
+      if (direction && !shouldBeAvailable) continue;
+      if (!direction && shouldBeAvailable) continue;
 
       if (dish.available !== shouldBeAvailable) {
         // הגנה ברמת מסד הנתונים: מנה שכובתה ידנית לעולם לא תודלק אוטומטית,
@@ -869,11 +883,12 @@ const Kitchen = () => {
         if (!updatedRows || updatedRows.length === 0) continue;
         working = working.map((i) => (i.item_id === dishId ? { ...i, available: shouldBeAvailable } : i));
         setAvailabilityItems(working);
-        working = await syncDependentDishes(dishId, working, seen);
+        working = await syncDependentDishes(dishId, working, direction, seen);
       }
     }
     return working;
   };
+
 
   const setAvailabilityFor = async (
     itemId: string,
@@ -898,7 +913,7 @@ const Kitchen = () => {
       setAvailabilityItems(base);
       return base;
     }
-    return await syncDependentDishes(itemId, optimistic);
+    return await syncDependentDishes(itemId, optimistic, newValue);
   };
 
   const enableItems = async (itemIds: string[]) => {
