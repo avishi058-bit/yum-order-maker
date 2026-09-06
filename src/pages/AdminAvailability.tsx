@@ -13,6 +13,7 @@ interface AvailabilityItem {
   category: string;
   available: boolean;
   manually_disabled?: boolean;
+  archived?: boolean;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -197,13 +198,26 @@ const AdminAvailability = () => {
 
 
 
+  // ארכיון: מנות שירדו מהתפריט — מוסתרות מהמסך, ניתנות להחזרה
+  const setArchived = async (itemId: string, archived: boolean) => {
+    const base = items;
+    setItems((prev) => prev.map((i) => (i.item_id === itemId ? { ...i, archived } : i)));
+    const { error } = await supabase
+      .from("menu_availability")
+      .update({ archived, updated_at: new Date().toISOString() })
+      .eq("item_id", itemId);
+    if (error) setItems(base);
+  };
+
   const grouped = categoryOrder
     .map((cat) => ({
       category: cat,
       label: categoryLabels[cat] || cat,
-      items: items.filter((i) => i.category === cat),
+      items: items.filter((i) => i.category === cat && !i.archived),
     }))
     .filter((g) => g.items.length > 0);
+
+  const archivedItems = items.filter((i) => i.archived);
 
   if (loading) {
     return (

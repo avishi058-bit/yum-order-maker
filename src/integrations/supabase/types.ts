@@ -820,6 +820,7 @@ export type Database = {
       }
       menu_availability: {
         Row: {
+          archived: boolean
           available: boolean
           category: string
           id: string
@@ -829,6 +830,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean
           available?: boolean
           category?: string
           id?: string
@@ -838,6 +840,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean
           available?: boolean
           category?: string
           id?: string

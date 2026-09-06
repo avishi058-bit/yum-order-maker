@@ -1,0 +1,1 @@
+ALTER TABLE public.menu_availability ADD COLUMN IF NOT EXISTS archived boolean NOT NULL DEFAULT false;
