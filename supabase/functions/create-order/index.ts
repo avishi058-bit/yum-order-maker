@@ -190,7 +190,8 @@ interface PricedLine {
 
 function priceCart(
   items: CartItemInput[],
-  overrides: Record<string, { price?: number }>
+  overrides: Record<string, { price?: number }>,
+  extraToppings: Record<string, { name: string; price: number }> = {}
 ): { ok: true; total: number; lines: PricedLine[] } | { ok: false; error: string } {
   const lines: PricedLine[] = [];
   let total = 0;
@@ -214,7 +215,7 @@ function priceCart(
         return { ok: false, error: `תוספות לא מותרות על ${menuItem.name}` };
       }
       for (const tId of item.toppings) {
-        const t = TOPPINGS_PRICING[tId];
+        const t = TOPPINGS_PRICING[tId] ?? extraToppings[tId];
         if (!t) return { ok: false, error: `תוספת לא ידועה: ${tId}` };
         unit += t.price;
         toppingNames.push(t.name);
@@ -270,7 +271,7 @@ function priceCart(
       for (const b of item.dealBurgers) {
         const namesForBurger: string[] = [];
         for (const tId of b.toppings ?? []) {
-          const t = TOPPINGS_PRICING[tId];
+          const t = TOPPINGS_PRICING[tId] ?? extraToppings[tId];
           if (!t) return { ok: false, error: `תוספת לא ידועה בדיל: ${tId}` };
           unit += t.price;
           namesForBurger.push(t.name);
@@ -449,7 +450,17 @@ Deno.serve(async (req: Request) => {
   }
 
   // Server-side pricing
-  const pricing = priceCart(body.items, overrides);
+  // Kitchen-defined custom toppings (public.custom_toppings) are selectable in
+  // the customizer — price them here too, otherwise the whole order is rejected.
+  const customToppings: Record<string, { name: string; price: number }> = {};
+  const { data: customToppingRows } = await supabase
+    .from("custom_toppings")
+    .select("item_id, name, price");
+  for (const row of customToppingRows ?? []) {
+    customToppings[row.item_id] = { name: row.name, price: Number(row.price) || 0 };
+  }
+
+  const pricing = priceCart(body.items, overrides, customToppings);
   if (!pricing.ok) return jsonResponse({ error: pricing.error }, 400);
 
   // Sauce extra-charge: premium sauces (fixed per-unit price) are always billed;
@@ -466,7 +477,30 @@ Deno.serve(async (req: Request) => {
     if (p) premiumSauceCost += p * s.quantity;
     else regularSauceQty += s.quantity;
   }
-  const extraSauces = Math.max(0, regularSauceQty - body.freeSauces);
+  // Free-sauce quota is recomputed server-side (never trust the client value):
+  // 3 free sauces per burger/meal (deal burgers included), otherwise 5 per
+  // "מיקס חברים" and 2 per fried side.
+  const FRIED_SIDE_IDS = new Set(["fries", "sweet-potato-fries", "onion-rings", "tempura-onion"]);
+  let burgerUnits = 0;
+  let sideQuota = 0;
+  for (const it of body.items) {
+    const mi = MENU_BY_ID.get(it.itemId);
+    if (!mi) continue;
+    if (it.dealBurgers?.length) {
+      burgerUnits += it.dealBurgers.length * it.quantity;
+      continue;
+    }
+    if (mi.category === "burger" || mi.category === "meal") {
+      burgerUnits += it.quantity;
+      if (mi.category === "meal" || it.withMeal) sideQuota += 0;
+      continue;
+    }
+    if (mi.id === "friends-mix") sideQuota += 5 * it.quantity;
+    else if (FRIED_SIDE_IDS.has(mi.id)) sideQuota += 2 * it.quantity;
+  }
+  const allowedFreeSauces = burgerUnits > 0 ? burgerUnits * 3 : sideQuota;
+  const effectiveFreeSauces = Math.min(body.freeSauces, allowedFreeSauces);
+  const extraSauces = Math.max(0, regularSauceQty - effectiveFreeSauces);
   const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost) * 100) / 100;
 
   // Normalize phone: kiosk no-phone flow sends "" — store a placeholder so
