@@ -83,6 +83,8 @@ export interface ReceiptOrder {
   order_number: number;
   /** Position in today's preparation queue — assigned when the order is marked paid. */
   queue_number?: number | null;
+  /** Daily sequential number assigned at order creation — printed on the bon. */
+  bon_queue_number?: number | null;
   customer_name: string;
   customer_phone: string;
   notes: string | null;
@@ -1167,7 +1169,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 </style>
 </head>
 <body>
-  <div style="text-align:center;font-size:26pt;font-weight:900;line-height:1;margin-bottom:1mm;">${order.queue_number ?? order.order_number}</div>
+  <div style="text-align:center;font-size:26pt;font-weight:900;line-height:1;margin-bottom:1mm;">${order.bon_queue_number ?? order.queue_number ?? order.order_number}</div>
   <div style="text-align:center;font-size:9pt;color:#555;margin-bottom:1mm;">${time}</div>
   <div class="type">${orderTypeLabel(order)}</div>
 
@@ -1233,6 +1235,8 @@ export interface RoundOrder {
   order_number: number;
   /** Position in today's preparation queue — assigned when the order is marked paid. */
   queue_number?: number | null;
+  /** Daily sequential number assigned at order creation — printed on the bon. */
+  bon_queue_number?: number | null;
   customer_name?: string | null;
   created_at?: string | null;
   status?: string | null;
@@ -1345,7 +1349,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
 
   return `<div class="order-block">
     <div class="order-head">
-      <div class="order-num">${order.queue_number ?? index + 1}. הזמנה #${order.order_number}</div>
+      <div class="order-num">${order.bon_queue_number ?? order.queue_number ?? index + 1}. הזמנה #${order.order_number}</div>
       <div class="order-meta">
         <span class="cust">${escapeHtml(order.customer_name || "")}</span>
         ${time ? `<span class="time">⏱ ${escapeHtml(time)}</span>` : ""}
