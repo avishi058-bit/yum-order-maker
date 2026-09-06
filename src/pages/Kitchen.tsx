@@ -383,6 +383,8 @@ const Kitchen = () => {
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const [showDayChecklist, setShowDayChecklist] = useState(false);
   const dayChecklistCheckedRef = useRef(false);
+  // חלון זמן שבו מנוי ה-realtime מתעלם מעדכוני זמינות (במהלך לחיצה מקומית)
+  const availLocalWriteUntilRef = useRef(0);
   const [missingPrompt, setMissingPrompt] = useState<{ dishName: string; ingredients: IngredientOption[] } | null>(null);
   const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
   const [newTopName, setNewTopName] = useState("");
@@ -762,6 +764,9 @@ const Kitchen = () => {
     const availChannel = supabase
       .channel("availability-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_availability" }, () => {
+        // מתעלמים מעדכונים שהגיעו בעקבות לחיצות מקומיות שלנו – אחרת ה-refetch
+        // דורס את המצב האופטימיסטי באמצע שרשרת העדכונים והכפתורים "רוקדים"
+        if (Date.now() < availLocalWriteUntilRef.current) return;
         fetchAvailability();
       })
       .subscribe();
@@ -884,6 +889,7 @@ const Kitchen = () => {
       if (dish.available !== shouldBeAvailable) {
         // הגנה ברמת מסד הנתונים: מנה שכובתה ידנית לעולם לא תודלק אוטומטית,
         // גם אם הזיכרון המקומי של המסך ישן
+        availLocalWriteUntilRef.current = Date.now() + 5000;
         let query = supabase
           .from("menu_availability")
           .update({ available: shouldBeAvailable, updated_at: new Date().toISOString() })
@@ -910,6 +916,7 @@ const Kitchen = () => {
     );
     setAvailabilityItems(optimistic);
 
+    availLocalWriteUntilRef.current = Date.now() + 5000;
     const { error } = await supabase
       .from("menu_availability")
       .update({
@@ -977,6 +984,7 @@ const Kitchen = () => {
         // והיא תודלק רק אם יש לפחות סוג צ'יפס אחד זמין
         const isAvail = (id: string) => working.find((i) => i.item_id === id)?.available ?? true;
         const mealOk = isDishSatisfied(linkedMeal, isAvail);
+        availLocalWriteUntilRef.current = Date.now() + 5000;
         await supabase
           .from("menu_availability")
           .update({ available: mealOk, manually_disabled: false, updated_at: new Date().toISOString() })
