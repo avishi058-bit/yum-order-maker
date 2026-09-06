@@ -363,10 +363,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const ops: FastOp[] = [];
 
   // 0) Queue position — printed big at the very top so bons stay in order.
-  if (order.queue_number) {
-    ops.push(asLine(`${order.queue_number}`, { align: "C", bold: true, size: 0 }));
-    ops.push(sep());
-  }
+  // Daily sequential number assigned at order creation; no extra label.
+  ops.push(asLine(`${order.queue_number ?? order.order_number}`, { align: "C", bold: true, size: 0 }));
+  ops.push(sep());
 
 
   // 1) TOP: customer name (big bold) + phone next to it (large, thin), centered.
