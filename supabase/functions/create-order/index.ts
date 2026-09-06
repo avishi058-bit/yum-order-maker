@@ -616,7 +616,7 @@ Deno.serve(async (req: Request) => {
     orderItemsRows.push({
       order_id: order.id,
       item_name: "רטבים",
-      price: extraSauces, // 0 if all within free quota
+      price: Math.round((extraSauces + premiumSauceCost) * 100) / 100, // matches the order total
       quantity: 1,
       toppings: sauceLabels,
       removals: [],
