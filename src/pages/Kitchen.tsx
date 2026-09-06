@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, Pencil } from "lucide-react";
-import EditOrderModal from "@/components/EditOrderModal";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator } from "lucide-react";
+
 import QRCode from "qrcode";
 // DashboardView is lazy-loaded — pulls in recharts, admin-only, keep out of main bundle
 const DashboardView = lazy(() => import("@/components/DashboardView"));
@@ -393,7 +393,7 @@ const Kitchen = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showEventsPanel, setShowEventsPanel] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [showRoundSummary, setShowRoundSummary] = useState(false);
   const [showRoundChefSummary, setShowRoundChefSummary] = useState(false);
