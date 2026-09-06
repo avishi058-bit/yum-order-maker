@@ -9,6 +9,9 @@ const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { getDependentDishes, isDishSatisfied, getDishIngredients } from "@/lib/menuDependencies";
+import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
+import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName, sortByQueue, type RoundOrder } from "@/lib/kitchenReceipt";
@@ -120,6 +123,8 @@ interface AvailabilityItem {
   item_name: string;
   category: string;
   available: boolean;
+  manually_disabled?: boolean;
+  archived?: boolean;
 }
 
 const availabilityCategoryLabels: Record<string, string> = {
@@ -375,6 +380,8 @@ const Kitchen = () => {
   const seenOrdersRef = useRef<Set<string>>(new Set());
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
+  const [showDayChecklist, setShowDayChecklist] = useState(false);
+  const [missingPrompt, setMissingPrompt] = useState<{ dishName: string; ingredients: IngredientOption[] } | null>(null);
   const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
   const [newTopName, setNewTopName] = useState("");
   const [newTopPrice, setNewTopPrice] = useState("");
@@ -831,32 +838,114 @@ const Kitchen = () => {
     prevOrderCountRef.current = printableOrders.length;
   }, [orders, autoPrint]);
 
+  // מסנכרן מנות שתלויות במרכיב שהשתנה (רקורסיבי)
+  const syncDependentDishes = async (
+    changedItemId: string,
+    currentItems: AvailabilityItem[],
+    seen: Set<string> = new Set(),
+  ): Promise<AvailabilityItem[]> => {
+    if (seen.has(changedItemId)) return currentItems;
+    seen.add(changedItemId);
+
+    let working = currentItems;
+    for (const dishId of getDependentDishes(changedItemId)) {
+      const dish = working.find((i) => i.item_id === dishId);
+      if (!dish || dish.manually_disabled) continue;
+
+      const shouldBeAvailable = isDishSatisfied(dishId, (ingId) => {
+        const ing = working.find((i) => i.item_id === ingId);
+        return ing ? ing.available : true;
+      });
+
+      if (dish.available !== shouldBeAvailable) {
+        await supabase
+          .from("menu_availability")
+          .update({ available: shouldBeAvailable, updated_at: new Date().toISOString() })
+          .eq("item_id", dishId);
+        working = working.map((i) => (i.item_id === dishId ? { ...i, available: shouldBeAvailable } : i));
+        setAvailabilityItems(working);
+        working = await syncDependentDishes(dishId, working, seen);
+      }
+    }
+    return working;
+  };
+
+  const setAvailabilityFor = async (
+    itemId: string,
+    newValue: boolean,
+    base: AvailabilityItem[],
+  ): Promise<AvailabilityItem[]> => {
+    const optimistic = base.map((item) =>
+      item.item_id === itemId ? { ...item, available: newValue, manually_disabled: !newValue } : item,
+    );
+    setAvailabilityItems(optimistic);
+
+    const { error } = await supabase
+      .from("menu_availability")
+      .update({
+        available: newValue,
+        manually_disabled: !newValue,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("item_id", itemId);
+
+    if (error) {
+      setAvailabilityItems(base);
+      return base;
+    }
+    return await syncDependentDishes(itemId, optimistic);
+  };
+
+  const enableItems = async (itemIds: string[]) => {
+    let working = availabilityItems;
+    for (const id of itemIds) {
+      working = await setAvailabilityFor(id, true, working);
+    }
+  };
+
+  const disableIngredients = async (itemIds: string[]) => {
+    let working = availabilityItems;
+    for (const id of itemIds) {
+      working = await setAvailabilityFor(id, false, working);
+    }
+  };
+
+  // מנות שבכיבוי שלהן יודעים בוודאות איזה מרכיב אזל – בלי לשאול
+  const AUTO_MISSING_INGREDIENT: Record<string, string> = {
+    "smash-double-cheese": "vegan-cheddar",
+    "meal-smash-double-cheese": "vegan-cheddar",
+  };
+
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
     const newValue = !currentValue;
-    // Determine which items to toggle (burger + its meal)
-    const idsToToggle = [itemId];
+    let working = await setAvailabilityFor(itemId, newValue, availabilityItems);
+
+    // כיבוי המבורגר => מכבה גם את הארוחה העסקית שלו
     const linkedMeal = burgerToMeal[itemId];
-    if (linkedMeal && !newValue) {
-      // Turning off a burger → also turn off its meal
-      idsToToggle.push(linkedMeal);
+    if (linkedMeal && !newValue && working.some((i) => i.item_id === linkedMeal)) {
+      working = await setAvailabilityFor(linkedMeal, false, working);
     }
 
-    // Optimistic update
-    setAvailabilityItems((prev) =>
-      prev.map((item) => (idsToToggle.includes(item.item_id) ? { ...item, available: newValue } : item))
-    );
+    if (newValue) return;
 
-    // Update all in DB
-    for (const id of idsToToggle) {
-      const { error } = await supabase
-        .from("menu_availability")
-        .update({ available: newValue, updated_at: new Date().toISOString() })
-        .eq("item_id", id);
-      if (error) {
-        setAvailabilityItems((prev) =>
-          prev.map((item) => (item.item_id === id ? { ...item, available: currentValue } : item))
-        );
-      }
+    // כיבוי דאבל צ'יז => הצ'דר הטבעוני אזל, ישירות בלי שאלה
+    const autoId = AUTO_MISSING_INGREDIENT[itemId];
+    if (autoId) {
+      const ing = working.find((i) => i.item_id === autoId);
+      if (ing?.available) await setAvailabilityFor(autoId, false, working);
+      return;
+    }
+
+    // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
+    const availableDeps = getDishIngredients(itemId)
+      .map((id) => working.find((i) => i.item_id === id))
+      .filter((i): i is AvailabilityItem => !!i && i.available);
+    if (availableDeps.length > 0) {
+      const dish = working.find((i) => i.item_id === itemId);
+      setMissingPrompt({
+        dishName: dish?.item_name || "",
+        ingredients: availableDeps.map((i) => ({ item_id: i.item_id, item_name: i.item_name })),
+      });
     }
   };
 
@@ -889,10 +978,17 @@ const Kitchen = () => {
     toast.success("נמחק");
   };
 
+  // תזכורת פתיחת יום – פעם ביום כשנכנסים למסך הזמינות
+  useEffect(() => {
+    if (viewMode === "availability" && availabilityItems.length > 0 && shouldShowDayOpenChecklist()) {
+      setShowDayChecklist(true);
+    }
+  }, [viewMode, availabilityItems.length]);
+
   const availabilityGrouped = availabilityCategoryOrder
     .map((cat) => {
       const order = itemOrder[cat] || [];
-      const catItems = availabilityItems.filter((i) => i.category === cat);
+      const catItems = availabilityItems.filter((i) => i.category === cat && !i.archived);
       catItems.sort((a, b) => {
         const ai = order.indexOf(a.item_id);
         const bi = order.indexOf(b.item_id);
@@ -2296,6 +2392,21 @@ const Kitchen = () => {
 
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
+          {showDayChecklist && (
+            <DayOpenChecklist
+              items={availabilityItems}
+              onEnable={enableItems}
+              onClose={() => setShowDayChecklist(false)}
+            />
+          )}
+          {missingPrompt && (
+            <MissingIngredientsDialog
+              dishName={missingPrompt.dishName}
+              ingredients={missingPrompt.ingredients}
+              onConfirm={disableIngredients}
+              onClose={() => setMissingPrompt(null)}
+            />
+          )}
           {availabilityGrouped.map((group) => (
             <div key={group.category} className="mb-8">
               <h2 className="text-xl font-bold text-primary mb-3">{group.label}</h2>
