@@ -523,7 +523,7 @@ const Kiosk = () => {
               dineIn={dineIn}
               items={cart}
               total={getTotal()}
-              sauces={selectedSauces}
+              sauces={dineIn ? [] : selectedSauces}
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
               onSuccess={(orderNumber, _phone, method) => {

@@ -41,6 +41,9 @@ const MEAL_DRINK_BY_NAME = new Map(MEAL_DRINKS_PRICING.map((d) => [d.name, d]));
 const DEAL_DRINK_BY_ID = new Map(DEAL_DRINKS_PRICING.map((d) => [d.id, d]));
 const DEAL_DRINK_BY_NAME = new Map(DEAL_DRINKS_PRICING.map((d) => [d.name, d]));
 
+// Kitchen-defined custom toppings, loaded per-request (name → price).
+let CUSTOM_TOPPING_BY_NAME = new Map<string, { name: string; price: number }>();
+
 function priceLine(it: EditItem): { unit: number; error?: string } {
   const menu = MENU_BY_ID.get(it.item_id);
   if (!menu) return { unit: 0, error: `unknown item: ${it.item_id}` };
@@ -48,7 +51,7 @@ function priceLine(it: EditItem): { unit: number; error?: string } {
 
   // Toppings (paid burger add-ons) — stored as Hebrew names on order_items.
   for (const t of it.toppings ?? []) {
-    const found = TOPPING_BY_NAME.get(t);
+    const found = TOPPING_BY_NAME.get(t) ?? CUSTOM_TOPPING_BY_NAME.get(t);
     if (found) unit += found.price;
     // Unknown names (custom toppings, sauce lines, etc.) count as 0 —
     // never treat unknowns as free-price overrides from the client.
@@ -84,7 +87,7 @@ function priceLine(it: EditItem): { unit: number; error?: string } {
     for (const b of it.deal_burgers) {
       if (Array.isArray(b?.toppings)) {
         for (const t of b.toppings) {
-          const found = TOPPING_BY_NAME.get(t);
+          const found = TOPPING_BY_NAME.get(t) ?? CUSTOM_TOPPING_BY_NAME.get(t);
           if (found) unit += found.price;
         }
       }
@@ -172,6 +175,16 @@ Deno.serve(async (req) => {
     }
 
     const oldItems: any[] = order.order_items ?? [];
+    // Synthetic lines without a menu id (e.g. the "רטבים" sauce-charge line)
+    // are not editable — preserve them as-is so their charge is not lost.
+    const preservedItems: any[] = oldItems.filter((oi) => !oi.item_id);
+
+    const { data: customToppingRows } = await admin
+      .from("custom_toppings")
+      .select("name, price");
+    CUSTOM_TOPPING_BY_NAME = new Map(
+      (customToppingRows ?? []).map((r: any) => [r.name, { name: r.name, price: Number(r.price) || 0 }])
+    );
 
     // ---- Server-side re-price. Reject unknown menu ids upfront. ----
     const priced: Array<{ item: EditItem; unit: number }> = [];
@@ -242,11 +255,32 @@ Deno.serve(async (req) => {
       deal_burgers: it.deal_burgers ?? null,
       deal_drinks: it.deal_drinks ?? null,
     }));
+    for (const oi of preservedItems) {
+      rowsToInsert.push({
+        order_id: orderId,
+        item_id: null,
+        item_name: oi.item_name,
+        price: Number(oi.price || 0),
+        quantity: Number(oi.quantity || 1),
+        toppings: oi.toppings ?? [],
+        removals: oi.removals ?? [],
+        with_meal: false,
+        meal_side: null,
+        meal_drink: null,
+        deal_burgers: null,
+        deal_drinks: null,
+      });
+    }
     const { error: insErr } = await admin.from("order_items").insert(rowsToInsert);
     if (insErr) throw insErr;
 
     // Server-computed total, minus a bounded admin discount.
-    const gross = priced.reduce((s, { unit, item }) => s + unit * Number(item.quantity), 0);
+    const preservedGross = preservedItems.reduce(
+      (s, oi) => s + Number(oi.price || 0) * Number(oi.quantity || 1),
+      0
+    );
+    const gross =
+      priced.reduce((s, { unit, item }) => s + unit * Number(item.quantity), 0) + preservedGross;
     const discount = Math.min(requestedDiscount, gross);
     const newTotal = Math.round((gross - discount) * 100) / 100;
 

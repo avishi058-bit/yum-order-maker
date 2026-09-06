@@ -51,7 +51,9 @@ export default function EditOrderModal({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) setWorking(items.map((it) => ({ ...it })));
+    // Synthetic lines without a menu id (the "רטבים" sauce charge) are kept
+    // untouched by the server, so they are not shown here.
+    if (open) setWorking(items.filter((it) => it.item_id).map((it) => ({ ...it })));
   }, [open, items]);
 
   const grouped = useMemo(() => {
