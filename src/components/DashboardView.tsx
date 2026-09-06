@@ -23,6 +23,35 @@ interface Order {
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444", "#eab308"];
 
+// Business day in the restaurant runs 06:00 Jerusalem time → next day 06:00.
+const getBusinessDayStart = (date = new Date()): Date => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jerusalem",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
+  const localAsUtc = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour") % 24,
+    get("minute"),
+    get("second")
+  );
+  const offsetMs = localAsUtc - Math.floor(date.getTime() / 1000) * 1000;
+  let startLocal = Date.UTC(get("year"), get("month") - 1, get("day"), 6, 0, 0);
+  if ((get("hour") % 24) < 6) {
+    startLocal -= 24 * 60 * 60 * 1000;
+  }
+  return new Date(startLocal - offsetMs);
+};
+
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
