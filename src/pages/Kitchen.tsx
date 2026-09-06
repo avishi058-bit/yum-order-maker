@@ -984,6 +984,7 @@ const Kitchen = () => {
         // והיא תודלק רק אם יש לפחות סוג צ'יפס אחד זמין
         const isAvail = (id: string) => working.find((i) => i.item_id === id)?.available ?? true;
         const mealOk = isDishSatisfied(linkedMeal, isAvail);
+        availLocalWriteUntilRef.current = Date.now() + 5000;
         await supabase
           .from("menu_availability")
           .update({ available: mealOk, manually_disabled: false, updated_at: new Date().toISOString() })
