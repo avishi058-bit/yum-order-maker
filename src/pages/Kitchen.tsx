@@ -2896,7 +2896,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["preparing", "ready"].includes(order.status) && order.queue_number == null && (
+                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
