@@ -2069,7 +2069,7 @@ const Kitchen = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={openAll}
+                      onClick={handleOpenAll}
                       className="w-full px-3 py-2 rounded-lg bg-green-500 text-white text-sm font-bold hover:bg-green-600"
                     >
                       פתח הכל
@@ -2409,15 +2409,16 @@ const Kitchen = () => {
       )}
 
 
+      {showDayChecklist && (
+        <DayOpenChecklist
+          items={availabilityItems}
+          onEnable={enableItems}
+          onClose={() => setShowDayChecklist(false)}
+        />
+      )}
+
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
-          {showDayChecklist && (
-            <DayOpenChecklist
-              items={availabilityItems}
-              onEnable={enableItems}
-              onClose={() => setShowDayChecklist(false)}
-            />
-          )}
           {missingPrompt && (
             <MissingIngredientsDialog
               dishName={missingPrompt.dishName}
