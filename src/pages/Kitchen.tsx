@@ -664,24 +664,13 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
-  // שאלות הזמינות מופיעות רק בפתיחה ראשונה של האתר בסשן (טאב נסגר = סשן נגמר),
-  // לא בכל יציאה וכניסה למסך המטבח.
+  // שאלות הזמינות מופיעות פעם אחת ביום עסקי (מתאפס ב-06:00) — בפתיחה הראשונה
+  // של האתר. לא בכל יציאה וכניסה למסך המטבח, וגם לא אחרי סגירת אפליקציה/טאב
+  // (sessionStorage מתאפס ב-PWA; localStorage נשמר).
   useEffect(() => {
     if (dayChecklistCheckedRef.current || availabilityItems.length === 0) return;
-    try {
-      if (sessionStorage.getItem("kitchenDayQuestionsShown") === "1") {
-        dayChecklistCheckedRef.current = true;
-        return;
-      }
-    } catch {
-      /* noop */
-    }
     dayChecklistCheckedRef.current = true;
-    try {
-      sessionStorage.setItem("kitchenDayQuestionsShown", "1");
-    } catch {
-      /* noop */
-    }
+    if (!shouldShowDayOpenChecklist()) return;
     setShowDayChecklist(true);
   }, [availabilityItems.length]);
 
