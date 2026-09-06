@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { MENU_DEPENDENCIES, getDependentDishes } from "@/lib/menuDependencies";
+import { getDependentDishes, isDishSatisfied, getDishIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
 import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 
@@ -99,8 +99,7 @@ const AdminAvailability = () => {
       const dish = working.find((i) => i.item_id === dishId);
       if (!dish) continue;
 
-      const ingredientIds = MENU_DEPENDENCIES[dishId] || [];
-      const allIngredientsAvailable = ingredientIds.every((ingId) => {
+      const shouldBeAvailable = isDishSatisfied(dishId, (ingId) => {
         const ing = working.find((i) => i.item_id === ingId);
         return ing ? ing.available : true;
       });
@@ -108,7 +107,6 @@ const AdminAvailability = () => {
       // אם המנה כובתה ידנית - לא נוגעים בה
       if (dish.manually_disabled) continue;
 
-      const shouldBeAvailable = allIngredientsAvailable;
       if (dish.available !== shouldBeAvailable) {
         await supabase
           .from("menu_availability")
@@ -153,13 +151,21 @@ const AdminAvailability = () => {
     }
   };
 
+  const toggleAllSmash = async (turnOff: boolean) => {
+    let working = items;
+    for (const id of SMASH_DISH_IDS) {
+      if (!working.find((i) => i.item_id === id)) continue;
+      working = await setAvailability(id, !turnOff, working);
+    }
+  };
+
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
     const newValue = !currentValue;
     const updated = await setAvailability(itemId, newValue, items);
 
     // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
     if (!newValue) {
-      const deps = MENU_DEPENDENCIES[itemId] || [];
+      const deps = getDishIngredients(itemId);
       const availableDeps = deps
         .map((id) => updated.find((i) => i.item_id === id))
         .filter((i): i is AvailabilityItem => !!i && i.available);
@@ -212,6 +218,21 @@ const AdminAvailability = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-foreground">ניהול זמינות פריטים</h1>
           <p className="text-muted-foreground text-sm mt-2">כבה/הדלק פריטים בזמן אמת</p>
+        </div>
+
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => toggleAllSmash(true)}
+            className="py-3 rounded-xl bg-destructive text-destructive-foreground font-black"
+          >
+            כבה את כל הסמאשים
+          </button>
+          <button
+            onClick={() => toggleAllSmash(false)}
+            className="py-3 rounded-xl bg-green-600 text-white font-black"
+          >
+            הדלק את כל הסמאשים
+          </button>
         </div>
 
         {grouped.map((group) => (
