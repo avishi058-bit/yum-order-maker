@@ -889,6 +889,7 @@ const Kitchen = () => {
       if (dish.available !== shouldBeAvailable) {
         // הגנה ברמת מסד הנתונים: מנה שכובתה ידנית לעולם לא תודלק אוטומטית,
         // גם אם הזיכרון המקומי של המסך ישן
+        availLocalWriteUntilRef.current = Date.now() + 5000;
         let query = supabase
           .from("menu_availability")
           .update({ available: shouldBeAvailable, updated_at: new Date().toISOString() })
@@ -915,6 +916,7 @@ const Kitchen = () => {
     );
     setAvailabilityItems(optimistic);
 
+    availLocalWriteUntilRef.current = Date.now() + 5000;
     const { error } = await supabase
       .from("menu_availability")
       .update({
