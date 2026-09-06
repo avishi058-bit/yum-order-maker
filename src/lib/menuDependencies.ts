@@ -11,6 +11,12 @@ export const MENU_DEPENDENCIES: Record<string, string[]> = {
   "special-hadegel": ["tempura-onion", "garlic-confit", "onion-jam"],
   "meal-special-hadegel": ["tempura-onion", "garlic-confit", "onion-jam"],
 
+  // טופינג שלוש טבעות בצל ביתיות - דורש טבעות בצל בטמפורה
+  "onion-rings-topping": ["tempura-onion"],
+
+  // מיקס חברים - צ'יפס רגיל, טבעות בצל רגילות, וופל ציפס
+  "friends-mix": ["fries", "onion-rings", "sweet-potato-fries"],
+
   // סמאש דאבל ציז - דורש צ'דר טבעוני
   "smash-double-cheese": ["vegan-cheddar"],
   "meal-smash-double-cheese": ["vegan-cheddar"],
@@ -24,6 +30,7 @@ export const MENU_DEPENDENCIES: Record<string, string[]> = {
   "meal-crazy-smash": ["hot-pepper-jam"],
 
 };
+
 
 /**
  * מחזיר את רשימת המנות שתלויות במרכיב מסוים.
