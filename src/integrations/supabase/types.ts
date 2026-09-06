@@ -1391,6 +1391,7 @@ export type Database = {
       is_attack_mode_active: { Args: never; Returns: boolean }
       is_ip_blocked: { Args: { p_ip: string }; Returns: boolean }
       mark_order_paid: { Args: { p_order_id: string }; Returns: number }
+      next_daily_queue_number: { Args: never; Returns: number }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }
