@@ -978,10 +978,17 @@ const Kitchen = () => {
     toast.success("נמחק");
   };
 
+  // תזכורת פתיחת יום – פעם ביום כשנכנסים למסך הזמינות
+  useEffect(() => {
+    if (viewMode === "availability" && availabilityItems.length > 0 && shouldShowDayOpenChecklist()) {
+      setShowDayChecklist(true);
+    }
+  }, [viewMode, availabilityItems.length]);
+
   const availabilityGrouped = availabilityCategoryOrder
     .map((cat) => {
       const order = itemOrder[cat] || [];
-      const catItems = availabilityItems.filter((i) => i.category === cat);
+      const catItems = availabilityItems.filter((i) => i.category === cat && !i.archived);
       catItems.sort((a, b) => {
         const ai = order.indexOf(a.item_id);
         const bi = order.indexOf(b.item_id);
