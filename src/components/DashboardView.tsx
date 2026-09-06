@@ -58,6 +58,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
       const d = new Date(o.created_at);
+      if (todayOnly && d < yesterdayStart) return false;
       switch (period) {
         case "today": return d >= todayStart;
         case "yesterday": return d >= yesterdayStart && d < todayStart;
