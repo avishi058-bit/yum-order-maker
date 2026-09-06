@@ -18,11 +18,12 @@ export const IMPORTANT_TOPPING_IDS = [
 ];
 
 // מטוגנים שנשאל עליהם בפתיחת יום (רק אם כבויים)
+// הערה: tempura-onion תלוי ב-onion-rings — אם טבעות בצל כבויות גם הטמפורה כבוי,
+// לכן אין צורך לשאול עליו בנפרד.
 export const FRIED_IDS = [
   "fries",
   "sweet-potato-fries",
   "onion-rings",
-  "tempura-onion",
   "friends-mix",
 ];
 
