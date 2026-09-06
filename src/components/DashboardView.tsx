@@ -75,14 +75,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   };
 
   const filteredOrders = useMemo(() => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
-    const monthStart = new Date(todayStart);
-    monthStart.setDate(monthStart.getDate() - 30);
+    const todayStart = getBusinessDayStart();
+    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+    const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
@@ -95,7 +91,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         case "month": return d >= monthStart;
       }
     });
-  }, [orders, period]);
+  }, [orders, period, todayOnly]);
 
   const totalRevenue = filteredOrders.reduce((s, o) => s + o.total, 0);
   const orderCount = filteredOrders.length;
