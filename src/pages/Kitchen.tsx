@@ -9,7 +9,7 @@ const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { getDependentDishes, isDishSatisfied, getDishIngredients } from "@/lib/menuDependencies";
+import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients } from "@/lib/menuDependencies";
 import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
@@ -939,7 +939,19 @@ const Kitchen = () => {
 
   const toggleAvailability = async (itemId: string, currentValue: boolean) => {
     const newValue = !currentValue;
-    let working = await setAvailabilityFor(itemId, newValue, availabilityItems);
+    let working = availabilityItems;
+
+    // הדלקת מנה מורכבת => כל המרכיבים שלה חזרו למלאי, מדליקים אותם קודם
+    if (newValue) {
+      for (const ingId of getAllRequiredIngredients(itemId)) {
+        const ing = working.find((i) => i.item_id === ingId);
+        if (ing && !ing.available) {
+          working = await setAvailabilityFor(ingId, true, working);
+        }
+      }
+    }
+
+    working = await setAvailabilityFor(itemId, newValue, working);
 
     // המבורגר והארוחה שלו הם כפתור אחד – אין מנה = אין ארוחה, ולהיפך
     const linkedMeal = burgerToMeal[itemId];
