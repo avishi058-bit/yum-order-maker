@@ -2392,6 +2392,21 @@ const Kitchen = () => {
 
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
+          {showDayChecklist && (
+            <DayOpenChecklist
+              items={availabilityItems}
+              onEnable={enableItems}
+              onClose={() => setShowDayChecklist(false)}
+            />
+          )}
+          {missingPrompt && (
+            <MissingIngredientsDialog
+              dishName={missingPrompt.dishName}
+              ingredients={missingPrompt.ingredients}
+              onConfirm={disableIngredients}
+              onClose={() => setMissingPrompt(null)}
+            />
+          )}
           {availabilityGrouped.map((group) => (
             <div key={group.category} className="mb-8">
               <h2 className="text-xl font-bold text-primary mb-3">{group.label}</h2>
