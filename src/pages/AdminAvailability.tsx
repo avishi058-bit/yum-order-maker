@@ -30,6 +30,7 @@ const categoryOrder = ["burger", "meal", "side", "topping", "drink", "sauce", "d
 const AdminAvailability = () => {
   const [items, setItems] = useState<AvailabilityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   const fetchItems = async () => {
     const { data } = await supabase
@@ -38,9 +39,21 @@ const AdminAvailability = () => {
       .order("category");
     if (data) {
       setItems(data as AvailabilityItem[]);
+      if (shouldShowDayOpenChecklist()) setShowChecklist(true);
     }
     setLoading(false);
   };
+
+  const enableItems = async (itemIds: string[]) => {
+    await supabase
+      .from("menu_availability")
+      .update({ available: true, manually_disabled: false, updated_at: new Date().toISOString() })
+      .in("item_id", itemIds);
+    setItems((prev) =>
+      prev.map((i) => (itemIds.includes(i.item_id) ? { ...i, available: true, manually_disabled: false } : i))
+    );
+  };
+
 
   useEffect(() => {
     fetchItems();
