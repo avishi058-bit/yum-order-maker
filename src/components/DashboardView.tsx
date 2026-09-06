@@ -133,7 +133,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const dailyData = useMemo(() => {
     const days: Record<string, { date: string; revenue: number; orders: number; website: number; kiosk: number }> = {};
     filteredOrders.forEach((o) => {
-      const d = new Date(o.created_at).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
+      const d = getBusinessDayStart(new Date(o.created_at)).toLocaleDateString("he-IL", {
+        day: "2-digit",
+        month: "2-digit",
+      });
       if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, kiosk: 0 };
       days[d].revenue += o.total;
       days[d].orders += 1;
