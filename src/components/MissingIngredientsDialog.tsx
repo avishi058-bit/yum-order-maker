@@ -70,29 +70,15 @@ const MissingIngredientsDialog = ({ dishName, ingredients, onConfirm, onClose }:
             })}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mt-5">
+          <div className="mt-5">
             <button
-              disabled={busy}
+              disabled={busy || selected.length === 0}
               onClick={() => submit(selected)}
-              className="py-3 rounded-xl bg-primary text-primary-foreground font-black disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-black disabled:opacity-50"
             >
               כבה את המסומנים
             </button>
-            <button
-              disabled={busy}
-              onClick={() => submit(ingredients.map((i) => i.item_id))}
-              className="py-3 rounded-xl bg-destructive text-destructive-foreground font-black disabled:opacity-50"
-            >
-              כבה את כולם
-            </button>
           </div>
-
-          <button
-            onClick={onClose}
-            className="w-full mt-4 py-2 text-sm font-bold text-muted-foreground underline"
-          >
-            לא חסר כלום – רק המנה
-          </button>
         </motion.div>
       </motion.div>
     </AnimatePresence>
