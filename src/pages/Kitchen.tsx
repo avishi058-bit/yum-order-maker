@@ -10,7 +10,7 @@ import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
-import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
+import DayOpenChecklist, { shouldShowDayOpenChecklist, markDayOpenChecklistDone } from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -2519,7 +2519,7 @@ const Kitchen = () => {
         <DayOpenChecklist
           items={availabilityItems}
           onEnable={enableItems}
-          onClose={() => setShowDayChecklist(false)}
+          onClose={() => { markDayOpenChecklistDone(); setShowDayChecklist(false); }}
         />
       )}
 
