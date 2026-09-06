@@ -52,7 +52,10 @@ const MEAL_IDS = [
 ];
 
 export const MENU_ANY_DEPENDENCIES: Record<string, string[]> = Object.fromEntries(
-  MEAL_IDS.map((id) => [id, ["fries", "sweet-potato-fries"]])
+  MEAL_IDS.map((id) => [
+    id,
+    ["fries", "sweet-potato-fries", "onion-rings", "tempura-onion"],
+  ])
 );
 
 /** כל מנות הסמאש - לכיבוי מרוכז */
