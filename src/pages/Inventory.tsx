@@ -93,11 +93,30 @@ const CATEGORY_GROUPS: { key: string; label: string; cats: string[] }[] = [
   { key: "frozen", label: "קפואים", cats: ["בשר", "צ׳יפס", "לחם", "קפואים"] },
 ];
 
+// Display order for inventory categories: fried items, then toppings, then drinks.
+const CATEGORY_ORDER = [
+  "בשר",
+  "צ׳יפס",
+  "לחם",
+  "קפואים",
+  "מטוגנים",
+  "טופינג",
+  "בירות",
+  "פחיות",
+  "בקבוקים",
+  "שתיה",
+];
+
 function groupKeyForCategory(cat: string): string {
   for (const g of CATEGORY_GROUPS) {
     if (g.cats.includes(cat)) return g.key;
   }
   return "other";
+}
+
+function categoryRank(cat: string): number {
+  const idx = CATEGORY_ORDER.indexOf(cat);
+  return idx === -1 ? CATEGORY_ORDER.length : idx;
 }
 
 
@@ -194,19 +213,24 @@ export default function Inventory() {
       catMap.set(item.category, arr);
       superMap.set(gk, catMap);
     }
-    const orderedKeys = [
-      ...CATEGORY_GROUPS.map((g) => g.key),
-      "other",
-    ];
-    return orderedKeys
-      .filter((k) => superMap.has(k))
-      .map((k) => ({
-        key: k,
-        label:
-          CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
-          "אחר",
-        categories: Array.from(superMap.get(k)!.entries()),
-      }));
+    const orderedKeys = Array.from(superMap.keys()).sort((a, b) => {
+      const minA = Math.min(
+        ...Array.from(superMap.get(a)!.keys()).map(categoryRank),
+      );
+      const minB = Math.min(
+        ...Array.from(superMap.get(b)!.keys()).map(categoryRank),
+      );
+      return minA - minB;
+    });
+    return orderedKeys.map((k) => ({
+      key: k,
+      label:
+        CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
+        "אחר",
+      categories: Array.from(superMap.get(k)!.entries()).sort(
+        ([catA], [catB]) => categoryRank(catA) - categoryRank(catB),
+      ),
+    }));
   }, [items]);
 
 
