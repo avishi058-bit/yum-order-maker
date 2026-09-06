@@ -93,6 +93,8 @@ interface Order {
   order_number: number;
   /** Queue position — set when the order is marked paid. Null = still waiting for payment. */
   queue_number?: number | null;
+  /** Daily sequential number assigned at order creation — printed on the bon. */
+  bon_queue_number?: number | null;
   paid_at?: string | null;
   /** הלקוח לחץ "ראיתי – אני בדרך" במסך המעקב */
   customer_on_way_at?: string | null;
@@ -1647,6 +1649,7 @@ const Kitchen = () => {
             id: o.id,
             order_number: o.order_number,
             queue_number: o.queue_number ?? null,
+            bon_queue_number: o.bon_queue_number ?? null,
             customer_name: o.customer_name,
             created_at: o.created_at,
             status: o.status,
