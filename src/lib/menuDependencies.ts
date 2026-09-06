@@ -11,11 +11,9 @@ export const MENU_DEPENDENCIES: Record<string, string[]> = {
   "special-hadegel": ["tempura-onion", "garlic-confit", "onion-jam"],
   "meal-special-hadegel": ["tempura-onion", "garlic-confit", "onion-jam"],
 
-  // טבעות בצל בטמפורה - דורש טבעות בצל רגילות (אם אין טבעות בצל, אין גם טמפורה)
-  "tempura-onion": ["onion-rings"],
-
-  // טופינג שלוש טבעות בצל ביתיות - דורש טבעות בצל בטמפורה
-  "onion-rings-topping": ["tempura-onion"],
+  // טבעות בצל בטמפורה (תוספת) - תלויות בטופינג "שלוש טבעות בצל בטמפורה".
+  // אין קשר לטבעות הבצל הרגילות (onion-rings).
+  "tempura-onion": ["onion-rings-topping"],
 
   // מיקס חברים - צ'יפס רגיל, טבעות בצל רגילות, וופל ציפס
   "friends-mix": ["fries", "onion-rings", "sweet-potato-fries"],
