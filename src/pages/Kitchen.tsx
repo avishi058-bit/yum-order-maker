@@ -3070,41 +3070,6 @@ const Kitchen = () => {
           </div>
         </div>
       )}
-      {editingOrder && (
-        <EditOrderModal
-          open={!!editingOrder}
-          onClose={() => setEditingOrder(null)}
-          orderId={editingOrder.id}
-          orderNumber={editingOrder.order_number}
-          items={editingOrder.order_items.map((it) => ({
-            id: it.id,
-            item_id: it.item_id,
-            item_name: it.item_name,
-            price: it.price,
-            quantity: it.quantity,
-            toppings: it.toppings,
-            removals: it.removals,
-            with_meal: it.with_meal,
-            meal_side: it.meal_side,
-            meal_drink: it.meal_drink,
-            deal_burgers: it.deal_burgers,
-            deal_drinks: it.deal_drinks,
-          }))}
-          onSaved={async ({ requires_reprint }) => {
-            // Refetch the updated order so we have fresh items for reprint
-            const { data } = await supabase
-              .from("orders")
-              .select("*, order_items(*)")
-              .eq("id", editingOrder.id)
-              .maybeSingle();
-            if (requires_reprint && data) {
-              printedOrdersRef.current.add(data.id); persistPrintedOrder(data.id, true);
-              printOrder(data as Order);
-              toast.info("מדפיס בון מעודכן למטבח");
-            }
-          }}
-        />
-      )}
     </div>
   );
 };
