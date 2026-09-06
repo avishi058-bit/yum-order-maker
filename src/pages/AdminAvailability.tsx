@@ -71,7 +71,7 @@ const AdminAvailability = () => {
           setItems((prev) =>
             prev.map((item) =>
               item.item_id === updated.item_id
-                ? { ...item, available: updated.available, manually_disabled: updated.manually_disabled }
+                ? { ...item, available: updated.available, manually_disabled: updated.manually_disabled, archived: updated.archived }
                 : item
             )
           );
@@ -290,6 +290,14 @@ const AdminAvailability = () => {
                     />
                   </button>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setArchived(item.item_id, true)}
+                      title="הסר מהתפריט (ארכיון)"
+                      aria-label={`הסר את ${item.item_name} מהתפריט`}
+                      className="text-[10px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                    >
+                      הסר
+                    </button>
                     <span className={`font-medium ${!item.available ? "text-muted-foreground line-through" : "text-foreground"}`}>
                       {item.item_name}
                     </span>
@@ -304,6 +312,30 @@ const AdminAvailability = () => {
             </div>
           </div>
         ))}
+
+        {archivedItems.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-muted-foreground mb-3">🗄️ ארכיון — ירד מהתפריט</h2>
+            <div className="bg-card rounded-xl border border-dashed border-border overflow-hidden opacity-80">
+              {archivedItems.map((item, i) => (
+                <div
+                  key={item.item_id}
+                  className={`flex items-center justify-between px-4 py-3.5 ${
+                    i < archivedItems.length - 1 ? "border-b border-border/50" : ""
+                  }`}
+                >
+                  <button
+                    onClick={() => setArchived(item.item_id, false)}
+                    className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-full"
+                  >
+                    החזר לתפריט
+                  </button>
+                  <span className="font-medium text-muted-foreground">{item.item_name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
