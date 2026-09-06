@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { MENU_DEPENDENCIES, getDependentDishes } from "@/lib/menuDependencies";
 import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
+import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 
 
 interface AvailabilityItem {
@@ -31,6 +32,7 @@ const AdminAvailability = () => {
   const [items, setItems] = useState<AvailabilityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showChecklist, setShowChecklist] = useState(false);
+  const [missingPrompt, setMissingPrompt] = useState<{ dishName: string; ingredients: IngredientOption[] } | null>(null);
 
   const fetchItems = async () => {
     const { data } = await supabase
@@ -195,6 +197,14 @@ const AdminAvailability = () => {
           items={items}
           onEnable={enableItems}
           onClose={() => setShowChecklist(false)}
+        />
+      )}
+      {missingPrompt && (
+        <MissingIngredientsDialog
+          dishName={missingPrompt.dishName}
+          ingredients={missingPrompt.ingredients}
+          onConfirm={disableIngredients}
+          onClose={() => setMissingPrompt(null)}
         />
       )}
       <div className="max-w-2xl mx-auto px-4 py-8">
