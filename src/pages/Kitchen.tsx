@@ -2650,15 +2650,6 @@ const Kitchen = () => {
                     >
                       <ChefHat size={16} />
                     </button>
-                    {(order.status === "new" || order.status === "preparing") && (
-                      <button
-                        onClick={() => setEditingOrder(order)}
-                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                        title="ערוך הזמנה"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                    )}
                     {order.order_source !== "kiosk" && order.order_source !== "station" && (
                       <button
                         onClick={() => printCustomerQr(order)}
