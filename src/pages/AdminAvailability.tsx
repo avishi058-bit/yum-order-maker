@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { MENU_DEPENDENCIES, getDependentDishes } from "@/lib/menuDependencies";
+import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
+
 
 interface AvailabilityItem {
   id: string;
@@ -28,6 +30,7 @@ const categoryOrder = ["burger", "meal", "side", "topping", "drink", "sauce", "d
 const AdminAvailability = () => {
   const [items, setItems] = useState<AvailabilityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   const fetchItems = async () => {
     const { data } = await supabase
@@ -36,9 +39,21 @@ const AdminAvailability = () => {
       .order("category");
     if (data) {
       setItems(data as AvailabilityItem[]);
+      if (shouldShowDayOpenChecklist()) setShowChecklist(true);
     }
     setLoading(false);
   };
+
+  const enableItems = async (itemIds: string[]) => {
+    await supabase
+      .from("menu_availability")
+      .update({ available: true, manually_disabled: false, updated_at: new Date().toISOString() })
+      .in("item_id", itemIds);
+    setItems((prev) =>
+      prev.map((i) => (itemIds.includes(i.item_id) ? { ...i, available: true, manually_disabled: false } : i))
+    );
+  };
+
 
   useEffect(() => {
     fetchItems();
@@ -141,7 +156,15 @@ const AdminAvailability = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {showChecklist && (
+        <DayOpenChecklist
+          items={items}
+          onEnable={enableItems}
+          onClose={() => setShowChecklist(false)}
+        />
+      )}
       <div className="max-w-2xl mx-auto px-4 py-8">
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-foreground">ניהול זמינות פריטים</h1>
           <p className="text-muted-foreground text-sm mt-2">כבה/הדלק פריטים בזמן אמת</p>
