@@ -156,7 +156,15 @@ const AdminAvailability = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {showChecklist && (
+        <DayOpenChecklist
+          items={items}
+          onEnable={enableItems}
+          onClose={() => setShowChecklist(false)}
+        />
+      )}
       <div className="max-w-2xl mx-auto px-4 py-8">
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-foreground">ניהול זמינות פריטים</h1>
           <p className="text-muted-foreground text-sm mt-2">כבה/הדלק פריטים בזמן אמת</p>
