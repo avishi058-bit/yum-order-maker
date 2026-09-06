@@ -61,9 +61,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }, []);
 
   const fetchOrders = async () => {
+    const todayStart = getBusinessDayStart();
     const daysBack = todayOnly ? 2 : 30;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysBack);
+    const startDate = new Date(todayStart.getTime() - daysBack * 24 * 60 * 60 * 1000);
 
     const { data } = await supabase
       .from("orders")
