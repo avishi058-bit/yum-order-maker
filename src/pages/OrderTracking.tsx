@@ -224,21 +224,16 @@ const OrderTracking = () => {
             <p className="text-2xl font-bold text-green-400">ההזמנה מוכנה ✅🥳</p>
             <p className="text-sm text-muted-foreground mt-2">אפשר לאסוף</p>
 
-            {order.customer_on_way_at ? (
-              <div className="mt-5 bg-green-500/20 border border-green-500/40 rounded-xl py-3 px-4">
-                <p className="text-green-400 font-bold">מעולה, עדכנו את המטבח שאתם בדרך 🚗</p>
-              </div>
-            ) : (
-              <button
-                onClick={markOnWay}
-                disabled={onWayLoading}
-                className="mt-5 w-full bg-green-500 text-white text-xl font-black py-5 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition animate-pulse disabled:opacity-60"
-              >
-                {onWayLoading ? "רגע..." : "ראיתי — אני בדרך 🚗"}
-              </button>
-            )}
+            <OnWayButton
+              orderNumber={parseInt(orderNumber)}
+              phone={phone}
+              alreadyOnWay={!!order.customer_on_way_at}
+              autoConfirm={searchParams.get("onway") === "1"}
+              className="mt-5"
+            />
           </div>
         )}
+
 
 
         {order.status === "completed" && (
