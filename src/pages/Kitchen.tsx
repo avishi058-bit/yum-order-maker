@@ -9,7 +9,7 @@ const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients } from "@/lib/menuDependencies";
+import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
 import DayOpenChecklist from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
@@ -931,9 +931,10 @@ const Kitchen = () => {
     }
     let working = await syncDependentDishes(itemId, optimistic, newValue);
 
-    // קציצת סמאש דלוקה => סמאש של מושבניקים תמיד דלוק איתה (גם אם כובה ידנית בעבר)
+    // קציצת סמאש דלוקה => כל מנות הסמאש חוזרות אוטומטית אם שאר הטופינגים שלהן זמינים,
+    // גם אם כובו ידנית בעבר (סמאש של מושבניקים תמיד דלוק עם הקציצה)
     if (itemId === "smash-patty" && newValue) {
-      for (const depId of ["smash-moshavnikim", "meal-smash-moshavnikim"]) {
+      for (const depId of SMASH_DISH_IDS) {
         const dish = working.find((i) => i.item_id === depId);
         if (!dish) continue;
         const isAvail = (id: string) => working.find((i) => i.item_id === id)?.available ?? true;
