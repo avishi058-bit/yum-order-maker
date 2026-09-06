@@ -362,13 +362,6 @@ function cleanDrinkName(s: string): string {
 export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const ops: FastOp[] = [];
 
-  // 0) Queue position — printed big at the very top so bons stay in order.
-  // bon_queue_number is assigned at order creation (arrival order) so the bon
-  // has its number immediately; queue_number (paid) is the same value.
-  ops.push(asLine(`${(order as any).bon_queue_number ?? order.queue_number ?? order.order_number}`, { align: "C", bold: true, size: 0 }));
-  ops.push(sep());
-
-
   // 1) TOP: customer name (big bold) + phone next to it (large, thin), centered.
   if (order.customer_name || order.customer_phone) {
     ops.push({
@@ -378,6 +371,14 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       namePx: 48,
       phonePx: 44,
     });
+  }
+
+  // Daily running number, printed right under the name, extra big & bold, so
+  // the kitchen can order bons by arrival. Assigned at order creation and
+  // restarts from 1 every business day — unrelated to the order number.
+  const bonNum = (order as any).bon_queue_number ?? order.queue_number ?? null;
+  if (bonNum != null) {
+    ops.push(asLine(`מס׳ ${bonNum}`, { align: "C", bold: true, size: 64 }));
   }
   // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד — לא כאן.)
   ops.push(sep());
