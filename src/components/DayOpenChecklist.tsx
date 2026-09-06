@@ -90,7 +90,18 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
       });
     }
 
-    // שלב 3: תוספות חשובות שכבויות
+    // שלב 3: קציצת סמאש – אם כבויה, נשאל אם חזרה (אישור מדליק גם את מנות הסמאש)
+    const SMASH_PATTY_ID = "smash-patty";
+    if (byId[SMASH_PATTY_ID] && byId[SMASH_PATTY_ID].available === false) {
+      list.push({
+        id: SMASH_PATTY_ID,
+        title: "קציצת סמאש חזרה למלאי?",
+        subtitle: "אישור ידליק גם את מנות הסמאש התלויות בה",
+        enableIds: [SMASH_PATTY_ID],
+      });
+    }
+
+    // שלב 4: תוספות חשובות שכבויות
     IMPORTANT_TOPPING_IDS.filter((id) => byId[id] && byId[id].available === false).forEach((id) => {
       list.push({
         id,
@@ -100,7 +111,7 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
       });
     });
 
-    // שלב 4: מטוגנים כבויים
+    // שלב 5: מטוגנים כבויים
     FRIED_IDS.filter((id) => byId[id] && byId[id].available === false).forEach((id) => {
       list.push({
         id,
