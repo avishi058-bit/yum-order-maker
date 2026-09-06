@@ -383,6 +383,8 @@ const Kitchen = () => {
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const [showDayChecklist, setShowDayChecklist] = useState(false);
   const dayChecklistCheckedRef = useRef(false);
+  // חלון זמן שבו מנוי ה-realtime מתעלם מעדכוני זמינות (במהלך לחיצה מקומית)
+  const availLocalWriteUntilRef = useRef(0);
   const [missingPrompt, setMissingPrompt] = useState<{ dishName: string; ingredients: IngredientOption[] } | null>(null);
   const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
   const [newTopName, setNewTopName] = useState("");
@@ -762,6 +764,9 @@ const Kitchen = () => {
     const availChannel = supabase
       .channel("availability-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_availability" }, () => {
+        // מתעלמים מעדכונים שהגיעו בעקבות לחיצות מקומיות שלנו – אחרת ה-refetch
+        // דורס את המצב האופטימיסטי באמצע שרשרת העדכונים והכפתורים "רוקדים"
+        if (Date.now() < availLocalWriteUntilRef.current) return;
         fetchAvailability();
       })
       .subscribe();
