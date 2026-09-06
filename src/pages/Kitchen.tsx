@@ -2880,9 +2880,9 @@ const Kitchen = () => {
                 )}
 
                 {/* Footer */}
-                <div className="px-4 py-3 border-t border-border flex items-center justify-between">
+                <div className="px-4 py-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-lg text-primary">₪{order.total}</span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {(() => { const isPending = pendingStatusIds.has(order.id); return (<>
                     {["new", "preparing", "ready"].includes(order.status) && (
                       <button

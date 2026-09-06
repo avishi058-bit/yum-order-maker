@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ALTER COLUMN queue_number DROP DEFAULT;
