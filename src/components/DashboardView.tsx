@@ -23,7 +23,7 @@ interface Order {
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444", "#eab308"];
 
-const DashboardView = () => {
+const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
 
@@ -32,13 +32,14 @@ const DashboardView = () => {
   }, []);
 
   const fetchOrders = async () => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const daysBack = todayOnly ? 2 : 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysBack);
 
     const { data } = await supabase
       .from("orders")
       .select("id, order_number, total, status, created_at, payment_method, order_source, customer_name, customer_phone")
-      .gte("created_at", thirtyDaysAgo.toISOString())
+      .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: true });
 
     if (data) setOrders(excludeTestOrders(data as Order[]));
