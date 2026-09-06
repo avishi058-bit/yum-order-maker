@@ -23,6 +23,35 @@ interface Order {
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444", "#eab308"];
 
+// Business day in the restaurant runs 06:00 Jerusalem time → next day 06:00.
+const getBusinessDayStart = (date = new Date()): Date => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jerusalem",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
+  const localAsUtc = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour") % 24,
+    get("minute"),
+    get("second")
+  );
+  const offsetMs = localAsUtc - Math.floor(date.getTime() / 1000) * 1000;
+  let startLocal = Date.UTC(get("year"), get("month") - 1, get("day"), 6, 0, 0);
+  if ((get("hour") % 24) < 6) {
+    startLocal -= 24 * 60 * 60 * 1000;
+  }
+  return new Date(startLocal - offsetMs);
+};
+
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
@@ -32,9 +61,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }, []);
 
   const fetchOrders = async () => {
+    const todayStart = getBusinessDayStart();
     const daysBack = todayOnly ? 2 : 30;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysBack);
+    const startDate = new Date(todayStart.getTime() - daysBack * 24 * 60 * 60 * 1000);
 
     const { data } = await supabase
       .from("orders")
@@ -46,14 +75,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   };
 
   const filteredOrders = useMemo(() => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
-    const monthStart = new Date(todayStart);
-    monthStart.setDate(monthStart.getDate() - 30);
+    const todayStart = getBusinessDayStart();
+    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+    const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
@@ -66,7 +91,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         case "month": return d >= monthStart;
       }
     });
-  }, [orders, period]);
+  }, [orders, period, todayOnly]);
 
   const totalRevenue = filteredOrders.reduce((s, o) => s + o.total, 0);
   const orderCount = filteredOrders.length;
@@ -108,7 +133,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const dailyData = useMemo(() => {
     const days: Record<string, { date: string; revenue: number; orders: number; website: number; kiosk: number }> = {};
     filteredOrders.forEach((o) => {
-      const d = new Date(o.created_at).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
+      const d = getBusinessDayStart(new Date(o.created_at)).toLocaleDateString("he-IL", {
+        day: "2-digit",
+        month: "2-digit",
+      });
       if (!days[d]) days[d] = { date: d, revenue: 0, orders: 0, website: 0, kiosk: 0 };
       days[d].revenue += o.total;
       days[d].orders += 1;
