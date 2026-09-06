@@ -99,3 +99,20 @@ export const getDishIngredients = (dishId: string): string[] => [
   ...(MENU_DEPENDENCIES[dishId] || []),
   ...(MENU_ANY_DEPENDENCIES[dishId] || []),
 ];
+
+/**
+ * כל המרכיבים החיוניים של מנה, כולל מרכיבים של מרכיבים (רקורסיבי).
+ * משמש להדלקה יזומה: אם מדליקים מנה מורכבת – כל מה שהיא צריכה זמין שוב.
+ */
+export const getAllRequiredIngredients = (dishId: string): string[] => {
+  const out = new Set<string>();
+  const walk = (id: string) => {
+    for (const dep of MENU_DEPENDENCIES[id] || []) {
+      if (out.has(dep)) continue;
+      out.add(dep);
+      walk(dep);
+    }
+  };
+  walk(dishId);
+  return [...out];
+};
