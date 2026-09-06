@@ -662,10 +662,24 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
-  // שאלות הזמינות מופיעות בכל פתיחה של מסך המטבח (פעם אחת בכל טעינת מסך)
+  // שאלות הזמינות מופיעות רק בפתיחה ראשונה של האתר בסשן (טאב נסגר = סשן נגמר),
+  // לא בכל יציאה וכניסה למסך המטבח.
   useEffect(() => {
     if (dayChecklistCheckedRef.current || availabilityItems.length === 0) return;
+    try {
+      if (sessionStorage.getItem("kitchenDayQuestionsShown") === "1") {
+        dayChecklistCheckedRef.current = true;
+        return;
+      }
+    } catch {
+      /* noop */
+    }
     dayChecklistCheckedRef.current = true;
+    try {
+      sessionStorage.setItem("kitchenDayQuestionsShown", "1");
+    } catch {
+      /* noop */
+    }
     setShowDayChecklist(true);
   }, [availabilityItems.length]);
 
