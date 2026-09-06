@@ -9,7 +9,7 @@ const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients } from "@/lib/menuDependencies";
+import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
 import DayOpenChecklist from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
