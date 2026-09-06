@@ -832,7 +832,7 @@ const Index = () => {
               dineIn={dineIn}
               items={cart}
               total={getTotal()}
-              sauces={selectedSauces}
+              sauces={dineIn === false ? selectedSauces : []}
               freeSauces={freeSauces}
               skipDetails={checkoutSkipDetails}
               delivery={deliveryInfo ?? undefined}
