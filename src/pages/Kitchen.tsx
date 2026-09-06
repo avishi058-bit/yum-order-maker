@@ -2386,7 +2386,7 @@ const Kitchen = () => {
         </div>
       ) : viewMode === "dashboard" ? (
         <Suspense fallback={<div className="p-8 text-center text-muted-foreground">טוען לוח בקרה…</div>}>
-          <DashboardView />
+          <DashboardView todayOnly />
         </Suspense>
       ) : (
         /* Orders Grid */

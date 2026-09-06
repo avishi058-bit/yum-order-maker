@@ -23,7 +23,7 @@ interface Order {
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444", "#eab308"];
 
-const DashboardView = () => {
+const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
 
@@ -32,13 +32,14 @@ const DashboardView = () => {
   }, []);
 
   const fetchOrders = async () => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const daysBack = todayOnly ? 2 : 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysBack);
 
     const { data } = await supabase
       .from("orders")
       .select("id, order_number, total, status, created_at, payment_method, order_source, customer_name, customer_phone")
-      .gte("created_at", thirtyDaysAgo.toISOString())
+      .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: true });
 
     if (data) setOrders(excludeTestOrders(data as Order[]));
@@ -57,6 +58,7 @@ const DashboardView = () => {
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
       const d = new Date(o.created_at);
+      if (todayOnly && d < yesterdayStart) return false;
       switch (period) {
         case "today": return d >= todayStart;
         case "yesterday": return d >= yesterdayStart && d < todayStart;
@@ -127,11 +129,11 @@ const DashboardView = () => {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Period Selector */}
       <Tabs value={period} onValueChange={(v) => setPeriod(v as any)} dir="rtl">
-        <TabsList className="grid grid-cols-4 w-full max-w-md">
+        <TabsList className={`grid ${todayOnly ? "grid-cols-2" : "grid-cols-4"} w-full max-w-md`}>
           <TabsTrigger value="today">היום</TabsTrigger>
           <TabsTrigger value="yesterday">אתמול</TabsTrigger>
-          <TabsTrigger value="week">שבוע</TabsTrigger>
-          <TabsTrigger value="month">חודש</TabsTrigger>
+          {!todayOnly && <TabsTrigger value="week">שבוע</TabsTrigger>}
+          {!todayOnly && <TabsTrigger value="month">חודש</TabsTrigger>}
         </TabsList>
       </Tabs>
 
