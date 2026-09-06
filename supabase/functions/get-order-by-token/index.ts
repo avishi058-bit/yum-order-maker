@@ -77,15 +77,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: order } = await supabase
+    // NOTE: order_number restarts daily, so the same number can exist on many
+    // days. Fetch the recent candidates and pick the newest one matching the
+    // caller's phone — `.maybeSingle()` used to error out on duplicates, which
+    // broke tracking, status updates and the "I'm on the way" confirmation.
+    const { data: candidates } = await supabase
       .from("orders")
       .select(
         "id, order_number, customer_name, status, total, estimated_ready_at, updated_at, created_at, customer_phone, customer_on_way_at",
       )
       .eq("order_number", order_number)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(20);
 
-    if (!order || normalizePhone(order.customer_phone) !== normalizePhone(phone)) {
+    const wanted = normalizePhone(phone);
+    const order = (candidates ?? []).find(
+      (o) => normalizePhone(o.customer_phone ?? "") === wanted,
+    );
+
+    if (!order) {
       await recordFailure();
       return new Response(
         JSON.stringify({ error: "not_found" }),
