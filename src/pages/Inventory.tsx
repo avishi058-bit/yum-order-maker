@@ -213,19 +213,24 @@ export default function Inventory() {
       catMap.set(item.category, arr);
       superMap.set(gk, catMap);
     }
-    const orderedKeys = [
-      ...CATEGORY_GROUPS.map((g) => g.key),
-      "other",
-    ];
-    return orderedKeys
-      .filter((k) => superMap.has(k))
-      .map((k) => ({
-        key: k,
-        label:
-          CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
-          "אחר",
-        categories: Array.from(superMap.get(k)!.entries()),
-      }));
+    const orderedKeys = Array.from(superMap.keys()).sort((a, b) => {
+      const minA = Math.min(
+        ...Array.from(superMap.get(a)!.keys()).map(categoryRank),
+      );
+      const minB = Math.min(
+        ...Array.from(superMap.get(b)!.keys()).map(categoryRank),
+      );
+      return minA - minB;
+    });
+    return orderedKeys.map((k) => ({
+      key: k,
+      label:
+        CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
+        "אחר",
+      categories: Array.from(superMap.get(k)!.entries()).sort(
+        ([catA], [catB]) => categoryRank(catA) - categoryRank(catB),
+      ),
+    }));
   }, [items]);
 
 
