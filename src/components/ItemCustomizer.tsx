@@ -1494,7 +1494,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       onClick={() => handleFinish(false)}
                       className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
-                      {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "הוספה להזמנה בלי תוספות"}
+                      {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "לא תודה"}
                     </button>
                     <div className="h-4" />
                   </motion.div>
