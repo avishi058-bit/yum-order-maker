@@ -139,7 +139,8 @@ const availabilityCategoryLabels: Record<string, string> = {
   doneness: "🔥 מידת עשייה",
 };
 
-const availabilityCategoryOrder = ["burger", "meal", "side", "drink", "deal", "topping", "sauce", "ingredient", "doneness"];
+// הארוחות העסקיות מאוחדות עם ההמבורגרים – אין קטגוריית "meal" נפרדת במסך
+const availabilityCategoryOrder = ["burger", "side", "drink", "deal", "topping", "sauce", "ingredient", "doneness"];
 
 // Fixed order of items within each category to match the menu
 const itemOrder: Record<string, string[]> = {
@@ -940,10 +941,26 @@ const Kitchen = () => {
     const newValue = !currentValue;
     let working = await setAvailabilityFor(itemId, newValue, availabilityItems);
 
-    // כיבוי המבורגר => מכבה גם את הארוחה העסקית שלו
+    // המבורגר והארוחה שלו הם כפתור אחד – אין מנה = אין ארוחה, ולהיפך
     const linkedMeal = burgerToMeal[itemId];
-    if (linkedMeal && !newValue && working.some((i) => i.item_id === linkedMeal)) {
-      working = await setAvailabilityFor(linkedMeal, false, working);
+    if (linkedMeal && working.some((i) => i.item_id === linkedMeal)) {
+      if (!newValue) {
+        working = await setAvailabilityFor(linkedMeal, false, working);
+      } else {
+        // הדלקת מבורגר: מנקים את סימון הכיבוי הידני של הארוחה,
+        // והיא תודלק רק אם יש לפחות סוג צ'יפס אחד זמין
+        const isAvail = (id: string) => working.find((i) => i.item_id === id)?.available ?? true;
+        const mealOk = isDishSatisfied(linkedMeal, isAvail);
+        await supabase
+          .from("menu_availability")
+          .update({ available: mealOk, manually_disabled: false, updated_at: new Date().toISOString() })
+          .eq("item_id", linkedMeal);
+        working = working.map((i) =>
+          i.item_id === linkedMeal ? { ...i, available: mealOk, manually_disabled: false } : i
+        );
+        setAvailabilityItems(working);
+        working = await syncDependentDishes(linkedMeal, working, mealOk);
+      }
     }
 
     if (newValue) return;
