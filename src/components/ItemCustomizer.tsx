@@ -3,7 +3,7 @@ import { flushSync } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Utensils, Check } from "lucide-react";
-import { MenuItem, menuItems, toppings as staticToppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS, excludedToppingsByItem } from "@/data/menu";
+import { MenuItem, menuItems, toppings as staticToppings, Topping, smashBurgerIds, ingredients, mealUpgrade, mealSideOptions, mealDrinkOptions, drinkSubOptions, drinkToAvailabilityId, donenessOptions, DEFAULT_DONENESS, excludedToppingsByItem } from "@/data/menu";
 import { useCustomToppings } from "@/lib/customToppingsStore";
 import { findTopping } from "@/lib/toppingsLookup";
 import { menuImages } from "@/data/menuImages";
@@ -132,7 +132,7 @@ export interface ItemCustomizerInitialState {
 interface ItemCustomizerProps {
   item: MenuItem | null;
   onClose: () => void;
-  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number }>) => void;
+  onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number; label?: string }>) => void;
   isAvailable?: (id: string) => boolean;
   /** Take-away (false) shows the optional "name on the dish" step at the end. */
   dineIn?: boolean | null;
@@ -141,7 +141,7 @@ interface ItemCustomizerProps {
   initialState?: ItemCustomizerInitialState;
 }
 
-type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select";
+type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select" | "extras";
 
 // Hero image collapse parameters (kept tiny — pure transform/opacity, no layout)
 const HERO_HEIGHT = 280;          // initial hero height in px (mobile/web)
@@ -730,7 +730,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     ];
     const sideItems = Object.entries(sideItemCounts)
       .filter(([, q]) => q > 0)
-      .map(([itemId, qty]) => ({ itemId, qty }));
+      .map(([key, qty]) => {
+        const [itemId, subId] = key.split("::");
+        const label = subId
+          ? (drinkSubOptions[itemId] || []).find((o) => o.id === subId)?.name
+          : undefined;
+        return { itemId, qty, label };
+      });
     onConfirm(
       item,
       quantity,
@@ -772,6 +778,78 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
   // Meal-upgrade is rendered as a centered modal (independent overlay)
   const isMealUpgrade = step === "meal-upgrade";
+
+  /** Standalone sides offered (full price) after the customer declined the meal upgrade. */
+  const extraSideItems = ["fries", "sweet-potato-fries", "onion-rings", "tempura-onion", "friends-mix"]
+    .map((id) => menuItems.find((m) => m.id === id))
+    .filter((m): m is MenuItem => !!m)
+    .filter((m) => !isAvailable || isAvailable(m.id));
+
+  /** Standalone drinks (full price). Alcohol is intentionally excluded from this quick upsell. */
+  const extraDrinkRows: Array<{ key: string; name: string; price: number }> = [];
+  ["can", "bottle", "flavored-water"].forEach((baseId) => {
+    const base = menuItems.find((m) => m.id === baseId);
+    if (!base) return;
+    (drinkSubOptions[baseId] || []).forEach((sub) => {
+      const availId = drinkToAvailabilityId[sub.id] || sub.id;
+      if (isAvailable && !isAvailable(availId)) return;
+      extraDrinkRows.push({ key: `${baseId}::${sub.id}`, name: sub.name, price: base.price });
+    });
+  });
+  ["water", "soda", "fuze-tea"].forEach((id) => {
+    const m = menuItems.find((mi) => mi.id === id);
+    if (!m) return;
+    const availId = drinkToAvailabilityId[id] || id;
+    if (isAvailable && !isAvailable(availId)) return;
+    extraDrinkRows.push({ key: id, name: m.name, price: m.price });
+  });
+
+  const extrasTotal = Object.entries(sideItemCounts).reduce((sum, [key, qty]) => {
+    if (!qty) return sum;
+    const [itemId] = key.split("::");
+    const m = menuItems.find((mi) => mi.id === itemId);
+    return sum + (m ? m.price * qty : 0);
+  }, 0);
+
+  const StepperRow = ({ rowKey, name, price }: { rowKey: string; name: string; price: number }) => {
+    const count = sideItemCounts[rowKey] || 0;
+    const setCount = (n: number) => setSideItemCounts((s) => ({ ...s, [rowKey]: Math.max(0, n) }));
+    return (
+      <div className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}>
+        <div className="flex items-center gap-3">
+          {count > 0 ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCount(count - 1)}
+                className={`rounded-full bg-secondary flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                aria-label="הסר"
+              >
+                <Minus size={isKiosk ? 18 : 14} />
+              </button>
+              <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{count}</span>
+              <button
+                onClick={() => setCount(count + 1)}
+                className={`rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
+                aria-label="הוסף"
+              >
+                <Plus size={isKiosk ? 18 : 14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setCount(1)}
+              className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
+            >
+              <Plus size={isKiosk ? 18 : 14} />
+              הוסף
+            </button>
+          )}
+          <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>₪{price}</span>
+        </div>
+        <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"}`}>{name}</span>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -1378,6 +1456,50 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                   </motion.div>
                 )}
 
+                {step === "extras" && (
+                  <motion.div
+                    key="extras"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
+                  >
+                    <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-2" : "text-lg mb-1"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
+                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[20px] mb-6" : "text-sm mb-4"}`}>מחיר מלא, אפשר גם לדלג</p>
+
+                    {extraSideItems.length > 0 && (
+                      <>
+                        <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🍟 צ׳יפס ותוספות</h4>
+                        <div className="space-y-0 mb-6">
+                          {extraSideItems.map((m) => (
+                            <StepperRow key={m.id} rowKey={m.id} name={m.name} price={m.price} />
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {extraDrinkRows.length > 0 && (
+                      <>
+                        <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🥤 שתייה</h4>
+                        <div className="space-y-0">
+                          {extraDrinkRows.map((d) => (
+                            <StepperRow key={d.key} rowKey={d.key} name={d.name} price={d.price} />
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    <button
+                      onClick={() => handleFinish(false)}
+                      className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                    >
+                      {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "הוספה להזמנה בלי תוספות"}
+                    </button>
+                    <div className="h-4" />
+                  </motion.div>
+                )}
+
                 {step === "drink-select" && (
                   <motion.div
                     key="drink-select"
@@ -1539,7 +1661,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                 animate={{ opacity: 0.6 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
-                onClick={() => handleFinish(false)}
+                onClick={() => setStep("extras")}
                 className="fixed inset-0 bg-black z-50"
                 style={{ willChange: "opacity" }}
               />
@@ -1575,7 +1697,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         שדרגו לי! 🍟🥤
                       </button>
                       <button
-                        onClick={() => handleFinish(false)}
+                        onClick={() => setStep("extras")}
                         className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${
                           isKiosk ? "py-6 text-[26px]" : "py-4 text-base"
                         }`}

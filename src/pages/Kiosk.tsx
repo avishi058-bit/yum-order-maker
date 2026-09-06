@@ -204,7 +204,7 @@ const Kiosk = () => {
   }, []);
 
   const handleCustomizerConfirm = useCallback(
-    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number }>) => {
+    (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number; label?: string }>) => {
       setCart((prev) => {
         if (editingCartId) {
           return prev.map((c) =>
@@ -226,7 +226,7 @@ const Kiosk = () => {
             next.push({
               id: `${m.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               menuItemId: m.id,
-              name: m.name,
+              name: s.label ? `${m.name} — ${s.label}` : m.name,
               price: m.price,
               quantity: s.qty,
               toppings: [],
