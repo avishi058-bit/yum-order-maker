@@ -91,6 +91,9 @@ interface Order {
   /** Queue position — set when the order is marked paid. Null = still waiting for payment. */
   queue_number?: number | null;
   paid_at?: string | null;
+  /** הלקוח לחץ "ראיתי – אני בדרך" במסך המעקב */
+  customer_on_way_at?: string | null;
+
   customer_name: string;
   customer_phone: string;
   customer_address: string | null;
@@ -2438,6 +2441,12 @@ const Kitchen = () => {
                       </span>
                     ) : null}
                     <span className="text-sm opacity-80">{config.label}</span>
+                    {order.customer_on_way_at && (
+                      <span className="text-[10px] font-black bg-blue-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                        🚗 הלקוח בדרך
+                      </span>
+                    )}
+
                     {order.status === "new" && escLevel === 0 && (
                       <span className="text-[10px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded-full animate-pulse">
                         חדש
