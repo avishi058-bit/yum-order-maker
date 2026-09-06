@@ -93,11 +93,30 @@ const CATEGORY_GROUPS: { key: string; label: string; cats: string[] }[] = [
   { key: "frozen", label: "קפואים", cats: ["בשר", "צ׳יפס", "לחם", "קפואים"] },
 ];
 
+// Display order for inventory categories: fried items, then toppings, then drinks.
+const CATEGORY_ORDER = [
+  "בשר",
+  "צ׳יפס",
+  "לחם",
+  "קפואים",
+  "מטוגנים",
+  "טופינג",
+  "בירות",
+  "פחיות",
+  "בקבוקים",
+  "שתיה",
+];
+
 function groupKeyForCategory(cat: string): string {
   for (const g of CATEGORY_GROUPS) {
     if (g.cats.includes(cat)) return g.key;
   }
   return "other";
+}
+
+function categoryRank(cat: string): number {
+  const idx = CATEGORY_ORDER.indexOf(cat);
+  return idx === -1 ? CATEGORY_ORDER.length : idx;
 }
 
 
