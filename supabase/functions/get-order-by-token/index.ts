@@ -20,6 +20,8 @@ const corsHeaders = {
 interface Body {
   order_number?: number;
   phone?: string;
+  /** "on_way" = the customer confirmed they saw the order is ready and are on the way */
+  action?: string;
 }
 
 function normalizePhone(p: string): string {
@@ -65,7 +67,7 @@ Deno.serve(async (req) => {
         p_ip_address: ip,
       });
 
-    const { order_number, phone } = (await req.json()) as Body;
+    const { order_number, phone, action } = (await req.json()) as Body;
 
     if (!order_number || !phone || typeof phone !== "string") {
       await recordFailure();
@@ -78,7 +80,7 @@ Deno.serve(async (req) => {
     const { data: order } = await supabase
       .from("orders")
       .select(
-        "id, order_number, customer_name, status, total, estimated_ready_at, updated_at, created_at, customer_phone",
+        "id, order_number, customer_name, status, total, estimated_ready_at, updated_at, created_at, customer_phone, customer_on_way_at",
       )
       .eq("order_number", order_number)
       .maybeSingle();
@@ -89,6 +91,13 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "not_found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+
+    // Customer tapped "I saw it — I'm on the way"
+    if (action === "on_way" && !order.customer_on_way_at) {
+      const nowIso = new Date().toISOString();
+      await supabase.from("orders").update({ customer_on_way_at: nowIso }).eq("id", order.id);
+      order.customer_on_way_at = nowIso;
     }
 
     // Strip the phone from the response — caller already knows it
