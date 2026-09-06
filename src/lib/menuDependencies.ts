@@ -29,6 +29,10 @@ export const MENU_DEPENDENCIES: Record<string, string[]> = {
   avishai: ["roastbeef", "egg"],
   "meal-avishai": ["roastbeef", "egg"],
 
+  // דילים משפחתי וחברים - דורשים צ'יפס רגיל
+  "family-deal": ["fries"],
+  "friends-deal": ["fries"],
+
   // קרייזי סמאש - דורש ריבת פלפלים חריפים, מייפל וקציצת סמאש
   "crazy-smash": ["hot-pepper-jam", "maple", "smash-patty"],
   "meal-crazy-smash": ["hot-pepper-jam", "maple", "smash-patty"],
