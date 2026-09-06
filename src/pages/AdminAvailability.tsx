@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { MENU_DEPENDENCIES, getDependentDishes, isDishSatisfied, getDishIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
+import { getDependentDishes, isDishSatisfied, getDishIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
 import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 
