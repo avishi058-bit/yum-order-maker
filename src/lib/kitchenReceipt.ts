@@ -1167,10 +1167,8 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 </style>
 </head>
 <body>
-  ${order.queue_number
-    ? `<div style="text-align:center;font-size:12pt;font-weight:700;line-height:1;margin-bottom:1mm;">${order.queue_number}</div>`
-    : ""}
-  <div class="order-num">#${order.order_number}<small>${time}</small></div>
+  <div style="text-align:center;font-size:26pt;font-weight:900;line-height:1;margin-bottom:1mm;">${order.queue_number ?? order.order_number}</div>
+  <div style="text-align:center;font-size:9pt;color:#555;margin-bottom:1mm;">${time}</div>
   <div class="type">${orderTypeLabel(order)}</div>
 
 
