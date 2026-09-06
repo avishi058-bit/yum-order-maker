@@ -290,6 +290,14 @@ const AdminAvailability = () => {
                     />
                   </button>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setArchived(item.item_id, true)}
+                      title="הסר מהתפריט (ארכיון)"
+                      aria-label={`הסר את ${item.item_name} מהתפריט`}
+                      className="text-[10px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                    >
+                      הסר
+                    </button>
                     <span className={`font-medium ${!item.available ? "text-muted-foreground line-through" : "text-foreground"}`}>
                       {item.item_name}
                     </span>
