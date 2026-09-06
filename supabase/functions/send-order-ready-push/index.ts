@@ -126,10 +126,11 @@ Deno.serve(async (req) => {
       waze_url: wazeUrl,
       track_url: trackUrl,
       order_number: order.order_number,
+      on_way_url: `${trackUrl}&onway=1`,
       actions: notifType === "ready"
         ? [
+            { action: "on_way", title: "🚗 ראיתי, אני בדרך" },
             { action: "waze", title: "🧭 נווט בוויז" },
-            { action: "track", title: "⏱ פתח טיימר" },
           ]
         : [{ action: "track", title: "⏱ פתח טיימר" }],
     });

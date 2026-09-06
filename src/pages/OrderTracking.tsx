@@ -5,6 +5,7 @@ import { ChefHat, CheckCircle, Package, Bell, BellRing } from "lucide-react";
 
 import { toast } from "sonner";
 import GoogleReviewCard from "@/components/GoogleReviewCard";
+import OnWayButton from "@/components/OnWayButton";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import {
   isPushSupported,
@@ -26,25 +27,7 @@ const OrderTracking = () => {
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [pushState, setPushState] = useState<"idle" | "subscribing" | "subscribed">("idle");
-  const [onWayLoading, setOnWayLoading] = useState(false);
   const { settings } = useSiteSettings();
-
-  // הלקוח מאשר שראה שההזמנה מוכנה והוא בדרך – המטבח רואה את זה
-  const markOnWay = async () => {
-    if (!orderNumber || !phone) return;
-    setOnWayLoading(true);
-    const { data, error } = await supabase.functions.invoke("get-order-by-token", {
-      body: { order_number: parseInt(orderNumber), phone, action: "on_way" },
-    });
-    setOnWayLoading(false);
-    if (error || !data?.order) {
-      toast.error("לא הצלחנו לעדכן, נסו שוב");
-      return;
-    }
-    setOrder(data.order);
-    toast.success("עדכנו את המטבח שאתם בדרך 🚗");
-  };
-
 
   useEffect(() => {
     if (!orderNumber || !phone) return;
@@ -224,21 +207,16 @@ const OrderTracking = () => {
             <p className="text-2xl font-bold text-green-400">ההזמנה מוכנה ✅🥳</p>
             <p className="text-sm text-muted-foreground mt-2">אפשר לאסוף</p>
 
-            {order.customer_on_way_at ? (
-              <div className="mt-5 bg-green-500/20 border border-green-500/40 rounded-xl py-3 px-4">
-                <p className="text-green-400 font-bold">מעולה, עדכנו את המטבח שאתם בדרך 🚗</p>
-              </div>
-            ) : (
-              <button
-                onClick={markOnWay}
-                disabled={onWayLoading}
-                className="mt-5 w-full bg-green-500 text-white text-xl font-black py-5 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition animate-pulse disabled:opacity-60"
-              >
-                {onWayLoading ? "רגע..." : "ראיתי — אני בדרך 🚗"}
-              </button>
-            )}
+            <OnWayButton
+              orderNumber={parseInt(orderNumber)}
+              phone={phone}
+              alreadyOnWay={!!order.customer_on_way_at}
+              autoConfirm={searchParams.get("onway") === "1"}
+              className="mt-5"
+            />
           </div>
         )}
+
 
 
         {order.status === "completed" && (
