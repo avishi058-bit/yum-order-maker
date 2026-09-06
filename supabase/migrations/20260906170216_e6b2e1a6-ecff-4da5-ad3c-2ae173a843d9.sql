@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.assign_bon_queue_number() FROM PUBLIC, anon, authenticated;

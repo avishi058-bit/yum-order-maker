@@ -1169,13 +1169,15 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 </style>
 </head>
 <body>
-  <div style="text-align:center;font-size:26pt;font-weight:900;line-height:1;margin-bottom:1mm;">${order.bon_queue_number ?? order.queue_number ?? order.order_number}</div>
   <div style="text-align:center;font-size:9pt;color:#555;margin-bottom:1mm;">${time}</div>
   <div class="type">${orderTypeLabel(order)}</div>
 
 
   <div class="customer">
     <div class="name">${escapeHtml(order.customer_name)}</div>
+    ${(order.bon_queue_number ?? order.queue_number) != null
+      ? `<div style="text-align:center;font-size:40pt;font-weight:900;line-height:1;margin:1mm 0 2mm;">מס׳ ${order.bon_queue_number ?? order.queue_number}</div>`
+      : ""}
     ${order.customer_phone
       ? `<div class="phone-row">
            ${phoneQrSvg ? `<div class="phone-qr">${phoneQrSvg}</div>` : ""}
