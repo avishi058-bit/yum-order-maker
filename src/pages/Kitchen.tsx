@@ -10,7 +10,7 @@ import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients } from "@/lib/menuDependencies";
-import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
+import DayOpenChecklist from "@/components/DayOpenChecklist";
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
