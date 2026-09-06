@@ -913,7 +913,7 @@ const Kitchen = () => {
       setAvailabilityItems(base);
       return base;
     }
-    return await syncDependentDishes(itemId, optimistic);
+    return await syncDependentDishes(itemId, optimistic, newValue);
   };
 
   const enableItems = async (itemIds: string[]) => {
