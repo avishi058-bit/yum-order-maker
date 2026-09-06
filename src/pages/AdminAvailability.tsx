@@ -109,10 +109,14 @@ const AdminAvailability = () => {
       if (dish.manually_disabled) continue;
 
       if (dish.available !== shouldBeAvailable) {
-        await supabase
+        // הגנה ברמת מסד הנתונים: מנה שכובתה ידנית לעולם לא תודלק אוטומטית
+        let query = supabase
           .from("menu_availability")
           .update({ available: shouldBeAvailable, updated_at: new Date().toISOString() })
           .eq("item_id", dishId);
+        if (shouldBeAvailable) query = query.eq("manually_disabled", false);
+        const { data: updatedRows } = await query.select("item_id");
+        if (!updatedRows || updatedRows.length === 0) continue;
         working = working.map((i) => (i.item_id === dishId ? { ...i, available: shouldBeAvailable } : i));
         setItems(working);
         working = await syncDependentDishes(dishId, working, seen);
