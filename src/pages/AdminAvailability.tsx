@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { MENU_DEPENDENCIES, getDependentDishes } from "@/lib/menuDependencies";
+import DayOpenChecklist, { shouldShowDayOpenChecklist } from "@/components/DayOpenChecklist";
+
 
 interface AvailabilityItem {
   id: string;
