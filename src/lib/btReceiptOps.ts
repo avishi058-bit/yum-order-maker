@@ -660,8 +660,9 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
   const sorted = sortByQueue(orders);
 
   for (const o of sorted) {
-    if (o.queue_number) {
-      ops.push(asLine(`${o.queue_number}`, { align: "R", bold: true, size: 0 }));
+    const qNum = (o as any).bon_queue_number ?? o.queue_number;
+    if (qNum) {
+      ops.push(asLine(`${qNum}`, { align: "R", bold: true, size: 0 }));
     }
     ops.push({ kind: "text", text: `#${o.order_number}`, align: "R", size: 1 });
     if (o.customer_name) {
