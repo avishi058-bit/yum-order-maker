@@ -385,7 +385,7 @@ const Kitchen = () => {
   const dayChecklistCheckedRef = useRef(false);
   // חלון זמן שבו מנוי ה-realtime מתעלם מעדכוני זמינות (במהלך לחיצה מקומית)
   const availLocalWriteUntilRef = useRef(0);
-  const [missingPrompt, setMissingPrompt] = useState<{ dishName: string; ingredients: IngredientOption[] } | null>(null);
+  const [missingPrompt, setMissingPrompt] = useState<{ dishId: string; dishName: string; ingredients: IngredientOption[] } | null>(null);
   const [customToppings, setCustomToppings] = useState<{ id: string; item_id: string; name: string; price: number }[]>([]);
   const [newTopName, setNewTopName] = useState("");
   const [newTopPrice, setNewTopPrice] = useState("");
@@ -1013,9 +1013,37 @@ const Kitchen = () => {
     if (availableDeps.length > 0) {
       const dish = working.find((i) => i.item_id === itemId);
       setMissingPrompt({
+        dishId: itemId,
         dishName: dish?.item_name || "",
         ingredients: availableDeps.map((i) => ({ item_id: i.item_id, item_name: i.item_name })),
       });
+    }
+  };
+
+  // המנה כובתה בגלל מרכיב שאזל – לא בגלל כיבוי ידני אמיתי.
+  // מסירים את דגל הכיבוי הידני כדי שכשהמרכיב יחזור למלאי, המנה תידלק אוטומטית שוב.
+  const handleMissingIngredientsConfirm = async (itemIds: string[]) => {
+    const dishId = missingPrompt?.dishId;
+    await disableIngredients(itemIds);
+    if (!dishId) return;
+    availLocalWriteUntilRef.current = Date.now() + 5000;
+    await supabase
+      .from("menu_availability")
+      .update({ manually_disabled: false, updated_at: new Date().toISOString() })
+      .eq("item_id", dishId);
+    setAvailabilityItems((prev) =>
+      prev.map((i) => (i.item_id === dishId ? { ...i, manually_disabled: false } : i)),
+    );
+    // גם הארוחה המקושרת – אותו דבר
+    const linkedMeal = burgerToMeal[dishId];
+    if (linkedMeal) {
+      await supabase
+        .from("menu_availability")
+        .update({ manually_disabled: false, updated_at: new Date().toISOString() })
+        .eq("item_id", linkedMeal);
+      setAvailabilityItems((prev) =>
+        prev.map((i) => (i.item_id === linkedMeal ? { ...i, manually_disabled: false } : i)),
+      );
     }
   };
 
@@ -2473,7 +2501,7 @@ const Kitchen = () => {
             <MissingIngredientsDialog
               dishName={missingPrompt.dishName}
               ingredients={missingPrompt.ingredients}
-              onConfirm={disableIngredients}
+              onConfirm={handleMissingIngredientsConfirm}
               onClose={() => setMissingPrompt(null)}
             />
           )}
