@@ -128,11 +128,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Period Selector */}
       <Tabs value={period} onValueChange={(v) => setPeriod(v as any)} dir="rtl">
-        <TabsList className="grid grid-cols-4 w-full max-w-md">
+        <TabsList className={`grid ${todayOnly ? "grid-cols-2" : "grid-cols-4"} w-full max-w-md`}>
           <TabsTrigger value="today">היום</TabsTrigger>
           <TabsTrigger value="yesterday">אתמול</TabsTrigger>
-          <TabsTrigger value="week">שבוע</TabsTrigger>
-          <TabsTrigger value="month">חודש</TabsTrigger>
+          {!todayOnly && <TabsTrigger value="week">שבוע</TabsTrigger>}
+          {!todayOnly && <TabsTrigger value="month">חודש</TabsTrigger>}
         </TabsList>
       </Tabs>
 
