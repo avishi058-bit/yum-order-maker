@@ -920,6 +920,11 @@ const Kitchen = () => {
   const enableItems = async (itemIds: string[]) => {
     let working = availabilityItems;
     for (const id of itemIds) {
+      // מנה מורכבת שמדליקים – גם המרכיבים שלה חוזרים לזמינות
+      for (const ingId of getAllRequiredIngredients(id)) {
+        const ing = working.find((i) => i.item_id === ingId);
+        if (ing && !ing.available) working = await setAvailabilityFor(ingId, true, working);
+      }
       working = await setAvailabilityFor(id, true, working);
     }
   };
