@@ -929,7 +929,28 @@ const Kitchen = () => {
       setAvailabilityItems(base);
       return base;
     }
-    return await syncDependentDishes(itemId, optimistic, newValue);
+    let working = await syncDependentDishes(itemId, optimistic, newValue);
+
+    // קציצת סמאש דלוקה => סמאש של מושבניקים תמיד דלוק איתה (גם אם כובה ידנית בעבר)
+    if (itemId === "smash-patty" && newValue) {
+      for (const depId of ["smash-moshavnikim", "meal-smash-moshavnikim"]) {
+        const dish = working.find((i) => i.item_id === depId);
+        if (!dish) continue;
+        const isAvail = (id: string) => working.find((i) => i.item_id === id)?.available ?? true;
+        if (!isDishSatisfied(depId, isAvail)) continue;
+        if (dish.available && !dish.manually_disabled) continue;
+        availLocalWriteUntilRef.current = Date.now() + 5000;
+        await supabase
+          .from("menu_availability")
+          .update({ available: true, manually_disabled: false, updated_at: new Date().toISOString() })
+          .eq("item_id", depId);
+        working = working.map((i) =>
+          i.item_id === depId ? { ...i, available: true, manually_disabled: false } : i,
+        );
+        setAvailabilityItems(working);
+      }
+    }
+    return working;
   };
 
   const enableItems = async (itemIds: string[]) => {
