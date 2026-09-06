@@ -30,8 +30,10 @@ export const FRIED_IDS = [
 const AVISHAI_IDS = ["avishai", "meal-avishai"];
 const AVISHAI_DEPS = ["roastbeef", "egg"];
 
+// יום עסקי מתחיל ב-06:00 – לפני 6 בבוקר זה עדיין "אתמול"
 const todayKey = () => {
   const d = new Date();
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
   return `dayOpenChecklist:${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 };
 
