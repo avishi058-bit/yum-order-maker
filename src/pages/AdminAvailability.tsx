@@ -81,23 +81,30 @@ const AdminAvailability = () => {
     };
   }, []);
 
-  const syncDependentDishes = async (changedItemId: string, currentItems: AvailabilityItem[]) => {
+  // מסנכרן מנות התלויות במרכיב שהשתנה (רקורסיבי – מרכיב יכול להיות גם מנה)
+  const syncDependentDishes = async (
+    changedItemId: string,
+    currentItems: AvailabilityItem[],
+    seen: Set<string> = new Set()
+  ): Promise<AvailabilityItem[]> => {
+    if (seen.has(changedItemId)) return currentItems;
+    seen.add(changedItemId);
+
     const dependents = getDependentDishes(changedItemId);
-    if (dependents.length === 0) return;
+    let working = currentItems;
 
     for (const dishId of dependents) {
-      const dish = currentItems.find((i) => i.item_id === dishId);
+      const dish = working.find((i) => i.item_id === dishId);
       if (!dish) continue;
 
       const ingredientIds = MENU_DEPENDENCIES[dishId] || [];
       const allIngredientsAvailable = ingredientIds.every((ingId) => {
-        const ing = currentItems.find((i) => i.item_id === ingId);
+        const ing = working.find((i) => i.item_id === ingId);
         return ing ? ing.available : true;
       });
 
       // אם המנה כובתה ידנית - לא נוגעים בה
-      if (dish.manually_disabled && !allIngredientsAvailable) continue;
-      if (dish.manually_disabled && allIngredientsAvailable) continue;
+      if (dish.manually_disabled) continue;
 
       const shouldBeAvailable = allIngredientsAvailable;
       if (dish.available !== shouldBeAvailable) {
@@ -105,15 +112,17 @@ const AdminAvailability = () => {
           .from("menu_availability")
           .update({ available: shouldBeAvailable, updated_at: new Date().toISOString() })
           .eq("item_id", dishId);
+        working = working.map((i) => (i.item_id === dishId ? { ...i, available: shouldBeAvailable } : i));
+        setItems(working);
+        working = await syncDependentDishes(dishId, working, seen);
       }
     }
+
+    return working;
   };
 
-  const toggleAvailability = async (itemId: string, currentValue: boolean) => {
-    const newValue = !currentValue;
-
-    // Optimistic update - מסמן manually_disabled לפי הפעולה הידנית
-    const optimisticItems = items.map((item) =>
+  const setAvailability = async (itemId: string, newValue: boolean, base: AvailabilityItem[]) => {
+    const optimisticItems = base.map((item) =>
       item.item_id === itemId ? { ...item, available: newValue, manually_disabled: !newValue } : item
     );
     setItems(optimisticItems);
@@ -128,15 +137,40 @@ const AdminAvailability = () => {
       .eq("item_id", itemId);
 
     if (error) {
-      setItems((prev) =>
-        prev.map((item) => (item.item_id === itemId ? { ...item, available: currentValue } : item))
-      );
-      return;
+      setItems(base);
+      return base;
     }
 
-    // החלת לוגיקת תלויות על מנות שמכילות את המרכיב הזה
-    await syncDependentDishes(itemId, optimisticItems);
+    return await syncDependentDishes(itemId, optimisticItems);
   };
+
+  const disableIngredients = async (itemIds: string[]) => {
+    let working = items;
+    for (const id of itemIds) {
+      working = await setAvailability(id, false, working);
+    }
+  };
+
+  const toggleAvailability = async (itemId: string, currentValue: boolean) => {
+    const newValue = !currentValue;
+    const updated = await setAvailability(itemId, newValue, items);
+
+    // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
+    if (!newValue) {
+      const deps = MENU_DEPENDENCIES[itemId] || [];
+      const availableDeps = deps
+        .map((id) => updated.find((i) => i.item_id === id))
+        .filter((i): i is AvailabilityItem => !!i && i.available);
+      if (availableDeps.length > 0) {
+        const dish = updated.find((i) => i.item_id === itemId);
+        setMissingPrompt({
+          dishName: dish?.item_name || "",
+          ingredients: availableDeps.map((i) => ({ item_id: i.item_id, item_name: i.item_name })),
+        });
+      }
+    }
+  };
+
 
   const grouped = categoryOrder
     .map((cat) => ({
