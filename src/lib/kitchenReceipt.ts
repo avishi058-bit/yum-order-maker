@@ -181,12 +181,16 @@ const printableToppings = (toppings: string[] | null | undefined): string[] =>
 
 const isPattyTopping = (t: string): boolean => /קציצ/.test(String(t || ""));
 
+// שם התוספת בצד הלקוח הוא "+ זוג קציצות סמאש (220)" — במטבח ובבון נשאר השם הישן.
+const kitchenToppingName = (s: string): string =>
+  String(s || "").replace(/\+?\s*זוג קציצות סמאש(?:\s*\(220\))?/g, "קציצת סמאש");
+
 const formatToppingsHtml = (toppings: string[]): string => {
   const tops = printableToppings(toppings);
   if (tops.length === 0) return "";
   return tops
     .map((t) => {
-      const name = String(t || "").trim();
+      const name = kitchenToppingName(String(t || "").trim());
       const line = `+ ${name}`;
       return isPattyTopping(name)
         ? `<div class="sub patty-topping">${escapeHtml(line)}</div>`
