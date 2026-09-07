@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import {
   X,
   Accessibility,
@@ -92,6 +92,17 @@ const applyImageCaptions = (enabled: boolean) => {
 
 const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
+  const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
+    try {
+      const saved = localStorage.getItem("a11y-button-pos");
+      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+    } catch {
+      return { x: 0, y: 0 };
+    }
+  });
+  const x = useMotionValue(buttonPos.x);
+  const y = useMotionValue(buttonPos.y);
+
   const [state, setState] = useState<AccessibilityState>(() => {
     try {
       const saved = localStorage.getItem("accessibility");
@@ -210,14 +221,24 @@ const AccessibilityWidget = () => {
 
   return (
     <>
-      {/* Floating button — position from uiConfig */}
-      <button
-        onClick={() => setOpen(true)}
+      {/* Floating button — position from uiConfig, draggable by finger */}
+      <motion.button
+        drag
+        dragMomentum={false}
+        dragElastic={0}
+        whileDrag={{ scale: 1.1, cursor: "grabbing" }}
+        style={{ x, y, touchAction: "none" }}
+        onDragEnd={() => {
+          try {
+            localStorage.setItem("a11y-button-pos", JSON.stringify({ x: x.get(), y: y.get() }));
+          } catch {}
+        }}
+        onTap={() => setOpen(true)}
         aria-label="פתח תפריט נגישות"
-        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform`}
+        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-grab active:cursor-grabbing`}
       >
         <Accessibility size={22} />
-      </button>
+      </motion.button>
 
       {/* Panel */}
       <AnimatePresence>
