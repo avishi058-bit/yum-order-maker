@@ -1158,32 +1158,33 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                       {cheddarCount > 0 ? (
                                         <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
                                           <button
-                                            onClick={removeCheddarSlice}
+                                            onClick={() => removeToppingUnit(t.id)}
                                             className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
-                                            aria-label="הסר פרוסה"
+                                            aria-label="הסר"
                                           >
                                             <Minus size={isKiosk ? 18 : 14} />
                                           </button>
                                           <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{cheddarCount}</span>
                                           <button
-                                            onClick={addCheddarSlice}
-                                            disabled={cheddarCount >= VEGAN_CHEDDAR_MAX}
+                                            onClick={() => addToppingUnit(t.id)}
+                                            disabled={cheddarCount >= multiMax}
                                             className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
-                                            aria-label="הוסף פרוסה"
+                                            aria-label="הוסף"
                                           >
                                             <Plus size={isKiosk ? 18 : 14} />
                                           </button>
                                         </div>
                                       ) : (
                                         <button
-                                          onClick={addCheddarSlice}
+                                          onClick={() => addToppingUnit(t.id)}
                                           className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
                                         >
                                           <Plus size={isKiosk ? 18 : 14} />
                                           הוסף
                                         </button>
                                       )}
-                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
+                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price} {multiUnitLabel(t.id)}</span>
+
                                     </div>
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
