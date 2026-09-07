@@ -179,7 +179,7 @@ export const isNumberableDish = (name: string | undefined | null): boolean => {
 const printableToppings = (toppings: string[] | null | undefined): string[] =>
   (toppings || []).filter((t) => String(t || "").trim() !== "כל הירקות + איולי");
 
-const isPattyTopping = (t: string): boolean => /קציצה/.test(String(t || ""));
+const isPattyTopping = (t: string): boolean => /קציצ/.test(String(t || ""));
 
 const formatToppingsHtml = (toppings: string[]): string => {
   const tops = printableToppings(toppings);
