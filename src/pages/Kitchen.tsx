@@ -384,6 +384,11 @@ const Kitchen = () => {
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const [showDayChecklist, setShowDayChecklist] = useState(false);
+  // נעילת מסך המלאי בקוד — כיבוי/הדלקה של מנות ותוספות מחייב קוד
+  const [availUnlocked, setAvailUnlocked] = useState(() => sessionStorage.getItem("kitchenAvailUnlocked") === "1");
+  const [pinPrompt, setPinPrompt] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState(false);
   const dayChecklistCheckedRef = useRef(false);
   // חלון זמן שבו מנוי ה-realtime מתעלם מעדכוני זמינות (במהלך לחיצה מקומית)
   const availLocalWriteUntilRef = useRef(0);
