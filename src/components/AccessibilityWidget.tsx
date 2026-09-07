@@ -103,6 +103,7 @@ const AccessibilityWidget = () => {
   const x = useMotionValue(buttonPos.x);
   const y = useMotionValue(buttonPos.y);
   const draggedRef = useRef(false);
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
   const [state, setState] = useState<AccessibilityState>(() => {
     try {
@@ -232,6 +233,7 @@ const AccessibilityWidget = () => {
         style={{ x, y, touchAction: "none" }}
         onDragStart={() => {
           draggedRef.current = true;
+          dragStartPos.current = { x: x.get(), y: y.get() };
         }}
         onDragEnd={() => {
           try {
@@ -239,9 +241,16 @@ const AccessibilityWidget = () => {
           } catch {}
         }}
         onTap={() => {
+          const start = dragStartPos.current;
+          dragStartPos.current = null;
           if (draggedRef.current) {
             draggedRef.current = false;
             return;
+          }
+          if (start) {
+            const dx = x.get() - start.x;
+            const dy = y.get() - start.y;
+            if (Math.hypot(dx, dy) > 8) return;
           }
           setOpen(true);
         }}
