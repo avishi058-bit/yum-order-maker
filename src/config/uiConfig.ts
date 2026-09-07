@@ -12,7 +12,7 @@ export const uiPositions = {
   /** Accessibility widget floating button */
   accessibility: {
     button: "fixed bottom-24 right-4 z-[60]",
-    panelSide: "right" as const, // "right" | "left" — which side the panel slides from
+    panelSide: "right" as "right" | "left", // which side the panel slides from
   },
 
   /** Shopping cart floating button */
