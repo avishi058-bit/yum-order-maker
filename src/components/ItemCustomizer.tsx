@@ -588,6 +588,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const isChicken = (item.baseBurgerId || item.id) === "crispy-chicken";
 
   const VEGAN_CHEDDAR_MAX = 6;
+  // Toppings that can be added more than once (stepper UI). Each unit is
+  // charged separately and printed as its own line on the kitchen bon.
+  const MULTI_TOPPING_MAX: Record<string, number> = {
+    "vegan-cheddar": VEGAN_CHEDDAR_MAX,
+    "extra-patty": 4,
+    "extra-smash-patty": 4,
+    "extra-vegan-patty": 4,
+  };
+  const multiUnitLabel = (id: string) => (id === "vegan-cheddar" ? "לפרוסה" : "ליחידה");
+
 
   // Paid toppings that contain gluten — blocked once a GF bun is chosen.
   const GLUTEN_TOPPING_IDS = ["onion-rings-topping", "crispy-onion-chips"];
