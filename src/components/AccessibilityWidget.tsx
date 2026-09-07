@@ -233,6 +233,7 @@ const AccessibilityWidget = () => {
         style={{ x, y, touchAction: "none" }}
         onDragStart={() => {
           draggedRef.current = true;
+          dragStartPos.current = { x: x.get(), y: y.get() };
         }}
         onDragEnd={() => {
           try {
@@ -240,9 +241,16 @@ const AccessibilityWidget = () => {
           } catch {}
         }}
         onTap={() => {
+          const start = dragStartPos.current;
+          dragStartPos.current = null;
           if (draggedRef.current) {
             draggedRef.current = false;
             return;
+          }
+          if (start) {
+            const dx = x.get() - start.x;
+            const dy = y.get() - start.y;
+            if (Math.hypot(dx, dy) > 8) return;
           }
           setOpen(true);
         }}
