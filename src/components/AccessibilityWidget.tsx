@@ -94,7 +94,7 @@ const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
   const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
     try {
-      const saved = localStorage.getItem("a11y-button-pos-v2");
+      const saved = localStorage.getItem("a11y-button-pos-v3");
       return saved ? JSON.parse(saved) : { x: 0, y: 0 };
     } catch {
       return { x: 0, y: 0 };
@@ -227,6 +227,7 @@ const AccessibilityWidget = () => {
         drag
         dragMomentum={false}
         dragElastic={0}
+        dragTransition={{ power: 0, timeConstant: 0 }}
         whileDrag={{ scale: 1.1, cursor: "grabbing" }}
         style={{ x, y, touchAction: "none" }}
         onDragStart={() => {
@@ -234,7 +235,7 @@ const AccessibilityWidget = () => {
         }}
         onDragEnd={() => {
           try {
-            localStorage.setItem("a11y-button-pos-v2", JSON.stringify({ x: x.get(), y: y.get() }));
+            localStorage.setItem("a11y-button-pos-v3", JSON.stringify({ x: x.get(), y: y.get() }));
           } catch {}
         }}
         onTap={() => {
@@ -245,7 +246,7 @@ const AccessibilityWidget = () => {
           setOpen(true);
         }}
         aria-label="פתח תפריט נגישות"
-        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-grab active:cursor-grabbing`}
+        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing`}
       >
         <Accessibility size={22} />
       </motion.button>
