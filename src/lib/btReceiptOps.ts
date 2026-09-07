@@ -330,7 +330,7 @@ function toppingLine(s: string): string {
   return n.startsWith("+") ? n : `+ ${n}`;
 }
 
-const PATTY_RX = /קציצה/;
+const PATTY_RX = /קציצ/;
 function isPattyTopping(s: string): boolean {
   return PATTY_RX.test(s);
 }

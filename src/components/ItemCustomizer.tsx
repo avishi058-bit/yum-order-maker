@@ -588,6 +588,16 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const isChicken = (item.baseBurgerId || item.id) === "crispy-chicken";
 
   const VEGAN_CHEDDAR_MAX = 6;
+  // Toppings that can be added more than once (stepper UI). Each unit is
+  // charged separately and printed as its own line on the kitchen bon.
+  const MULTI_TOPPING_MAX: Record<string, number> = {
+    "vegan-cheddar": VEGAN_CHEDDAR_MAX,
+    "extra-patty": 4,
+    "extra-smash-patty": 4,
+    "extra-vegan-patty": 4,
+  };
+  const multiUnitLabel = (id: string) => (id === "vegan-cheddar" ? "לפרוסה" : "ליחידה");
+
 
   // Paid toppings that contain gluten — blocked once a GF bun is chosen.
   const GLUTEN_TOPPING_IDS = ["onion-rings-topping", "crispy-onion-chips"];
@@ -599,13 +609,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       // Contains gluten — not selectable alongside a gluten-free bun
       return;
     }
-    if (id === "vegan-cheddar") {
-      // Vegan cheddar supports multiple slices (counted by occurrences in the array)
+    if (MULTI_TOPPING_MAX[id]) {
+      // Multi-quantity toppings (counted by occurrences in the array)
       setSelectedToppings((prev) =>
         prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
       );
       return;
     }
+
     if (id === "gluten-free-bun" && !selectedToppings.includes(id)) {
       // Require explicit allergen acknowledgement before adding GF bun
       setGlutenConfirmOpen(true);
@@ -629,23 +640,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   };
 
 
-  const addCheddarSlice = () => {
+  const addToppingUnit = (id: string) => {
     setSelectedToppings((prev) => {
-      const count = prev.filter((t) => t === "vegan-cheddar").length;
-      if (count >= VEGAN_CHEDDAR_MAX) return prev;
-      return [...prev, "vegan-cheddar"];
+      const max = MULTI_TOPPING_MAX[id] ?? 1;
+      const count = prev.filter((t) => t === id).length;
+      if (count >= max) return prev;
+      return [...prev, id];
     });
   };
 
-  const removeCheddarSlice = () => {
+  const removeToppingUnit = (id: string) => {
     setSelectedToppings((prev) => {
-      const idx = prev.lastIndexOf("vegan-cheddar");
+      const idx = prev.lastIndexOf(id);
       if (idx === -1) return prev;
       const copy = [...prev];
       copy.splice(idx, 1);
       return copy;
     });
   };
+
 
   const toggleIngredient = (id: string) => {
     setIngredientState(prev => ({ ...prev, [id]: !prev[id] }));
@@ -1121,10 +1134,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                 return 0;
                               })
                               .map((t: Topping) => {
-                              const isCheddar = t.id === "vegan-cheddar";
+                              const multiMax = MULTI_TOPPING_MAX[t.id];
+                              const isCheddar = !!multiMax;
                               const isJalapeno = t.id === "pickled-jalapeno";
                               const jalapenoSide = selectedToppings.includes("pickled-jalapeno-side");
-                              const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === "vegan-cheddar").length : 0;
+                              const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === t.id).length : 0;
                               const active = isCheddar
                                 ? cheddarCount > 0
                                 : isJalapeno
@@ -1133,6 +1147,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
 
                               if (isCheddar) {
+
                                 return (
                                   <div
                                     key={t.id}
@@ -1143,32 +1158,33 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                       {cheddarCount > 0 ? (
                                         <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
                                           <button
-                                            onClick={removeCheddarSlice}
+                                            onClick={() => removeToppingUnit(t.id)}
                                             className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
-                                            aria-label="הסר פרוסה"
+                                            aria-label="הסר"
                                           >
                                             <Minus size={isKiosk ? 18 : 14} />
                                           </button>
                                           <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{cheddarCount}</span>
                                           <button
-                                            onClick={addCheddarSlice}
-                                            disabled={cheddarCount >= VEGAN_CHEDDAR_MAX}
+                                            onClick={() => addToppingUnit(t.id)}
+                                            disabled={cheddarCount >= multiMax}
                                             className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
-                                            aria-label="הוסף פרוסה"
+                                            aria-label="הוסף"
                                           >
                                             <Plus size={isKiosk ? 18 : 14} />
                                           </button>
                                         </div>
                                       ) : (
                                         <button
-                                          onClick={addCheddarSlice}
+                                          onClick={() => addToppingUnit(t.id)}
                                           className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
                                         >
                                           <Plus size={isKiosk ? 18 : 14} />
                                           הוסף
                                         </button>
                                       )}
-                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price} לפרוסה</span>
+                                      <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price} {multiUnitLabel(t.id)}</span>
+
                                     </div>
                                     {/* Right: name */}
                                     <div className="flex items-center gap-3">
