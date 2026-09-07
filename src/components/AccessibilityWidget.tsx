@@ -227,6 +227,7 @@ const AccessibilityWidget = () => {
         drag
         dragMomentum={false}
         dragElastic={0}
+        dragTransition={{ power: 0, timeConstant: 0 }}
         whileDrag={{ scale: 1.1, cursor: "grabbing" }}
         style={{ x, y, touchAction: "none" }}
         onDragStart={() => {
