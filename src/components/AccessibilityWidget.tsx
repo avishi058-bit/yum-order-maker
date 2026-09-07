@@ -221,14 +221,24 @@ const AccessibilityWidget = () => {
 
   return (
     <>
-      {/* Floating button — position from uiConfig */}
-      <button
-        onClick={() => setOpen(true)}
+      {/* Floating button — position from uiConfig, draggable by finger */}
+      <motion.button
+        drag
+        dragMomentum={false}
+        dragElastic={0}
+        whileDrag={{ scale: 1.1, cursor: "grabbing" }}
+        style={{ x, y, touchAction: "none" }}
+        onDragEnd={() => {
+          try {
+            localStorage.setItem("a11y-button-pos", JSON.stringify({ x: x.get(), y: y.get() }));
+          } catch {}
+        }}
+        onTap={() => setOpen(true)}
         aria-label="פתח תפריט נגישות"
-        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform`}
+        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-grab active:cursor-grabbing`}
       >
         <Accessibility size={22} />
-      </button>
+      </motion.button>
 
       {/* Panel */}
       <AnimatePresence>
