@@ -640,23 +640,25 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   };
 
 
-  const addCheddarSlice = () => {
+  const addToppingUnit = (id: string) => {
     setSelectedToppings((prev) => {
-      const count = prev.filter((t) => t === "vegan-cheddar").length;
-      if (count >= VEGAN_CHEDDAR_MAX) return prev;
-      return [...prev, "vegan-cheddar"];
+      const max = MULTI_TOPPING_MAX[id] ?? 1;
+      const count = prev.filter((t) => t === id).length;
+      if (count >= max) return prev;
+      return [...prev, id];
     });
   };
 
-  const removeCheddarSlice = () => {
+  const removeToppingUnit = (id: string) => {
     setSelectedToppings((prev) => {
-      const idx = prev.lastIndexOf("vegan-cheddar");
+      const idx = prev.lastIndexOf(id);
       if (idx === -1) return prev;
       const copy = [...prev];
       copy.splice(idx, 1);
       return copy;
     });
   };
+
 
   const toggleIngredient = (id: string) => {
     setIngredientState(prev => ({ ...prev, [id]: !prev[id] }));
