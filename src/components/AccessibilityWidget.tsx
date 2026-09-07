@@ -246,7 +246,7 @@ const AccessibilityWidget = () => {
           setOpen(true);
         }}
         aria-label="פתח תפריט נגישות"
-        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-grab active:cursor-grabbing`}
+        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing`}
       >
         <Accessibility size={22} />
       </motion.button>
