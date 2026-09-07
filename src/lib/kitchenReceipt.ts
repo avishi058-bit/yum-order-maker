@@ -690,9 +690,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     // Regular extra patty topping → +1 regular meat patty
     // (subtract vegan matches — they'd also match "תוספת קציצה" as a substring)
     regularPatties += (includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) - extraVeganPattyCount) * qty;
-    // Smash extra patty topping ("+ זוג קציצות סמאש (220)" / "אקסטרה קציצות סמאש") →
+    // Smash extra patty topping ("+ זוג קציצות סמאש (220)" / "+ קציצת סמאש") →
     // +1 smash patty in the chef summary.
-    smashPatties += includesAny(it.toppings, ["זוג קציצות סמאש"]) * qty;
+    smashPatties += includesAny(it.toppings, ["זוג קציצות סמאש", "קציצת סמאש"]) * qty;
     eggs += includesAny(it.toppings, ["ביצת עין"]) * qty;
     // פרוסות גבינה שנוספו כתוספת (על כל מנה שהיא)
     addCheddar(
