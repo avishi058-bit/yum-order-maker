@@ -94,7 +94,7 @@ const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
   const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
     try {
-      const saved = localStorage.getItem("a11y-button-pos-v3");
+      const saved = localStorage.getItem("a11y-button-pos-v4");
       return saved ? JSON.parse(saved) : { x: 0, y: 0 };
     } catch {
       return { x: 0, y: 0 };
@@ -237,7 +237,7 @@ const AccessibilityWidget = () => {
         }}
         onDragEnd={() => {
           try {
-            localStorage.setItem("a11y-button-pos-v3", JSON.stringify({ x: x.get(), y: y.get() }));
+            localStorage.setItem("a11y-button-pos-v4", JSON.stringify({ x: x.get(), y: y.get() }));
           } catch {}
         }}
         onTap={() => {
