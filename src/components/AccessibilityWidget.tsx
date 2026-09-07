@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import {
   X,
@@ -94,7 +94,7 @@ const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
   const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
     try {
-      const saved = localStorage.getItem("a11y-button-pos");
+      const saved = localStorage.getItem("a11y-button-pos-v2");
       return saved ? JSON.parse(saved) : { x: 0, y: 0 };
     } catch {
       return { x: 0, y: 0 };
@@ -102,6 +102,7 @@ const AccessibilityWidget = () => {
   });
   const x = useMotionValue(buttonPos.x);
   const y = useMotionValue(buttonPos.y);
+  const draggedRef = useRef(false);
 
   const [state, setState] = useState<AccessibilityState>(() => {
     try {
@@ -228,12 +229,21 @@ const AccessibilityWidget = () => {
         dragElastic={0}
         whileDrag={{ scale: 1.1, cursor: "grabbing" }}
         style={{ x, y, touchAction: "none" }}
+        onDragStart={() => {
+          draggedRef.current = true;
+        }}
         onDragEnd={() => {
           try {
-            localStorage.setItem("a11y-button-pos", JSON.stringify({ x: x.get(), y: y.get() }));
+            localStorage.setItem("a11y-button-pos-v2", JSON.stringify({ x: x.get(), y: y.get() }));
           } catch {}
         }}
-        onTap={() => setOpen(true)}
+        onTap={() => {
+          if (draggedRef.current) {
+            draggedRef.current = false;
+            return;
+          }
+          setOpen(true);
+        }}
         aria-label="פתח תפריט נגישות"
         className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-grab active:cursor-grabbing`}
       >
