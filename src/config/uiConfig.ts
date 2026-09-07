@@ -13,7 +13,7 @@ export const uiPositions = {
   accessibility: {
     button: "fixed bottom-24 right-4 z-[60]",
     panelSide: "right" as const, // "right" | "left" — which side the panel slides from
-  }
+  },
 
   /** Shopping cart floating button */
   cartButton: {
@@ -64,7 +64,7 @@ export const drawerAnimations = {
   accessibilityPanel: {
     direction: "right" as SlideDirection,
     transition: { type: "spring" as const, damping: 30, stiffness: 300 },
-  }
+  },
 
   /** Checkout form */
   checkout: {
