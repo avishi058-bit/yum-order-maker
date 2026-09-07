@@ -5,6 +5,7 @@ import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Phone } from "lucide-react";
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
