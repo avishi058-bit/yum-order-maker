@@ -93,7 +93,7 @@ const CATEGORY_GROUPS: { key: string; label: string; cats: string[] }[] = [
   { key: "frozen", label: "קפואים", cats: ["בשר", "צ׳יפס", "לחם", "קפואים"] },
 ];
 
-// Display order for inventory categories: fried items, then toppings, then drinks.
+// Display order for inventory categories: fried items, toppings, vegetables, then drinks at the bottom.
 const CATEGORY_ORDER = [
   "בשר",
   "צ׳יפס",
@@ -101,6 +101,7 @@ const CATEGORY_ORDER = [
   "קפואים",
   "מטוגנים",
   "טופינג",
+  "ירקות",
   "בירות",
   "פחיות",
   "בקבוקים",
