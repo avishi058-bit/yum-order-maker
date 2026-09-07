@@ -103,6 +103,7 @@ const AccessibilityWidget = () => {
   const x = useMotionValue(buttonPos.x);
   const y = useMotionValue(buttonPos.y);
   const draggedRef = useRef(false);
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
   const [state, setState] = useState<AccessibilityState>(() => {
     try {
