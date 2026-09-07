@@ -5,6 +5,7 @@ import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Phone } from "lucide-react";
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
@@ -46,6 +47,13 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
             alt="תעודת כשרות הבקתה"
             className="w-full h-auto rounded-md"
           />
+          <a
+            href="tel:+972505880510"
+            className="mt-3 flex items-center justify-center gap-2 w-full rounded-xl bg-primary/10 text-primary font-bold py-3 hover:bg-primary/20 transition-colors"
+          >
+            <Phone className="w-5 h-5" />
+            <span>להתקשר למשגיח כשרות - מורדכי: 050-5880510</span>
+          </a>
         </DialogContent>
       </Dialog>
 
