@@ -237,7 +237,7 @@ const AccessibilityWidget = () => {
         }}
         onDragEnd={() => {
           try {
-            localStorage.setItem("a11y-button-pos-v3", JSON.stringify({ x: x.get(), y: y.get() }));
+            localStorage.setItem("a11y-button-pos-v4", JSON.stringify({ x: x.get(), y: y.get() }));
           } catch {}
         }}
         onTap={() => {
