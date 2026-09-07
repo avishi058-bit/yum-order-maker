@@ -384,11 +384,6 @@ const Kitchen = () => {
   const prevOrderCountRef = useRef(0);
   const [availabilityItems, setAvailabilityItems] = useState<AvailabilityItem[]>([]);
   const [showDayChecklist, setShowDayChecklist] = useState(false);
-  // נעילת מסך המלאי בקוד — כיבוי/הדלקה של מנות ותוספות מחייב קוד
-  const [availUnlocked, setAvailUnlocked] = useState(() => sessionStorage.getItem("kitchenAvailUnlocked") === "1");
-  const [pinPrompt, setPinPrompt] = useState(false);
-  const [pinInput, setPinInput] = useState("");
-  const [pinError, setPinError] = useState(false);
   const dayChecklistCheckedRef = useRef(false);
   // חלון זמן שבו מנוי ה-realtime מתעלם מעדכוני זמינות (במהלך לחיצה מקומית)
   const availLocalWriteUntilRef = useRef(0);
@@ -1909,10 +1904,7 @@ const Kitchen = () => {
               היסטוריה
             </button>
             <button
-              onClick={() => {
-                if (availUnlocked) { setViewMode("availability"); return; }
-                setPinInput(""); setPinError(false); setPinPrompt(true);
-              }}
+              onClick={() => setViewMode("availability")}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 viewMode === "availability"
                   ? "bg-primary text-primary-foreground"
@@ -2532,54 +2524,6 @@ const Kitchen = () => {
           onClose={() => { markDayOpenChecklistDone(); setShowDayChecklist(false); }}
         />
       )}
-
-      {pinPrompt && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl border border-border w-full max-w-xs p-5 text-right">
-            <h3 className="text-lg font-bold text-foreground mb-1">קוד כניסה למלאי</h3>
-            <p className="text-sm text-muted-foreground mb-4">כדי לכבות או להדליק מנות ותוספות יש להזין קוד</p>
-            <input
-              autoFocus
-              type="password"
-              inputMode="numeric"
-              value={pinInput}
-              onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, "").slice(0, 8)); setPinError(false); }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (pinInput === "0584") {
-                    sessionStorage.setItem("kitchenAvailUnlocked", "1");
-                    setAvailUnlocked(true); setPinPrompt(false); setViewMode("availability");
-                  } else setPinError(true);
-                }
-              }}
-              placeholder="••••"
-              className="w-full px-3 py-3 rounded-lg border border-border bg-background text-foreground text-center text-2xl tracking-[0.5em] font-bold"
-            />
-            {pinError && <p className="text-destructive text-sm mt-2">קוד שגוי</p>}
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  if (pinInput === "0584") {
-                    sessionStorage.setItem("kitchenAvailUnlocked", "1");
-                    setAvailUnlocked(true); setPinPrompt(false); setViewMode("availability");
-                  } else setPinError(true);
-                }}
-                className="flex-1 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold"
-              >
-                אישור
-              </button>
-              <button
-                onClick={() => setPinPrompt(false)}
-                className="flex-1 py-2.5 rounded-lg bg-muted text-muted-foreground font-bold"
-              >
-                ביטול
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
 
       {viewMode === "availability" ? (
         <div className="max-w-2xl mx-auto px-4 py-6">
