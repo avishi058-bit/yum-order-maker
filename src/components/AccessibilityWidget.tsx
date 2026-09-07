@@ -92,6 +92,17 @@ const applyImageCaptions = (enabled: boolean) => {
 
 const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
+  const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
+    try {
+      const saved = localStorage.getItem("a11y-button-pos");
+      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+    } catch {
+      return { x: 0, y: 0 };
+    }
+  });
+  const x = useMotionValue(buttonPos.x);
+  const y = useMotionValue(buttonPos.y);
+
   const [state, setState] = useState<AccessibilityState>(() => {
     try {
       const saved = localStorage.getItem("accessibility");
