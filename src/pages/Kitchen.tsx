@@ -1909,7 +1909,10 @@ const Kitchen = () => {
               היסטוריה
             </button>
             <button
-              onClick={() => setViewMode("availability")}
+              onClick={() => {
+                if (availUnlocked) { setViewMode("availability"); return; }
+                setPinInput(""); setPinError(false); setPinPrompt(true);
+              }}
               className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                 viewMode === "availability"
                   ? "bg-primary text-primary-foreground"
