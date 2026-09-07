@@ -11,8 +11,8 @@
 export const uiPositions = {
   /** Accessibility widget floating button */
   accessibility: {
-    button: "fixed top-24 left-4 z-[60]",
-    panelSide: "left" as const, // "right" | "left" — which side the panel slides from
+    button: "fixed bottom-24 right-4 z-[60]",
+    panelSide: "right" as "right" | "left", // which side the panel slides from
   },
 
   /** Shopping cart floating button */
@@ -62,7 +62,7 @@ export const drawerAnimations = {
 
   /** Accessibility panel */
   accessibilityPanel: {
-    direction: "left" as SlideDirection,
+    direction: "right" as SlideDirection,
     transition: { type: "spring" as const, damping: 30, stiffness: 300 },
   },
 
