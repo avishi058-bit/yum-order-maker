@@ -609,13 +609,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       // Contains gluten — not selectable alongside a gluten-free bun
       return;
     }
-    if (id === "vegan-cheddar") {
-      // Vegan cheddar supports multiple slices (counted by occurrences in the array)
+    if (MULTI_TOPPING_MAX[id]) {
+      // Multi-quantity toppings (counted by occurrences in the array)
       setSelectedToppings((prev) =>
         prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
       );
       return;
     }
+
     if (id === "gluten-free-bun" && !selectedToppings.includes(id)) {
       // Require explicit allergen acknowledgement before adding GF bun
       setGlutenConfirmOpen(true);
