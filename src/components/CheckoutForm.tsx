@@ -478,9 +478,32 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         rememberLastOrderCustomer(form.phone, form.name);
       }
 
-      // NOTE: physical PinPad charging (edge function `pinpad-charge`) is
-      // paused until the terminal credentials are provided; the kiosk keeps
-      // using the hosted payment page for now.
+      // Kiosk: charge the physical PinPad standing next to the screen instead
+      // of opening the hosted web payment page. Amount + credentials are
+      // enforced server-side in the `pinpad-charge` edge function.
+      if (isKiosk) {
+        setPinpadState("waiting");
+        try {
+          const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
+            body: { orderId: order.orderId },
+          });
+          if (pinErr) throw new Error("שגיאה בתקשורת עם המסוף");
+          if (!pin?.success) {
+            throw new Error(pin?.message || "העסקה לא אושרה במסוף");
+          }
+          setPinpadState(null);
+          toast({
+            title: "התשלום אושר! 🎉",
+            description: `מספר הזמנה: #${order.orderNumber}`,
+          });
+          onSuccess(order.orderNumber, form.phone, "credit");
+        } catch (e: any) {
+          setPinpadState(null);
+          throw e;
+        }
+        return;
+      }
+
 
 
 
