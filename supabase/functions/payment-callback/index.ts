@@ -149,9 +149,11 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("Callback error:", error);
-    return new Response(JSON.stringify({ error: "server_error" }), {
-      status: 500,
+    // Still 200: Z-Credit surfaces any non-2xx to the customer as postError.
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   }
 });
