@@ -64,6 +64,9 @@ export const MENU_ITEMS_PRICING: MenuItemPricing[] = [
   { id: "beer-maccabi", name: "בירה מכבי 7.9%", price: 20, category: "drink" },
   { id: "fuze-tea", name: "פיוז טי", price: 14, category: "drink" },
 
+  // Temporary: terminal test product (0.10 ILS)
+  { id: "terminal-test", name: "בדיקת מסוף", price: 0.1, category: "side" },
+
   // Deals
   { id: "family-deal", name: "דיל משפחתי", price: 300, category: "deal" },
   { id: "friends-deal", name: "דיל חברים", price: 216, category: "deal" },
