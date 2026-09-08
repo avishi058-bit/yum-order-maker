@@ -58,10 +58,24 @@ Deno.serve(async (req) => {
     }
     console.log("Payment callback received (token verified):", JSON.stringify(data));
 
-    const orderId = String(data.UniqueId ?? data.uniqueId ?? data.uniqueid ?? "");
+    // Z-Credit spells this differently across APIs: UniqueId / UniqueID / UID.
+    const uuidRx = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const candidates = [
+      data.UniqueId,
+      data.UniqueID,
+      data.uniqueId,
+      data.uniqueid,
+      data.UID,
+      data.CustomerUniqueId,
+    ]
+      .map((v) => String(v ?? "").trim())
+      .filter((v) => uuidRx.test(v));
+    const orderId = candidates[0] ?? "";
     if (!orderId) {
-      return new Response(JSON.stringify({ error: "missing_order_id" }), {
-        status: 400,
+      console.warn("payment-callback: no order id in payload");
+      // Always 200 — otherwise Z-Credit shows a postError and keeps retrying.
+      return new Response(JSON.stringify({ received: true }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -69,12 +83,18 @@ Deno.serve(async (req) => {
     const isSuccess =
       data.HasError === false ||
       data.HasError === "false" ||
-      Number(data.ReturnCode) === 0;
+      Number(data.ReturnCode) === 0 ||
+      // Callbacks from the hosted checkout page carry no error fields at all —
+      // their presence with an approval number means the charge went through.
+      (data.HasError === undefined &&
+        data.ReturnCode === undefined &&
+        String(data.ApprovalNumber ?? "").trim() !== "");
 
     // Amount sent back by Z-Credit (varies by field name across their APIs).
     const paidAmount = Number(
-      data.Amount ?? data.TotalAmount ?? data.TransactionAmount ?? data.Sum ?? 0,
+      data.Amount ?? data.Total ?? data.TotalAmount ?? data.TransactionAmount ?? data.Sum ?? 0,
     );
+
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
