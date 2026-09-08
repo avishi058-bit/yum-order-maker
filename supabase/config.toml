@@ -1,1 +1,4 @@
 project_id = "kdkcygokopwvutwvrgnp"
+
+[functions.pinpad-charge]
+verify_jwt = false
