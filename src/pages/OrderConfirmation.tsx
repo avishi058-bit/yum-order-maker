@@ -128,7 +128,7 @@ const OrderConfirmation = () => {
           )}
 
           <button
-            onClick={goTrack}
+            onClick={goHomeTracking}
             className="mt-2 w-full rounded-full bg-green-600 py-4 text-lg font-black text-white transition-transform active:scale-95"
           >
             למעקב אחרי ההזמנה לחץ כאן
