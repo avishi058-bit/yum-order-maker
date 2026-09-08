@@ -1,0 +1,1 @@
+update public.menu_availability set available = true, manually_disabled = false, archived = false, updated_at = now() where item_id = 'terminal-test';
