@@ -45,7 +45,7 @@ const OrderConfirmation = () => {
   const goTrack = () => {
     let phone = "";
     try {
-      const raw = localStorage.getItem("habikta_last_order_customer");
+      const raw = localStorage.getItem("habakta_last_order_customer");
       if (raw) phone = JSON.parse(raw)?.phone ?? "";
     } catch { /* ignore */ }
     if (orderNumber && phone) navigate(`/track?order=${orderNumber}&phone=${encodeURIComponent(phone)}`);

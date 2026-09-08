@@ -2,3 +2,6 @@ project_id = "kdkcygokopwvutwvrgnp"
 
 [functions.pinpad-charge]
 verify_jwt = false
+
+[functions.get-payment-status]
+verify_jwt = false
