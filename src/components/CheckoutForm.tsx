@@ -478,6 +478,42 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         rememberLastOrderCustomer(form.phone, form.name);
       }
 
+      // Kiosk: charge on the physical PinPad standing next to the screen
+      // instead of opening the web payment page.
+      if (isKiosk) {
+        setPinpadState("waiting");
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pinpad-charge`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              },
+              body: JSON.stringify({ orderId: order.orderId }),
+            },
+          );
+          const payRes = await res.json();
+          if (!res.ok || !payRes?.success) {
+            setPinpadState("idle");
+            toast({
+              title: payRes?.message || "התשלום לא אושר, נסו שוב",
+              variant: "destructive",
+            });
+            return;
+          }
+          setPinpadState("idle");
+          onSuccess(order.orderNumber, form.phone, "credit");
+        } catch (err) {
+          setPinpadState("idle");
+          toast({ title: "אין תקשורת עם המסוף", variant: "destructive" });
+        }
+        return;
+      }
+
+
+
       // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
       const zcreditItems = items.map((item) => {
         let unitPrice = item.price;
