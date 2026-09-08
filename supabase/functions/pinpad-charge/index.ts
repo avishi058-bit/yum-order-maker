@@ -32,12 +32,14 @@ Deno.serve(async (req) => {
 
   try {
     const TERMINAL = Deno.env.get("ZCREDIT_TERMINAL_NUMBER");
-    const PASSWORD = Deno.env.get("ZCREDIT_WS_PASSWORD");
+    const PASSWORD =
+      Deno.env.get("ZCREDIT_WS_PASSWORD") ?? Deno.env.get("ZCREDIT_TERMINAL_PASSWORD");
     const PINPAD_ID = Deno.env.get("ZCREDIT_PINPAD_ID");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     if (!TERMINAL || !PASSWORD || !PINPAD_ID || !SUPABASE_URL) {
       return json({ error: "server_misconfigured" }, 500);
     }
+
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) return json({ error: "invalid_body" }, 400);

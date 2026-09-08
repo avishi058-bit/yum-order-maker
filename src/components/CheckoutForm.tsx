@@ -113,6 +113,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pinpadState, setPinpadState] = useState<"waiting" | null>(null);
+
   // Set when the server detects an identical order sent minutes ago — we ask
   // the customer to confirm before creating a second one.
   const [duplicateInfo, setDuplicateInfo] = useState<{ orderNumber?: number; method: "cash" | "credit" | "counter" } | null>(null);
@@ -478,9 +480,32 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         rememberLastOrderCustomer(form.phone, form.name);
       }
 
-      // NOTE: physical PinPad charging (edge function `pinpad-charge`) is
-      // paused until the terminal credentials are provided; the kiosk keeps
-      // using the hosted payment page for now.
+      // Kiosk: charge the physical PinPad standing next to the screen instead
+      // of opening the hosted web payment page. Amount + credentials are
+      // enforced server-side in the `pinpad-charge` edge function.
+      if (isKiosk) {
+        setPinpadState("waiting");
+        try {
+          const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
+            body: { orderId: order.orderId },
+          });
+          if (pinErr) throw new Error("שגיאה בתקשורת עם המסוף");
+          if (!pin?.success) {
+            throw new Error(pin?.message || "העסקה לא אושרה במסוף");
+          }
+          setPinpadState(null);
+          toast({
+            title: "התשלום אושר! 🎉",
+            description: `מספר הזמנה: #${order.orderNumber}`,
+          });
+          onSuccess(order.orderNumber, form.phone, "credit");
+        } catch (e: any) {
+          setPinpadState(null);
+          throw e;
+        }
+        return;
+      }
+
 
 
 
@@ -1136,6 +1161,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           </div>
         )}
       </motion.div>
+
+      {/* Kiosk: physical terminal prompt while the card is being charged */}
+      {pinpadState === "waiting" && (
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-black/80 p-6" dir="rtl">
+          <div className="bg-card border border-border rounded-3xl p-10 text-center max-w-md w-full">
+            <div className="text-6xl mb-6 animate-pulse">💳</div>
+            <h3 className="text-3xl font-black text-foreground mb-3">העבר/י כרטיס במסוף</h3>
+            <p className="text-xl text-muted-foreground">
+              הצמד/י או הכנס/י את הכרטיס למכשיר שלצד המסך
+            </p>
+            <p className="text-base text-muted-foreground mt-4">ממתינים לאישור…</p>
+          </div>
+        </div>
+      )}
 
       {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
