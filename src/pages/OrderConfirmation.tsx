@@ -26,17 +26,23 @@ const OrderConfirmation = () => {
         body: { orderId },
       });
       if (stopped) return;
-      if (!error && data?.paid) {
+      // Success screen ONLY when the server confirms a full, completed charge.
+      if (!error && data?.paid === true) {
         setOrderNumber(data.orderNumber ?? null);
         setState("paid");
         return;
       }
-      if (data?.cancelled || tries >= 20) {
+      if (data?.cancelled === true) {
+        setState("failed");
+        return;
+      }
+      if (tries >= 45) {
         setState("failed");
         return;
       }
       setTimeout(check, 2000);
     };
+
 
     check();
     return () => { stopped = true; };

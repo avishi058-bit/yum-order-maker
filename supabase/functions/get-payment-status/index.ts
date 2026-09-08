@@ -40,12 +40,17 @@ Deno.serve(async (req) => {
 
     if (!order) return json({ error: "not_found" }, 404);
 
-    const paid = order.status !== "pending_payment" && order.status !== "cancelled";
+    const failedStatuses = ["cancelled", "payment_failed", "declined", "refunded"];
+    const failed = failedStatuses.includes(order.status);
+    // Only a fully confirmed credit charge counts as paid: the callback flipped
+    // the order out of pending_payment AND stamped payment_method = 'credit'.
+    const paid = !failed && order.status !== "pending_payment" && order.payment_method === "credit";
 
     return json({
       paid,
-      cancelled: order.status === "cancelled",
-      orderNumber: order.order_number,
+      cancelled: failed,
+      pending: !paid && !failed,
+      orderNumber: paid ? order.order_number : null,
     });
   } catch (err) {
     console.error("get-payment-status error:", err);
