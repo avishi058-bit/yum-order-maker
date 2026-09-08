@@ -1066,7 +1066,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             )}
 
             <div className="grid grid-cols-1 gap-3">
-              {availablePaymentMethods.cash && (
+              {isKiosk && availablePaymentMethods.cash && (
                 <motion.button
                   whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
                   whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
@@ -1112,9 +1112,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 </motion.button>
               )}
 
-              {/* Pay-at-counter — always available regardless of online toggles.
-                  Sends order to kitchen immediately; customer pays in person. */}
-              {RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
+              {/* Website cash payment — order goes to the kitchen right away and the
+                  customer pays in person. Controlled by the website cash toggle. */}
+              {!isKiosk && RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && availablePaymentMethods.cash && (
                 <motion.button
                   whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
                   whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
@@ -1125,21 +1125,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
                   className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
                 >
-                  <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
-                    <Store size={24} className="text-orange-400" />
+                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Banknote size={24} className="text-green-400" />
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-lg text-foreground">
-                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : "תשלום בקופה 🏪"}
+                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : "מזומן 💵"}
                     </div>
-                    <div className="text-sm text-muted-foreground">תשלום בעסק (מזומן או אשראי)</div>
+                    <div className="text-sm text-muted-foreground">תשלום במזומן בעסק</div>
                   </div>
                 </motion.button>
               )}
 
-              {!availablePaymentMethods.cash &&
-                !availablePaymentMethods.credit &&
-                !RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && (
+              {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
                   <p className="text-sm mt-1">אנא נסה שוב מאוחר יותר</p>
