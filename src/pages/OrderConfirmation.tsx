@@ -48,15 +48,34 @@ const OrderConfirmation = () => {
     return () => { stopped = true; };
   }, [orderId]);
 
-  const goTrack = () => {
-    let phone = "";
+  const lastPhone = () => {
     try {
       const raw = localStorage.getItem("habakta_last_order_customer");
-      if (raw) phone = JSON.parse(raw)?.phone ?? "";
+      if (raw) return JSON.parse(raw)?.phone ?? "";
     } catch { /* ignore */ }
-    if (orderNumber && phone) navigate(`/track?order=${orderNumber}&phone=${encodeURIComponent(phone)}`);
-    else navigate("/");
+    return "";
   };
+
+  const goHomeTracking = () => {
+    if (orderNumber) {
+      setTrackedOrder({
+        orderNumber,
+        phone: lastPhone() || undefined,
+        notificationsEnabled: true,
+        soundEnabled: true,
+      });
+    }
+    navigate("/");
+  };
+
+  // Once payment is confirmed, show the success screen briefly and then send the
+  // customer back to the main page, where the live order tracker takes over.
+  useEffect(() => {
+    if (state !== "paid") return;
+    const t = setTimeout(goHomeTracking, 5000);
+    return () => clearTimeout(t);
+  }, [state, orderNumber]);
+
 
   return (
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
