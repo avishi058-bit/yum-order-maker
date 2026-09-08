@@ -2110,13 +2110,17 @@ const Kitchen = () => {
                   <span>{restaurantStatus.station_open ? "פתוח" : "סגור"}</span>
                 </button>
 
+                <div className="pt-1 text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                  <Globe size={11} /> תשלום באתר
+                </div>
+
                 <button
                   onClick={() => toggleCash(!restaurantStatus.cash_enabled)}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
                     restaurantStatus.cash_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן</span>
+                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן — אתר</span>
                   <span>{restaurantStatus.cash_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
@@ -2126,8 +2130,32 @@ const Kitchen = () => {
                     restaurantStatus.credit_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי</span>
+                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי — אתר</span>
                   <span>{restaurantStatus.credit_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <div className="pt-1 text-[11px] font-bold text-muted-foreground flex items-center gap-1">
+                  <Monitor size={11} /> תשלום בעמדה (קיוסק)
+                </div>
+
+                <button
+                  onClick={() => toggleKioskCash(!restaurantStatus.kiosk_cash_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.kiosk_cash_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן — עמדה</span>
+                  <span>{restaurantStatus.kiosk_cash_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <button
+                  onClick={() => toggleKioskCredit(!restaurantStatus.kiosk_credit_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.kiosk_credit_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי — עמדה</span>
+                  <span>{restaurantStatus.kiosk_credit_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
                 <button
