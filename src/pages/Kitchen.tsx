@@ -1173,14 +1173,20 @@ const Kitchen = () => {
     fetchOrders();
   };
 
-  // Credit-card orders are already paid online — staff should not have to tap
-  // "שולם". Give them their queue position automatically (still via the
+  // A credit order counts as paid ONLY once the terminal/gateway callback
+  // confirmed the charge (status left pending_payment and did not fail).
+  const isCreditConfirmed = (o: { payment_method: string | null; status: string }) =>
+    o.payment_method === "credit" &&
+    !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status);
+
+  // Confirmed credit orders are already paid online — staff should not have to
+  // tap "שולם". Give them their queue position automatically (still via the
   // mark_order_paid RPC, never a DB default).
   const autoPaidRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     orders.forEach((o) => {
       if (
-        o.payment_method === "credit" &&
+        isCreditConfirmed(o) &&
         o.queue_number == null &&
         ["new", "preparing", "ready"].includes(o.status) &&
         !autoPaidRef.current.has(o.id)
@@ -1189,6 +1195,7 @@ const Kitchen = () => {
         void markPaid(o);
       }
     });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
 
@@ -2779,9 +2786,13 @@ const Kitchen = () => {
                   {order.payment_method === "cash" && (
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
-                  {order.payment_method === "credit" && (
+                  {isCreditConfirmed(order) && (
                     <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי — אין צורך לגבות תשלום</p>
                   )}
+                  {order.payment_method === "credit" && !isCreditConfirmed(order) && (
+                    <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף — טרם שולם</p>
+                  )}
+
                   {order.payment_method === "counter" && (
                     <p className="text-sm font-bold text-red-400 mt-1 animate-pulse">⚠️ לתשלום בקופה</p>
                   )}
@@ -2911,7 +2922,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && order.payment_method !== "credit" && (
+                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && !isCreditConfirmed(order) && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}

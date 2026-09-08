@@ -979,12 +979,20 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   }
 
   const isCounter = order.payment_method === "counter";
+  // "שולם!" only when the terminal/gateway actually confirmed the charge.
+  const creditStatus = String((order as any).status ?? "");
+  const creditConfirmed =
+    order.payment_method === "credit" &&
+    !["pending_payment", "payment_failed", "cancelled", "declined"].includes(creditStatus);
   const paymentLine = isCash
     ? `<div class="warn">לא שולם — מזומן בעת המסירה</div>`
     : isCounter
     ? `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ לתשלום בקופה ⚠️</div>`
-    : `<div class="paid" style="font-size:1.5em;font-weight:900;">שולם!</div>
-       <div class="paid">שולם באשראי — אין צורך לגבות תשלום</div>`;
+    : creditConfirmed
+    ? `<div class="paid" style="font-size:1.5em;font-weight:900;">שולם!</div>
+       <div class="paid">שולם באשראי — אין צורך לגבות תשלום</div>`
+    : `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ טרם התקבל אישור מהמסוף — יש לגבות תשלום ⚠️</div>`;
+
 
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he">
