@@ -667,12 +667,35 @@ const Kitchen = () => {
   // שאלות הזמינות מופיעות פעם אחת ביום עסקי (מתאפס ב-06:00) — בפתיחה הראשונה
   // של האתר. לא בכל יציאה וכניסה למסך המטבח, וגם לא אחרי סגירת אפליקציה/טאב
   // (sessionStorage מתאפס ב-PWA; localStorage נשמר).
+  // חשוב: הטאבלט במטבח נשאר פתוח לילה שלם, לכן בודקים שוב מדי דקה וכשחוזרים
+  // למסך — אחרת יום עסקי חדש (06:00) לעולם לא יזוהה בלי רענון ידני.
   useEffect(() => {
-    if (dayChecklistCheckedRef.current || availabilityItems.length === 0) return;
-    dayChecklistCheckedRef.current = true;
-    if (!shouldShowDayOpenChecklist()) return;
-    setShowDayChecklist(true);
+    if (availabilityItems.length === 0) return;
+    const check = () => {
+      if (dayChecklistCheckedRef.current) return;
+      if (!shouldShowDayOpenChecklist()) return;
+      dayChecklistCheckedRef.current = true;
+      setShowDayChecklist(true);
+    };
+    // איפוס הדגל כשמתחיל יום עסקי חדש
+    const tick = () => {
+      if (dayChecklistCheckedRef.current && shouldShowDayOpenChecklist()) {
+        dayChecklistCheckedRef.current = false;
+      }
+      check();
+    };
+    tick();
+    const id = setInterval(tick, 60_000);
+    const onVis = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+    };
   }, [availabilityItems.length]);
+
 
   const fetchCustomToppings = useCallback(async () => {
     const { data } = await supabase
