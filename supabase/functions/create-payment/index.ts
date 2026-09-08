@@ -25,8 +25,10 @@ const BodySchema = z.object({
   total: z.number().positive().max(1_000_000),
   items: z.array(CartItemSchema).min(1).max(100),
   customerName: z.string().max(200).optional().default(""),
-  // customerPhone is now REQUIRED — used to prove the caller owns the order.
-  customerPhone: z.string().min(6).max(30),
+  // Phone proves the caller owns the order. It may be empty for flows that
+  // don't collect a phone (kiosk / no-phone checkout) — in that case the
+  // stored order must also have no real phone, otherwise we reject.
+  customerPhone: z.string().max(30).optional().default(""),
   orderId: z.string().uuid(),
 });
 
