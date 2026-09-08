@@ -671,6 +671,8 @@ const Kitchen = () => {
   // למסך — אחרת יום עסקי חדש (06:00) לעולם לא יזוהה בלי רענון ידני.
   useEffect(() => {
     if (availabilityItems.length === 0) return;
+    let rolloverTimer: ReturnType<typeof setTimeout> | undefined;
+
     const check = () => {
       if (dayChecklistCheckedRef.current) return;
       if (!shouldShowDayOpenChecklist()) return;
@@ -684,17 +686,36 @@ const Kitchen = () => {
       }
       check();
     };
+
+    // טיימר מדויק ל-06:00 הבא — מבטיח פתיחת יום חדש בדיוק בשעה,
+    // גם אם המסך פתוח כל הלילה או שהמכשיר היה במצב שינה.
+    const scheduleRollover = () => {
+      const now = new Date();
+      const next = new Date(now);
+      next.setHours(6, 0, 2, 0);
+      if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
+      rolloverTimer = setTimeout(() => {
+        dayChecklistCheckedRef.current = false;
+        fetchAvailability();
+        tick();
+        scheduleRollover();
+      }, next.getTime() - now.getTime());
+    };
+
     tick();
+    scheduleRollover();
     const id = setInterval(tick, 60_000);
     const onVis = () => { if (document.visibilityState === "visible") tick(); };
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("focus", onVis);
     return () => {
       clearInterval(id);
+      if (rolloverTimer) clearTimeout(rolloverTimer);
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("focus", onVis);
     };
-  }, [availabilityItems.length]);
+  }, [availabilityItems.length, fetchAvailability]);
+
 
 
   const fetchCustomToppings = useCallback(async () => {
