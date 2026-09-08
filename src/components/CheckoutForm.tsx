@@ -1162,6 +1162,20 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         )}
       </motion.div>
 
+      {/* Kiosk: physical terminal prompt while the card is being charged */}
+      {pinpadState === "waiting" && (
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-black/80 p-6" dir="rtl">
+          <div className="bg-card border border-border rounded-3xl p-10 text-center max-w-md w-full">
+            <div className="text-6xl mb-6 animate-pulse">💳</div>
+            <h3 className="text-3xl font-black text-foreground mb-3">העבר/י כרטיס במסוף</h3>
+            <p className="text-xl text-muted-foreground">
+              הצמד/י או הכנס/י את הכרטיס למכשיר שלצד המסך
+            </p>
+            <p className="text-base text-muted-foreground mt-4">ממתינים לאישור…</p>
+          </div>
+        </div>
+      )}
+
       {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
       <PrivacyModal open={privacyModalOpen} onClose={() => setPrivacyModalOpen(false)} isKiosk={isKiosk} />
