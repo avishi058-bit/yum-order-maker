@@ -2786,9 +2786,13 @@ const Kitchen = () => {
                   {order.payment_method === "cash" && (
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
-                  {order.payment_method === "credit" && (
+                  {isCreditConfirmed(order) && (
                     <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי — אין צורך לגבות תשלום</p>
                   )}
+                  {order.payment_method === "credit" && !isCreditConfirmed(order) && (
+                    <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף — טרם שולם</p>
+                  )}
+
                   {order.payment_method === "counter" && (
                     <p className="text-sm font-bold text-red-400 mt-1 animate-pulse">⚠️ לתשלום בקופה</p>
                   )}
