@@ -32,8 +32,10 @@ Deno.serve(async (req) => {
 
   try {
     const TERMINAL = Deno.env.get("ZCREDIT_TERMINAL_NUMBER");
+    // Prefer the current terminal password. ZCREDIT_WS_PASSWORD is retained
+    // only as a legacy fallback so an older stale value cannot override it.
     const PASSWORD =
-      Deno.env.get("ZCREDIT_WS_PASSWORD") ?? Deno.env.get("ZCREDIT_TERMINAL_PASSWORD");
+      Deno.env.get("ZCREDIT_TERMINAL_PASSWORD") ?? Deno.env.get("ZCREDIT_WS_PASSWORD");
     const PINPAD_ID = Deno.env.get("ZCREDIT_PINPAD_ID");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     if (!TERMINAL || !PASSWORD || !PINPAD_ID || !SUPABASE_URL) {
