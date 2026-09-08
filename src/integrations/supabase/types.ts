@@ -965,6 +965,7 @@ export type Database = {
           order_source: string
           paid_at: string | null
           payment_method: string | null
+          payment_session_id: string | null
           queue_number: number | null
           scheduled_for: string | null
           status: string
@@ -992,6 +993,7 @@ export type Database = {
           order_source?: string
           paid_at?: string | null
           payment_method?: string | null
+          payment_session_id?: string | null
           queue_number?: number | null
           scheduled_for?: string | null
           status?: string
@@ -1019,6 +1021,7 @@ export type Database = {
           order_source?: string
           paid_at?: string | null
           payment_method?: string | null
+          payment_session_id?: string | null
           queue_number?: number | null
           scheduled_for?: string | null
           status?: string
