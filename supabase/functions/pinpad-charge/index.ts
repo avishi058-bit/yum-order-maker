@@ -97,7 +97,14 @@ Deno.serve(async (req) => {
         orderId: order.id,
         code: result?.ReturnCode,
         msg: result?.ReturnMessage,
+        // Non-sensitive diagnostics: never log the values themselves.
+        terminal: TERMINAL,
+        pwdSource: Deno.env.get("ZCREDIT_TERMINAL_PASSWORD") ? "TERMINAL" : "WS",
+        pwdLen: PASSWORD.length,
+        pwdTrimmedLen: PASSWORD.trim().length,
+        pinpadLen: PINPAD_ID.length,
       });
+
       return json(
         {
           success: false,
