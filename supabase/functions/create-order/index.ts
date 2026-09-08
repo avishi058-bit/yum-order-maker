@@ -531,7 +531,10 @@ Deno.serve(async (req: Request) => {
       .eq("customer_phone", phoneForOrder)
       .eq("total", finalTotal)
       .gte("created_at", since)
-      .not("status", "in", '("cancelled","completed")')
+      // Orders that never got paid (payment page abandoned / charge failed)
+      // must NOT block the customer from trying again.
+      .not("status", "in", '("cancelled","completed","pending_payment","payment_failed","declined")')
+
       .order("created_at", { ascending: false })
       .limit(1);
     const existing = recent?.[0];
