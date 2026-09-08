@@ -2780,7 +2780,7 @@ const Kitchen = () => {
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
                   {order.payment_method === "credit" && (
-                    <p className="text-sm font-bold text-green-400 mt-1">💳 שולם באשראי</p>
+                    <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי — אין צורך לגבות תשלום</p>
                   )}
                   {order.payment_method === "counter" && (
                     <p className="text-sm font-bold text-red-400 mt-1 animate-pulse">⚠️ לתשלום בקופה</p>
@@ -2911,7 +2911,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
+                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && order.payment_method !== "credit" && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
