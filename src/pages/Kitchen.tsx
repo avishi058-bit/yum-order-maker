@@ -1173,6 +1173,27 @@ const Kitchen = () => {
     fetchOrders();
   };
 
+  // Credit-card orders are already paid online — staff should not have to tap
+  // "שולם". Give them their queue position automatically (still via the
+  // mark_order_paid RPC, never a DB default).
+  const autoPaidRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    orders.forEach((o) => {
+      if (
+        o.payment_method === "credit" &&
+        o.queue_number == null &&
+        ["new", "preparing", "ready"].includes(o.status) &&
+        !autoPaidRef.current.has(o.id)
+      ) {
+        autoPaidRef.current.add(o.id);
+        void markPaid(o);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
+
+
+
   const unmarkPaid = async (order: Order) => {
     if (paidPendingIds.has(order.id) || order.queue_number == null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
