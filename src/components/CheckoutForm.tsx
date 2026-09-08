@@ -669,8 +669,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
   const availablePaymentMethods = {
-    cash: restaurantStatus.cash_enabled,
-    credit: restaurantStatus.credit_enabled,
+    cash: isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled,
+    credit: isKiosk ? restaurantStatus.kiosk_credit_enabled : restaurantStatus.credit_enabled,
   };
 
   // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.

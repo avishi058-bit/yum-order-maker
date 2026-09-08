@@ -394,7 +394,7 @@ Deno.serve(async (req: Request) => {
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
-    .select("website_open, station_open, cash_enabled, credit_enabled")
+    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled")
     .limit(1);
   if (statusErr) {
     console.error("status fetch failed", statusErr);
@@ -410,10 +410,12 @@ Deno.serve(async (req: Request) => {
   if (!isStationOrKiosk && !status.website_open) {
     return jsonResponse({ error: "האתר סגור כרגע להזמנות" }, 403);
   }
-  if (body.paymentMethod === "cash" && !status.cash_enabled) {
+  const cashOk = isStationOrKiosk ? status.kiosk_cash_enabled : status.cash_enabled;
+  const creditOk = isStationOrKiosk ? status.kiosk_credit_enabled : status.credit_enabled;
+  if (body.paymentMethod === "cash" && !cashOk) {
     return jsonResponse({ error: "תשלום במזומן אינו זמין כרגע" }, 403);
   }
-  if (body.paymentMethod === "credit" && !status.credit_enabled) {
+  if (body.paymentMethod === "credit" && !creditOk) {
     return jsonResponse({ error: "תשלום באשראי אינו זמין כרגע" }, 403);
   }
   // "counter" = pay-at-counter (cash or card paid physically at the location).
