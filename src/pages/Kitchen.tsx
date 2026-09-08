@@ -2931,7 +2931,7 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
                       </button>
                     )}
-                    {order.queue_number != null && undoablePaid[order.id] && (
+                    {order.queue_number != null && undoablePaid[order.id] && !isCreditConfirmed(order) && (
                       <button
                         onClick={() => unmarkPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
@@ -2941,6 +2941,14 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id)
                           ? "מעדכן..."
                           : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
+                      </button>
+                    )}
+                    {isCreditConfirmed(order) && (
+                      <button
+                        disabled
+                        className="px-4 py-3 rounded-lg bg-green-600 text-white font-black text-base shadow-md shadow-green-600/40 disabled:opacity-100 cursor-default"
+                      >
+                        ✅ שולם באשראי
                       </button>
                     )}
                     {order.status === "ready" && (
