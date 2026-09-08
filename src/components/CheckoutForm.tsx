@@ -387,7 +387,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     allowDuplicate = false,
   ) => {
     const isStation = localStorage.getItem("habakta_station") === "true";
-    const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
+    const isKioskPath = isKiosk;
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
       ? "kiosk"
       : isStation
