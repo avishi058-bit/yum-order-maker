@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     const ZCREDIT_KEY = Deno.env.get("ZCREDIT_KEY");
     const CALLBACK_SECRET = Deno.env.get("ZCREDIT_CALLBACK_SECRET");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const PUBLIC_APP_URL = Deno.env.get("PUBLIC_APP_URL") ?? "https://yum-order-maker.lovable.app";
+    const PUBLIC_APP_URL = Deno.env.get("PUBLIC_APP_URL") ?? "https://habikta-burger.lovable.app";
     if (!ZCREDIT_KEY || !CALLBACK_SECRET || !SUPABASE_URL) {
       return new Response(JSON.stringify({ error: "server_misconfigured" }), {
         status: 500,
