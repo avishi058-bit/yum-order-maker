@@ -2922,7 +2922,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && order.payment_method !== "credit" && (
+                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && !isCreditConfirmed(order) && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
