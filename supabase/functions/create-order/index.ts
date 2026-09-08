@@ -349,7 +349,10 @@ Deno.serve(async (req: Request) => {
   const rateLimitAction = (body.orderSource === "kiosk" || body.orderSource === "station")
     ? "order_create_station"
     : "order_create";
-  const maxOrderAttempts = (body.orderSource === "kiosk" || body.orderSource === "station") ? 30 : 5;
+  // Website customers may legitimately retry several times when a card payment
+  // fails, so keep the window generous enough for real retries.
+  const maxOrderAttempts = (body.orderSource === "kiosk" || body.orderSource === "station") ? 30 : 12;
+
   const orderWindow = "15 minutes";
 
   const { data: allowed, error: rateErr } = await supabase.rpc("check_rate_limit", {
