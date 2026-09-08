@@ -25,8 +25,10 @@ const BodySchema = z.object({
   total: z.number().positive().max(1_000_000),
   items: z.array(CartItemSchema).min(1).max(100),
   customerName: z.string().max(200).optional().default(""),
-  // customerPhone is now REQUIRED — used to prove the caller owns the order.
-  customerPhone: z.string().min(6).max(30),
+  // Phone proves the caller owns the order. It may be empty for flows that
+  // don't collect a phone (kiosk / no-phone checkout) — in that case the
+  // stored order must also have no real phone, otherwise we reject.
+  customerPhone: z.string().max(30).optional().default(""),
   orderId: z.string().uuid(),
 });
 
@@ -70,10 +72,14 @@ Deno.serve(async (req) => {
       .select("id, total, status, customer_phone")
       .eq("id", body.orderId)
       .maybeSingle();
+    const storedPhone = normalizePhone(order?.customer_phone ?? "");
+    const givenPhone = normalizePhone(body.customerPhone);
+    // No-phone orders (kiosk flow) store a "—" placeholder → no digits at all.
+    const phoneOk = storedPhone.length === 0 ? givenPhone.length === 0 : storedPhone === givenPhone;
     if (
       ordErr ||
       !order ||
-      normalizePhone(order.customer_phone ?? "") !== normalizePhone(body.customerPhone) ||
+      !phoneOk ||
       Math.abs(Number(order.total) - body.total) > 0.01
     ) {
       return new Response(JSON.stringify({ error: "order_not_found" }), {

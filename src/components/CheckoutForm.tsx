@@ -53,7 +53,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   useBodyScrollLock(true);
   const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
   // Kiosk context → larger touch-friendly checkbox + modal
-  const isKiosk = typeof window !== "undefined" && window.location.pathname === "/kiosk";
+  const isKiosk = typeof window !== "undefined" && /^\/kiosk\/?$/.test(window.location.pathname);
 
   // Kiosk uses a high-contrast light theme for readability on the kiosk screen.
   const th = isKiosk
@@ -387,7 +387,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     allowDuplicate = false,
   ) => {
     const isStation = localStorage.getItem("habakta_station") === "true";
-    const isKioskPath = typeof window !== "undefined" && window.location.pathname === "/kiosk";
+    const isKioskPath = isKiosk;
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
       ? "kiosk"
       : isStation
