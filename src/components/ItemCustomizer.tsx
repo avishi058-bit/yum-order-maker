@@ -1135,19 +1135,18 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               })
                               .map((t: Topping) => {
                               const multiMax = MULTI_TOPPING_MAX[t.id];
-                              const isCheddar = !!multiMax;
+                              const isMultiTop = !!multiMax;
                               const isJalapeno = t.id === "pickled-jalapeno";
                               const jalapenoSide = selectedToppings.includes("pickled-jalapeno-side");
-                              const cheddarCount = isCheddar ? selectedToppings.filter((id) => id === t.id).length : 0;
-                              const active = isCheddar
-                                ? cheddarCount > 0
+                              const multiCount = isMultiTop ? selectedToppings.filter((id) => id === t.id).length : 0;
+                              const active = isMultiTop
+                                ? multiCount > 0
                                 : isJalapeno
                                   ? selectedToppings.includes("pickled-jalapeno") || jalapenoSide
                                   : selectedToppings.includes(t.id);
                               const showRecommended = t.recommended && (item.id === "smash-double-cheese" || item.baseBurgerId === "smash-double-cheese" || item.id === "meal-smash-double-cheese");
 
-                              if (isCheddar) {
-
+                              if (isMultiTop) {
                                 return (
                                   <div
                                     key={t.id}
@@ -1155,7 +1154,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                   >
                                     {/* Left: stepper + price */}
                                     <div className="flex items-center gap-3">
-                                      {cheddarCount > 0 ? (
+                                      {multiCount > 0 ? (
                                         <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
                                           <button
                                             onClick={() => removeToppingUnit(t.id)}
@@ -1164,10 +1163,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                           >
                                             <Minus size={isKiosk ? 18 : 14} />
                                           </button>
-                                          <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{cheddarCount}</span>
+                                          <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{multiCount}</span>
                                           <button
                                             onClick={() => addToppingUnit(t.id)}
-                                            disabled={cheddarCount >= multiMax}
+                                            disabled={multiCount >= multiMax}
                                             className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                             aria-label="הוסף"
                                           >
