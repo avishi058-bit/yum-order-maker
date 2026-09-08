@@ -147,6 +147,15 @@ Deno.serve(async (req) => {
       }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Persist the session id so payment status can be verified directly
+    // against Z-Credit's GetSessionStatus endpoint later.
+    if (result.Data?.SessionId) {
+      await supabase
+        .from("orders")
+        .update({ payment_session_id: result.Data.SessionId })
+        .eq("id", body.orderId);
+    }
+
     return new Response(JSON.stringify({
       sessionId: result.Data.SessionId,
       sessionUrl: result.Data.SessionUrl,
