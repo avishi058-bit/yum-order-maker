@@ -23,6 +23,7 @@ import KitchenInstall from "./pages/KitchenInstall";
 const Index = lazy(() => import("./pages/Index"));
 const Kitchen = lazy(() => import("./pages/Kitchen"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking"));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
 const AdminAvailability = lazy(() => import("./pages/AdminAvailability"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminConsents = lazy(() => import("./pages/AdminConsents"));
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="/install" element={<Install />} />
               <Route path="/kitchen/install" element={<KitchenInstall />} />
               <Route path="/track" element={<OrderTracking />} />
+              <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
               <Route path="/kiosk" element={<Kiosk />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/about" element={<About />} />

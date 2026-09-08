@@ -642,6 +642,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ops.push(sep());
     ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 26 }));
     ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
+  } else if (order.payment_method === "credit") {
+    ops.push(sep());
+    ops.push(asLine("שולם!", { align: "C", bold: true, size: 40 }));
+    ops.push(asLine("שולם באשראי - אין צורך לגבות", { align: "C", bold: true, size: 24 }));
   }
 
   ops.push(feed(2));

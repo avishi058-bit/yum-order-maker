@@ -1173,6 +1173,27 @@ const Kitchen = () => {
     fetchOrders();
   };
 
+  // Credit-card orders are already paid online — staff should not have to tap
+  // "שולם". Give them their queue position automatically (still via the
+  // mark_order_paid RPC, never a DB default).
+  const autoPaidRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    orders.forEach((o) => {
+      if (
+        o.payment_method === "credit" &&
+        o.queue_number == null &&
+        ["new", "preparing", "ready"].includes(o.status) &&
+        !autoPaidRef.current.has(o.id)
+      ) {
+        autoPaidRef.current.add(o.id);
+        void markPaid(o);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
+
+
+
   const unmarkPaid = async (order: Order) => {
     if (paidPendingIds.has(order.id) || order.queue_number == null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
@@ -2759,7 +2780,7 @@ const Kitchen = () => {
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
                   {order.payment_method === "credit" && (
-                    <p className="text-sm font-bold text-green-400 mt-1">💳 שולם באשראי</p>
+                    <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי — אין צורך לגבות תשלום</p>
                   )}
                   {order.payment_method === "counter" && (
                     <p className="text-sm font-bold text-red-400 mt-1 animate-pulse">⚠️ לתשלום בקופה</p>
@@ -2890,7 +2911,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
+                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && order.payment_method !== "credit" && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
