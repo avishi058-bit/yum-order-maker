@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { setTrackedOrder } from "@/components/OrderTopBar";
 
 /**
  * Payment confirmation screen shown after returning from the hosted checkout.
