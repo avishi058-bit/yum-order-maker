@@ -1173,14 +1173,20 @@ const Kitchen = () => {
     fetchOrders();
   };
 
-  // Credit-card orders are already paid online — staff should not have to tap
-  // "שולם". Give them their queue position automatically (still via the
+  // A credit order counts as paid ONLY once the terminal/gateway callback
+  // confirmed the charge (status left pending_payment and did not fail).
+  const isCreditConfirmed = (o: { payment_method: string | null; status: string }) =>
+    o.payment_method === "credit" &&
+    !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status);
+
+  // Confirmed credit orders are already paid online — staff should not have to
+  // tap "שולם". Give them their queue position automatically (still via the
   // mark_order_paid RPC, never a DB default).
   const autoPaidRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     orders.forEach((o) => {
       if (
-        o.payment_method === "credit" &&
+        isCreditConfirmed(o) &&
         o.queue_number == null &&
         ["new", "preparing", "ready"].includes(o.status) &&
         !autoPaidRef.current.has(o.id)
@@ -1189,6 +1195,7 @@ const Kitchen = () => {
         void markPaid(o);
       }
     });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
 
