@@ -72,10 +72,14 @@ Deno.serve(async (req) => {
       .select("id, total, status, customer_phone")
       .eq("id", body.orderId)
       .maybeSingle();
+    const storedPhone = normalizePhone(order?.customer_phone ?? "");
+    const givenPhone = normalizePhone(body.customerPhone);
+    // No-phone orders (kiosk flow) store a "—" placeholder → no digits at all.
+    const phoneOk = storedPhone.length === 0 ? givenPhone.length === 0 : storedPhone === givenPhone;
     if (
       ordErr ||
       !order ||
-      normalizePhone(order.customer_phone ?? "") !== normalizePhone(body.customerPhone) ||
+      !phoneOk ||
       Math.abs(Number(order.total) - body.total) > 0.01
     ) {
       return new Response(JSON.stringify({ error: "order_not_found" }), {
