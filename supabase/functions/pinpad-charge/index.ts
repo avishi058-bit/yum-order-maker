@@ -132,7 +132,13 @@ Deno.serve(async (req) => {
 
     const { error: updErr } = await supabase
       .from("orders")
-      .update({ status: "new", payment_method: "credit" })
+      .update({
+        status: "new",
+        payment_method: "credit",
+        // Needed later to email the Z-Credit invoice to the customer.
+        payment_reference:
+          result?.ReferenceNumber != null ? String(result.ReferenceNumber) : null,
+      })
       .eq("id", order.id)
       .eq("status", "pending_payment");
     if (updErr) console.error("pinpad-charge: order update failed", updErr);
