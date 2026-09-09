@@ -135,7 +135,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [verifyCaptchaRequired, setVerifyCaptchaRequired] = useState(false);
   const [verifyTurnstileToken, setVerifyTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
+  const [termsWarning, setTermsWarning] = useState(false);
   // Preorder scheduling — pick a future pickup time within the allowed window.
+
   const [preorderEnabled, setPreorderEnabled] = useState(false);
   const [preorderTime, setPreorderTime] = useState<string>(""); // "HH:MM" today
   const [deliveryAck, setDeliveryAck] = useState(false);
@@ -297,12 +299,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     if (submitting) return;
     // Hard gate: terms + privacy must be accepted before any payment can proceed
     if (!termsAccepted) {
-      toast({
-        title: "יש לאשר תנאי שימוש ומדיניות פרטיות לפני המשך",
-        variant: "destructive",
-      });
+      setTermsWarning(true);
+      setTimeout(() => setTermsWarning(false), 3000);
       return;
     }
+
     // Anti-bot gate: Turnstile can be disabled during soft launch for mobile
     // browsers where the Cloudflare iframe stays blank.
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && !turnstileToken) {
