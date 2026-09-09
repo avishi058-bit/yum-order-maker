@@ -672,7 +672,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.orderNumber}`,
       });
-      onSuccess(order.orderNumber, form.phone, method);
+      onSuccess(order.orderNumber, form.phone, method, order.orderId);
     } catch (error: any) {
       console.error("Order error:", error);
       if (error?.duplicate) {
