@@ -2776,7 +2776,7 @@ const Kitchen = () => {
                     <span className="font-bold">#{order.order_number}</span>
                     {order.queue_number != null ? (
                       <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
-                        שולם ✓
+                        {isCreditConfirmed(order) ? "שולם באשראי✅" : "שולם ✓"}
                       </span>
                     ) : null}
                     <span className="text-sm opacity-80">{config.label}</span>
@@ -2994,7 +2994,7 @@ const Kitchen = () => {
                         ביטול
                       </button>
                     )}
-                    {["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && !isCreditConfirmed(order) && (
+                    {order.payment_method === "cash" && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
@@ -3003,7 +3003,7 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
                       </button>
                     )}
-                    {order.queue_number != null && undoablePaid[order.id] && !isCreditConfirmed(order) && (
+                    {order.payment_method === "cash" && order.queue_number != null && undoablePaid[order.id] && (
                       <button
                         onClick={() => unmarkPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
@@ -3013,14 +3013,6 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id)
                           ? "מעדכן..."
                           : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
-                      </button>
-                    )}
-                    {isCreditConfirmed(order) && (
-                      <button
-                        disabled
-                        className="px-4 py-3 rounded-lg bg-green-600 text-white font-black text-base shadow-md shadow-green-600/40 disabled:opacity-100 cursor-default"
-                      >
-                        ✅ שולם באשראי
                       </button>
                     )}
                     {order.status === "ready" && (
