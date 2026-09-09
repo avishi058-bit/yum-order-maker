@@ -534,13 +534,15 @@ const Kiosk = () => {
               sauces={dineIn ? [] : selectedSauces}
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
-              onSuccess={(orderNumber, _phone, method, orderId) => {
+              onSuccess={(orderNumber, _phone, method, orderId, customerName) => {
                 setCheckoutOpen(false);
                 setOrderSuccess(orderNumber ?? 0);
                 setSuccessPaymentMethod(method ?? null);
                 setSuccessOrderId(orderId ?? null);
+                setSuccessCustomerName(customerName ?? "");
                 setInvoiceOpen(false);
                 setInvoiceEmail("");
+                setInvoiceName("");
                 setInvoiceState("idle");
                 // Fire confetti
                 import("canvas-confetti").then(({ default: confetti }) => {
