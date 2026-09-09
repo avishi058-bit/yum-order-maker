@@ -4,7 +4,6 @@ import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import KioskWelcome from "@/components/KioskWelcome";
 import type { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
