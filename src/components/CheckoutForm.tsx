@@ -115,6 +115,12 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [submitting, setSubmitting] = useState(false);
   const [pinpadState, setPinpadState] = useState<"waiting" | null>(null);
   const [pinpadError, setPinpadError] = useState<string | null>(null);
+  // Kiosk: invoice-by-email request collected BEFORE payment method selection.
+  // Sent automatically only if the card payment succeeds.
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoiceEmail, setInvoiceEmail] = useState("");
+  const [invoiceName, setInvoiceName] = useState("");
+  const [invoiceSaved, setInvoiceSaved] = useState(false);
 
 
   // Set when the server detects an identical order sent minutes ago — we ask
