@@ -43,8 +43,14 @@ Deno.serve(async (req) => {
     }
 
 
-    const parsed = BodySchema.safeParse(await req.json());
+    const rawBody = await req.json().catch(() => ({}));
+    // Warm-up ping sent by the kiosk the moment the customer taps "credit",
+    // so the function is already booted when the real charge arrives.
+    if ((rawBody as any)?.warmup === true) return json({ warm: true });
+
+    const parsed = BodySchema.safeParse(rawBody);
     if (!parsed.success) return json({ error: "invalid_body" }, 400);
+
 
     const supabase = createClient(
       SUPABASE_URL,
