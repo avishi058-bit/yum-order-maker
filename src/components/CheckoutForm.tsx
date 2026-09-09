@@ -114,6 +114,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [pinpadState, setPinpadState] = useState<"waiting" | null>(null);
+  const [pinpadError, setPinpadError] = useState<string | null>(null);
+
 
   // Set when the server detects an identical order sent minutes ago — we ask
   // the customer to confirm before creating a second one.
@@ -497,9 +499,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
             body: { orderId: order.orderId },
           });
-          if (pinErr) throw new Error("שגיאה בתקשורת עם המסוף");
+          if (pinErr) {
+            setPinpadState(null);
+            setPinpadError("שגיאה בתקשורת עם המסוף");
+            return;
+          }
           if (!pin?.success) {
-            throw new Error(pin?.message || "העסקה לא אושרה במסוף");
+            setPinpadState(null);
+            setPinpadError(pin?.message || "העסקה לא אושרה במסוף");
+            return;
           }
           setPinpadState(null);
           toast({
@@ -509,10 +517,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           onSuccess(order.orderNumber, form.phone, "credit");
         } catch (e: any) {
           setPinpadState(null);
-          throw new Error("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
+          setPinpadError("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
         }
         return;
       }
+
 
 
 
@@ -1172,12 +1181,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       {/* Kiosk: physical terminal prompt while the card is being charged */}
       {pinpadState === "waiting" && (
         <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-black/60 p-6" dir="rtl">
-          <div className="bg-white rounded-3xl p-10 text-center max-w-md w-full shadow-2xl">
-            <div className="text-6xl mb-4">🥰</div>
-            <h3 className="text-3xl font-black text-gray-900 mb-3">
-              מקבלים פייטר למילואימניקים
-            </h3>
-            <p className="text-xl text-gray-700 mb-2">העבר/י כרטיס במסוף</p>
+          <div className="bg-white rounded-3xl p-10 text-center max-w-md w-full shadow-2xl flex flex-col items-center">
+            <p className="text-xl text-gray-700 mb-2 font-bold">העבר/י כרטיס במסוף</p>
             <p className="text-lg text-gray-500 mb-6">
               הצמד/י או הכנס/י את הכרטיס למכשיר שלצד המסך
             </p>
@@ -1190,10 +1195,27 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </motion.div>
               <span className="text-2xl font-bold">למסוף</span>
             </div>
-            <p className="text-base text-gray-500 mt-6">ממתינים לאישור…</p>
+            <p className="text-xs text-gray-400 mt-8">מקבלים פייטר למילואימניקים 🥰</p>
           </div>
         </div>
       )}
+
+      {pinpadError && (
+        <div className="fixed inset-0 z-[10060] flex items-center justify-center bg-black/70 p-6" dir="rtl">
+          <div className="bg-white rounded-3xl p-8 text-center max-w-md w-full shadow-2xl">
+            <h3 className="text-3xl font-black text-gray-900 mb-8 leading-snug">
+              {pinpadError}
+            </h3>
+            <button
+              onClick={() => setPinpadError(null)}
+              className="w-full py-4 rounded-xl bg-primary text-white font-bold text-lg hover:bg-primary/90 transition-colors"
+            >
+              נסה שוב
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
