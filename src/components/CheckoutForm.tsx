@@ -1209,6 +1209,74 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
             </div>
 
+            {/* 🧾 Invoice by email — kiosk only, collected BEFORE payment.
+                Sent automatically after a successful card charge. */}
+            {isKiosk && availablePaymentMethods.credit && (
+              <div className="mt-2">
+                {invoiceSaved && !invoiceOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setInvoiceOpen(true)}
+                    className="w-full rounded-2xl border-4 border-green-500 bg-green-50 py-4 text-2xl font-black text-green-700 active:scale-95 transition-transform"
+                  >
+                    ✅ חשבונית תישלח למייל — לחצו לעריכה
+                  </button>
+                ) : !invoiceOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setInvoiceOpen(true)}
+                    className="w-full rounded-2xl border-4 border-primary bg-white py-4 text-2xl font-black text-primary active:scale-95 transition-transform"
+                  >
+                    לשלוח חשבונית במייל? 📧
+                  </button>
+                ) : (
+                  <div className="rounded-2xl border-4 border-primary/40 bg-white p-4 space-y-3">
+                    <p className="text-xl font-black text-gray-900">לשלוח חשבונית? (למשלמים באשראי בלבד)</p>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      dir="ltr"
+                      autoFocus
+                      value={invoiceEmail}
+                      onChange={(e) => setInvoiceEmail(e.target.value)}
+                      placeholder="המייל שלכם"
+                      className="w-full rounded-2xl border-2 border-gray-300 px-4 py-4 text-2xl text-center text-gray-900"
+                    />
+                    {invoiceEmail.trim() && !invoiceEmail.includes("@") && (
+                      <p className="text-lg text-gray-500 text-center" dir="ltr">
+                        {invoiceEmail.trim()}@gmail.com
+                      </p>
+                    )}
+                    <p className="text-lg font-bold text-gray-900">לכבוד (לא חובה — ברירת מחדל: שם ההזמנה)</p>
+                    <input
+                      type="text"
+                      value={invoiceName}
+                      onChange={(e) => setInvoiceName(e.target.value)}
+                      placeholder={form.name || "שם ההזמנה"}
+                      className="w-full rounded-2xl border-2 border-gray-300 px-4 py-4 text-2xl text-center text-gray-900"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        disabled={!/^\S+$/.test(invoiceEmail.trim())}
+                        onClick={() => { setInvoiceSaved(true); setInvoiceOpen(false); }}
+                        className="rounded-2xl bg-primary py-4 text-2xl font-black text-primary-foreground disabled:opacity-50 active:scale-95 transition-transform"
+                      >
+                        שמירה
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setInvoiceOpen(false); setInvoiceSaved(false); setInvoiceEmail(""); setInvoiceName(""); }}
+                        className="rounded-2xl border-2 border-gray-300 py-4 text-2xl font-black text-gray-700 active:scale-95 transition-transform"
+                      >
+                        חזרה
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {termsWarning && (
               <div className="flex justify-center">
                 <p className="text-sm font-bold text-center text-destructive bg-destructive/10 rounded-full px-4 py-2 animate-pulse">
