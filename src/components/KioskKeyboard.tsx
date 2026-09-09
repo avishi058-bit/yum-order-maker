@@ -14,7 +14,7 @@ import { Delete, CornerDownLeft } from "lucide-react";
  * Usage: render <KioskKeyboard /> once at the root of the kiosk page.
  */
 
-type Layout = "hebrew" | "numeric";
+type Layout = "hebrew" | "numeric" | "english";
 
 // Letters in VISUAL order right-to-left, matching standard Hebrew keyboard.
 // The container uses direction:rtl so index 0 = rightmost key on screen.
@@ -22,6 +22,13 @@ const HEBREW_ROWS: string[][] = [
   ["פ", "ם", "ן", "ו", "ט", "א", "ר", "ק"],
   ["ף", "ך", "ל", "ח", "י", "ע", "כ", "ג", "ד", "ש"],
   ["ץ", "ת", "צ", "מ", "נ", "ה", "ב", "ס", "ז"],
+];
+
+// English letters, stored right-to-left because the rows render row-reverse.
+const ENGLISH_ROWS: string[][] = [
+  ["p", "o", "i", "u", "y", "t", "r", "e", "w", "q"],
+  ["l", "k", "j", "h", "g", "f", "d", "s", "a"],
+  [".", "_", "-", "@", "m", "n", "b", "v", "c", "x", "z"],
 ];
 
 const NUMERIC_KEYS = [
@@ -48,6 +55,7 @@ function pickLayout(el: HTMLElement | null): Layout {
   if (t === "tel" || t === "number" || im === "tel" || im === "numeric" || im === "decimal") {
     return "numeric";
   }
+  if (t === "email" || im === "email") return "english";
   return "hebrew";
 }
 
@@ -221,7 +229,12 @@ const KioskKeyboard = () => {
     }, 50);
   }, []);
 
-  const rows = layout === "numeric" ? NUMERIC_KEYS : HEBREW_ROWS;
+  const rows =
+    layout === "numeric" ? NUMERIC_KEYS : layout === "english" ? ENGLISH_ROWS : HEBREW_ROWS;
+  // Cycle: Hebrew -> numbers -> English -> Hebrew
+  const nextLayout: Layout =
+    layout === "hebrew" ? "numeric" : layout === "numeric" ? "english" : "hebrew";
+  const nextLabel = nextLayout === "numeric" ? "123" : nextLayout === "english" ? "ABC" : "א-ב";
 
   return (
     <AnimatePresence>
@@ -319,11 +332,11 @@ const KioskKeyboard = () => {
               <button
                 type="button"
                 onPointerDown={handlePointerDown}
-                onClick={() => setLayout(layout === "hebrew" ? "numeric" : "hebrew")}
+                onClick={() => setLayout(nextLayout)}
                 className="rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
                 style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
               >
-                {layout === "hebrew" ? "123" : "א-ב"}
+                {nextLabel}
               </button>
             </div>
           </div>
