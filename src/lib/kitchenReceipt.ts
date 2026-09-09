@@ -989,7 +989,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     : isCounter
     ? `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ לתשלום בקופה ⚠️</div>`
     : creditConfirmed
-    ? `<div class="paid" style="font-size:1.5em;font-weight:900;">שולם!</div>
+    ? `<div class="paid" style="font-size:1.5em;font-weight:900;">שולם ₪${order.total}!</div>
        <div class="paid">שולם באשראי — אין צורך לגבות תשלום</div>`
     : `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ טרם התקבל אישור מהמסוף — יש לגבות תשלום ⚠️</div>`;
 
