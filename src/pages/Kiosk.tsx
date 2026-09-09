@@ -88,6 +88,8 @@ const Kiosk = () => {
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [invoiceEmail, setInvoiceEmail] = useState("");
+  const [invoiceName, setInvoiceName] = useState("");
+  const [successCustomerName, setSuccessCustomerName] = useState("");
   const [invoiceState, setInvoiceState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
