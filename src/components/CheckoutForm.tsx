@@ -10,7 +10,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { validateIsraeliPhone } from "@/lib/utils";
-import { Banknote, CreditCard, Store } from "lucide-react";
+import { Banknote, CreditCard, Store, ArrowRight } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
@@ -1200,6 +1200,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             <p className="text-xl text-gray-500 mb-6">
               הצמד/י או הכנס/י את הכרטיס למכשיר שלצד המסך
             </p>
+            <motion.div
+              className="flex items-center justify-center gap-2 mt-4 text-primary"
+              animate={{ x: [0, 8, 0] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+            >
+              <span className="text-lg font-bold text-gray-700">למסוף</span>
+              <ArrowRight className="w-10 h-10" />
+            </motion.div>
             <p className="text-base text-gray-400 mt-2">ממתינים לאישור…</p>
             <p className="text-2xl font-bold text-gray-800 mt-8">מקבלים פייטר למילואימניקים 🥰</p>
           </div>
