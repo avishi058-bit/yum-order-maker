@@ -470,21 +470,29 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const handleCreditPayment = async (allowDuplicate = false) => {
     setSubmitting(true);
     try {
-      const order = await callCreateOrder("credit", "pending_payment", allowDuplicate);
-      // Silently link/create customer so the next visit auto-logs in.
-      if (!isLoggedIn && form.phone && form.name) {
-        await linkFromOrder(form.phone, form.name).catch(() => {});
+      // Kiosk: show the "swipe your card" screen immediately and wake the
+      // terminal function (cold start) while the order is still being created.
+      if (isKiosk) {
+        setPinpadState("waiting");
+        supabase.functions
+          .invoke("pinpad-charge", { body: { warmup: true } })
+          .catch(() => {});
       }
+
+      const order = await callCreateOrder("credit", "pending_payment", allowDuplicate);
       // Persist for cross-context recovery (PWA install after the order).
       if (form.phone && form.name) {
         rememberLastOrderCustomer(form.phone, form.name);
+      }
+      // Non-blocking: linking the customer must never delay the terminal.
+      if (!isLoggedIn && form.phone && form.name) {
+        void linkFromOrder(form.phone, form.name).catch(() => {});
       }
 
       // Kiosk: charge the physical PinPad standing next to the screen instead
       // of opening the hosted web payment page. Amount + credentials are
       // enforced server-side in the `pinpad-charge` edge function.
       if (isKiosk) {
-        setPinpadState("waiting");
         try {
           const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
             body: { orderId: order.orderId },
@@ -505,6 +513,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         }
         return;
       }
+
 
 
 
