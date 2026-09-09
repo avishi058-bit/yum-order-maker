@@ -1143,22 +1143,23 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "counter"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Banknote size={24} className="text-green-400" />
+                    <Banknote size={24} className="text-green-600" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">
-                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : "מזומן 💵"}
+                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : isKiosk ? "מזומן בקופה💵" : "מזומן 💵"}
                     </div>
-                    <div className="text-sm text-muted-foreground">תשלום במזומן בעסק</div>
+                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום במזומן בעסק</div>
                   </div>
                 </motion.button>
               )}
 
               {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
+
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
                   <p className="text-sm mt-1">אנא נסה שוב מאוחר יותר</p>
