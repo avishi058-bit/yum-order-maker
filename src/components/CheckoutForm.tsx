@@ -135,7 +135,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [verifyCaptchaRequired, setVerifyCaptchaRequired] = useState(false);
   const [verifyTurnstileToken, setVerifyTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
+  const [termsWarning, setTermsWarning] = useState(false);
   // Preorder scheduling — pick a future pickup time within the allowed window.
+
   const [preorderEnabled, setPreorderEnabled] = useState(false);
   const [preorderTime, setPreorderTime] = useState<string>(""); // "HH:MM" today
   const [deliveryAck, setDeliveryAck] = useState(false);
@@ -297,12 +299,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     if (submitting) return;
     // Hard gate: terms + privacy must be accepted before any payment can proceed
     if (!termsAccepted) {
-      toast({
-        title: "יש לאשר תנאי שימוש ומדיניות פרטיות לפני המשך",
-        variant: "destructive",
-      });
+      setTermsWarning(true);
+      setTimeout(() => setTermsWarning(false), 3000);
       return;
     }
+
     // Anti-bot gate: Turnstile can be disabled during soft launch for mobile
     // browsers where the Cloudflare iframe stays blank.
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && !turnstileToken) {
@@ -1092,20 +1093,21 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "cash"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Banknote size={24} className="text-green-400" />
+                    <Banknote size={24} className="text-green-600" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">
-                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן 💵"}
+                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : isKiosk ? "מזומן בקופה💵" : "מזומן 💵"}
                     </div>
-                    <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>
+                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום במזומן בעת המסירה</div>
                   </div>
                 </motion.button>
               )}
+
 
               {availablePaymentMethods.credit && (
                 <motion.button
@@ -1115,20 +1117,21 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "credit"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <CreditCard size={24} className="text-blue-400" />
+                    <CreditCard size={24} className="text-blue-600" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">
+                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
                       {submitting && paymentMethod === "credit" ? "מעביר לתשלום..." : "אשראי 💳"}
                     </div>
-                    <div className="text-sm text-muted-foreground">תשלום מאובטח בכרטיס אשראי</div>
+                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום מאובטח בכרטיס אשראי</div>
                   </div>
                 </motion.button>
               )}
+
 
               {/* Website cash payment — order goes to the kitchen right away and the
                   customer pays in person. Controlled by the website cash toggle. */}
@@ -1140,22 +1143,23 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "counter"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Banknote size={24} className="text-green-400" />
+                    <Banknote size={24} className="text-green-600" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">
-                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : "מזומן 💵"}
+                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : isKiosk ? "מזומן בקופה💵" : "מזומן 💵"}
                     </div>
-                    <div className="text-sm text-muted-foreground">תשלום במזומן בעסק</div>
+                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום במזומן בעסק</div>
                   </div>
                 </motion.button>
               )}
 
               {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
+
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
                   <p className="text-sm mt-1">אנא נסה שוב מאוחר יותר</p>
@@ -1163,9 +1167,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
             </div>
 
+            {termsWarning && (
+              <div className="flex justify-center">
+                <p className="text-sm font-bold text-center text-destructive bg-destructive/10 rounded-full px-4 py-2 animate-pulse">
+                  יש לאשר את תנאי השימוש
+                </p>
+              </div>
+            )}
+
             {submitting && (
               <div className="text-center text-primary font-bold py-2">שולח הזמנה...</div>
             )}
+
 
             <button
               type="button"
