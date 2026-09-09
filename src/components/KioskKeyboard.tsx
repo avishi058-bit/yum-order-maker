@@ -24,6 +24,13 @@ const HEBREW_ROWS: string[][] = [
   ["ץ", "ת", "צ", "מ", "נ", "ה", "ב", "ס", "ז"],
 ];
 
+// English letters, stored right-to-left because the rows render row-reverse.
+const ENGLISH_ROWS: string[][] = [
+  ["p", "o", "i", "u", "y", "t", "r", "e", "w", "q"],
+  ["l", "k", "j", "h", "g", "f", "d", "s", "a"],
+  [".", "_", "-", "@", "m", "n", "b", "v", "c", "x", "z"],
+];
+
 const NUMERIC_KEYS = [
   ["3", "2", "1"],
   ["6", "5", "4"],
