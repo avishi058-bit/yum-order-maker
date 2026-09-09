@@ -1084,31 +1084,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-3">
-              {isKiosk && availablePaymentMethods.cash && (
-                <motion.button
-                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
-                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
-                  onClick={() => handlePaymentSelect("cash")}
-                  disabled={submitting || !canSubmit}
-                  aria-busy={submitting && paymentMethod === "cash"}
-                  aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
-                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
-                >
-                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <Banknote size={24} className="text-green-600" />
-                  </div>
-                  <div className="text-right">
-                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
-                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : isKiosk ? "מזומן בקופה💵" : "מזומן 💵"}
-                    </div>
-                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום במזומן בעת המסירה</div>
-                  </div>
-                </motion.button>
-              )}
-
-
+            <div className={isKiosk ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-3"}>
+              {/* קיוסק: אשראי מימין, מזומן משמאל (RTL). אתר: סדר קודם. */}
               {availablePaymentMethods.credit && (
                 <motion.button
                   whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
@@ -1118,16 +1095,62 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   aria-busy={submitting && paymentMethod === "credit"}
                   aria-disabled={!canSubmit}
                   title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
-                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
+                  className={`rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900 aspect-square flex flex-col items-center justify-center gap-4 p-4" : "flex items-center gap-4 p-5 bg-secondary"}`}
                 >
-                  <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <CreditCard size={24} className="text-blue-600" />
+                  <div className={`rounded-full bg-blue-500/20 flex items-center justify-center ${isKiosk ? "w-20 h-20" : "w-12 h-12"}`}>
+                    <CreditCard size={isKiosk ? 40 : 24} className="text-blue-600" />
+                  </div>
+                  <div className={isKiosk ? "text-center" : "text-right"}>
+                    <div className={`font-black ${isKiosk ? "text-3xl" : "text-lg"} ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                      {submitting && paymentMethod === "credit" ? "מעביר לתשלום..." : "אשראי"}
+                    </div>
+                    {!isKiosk && <div className="text-sm text-muted-foreground">תשלום מאובטח בכרטיס אשראי</div>}
+                  </div>
+                </motion.button>
+              )}
+
+              {isKiosk && availablePaymentMethods.cash && (
+                <motion.button
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
+                  onClick={() => handlePaymentSelect("cash")}
+                  disabled={submitting || !canSubmit}
+                  aria-busy={submitting && paymentMethod === "cash"}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className={`rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900 aspect-square flex flex-col items-center justify-center gap-4 p-4" : "flex items-center gap-4 p-5 bg-secondary"}`}
+                >
+                  <div className={`rounded-full bg-green-500/20 flex items-center justify-center ${isKiosk ? "w-20 h-20" : "w-12 h-12"}`}>
+                    <Banknote size={isKiosk ? 40 : 24} className="text-green-600" />
+                  </div>
+                  <div className={isKiosk ? "text-center" : "text-right"}>
+                    <div className={`font-black ${isKiosk ? "text-3xl" : "text-lg"} ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן"}
+                    </div>
+                    {!isKiosk && <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>}
+                  </div>
+                </motion.button>
+              )}
+
+              {!isKiosk && availablePaymentMethods.cash && (
+                <motion.button
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
+                  onClick={() => handlePaymentSelect("cash")}
+                  disabled={submitting || !canSubmit}
+                  aria-busy={submitting && paymentMethod === "cash"}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border bg-secondary"
+                >
+                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Banknote size={24} className="text-green-600" />
                   </div>
                   <div className="text-right">
-                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
-                      {submitting && paymentMethod === "credit" ? "מעביר לתשלום..." : "אשראי 💳"}
+                    <div className="font-bold text-lg text-foreground">
+                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן 💵"}
                     </div>
-                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום מאובטח בכרטיס אשראי</div>
+                    <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>
                   </div>
                 </motion.button>
               )}
