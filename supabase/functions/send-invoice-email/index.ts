@@ -15,6 +15,8 @@ const CLIENT_UUID = "habikta-kiosk-01";
 const BodySchema = z.object({
   orderId: z.string().uuid(),
   email: z.string().trim().email().max(255),
+  // Optional "לכבוד" name for the invoice; falls back to the order's customer name.
+  name: z.string().trim().max(100).optional(),
 });
 
 const esc = (s: string) =>
