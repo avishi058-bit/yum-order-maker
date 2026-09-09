@@ -95,24 +95,48 @@ Deno.serve(async (req) => {
       return json({ error: "order_too_old" }, 409);
     }
 
-    const loginXml = await soap(
-      "RegisterLoginToken",
-      `<RegisterLoginToken xmlns="http://z-credit.com/">
-        <TerminalNumber>${esc(TERMINAL.trim())}</TerminalNumber>
-        <Password>${esc(PASSWORD.trim())}</Password>
+    // The invoice module may live on the web (WebCheckout) account rather than
+    // the physical terminal, so try each credential pair we hold until one logs in.
+    const WEB_KEY = Deno.env.get("ZCREDIT_KEY")?.trim() || "";
+    const candidates: Array<{ label: string; terminal: string; password: string }> = [
+      { label: "terminal", terminal: TERMINAL.trim(), password: PASSWORD.trim() },
+    ];
+    if (WEB_KEY) {
+      candidates.push({ label: "terminal+webkey", terminal: TERMINAL.trim(), password: WEB_KEY });
+      candidates.push({ label: "webkey", terminal: WEB_KEY, password: WEB_KEY });
+    }
+
+    let token = "";
+    let lastCode = "";
+    let lastMsg = "";
+    for (const c of candidates) {
+      const loginXml = await soap(
+        "RegisterLoginToken",
+        `<RegisterLoginToken xmlns="http://z-credit.com/">
+        <TerminalNumber>${esc(c.terminal)}</TerminalNumber>
+        <Password>${esc(c.password)}</Password>
         <UUID>${CLIENT_UUID}</UUID>
       </RegisterLoginToken>`,
-    );
-
-    const loginOk = pick(loginXml, "RegisterLoginTokenResult") === "true";
-    const token = pick(loginXml, "LoginToken");
-    if (!loginOk || !token) {
-      console.error("send-invoice-email: login failed", {
-        code: pick(loginXml, "Validation_Result_Code"),
-        msg: pick(loginXml, "Validation_Result_Message"),
-      });
-      return json({ success: false, message: "לא הצלחנו להתחבר לשירות החשבוניות" });
+      );
+      const ok = pick(loginXml, "RegisterLoginTokenResult") === "true";
+      const t = pick(loginXml, "LoginToken");
+      if (ok && t) {
+        console.log("send-invoice-email: login ok", { via: c.label });
+        token = t;
+        break;
+      }
+      lastCode = pick(loginXml, "Validation_Result_Code");
+      lastMsg = pick(loginXml, "Validation_Result_Message");
+      console.error("send-invoice-email: login failed", { via: c.label, code: lastCode, msg: lastMsg });
     }
+
+    if (!token) {
+      return json({
+        success: false,
+        message: lastMsg || "לא הצלחנו להתחבר לשירות החשבוניות",
+      });
+    }
+
 
     const invoiceName = parsed.data.name || order.customer_name || "";
     console.log("send-invoice-email: sending", { orderId: order.id, invoiceName });
