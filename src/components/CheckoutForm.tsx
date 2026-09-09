@@ -10,7 +10,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { validateIsraeliPhone } from "@/lib/utils";
-import { Banknote, CreditCard, Store, ArrowRight } from "lucide-react";
+import { Banknote, CreditCard, Store } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
@@ -1195,20 +1195,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       {pinpadState === "waiting" && (
         <div className="fixed inset-0 z-[10050] flex items-center justify-center bg-black/60 p-6" dir="rtl">
           <div className="bg-white rounded-3xl p-10 text-center max-w-md w-full shadow-2xl flex flex-col items-center">
-            <p className="text-xl text-gray-700 mb-2 font-bold">העבר/י כרטיס במסוף</p>
-            <p className="text-lg text-gray-500 mb-6">
+            <div className="text-7xl mb-6 animate-pulse">💳</div>
+            <h3 className="text-3xl font-black text-gray-900 mb-3">העבר/י כרטיס במסוף</h3>
+            <p className="text-xl text-gray-500 mb-6">
               הצמד/י או הכנס/י את הכרטיס למכשיר שלצד המסך
             </p>
-            <div className="flex items-center justify-center gap-3 text-gray-900">
-              <motion.div
-                animate={{ x: [0, 10, 0] }}
-                transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }}
-              >
-                <ArrowRight className="w-12 h-12" />
-              </motion.div>
-              <span className="text-2xl font-bold">למסוף</span>
-            </div>
-            <p className="text-xs text-gray-400 mt-8">מקבלים פייטר למילואימניקים 🥰</p>
+            <p className="text-base text-gray-400 mt-2">ממתינים לאישור…</p>
+            <p className="text-2xl font-bold text-gray-800 mt-8">מקבלים פייטר למילואימניקים 🥰</p>
           </div>
         </div>
       )}
