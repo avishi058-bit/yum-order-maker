@@ -14,7 +14,7 @@ import { Delete, CornerDownLeft } from "lucide-react";
  * Usage: render <KioskKeyboard /> once at the root of the kiosk page.
  */
 
-type Layout = "hebrew" | "numeric";
+type Layout = "hebrew" | "numeric" | "english";
 
 // Letters in VISUAL order right-to-left, matching standard Hebrew keyboard.
 // The container uses direction:rtl so index 0 = rightmost key on screen.
