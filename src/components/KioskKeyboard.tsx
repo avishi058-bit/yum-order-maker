@@ -336,7 +336,7 @@ const KioskKeyboard = () => {
                 className="rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
                 style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
               >
-                {layout === "hebrew" ? "123" : "א-ב"}
+                {nextLabel}
               </button>
             </div>
           </div>
