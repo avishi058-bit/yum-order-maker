@@ -1117,20 +1117,21 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "credit"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש ולסיים את האימות הביטחוני" : undefined}
-                  className="flex items-center gap-4 p-5 rounded-xl border-2 border-border bg-secondary hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border"
+                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
+                  className={`flex items-center gap-4 p-5 rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900" : "bg-secondary"}`}
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <CreditCard size={24} className="text-blue-400" />
+                    <CreditCard size={24} className="text-blue-600" />
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-lg text-foreground">
+                    <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
                       {submitting && paymentMethod === "credit" ? "מעביר לתשלום..." : "אשראי 💳"}
                     </div>
-                    <div className="text-sm text-muted-foreground">תשלום מאובטח בכרטיס אשראי</div>
+                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום מאובטח בכרטיס אשראי</div>
                   </div>
                 </motion.button>
               )}
+
 
               {/* Website cash payment — order goes to the kitchen right away and the
                   customer pays in person. Controlled by the website cash toggle. */}
