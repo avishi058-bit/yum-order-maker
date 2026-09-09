@@ -30,7 +30,7 @@ interface CheckoutFormProps {
   sauces?: CheckoutSauce[];
   freeSauces?: number;
   onClose: () => void;
-  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter", orderId?: string) => void;
+  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter", orderId?: string, customerName?: string) => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
   /** Customer's actual dining choice. Passed to the server so the kitchen receipt shows the real choice, not just the order source. */
