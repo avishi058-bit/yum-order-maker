@@ -4,7 +4,6 @@ import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import KioskWelcome from "@/components/KioskWelcome";
 import type { CartItem, DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import type { ItemCustomizerInitialState } from "@/components/ItemCustomizer";
@@ -84,13 +83,6 @@ const Kiosk = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
   const [successPaymentMethod, setSuccessPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
-  // Invoice-by-email (credit orders only, via the terminal provider)
-  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
-  const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [invoiceEmail, setInvoiceEmail] = useState("");
-  const [invoiceName, setInvoiceName] = useState("");
-  const [successCustomerName, setSuccessCustomerName] = useState("");
-  const [invoiceState, setInvoiceState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
@@ -534,28 +526,19 @@ const Kiosk = () => {
               sauces={dineIn ? [] : selectedSauces}
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
-              onSuccess={(orderNumber, _phone, method, orderId, customerName) => {
+              onSuccess={(orderNumber, _phone, method) => {
                 setCheckoutOpen(false);
                 setOrderSuccess(orderNumber ?? 0);
                 setSuccessPaymentMethod(method ?? null);
-                setSuccessOrderId(orderId ?? null);
-                setSuccessCustomerName(customerName ?? "");
-                setInvoiceOpen(false);
-                setInvoiceEmail("");
-                setInvoiceName("");
-                setInvoiceState("idle");
                 // Fire confetti
                 import("canvas-confetti").then(({ default: confetti }) => {
                   confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
                 });
-                // Card payments stay a bit longer so the customer can ask for an invoice.
                 setTimeout(() => {
                   setOrderSuccess(null);
                   setSuccessPaymentMethod(null);
-                  setSuccessOrderId(null);
-                  setInvoiceOpen(false);
                   resetOrder();
-                }, method === "credit" ? 30000 : 2000);
+                }, method === "credit" ? 5000 : 2000);
               }}
             />
           </Suspense>
@@ -598,103 +581,6 @@ const Kiosk = () => {
                 )}
               </div>
               <p className="text-2xl text-gray-500">מספר ההזמנה שלך למעלה</p>
-
-              {/* Invoice by email — only for a completed card payment */}
-              {successPaymentMethod === "credit" && successOrderId && (
-                <div className="mt-6">
-                  {invoiceState === "sent" ? (
-                    <p className="text-2xl font-black text-green-600">החשבונית נשלחה למייל ✅</p>
-                  ) : !invoiceOpen ? (
-                    <div className="space-y-3">
-                      <p className="text-3xl font-black text-gray-900">לשלוח חשבונית?</p>
-                      <p className="text-lg text-gray-500">למשלמים באשראי בלבד</p>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setInvoiceOpen(true)}
-                          className="rounded-2xl bg-primary py-4 text-2xl font-black text-primary-foreground active:scale-95 transition-transform"
-                        >
-                          כן, שלחו 📧
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSuccessOrderId(null)}
-                          className="rounded-2xl border-4 border-gray-300 py-4 text-2xl font-black text-gray-600 active:scale-95 transition-transform"
-                        >
-                          לא, תודה
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <p className="text-2xl font-black text-gray-900">המייל שלך</p>
-                      <div dir="ltr" className="flex items-stretch rounded-2xl border-2 border-gray-300 overflow-hidden">
-                        <input
-                          type="text"
-                          inputMode="email"
-                          dir="ltr"
-                          autoFocus
-                          value={invoiceEmail}
-                          onChange={(e) => { setInvoiceEmail(e.target.value.replace(/\s/g, "")); setInvoiceState("idle"); }}
-                          placeholder="yourname"
-                          className="flex-1 min-w-0 px-4 py-4 text-2xl text-gray-900 outline-none"
-                        />
-                        {!invoiceEmail.includes("@") && (
-                          <span className="flex items-center bg-gray-100 px-3 text-2xl font-bold text-gray-600 whitespace-nowrap">
-                            @gmail.com
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-2xl font-black text-gray-900 mt-2">לכבוד (לא חובה)</p>
-                      <input
-                        type="text"
-                        value={invoiceName}
-                        onChange={(e) => setInvoiceName(e.target.value)}
-                        placeholder="שם על החשבונית"
-                        className="w-full rounded-2xl border-2 border-gray-300 px-4 py-4 text-2xl text-center text-gray-900"
-                      />
-                      {invoiceState === "error" && (
-                        <p className="text-xl font-bold text-red-600">שליחת החשבונית נכשלה, נסו שוב</p>
-                      )}
-                      <button
-                        type="button"
-                        disabled={
-                          invoiceState === "sending" ||
-                          !/^\S+@\S+\.\S+$/.test(
-                            invoiceEmail.includes("@") ? invoiceEmail : `${invoiceEmail}@gmail.com`,
-                          )
-                        }
-                        onClick={async () => {
-                          setInvoiceState("sending");
-                          const raw = invoiceEmail.trim();
-                          const email = raw.includes("@") ? raw : `${raw}@gmail.com`;
-                          const { data, error } = await supabase.functions.invoke("send-invoice-email", {
-                            body: {
-                              orderId: successOrderId,
-                              email,
-                              name: (invoiceName.trim() || successCustomerName || "").slice(0, 100) || undefined,
-                            },
-                          });
-                          setInvoiceState(!error && data?.success ? "sent" : "error");
-                        }}
-                        className="w-full rounded-2xl bg-primary py-4 text-2xl font-black text-primary-foreground disabled:opacity-50 active:scale-95 transition-transform"
-                      >
-                        {invoiceState === "sending" ? "שולח…" : "שליחה"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setInvoiceOpen(false); setInvoiceState("idle"); }}
-                        className="w-full rounded-2xl border-2 border-gray-300 py-3 text-xl font-bold text-gray-500 active:scale-95 transition-transform"
-                      >
-                        ← חזרה / ויתור על חשבונית
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-
-
             </motion.div>
           </motion.div>
         )}
