@@ -1167,9 +1167,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
             </div>
 
+            {termsWarning && (
+              <div className="flex justify-center">
+                <p className="text-sm font-bold text-center text-destructive bg-destructive/10 rounded-full px-4 py-2 animate-pulse">
+                  יש לאשר את תנאי השימוש
+                </p>
+              </div>
+            )}
+
             {submitting && (
               <div className="text-center text-primary font-bold py-2">שולח הזמנה...</div>
             )}
+
 
             <button
               type="button"
