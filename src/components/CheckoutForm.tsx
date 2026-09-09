@@ -30,7 +30,7 @@ interface CheckoutFormProps {
   sauces?: CheckoutSauce[];
   freeSauces?: number;
   onClose: () => void;
-  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter", orderId?: string) => void;
+  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter", orderId?: string, customerName?: string) => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
   /** Customer's actual dining choice. Passed to the server so the kitchen receipt shows the real choice, not just the order source. */
@@ -515,7 +515,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             title: "התשלום אושר! 🎉",
             description: `מספר הזמנה: #${order.orderNumber}`,
           });
-          onSuccess(order.orderNumber, form.phone, "credit", order.orderId);
+          onSuccess(order.orderNumber, form.phone, "credit", order.orderId, form.name);
         } catch (e: any) {
           setPinpadState(null);
           setPinpadError("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
@@ -672,7 +672,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         title: "ההזמנה נשלחה בהצלחה! 🎉",
         description: `מספר הזמנה: #${order.orderNumber}`,
       });
-      onSuccess(order.orderNumber, form.phone, method, order.orderId);
+      onSuccess(order.orderNumber, form.phone, method, order.orderId, form.name);
     } catch (error: any) {
       console.error("Order error:", error);
       if (error?.duplicate) {
