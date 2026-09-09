@@ -2776,7 +2776,7 @@ const Kitchen = () => {
                     <span className="font-bold">#{order.order_number}</span>
                     {order.queue_number != null ? (
                       <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
-                        שולם ✓
+                        {isCreditConfirmed(order) ? "שולם באשראי✅" : "שולם ✓"}
                       </span>
                     ) : null}
                     <span className="text-sm opacity-80">{config.label}</span>
