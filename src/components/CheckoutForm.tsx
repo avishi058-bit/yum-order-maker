@@ -501,7 +501,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           onSuccess(order.orderNumber, form.phone, "credit");
         } catch (e: any) {
           setPinpadState(null);
-          throw e;
+          throw new Error("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
         }
         return;
       }
