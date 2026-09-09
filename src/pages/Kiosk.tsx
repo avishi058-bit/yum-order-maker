@@ -594,6 +594,55 @@ const Kiosk = () => {
               </div>
               <p className="text-2xl text-gray-500">מספר ההזמנה שלך למעלה</p>
 
+              {/* Invoice by email — only for a completed card payment */}
+              {successPaymentMethod === "credit" && successOrderId && (
+                <div className="mt-6">
+                  {invoiceState === "sent" ? (
+                    <p className="text-2xl font-black text-green-600">החשבונית נשלחה למייל ✅</p>
+                  ) : !invoiceOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => setInvoiceOpen(true)}
+                      className="w-full rounded-2xl border-4 border-primary py-4 text-2xl font-black text-primary active:scale-95 transition-transform"
+                    >
+                      שלחו לי חשבונית למייל 📧
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <input
+                        type="email"
+                        inputMode="email"
+                        dir="ltr"
+                        autoFocus
+                        value={invoiceEmail}
+                        onChange={(e) => { setInvoiceEmail(e.target.value); setInvoiceState("idle"); }}
+                        placeholder="your@email.com"
+                        className="w-full rounded-2xl border-2 border-gray-300 px-4 py-4 text-2xl text-center text-gray-900"
+                      />
+                      {invoiceState === "error" && (
+                        <p className="text-xl font-bold text-red-600">שליחת החשבונית נכשלה, נסו שוב</p>
+                      )}
+                      <button
+                        type="button"
+                        disabled={invoiceState === "sending" || !/^\S+@\S+\.\S+$/.test(invoiceEmail)}
+                        onClick={async () => {
+                          setInvoiceState("sending");
+                          const { data, error } = await supabase.functions.invoke("send-invoice-email", {
+                            body: { orderId: successOrderId, email: invoiceEmail.trim() },
+                          });
+                          setInvoiceState(!error && data?.success ? "sent" : "error");
+                        }}
+                        className="w-full rounded-2xl bg-primary py-4 text-2xl font-black text-primary-foreground disabled:opacity-50 active:scale-95 transition-transform"
+                      >
+                        {invoiceState === "sending" ? "שולח…" : "שליחה"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
+
             </motion.div>
           </motion.div>
         )}
