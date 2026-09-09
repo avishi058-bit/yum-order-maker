@@ -84,13 +84,6 @@ const Kiosk = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
   const [successPaymentMethod, setSuccessPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
-  // Invoice-by-email (credit orders only, via the terminal provider)
-  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
-  const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [invoiceEmail, setInvoiceEmail] = useState("");
-  const [invoiceName, setInvoiceName] = useState("");
-  const [successCustomerName, setSuccessCustomerName] = useState("");
-  const [invoiceState, setInvoiceState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
