@@ -114,6 +114,9 @@ Deno.serve(async (req) => {
       return json({ success: false, message: "לא הצלחנו להתחבר לשירות החשבוניות" });
     }
 
+    const invoiceName = parsed.data.name || order.customer_name || "";
+    console.log("send-invoice-email: sending", { orderId: order.id, invoiceName });
+
     const sendXml = await soap(
       "SendEmailPostTransaction",
       `<SendEmailPostTransaction xmlns="http://z-credit.com/">
