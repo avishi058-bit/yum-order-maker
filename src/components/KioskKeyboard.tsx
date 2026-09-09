@@ -229,7 +229,12 @@ const KioskKeyboard = () => {
     }, 50);
   }, []);
 
-  const rows = layout === "numeric" ? NUMERIC_KEYS : HEBREW_ROWS;
+  const rows =
+    layout === "numeric" ? NUMERIC_KEYS : layout === "english" ? ENGLISH_ROWS : HEBREW_ROWS;
+  // Cycle: Hebrew -> numbers -> English -> Hebrew
+  const nextLayout: Layout =
+    layout === "hebrew" ? "numeric" : layout === "numeric" ? "english" : "hebrew";
+  const nextLabel = nextLayout === "numeric" ? "123" : nextLayout === "english" ? "ABC" : "א-ב";
 
   return (
     <AnimatePresence>
