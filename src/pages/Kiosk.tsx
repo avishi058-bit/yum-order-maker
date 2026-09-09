@@ -531,19 +531,26 @@ const Kiosk = () => {
               sauces={dineIn ? [] : selectedSauces}
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
-              onSuccess={(orderNumber, _phone, method) => {
+              onSuccess={(orderNumber, _phone, method, orderId) => {
                 setCheckoutOpen(false);
                 setOrderSuccess(orderNumber ?? 0);
                 setSuccessPaymentMethod(method ?? null);
+                setSuccessOrderId(orderId ?? null);
+                setInvoiceOpen(false);
+                setInvoiceEmail("");
+                setInvoiceState("idle");
                 // Fire confetti
                 import("canvas-confetti").then(({ default: confetti }) => {
                   confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
                 });
+                // Card payments stay a bit longer so the customer can ask for an invoice.
                 setTimeout(() => {
                   setOrderSuccess(null);
                   setSuccessPaymentMethod(null);
+                  setSuccessOrderId(null);
+                  setInvoiceOpen(false);
                   resetOrder();
-                }, 2000);
+                }, method === "credit" ? 30000 : 2000);
               }}
             />
           </Suspense>
