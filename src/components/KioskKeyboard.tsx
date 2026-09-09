@@ -55,6 +55,7 @@ function pickLayout(el: HTMLElement | null): Layout {
   if (t === "tel" || t === "number" || im === "tel" || im === "numeric" || im === "decimal") {
     return "numeric";
   }
+  if (t === "email" || im === "email") return "english";
   return "hebrew";
 }
 
