@@ -65,22 +65,31 @@ Deno.serve(async (req) => {
     const sum = Number(order.total);
     if (!(sum > 0)) return json({ error: "invalid_amount" }, 400);
 
+    // Mirror EXACTLY the payload shape that Z-Credit accepts for this terminal.
     const payload = {
-      TerminalNumber: TERMINAL,
-      Password: PASSWORD,
+      TerminalNumber: TERMINAL.trim(),
+      Password: PASSWORD.trim(),
       // Routing the charge to the physical device: PINPAD prefix + device id.
-      Track2: `PINPAD${PINPAD_ID}`,
+      Track2: `PINPAD${PINPAD_ID.trim()}`,
+      CardNumber: "",
+      ExpDate_MMYY: "",
+      CVV: "",
       TransactionSum: sum,
       NumberOfPayments: 1,
+      FirstPaymentSum: 0,
+      OtherPaymentsSum: 0,
       TransactionType: "01",
       CurrencyType: 1,
       CreditType: 1,
       J: 0,
-      IsCustomerPresent: true,
-      CustomerName: String(order.customer_name ?? "").replace(/[^\p{L}\p{N} ]/gu, ""),
-      ItemDescription: `Order ${order.order_number ?? ""}`.trim(),
-      TransactionUniqueID: order.id,
-      TransactionUniqueIdForQuery: order.id,
+      IsCustomerPresent: false,
+      AuthNum: "",
+      HolderID: "",
+      CustomerName: "",
+      CustomerEmail: "",
+      PhoneNumber: "",
+      ItemDescription: "",
+      DisableMobile: false,
     };
 
     const res = await fetch(ZCREDIT_WS_URL, {
