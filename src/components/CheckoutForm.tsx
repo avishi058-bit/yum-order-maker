@@ -517,6 +517,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             return;
           }
           setPinpadState(null);
+          // Invoice by email — requested before payment; send only now that
+          // the charge succeeded. Fire-and-forget so it never blocks the flow.
+          if (invoiceSaved && invoiceEmail.trim()) {
+            const raw = invoiceEmail.trim();
+            const email = raw.includes("@") ? raw : `${raw}@gmail.com`;
+            void supabase.functions.invoke("send-invoice-email", {
+              body: {
+                orderId: order.orderId,
+                email,
+                name: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
+              },
+            }).catch(() => {});
+          }
           toast({
             title: "התשלום אושר! 🎉",
             description: `מספר הזמנה: #${order.orderNumber}`,
