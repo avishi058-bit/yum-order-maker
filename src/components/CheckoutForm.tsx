@@ -515,7 +515,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             title: "התשלום אושר! 🎉",
             description: `מספר הזמנה: #${order.orderNumber}`,
           });
-          onSuccess(order.orderNumber, form.phone, "credit");
+          onSuccess(order.orderNumber, form.phone, "credit", order.orderId);
         } catch (e: any) {
           setPinpadState(null);
           setPinpadError("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
