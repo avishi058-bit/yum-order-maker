@@ -329,3 +329,10 @@ export function printRawBTPlainTextShare(text: string): RawBTDebugInfo {
 // Paper width is shared with the BT driver via getPaperWidthDots(), so the
 // receipt layout is identical regardless of which transport is used.
 export { getPaperWidthDots };
+
+export async function printRawBTInvoice(
+  inv: import("./btReceiptOps").InvoicePrintData,
+): Promise<RawBTDebugInfo> {
+  const { buildInvoiceOps } = await import("./btReceiptOps");
+  return sendBytesToRawBT(buildOpsBytes(buildInvoiceOps(inv)));
+}

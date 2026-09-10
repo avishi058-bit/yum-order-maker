@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, ReceiptText } from "lucide-react";
 
 import QRCode from "qrcode";
 // DashboardView is lazy-loaded — pulls in recharts, admin-only, keep out of main bundle
@@ -27,6 +27,7 @@ import {
   printBluetoothRoundChef,
   printBluetoothFridgeRefill,
   printBluetoothPhoneQr,
+  printBluetoothInvoice,
   printTest,
   printHybridDiagnostic,
   getEncoding,
@@ -47,13 +48,14 @@ import {
   printRawBTRoundChef,
   printRawBTFridgeRefill,
   printRawBTPhoneQr,
+  printRawBTInvoice,
   printRawBTPlainText,
   printRawBTPlainTextDirect,
   printRawBTPlainTextShare,
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
+import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr, printAgentInvoice } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
@@ -1865,6 +1867,61 @@ const Kitchen = () => {
     }
   };
 
+  // Prints the official tax invoice/receipt for a paid credit order on the bon
+  // printer. The document itself is issued once by the payment provider; the
+  // bon is a text copy carrying that same document number.
+  const [invoiceBusyId, setInvoiceBusyId] = useState<string | null>(null);
+  const printInvoiceBon = async (order: { id: string }) => {
+    if (invoiceBusyId) return;
+    setInvoiceBusyId(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("issue-invoice", {
+        body: { orderId: order.id },
+      });
+      if (error) throw error;
+      if (!data?.success) {
+        toast.error(data?.message || "לא ניתן להפיק חשבונית להזמנה זו");
+        return;
+      }
+      const inv = {
+        invoiceNumber: data.invoiceNumber ?? null,
+        issuedAt: data.issuedAt ?? null,
+        orderNumber: data.orderNumber ?? null,
+        customerName: data.customerName ?? null,
+        customerPhone: data.customerPhone ?? null,
+        total: Number(data.total ?? 0),
+        taxRate: Number(data.taxRate ?? 18),
+        items: (data.items ?? []) as { name: string; qty: number; price: number }[],
+      };
+
+      if (isPrinterConnected()) {
+        await printBluetoothInvoice(inv);
+        return;
+      }
+      if (printMode === "bt") {
+        toast.error("מדפסת בלוטות׳ לא מחוברת — חבר מדפסת ונסה שוב");
+        return;
+      }
+      if (printMode === "agent") {
+        const info = await printAgentInvoice(inv);
+        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
+        return;
+      }
+      if (printMode === "rawbt") {
+        setRawbtDebug(await printRawBTInvoice(inv));
+        return;
+      }
+      toast.error("אין מדפסת מוגדרת להדפסה");
+    } catch (e) {
+      console.error("[Kitchen] invoice print failed", e);
+      toast.error("שגיאה בהפקת החשבונית");
+    } finally {
+      setInvoiceBusyId(null);
+    }
+  };
+
+
+
   const roundSummaryHtml = useMemo(
     () => (showRoundSummary ? buildRoundSummaryHtml(activeRoundOrders, { interactive: true }) : ""),
     [showRoundSummary, activeRoundOrders],
@@ -2824,6 +2881,16 @@ const Kitchen = () => {
                     >
                       <ChefHat size={16} />
                     </button>
+                    {isCreditConfirmed(order) && (
+                      <button
+                        onClick={() => printInvoiceBon(order)}
+                        disabled={invoiceBusyId === order.id}
+                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-50"
+                        title="הדפס חשבונית מס קבלה ללקוח"
+                      >
+                        <ReceiptText size={16} />
+                      </button>
+                    )}
                     {order.order_source !== "kiosk" && order.order_source !== "station" && (
                       <button
                         onClick={() => printCustomerQr(order)}
