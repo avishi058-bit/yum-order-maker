@@ -967,6 +967,7 @@ export type Database = {
           payment_method: string | null
           payment_reference: string | null
           payment_session_id: string | null
+          payment_transaction_id: string | null
           queue_number: number | null
           scheduled_for: string | null
           status: string
@@ -996,6 +997,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           payment_session_id?: string | null
+          payment_transaction_id?: string | null
           queue_number?: number | null
           scheduled_for?: string | null
           status?: string
@@ -1025,6 +1027,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           payment_session_id?: string | null
+          payment_transaction_id?: string | null
           queue_number?: number | null
           scheduled_for?: string | null
           status?: string
