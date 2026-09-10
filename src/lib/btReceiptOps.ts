@@ -649,7 +649,6 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     if (confirmed) {
       ops.push(asLine("שולם!", { align: "C", bold: true, size: 40 }));
       ops.push(asLine(`שולם ${order.total}₪ באשראי`, { align: "C", bold: true, size: 32 }));
-      ops.push(asLine("אין צורך לגבות", { align: "C", bold: true, size: 24 }));
     } else {
       ops.push(asLine("!! טרם התקבל אישור מהמסוף !!", { align: "C", bold: true, size: 28 }));
       ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
