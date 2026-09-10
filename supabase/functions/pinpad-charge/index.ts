@@ -138,6 +138,9 @@ Deno.serve(async (req) => {
         // Needed later to email the Z-Credit invoice to the customer.
         payment_reference:
           result?.ReferenceNumber != null ? String(result.ReferenceNumber) : null,
+        // Needed to issue an invoice/receipt via CreateInvoiceReceipt.
+        payment_transaction_id:
+          result?.TransactionId != null ? String(result.TransactionId) : null,
       })
       .eq("id", order.id)
       .eq("status", "pending_payment");
