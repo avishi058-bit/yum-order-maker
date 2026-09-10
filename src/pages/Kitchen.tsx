@@ -48,13 +48,14 @@ import {
   printRawBTRoundChef,
   printRawBTFridgeRefill,
   printRawBTPhoneQr,
+  printRawBTInvoice,
   printRawBTPlainText,
   printRawBTPlainTextDirect,
   printRawBTPlainTextShare,
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr } from "@/lib/localPrintAgent";
+import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr, printAgentInvoice } from "@/lib/localPrintAgent";
 import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
