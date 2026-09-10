@@ -179,3 +179,10 @@ export async function printAgentTest(): Promise<AgentPrintResult> {
   const { buildTestOps } = await import("./btReceiptOps");
   return sendBytesToAgent(buildOpsBytes(buildTestOps()));
 }
+
+export async function printAgentInvoice(
+  inv: import("./btReceiptOps").InvoicePrintData,
+): Promise<AgentPrintResult> {
+  const { buildInvoiceOps } = await import("./btReceiptOps");
+  return sendBytesToAgent(buildOpsBytes(buildInvoiceOps(inv)));
+}

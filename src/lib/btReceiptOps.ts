@@ -984,3 +984,66 @@ export function buildEventPrepOps(
 }
 
 
+
+// ============================================================
+// CUSTOMER TAX INVOICE / RECEIPT (חשבונית מס קבלה)
+// Text rendering of the official Z-Credit document, printed on the
+// thermal bon printer. Carries the original document number.
+// ============================================================
+export interface InvoicePrintData {
+  invoiceNumber?: string | null;
+  issuedAt?: string | null;
+  orderNumber?: number | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  total: number;
+  taxRate: number;
+  items: { name: string; qty: number; price: number }[];
+}
+
+export function buildInvoiceOps(inv: InvoicePrintData): FastOp[] {
+  const ops: FastOp[] = [];
+  const money = (n: number) => `${n.toFixed(2)} ILS`;
+  const when = new Date(inv.issuedAt ?? Date.now()).toLocaleString("he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  ops.push(asLine("הבקתה", { align: "C", bold: true, size: 48 }));
+  ops.push(asLine("ערבי הנחל 22, תושיה", { align: "C", size: 30 }));
+  ops.push(sep());
+  ops.push(asLine("חשבונית מס קבלה", { align: "C", bold: true, size: 42 }));
+  if (inv.invoiceNumber) {
+    ops.push(asLine(`מסמך ${inv.invoiceNumber}`, { align: "C", bold: true, size: 39 }));
+  }
+  ops.push(asLine(when, { align: "C", size: 30 }));
+  if (inv.orderNumber != null) {
+    ops.push(asLine(`הזמנה ${inv.orderNumber}`, { align: "C", size: 30 }));
+  }
+  ops.push(sep());
+  if (inv.customerName) ops.push(asLine(`לכבוד: ${inv.customerName}`, { align: "R", size: 33 }));
+  if (inv.customerPhone) ops.push(asLine(`טלפון: ${inv.customerPhone}`, { align: "R", size: 30 }));
+  ops.push(sep());
+
+  for (const it of inv.items) {
+    const line = it.qty > 1 ? `${it.qty} x ${it.name}` : it.name;
+    ops.push(asLine(line, { align: "R", size: 33 }));
+    ops.push(asLine(money(it.qty * it.price), { align: "L", size: 30 }));
+  }
+
+  ops.push(sep());
+  const withoutVat = inv.total / (1 + inv.taxRate / 100);
+  const vat = inv.total - withoutVat;
+  ops.push(asLine(`סה"כ לפני מע"מ: ${money(withoutVat)}`, { align: "R", size: 30 }));
+  ops.push(asLine(`מע"מ ${inv.taxRate}%: ${money(vat)}`, { align: "R", size: 30 }));
+  ops.push(asLine(`סה"כ לתשלום: ${money(inv.total)}`, { align: "R", bold: true, size: 42 }));
+  ops.push(asLine("שולם באשראי", { align: "C", bold: true, size: 36 }));
+  ops.push(feed(1));
+  ops.push(asLine("תודה ולהתראות!", { align: "C", size: 30 }));
+  ops.push(feed(2));
+  ops.push({ kind: "cut" });
+  return ops;
+}

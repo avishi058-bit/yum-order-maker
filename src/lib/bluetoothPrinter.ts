@@ -1579,3 +1579,10 @@ export async function printReceiptAuto(
   await fallback(order);
   return { method: "browser" };
 }
+
+export async function printBluetoothInvoice(
+  inv: import("./btReceiptOps").InvoicePrintData,
+): Promise<void> {
+  const { buildInvoiceOps } = await _ops();
+  await printOps(buildInvoiceOps(inv));
+}
