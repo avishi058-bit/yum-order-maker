@@ -2926,7 +2926,7 @@ const Kitchen = () => {
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
                   {isCreditConfirmed(order) && (
-                    <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי — אין צורך לגבות תשלום</p>
+                    <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי</p>
                   )}
                   {order.payment_method === "credit" && !isCreditConfirmed(order) && (
                     <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף — טרם שולם</p>
