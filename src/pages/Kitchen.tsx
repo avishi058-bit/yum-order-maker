@@ -27,6 +27,7 @@ import {
   printBluetoothRoundChef,
   printBluetoothFridgeRefill,
   printBluetoothPhoneQr,
+  printBluetoothInvoice,
   printTest,
   printHybridDiagnostic,
   getEncoding,
