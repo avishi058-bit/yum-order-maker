@@ -504,7 +504,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       if (isKiosk) {
         try {
           const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
-            body: { orderId: order.orderId },
+            body: {
+              orderId: order.orderId,
+              invoiceEmail: invoiceSaved && invoiceEmail.trim()
+                ? (invoiceEmail.trim().includes("@") ? invoiceEmail.trim() : `${invoiceEmail.trim()}@gmail.com`)
+                : undefined,
+              invoiceName: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
+            },
           });
           if (pinErr) {
             setPinpadState(null);
@@ -517,31 +523,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             return;
           }
           setPinpadState(null);
-          // Invoice by email — requested before payment; send only after the
-          // physical terminal charge succeeded. Await the provider response so
-          // kiosk navigation cannot cancel the request and failures are visible.
-          if (invoiceSaved && invoiceEmail.trim()) {
-            const raw = invoiceEmail.trim();
-            const email = raw.includes("@") ? raw : `${raw}@gmail.com`;
-            const { data: invoiceResult, error: invoiceError } = await supabase.functions.invoke("send-invoice-email", {
-              body: {
-                orderId: order.orderId,
-                email,
-                name: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
-              },
+          if (!pin?.invoiceCreated) {
+            toast({
+              title: "התשלום עבר, אך הפקת החשבונית נכשלה",
+              description: pin?.invoiceMessage || "אפשר לפנות לצוות להפקה חוזרת",
+              variant: "destructive",
             });
-            if (invoiceError || !invoiceResult?.success) {
-              toast({
-                title: "התשלום עבר, אך החשבונית לא נשלחה",
-                description: invoiceResult?.message || "אפשר לפנות לצוות ולבקש שליחה חוזרת",
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "החשבונית נשלחה למייל ✅",
-                description: email,
-              });
-            }
+          } else if (invoiceSaved && invoiceEmail.trim()) {
+            const email = invoiceEmail.trim().includes("@") ? invoiceEmail.trim() : `${invoiceEmail.trim()}@gmail.com`;
+            toast({
+              title: pin?.invoiceEmailed ? "החשבונית הופקה ונשלחה למייל ✅" : "החשבונית הופקה, אך המייל לא נשלח",
+              description: pin?.invoiceEmailed ? email : (pin?.invoiceMessage || "אפשר לפנות לצוות ולבקש שליחה חוזרת"),
+              variant: pin?.invoiceEmailed ? "default" : "destructive",
+            });
           }
           toast({
             title: "התשלום אושר! 🎉",
