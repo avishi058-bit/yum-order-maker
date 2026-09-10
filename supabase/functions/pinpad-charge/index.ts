@@ -15,10 +15,25 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 
 const ZCREDIT_WS_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CommitFullTransaction";
+const ZCREDIT_INVOICE_URL =
+  "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CreateInvoiceReceipt";
+const TAX_RATE = 18;
+const BUSINESS_ADDRESS = "ערבי הנחל 22";
+const BUSINESS_CITY = "תושיה";
 
 const BodySchema = z.object({
   orderId: z.string().uuid(),
+  invoiceEmail: z.string().trim().email().max(255).optional(),
+  invoiceName: z.string().trim().max(100).optional(),
 });
+
+function pickInvoiceNumber(result: Record<string, unknown>): string | null {
+  for (const key of ["InvoiceReceiptNumber", "DocumentNumber", "InvoiceNumber", "ReceiptNumber", "DocNumber", "ReferenceNumber"]) {
+    const value = result[key];
+    if (value != null && String(value).trim() !== "" && String(value) !== "0") return String(value);
+  }
+  return null;
+}
 
 Deno.serve(async (req) => {
   const cors = corsHeadersFor(req);
@@ -59,7 +74,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: ordErr } = await supabase
       .from("orders")
-      .select("id, total, status, customer_name, order_number")
+      .select("id, total, status, customer_name, customer_phone, order_number")
       .eq("id", parsed.data.orderId)
       .maybeSingle();
 
@@ -130,6 +145,17 @@ Deno.serve(async (req) => {
       );
     }
 
+    const transactionIdValue =
+      result?.TransactionId ??
+      result?.TransactionID ??
+      result?.TransactionUniqueID ??
+      result?.UID ??
+      null;
+    const transactionId =
+      transactionIdValue != null && String(transactionIdValue).trim() !== ""
+        ? String(transactionIdValue)
+        : null;
+
     const { error: updErr } = await supabase
       .from("orders")
       .update({
@@ -140,19 +166,116 @@ Deno.serve(async (req) => {
           result?.ReferenceNumber != null ? String(result.ReferenceNumber) : null,
         // Needed to issue an invoice/receipt via CreateInvoiceReceipt on the
         // SAME physical terminal that performed the charge.
-        payment_transaction_id: (() => {
-          const v =
-            result?.TransactionId ??
-            result?.TransactionID ??
-            result?.TransactionUniqueID ??
-            result?.UID ??
-            null;
-          return v != null && String(v).trim() !== "" ? String(v) : null;
-        })(),
+        payment_transaction_id: transactionId,
       })
       .eq("id", order.id)
       .eq("status", "pending_payment");
     if (updErr) console.error("pinpad-charge: order update failed", updErr);
+
+    // Every successful physical-terminal charge gets one official invoice.
+    // Email delivery is optional and is requested in the same call, preventing
+    // kiosk navigation from cancelling a separate invoice request.
+    let invoiceCreated = false;
+    let invoiceEmailed = false;
+    let invoiceMessage: string | null = null;
+    let invoiceNumber: string | null = null;
+
+    if (!transactionId) {
+      invoiceMessage = "המסוף אישר את החיוב אך לא החזיר מזהה עסקה להפקת חשבונית";
+      console.error("pinpad-charge: missing transaction id", {
+        orderId: order.id,
+        responseKeys: Object.keys(result ?? {}),
+      });
+    } else {
+      const { data: rows } = await supabase
+        .from("order_items")
+        .select("item_name, price, quantity")
+        .eq("order_id", order.id);
+      const items = (rows ?? [])
+        .filter((row) => Number(row.price) > 0)
+        .map((row) => ({
+          ItemDescription: String(row.item_name ?? "פריט").slice(0, 100),
+          ItemQuantity: Number(row.quantity) || 1,
+          ItemPrice: Number(row.price),
+          IsTaxFree: false,
+        }));
+      const linesSum = items.reduce((sumValue, item) => sumValue + item.ItemPrice * item.ItemQuantity, 0);
+      const difference = Math.round((sum - linesSum) * 100) / 100;
+      if (items.length === 0) {
+        items.push({
+          ItemDescription: `הזמנה מס' ${order.order_number ?? ""}`.trim(),
+          ItemQuantity: 1,
+          ItemPrice: sum,
+          IsTaxFree: false,
+        });
+      } else if (Math.abs(difference) >= 0.01) {
+        items.push({
+          ItemDescription: difference > 0 ? "תוספות" : "הנחה",
+          ItemQuantity: 1,
+          ItemPrice: difference,
+          IsTaxFree: false,
+        });
+      }
+
+      const invoiceResponse = await fetch(ZCREDIT_INVOICE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          TerminalNumber: TERMINAL.trim(),
+          Password: PASSWORD.trim(),
+          TransactionId: transactionId,
+          ZCreditInvoiceReceipt: {
+            Type: 1,
+            TaxRate: TAX_RATE,
+            RecepientName: parsed.data.invoiceName || order.customer_name || "לקוח",
+            RecepientCompanyID: "",
+            Address: BUSINESS_ADDRESS,
+            City: BUSINESS_CITY,
+            ZipCode: "",
+            PhoneNum: order.customer_phone ?? "",
+            ReceipientEmail: parsed.data.invoiceEmail ?? "",
+            EmailDocumentToReceipient: Boolean(parsed.data.invoiceEmail),
+            ReturnDocumentInResponse: false,
+            Items: items,
+          },
+        }),
+      });
+      const invoiceResult = await invoiceResponse.json().catch(() => ({}));
+      const invoiceFailed =
+        !invoiceResponse.ok ||
+        invoiceResult?.HasError === true ||
+        (invoiceResult?.ReturnCode != null && Number(invoiceResult.ReturnCode) !== 0);
+
+      if (invoiceFailed) {
+        invoiceMessage = invoiceResult?.ReturnMessage || "הפקת החשבונית נכשלה";
+        console.error("pinpad-charge: invoice failed", {
+          orderId: order.id,
+          httpStatus: invoiceResponse.status,
+          code: invoiceResult?.ReturnCode,
+          msg: invoiceResult?.ReturnMessage,
+        });
+      } else {
+        invoiceCreated = true;
+        invoiceEmailed = Boolean(parsed.data.invoiceEmail);
+        invoiceNumber = pickInvoiceNumber(invoiceResult ?? {});
+        const issuedAt = new Date().toISOString();
+        const { error: invoiceUpdateError } = await supabase
+          .from("orders")
+          .update({ invoice_number: invoiceNumber, invoice_issued_at: issuedAt })
+          .eq("id", order.id);
+        if (invoiceUpdateError) {
+          console.error("pinpad-charge: invoice persistence failed", {
+            orderId: order.id,
+            message: invoiceUpdateError.message,
+          });
+        }
+        console.log("pinpad-charge: invoice created", {
+          orderId: order.id,
+          invoiceNumber,
+          emailed: invoiceEmailed,
+        });
+      }
+    }
 
     return json({
       success: true,
@@ -160,6 +283,10 @@ Deno.serve(async (req) => {
       approvalNumber: result?.ApprovalNumber ?? null,
       card4: result?.Card4Digits ?? null,
       clientReceipt: result?.ClientReciept ?? null,
+      invoiceCreated,
+      invoiceEmailed,
+      invoiceNumber,
+      invoiceMessage,
     });
   } catch (e) {
     console.error("pinpad-charge error", e);
