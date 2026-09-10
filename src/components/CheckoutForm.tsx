@@ -1116,6 +1116,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </div>
             )}
 
+            {isKiosk && !canSubmit && !submitting && (
+              <div className="flex flex-col items-center gap-1 rounded-xl border-2 border-dashed border-amber-500/60 bg-amber-500/10 p-3 text-amber-700 animate-pulse">
+                <ArrowUp size={28} className="text-amber-600" />
+                <p className="text-center text-base font-black">
+                  יש לסמן את התיבה למעלה כדי לבחור תשלום
+                </p>
+              </div>
+            )}
+
             <div className={isKiosk ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-3"}>
               {/* קיוסק: אשראי מימין, מזומן משמאל (RTL). אתר: סדר קודם. */}
               {availablePaymentMethods.credit && (
@@ -1126,14 +1135,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "credit"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
-                  className={`rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900 aspect-square flex flex-col items-center justify-center gap-4 p-4" : "flex items-center gap-4 p-5 bg-secondary"}`}
+                  title={!canSubmit ? "יש לסמן את התיבה מעלה כדי לבחור תשלום" : undefined}
+                  className={`rounded-xl border-2 transition-colors disabled:cursor-not-allowed ${
+                    isKiosk
+                      ? "aspect-square flex flex-col items-center justify-center gap-4 p-4 disabled:bg-gray-200/60 disabled:border-gray-300/50 disabled:text-gray-400 bg-white text-gray-900 border-border hover:border-primary"
+                      : "flex items-center gap-4 p-5 bg-secondary border-border hover:border-primary disabled:opacity-50 disabled:hover:border-border"
+                  }`}
                 >
-                  <div className={`rounded-full bg-blue-500/20 flex items-center justify-center ${isKiosk ? "w-20 h-20" : "w-12 h-12"}`}>
-                    <CreditCard size={isKiosk ? 40 : 24} className="text-blue-600" />
+                  <div className={`rounded-full flex items-center justify-center ${isKiosk ? "w-20 h-20 disabled:bg-gray-300/40" : "w-12 h-12"} ${isKiosk && canSubmit ? "bg-blue-500/20" : !isKiosk ? "bg-blue-500/20" : "bg-gray-300/30"}`}>
+                    <CreditCard size={isKiosk ? 40 : 24} className={`${isKiosk && !canSubmit ? "text-gray-400" : "text-blue-600"}`} />
                   </div>
                   <div className={isKiosk ? "text-center" : "text-right"}>
-                    <div className={`font-black ${isKiosk ? "text-3xl" : "text-lg"} ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                    <div className={`font-black ${isKiosk ? "text-3xl" : "text-lg"} ${isKiosk ? (canSubmit ? "text-gray-900" : "text-gray-400") : "text-foreground"}`}>
                       {submitting && paymentMethod === "credit" ? "מעביר לתשלום..." : "אשראי"}
                     </div>
                     {!isKiosk && <div className="text-sm text-muted-foreground">תשלום מאובטח בכרטיס אשראי</div>}
