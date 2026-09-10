@@ -2881,6 +2881,16 @@ const Kitchen = () => {
                     >
                       <ChefHat size={16} />
                     </button>
+                    {isCreditConfirmed(order) && (
+                      <button
+                        onClick={() => printInvoiceBon(order)}
+                        disabled={invoiceBusyId === order.id}
+                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-50"
+                        title="הדפס חשבונית מס קבלה ללקוח"
+                      >
+                        <ReceiptText size={16} />
+                      </button>
+                    )}
                     {order.order_source !== "kiosk" && order.order_source !== "station" && (
                       <button
                         onClick={() => printCustomerQr(order)}
