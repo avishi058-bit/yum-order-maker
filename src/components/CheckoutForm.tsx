@@ -1162,14 +1162,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   disabled={submitting || !canSubmit}
                   aria-busy={submitting && paymentMethod === "cash"}
                   aria-disabled={!canSubmit}
-                  title={!canSubmit ? "יש לאשר תנאי שימוש" : undefined}
-                  className={`rounded-xl border-2 border-border hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border ${isKiosk ? "bg-white text-gray-900 aspect-square flex flex-col items-center justify-center gap-4 p-4" : "flex items-center gap-4 p-5 bg-secondary"}`}
+                  title={!canSubmit ? "יש לסמן את התיבה מעלה כדי לבחור תשלום" : undefined}
+                  className={`rounded-xl border-2 transition-colors disabled:cursor-not-allowed ${
+                    isKiosk
+                      ? "aspect-square flex flex-col items-center justify-center gap-4 p-4 disabled:bg-gray-200/60 disabled:border-gray-300/50 disabled:text-gray-400 bg-white text-gray-900 border-border hover:border-primary"
+                      : "flex items-center gap-4 p-5 bg-secondary border-border hover:border-primary disabled:opacity-50 disabled:hover:border-border"
+                  }`}
                 >
-                  <div className={`rounded-full bg-green-500/20 flex items-center justify-center ${isKiosk ? "w-20 h-20" : "w-12 h-12"}`}>
-                    <Banknote size={isKiosk ? 40 : 24} className="text-green-600" />
+                  <div className={`rounded-full flex items-center justify-center ${isKiosk ? "w-20 h-20" : "w-12 h-12"} ${isKiosk && canSubmit ? "bg-green-500/20" : !isKiosk ? "bg-green-500/20" : "bg-gray-300/30"}`}>
+                    <Banknote size={isKiosk ? 40 : 24} className={`${isKiosk && !canSubmit ? "text-gray-400" : "text-green-600"}`} />
                   </div>
                   <div className={isKiosk ? "text-center" : "text-right"}>
-                    <div className={`font-black ${isKiosk ? "text-3xl" : "text-lg"} ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
+                    <div className={`font-black ${isKiosk ? "text-3xl" : "text-lg"} ${isKiosk ? (canSubmit ? "text-gray-900" : "text-gray-400") : "text-foreground"}`}>
                       {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן"}
                     </div>
                     {!isKiosk && <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>}
