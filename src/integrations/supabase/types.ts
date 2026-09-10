@@ -960,6 +960,8 @@ export type Database = {
           dine_in: boolean | null
           estimated_ready_at: string | null
           id: string
+          invoice_issued_at: string | null
+          invoice_number: string | null
           notes: string | null
           order_number: number
           order_source: string
@@ -990,6 +992,8 @@ export type Database = {
           dine_in?: boolean | null
           estimated_ready_at?: string | null
           id?: string
+          invoice_issued_at?: string | null
+          invoice_number?: string | null
           notes?: string | null
           order_number?: number
           order_source?: string
@@ -1020,6 +1024,8 @@ export type Database = {
           dine_in?: boolean | null
           estimated_ready_at?: string | null
           id?: string
+          invoice_issued_at?: string | null
+          invoice_number?: string | null
           notes?: string | null
           order_number?: number
           order_source?: string

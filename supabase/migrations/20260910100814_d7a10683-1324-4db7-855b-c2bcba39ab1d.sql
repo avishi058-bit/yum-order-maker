@@ -1,0 +1,2 @@
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_number text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_issued_at timestamptz;
