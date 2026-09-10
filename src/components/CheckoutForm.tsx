@@ -517,18 +517,31 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             return;
           }
           setPinpadState(null);
-          // Invoice by email — requested before payment; send only now that
-          // the charge succeeded. Fire-and-forget so it never blocks the flow.
+          // Invoice by email — requested before payment; send only after the
+          // physical terminal charge succeeded. Await the provider response so
+          // kiosk navigation cannot cancel the request and failures are visible.
           if (invoiceSaved && invoiceEmail.trim()) {
             const raw = invoiceEmail.trim();
             const email = raw.includes("@") ? raw : `${raw}@gmail.com`;
-            void supabase.functions.invoke("send-invoice-email", {
+            const { data: invoiceResult, error: invoiceError } = await supabase.functions.invoke("send-invoice-email", {
               body: {
                 orderId: order.orderId,
                 email,
                 name: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
               },
-            }).catch(() => {});
+            });
+            if (invoiceError || !invoiceResult?.success) {
+              toast({
+                title: "התשלום עבר, אך החשבונית לא נשלחה",
+                description: invoiceResult?.message || "אפשר לפנות לצוות ולבקש שליחה חוזרת",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "החשבונית נשלחה למייל ✅",
+                description: email,
+              });
+            }
           }
           toast({
             title: "התשלום אושר! 🎉",
