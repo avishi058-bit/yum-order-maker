@@ -1,45 +1,28 @@
-// Emails the Z-Credit invoice/receipt for a kiosk (PinPad) credit charge.
+// Issues a Z-Credit invoice/receipt (חשבונית מס קבלה) for a kiosk credit
+// charge and emails it to the customer.
 //
-// Flow: RegisterLoginToken (terminal credentials) -> SendEmailPostTransaction
-// with the transaction ReferenceNumber stored on the order at charge time.
-// Both are SOAP operations on the Z-Credit WS endpoint.
+// Flow: pinpad-charge stores the terminal's TransactionId on the order ->
+// this function calls Transaction/CreateInvoiceReceipt with that id, the
+// order lines, and the customer's email (EmailDocumentToReceipient=true).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 
-const SOAP_URL = "https://pci.zcredit.co.il/zcreditws.asmx";
-// Stable client identifier — must be identical for both SOAP calls.
-const CLIENT_UUID = "habikta-kiosk-01";
+const INVOICE_URL =
+  "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CreateInvoiceReceipt";
+
+// Business details printed on the document.
+const TAX_RATE = 18;
+const BUSINESS_ADDRESS = "ערבי הנחל 22";
+const BUSINESS_CITY = "תושיה";
 
 const BodySchema = z.object({
   orderId: z.string().uuid(),
   email: z.string().trim().email().max(255),
-  // Optional "לכבוד" name for the invoice; falls back to the order's customer name.
+  // Optional "לכבוד" name; falls back to the order's customer name.
   name: z.string().trim().max(100).optional(),
 });
-
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-const pick = (xml: string, tag: string) =>
-  xml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1] ?? "";
-
-async function soap(action: string, inner: string) {
-  const body = `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>${inner}</soap:Body>
-</soap:Envelope>`;
-  const res = await fetch(SOAP_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/xml; charset=utf-8",
-      SOAPAction: `"http://z-credit.com/${action}"`,
-    },
-    body,
-  });
-  return await res.text();
-}
 
 Deno.serve(async (req) => {
   const cors = corsHeadersFor(req);
@@ -53,7 +36,8 @@ Deno.serve(async (req) => {
 
   try {
     const TERMINAL = Deno.env.get("ZCREDIT_TERMINAL_NUMBER");
-    const PASSWORD = Deno.env.get("ZCREDIT_TERMINAL_PASSWORD");
+    const PASSWORD =
+      Deno.env.get("ZCREDIT_TERMINAL_PASSWORD") ?? Deno.env.get("ZCREDIT_WS_PASSWORD");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     if (!TERMINAL || !PASSWORD || !SUPABASE_URL) {
       return json({ error: "server_misconfigured" }, 500);
@@ -82,88 +66,99 @@ Deno.serve(async (req) => {
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, payment_method, payment_reference, created_at, customer_name")
+      .select(
+        "id, order_number, total, payment_method, payment_transaction_id, created_at, customer_name, customer_phone",
+      )
       .eq("id", parsed.data.orderId)
       .maybeSingle();
 
     if (!order) return json({ error: "order_not_found" }, 404);
-    if (order.payment_method !== "credit" || !order.payment_reference) {
+    if (order.payment_method !== "credit" || !order.payment_transaction_id) {
       return json({ error: "no_invoice_for_order" }, 409);
     }
-    // Only recent orders (24h) can be re-sent.
+    // Only recent orders (24h) can be invoiced/re-sent.
     if (Date.now() - new Date(order.created_at).getTime() > 24 * 3600 * 1000) {
       return json({ error: "order_too_old" }, 409);
     }
 
-    // The invoice module may live on the web (WebCheckout) account rather than
-    // the physical terminal, so try each credential pair we hold until one logs in.
-    const WEB_KEY = Deno.env.get("ZCREDIT_KEY")?.trim() || "";
-    const candidates: Array<{ label: string; terminal: string; password: string }> = [
-      { label: "terminal", terminal: TERMINAL.trim(), password: PASSWORD.trim() },
-    ];
-    if (WEB_KEY) {
-      candidates.push({ label: "terminal+webkey", terminal: TERMINAL.trim(), password: WEB_KEY });
-      candidates.push({ label: "webkey", terminal: WEB_KEY, password: WEB_KEY });
+    const { data: rows } = await supabase
+      .from("order_items")
+      .select("item_name, price, quantity")
+      .eq("order_id", order.id);
+
+    const items = (rows ?? [])
+      .filter((r) => Number(r.price) > 0)
+      .map((r) => ({
+        ItemDescription: String(r.item_name ?? "פריט").slice(0, 100),
+        ItemQuantity: Number(r.quantity) || 1,
+        ItemPrice: Number(r.price),
+        IsTaxFree: false,
+      }));
+
+    // Keep the document total identical to the amount actually charged.
+    const linesSum = items.reduce((s, i) => s + i.ItemPrice * i.ItemQuantity, 0);
+    const total = Number(order.total);
+    const diff = Math.round((total - linesSum) * 100) / 100;
+    if (items.length === 0) {
+      items.push({
+        ItemDescription: `הזמנה מס' ${order.order_number ?? ""}`.trim(),
+        ItemQuantity: 1,
+        ItemPrice: total,
+        IsTaxFree: false,
+      });
+    } else if (Math.abs(diff) >= 0.01) {
+      items.push({
+        ItemDescription: diff > 0 ? "תוספות" : "הנחה",
+        ItemQuantity: 1,
+        ItemPrice: diff,
+        IsTaxFree: false,
+      });
     }
 
-    let token = "";
-    let lastCode = "";
-    let lastMsg = "";
-    for (const c of candidates) {
-      const loginXml = await soap(
-        "RegisterLoginToken",
-        `<RegisterLoginToken xmlns="http://z-credit.com/">
-        <TerminalNumber>${esc(c.terminal)}</TerminalNumber>
-        <Password>${esc(c.password)}</Password>
-        <UUID>${CLIENT_UUID}</UUID>
-      </RegisterLoginToken>`,
-      );
-      const ok = pick(loginXml, "RegisterLoginTokenResult") === "true";
-      const t = pick(loginXml, "LoginToken");
-      if (ok && t) {
-        console.log("send-invoice-email: login ok", { via: c.label });
-        token = t;
-        break;
-      }
-      lastCode = pick(loginXml, "Validation_Result_Code");
-      lastMsg = pick(loginXml, "Validation_Result_Message");
-      console.error("send-invoice-email: login failed", { via: c.label, code: lastCode, msg: lastMsg });
-    }
+    const payload = {
+      TerminalNumber: TERMINAL.trim(),
+      Password: PASSWORD.trim(),
+      TransactionId: String(order.payment_transaction_id),
+      ZCreditInvoiceReceipt: {
+        Type: 1, // חשבונית מס קבלה
+        TaxRate: TAX_RATE,
+        RecepientName: parsed.data.name || order.customer_name || "לקוח",
+        RecepientCompanyID: "",
+        Address: BUSINESS_ADDRESS,
+        City: BUSINESS_CITY,
+        ZipCode: "",
+        PhoneNum: order.customer_phone ?? "",
+        ReceipientEmail: parsed.data.email,
+        EmailDocumentToReceipient: true,
+        ReturnDocumentInResponse: false,
+        Items: items,
+      },
+    };
 
-    if (!token) {
+    const res = await fetch(INVOICE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json().catch(() => ({}));
+
+    const failed =
+      result?.HasError === true ||
+      (result?.ReturnCode != null && Number(result.ReturnCode) !== 0);
+
+    if (failed) {
+      console.error("send-invoice-email: invoice failed", {
+        orderId: order.id,
+        code: result?.ReturnCode,
+        msg: result?.ReturnMessage,
+      });
       return json({
         success: false,
-        message: lastMsg || "לא הצלחנו להתחבר לשירות החשבוניות",
+        message: result?.ReturnMessage || "שליחת החשבונית נכשלה",
       });
     }
 
-
-    const invoiceName = parsed.data.name || order.customer_name || "";
-    console.log("send-invoice-email: sending", { orderId: order.id, invoiceName });
-
-    const sendXml = await soap(
-      "SendEmailPostTransaction",
-      `<SendEmailPostTransaction xmlns="http://z-credit.com/">
-        <LoginToken>${esc(token)}</LoginToken>
-        <UUID>${CLIENT_UUID}</UUID>
-        <ReferenceNumber>${esc(String(order.payment_reference))}</ReferenceNumber>
-        <MerchantEmail></MerchantEmail>
-        <CustomerEmail>${esc(parsed.data.email)}</CustomerEmail>
-      </SendEmailPostTransaction>`,
-    );
-
-    const sent = pick(sendXml, "SendEmailPostTransactionResult") === "true";
-    if (!sent) {
-      console.error("send-invoice-email: send failed", {
-        code: pick(sendXml, "Validation_Result_Code"),
-        msg: pick(sendXml, "Validation_Result_Message"),
-      });
-      return json({
-        success: false,
-        message: pick(sendXml, "Validation_Result_Message") || "שליחת החשבונית נכשלה",
-      });
-    }
-
+    console.log("send-invoice-email: invoice sent", { orderId: order.id });
     return json({ success: true });
   } catch (e) {
     console.error("send-invoice-email error", e);
