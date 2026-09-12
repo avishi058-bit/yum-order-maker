@@ -47,6 +47,15 @@ interface CheckoutFormProps {
   };
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const resolveInvoiceEmail = (value: string): string | undefined => {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return undefined;
+  const completed = trimmed.includes("@") ? trimmed : `${trimmed}@gmail.com`;
+  return EMAIL_PATTERN.test(completed) ? completed : undefined;
+};
+
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery }, ref) => {
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
@@ -503,12 +512,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       // enforced server-side in the `pinpad-charge` edge function.
       if (isKiosk) {
         try {
+          const resolvedInvoiceEmail = invoiceSaved ? resolveInvoiceEmail(invoiceEmail) : undefined;
           const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
             body: {
               orderId: order.orderId,
-              invoiceEmail: invoiceSaved && invoiceEmail.trim()
-                ? (invoiceEmail.trim().includes("@") ? invoiceEmail.trim() : `${invoiceEmail.trim()}@gmail.com`)
-                : undefined,
+              invoiceEmail: resolvedInvoiceEmail,
               invoiceName: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
             },
           });
@@ -529,11 +537,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               description: pin?.invoiceMessage || "אפשר לפנות לצוות להפקה חוזרת",
               variant: "destructive",
             });
-          } else if (invoiceSaved && invoiceEmail.trim()) {
-            const email = invoiceEmail.trim().includes("@") ? invoiceEmail.trim() : `${invoiceEmail.trim()}@gmail.com`;
+          } else if (resolvedInvoiceEmail) {
             toast({
               title: pin?.invoiceEmailed ? "החשבונית הופקה ונשלחה למייל ✅" : "החשבונית הופקה, אך המייל לא נשלח",
-              description: pin?.invoiceEmailed ? email : (pin?.invoiceMessage || "אפשר לפנות לצוות ולבקש שליחה חוזרת"),
+              description: pin?.invoiceEmailed ? resolvedInvoiceEmail : (pin?.invoiceMessage || "אפשר לפנות לצוות ולבקש שליחה חוזרת"),
               variant: pin?.invoiceEmailed ? "default" : "destructive",
             });
           }
@@ -1271,6 +1278,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                         {invoiceEmail.trim()}@gmail.com
                       </p>
                     )}
+                    {invoiceEmail.trim() && !resolveInvoiceEmail(invoiceEmail) && (
+                      <p className="text-base font-bold text-destructive text-center">
+                        כתובת המייל אינה תקינה
+                      </p>
+                    )}
                     <p className="text-lg font-bold text-gray-900">לכבוד (לא חובה — ברירת מחדל: שם ההזמנה)</p>
                     <input
                       type="text"
@@ -1282,7 +1294,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        disabled={!/^\S+$/.test(invoiceEmail.trim())}
+                        disabled={!resolveInvoiceEmail(invoiceEmail)}
                         onClick={() => { setInvoiceSaved(true); setInvoiceOpen(false); }}
                         className="rounded-2xl bg-primary py-4 text-2xl font-black text-primary-foreground disabled:opacity-50 active:scale-95 transition-transform"
                       >

@@ -145,16 +145,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    const transactionIdValue =
-      result?.TransactionId ??
-      result?.TransactionID ??
-      result?.TransactionUniqueID ??
-      result?.UID ??
-      null;
-    const transactionId =
-      transactionIdValue != null && String(transactionIdValue).trim() !== ""
-        ? String(transactionIdValue)
-        : null;
+    // The JSON gateway has returned different identifier fields across
+    // terminal versions. Keep every non-empty candidate and let the invoice
+    // endpoint confirm which one identifies this charge. ReferenceNumber is
+    // part of the documented CommitFullTransaction response.
+    const transactionIdCandidates = [
+      result?.TransactionId,
+      result?.TransactionID,
+      result?.TransactionUniqueID,
+      result?.UID,
+      result?.ReferenceNumber,
+    ]
+      .filter((value) => value != null && String(value).trim() !== "" && String(value) !== "0")
+      .map((value) => String(value).trim())
+      .filter((value, index, values) => values.indexOf(value) === index);
+    let transactionId = transactionIdCandidates[0] ?? null;
 
     const { error: updErr } = await supabase
       .from("orders")
@@ -217,32 +222,50 @@ Deno.serve(async (req) => {
         });
       }
 
-      const invoiceResponse = await fetch(ZCREDIT_INVOICE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          TerminalNumber: TERMINAL.trim(),
-          Password: PASSWORD.trim(),
-          TransactionId: transactionId,
-          ZCreditInvoiceReceipt: {
-            Type: 1,
-            TaxRate: TAX_RATE,
-            RecepientName: parsed.data.invoiceName || order.customer_name || "לקוח",
-            RecepientCompanyID: "",
-            Address: BUSINESS_ADDRESS,
-            City: BUSINESS_CITY,
-            ZipCode: "",
-            PhoneNum: order.customer_phone ?? "",
-            ReceipientEmail: parsed.data.invoiceEmail ?? "",
-            EmailDocumentToReceipient: Boolean(parsed.data.invoiceEmail),
-            ReturnDocumentInResponse: false,
-            Items: items,
-          },
-        }),
-      });
-      const invoiceResult = await invoiceResponse.json().catch(() => ({}));
+      const invoicePayload = {
+        TerminalNumber: TERMINAL.trim(),
+        Password: PASSWORD.trim(),
+        ZCreditInvoiceReceipt: {
+          Type: 1,
+          TaxRate: TAX_RATE,
+          RecepientName: parsed.data.invoiceName || order.customer_name || "לקוח",
+          RecepientCompanyID: "",
+          Address: BUSINESS_ADDRESS,
+          City: BUSINESS_CITY,
+          ZipCode: "",
+          PhoneNum: order.customer_phone ?? "",
+          ReceipientEmail: parsed.data.invoiceEmail ?? "",
+          EmailDocumentToReceipient: Boolean(parsed.data.invoiceEmail),
+          ReturnDocumentInResponse: false,
+          Items: items,
+        },
+      };
+
+      let invoiceResponse: Response | null = null;
+      let invoiceResult: Record<string, unknown> = {};
+      for (let index = 0; index < transactionIdCandidates.length; index += 1) {
+        const candidate = transactionIdCandidates[index];
+        if (index > 0) await new Promise((resolve) => setTimeout(resolve, 750));
+        invoiceResponse = await fetch(ZCREDIT_INVOICE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...invoicePayload, TransactionId: candidate }),
+        });
+        invoiceResult = await invoiceResponse.json().catch(() => ({}));
+        const candidateFailed =
+          !invoiceResponse.ok ||
+          invoiceResult?.HasError === true ||
+          (invoiceResult?.ReturnCode != null && Number(invoiceResult.ReturnCode) !== 0);
+        if (!candidateFailed) {
+          transactionId = candidate;
+          break;
+        }
+        // Only an unknown transaction can be corrected by trying another
+        // identifier. Other failures must not risk creating a duplicate.
+        if (Number(invoiceResult?.ReturnCode) !== -80) break;
+      }
       const invoiceFailed =
-        !invoiceResponse.ok ||
+        !invoiceResponse?.ok ||
         invoiceResult?.HasError === true ||
         (invoiceResult?.ReturnCode != null && Number(invoiceResult.ReturnCode) !== 0);
 
@@ -261,7 +284,11 @@ Deno.serve(async (req) => {
         const issuedAt = new Date().toISOString();
         const { error: invoiceUpdateError } = await supabase
           .from("orders")
-          .update({ invoice_number: invoiceNumber, invoice_issued_at: issuedAt })
+          .update({
+            payment_transaction_id: transactionId,
+            invoice_number: invoiceNumber,
+            invoice_issued_at: issuedAt,
+          })
           .eq("id", order.id);
         if (invoiceUpdateError) {
           console.error("pinpad-charge: invoice persistence failed", {
