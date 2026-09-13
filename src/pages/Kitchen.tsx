@@ -2642,8 +2642,8 @@ const Kitchen = () => {
             </button>
             <div className="mb-4 flex items-center justify-between gap-3 rounded-lg bg-muted/40 p-3">
               <div>
-                <p className="text-sm font-bold text-foreground">אישור אוטומטי אחרי 2 שניות</p>
-                <p className="text-xs text-muted-foreground">הזמנות חדשות יתקבלו אוטומטית ללא לחיצה</p>
+                <p className="text-sm font-bold text-foreground">קבלת הזמנות אוטומטית</p>
+                <p className="text-xs text-muted-foreground">צלצול של שנייה ואז ההזמנה מתקבלת לבד</p>
               </div>
               <button
                 type="button"
