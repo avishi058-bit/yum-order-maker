@@ -538,20 +538,27 @@ const Kitchen = () => {
     return () => clearInterval(i);
   }, []);
 
-  // When auto-accept is on, accept every "new" order 2s after it appears.
+  // When auto-accept is on: ring for one second, then accept the order with
+  // the configured prep time. Optionally limited to already-paid orders.
   const autoAcceptedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!autoAccept) return;
+    const isPaid = (o: Order) =>
+      !!o.paid_at ||
+      (o.payment_method === "credit" &&
+        !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status));
     const timers = orders
       .filter((o) => o.status === "new" && !autoAcceptedRef.current.has(o.id))
+      .filter((o) => !autoAcceptPaidOnly || isPaid(o))
       .map((o) => {
         autoAcceptedRef.current.add(o.id);
+        playAutoAcceptChime();
         return setTimeout(() => {
-          updateStatus(o.id, "preparing");
-        }, 2000);
+          updateStatus(o.id, "preparing", autoAcceptPrep);
+        }, 1000);
       });
     return () => timers.forEach(clearTimeout);
-  }, [orders, autoAccept]);
+  }, [orders, autoAccept, autoAcceptPaidOnly, autoAcceptPrep]);
 
   // Swap the document <link rel="manifest"> to the kitchen manifest so the
   // browser offers "install" with the kitchen icon/name/start_url=/kitchen.
