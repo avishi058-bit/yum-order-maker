@@ -2657,6 +2657,46 @@ const Kitchen = () => {
                 />
               </button>
             </div>
+
+            {autoAccept && (
+              <div className="mb-4 space-y-3 rounded-lg border border-border bg-muted/20 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">רק הזמנות ששולמו</p>
+                    <p className="text-xs text-muted-foreground">הזמנות שטרם שולמו ימתינו לאישור ידני</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={autoAcceptPaidOnly}
+                    onClick={() => setAutoAcceptPaidOnly((v) => !v)}
+                    className={`relative h-7 w-14 shrink-0 rounded-full transition-colors ${autoAcceptPaidOnly ? "bg-green-500" : "bg-muted-foreground/40"}`}
+                  >
+                    <span
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${autoAcceptPaidOnly ? "right-1" : "right-8"}`}
+                    />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="auto-accept-prep" className="text-sm font-bold text-foreground">
+                    זמן הכנה בקבלה אוטומטית (דקות)
+                  </label>
+                  <input
+                    id="auto-accept-prep"
+                    type="number"
+                    min={1}
+                    max={180}
+                    value={autoAcceptPrep}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value);
+                      setAutoAcceptPrep(isNaN(n) ? 25 : Math.min(180, Math.max(1, n)));
+                    }}
+                    className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-center text-sm font-bold text-foreground"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <AlertTriangle size={16} className="text-yellow-400" />
