@@ -503,13 +503,30 @@ const Kitchen = () => {
     return isNaN(v) ? DEFAULT_AGGRESSIVE_AFTER : v;
   });
 
-  // Auto-accept mode — new orders are accepted automatically after 2 seconds
+  // Auto-accept mode — new orders are accepted automatically after a short chime
   const [autoAccept, setAutoAccept] = useState<boolean>(
     () => localStorage.getItem("kitchen-auto-accept") === "1"
   );
   useEffect(() => {
     localStorage.setItem("kitchen-auto-accept", autoAccept ? "1" : "0");
   }, [autoAccept]);
+
+  // Only auto-accept orders that are already paid (credit confirmed / marked paid)
+  const [autoAcceptPaidOnly, setAutoAcceptPaidOnly] = useState<boolean>(
+    () => localStorage.getItem("kitchen-auto-accept-paid-only") !== "0"
+  );
+  useEffect(() => {
+    localStorage.setItem("kitchen-auto-accept-paid-only", autoAcceptPaidOnly ? "1" : "0");
+  }, [autoAcceptPaidOnly]);
+
+  // Default prep time (minutes) applied when an order is auto-accepted
+  const [autoAcceptPrep, setAutoAcceptPrep] = useState<number>(() => {
+    const v = parseInt(localStorage.getItem("kitchen-auto-accept-prep") || "");
+    return isNaN(v) || v <= 0 ? 25 : v;
+  });
+  useEffect(() => {
+    localStorage.setItem("kitchen-auto-accept-prep", String(autoAcceptPrep));
+  }, [autoAcceptPrep]);
 
   useEffect(() => { localStorage.setItem("kitchen-red-after", String(redAfter)); }, [redAfter]);
   useEffect(() => { localStorage.setItem("kitchen-aggressive-after", String(aggressiveAfter)); }, [aggressiveAfter]);
