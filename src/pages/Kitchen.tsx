@@ -238,6 +238,25 @@ if (typeof window !== "undefined") {
   document.addEventListener("touchstart", unlock, { once: true });
 }
 
+/** Short one-second ring played right before an order is auto-accepted */
+const playAutoAcceptChime = () => {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(880, now);
+  osc.frequency.setValueAtTime(1170, now + 0.5);
+  gain.gain.setValueAtTime(0.3, now);
+  gain.gain.setValueAtTime(0.3, now + 0.5);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 1);
+  osc.start(now);
+  osc.stop(now + 1);
+};
+
 const playRingtone = (ringtoneId: RingtoneId) => {
   const ctx = getAudioCtx();
   if (!ctx) return;
