@@ -16,12 +16,21 @@ interface Order {
   status: string;
   created_at: string;
   payment_method: string | null;
+  paid_at?: string | null;
   order_source: string;
   customer_name?: string | null;
   customer_phone?: string | null;
 }
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444", "#eab308"];
+
+// Orders that never completed payment must not count as revenue
+const UNCOUNTED_STATUSES = new Set([
+  "cancelled",
+  "pending_payment",
+  "payment_failed",
+  "declined",
+]);
 
 // Business day in the restaurant runs 06:00 Jerusalem time → next day 06:00.
 const getBusinessDayStart = (date = new Date()): Date => {
@@ -67,7 +76,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
     const { data } = await supabase
       .from("orders")
-      .select("id, order_number, total, status, created_at, payment_method, order_source, customer_name, customer_phone")
+      .select("id, order_number, total, status, created_at, payment_method, paid_at, order_source, customer_name, customer_phone")
       .gte("created_at", startDate.toISOString())
       .order("created_at", { ascending: true });
 
@@ -81,7 +90,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const monthStart = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     return orders.filter((o) => {
-      if (o.status === "cancelled") return false;
+      if (UNCOUNTED_STATUSES.has(o.status)) return false;
+      // Credit orders only count once the terminal/gateway actually confirmed payment
+      if (o.payment_method === "credit" && !o.paid_at) return false;
       const d = new Date(o.created_at);
       if (todayOnly && d < yesterdayStart) return false;
       switch (period) {
@@ -109,10 +120,14 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   ].filter((d) => d.value > 0);
 
   const cashOrders = filteredOrders.filter((o) => o.payment_method === "cash");
-  const creditOrders = filteredOrders.filter((o) => o.payment_method !== "cash");
+  const creditOrders = filteredOrders.filter((o) => o.payment_method === "credit");
+  const unmarkedOrders = filteredOrders.filter(
+    (o) => o.payment_method !== "cash" && o.payment_method !== "credit",
+  );
   const paymentPieData = [
     { name: "מזומן", value: cashOrders.reduce((s, o) => s + o.total, 0) },
     { name: "אשראי", value: creditOrders.reduce((s, o) => s + o.total, 0) },
+    { name: "לא סומן", value: unmarkedOrders.reduce((s, o) => s + o.total, 0) },
   ].filter((d) => d.value > 0);
 
   // Hourly breakdown for today/yesterday

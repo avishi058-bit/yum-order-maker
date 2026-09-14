@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
 
     const { data: orders, error: ordErr } = await supabase
       .from("orders")
-      .select("total, status, customer_name, customer_phone")
+      .select("total, status, payment_method, paid_at, customer_name, customer_phone")
       .gte("created_at", since);
 
     if (ordErr) {
@@ -99,8 +99,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    const UNCOUNTED = new Set(["cancelled", "pending_payment", "payment_failed", "declined"]);
     const counted = (orders ?? []).filter(
-      (o) => o.status !== "cancelled" && !isTestCustomer(o.customer_name, o.customer_phone),
+      (o) =>
+        !UNCOUNTED.has(o.status) &&
+        // credit orders count only after the payment was actually confirmed
+        !(o.payment_method === "credit" && !o.paid_at) &&
+        !isTestCustomer(o.customer_name, o.customer_phone),
     );
     const total = counted.reduce((sum, o) => sum + Number(o.total ?? 0), 0);
     const totalStr = Number.isInteger(total) ? String(total) : total.toFixed(2);
