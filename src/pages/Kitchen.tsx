@@ -559,16 +559,17 @@ const Kitchen = () => {
 
   // When auto-accept is on: ring for one second, then accept the order with
   // the configured prep time. Optionally limited to already-paid orders.
+  // Cash orders are never auto-accepted, even when marked as paid.
   const autoAcceptedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!autoAccept) return;
-    const isPaid = (o: Order) =>
-      !!o.paid_at ||
-      (o.payment_method === "credit" &&
-        !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status));
+    const isCreditConfirmed = (o: Order) =>
+      o.payment_method === "credit" &&
+      !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status);
     const timers = orders
       .filter((o) => o.status === "new" && !autoAcceptedRef.current.has(o.id))
-      .filter((o) => !autoAcceptPaidOnly || isPaid(o))
+      .filter((o) => o.payment_method !== "cash")
+      .filter((o) => !autoAcceptPaidOnly || isCreditConfirmed(o))
       .map((o) => {
         autoAcceptedRef.current.add(o.id);
         playAutoAcceptChime();
@@ -2662,8 +2663,8 @@ const Kitchen = () => {
               <div className="mb-4 space-y-3 rounded-lg border border-border bg-muted/20 p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-foreground">רק הזמנות ששולמו</p>
-                    <p className="text-xs text-muted-foreground">הזמנות שטרם שולמו ימתינו לאישור ידני</p>
+                    <p className="text-sm font-bold text-foreground">רק הזמנות ששולמו באשראי</p>
+                    <p className="text-xs text-muted-foreground">הזמנות מזומן לעולם לא יתקבלו אוטומטית</p>
                   </div>
                   <button
                     type="button"
