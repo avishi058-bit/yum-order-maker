@@ -141,6 +141,11 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, kiosk_credit_enabled: enabled }));
   };
 
+  const toggleKioskPaybox = async (enabled: boolean) => {
+    await supabase.from("restaurant_status").update({ kiosk_paybox_enabled: enabled }).neq("id", "00000000-0000-0000-0000-000000000000");
+    setStatus((prev) => ({ ...prev, kiosk_paybox_enabled: enabled }));
+  };
+
   const closeAll = async () => {
     await supabase.from("restaurant_status").update({ website_open: false, station_open: false }).neq("id", "00000000-0000-0000-0000-000000000000");
     setStatus((prev) => ({ ...prev, website_open: false, station_open: false }));
