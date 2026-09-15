@@ -121,12 +121,14 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const cashOrders = filteredOrders.filter((o) => o.payment_method === "cash");
   const creditOrders = filteredOrders.filter((o) => o.payment_method === "credit");
+  const payboxOrders = filteredOrders.filter((o) => o.payment_method === "paybox");
   const unmarkedOrders = filteredOrders.filter(
-    (o) => o.payment_method !== "cash" && o.payment_method !== "credit",
+    (o) => o.payment_method !== "cash" && o.payment_method !== "credit" && o.payment_method !== "paybox",
   );
   const paymentPieData = [
     { name: "מזומן", value: cashOrders.reduce((s, o) => s + o.total, 0) },
     { name: "אשראי", value: creditOrders.reduce((s, o) => s + o.total, 0) },
+    { name: "פייבוקס", value: payboxOrders.reduce((s, o) => s + o.total, 0) },
     { name: "לא סומן", value: unmarkedOrders.reduce((s, o) => s + o.total, 0) },
   ].filter((d) => d.value > 0);
 

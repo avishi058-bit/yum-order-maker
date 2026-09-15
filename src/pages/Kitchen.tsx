@@ -348,7 +348,7 @@ function persistPrintedOrder(id: string, printed: boolean) {
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
-  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -568,7 +568,7 @@ const Kitchen = () => {
       !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status);
     const timers = orders
       .filter((o) => o.status === "new" && !autoAcceptedRef.current.has(o.id))
-      .filter((o) => o.payment_method !== "cash")
+      .filter((o) => o.payment_method !== "cash" && o.payment_method !== "paybox")
       .filter((o) => !autoAcceptPaidOnly || isCreditConfirmed(o))
       .map((o) => {
         autoAcceptedRef.current.add(o.id);
@@ -2304,6 +2304,16 @@ const Kitchen = () => {
                 </button>
 
                 <button
+                  onClick={() => toggleKioskPaybox(!restaurantStatus.kiosk_paybox_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.kiosk_paybox_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><Smartphone size={14} /> פייבוקס — עמדה</span>
+                  <span>{restaurantStatus.kiosk_paybox_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <button
                   onClick={() => toggleHighLoad(!restaurantStatus.high_load)}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 border-2 ${
                     restaurantStatus.high_load
@@ -3009,6 +3019,12 @@ const Kitchen = () => {
                   {order.payment_method === "cash" && (
                     <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
                   )}
+                  {order.payment_method === "paybox" && order.queue_number == null && (
+                    <p className="text-sm font-black text-purple-400 mt-1 animate-pulse">📲 פייבוקס — יש לבדוק צילום מסך של ההעברה</p>
+                  )}
+                  {order.payment_method === "paybox" && order.queue_number != null && (
+                    <p className="text-sm font-black text-purple-300 mt-1">📲 שולם בפייבוקס</p>
+                  )}
                   {isCreditConfirmed(order) && (
                     <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי</p>
                   )}
@@ -3143,6 +3159,27 @@ const Kitchen = () => {
                         className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-60 disabled:cursor-wait"
                       >
                         ביטול
+                      </button>
+                    )}
+                    {order.payment_method === "paybox" && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
+                      <button
+                        onClick={() => markPaid(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-6 py-3 rounded-lg bg-purple-600 text-white font-black text-lg hover:bg-purple-500 transition-all active:scale-95 shadow-md shadow-purple-600/40 disabled:opacity-60 disabled:cursor-wait"
+                      >
+                        {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם בפייבוקס 📲"}
+                      </button>
+                    )}
+                    {order.payment_method === "paybox" && order.queue_number != null && undoablePaid[order.id] && (
+                      <button
+                        onClick={() => unmarkPaid(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-4 py-3 rounded-lg bg-yellow-600 text-white font-black text-base hover:bg-yellow-500 transition-all active:scale-95 shadow-md shadow-yellow-600/40 disabled:opacity-60 disabled:cursor-wait"
+                        title="ביטול אפשרי רק 30 שניות לאחר סימון השולם"
+                      >
+                        {paidPendingIds.has(order.id)
+                          ? "מעדכן..."
+                          : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
                       </button>
                     )}
                     {order.payment_method === "cash" && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (

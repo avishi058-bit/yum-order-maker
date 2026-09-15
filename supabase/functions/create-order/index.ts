@@ -101,7 +101,7 @@ const BodySchema = z.object({
   // Empty strings are normalized to a placeholder before insert.
   customerPhone: z.string().trim().max(30).optional().default(""),
   notes: z.string().max(500).optional().nullable(),
-  paymentMethod: z.enum(["cash", "credit", "counter"]),
+  paymentMethod: z.enum(["cash", "credit", "counter", "paybox"]),
   orderSource: z.enum(["website", "kiosk", "station"]).default("website"),
   dineIn: z.boolean().nullable().optional(),
   status: z.enum(["new", "pending_payment"]).default("new"),
@@ -394,7 +394,7 @@ Deno.serve(async (req: Request) => {
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
-    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled")
+    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled")
     .limit(1);
   if (statusErr) {
     console.error("status fetch failed", statusErr);
@@ -417,6 +417,15 @@ Deno.serve(async (req: Request) => {
   }
   if (body.paymentMethod === "credit" && !creditOk) {
     return jsonResponse({ error: "תשלום באשראי אינו זמין כרגע" }, 403);
+  }
+  // Paybox is a kiosk-only method, gated by its own kitchen toggle.
+  if (body.paymentMethod === "paybox") {
+    if (!isStationOrKiosk) {
+      return jsonResponse({ error: "תשלום בפייבוקס זמין רק בעמדה" }, 403);
+    }
+    if (!status.kiosk_paybox_enabled) {
+      return jsonResponse({ error: "תשלום בפייבוקס אינו זמין כרגע" }, 403);
+    }
   }
   // "counter" = pay-at-counter (cash or card paid physically at the location).
   // Always allowed regardless of cash/credit toggles, since payment happens
