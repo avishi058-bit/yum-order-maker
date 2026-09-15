@@ -642,6 +642,16 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ops.push(sep());
     ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 26 }));
     ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
+  } else if (order.payment_method === "paybox") {
+    const paid = (order as any).queue_number != null;
+    ops.push(sep());
+    if (paid) {
+      ops.push(asLine("שולם בפייבוקס!", { align: "C", bold: true, size: 36 }));
+      ops.push(asLine(`שולם ${order.total}₪ בפייבוקס`, { align: "C", bold: true, size: 32 }));
+    } else {
+      ops.push(asLine("!! פייבוקס - לבדוק צילום מסך !!", { align: "C", bold: true, size: 26 }));
+      ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
+    }
   } else if (order.payment_method === "credit") {
     const st = String((order as any).status ?? "");
     const confirmed = !["pending_payment", "payment_failed", "cancelled", "declined"].includes(st);

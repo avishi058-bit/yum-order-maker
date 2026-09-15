@@ -984,7 +984,13 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const creditConfirmed =
     order.payment_method === "credit" &&
     !["pending_payment", "payment_failed", "cancelled", "declined"].includes(creditStatus);
-  const paymentLine = isCash
+  const isPaybox = order.payment_method === "paybox";
+  const payboxPaid = isPaybox && (order as any).queue_number != null;
+  const paymentLine = isPaybox
+    ? payboxPaid
+      ? `<div class="paid" style="font-size:1.4em;font-weight:900;">📲 שולם ₪${order.total} בפייבוקס</div>`
+      : `<div class="warn" style="font-size:1.3em;font-weight:900;">📲 פייבוקס — יש לבדוק צילום מסך של ההעברה</div>`
+    : isCash
     ? `<div class="warn">לא שולם — מזומן בעת המסירה</div>`
     : isCounter
     ? `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ לתשלום בקופה ⚠️</div>`
