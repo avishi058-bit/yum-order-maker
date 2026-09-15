@@ -10,7 +10,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { validateIsraeliPhone } from "@/lib/utils";
-import { Banknote, CreditCard, Store, ArrowRight, ArrowUp } from "lucide-react";
+import { Banknote, CreditCard, Store, ArrowRight, ArrowUp, Smartphone } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
 import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
@@ -1426,6 +1426,45 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           setStep("payment");
         }}
       />
+
+      {/* Paybox acknowledgement — the customer must confirm they transfer the
+          money now and show the confirmation screenshot to the cashier. */}
+      {payboxConfirmOpen && (
+        <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4" dir="rtl">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setPayboxConfirmOpen(false)} />
+          <div className={`relative rounded-2xl p-6 w-full max-w-md text-center space-y-4 shadow-2xl ${isKiosk ? "bg-white text-gray-900" : "bg-card border border-border"}`}>
+            <div className="text-5xl">📲</div>
+            <h3 className={`${isKiosk ? "text-3xl" : "text-xl"} font-black`}>תשלום בפייבוקס</h3>
+            <p className={`${isKiosk ? "text-xl text-gray-700" : "text-sm text-muted-foreground"} font-bold leading-relaxed`}>
+              עליך להעביר את התשלום בפייבוקס עם שליחת ההזמנה,
+              <br />
+              ולהראות את צילום המסך של ההעברה למוכר.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => {
+                  setPayboxAck(true);
+                  setPayboxConfirmOpen(false);
+                  setPaymentMethod("paybox");
+                  void submitOrder("paybox");
+                }}
+                className={`w-full rounded-xl bg-primary text-primary-foreground font-black disabled:opacity-60 ${isKiosk ? "py-5 text-2xl" : "py-3"}`}
+              >
+                מאשר/ת — שולח הזמנה ✅
+              </button>
+              <button
+                type="button"
+                onClick={() => setPayboxConfirmOpen(false)}
+                className={`w-full rounded-xl font-bold ${isKiosk ? "py-4 text-xl border-2 border-gray-300 text-gray-700" : "py-3 border border-border text-muted-foreground"}`}
+              >
+                חזרה לבחירת אמצעי תשלום ↩
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Duplicate-order confirmation — prevents accidentally ordering twice */}
       {duplicateInfo && (
