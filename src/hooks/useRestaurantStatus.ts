@@ -16,11 +16,11 @@ export interface RestaurantStatus {
   delivery_enabled: boolean;
 }
 
-const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled";
+const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled";
 
 const CACHE_KEY = "habakta_restaurant_status";
 
-const DEFAULT_STATUS: RestaurantStatus = { website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, kiosk_cash_enabled: true, kiosk_credit_enabled: true, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false };
+const DEFAULT_STATUS: RestaurantStatus = { website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, kiosk_cash_enabled: true, kiosk_credit_enabled: true, kiosk_paybox_enabled: false, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false };
 
 // Read the last known status synchronously so a closed restaurant never
 // flashes as "open" for the ~1.5s the network request takes.
