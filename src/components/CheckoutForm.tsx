@@ -30,7 +30,7 @@ interface CheckoutFormProps {
   sauces?: CheckoutSauce[];
   freeSauces?: number;
   onClose: () => void;
-  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter", orderId?: string, customerName?: string) => void;
+  onSuccess: (orderNumber?: number, phone?: string, paymentMethod?: "cash" | "credit" | "counter" | "paybox", orderId?: string, customerName?: string) => void;
   /** When true, skip the "details" (סיום הזמנה) step and jump straight to payment method selection. */
   skipDetails?: boolean;
   /** Customer's actual dining choice. Passed to the server so the kitchen receipt shows the real choice, not just the order source. */
@@ -134,13 +134,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   // Set when the server detects an identical order sent minutes ago — we ask
   // the customer to confirm before creating a second one.
-  const [duplicateInfo, setDuplicateInfo] = useState<{ orderNumber?: number; method: "cash" | "credit" | "counter" } | null>(null);
+  const [duplicateInfo, setDuplicateInfo] = useState<{ orderNumber?: number; method: "cash" | "credit" | "counter" | "paybox" } | null>(null);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [customerName, setCustomerName] = useState<string | null>(
     isLoggedIn && customer ? customer.name : null
   );
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | "counter" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
+  const [payboxConfirmOpen, setPayboxConfirmOpen] = useState(false);
+  const [payboxAck, setPayboxAck] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
@@ -309,7 +311,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     setStep("payment");
   };
 
-  const handlePaymentSelect = async (method: "cash" | "credit" | "counter") => {
+  const handlePaymentSelect = async (method: "cash" | "credit" | "counter" | "paybox") => {
     // Guard against double-clicks while a previous submission is in flight
     if (submitting) return;
     // Hard gate: terms + privacy must be accepted before any payment can proceed
@@ -337,6 +339,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       });
       return;
     }
+    // Paybox requires an explicit acknowledgement that the customer transfers
+    // the money now and shows the confirmation screenshot to the cashier.
+    if (method === "paybox" && !payboxAck) {
+      setPayboxConfirmOpen(true);
+      return;
+    }
+
     setPaymentMethod(method);
 
     if (method === "credit") {
@@ -400,7 +409,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   };
 
   const callCreateOrder = async (
-    paymentMethod: "cash" | "credit" | "counter",
+    paymentMethod: "cash" | "credit" | "counter" | "paybox",
     status: "new" | "pending_payment",
     allowDuplicate = false,
   ) => {
@@ -687,7 +696,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
   };
 
-  const submitOrder = async (method: "cash" | "credit" | "counter", allowDuplicate = false) => {
+  const submitOrder = async (method: "cash" | "credit" | "counter" | "paybox", allowDuplicate = false) => {
     setSubmitting(true);
     try {
       const order = await callCreateOrder(method, "new", allowDuplicate);
@@ -723,6 +732,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const availablePaymentMethods = {
     cash: isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled,
     credit: isKiosk ? restaurantStatus.kiosk_credit_enabled : restaurantStatus.credit_enabled,
+    // Paybox — kiosk only, controlled by its own kitchen toggle.
+    paybox: isKiosk && restaurantStatus.kiosk_paybox_enabled,
   };
 
   // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.
@@ -1231,7 +1242,29 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 </motion.button>
               )}
 
-              {!availablePaymentMethods.cash && !availablePaymentMethods.credit && (
+              {isKiosk && availablePaymentMethods.paybox && (
+                <motion.button
+                  whileHover={!submitting && canSubmit ? { scale: 1.02 } : undefined}
+                  whileTap={!submitting && canSubmit ? { scale: 0.98 } : undefined}
+                  onClick={() => handlePaymentSelect("paybox")}
+                  disabled={submitting || !canSubmit}
+                  aria-busy={submitting && paymentMethod === "paybox"}
+                  aria-disabled={!canSubmit}
+                  title={!canSubmit ? "יש לסמן את התיבה מעלה כדי לבחור תשלום" : undefined}
+                  className="rounded-xl border-2 transition-colors disabled:cursor-not-allowed aspect-square flex flex-col items-center justify-center gap-4 p-4 disabled:bg-gray-200/60 disabled:border-gray-300/50 disabled:text-gray-400 bg-white text-gray-900 border-border hover:border-primary"
+                >
+                  <div className={`rounded-full flex items-center justify-center w-20 h-20 ${canSubmit ? "bg-purple-500/20" : "bg-gray-300/30"}`}>
+                    <Smartphone size={40} className={canSubmit ? "text-purple-600" : "text-gray-400"} />
+                  </div>
+                  <div className="text-center">
+                    <div className={`font-black text-3xl ${canSubmit ? "text-gray-900" : "text-gray-400"}`}>
+                      {submitting && paymentMethod === "paybox" ? "שולח הזמנה..." : "פייבוקס"}
+                    </div>
+                  </div>
+                </motion.button>
+              )}
+
+              {!availablePaymentMethods.cash && !availablePaymentMethods.credit && !availablePaymentMethods.paybox && (
 
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-lg font-bold">אין אמצעי תשלום זמינים כרגע</p>
