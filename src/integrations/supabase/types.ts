@@ -1177,6 +1177,7 @@ export type Database = {
           id: string
           kiosk_cash_enabled: boolean
           kiosk_credit_enabled: boolean
+          kiosk_paybox_enabled: boolean
           last_opened_at: string | null
           preorder_enabled: boolean
           preorder_end_time: string
@@ -1193,6 +1194,7 @@ export type Database = {
           id?: string
           kiosk_cash_enabled?: boolean
           kiosk_credit_enabled?: boolean
+          kiosk_paybox_enabled?: boolean
           last_opened_at?: string | null
           preorder_enabled?: boolean
           preorder_end_time?: string
@@ -1209,6 +1211,7 @@ export type Database = {
           id?: string
           kiosk_cash_enabled?: boolean
           kiosk_credit_enabled?: boolean
+          kiosk_paybox_enabled?: boolean
           last_opened_at?: string | null
           preorder_enabled?: boolean
           preorder_end_time?: string

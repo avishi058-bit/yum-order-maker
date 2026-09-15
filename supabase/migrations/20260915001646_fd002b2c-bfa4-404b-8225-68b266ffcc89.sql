@@ -1,0 +1,1 @@
+ALTER TABLE public.restaurant_status ADD COLUMN IF NOT EXISTS kiosk_paybox_enabled boolean NOT NULL DEFAULT false;
