@@ -80,6 +80,7 @@ export const useRestaurantStatus = () => {
               credit_enabled: n.credit_enabled ?? prev.credit_enabled,
               kiosk_cash_enabled: n.kiosk_cash_enabled ?? prev.kiosk_cash_enabled,
               kiosk_credit_enabled: n.kiosk_credit_enabled ?? prev.kiosk_credit_enabled,
+              kiosk_paybox_enabled: n.kiosk_paybox_enabled ?? prev.kiosk_paybox_enabled,
               high_load: n.high_load ?? prev.high_load,
               preorder_enabled: n.preorder_enabled ?? prev.preorder_enabled,
               preorder_start_time: n.preorder_start_time ?? prev.preorder_start_time,
