@@ -8,6 +8,7 @@ export interface RestaurantStatus {
   credit_enabled: boolean;
   kiosk_cash_enabled: boolean;
   kiosk_credit_enabled: boolean;
+  kiosk_paybox_enabled: boolean;
   high_load: boolean;
   preorder_enabled: boolean;
   preorder_start_time: string; // "HH:MM" or "HH:MM:SS"
