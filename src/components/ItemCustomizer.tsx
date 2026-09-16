@@ -1399,6 +1399,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
+                    onScroll={markScroll}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
                     {isGlutenFree && (
@@ -1493,6 +1494,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
+                    onScroll={markScroll}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-2" : "text-lg mb-1"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
                     <p className={`text-center text-gray-500 ${isKiosk ? "text-[20px] mb-6" : "text-sm mb-4"}`}>מחיר מלא, אפשר גם לדלג</p>
