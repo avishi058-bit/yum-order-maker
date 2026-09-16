@@ -335,6 +335,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     });
   }, [applyHeroTransform]);
 
+  // Ignore taps that fire right after a scroll (accidental touches while scrolling)
+  const lastScrollAtRef = useRef(0);
+  const markScroll = useCallback(() => {
+    lastScrollAtRef.current = Date.now();
+  }, []);
+  const tapGuard = useCallback(
+    <A extends unknown[]>(fn: (...args: A) => void) =>
+      (...args: A) => {
+        if (Date.now() - lastScrollAtRef.current < 350) return;
+        fn(...args);
+      },
+    [],
+  );
+
   const isInteractiveDragTarget = useCallback((target: HTMLElement | null) =>
     !!target?.closest("button, a, input, textarea, select, label, [role='button']"), []);
 
@@ -972,7 +986,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={isKiosk ? undefined : handleScroll}
+                    onScroll={() => { markScroll(); if (!isKiosk) handleScroll(); }}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
