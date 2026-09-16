@@ -335,6 +335,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     });
   }, [applyHeroTransform]);
 
+  // Ignore taps that fire right after a scroll (accidental touches while scrolling)
+  const lastScrollAtRef = useRef(0);
+  const markScroll = useCallback(() => {
+    lastScrollAtRef.current = Date.now();
+  }, []);
+  const tapGuard = useCallback(
+    <A extends unknown[]>(fn: (...args: A) => void) =>
+      (...args: A) => {
+        if (Date.now() - lastScrollAtRef.current < 350) return;
+        fn(...args);
+      },
+    [],
+  );
+
   const isInteractiveDragTarget = useCallback((target: HTMLElement | null) =>
     !!target?.closest("button, a, input, textarea, select, label, [role='button']"), []);
 
@@ -972,7 +986,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     transition={{ duration: 0.18 }}
                     className="flex-1 overflow-y-auto overscroll-contain"
                     ref={scrollRef}
-                    onScroll={isKiosk ? undefined : handleScroll}
+                    onScroll={() => { markScroll(); if (!isKiosk) handleScroll(); }}
                     onPointerDown={onPointerDown}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
@@ -1023,7 +1037,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               return (
                                 <button
                                   key={d.id}
-                                  onClick={() => setSelectedDoneness(d.id)}
+                                  onClick={tapGuard(() => setSelectedDoneness(d.id))}
                                   aria-pressed={active}
                                   className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                 >
@@ -1070,7 +1084,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               return (
                                 <button
                                   key={ing.id}
-                                  onClick={() => toggleIngredient(ing.id)}
+                                  onClick={tapGuard(() => toggleIngredient(ing.id))}
                                   className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                 >
                                   <div
@@ -1157,7 +1171,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                       {multiCount > 0 ? (
                                         <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
                                           <button
-                                            onClick={() => removeToppingUnit(t.id)}
+                                            onClick={tapGuard(() => removeToppingUnit(t.id))}
                                             className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                             aria-label="הסר"
                                           >
@@ -1165,7 +1179,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                           </button>
                                           <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{multiCount}</span>
                                           <button
-                                            onClick={() => addToppingUnit(t.id)}
+                                            onClick={tapGuard(() => addToppingUnit(t.id))}
                                             disabled={multiCount >= multiMax}
                                             className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition disabled:opacity-40 ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                             aria-label="הוסף"
@@ -1175,7 +1189,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                         </div>
                                       ) : (
                                         <button
-                                          onClick={() => addToppingUnit(t.id)}
+                                          onClick={tapGuard(() => addToppingUnit(t.id))}
                                           className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
                                         >
                                           <Plus size={isKiosk ? 18 : 14} />
@@ -1217,7 +1231,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                     className={`w-full border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}
                                   >
                                     <button
-                                      onClick={() => setJalapeno(active ? "none" : dineIn ? "in" : "in")}
+                                      onClick={tapGuard(() => setJalapeno(active ? "none" : "in"))}
                                       aria-pressed={active}
                                       className="w-full flex items-center justify-between"
                                     >
@@ -1241,7 +1255,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                         ]).map((opt) => (
                                           <button
                                             key={opt.mode}
-                                            onClick={() => setJalapeno(opt.mode)}
+                                            onClick={tapGuard(() => setJalapeno(opt.mode))}
                                             aria-pressed={opt.on}
                                             className={`rounded-full border-2 font-bold transition-colors ${isKiosk ? "px-5 py-2.5 text-[20px]" : "px-4 py-1.5 text-sm"} ${
                                               opt.on ? "border-primary bg-primary text-primary-foreground" : "border-gray-300 text-gray-600"
@@ -1261,7 +1275,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                               return (
                                 <button
                                   key={t.id}
-                                  onClick={() => toggleTopping(t.id)}
+                                  onClick={tapGuard(() => toggleTopping(t.id))}
                                   aria-pressed={active}
                                   disabled={glutenBlocked}
                                   className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"} ${glutenBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -1326,7 +1340,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                         {count > 0 ? (
                                           <div className={`flex items-center gap-2 ${isKiosk ? "text-[20px]" : "text-base"}`}>
                                             <button
-                                              onClick={() => setCount(count - 1)}
+                                              onClick={tapGuard(() => setCount(count - 1))}
                                               className={`rounded-full bg-secondary hover:bg-border flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                               aria-label="הסר"
                                             >
@@ -1334,7 +1348,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                             </button>
                                             <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{count}</span>
                                             <button
-                                              onClick={() => setCount(count + 1)}
+                                              onClick={tapGuard(() => setCount(count + 1))}
                                               className={`rounded-full bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
                                               aria-label="הוסף"
                                             >
@@ -1385,6 +1399,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
+                    onScroll={markScroll}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר סוג צ׳יפס לעסקית:</h3>
                     {isGlutenFree && (
@@ -1412,7 +1427,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           <button
                             key={side.id}
                             aria-pressed={active}
-                            onClick={() => !unavailable && setSelectedSide(side.id)}
+                            onClick={tapGuard(() => { if (!unavailable) setSelectedSide(side.id); })}
                             disabled={unavailable}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${
                               unavailable ? "opacity-50 cursor-not-allowed" : ""
@@ -1479,6 +1494,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
+                    onScroll={markScroll}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-2" : "text-lg mb-1"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
                     <p className={`text-center text-gray-500 ${isKiosk ? "text-[20px] mb-6" : "text-sm mb-4"}`}>מחיר מלא, אפשר גם לדלג</p>
@@ -1523,6 +1539,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.18 }}
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
+                    onScroll={markScroll}
                   >
                     <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>בחר שתייה לעסקית:</h3>
 
@@ -1537,7 +1554,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           <button
                             key={drink.id}
                             disabled={unavailable}
-                            onClick={() => { if (!unavailable) { setSelectedDrink(drink.id); scrollToDrinkAddButton(); } }}
+                            onClick={tapGuard(() => { if (!unavailable) { setSelectedDrink(drink.id); scrollToDrinkAddButton(); } })}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
@@ -1583,7 +1600,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           <button
                             key={drink.id}
                             disabled={unavailable}
-                            onClick={() => !unavailable && handleDrinkSelection(drink.id)}
+                            onClick={tapGuard(() => { if (!unavailable) handleDrinkSelection(drink.id); })}
                             className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-4"} ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <div className="flex items-center gap-3">
