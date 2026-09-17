@@ -5,6 +5,11 @@ export interface AvailabilityMap {
   [itemId: string]: boolean;
 }
 
+/** Ids that represent the same physical ingredient — availability is shared. */
+export const AVAILABILITY_ALIAS_GROUPS: string[][] = [
+  ["pickled-jalapeno", "pickled-jalapeno-side", "pickled-jalapeno-sauce"],
+];
+
 export const useAvailability = () => {
   const [availability, setAvailability] = useState<AvailabilityMap>({});
   const [loading, setLoading] = useState(true);
@@ -45,6 +50,10 @@ export const useAvailability = () => {
   }, []);
 
   const isAvailable = (itemId: string) => {
+    // Some ingredients exist under several ids (topping / "on the side" / sauce).
+    // Disabling any one of them must hide the whole group.
+    const group = AVAILABILITY_ALIAS_GROUPS.find((g) => g.includes(itemId));
+    if (group) return group.every((id) => availability[id] !== false);
     return availability[itemId] !== false; // default to available if not in DB
   };
 
