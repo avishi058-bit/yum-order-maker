@@ -442,12 +442,30 @@ Deno.serve(async (req: Request) => {
     overrides = rawOverrides as Record<string, { price?: number }>;
   }
 
-  // Availability gate
-  const itemIds = Array.from(new Set(body.items.map((i) => i.itemId)));
+  // Availability gate — main items, paid toppings and sauces.
+  // Some ingredients exist under several ids (topping / "on the side" / sauce);
+  // disabling any one of them blocks the whole group.
+  const ALIAS_GROUPS: string[][] = [
+    ["pickled-jalapeno", "pickled-jalapeno-side", "pickled-jalapeno-sauce"],
+  ];
+  const requestedIds = new Set<string>();
+  for (const i of body.items) {
+    requestedIds.add(i.itemId);
+    for (const t of i.toppings ?? []) requestedIds.add(t);
+    for (const b of i.dealBurgers ?? []) {
+      for (const t of b.toppings ?? []) requestedIds.add(t);
+    }
+  }
+  for (const s of body.sauces ?? []) requestedIds.add(s.id);
+  const lookupIds = new Set<string>(requestedIds);
+  for (const id of requestedIds) {
+    const group = ALIAS_GROUPS.find((g) => g.includes(id));
+    if (group) group.forEach((g) => lookupIds.add(g));
+  }
   const { data: availRows, error: availErr } = await supabase
     .from("menu_availability")
     .select("item_id, available, item_name")
-    .in("item_id", itemIds);
+    .in("item_id", Array.from(lookupIds));
   if (availErr) {
     console.error("availability fetch failed", availErr);
     return jsonResponse({ error: "שגיאה בבדיקת זמינות" }, 500);
@@ -456,10 +474,13 @@ Deno.serve(async (req: Request) => {
   (availRows ?? []).forEach((r: any) => {
     availMap.set(r.item_id, { available: r.available, name: r.item_name });
   });
-  for (const id of itemIds) {
-    const row = availMap.get(id);
-    if (row && row.available === false) {
-      return jsonResponse({ error: `הפריט "${row.name}" אינו זמין כרגע` }, 409);
+  for (const id of requestedIds) {
+    const group = ALIAS_GROUPS.find((g) => g.includes(id)) ?? [id];
+    for (const gid of group) {
+      const row = availMap.get(gid);
+      if (row && row.available === false) {
+        return jsonResponse({ error: `הפריט "${row.name}" אינו זמין כרגע` }, 409);
+      }
     }
   }
 
