@@ -68,18 +68,27 @@ const COLOR_CLASSES: Record<Exclude<ColorMode, "none">, string> = {
 };
 
 const CAPTION_CLASS = "a11y-alt-caption";
+const BUTTON_SIZE = 48;
+
+const clampButtonPosition = (position: { x: number; y: number }) => ({
+  x: Math.min(Math.max(position.x, -16), Math.max(-16, window.innerWidth - BUTTON_SIZE - 16)),
+  y: Math.min(Math.max(position.y, -(window.innerHeight - BUTTON_SIZE - 16)), 16),
+});
 
 const applyImageCaptions = (enabled: boolean) => {
   if (!enabled) {
     document.querySelectorAll<HTMLElement>(`.${CAPTION_CLASS}`).forEach((el) => el.remove());
     return;
   }
+  document.querySelectorAll<HTMLElement>(`.${CAPTION_CLASS}`).forEach((caption) => {
+    const image = caption.previousElementSibling;
+    if (!(image instanceof HTMLImageElement) || image.alt !== caption.textContent) caption.remove();
+  });
   document.querySelectorAll<HTMLImageElement>("img[alt]").forEach((img) => {
     const alt = img.getAttribute("alt");
     if (!alt) return;
     // idempotent — never re-insert a caption that already exists
     if (img.nextElementSibling?.classList.contains(CAPTION_CLASS)) return;
-    img.title = alt;
     const caption = document.createElement("span");
     caption.className = CAPTION_CLASS;
     caption.textContent = alt;
@@ -95,7 +104,7 @@ const AccessibilityWidget = () => {
   const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
     try {
       const saved = localStorage.getItem("a11y-button-pos-v4");
-      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+      return saved ? clampButtonPosition(JSON.parse(saved)) : { x: 0, y: 0 };
     } catch {
       return { x: 0, y: 0 };
     }
@@ -104,6 +113,7 @@ const AccessibilityWidget = () => {
   const y = useMotionValue(buttonPos.y);
   const draggedRef = useRef(false);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
+  const playingVideosRef = useRef<HTMLVideoElement[]>([]);
 
   const [state, setState] = useState<AccessibilityState>(() => {
     try {
@@ -146,6 +156,14 @@ const AccessibilityWidget = () => {
     body.classList.toggle("accessibility-stop-animations", s.stopAnimations);
     root.classList.toggle("accessibility-stop-animations", s.stopAnimations);
 
+    if (s.stopAnimations) {
+      playingVideosRef.current = Array.from(document.querySelectorAll("video")).filter((video) => !video.paused);
+      playingVideosRef.current.forEach((video) => video.pause());
+    } else {
+      playingVideosRef.current.forEach((video) => void video.play().catch(() => undefined));
+      playingVideosRef.current = [];
+    }
+
     applyImageCaptions(s.imageDescriptions);
   }, []);
 
@@ -175,6 +193,17 @@ const AccessibilityWidget = () => {
     return () => observer.disconnect();
   }, [state.imageDescriptions]);
 
+  useEffect(() => {
+    const keepButtonVisible = () => {
+      const next = clampButtonPosition({ x: x.get(), y: y.get() });
+      x.set(next.x);
+      y.set(next.y);
+      setButtonPos(next);
+    };
+    window.addEventListener("resize", keepButtonVisible);
+    return () => window.removeEventListener("resize", keepButtonVisible);
+  }, [x, y]);
+
 
   const setColorMode = (mode: Exclude<ColorMode, "none">) =>
     setState((p) => ({ ...p, colorMode: p.colorMode === mode ? "none" : mode }));
@@ -188,7 +217,15 @@ const AccessibilityWidget = () => {
       return { ...p, [key]: Math.min(max, Math.max(0, p[key] + dir)) };
     });
 
-  const reset = () => setState(defaultState);
+  const reset = () => {
+    setState(defaultState);
+    x.set(0);
+    y.set(0);
+    setButtonPos({ x: 0, y: 0 });
+    try {
+      localStorage.removeItem("a11y-button-pos-v4");
+    } catch {}
+  };
 
   const colorButtons: { mode: Exclude<ColorMode, "none">; label: string; icon: React.ReactNode }[] = [
     { mode: "highContrast", label: "ניגודיות גבוהה", icon: <Contrast size={20} /> },
@@ -236,8 +273,12 @@ const AccessibilityWidget = () => {
           dragStartPos.current = { x: x.get(), y: y.get() };
         }}
         onDragEnd={() => {
+          const next = clampButtonPosition({ x: x.get(), y: y.get() });
+          x.set(next.x);
+          y.set(next.y);
+          setButtonPos(next);
           try {
-            localStorage.setItem("a11y-button-pos-v4", JSON.stringify({ x: x.get(), y: y.get() }));
+            localStorage.setItem("a11y-button-pos-v4", JSON.stringify(next));
           } catch {}
         }}
         onTap={() => {
@@ -293,25 +334,25 @@ const AccessibilityWidget = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" aria-live="polite">
                 {/* Font size */}
                 <div className="rounded-xl border border-border p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Type size={18} className="text-primary" />
                     <span className="text-sm font-bold">גודל טקסט — {FONT_SIZES[state.fontSize]}</span>
                   </div>
-                  <div className="flex gap-2">
+                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => step("fontSize", 1)}
                       aria-label="הגדלת גופן"
-                      className="flex-1 h-11 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center gap-1"
+                       className="min-w-0 min-h-11 rounded-lg bg-primary/10 text-primary font-bold text-sm flex flex-wrap items-center justify-center gap-1 px-2"
                     >
                       <Plus size={16} /> הגדלה
                     </button>
                     <button
                       onClick={() => step("fontSize", -1)}
                       aria-label="הקטנת גופן"
-                      className="flex-1 h-11 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center gap-1"
+                       className="min-w-0 min-h-11 rounded-lg bg-muted text-foreground font-bold text-sm flex flex-wrap items-center justify-center gap-1 px-2"
                     >
                       <Minus size={16} /> הקטנה
                     </button>
@@ -326,18 +367,18 @@ const AccessibilityWidget = () => {
                       גודל תצוגה — {Math.round(ZOOM_LEVELS[state.zoom] * 100)}%
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => step("zoom", 1)}
                       aria-label="הגדלת מסך"
-                      className="flex-1 h-11 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center gap-1"
+                       className="min-w-0 min-h-11 rounded-lg bg-primary/10 text-primary font-bold text-sm flex flex-wrap items-center justify-center gap-1 px-2"
                     >
                       <Maximize2 size={16} /> הגדלת מסך
                     </button>
                     <button
                       onClick={() => step("zoom", -1)}
                       aria-label="הקטנת מסך"
-                      className="flex-1 h-11 rounded-lg bg-muted text-foreground font-bold flex items-center justify-center gap-1"
+                       className="min-w-0 min-h-11 rounded-lg bg-muted text-foreground font-bold text-sm flex flex-wrap items-center justify-center gap-1 px-2"
                     >
                       <Minimize2 size={16} /> הקטנת מסך
                     </button>
