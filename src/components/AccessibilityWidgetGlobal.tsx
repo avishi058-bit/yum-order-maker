@@ -13,7 +13,6 @@ const INTERNAL_ROUTE_PREFIXES = [
   "/courier",
   "/events/admin",
   "/events/kitchen",
-  "/kiosk",     // physical kiosk — staff has manual accessibility assistance
   "/login",
 ];
 
