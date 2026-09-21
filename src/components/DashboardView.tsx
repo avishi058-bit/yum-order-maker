@@ -404,6 +404,23 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         </Card>
       </div>
 
+      {/* Comparison to previous equivalent period */}
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">השוואה לתקופה המקבילה הקודמת</p>
+            <p className="text-lg font-bold text-foreground">
+              ₪{totalRevenue.toLocaleString()} מול ₪{prevRevenue.toLocaleString()}
+            </p>
+          </div>
+          <p className={`text-lg font-black ${totalRevenue >= prevRevenue ? "text-green-500" : "text-red-500"}`}>
+            {prevRevenue > 0
+              ? `${totalRevenue >= prevRevenue ? "+" : ""}${Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100)}%`
+              : "—"}
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Charts Row */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Source Pie Chart */}
