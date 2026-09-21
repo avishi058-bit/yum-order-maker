@@ -137,6 +137,26 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     { name: "לא סומן", value: unmarkedOrders.reduce((s, o) => s + o.total, 0) },
   ].filter((d) => d.value > 0);
 
+  // Always-visible (no code needed): today's cash + paybox takings
+  const openTotals = useMemo(() => {
+    const todayStart = getBusinessDayStart();
+    const todays = orders.filter(
+      (o) =>
+        !UNCOUNTED_STATUSES.has(o.status) &&
+        new Date(o.created_at) >= todayStart,
+    );
+    const sum = (m: string) =>
+      todays.filter((o) => o.payment_method === m).reduce((s, o) => s + o.total, 0);
+    const count = (m: string) => todays.filter((o) => o.payment_method === m).length;
+    return {
+      cash: sum("cash"),
+      cashCount: count("cash"),
+      paybox: sum("paybox"),
+      payboxCount: count("paybox"),
+    };
+  }, [orders]);
+
+
   // Hourly breakdown for today/yesterday
   const hourlyData = useMemo(() => {
     const hours: Record<number, { hour: string; revenue: number; orders: number }> = {};
