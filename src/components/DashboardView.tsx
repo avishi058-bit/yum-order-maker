@@ -106,11 +106,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [unlocked]);
 
   const fetchOrders = async () => {
     const todayStart = getBusinessDayStart();
-    const daysBack = todayOnly ? 2 : 30;
+    // After unlocking with the admin code, load 90 days back for comparisons
+    const daysBack = unlocked ? 90 : (todayOnly ? 2 : 30);
     const startDate = new Date(todayStart.getTime() - daysBack * 24 * 60 * 60 * 1000);
 
     const { data } = await supabase
