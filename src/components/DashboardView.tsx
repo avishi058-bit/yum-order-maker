@@ -144,6 +144,31 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     });
   }, [orders, period, todayOnly]);
 
+  // Same-length previous period (for comparison after unlock)
+  const prevPeriodOrders = useMemo(() => {
+    const todayStart = getBusinessDayStart();
+    const day = 24 * 60 * 60 * 1000;
+    let from: Date, to: Date;
+    switch (period) {
+      case "today":
+        from = new Date(todayStart.getTime() - day); to = todayStart; break;
+      case "yesterday":
+        from = new Date(todayStart.getTime() - 2 * day); to = new Date(todayStart.getTime() - day); break;
+      case "week":
+        from = new Date(todayStart.getTime() - 14 * day); to = new Date(todayStart.getTime() - 7 * day); break;
+      case "month":
+        from = new Date(todayStart.getTime() - 60 * day); to = new Date(todayStart.getTime() - 30 * day); break;
+    }
+    return orders.filter((o) => {
+      if (UNCOUNTED_STATUSES.has(o.status)) return false;
+      if (o.payment_method === "credit" && !o.paid_at) return false;
+      const d = new Date(o.created_at);
+      return d >= from && d < to;
+    });
+  }, [orders, period]);
+
+  const prevRevenue = prevPeriodOrders.reduce((s, o) => s + o.total, 0);
+
   const totalRevenue = filteredOrders.reduce((s, o) => s + o.total, 0);
   const orderCount = filteredOrders.length;
   const avgOrder = orderCount > 0 ? totalRevenue / orderCount : 0;
