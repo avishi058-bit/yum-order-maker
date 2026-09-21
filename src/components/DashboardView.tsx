@@ -324,6 +324,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             </button>
           </CardContent>
         </Card>
+        )}
       </div>
     );
   }
