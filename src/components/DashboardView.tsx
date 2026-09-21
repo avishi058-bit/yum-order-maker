@@ -61,9 +61,14 @@ const getBusinessDayStart = (date = new Date()): Date => {
   return new Date(startLocal - offsetMs);
 };
 
+const DASHBOARD_CODE = "2138";
+
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
+  const [unlocked, setUnlocked] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState(false);
 
   useEffect(() => {
     fetchOrders();
