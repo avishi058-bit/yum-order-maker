@@ -264,20 +264,23 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
                 setCodeError(false);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (codeInput === DASHBOARD_CODE) setUnlocked(true);
-                  else setCodeError(true);
-                }
+                if (e.key === "Enter") tryUnlock();
               }}
               placeholder="קוד"
               className="w-full h-12 rounded-lg border border-border bg-background px-4 text-center text-2xl tracking-[0.4em] text-foreground"
             />
             {codeError && <p className="text-sm text-destructive">קוד שגוי</p>}
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={rememberDevice}
+                onChange={(e) => setRememberDevice(e.target.checked)}
+                className="h-4 w-4 accent-[hsl(var(--primary))]"
+              />
+              זכור את המכשיר הזה ואל תבקש קוד בפעם הבאה
+            </label>
             <button
-              onClick={() => {
-                if (codeInput === DASHBOARD_CODE) setUnlocked(true);
-                else setCodeError(true);
-              }}
+              onClick={tryUnlock}
               className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-bold"
             >
               הצג נתונים
