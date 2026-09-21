@@ -292,7 +292,15 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto" dir="rtl">
+      <div className="flex justify-end">
+        <button
+          onClick={forgetDevice}
+          className="text-xs text-muted-foreground underline"
+        >
+          נעל מכשיר זה
+        </button>
+      </div>
       {/* Period Selector */}
       <Tabs value={period} onValueChange={(v) => setPeriod(v as any)} dir="rtl">
         <TabsList className={`grid ${todayOnly ? "grid-cols-2" : "grid-cols-4"} w-full max-w-md`}>
