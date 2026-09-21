@@ -77,6 +77,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
+  const [showCodeEntry, setShowCodeEntry] = useState(false);
 
   const tryUnlock = () => {
     if (codeInput !== DASHBOARD_CODE) {
