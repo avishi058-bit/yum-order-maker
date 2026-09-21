@@ -61,9 +61,14 @@ const getBusinessDayStart = (date = new Date()): Date => {
   return new Date(startLocal - offsetMs);
 };
 
+const DASHBOARD_CODE = "2138";
+
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
+  const [unlocked, setUnlocked] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -132,6 +137,26 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     { name: "לא סומן", value: unmarkedOrders.reduce((s, o) => s + o.total, 0) },
   ].filter((d) => d.value > 0);
 
+  // Always-visible (no code needed): today's cash + paybox takings
+  const openTotals = useMemo(() => {
+    const todayStart = getBusinessDayStart();
+    const todays = orders.filter(
+      (o) =>
+        !UNCOUNTED_STATUSES.has(o.status) &&
+        new Date(o.created_at) >= todayStart,
+    );
+    const sum = (m: string) =>
+      todays.filter((o) => o.payment_method === m).reduce((s, o) => s + o.total, 0);
+    const count = (m: string) => todays.filter((o) => o.payment_method === m).length;
+    return {
+      cash: sum("cash"),
+      cashCount: count("cash"),
+      paybox: sum("paybox"),
+      payboxCount: count("paybox"),
+    };
+  }, [orders]);
+
+
   // Hourly breakdown for today/yesterday
   const hourlyData = useMemo(() => {
     const hours: Record<number, { hour: string; revenue: number; orders: number }> = {};
@@ -169,6 +194,66 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     week: "שבוע אחרון",
     month: "חודש אחרון",
   };
+
+  if (!unlocked) {
+    return (
+      <div dir="rtl" className="p-6 space-y-6 max-w-md mx-auto">
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">מזומן היום</p>
+              <p className="text-2xl font-black text-foreground">₪{openTotals.cash.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{openTotals.cashCount} הזמנות</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/30">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">פייבוקס היום</p>
+              <p className="text-2xl font-black text-foreground">₪{openTotals.paybox.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{openTotals.payboxCount} הזמנות</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">נתוני הכנסות מלאים</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">להצגת כל הנתונים יש להזין קוד</p>
+            <input
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              value={codeInput}
+              onChange={(e) => {
+                setCodeInput(e.target.value);
+                setCodeError(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (codeInput === DASHBOARD_CODE) setUnlocked(true);
+                  else setCodeError(true);
+                }
+              }}
+              placeholder="קוד"
+              className="w-full h-12 rounded-lg border border-border bg-background px-4 text-center text-2xl tracking-[0.4em] text-foreground"
+            />
+            {codeError && <p className="text-sm text-destructive">קוד שגוי</p>}
+            <button
+              onClick={() => {
+                if (codeInput === DASHBOARD_CODE) setUnlocked(true);
+                else setCodeError(true);
+              }}
+              className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-bold"
+            >
+              הצג נתונים
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
