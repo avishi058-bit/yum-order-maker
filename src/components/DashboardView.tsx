@@ -275,6 +275,16 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </Card>
         </div>
 
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowCodeEntry((v) => !v)}
+            className="text-xs text-muted-foreground underline"
+          >
+            לצפייה בפירוט המלא
+          </button>
+        </div>
+
+        {showCodeEntry && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">נתוני הכנסות מלאים</CardTitle>
