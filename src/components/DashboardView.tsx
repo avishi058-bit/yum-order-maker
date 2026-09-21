@@ -62,13 +62,46 @@ const getBusinessDayStart = (date = new Date()): Date => {
 };
 
 const DASHBOARD_CODE = "2138";
+const TRUSTED_KEY = "dashboard-trusted-device";
 
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => {
+    try {
+      return localStorage.getItem(TRUSTED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
+
+  const tryUnlock = () => {
+    if (codeInput !== DASHBOARD_CODE) {
+      setCodeError(true);
+      return;
+    }
+    if (rememberDevice) {
+      try {
+        localStorage.setItem(TRUSTED_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+    }
+    setUnlocked(true);
+  };
+
+  const forgetDevice = () => {
+    try {
+      localStorage.removeItem(TRUSTED_KEY);
+    } catch {
+      /* ignore */
+    }
+    setCodeInput("");
+    setUnlocked(false);
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -231,20 +264,23 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
                 setCodeError(false);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (codeInput === DASHBOARD_CODE) setUnlocked(true);
-                  else setCodeError(true);
-                }
+                if (e.key === "Enter") tryUnlock();
               }}
               placeholder="קוד"
               className="w-full h-12 rounded-lg border border-border bg-background px-4 text-center text-2xl tracking-[0.4em] text-foreground"
             />
             {codeError && <p className="text-sm text-destructive">קוד שגוי</p>}
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={rememberDevice}
+                onChange={(e) => setRememberDevice(e.target.checked)}
+                className="h-4 w-4 accent-[hsl(var(--primary))]"
+              />
+              זכור את המכשיר הזה ואל תבקש קוד בפעם הבאה
+            </label>
             <button
-              onClick={() => {
-                if (codeInput === DASHBOARD_CODE) setUnlocked(true);
-                else setCodeError(true);
-              }}
+              onClick={tryUnlock}
               className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-bold"
             >
               הצג נתונים
@@ -256,7 +292,15 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto" dir="rtl">
+      <div className="flex justify-end">
+        <button
+          onClick={forgetDevice}
+          className="text-xs text-muted-foreground underline"
+        >
+          נעל מכשיר זה
+        </button>
+      </div>
       {/* Period Selector */}
       <Tabs value={period} onValueChange={(v) => setPeriod(v as any)} dir="rtl">
         <TabsList className={`grid ${todayOnly ? "grid-cols-2" : "grid-cols-4"} w-full max-w-md`}>
