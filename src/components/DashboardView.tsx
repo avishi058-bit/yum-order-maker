@@ -77,6 +77,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
+  const [showCodeEntry, setShowCodeEntry] = useState(false);
 
   const tryUnlock = () => {
     if (codeInput !== DASHBOARD_CODE) {
@@ -105,11 +106,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [unlocked]);
 
   const fetchOrders = async () => {
     const todayStart = getBusinessDayStart();
-    const daysBack = todayOnly ? 2 : 30;
+    // After unlocking with the admin code, load 90 days back for comparisons
+    const daysBack = unlocked ? 90 : (todayOnly ? 2 : 30);
     const startDate = new Date(todayStart.getTime() - daysBack * 24 * 60 * 60 * 1000);
 
     const { data } = await supabase
@@ -141,6 +143,31 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       }
     });
   }, [orders, period, todayOnly]);
+
+  // Same-length previous period (for comparison after unlock)
+  const prevPeriodOrders = useMemo(() => {
+    const todayStart = getBusinessDayStart();
+    const day = 24 * 60 * 60 * 1000;
+    let from: Date, to: Date;
+    switch (period) {
+      case "today":
+        from = new Date(todayStart.getTime() - day); to = todayStart; break;
+      case "yesterday":
+        from = new Date(todayStart.getTime() - 2 * day); to = new Date(todayStart.getTime() - day); break;
+      case "week":
+        from = new Date(todayStart.getTime() - 14 * day); to = new Date(todayStart.getTime() - 7 * day); break;
+      case "month":
+        from = new Date(todayStart.getTime() - 60 * day); to = new Date(todayStart.getTime() - 30 * day); break;
+    }
+    return orders.filter((o) => {
+      if (UNCOUNTED_STATUSES.has(o.status)) return false;
+      if (o.payment_method === "credit" && !o.paid_at) return false;
+      const d = new Date(o.created_at);
+      return d >= from && d < to;
+    });
+  }, [orders, period]);
+
+  const prevRevenue = prevPeriodOrders.reduce((s, o) => s + o.total, 0);
 
   const totalRevenue = filteredOrders.reduce((s, o) => s + o.total, 0);
   const orderCount = filteredOrders.length;
@@ -248,6 +275,16 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </Card>
         </div>
 
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowCodeEntry((v) => !v)}
+            className="text-xs text-muted-foreground underline"
+          >
+            לצפייה בפירוט המלא
+          </button>
+        </div>
+
+        {showCodeEntry && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">נתוני הכנסות מלאים</CardTitle>
@@ -287,6 +324,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             </button>
           </CardContent>
         </Card>
+        )}
       </div>
     );
   }
@@ -365,6 +403,23 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Comparison to previous equivalent period */}
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">השוואה לתקופה המקבילה הקודמת</p>
+            <p className="text-lg font-bold text-foreground">
+              ₪{totalRevenue.toLocaleString()} מול ₪{prevRevenue.toLocaleString()}
+            </p>
+          </div>
+          <p className={`text-lg font-black ${totalRevenue >= prevRevenue ? "text-green-500" : "text-red-500"}`}>
+            {prevRevenue > 0
+              ? `${totalRevenue >= prevRevenue ? "+" : ""}${Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100)}%`
+              : "—"}
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Charts Row */}
       <div className="grid md:grid-cols-2 gap-6">
