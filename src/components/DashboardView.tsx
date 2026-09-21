@@ -62,13 +62,46 @@ const getBusinessDayStart = (date = new Date()): Date => {
 };
 
 const DASHBOARD_CODE = "2138";
+const TRUSTED_KEY = "dashboard-trusted-device";
 
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [period, setPeriod] = useState<"today" | "yesterday" | "week" | "month">("today");
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => {
+    try {
+      return localStorage.getItem(TRUSTED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
+
+  const tryUnlock = () => {
+    if (codeInput !== DASHBOARD_CODE) {
+      setCodeError(true);
+      return;
+    }
+    if (rememberDevice) {
+      try {
+        localStorage.setItem(TRUSTED_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+    }
+    setUnlocked(true);
+  };
+
+  const forgetDevice = () => {
+    try {
+      localStorage.removeItem(TRUSTED_KEY);
+    } catch {
+      /* ignore */
+    }
+    setCodeInput("");
+    setUnlocked(false);
+  };
 
   useEffect(() => {
     fetchOrders();
