@@ -21,6 +21,7 @@ export default function ShiftClock() {
   const [open, setOpen] = useState<{ id: string; clock_in: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const load = async () => {
     const { data } = await (supabase as any).from("work_shifts").select("id, clock_in")
@@ -30,6 +31,7 @@ export default function ShiftClock() {
   useEffect(() => { load(); }, []);
 
   const toggle = async () => {
+    setConfirming(false);
     setBusy(true);
     try {
       if (!open) {
@@ -57,12 +59,36 @@ export default function ShiftClock() {
   return (
     <>
       <button
-        onClick={toggle}
+        onClick={() => setConfirming(true)}
         disabled={busy}
         className={`px-3 py-2 rounded-lg text-xs font-bold ${open ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}
       >
         {open ? `יציאה · ${SHIFT_EMPLOYEE}` : `כניסה · ${SHIFT_EMPLOYEE}`}
       </button>
+      {confirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => !busy && setConfirming(false)}>
+          <div className="rounded-2xl bg-card border border-border p-6 text-center shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
+            <p className="text-lg font-bold mb-1">{SHIFT_EMPLOYEE}</p>
+            <p className="text-muted-foreground mb-5">{open ? "לאשר יציאה מהמשמרת?" : "לאשר כניסה למשמרת?"}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={toggle}
+                disabled={busy}
+                className={`rounded-lg px-8 py-3 font-bold text-white ${open ? "bg-red-500" : "bg-emerald-500"}`}
+              >
+                {busy ? "רגע…" : open ? "אישור יציאה" : "אישור כניסה"}
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                disabled={busy}
+                className="rounded-lg px-6 py-3 font-bold bg-muted text-muted-foreground"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {summary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setSummary(null)}>
           <div className="rounded-2xl bg-card border border-border p-8 text-center shadow-2xl">
