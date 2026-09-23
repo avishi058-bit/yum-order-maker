@@ -1,0 +1,9 @@
+---
+name: Net profit costs
+description: Dashboard net profit formula and per-ingredient costs given by owner
+type: feature
+---
+Net = revenue/1.18 − food cost − credit fee (0.78%+VAT, credit only) − monthly fixed/30 × days.
+Costs (₪): patty (regular/smash 220) 8.36, bun 2.70, veg+sauces 1.50, 3 side sauces 1.00, egg 1.30, cheese slice 1.61,
+onion jam/fried onion/garlic confit/pepper jam 2.00, crispy chicken 9.00, fries portion 3.50. Drinks: no cost given.
+Code: src/lib/profitStats.ts; fixed costs in site_settings.monthly_fixed_costs.
