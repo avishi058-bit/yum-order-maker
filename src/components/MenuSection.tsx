@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Star } from "lucide-react";
+import { ShoppingBag, Star, Plus } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -183,6 +183,127 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   );
 };
 
+/**
+ * Kiosk tile — the chosen direction: a square card whose photo fills the tile
+ * width, the item name in bold under the photo, the dish's ingredients in
+ * smaller (but still readable) text under the name, and the price + a "+"
+ * affordance pinned to the bottom of the card.
+ */
+const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, browseOnly = false }: { item: MenuItem; onAdd: (item: MenuItem) => void; fontScale?: number; nameOverride?: string; descOverride?: string; browseOnly?: boolean }) => {
+  const image = menuImages[item.id];
+  const displayName = nameOverride || item.name;
+  const displayDesc = descOverride || item.description;
+  const ingSize = 17 * fontScale;
+
+  const handleAdd = () => {
+    if (browseOnly) return;
+    onAdd(item);
+  };
+
+  return (
+    <div
+      onClick={handleAdd}
+      dir="rtl"
+      className={`bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col shadow-sm transition-transform duration-150 active:scale-[0.98] active:shadow-md ${browseOnly ? "cursor-default" : "cursor-pointer"}`}
+      style={{
+        // keep this tile's internal reflows from moving the rest of the grid
+        contain: "layout style",
+      }}
+    >
+      {/* Photo — square, fills the whole tile width so the food is the hero */}
+      <div className="relative w-full aspect-square bg-muted overflow-hidden">
+        {image ? (
+          <img
+            src={image}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            loading="eager"
+            decoding="sync"
+            {...{ fetchpriority: "high" as const }}
+            // Stale PWA/browser caches can hold a dead asset URL — retry once
+            // with a cache-busting query before giving up.
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (el.dataset.retried) return;
+              el.dataset.retried = "1";
+              el.src = `${image}${image.includes("?") ? "&" : "?"}v=${Date.now()}`;
+            }}
+            style={{ transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" }}
+          />
+        ) : (
+          <span className="w-full h-full flex items-center justify-center text-6xl text-gray-400/60" aria-hidden>
+            {item.badge || "🍽️"}
+          </span>
+        )}
+
+        {/* Status tags — kept small so they never compete with the photo */}
+        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+          {item.special && (
+            <span className="inline-flex items-center gap-1 bg-foreground text-background text-xs font-bold px-2.5 py-1 rounded-full">
+              <Star size={11} fill="currentColor" />
+              ספיישל
+            </span>
+          )}
+          {(item.popular || item.specialOfMonth) && (
+            <span className="inline-flex items-center gap-1 bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">
+              <Star size={11} fill="currentColor" />
+              {item.specialOfMonth ? "ספיישל החודש" : "פופולארי"}
+            </span>
+          )}
+          {item.id === "arayes-special" && (
+            <span className="inline-flex items-center gap-1 bg-green-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+              <Star size={11} fill="currentColor" />
+              מלאי מוגבל
+            </span>
+          )}
+        </div>
+        {item.badge && (
+          <span className="absolute top-2 left-2 text-2xl drop-shadow-md" aria-hidden>
+            {item.badge}
+          </span>
+        )}
+      </div>
+
+      {/* Text block: bold name, ingredients under it, price pinned to the bottom */}
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <h3
+            className="font-extrabold text-gray-900 leading-tight line-clamp-2 break-words"
+            style={{
+              fontSize: `${26 * fontScale}px`,
+              // Reserve exactly 2 lines so a one-word name doesn't shrink the tile
+              minHeight: `${26 * fontScale * 1.25 * 2}px`,
+            }}
+          >
+            {displayName}
+          </h3>
+          {item.weight && (
+            <span className="flex-shrink-0 text-gray-400 font-semibold mt-1.5 whitespace-nowrap" style={{ fontSize: `${14 * fontScale}px` }}>
+              {item.weight}
+            </span>
+          )}
+        </div>
+        <p
+          className="text-gray-500 leading-relaxed line-clamp-2 mt-1.5"
+          style={{
+            fontSize: `${ingSize}px`,
+            // Reserve exactly 2 lines so ingredient length never changes tile height
+            minHeight: `${ingSize * 1.6 * 2}px`,
+          }}
+        >
+          {displayDesc}
+        </p>
+        <div className="mt-auto pt-3 flex items-center justify-between">
+          <span className="text-primary font-black" style={{ fontSize: `${28 * fontScale}px` }}>₪{item.price}</span>
+          <span className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md flex-shrink-0" aria-hidden>
+            <Plus size={22} strokeWidth={3} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk = false, browseOnly = false }: { onAddItem: (item: MenuItem) => void; dineIn: boolean | null; onDineInChange: (val: boolean) => void; isAvailable: (id: string) => boolean; isKiosk?: boolean; browseOnly?: boolean }) => {
   const { settings } = useSiteSettings();
   const fontScale = isKiosk ? settings.kiosk_font_scale : settings.website_font_scale;
@@ -260,7 +381,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`${isKiosk ? 'mx-auto w-full max-w-[1100px] px-3 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing).
@@ -270,7 +391,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       <div
         className={`sticky z-50 ${isKiosk ? "bg-white border-b border-gray-200" : "bg-background border-b border-border"} ${
           isKiosk
-            ? "top-0 -mx-4 px-4 pt-5 pb-4 mb-6"
+            ? "top-0 -mx-3 px-3 pt-4 pb-0 mb-6"
             : "top-0 -mx-4 px-4 pb-3 mb-6"
         }`}
         style={
@@ -279,27 +400,32 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             : { paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }
         }
       >
-        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-3" : "gap-2"}`} dir="rtl">
+        <div ref={tabsRef} className={`flex overflow-x-auto no-scrollbar ${isKiosk ? "gap-8" : "gap-2"}`} dir="rtl">
 
-          {visibleCategories.map((cat) => (
-            <button
-              key={cat.key}
-              ref={(el) => { tabRefs.current[cat.key] = el; }}
-              onClick={() => scrollToCategory(cat.key)}
-              className={`relative whitespace-nowrap rounded-full font-bold transition-all flex-shrink-0 ${
-                isKiosk ? "px-9 py-5 text-2xl" : "px-5 py-2.5 text-base"
-              } ${
-                activeCategory === cat.key
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              {activeCategory === cat.key && (
-                <div className="absolute inset-0 bg-primary rounded-full" />
-              )}
-              <span className="relative z-10">{cat.label}</span>
-            </button>
-          ))}
+          {visibleCategories.map((cat) => {
+            const active = activeCategory === cat.key;
+            return (
+              <button
+                key={cat.key}
+                ref={(el) => { tabRefs.current[cat.key] = el; }}
+                onClick={() => scrollToCategory(cat.key)}
+                className={`relative whitespace-nowrap font-bold transition-all flex-shrink-0 ${
+                  isKiosk
+                    ? `px-1 pb-3 text-2xl border-b-4 ${
+                        active ? "text-primary border-primary" : "text-gray-400 border-transparent"
+                      }`
+                    : `rounded-full px-5 py-2.5 text-base ${
+                        active ? "text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
+                      }`
+                }`}
+              >
+                {active && !isKiosk && (
+                  <div className="absolute inset-0 bg-primary rounded-full" />
+                )}
+                <span className="relative z-10">{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -329,21 +455,37 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             data-category={cat.key}
             className="mb-10 scroll-mt-28"
           >
-            <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 36 : 24) * fontScale}px` }}>{cat.label}</h3>
-            <div className={`divide-y ${isKiosk ? "divide-gray-200" : "divide-border"}`}>
-              {items.map((item) => (
-                <MenuCard
-                  key={`${cat.key}-${item.id}`}
-                  item={item}
-                  onAdd={onAddItem}
-                  isKiosk={isKiosk}
-                  browseOnly={browseOnly}
-                  fontScale={fontScale}
-                  nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
-                  descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
-                />
-              ))}
-            </div>
+            <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 28 : 24) * fontScale}px` }}>{cat.label}</h3>
+            {isKiosk ? (
+              /* Kiosk: equal 2-column grid of square photo tiles (chosen direction) */
+              <div className="grid grid-cols-2 gap-3">
+                {items.map((item) => (
+                  <KioskTile
+                    key={`${cat.key}-${item.id}`}
+                    item={item}
+                    onAdd={onAddItem}
+                    browseOnly={browseOnly}
+                    fontScale={fontScale}
+                    nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
+                    descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {items.map((item) => (
+                  <MenuCard
+                    key={`${cat.key}-${item.id}`}
+                    item={item}
+                    onAdd={onAddItem}
+                    browseOnly={browseOnly}
+                    fontScale={fontScale}
+                    nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
+                    descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
