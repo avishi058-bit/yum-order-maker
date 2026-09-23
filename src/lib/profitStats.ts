@@ -30,6 +30,8 @@ const ITEM_COST: Record<string, number> = {
   "crispy-chicken": C.crispy + C.bun + C.veg,
   fries: C.fries,
   "sweet-potato-fries": C.fries,
+  // מיקס חברים = מנה אחת מכל סוג: צ׳יפס, טבעות בצל, וופל צ׳יפס
+  "friends-mix": 3 * C.fries,
   // one giant fries = 3 portions
   "family-deal": 5 * (C.patty + C.bun + C.veg) + 3 * C.fries,
   "friends-deal": 3 * (C.patty + C.bun + C.veg) + 3 * C.fries,
@@ -48,6 +50,7 @@ const NAME_TO_ID: Record<string, string> = {
   "דיל משפחתי": "family-deal",
   "דיל חברים": "friends-deal",
   "צ׳יפס": "fries",
+  "מיקס חברים": "friends-mix",
 };
 
 const TOPPING_COST: { match: string; cost: number }[] = [
