@@ -10,7 +10,7 @@ import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
-  CalendarRange, Trophy, Flame, BarChart3,
+  CalendarRange, Trophy, Flame, BarChart3, Lock, X,
 } from "lucide-react";
 
 interface Order {
@@ -128,6 +128,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
+  const [codeOpen, setCodeOpen] = useState(false);
 
   const tryUnlock = () => {
     if (codeInput !== DASHBOARD_CODE) {
