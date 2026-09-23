@@ -64,6 +64,26 @@ const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "איולי", cost: C.sauce },
 ];
 
+/** Drink unit costs before VAT. Order matters: first match wins. */
+const DRINK_COST: { re: RegExp; cost: number }[] = [
+  { re: /מים\s*ב?טעמ/, cost: 3.354 },
+  { re: /בלו/, cost: 2.188 },
+  { re: /פיוז/, cost: 4.417 },
+  { re: /סודה/, cost: 2.292 },
+  { re: /תפוזים/, cost: 3.167 },
+  { re: /ענבים/, cost: 3.167 },
+  { re: /גולדסטאר/, cost: 4.808 },
+  { re: /קרלסברג|קאלסברג|קלסטברג/, cost: 4.767 },
+  { re: /^מים|מים \(בקבוק\)/, cost: 1.763 },
+  { re: /פחית|קולה|זירו|פאנטה|ספרייט/, cost: 2.646 },
+];
+
+export const drinkCost = (name: string | null | undefined): number => {
+  const n = (name || "").trim();
+  if (!n) return 0;
+  return DRINK_COST.find((d) => d.re.test(n))?.cost ?? 0;
+};
+
 const mult = (t: string) => {
   const m = t.match(/[×x]\s*(\d+)/);
   return m ? Number(m[1]) : 1;
@@ -77,7 +97,12 @@ export const itemCost = (it: CountableOrderItem): number => {
     (it.item_id || "").replace(/^meal-/, "") ||
     NAME_TO_ID[name.replace(/^ארוחת\s+/, "")] ||
     "";
-  let unit = ITEM_COST[baseId] ?? 0;
+  let unit = ITEM_COST[baseId] ?? drinkCost(name);
+  // same drink cost whether sold alone or in a meal/deal — the price difference is already in the revenue
+  if (it.meal_drink) unit += drinkCost(it.meal_drink);
+  if (Array.isArray(it.deal_drinks)) {
+    for (const d of it.deal_drinks as { name?: string }[]) unit += drinkCost(d?.name);
+  }
   if (isMeal) unit += C.fries;
   for (const t of it.toppings ?? []) {
     const hit = TOPPING_COST.find((p) => t.includes(p.match));

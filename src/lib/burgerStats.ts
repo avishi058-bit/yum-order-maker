@@ -6,6 +6,8 @@ export interface CountableOrderItem {
   item_name: string;
   quantity: number;
   toppings: string[] | null;
+  meal_drink?: string | null;
+  deal_drinks?: unknown;
 }
 
 /** burgers / patties produced by one unit of a menu item */
