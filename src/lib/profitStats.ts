@@ -86,20 +86,26 @@ export const itemCost = (it: CountableOrderItem): number => {
   return unit * qty;
 };
 
+export const ACCOUNTANT_MONTHLY = 350; // before VAT
+export const NATIONAL_INSURANCE_RATE = 0.08;
+
 export interface ProfitInput {
   revenue: number;
   creditRevenue: number;
   items: CountableOrderItem[];
-  days: number;
-  monthlyFixed: number;
+  /** monthly costs already allocated to this range by work days */
+  fixed: number;
+  wages: number;
+  accountant: number;
 }
 
-export const computeProfit = ({ revenue, creditRevenue, items, days, monthlyFixed }: ProfitInput) => {
+export const computeProfit = ({ revenue, creditRevenue, items, fixed, wages, accountant }: ProfitInput) => {
   const netRevenue = revenue / (1 + VAT_RATE);
   const vat = revenue - netRevenue;
   const foodCost = items.reduce((s, i) => s + itemCost(i), 0);
   const creditFees = creditRevenue * CREDIT_FEE_RATE;
-  const fixed = (monthlyFixed / 30) * days;
-  const profit = netRevenue - foodCost - creditFees - fixed;
-  return { netRevenue, vat, foodCost, creditFees, fixed, profit, margin: revenue ? profit / netRevenue : 0 };
+  const beforeTax = netRevenue - foodCost - creditFees - fixed - wages - accountant;
+  const nationalInsurance = beforeTax > 0 ? beforeTax * NATIONAL_INSURANCE_RATE : 0;
+  const profit = beforeTax - nationalInsurance;
+  return { netRevenue, vat, foodCost, creditFees, fixed, wages, accountant, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
 };
