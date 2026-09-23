@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
-import { computeProfit } from "@/lib/profitStats";
+import { computeProfit, ACCOUNTANT_MONTHLY } from "@/lib/profitStats";
 import { toast } from "sonner";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -257,10 +257,14 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const [monthlyFixed, setMonthlyFixed] = useState(0);
   const [fixedInput, setFixedInput] = useState("0");
+  const [wages, setWages] = useState<Record<string, number>>({});
+  const [wageInput, setWageInput] = useState("");
+  const [workDays, setWorkDays] = useState<Record<string, Set<string>>>({});
   useEffect(() => {
-    (supabase as any).from("site_settings").select("id, monthly_fixed_costs").limit(1).maybeSingle()
+    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages").limit(1).maybeSingle()
       .then(({ data }: any) => {
         if (data) {
+          setWages((data.monthly_wages as Record<string, number>) || {});
           setMonthlyFixed(Number(data.monthly_fixed_costs) || 0);
           setFixedInput(String(Number(data.monthly_fixed_costs) || 0));
         }
@@ -272,6 +276,27 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     if (!data) return;
     const { error } = await (supabase as any).from("site_settings").update({ monthly_fixed_costs: v }).eq("id", data.id);
     if (error) toast.error("השמירה נכשלה"); else { setMonthlyFixed(v); toast.success("נשמר"); }
+  };
+
+  const saveWage = async () => {
+    const k = ranges[0].key.match(/^\d{4}-\d{2}$/) ? ranges[0].key : monthKey(ranges[0].start);
+    const next = { ...wages, [k]: Math.max(0, Number(wageInput) || 0) };
+    const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
+    if (!data) return;
+    const { error } = await (supabase as any).from("site_settings").update({ monthly_wages: next }).eq("id", data.id);
+    if (error) toast.error("השמירה נכשלה"); else { setWages(next); toast.success(`שכר ${monthLabel(k)} נשמר`); }
+  };
+
+  const currentMonthKey = monthKey(getBusinessDayStart());
+  const avgWorkDays = useMemo(() => {
+    const past = Object.entries(workDays).filter(([k, s]) => k !== currentMonthKey && s.size > 0);
+    return past.length ? past.reduce((a, [, s]) => a + s.size, 0) / past.length : 0;
+  }, [workDays, currentMonthKey]);
+  /** divisor for spreading a month's costs: actual work days, or the average for the running month */
+  const workDaysDivisor = (k: string) => {
+    const actual = workDays[k]?.size ?? 0;
+    if (k === currentMonthKey) return Math.max(actual, Math.round(avgWorkDays) || actual, 1);
+    return Math.max(actual, 1);
   };
 
   const isCounted = (o: Order) =>
@@ -290,8 +315,21 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const { burgers, patties } = countBurgers(rangeItems);
     const revenue = list.reduce((s, o) => s + o.total, 0);
     const creditRevenue = list.filter((o) => o.payment_method === "credit").reduce((s, o) => s + o.total, 0);
-    const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / DAY));
-    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, days, monthlyFixed });
+    const dayByMonth: Record<string, Set<string>> = {};
+    list.forEach((o) => {
+      const ds = getBusinessDayStart(new Date(o.created_at));
+      const k = monthKey(ds);
+      (dayByMonth[k] ??= new Set()).add(ds.toISOString().slice(0, 10));
+    });
+    let fixed = 0, wagesAlloc = 0, accountant = 0;
+    Object.entries(dayByMonth).forEach(([k, set]) => {
+      const share = set.size / workDaysDivisor(k);
+      fixed += monthlyFixed * share;
+      wagesAlloc += (wages[k] || 0) * share;
+      accountant += ACCOUNTANT_MONTHLY * share;
+    });
+    const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, fixed, wages: wagesAlloc, accountant });
     return {
       orders: list,
       revenue,
@@ -306,11 +344,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const primary = useMemo(
     () => statsFor(ranges[0].start, ranges[0].end),
-    [orders, items, ranges, monthlyFixed],
+    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays],
   );
   const secondary = useMemo(
     () => (ranges[1] ? statsFor(ranges[1].start, ranges[1].end) : null),
-    [orders, items, ranges, monthlyFixed],
+    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays],
   );
 
   const filteredOrders = primary.orders;
@@ -483,6 +521,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       const clean = excludeTestOrders((data ?? []) as Order[]).filter(isCounted);
       const map: Record<string, { revenue: number; orders: number }> = {};
       keys.forEach((k) => (map[k] = { revenue: 0, orders: 0 }));
+      const wd: Record<string, Set<string>> = {};
+      clean.forEach((o) => {
+        const ds = getBusinessDayStart(new Date(o.created_at));
+        (wd[monthKey(ds)] ??= new Set()).add(ds.toISOString().slice(0, 10));
+      });
+      setWorkDays(wd);
       clean.forEach((o) => {
         const k = monthKey(getBusinessDayStart(new Date(o.created_at)));
         if (!map[k]) return;
@@ -748,8 +792,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["הכנסות כולל מע״מ", primary.revenue],
               ["מע״מ (18%)", -primary.profit.vat],
               ["עלות חומרי גלם", -primary.profit.foodCost],
+              ["הכנסות ללא מע״מ", primary.profit.netRevenue],
               ["עמלות אשראי", -primary.profit.creditFees],
-              [`הוצאות קבועות (${primary.days.toFixed(0)} ימים)`, -primary.profit.fixed],
+              ["שכר עובדים", -primary.profit.wages],
+              ["רואת חשבון", -primary.profit.accountant],
+              ["הוצאות קבועות", -primary.profit.fixed],
+              ["רווח לפני ביטוח לאומי", primary.profit.beforeTax],
+              ["ביטוח לאומי (8%)", -primary.profit.nationalInsurance],
             ].map(([label, v]) => (
               <div key={label as string} className="flex justify-between rounded-lg bg-muted/40 px-3 py-2">
                 <span className="text-muted-foreground">{label}</span>
@@ -773,8 +822,27 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               שמור
             </button>
           </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה בתקופה: <b>{primary.days}</b></span>
+            <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה החודש: <b>{workDays[currentMonthKey]?.size ?? 0}</b></span>
+            <span className="rounded-lg bg-muted/40 px-3 py-2">ממוצע ימי עבודה בחודש: <b>{avgWorkDays ? avgWorkDays.toFixed(1) : "—"}</b></span>
+          </div>
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <label className="text-muted-foreground">
+              שכר עובדים · {monthLabel(ranges[0].key.match(/^\d{4}-\d{2}$/) ? ranges[0].key : monthKey(ranges[0].start))} (₪):
+            </label>
+            <input
+              type="number"
+              min={0}
+              placeholder={String(wages[ranges[0].key.match(/^\d{4}-\d{2}$/) ? ranges[0].key : monthKey(ranges[0].start)] ?? 0)}
+              value={wageInput}
+              onChange={(e) => setWageInput(e.target.value)}
+              className="w-28 rounded-md border bg-background px-2 py-1"
+            />
+            <button onClick={saveWage} className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold">שמור</button>
+          </div>
           <p className="text-xs text-muted-foreground">
-            שכירות, עובדים, חשמל וכו׳ — מתחלק לפי מספר הימים בתקופה. שתייה ומוצרים ללא עלות מוגדרת לא נספרים בעלות.
+            שכר, רואת חשבון (350 ₪ לפני מע״מ) והוצאות קבועות מתחלקים לפי ימי העבודה בפועל בחודש (בחודש הנוכחי — לפי ממוצע ימי העבודה). שכירות, עובדים, חשמל וכו׳ — מתחלק לפי מספר הימים בתקופה. שתייה ומוצרים ללא עלות מוגדרת לא נספרים בעלות.
           </p>
         </CardContent>
       </Card>

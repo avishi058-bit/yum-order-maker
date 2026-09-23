@@ -7,3 +7,5 @@ Net = revenue/1.18 − food cost − credit fee (0.78%+VAT, credit only) − mon
 Costs (₪): patty (regular/smash 220) 8.36, bun 2.70, veg+sauces 1.50, 3 side sauces 1.00, egg 1.30, cheese slice 1.61,
 onion jam/fried onion/garlic confit/pepper jam 2.00, crispy chicken 9.00, fries portion 3.50. Drinks: no cost given.
 Code: src/lib/profitStats.ts; fixed costs in site_settings.monthly_fixed_costs.
+
+Then: wages per month (site_settings.monthly_wages), accountant 350 before VAT/month; monthly costs spread by actual work days (current month: avg work days). Then minus 8% national insurance on pre-tax profit.
