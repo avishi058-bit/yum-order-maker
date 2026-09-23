@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
-import { computeProfit, ACCOUNTANT_MONTHLY } from "@/lib/profitStats";
+import { computeProfit, ACCOUNTANT_MONTHLY, OIL_WEEKLY } from "@/lib/profitStats";
 import { toast } from "sonner";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -340,7 +340,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const shiftPay = shiftHours * HOURLY_WAGE;
     wagesAlloc += shiftPay;
     const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
-    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant });
+    const oil = (days * OIL_WEEKLY) / 7; // שמן טיגון: עלות שבועית מתחלקת לימי עבודה
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant, oil });
     return {
       orders: list,
       revenue,
@@ -810,6 +811,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["עמלות אשראי", -primary.profit.creditFees],
               ["שכר עובדים", -primary.profit.wages],
               ["רואת חשבון", -primary.profit.accountant],
+              ["שמן טיגון", -primary.profit.oil],
               ["הוצאות קבועות", -primary.profit.fixed],
               ["רווח לפני ביטוח לאומי", primary.profit.beforeTax],
               ["ביטוח לאומי (8%)", -primary.profit.nationalInsurance],
