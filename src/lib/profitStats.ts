@@ -30,7 +30,8 @@ const ITEM_COST: Record<string, number> = {
   "crispy-chicken": C.crispy + C.bun + C.veg,
   fries: C.fries,
   "sweet-potato-fries": C.fries,
-  "family-deal": 5 * (C.patty + C.bun + C.veg) + 5 * C.fries,
+  // one giant fries = 3 portions
+  "family-deal": 5 * (C.patty + C.bun + C.veg) + 3 * C.fries,
   "friends-deal": 3 * (C.patty + C.bun + C.veg) + 3 * C.fries,
 };
 
@@ -111,6 +112,40 @@ export const itemCost = (it: CountableOrderItem): number => {
   return unit * qty;
 };
 
+/** Takeaway packaging, before VAT */
+export const PACK = { friesBox: 0.4, giantFriesBox: 0.8, bag: 0.39, wrap: 0.21 };
+const FRIED_IDS = new Set(["fries", "sweet-potato-fries", "waffle-fries", "onion-rings", "tempura-onion"]);
+const FRIED_NAME = /צ[׳']יפס|וופל|טבעות בצל/;
+const BURGER_IDS = new Set(["classic", "avishai", "special-hadegel", "haf-mifsha", "smash-moshavnikim", "double", "crazy-smash", "smash-double-cheese", "crispy-chicken"]);
+
+/** Packaging cost of ONE takeaway order */
+export const packagingCost = (orderItems: CountableOrderItem[]): number => {
+  let burgers = 0, fried = 0, dealBags = 0, other = 0, cost = 0;
+  for (const it of orderItems) {
+    const qty = Number(it.quantity) || 0;
+    const name = (it.item_name || "").trim();
+    const isMeal = (it.item_id || "").startsWith("meal-") || name.startsWith("ארוחת ");
+    const id = (it.item_id || "").replace(/^meal-/, "") || NAME_TO_ID[name.replace(/^ארוחת\s+/, "")] || "";
+    if (id === "friends-deal" || id === "family-deal") {
+      const n = id === "family-deal" ? 5 : 3;
+      cost += qty * (n * PACK.wrap + PACK.giantFriesBox);
+      dealBags += qty * (id === "family-deal" ? 2 : 1);
+      continue;
+    }
+    if (BURGER_IDS.has(id)) burgers += qty;
+    else if (FRIED_IDS.has(id) || FRIED_NAME.test(name)) fried += qty;
+    else other += qty;
+    if (isMeal) fried += qty;
+  }
+  cost += burgers * PACK.wrap + fried * PACK.friesBox;
+  let bags = 0;
+  if (burgers + fried + other > 0) {
+    bags = burgers > 3 ? 2 : 1;
+    if (fried > 4) bags += 1;
+  }
+  return cost + (bags + dealBags) * PACK.bag;
+};
+
 export const ACCOUNTANT_MONTHLY = 350; // before VAT
 export const NATIONAL_INSURANCE_RATE = 0.08;
 
@@ -118,19 +153,24 @@ export interface ProfitInput {
   revenue: number;
   creditRevenue: number;
   items: CountableOrderItem[];
+  /** ids of takeaway orders (packaging applies only to these) */
+  takeawayIds?: Set<string>;
   /** monthly costs already allocated to this range by work days */
   fixed: number;
   wages: number;
   accountant: number;
 }
 
-export const computeProfit = ({ revenue, creditRevenue, items, fixed, wages, accountant }: ProfitInput) => {
+export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, fixed, wages, accountant }: ProfitInput) => {
+  const byOrder: Record<string, CountableOrderItem[]> = {};
+  for (const i of items) if (takeawayIds?.has(i.order_id)) (byOrder[i.order_id] ??= []).push(i);
+  const packaging = Object.values(byOrder).reduce((s, l) => s + packagingCost(l), 0);
   const netRevenue = revenue / (1 + VAT_RATE);
   const vat = revenue - netRevenue;
   const foodCost = items.reduce((s, i) => s + itemCost(i), 0);
   const creditFees = creditRevenue * CREDIT_FEE_RATE;
-  const beforeTax = netRevenue - foodCost - creditFees - fixed - wages - accountant;
+  const beforeTax = netRevenue - foodCost - creditFees - packaging - fixed - wages - accountant;
   const nationalInsurance = beforeTax > 0 ? beforeTax * NATIONAL_INSURANCE_RATE : 0;
   const profit = beforeTax - nationalInsurance;
-  return { netRevenue, vat, foodCost, creditFees, fixed, wages, accountant, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
+  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
 };

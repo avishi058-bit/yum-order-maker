@@ -24,6 +24,7 @@ interface Order {
   payment_method: string | null;
   paid_at?: string | null;
   order_source: string;
+  dine_in?: boolean | null;
   customer_name?: string | null;
   customer_phone?: string | null;
 }
@@ -225,7 +226,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       setLoading(true);
       const { data } = await supabase
         .from("orders")
-        .select("id, order_number, total, status, created_at, payment_method, paid_at, order_source, customer_name, customer_phone")
+        .select("id, order_number, total, status, created_at, payment_method, paid_at, order_source, dine_in, customer_name, customer_phone")
         .gte("created_at", fetchStart.toISOString())
         .lt("created_at", fetchEnd.toISOString())
         .order("created_at", { ascending: true });
@@ -329,7 +330,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       accountant += ACCOUNTANT_MONTHLY * share;
     });
     const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
-    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, fixed, wages: wagesAlloc, accountant });
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), fixed, wages: wagesAlloc, accountant });
     return {
       orders: list,
       revenue,
@@ -793,6 +794,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["מע״מ (18%)", -primary.profit.vat],
               ["עלות חומרי גלם", -primary.profit.foodCost],
               ["הכנסות ללא מע״מ", primary.profit.netRevenue],
+              ["אריזות טייקאווי", -primary.profit.packaging],
               ["עמלות אשראי", -primary.profit.creditFees],
               ["שכר עובדים", -primary.profit.wages],
               ["רואת חשבון", -primary.profit.accountant],
