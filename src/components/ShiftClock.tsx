@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getBusinessDayStart } from "@/lib/businessDay";
 
 export const SHIFT_EMPLOYEE = "אליה בירן";
+
+const getBusinessDayStart = () => {
+  const d = new Date();
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+  d.setHours(6, 0, 0, 0);
+  return d;
+};
 
 const fmt = (ms: number) => {
   const m = Math.max(0, Math.round(ms / 60000));

@@ -8,6 +8,7 @@ import QRCode from "qrcode";
 const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import ShiftClock from "@/components/ShiftClock";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { getDependentDishes, isDishSatisfied, getDishIngredients, getAllRequiredIngredients, SMASH_DISH_IDS } from "@/lib/menuDependencies";
 import DayOpenChecklist, { shouldShowDayOpenChecklist, markDayOpenChecklistDone } from "@/components/DayOpenChecklist";
@@ -2407,6 +2408,8 @@ const Kitchen = () => {
           </div>
 
 
+
+          <ShiftClock />
 
           {/* ⚡ Quick connect to printer (Bluetooth) */}
           <button
