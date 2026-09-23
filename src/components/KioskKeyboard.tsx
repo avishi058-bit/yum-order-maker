@@ -236,110 +236,69 @@ const KioskKeyboard = () => {
     layout === "hebrew" ? "numeric" : layout === "numeric" ? "english" : "hebrew";
   const nextLabel = nextLayout === "numeric" ? "123" : nextLayout === "english" ? "ABC" : "א-ב";
 
+  const isNum = layout === "numeric";
+  const keyCls =
+    "rounded-xl bg-card text-foreground border border-border shadow-sm active:scale-95 active:bg-muted transition-transform flex items-center justify-center font-medium select-none";
+  const fnCls =
+    "rounded-xl bg-muted text-foreground border border-border shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none";
+
   return (
     <AnimatePresence>
       {open && (
         <motion.div
           key="kiosk-kbd"
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", damping: 28, stiffness: 280 }}
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 40, opacity: 0 }}
+          transition={{ type: "spring", damping: 26, stiffness: 300 }}
           onPointerDown={handlePointerDown}
           dir="ltr"
-          className="fixed bottom-0 left-0 right-0 z-[10000] bg-[#d1d5db] border-t border-black/10 shadow-[0_-8px_30px_rgba(0,0,0,0.25)] flex flex-col"
+          className="fixed inset-x-0 mx-auto z-[10000] rounded-3xl bg-background/95 backdrop-blur border border-border shadow-2xl p-4"
           style={{
-            height: "36vh",
-            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            bottom: "calc(2vh + env(safe-area-inset-bottom, 0px))",
+            width: isNum ? "min(420px, 92vw)" : "min(760px, 94vw)",
           }}
           role="dialog"
           aria-label="מקלדת"
         >
-          {/* Keys area — flex column that fills available height */}
-          <div className="flex-1 flex flex-col justify-around px-1.5 py-2 gap-1.5">
-            {/* Row 1: ק ר א ט ו ן ם פ ⌫  (right-to-left) */}
-            {/* We use flex-row-reverse so array index 0 (ק) appears on the RIGHT */}
-            <div className="flex-1 flex flex-row-reverse gap-1 items-stretch">
-              {rows[0].map((k, j) => (
-                <button
-                  key={j}
-                  type="button"
-                  onPointerDown={handlePointerDown}
-                  onClick={() => press(k)}
-                  className="flex-1 min-w-0 rounded-md bg-white text-3xl font-normal text-black active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
-                  style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
-                >
-                  {k}
-                </button>
+          {isNum ? (
+            <div className="grid grid-cols-3 gap-2.5" dir="ltr">
+              {["1","2","3","4","5","6","7","8","9"].map((k) => (
+                <button key={k} type="button" onPointerDown={handlePointerDown} onClick={() => press(k)}
+                  className={`${keyCls} h-16 text-3xl`}>{k}</button>
               ))}
-              {/* Backspace at the LEFT end of row 1 */}
-              <button
-                type="button"
-                onPointerDown={handlePointerDown}
-                onClick={onBackspace}
-                className="rounded-md bg-[#a8adb6] text-black active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
-                style={{ minWidth: "9%", flex: "0 0 auto", padding: "0 12px" }}
-                aria-label="מחק"
-              >
-                <Delete size={26} strokeWidth={2.2} />
-              </button>
+              <button type="button" onPointerDown={handlePointerDown} onClick={() => setLayout("hebrew")}
+                className={`${fnCls} h-16 text-base`}>א-ב</button>
+              <button type="button" onPointerDown={handlePointerDown} onClick={() => press("0")}
+                className={`${keyCls} h-16 text-3xl`}>0</button>
+              <button type="button" onPointerDown={handlePointerDown} onClick={onBackspace}
+                className={`${fnCls} h-16`} aria-label="מחק"><Delete size={26} /></button>
             </div>
-
-            {/* Rows 2 and 3 — letters only */}
-            {rows.slice(1).map((row, i) => (
-              <div key={i + 1} className="flex-1 flex flex-row-reverse gap-1 items-stretch">
-                {row.map((k, j) => (
-                  <button
-                    key={j}
-                    type="button"
-                    onPointerDown={handlePointerDown}
-                    onClick={() => press(k)}
-                    className="flex-1 min-w-0 rounded-md bg-white text-3xl font-normal text-black active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
-                    style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
-                  >
-                    {k}
-                  </button>
-                ))}
+          ) : (
+            <div className="flex flex-col gap-2">
+              {rows.map((row, i) => (
+                <div key={i} className="flex flex-row-reverse gap-1.5 justify-center">
+                  {row.map((k, j) => (
+                    <button key={j} type="button" onPointerDown={handlePointerDown} onClick={() => press(k)}
+                      className={`${keyCls} h-14 flex-1 max-w-[64px] min-w-0 text-2xl`}>{k}</button>
+                  ))}
+                  {i === 0 && (
+                    <button type="button" onPointerDown={handlePointerDown} onClick={onBackspace}
+                      className={`${fnCls} h-14 px-4`} aria-label="מחק"><Delete size={24} /></button>
+                  )}
+                </div>
+              ))}
+              <div className="flex flex-row-reverse gap-1.5">
+                <button type="button" onPointerDown={handlePointerDown} onClick={onEnter}
+                  className="rounded-xl bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-1 h-14 px-5 font-semibold"
+                  aria-label="אנטר"><CornerDownLeft size={20} /><span>המשך</span></button>
+                <button type="button" onPointerDown={handlePointerDown} onClick={onSpace}
+                  className={`${keyCls} h-14 flex-1 text-base text-muted-foreground`} aria-label="רווח">רווח</button>
+                <button type="button" onPointerDown={handlePointerDown} onClick={() => setLayout(nextLayout)}
+                  className={`${fnCls} h-14 px-5 text-base`}>{nextLabel}</button>
               </div>
-            ))}
-
-            {/* Bottom utility row (visually RTL): close | space | 123 → using row-reverse */}
-            <div className="flex-1 flex flex-row-reverse gap-1 items-stretch">
-              {/* Enter — rightmost (first in row-reverse) */}
-              <button
-                type="button"
-                onPointerDown={handlePointerDown}
-                onClick={onEnter}
-                className="rounded-md bg-[#4a90d9] text-white font-semibold active:bg-[#3a7bc8] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center gap-1"
-                style={{ minWidth: "14%", flex: "0 0 auto", padding: "0 12px" }}
-                aria-label="אנטר"
-              >
-                <CornerDownLeft size={20} strokeWidth={2.2} />
-                <span className="text-sm">אנטר</span>
-              </button>
-              {/* Space — center, takes the rest */}
-              <button
-                type="button"
-                onPointerDown={handlePointerDown}
-                onClick={onSpace}
-                className="flex-1 rounded-md bg-white text-black text-base font-normal active:bg-black/10 active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)]"
-                style={{ fontFamily: '-apple-system, "SF Pro Display", "Heebo", system-ui, sans-serif' }}
-                aria-label="רווח"
-              >
-                רווח
-              </button>
-              {/* 123 — leftmost (last in row-reverse) */}
-              <button
-                type="button"
-                onPointerDown={handlePointerDown}
-                onClick={() => setLayout(nextLayout)}
-                className="rounded-md bg-[#a8adb6] text-black text-base font-semibold active:bg-[#959aa3] active:scale-95 transition-transform shadow-[0_1px_0_rgba(0,0,0,0.35)] flex items-center justify-center"
-                style={{ minWidth: "12%", flex: "0 0 auto", padding: "0 12px" }}
-              >
-                {nextLabel}
-              </button>
             </div>
-          </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
