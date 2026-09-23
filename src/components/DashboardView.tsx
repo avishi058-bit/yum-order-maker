@@ -306,11 +306,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const primary = useMemo(
     () => statsFor(ranges[0].start, ranges[0].end),
-    [orders, items, ranges],
+    [orders, items, ranges, monthlyFixed],
   );
   const secondary = useMemo(
     () => (ranges[1] ? statsFor(ranges[1].start, ranges[1].end) : null),
-    [orders, items, ranges],
+    [orders, items, ranges, monthlyFixed],
   );
 
   const filteredOrders = primary.orders;
