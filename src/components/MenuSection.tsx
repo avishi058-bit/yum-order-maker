@@ -383,7 +383,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`${isKiosk ? 'mx-auto w-full max-w-[960px] px-3 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing).
@@ -393,7 +393,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       <div
         className={`sticky z-50 ${isKiosk ? "bg-white border-b border-gray-200" : "bg-background border-b border-border"} ${
           isKiosk
-            ? "top-0 -mx-3 px-3 pt-4 pb-0 mb-6"
+            ? "top-0 -mx-2 px-2 pt-4 pb-0 mb-6"
             : "top-0 -mx-4 px-4 pb-3 mb-6"
         }`}
         style={
