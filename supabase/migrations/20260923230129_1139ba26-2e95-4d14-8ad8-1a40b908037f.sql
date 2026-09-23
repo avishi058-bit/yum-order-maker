@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS monthly_fixed_costs numeric NOT NULL DEFAULT 0;

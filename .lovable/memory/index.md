@@ -14,3 +14,4 @@ Strict separation UI/logic/data. No console.log in prod (keep console.error). Mi
 - [UI config](mem://design/ui-config) — Centralized positions and animations in src/config/uiConfig.ts
 - [Code quality & data standards](mem://standards/code-quality) — Mandatory standards: code quality, modularity, data minimization, analytics event names, security, performance
 - [Menu item inventory end-to-end](mem://features/menu-item-inventory-end-to-end) — New menu items must also be connected to kitchen availability, inventory, recipes, fridge, pricing, and orders
+- [Net profit](mem://features/net-profit) — Owner's ingredient costs, VAT 18%, credit fee 0.78%+VAT, monthly fixed costs
