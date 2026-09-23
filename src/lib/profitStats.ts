@@ -30,6 +30,8 @@ const ITEM_COST: Record<string, number> = {
   "crispy-chicken": C.crispy + C.bun + C.veg,
   fries: C.fries,
   "sweet-potato-fries": C.fries,
+  // מיקס חברים = מנה אחת מכל סוג: צ׳יפס, טבעות בצל, וופל צ׳יפס
+  "friends-mix": 3 * C.fries,
   // one giant fries = 3 portions
   "family-deal": 5 * (C.patty + C.bun + C.veg) + 3 * C.fries,
   "friends-deal": 3 * (C.patty + C.bun + C.veg) + 3 * C.fries,
@@ -48,6 +50,7 @@ const NAME_TO_ID: Record<string, string> = {
   "דיל משפחתי": "family-deal",
   "דיל חברים": "friends-deal",
   "צ׳יפס": "fries",
+  "מיקס חברים": "friends-mix",
 };
 
 const TOPPING_COST: { match: string; cost: number }[] = [
@@ -120,7 +123,7 @@ const BURGER_IDS = new Set(["classic", "avishai", "special-hadegel", "haf-mifsha
 
 /** Packaging cost of ONE takeaway order */
 export const packagingCost = (orderItems: CountableOrderItem[]): number => {
-  let burgers = 0, fried = 0, dealBags = 0, other = 0, cost = 0;
+  let burgers = 0, fried = 0, mixUnits = 0, dealBags = 0, other = 0, cost = 0;
   for (const it of orderItems) {
     const qty = Number(it.quantity) || 0;
     const name = (it.item_name || "").trim();
@@ -132,16 +135,23 @@ export const packagingCost = (orderItems: CountableOrderItem[]): number => {
       dealBags += qty * (id === "family-deal" ? 2 : 1);
       continue;
     }
+    // מיקס חברים — אריזה אחת של צ׳יפס ענק, לא 3 אריזות נפרדות
+    if (id === "friends-mix") {
+      cost += qty * PACK.giantFriesBox;
+      mixUnits += qty;
+      continue;
+    }
     if (BURGER_IDS.has(id)) burgers += qty;
     else if (FRIED_IDS.has(id) || FRIED_NAME.test(name)) fried += qty;
     else other += qty;
     if (isMeal) fried += qty;
   }
   cost += burgers * PACK.wrap + fried * PACK.friesBox;
+  const friedAll = fried + mixUnits;
   let bags = 0;
-  if (burgers + fried + other > 0) {
+  if (burgers + friedAll + other > 0) {
     bags = burgers > 3 ? 2 : 1;
-    if (fried > 4) bags += 1;
+    if (friedAll > 4) bags += 1;
   }
   return cost + (bags + dealBags) * PACK.bag;
 };
