@@ -330,7 +330,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       accountant += ACCOUNTANT_MONTHLY * share;
     });
     const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
-    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), fixed, wages: wagesAlloc, accountant });
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant });
     return {
       orders: list,
       revenue,
@@ -794,7 +794,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["מע״מ (18%)", -primary.profit.vat],
               ["עלות חומרי גלם", -primary.profit.foodCost],
               ["הכנסות ללא מע״מ", primary.profit.netRevenue],
-              ["אריזות טייקאווי", -primary.profit.packaging],
+              ["אריזות (טייקאווי + סירות בישיבה)", -primary.profit.packaging],
               ["עמלות אשראי", -primary.profit.creditFees],
               ["שכר עובדים", -primary.profit.wages],
               ["רואת חשבון", -primary.profit.accountant],

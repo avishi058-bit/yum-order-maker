@@ -156,6 +156,20 @@ export const packagingCost = (orderItems: CountableOrderItem[]): number => {
   return cost + (bags + dealBags) * PACK.bag;
 };
 
+/** Dine-in: one cardboard tray (0.39) per burger/crispy, incl. deals & meals; fries share the tray */
+export const dineInPackagingCost = (orderItems: CountableOrderItem[]): number => {
+  let burgers = 0;
+  for (const it of orderItems) {
+    const qty = Number(it.quantity) || 0;
+    const name = (it.item_name || "").trim();
+    const id = (it.item_id || "").replace(/^meal-/, "") || NAME_TO_ID[name.replace(/^ארוחת\s+/, "")] || "";
+    if (id === "friends-deal") burgers += 3 * qty;
+    else if (id === "family-deal") burgers += 5 * qty;
+    else if (BURGER_IDS.has(id)) burgers += qty;
+  }
+  return burgers * PACK.bag; // סירת קרטון = מחיר שקית 0.39
+};
+
 export const ACCOUNTANT_MONTHLY = 350; // before VAT
 export const NATIONAL_INSURANCE_RATE = 0.08;
 
@@ -163,18 +177,24 @@ export interface ProfitInput {
   revenue: number;
   creditRevenue: number;
   items: CountableOrderItem[];
-  /** ids of takeaway orders (packaging applies only to these) */
+  /** ids of takeaway orders (bags/boxes/wraps apply only to these) */
   takeawayIds?: Set<string>;
+  /** ids of dine-in orders (cardboard tray per burger) */
+  dineInIds?: Set<string>;
   /** monthly costs already allocated to this range by work days */
   fixed: number;
   wages: number;
   accountant: number;
 }
 
-export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, fixed, wages, accountant }: ProfitInput) => {
+export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant }: ProfitInput) => {
   const byOrder: Record<string, CountableOrderItem[]> = {};
   for (const i of items) if (takeawayIds?.has(i.order_id)) (byOrder[i.order_id] ??= []).push(i);
-  const packaging = Object.values(byOrder).reduce((s, l) => s + packagingCost(l), 0);
+  const byDineOrder: Record<string, CountableOrderItem[]> = {};
+  for (const i of items) if (dineInIds?.has(i.order_id)) (byDineOrder[i.order_id] ??= []).push(i);
+  const packaging =
+    Object.values(byOrder).reduce((s, l) => s + packagingCost(l), 0) +
+    Object.values(byDineOrder).reduce((s, l) => s + dineInPackagingCost(l), 0);
   const netRevenue = revenue / (1 + VAT_RATE);
   const vat = revenue - netRevenue;
   const foodCost = items.reduce((s, i) => s + itemCost(i), 0);
