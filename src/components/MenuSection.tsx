@@ -204,18 +204,21 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
     <div
       onClick={handleAdd}
       dir="rtl"
-      className={`bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col shadow-sm transition-transform duration-150 active:scale-[0.98] active:shadow-md ${browseOnly ? "cursor-default" : "cursor-pointer"}`}
+      className={`bg-white rounded-xl overflow-hidden border border-gray-100 flex flex-col shadow-sm transition-transform duration-150 active:scale-[0.98] active:shadow-md ${browseOnly ? "cursor-default" : "cursor-pointer"}`}
       style={{
         // keep this tile's internal reflows from moving the rest of the grid
         contain: "layout style",
       }}
     >
-      {/* Photo — square, fills the whole tile width so the food is the hero */}
-      <div className="relative w-full aspect-square bg-muted overflow-hidden">
+      {/* The source food photos are landscape. Keeping their native 16:9 ratio
+          avoids enlarging and heavily cropping them, so they look sharper. */}
+      <div className="relative w-full aspect-video bg-muted overflow-hidden">
         {image ? (
           <img
             src={image}
             alt={item.name}
+            width={800}
+            height={450}
             className="w-full h-full object-cover"
             loading="eager"
             decoding="sync"
@@ -228,7 +231,6 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
               el.dataset.retried = "1";
               el.src = `${image}${image.includes("?") ? "&" : "?"}v=${Date.now()}`;
             }}
-            style={{ transform: "scale(var(--kiosk-image-scale, 1))", transformOrigin: "center" }}
           />
         ) : (
           <span className="w-full h-full flex items-center justify-center text-6xl text-gray-400/60" aria-hidden>
@@ -265,14 +267,14 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
       </div>
 
       {/* Text block: bold name, ingredients under it, price pinned to the bottom */}
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3.5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2">
           <h3
             className="font-extrabold text-gray-900 leading-tight line-clamp-2 break-words"
             style={{
-              fontSize: `${26 * fontScale}px`,
+              fontSize: `${23 * fontScale}px`,
               // Reserve exactly 2 lines so a one-word name doesn't shrink the tile
-              minHeight: `${26 * fontScale * 1.25 * 2}px`,
+              minHeight: `${23 * fontScale * 1.25 * 2}px`,
             }}
           >
             {displayName}
@@ -294,9 +296,9 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
           {displayDesc}
         </p>
         <div className="mt-auto pt-3 flex items-center justify-between">
-          <span className="text-primary font-black" style={{ fontSize: `${28 * fontScale}px` }}>₪{item.price}</span>
-          <span className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md flex-shrink-0" aria-hidden>
-            <Plus size={22} strokeWidth={3} />
+          <span className="text-primary font-black" style={{ fontSize: `${25 * fontScale}px` }}>₪{item.price}</span>
+          <span className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md flex-shrink-0" aria-hidden>
+            <Plus size={20} strokeWidth={3} />
           </span>
         </div>
       </div>
@@ -381,7 +383,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   );
 
   return (
-    <section id="menu" className={`${isKiosk ? 'mx-auto w-full max-w-[1100px] px-3 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
+    <section id="menu" className={`${isKiosk ? 'mx-auto w-full max-w-[960px] px-3 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing).
