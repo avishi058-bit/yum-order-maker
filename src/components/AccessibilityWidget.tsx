@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import {
@@ -139,7 +140,15 @@ const AccessibilityWidget = () => {
       body.classList.remove(cls);
       root.classList.remove(cls);
     });
-    if (s.colorMode !== "none") body.classList.add(COLOR_CLASSES[s.colorMode]);
+    const appRoot = document.getElementById("root");
+    Object.values(COLOR_CLASSES).forEach((c) => appRoot?.classList.remove(c));
+    if (s.colorMode !== "none") {
+      const cls = COLOR_CLASSES[s.colorMode];
+      // Filters on <body> break position:fixed (the floating button vanished).
+      // Apply filter modes to #root; the widget is portaled outside #root.
+      if (["invert", "monochrome", "sepia"].includes(s.colorMode) && appRoot) appRoot.classList.add(cls);
+      else body.classList.add(cls);
+    }
 
     const toggleClass = (cond: boolean, cls: string) => {
       body.classList.toggle(cls, cond);
@@ -258,7 +267,7 @@ const AccessibilityWidget = () => {
       active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
     }`;
 
-  return (
+  return createPortal(
     <>
       {/* Floating button — position from uiConfig, draggable by finger */}
       <motion.button
@@ -457,7 +466,8 @@ const AccessibilityWidget = () => {
           </>
         )}
       </AnimatePresence>
-    </>
+    </>,
+    document.body
   );
 };
 
