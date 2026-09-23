@@ -240,7 +240,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         const chunk = ids.slice(i, i + 200);
         const { data: rows } = await supabase
           .from("order_items")
-          .select("order_id, item_id, item_name, quantity, toppings")
+          .select("order_id, item_id, item_name, quantity, toppings, meal_drink, deal_drinks")
           .in("order_id", chunk);
         if (rows) collected.push(...(rows as CountableOrderItem[]));
       }
