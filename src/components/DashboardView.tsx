@@ -674,6 +674,195 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         </Card>
       </div>
 
+      {/* Month-to-date vs previous month */}
+      {monthSelection && monthToDate && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CalendarRange size={18} className="text-emerald-400" />
+              {monthLabel(monthSelection.key)} מול {monthToDate.prevLabel} — {monthToDate.days} הימים הראשונים
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground mb-1">החודש</p>
+                <p className="text-xl font-black text-foreground">₪{monthToDate.cur.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground mb-1">{monthToDate.prevLabel}</p>
+                <p className="text-xl font-black text-foreground">₪{monthToDate.prev.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground mb-1">שינוי</p>
+                {monthToDate.delta === null ? (
+                  <p className="text-xl font-black text-muted-foreground">—</p>
+                ) : (
+                  <p className={`text-xl font-black flex items-center justify-center gap-1 ${monthToDate.delta >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {monthToDate.delta >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                    {monthToDate.delta >= 0 ? "+" : ""}{monthToDate.delta.toFixed(1)}%
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">הכנסות לפי יום בחודש</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={monthDayCompare}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <Tooltip
+                    formatter={(value: number, name: string) => [`₪${value.toLocaleString()}`, name === "current" ? monthLabel(monthSelection.key) : monthToDate.prevLabel]}
+                    labelFormatter={(l) => `יום ${l} בחודש`}
+                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
+                  />
+                  <Legend formatter={(v) => (v === "current" ? monthLabel(monthSelection.key) : monthToDate.prevLabel)} />
+                  <Bar dataKey="previous" fill="#64748b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="current" fill="#f97316" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">מרוץ מצטבר לאורך החודש</p>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={monthDayCompare}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <Tooltip
+                    formatter={(value: number, name: string) => [`₪${value.toLocaleString()}`, name === "cumCurrent" ? monthLabel(monthSelection.key) : monthToDate.prevLabel]}
+                    labelFormatter={(l) => `יום ${l} בחודש`}
+                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
+                  />
+                  <Legend formatter={(v) => (v === "cumCurrent" ? monthLabel(monthSelection.key) : monthToDate.prevLabel)} />
+                  <Line type="monotone" dataKey="cumPrevious" stroke="#64748b" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="cumCurrent" stroke="#10b981" strokeWidth={3} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Insights */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><Trophy size={14} className="text-yellow-400" /> היום החזק בתקופה</p>
+            <p className="text-lg font-black text-foreground">{bestDay ? bestDay.date : "—"}</p>
+            <p className="text-xs text-muted-foreground">{bestDay ? `₪${bestDay.revenue.toLocaleString()}` : ""}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><Flame size={14} className="text-orange-400" /> המנה הנמכרת ביותר</p>
+            <p className="text-lg font-black text-foreground truncate">{topItems[0]?.name ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">{topItems[0] ? `${topItems[0].qty} יחידות` : ""}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><Beef size={14} className="text-amber-400" /> קציצות להזמנה</p>
+            <p className="text-lg font-black text-foreground">{primary.count ? (primary.patties / primary.count).toFixed(1) : "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><BarChart3 size={14} className="text-blue-400" /> היום הכי חזק בשבוע</p>
+            <p className="text-lg font-black text-foreground">
+              {weekdayData.some((w) => w.revenue > 0)
+                ? weekdayData.reduce((max, w) => (w.revenue > max.revenue ? w : max), weekdayData[0]).name
+                : "—"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top items + weekday */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Flame size={18} className="text-orange-400" />
+              10 המנות הנמכרות ביותר
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topItems.length > 0 ? (
+              <div className="space-y-2">
+                {topItems.map((it, i) => (
+                  <div key={it.name} className="flex items-center gap-3">
+                    <span className="w-5 text-xs text-muted-foreground">{i + 1}</span>
+                    <span className="flex-1 text-sm text-foreground truncate">{it.name}</span>
+                    <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${(it.qty / topItems[0].qty) * 100}%` }} />
+                    </div>
+                    <span className="w-10 text-sm font-bold text-foreground text-left">{it.qty}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">אין נתונים</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CalendarRange size={18} className="text-emerald-400" />
+              ביצועים לפי יום בשבוע (ממוצע ליום)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={weekdayData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Tooltip
+                  formatter={(value: number) => [`₪${value.toLocaleString()}`, "ממוצע"]}
+                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
+                />
+                <Bar dataKey="avg" fill="#10b981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 12 month trend */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp size={18} className="text-green-400" />
+            12 החודשים האחרונים
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {trend.some((t) => t.revenue > 0) ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={trend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <Tooltip
+                  formatter={(value: number, name: string) => (name === "revenue" ? [`₪${value.toLocaleString()}`, "הכנסות"] : [value, "הזמנות"])}
+                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
+                />
+                <Area type="monotone" dataKey="revenue" stroke="#10b981" fill="#10b981" fillOpacity={0.2} name="revenue" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-center text-muted-foreground py-12">אין עדיין נתונים לחודשים קודמים</p>
+          )}
+        </CardContent>
+      </Card>
+
+
       {/* Month comparison */}
       {mode === "compare" && secondary && ranges[1] && (
         <Card>
