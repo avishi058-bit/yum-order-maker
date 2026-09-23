@@ -8,7 +8,10 @@ import {
 } from "recharts";
 import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
-import { TrendingUp, ShoppingBag, DollarSign, Clock, Globe, Beef } from "lucide-react";
+import {
+  TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
+  CalendarRange, Trophy, Flame, BarChart3,
+} from "lucide-react";
 
 interface Order {
   id: string;
@@ -162,8 +165,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         return [{ key: "yesterday", label: "אתמול", start: new Date(todayStart.getTime() - DAY), end: todayStart }];
       case "week":
         return [{ key: "week", label: "שבוע אחרון", start: new Date(todayStart.getTime() - 6 * DAY), end: tomorrow }];
-      case "month":
-        return [{ key: "month", label: "30 ימים אחרונים", start: new Date(todayStart.getTime() - 29 * DAY), end: tomorrow }];
+      case "month": {
+        const key = monthKey(new Date());
+        return [{ key, label: `החודש · ${monthLabel(key)}`, ...monthRange(key) }];
+      }
       case "custom": {
         const from = dayStartFromISO(customFrom);
         const to = new Date(dayStartFromISO(customTo).getTime() + DAY);
@@ -189,9 +194,21 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     }
   }, [mode, customFrom, customTo, selectedMonth, monthA, monthB]);
 
+  /** When viewing a full calendar month, also pull the previous month for day-vs-day comparison. */
+  const monthSelection = useMemo(() => {
+    if (mode !== "month" && mode !== "pickMonth") return null;
+    const key = mode === "pickMonth" ? selectedMonth : monthKey(new Date());
+    const [y, m] = key.split("-").map(Number);
+    const prevKey = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
+    return { key, prevKey, cur: monthRange(key), prev: monthRange(prevKey) };
+  }, [mode, selectedMonth]);
+
   const fetchStart = useMemo(
-    () => new Date(Math.min(...ranges.map((r) => r.start.getTime()))),
-    [ranges],
+    () => new Date(Math.min(
+      ...ranges.map((r) => r.start.getTime()),
+      ...(monthSelection ? [monthSelection.prev.start.getTime()] : []),
+    )),
+    [ranges, monthSelection],
   );
   const fetchEnd = useMemo(
     () => new Date(Math.max(...ranges.map((r) => r.end.getTime()))),
@@ -333,6 +350,133 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       { metric: "קציצות", [ranges[0].label]: primary.patties, [ranges[1].label]: secondary.patties },
     ];
   }, [primary, secondary, ranges]);
+
+  // ===== day-of-month: this month vs previous month =====
+  const dayOfMonth = (iso: string) => {
+    const start = getBusinessDayStart(new Date(iso));
+    return Number(
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", day: "2-digit" }).format(start),
+    );
+  };
+
+  const monthDayCompare = useMemo(() => {
+    if (!monthSelection) return [];
+    const bucket = (start: Date, end: Date) => {
+      const map: Record<number, number> = {};
+      orders.forEach((o) => {
+        if (!isCounted(o)) return;
+        const d = new Date(o.created_at);
+        if (d < start || d >= end) return;
+        const day = dayOfMonth(o.created_at);
+        map[day] = (map[day] ?? 0) + o.total;
+      });
+      return map;
+    };
+    const cur = bucket(monthSelection.cur.start, monthSelection.cur.end);
+    const prev = bucket(monthSelection.prev.start, monthSelection.prev.end);
+    const days = Math.max(...Object.keys(cur).map(Number), ...Object.keys(prev).map(Number), 1);
+    let cumCur = 0;
+    let cumPrev = 0;
+    const rows = [];
+    for (let day = 1; day <= days; day++) {
+      cumCur += cur[day] ?? 0;
+      cumPrev += prev[day] ?? 0;
+      rows.push({
+        day: String(day),
+        current: cur[day] ?? 0,
+        previous: prev[day] ?? 0,
+        cumCurrent: cumCur,
+        cumPrevious: cumPrev,
+      });
+    }
+    return rows;
+  }, [orders, monthSelection]);
+
+  /** Same-days-so-far comparison (fair month-to-date delta) */
+  const monthToDate = useMemo(() => {
+    if (!monthSelection || monthDayCompare.length === 0) return null;
+    const lastActiveDay = monthDayCompare.reduce((m, r) => (r.current > 0 ? Number(r.day) : m), 0);
+    if (!lastActiveDay) return null;
+    const slice = monthDayCompare.filter((r) => Number(r.day) <= lastActiveDay);
+    const cur = slice.reduce((s, r) => s + r.current, 0);
+    const prev = slice.reduce((s, r) => s + r.previous, 0);
+    const delta = prev > 0 ? ((cur - prev) / prev) * 100 : null;
+    return { days: lastActiveDay, cur, prev, delta, prevLabel: monthLabel(monthSelection.prevKey) };
+  }, [monthDayCompare, monthSelection]);
+
+  // ===== top selling items =====
+  const topItems = useMemo(() => {
+    const ids = new Set(primary.orders.map((o) => o.id));
+    const map: Record<string, number> = {};
+    items.forEach((i) => {
+      if (!ids.has(i.order_id)) return;
+      const name = i.item_name ?? "—";
+      map[name] = (map[name] ?? 0) + (i.quantity ?? 1);
+    });
+    return Object.entries(map)
+      .map(([name, qty]) => ({ name, qty }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 10);
+  }, [items, primary.orders]);
+
+  // ===== weekday performance =====
+  const WEEKDAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+  const weekdayData = useMemo(() => {
+    const map: Record<number, { revenue: number; orders: number; days: Set<string> }> = {};
+    for (let i = 0; i < 7; i++) map[i] = { revenue: 0, orders: 0, days: new Set() };
+    filteredOrders.forEach((o) => {
+      const start = getBusinessDayStart(new Date(o.created_at));
+      const idx = start.getDay();
+      map[idx].revenue += o.total;
+      map[idx].orders += 1;
+      map[idx].days.add(start.toISOString().slice(0, 10));
+    });
+    return WEEKDAYS.map((name, i) => ({
+      name,
+      revenue: map[i].revenue,
+      orders: map[i].orders,
+      avg: map[i].days.size ? Math.round(map[i].revenue / map[i].days.size) : 0,
+    }));
+  }, [filteredOrders]);
+
+  // ===== 12 month trend (loaded once) =====
+  const [trend, setTrend] = useState<{ month: string; revenue: number; orders: number }[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const keys = lastMonths(12).reverse();
+      const start = monthRange(keys[0]).start;
+      const { data } = await supabase
+        .from("orders")
+        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone")
+        .gte("created_at", start.toISOString())
+        .order("created_at", { ascending: true });
+      if (cancelled) return;
+      const clean = excludeTestOrders((data ?? []) as Order[]).filter(isCounted);
+      const map: Record<string, { revenue: number; orders: number }> = {};
+      keys.forEach((k) => (map[k] = { revenue: 0, orders: 0 }));
+      clean.forEach((o) => {
+        const k = monthKey(getBusinessDayStart(new Date(o.created_at)));
+        if (!map[k]) return;
+        map[k].revenue += o.total;
+        map[k].orders += 1;
+      });
+      setTrend(keys.map((k) => ({
+        month: monthLabel(k).replace(/\s\d{4}$/, ""),
+        revenue: map[k].revenue,
+        orders: map[k].orders,
+      })));
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const bestDay = useMemo(() => {
+    if (dailyData.length === 0) return null;
+    return dailyData.reduce((max, d) => (d.revenue > max.revenue ? d : max), dailyData[0]);
+  }, [dailyData]);
 
   if (!unlocked) {
     return (
