@@ -545,3 +545,10 @@ html.pwa-installed .pwa-safe-bottom {
 html.pwa-installed .pwa-safe-absolute-bottom {
   bottom: calc(env(safe-area-inset-bottom) + 1rem) !important;
 }
+
+#root.accessibility-invert,
+#root.accessibility-monochrome,
+#root.accessibility-sepia {
+  min-height: 100dvh;
+  background-color: hsl(var(--background));
+}
