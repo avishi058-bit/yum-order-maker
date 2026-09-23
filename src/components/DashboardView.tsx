@@ -481,60 +481,87 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   if (!unlocked) {
     return (
-      <div dir="rtl" className="p-6 space-y-6 max-w-md mx-auto">
-        <div className="grid grid-cols-2 gap-4">
+      <div dir="rtl" className="p-6 space-y-4 max-w-md mx-auto">
+        <div className="grid grid-cols-2 gap-3">
           <Card className="bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <p className="text-xs text-muted-foreground">מזומן היום</p>
-              <p className="text-2xl font-black text-foreground">₪{openTotals.cash.toLocaleString()}</p>
+              <p className="text-xl font-black text-foreground">₪{openTotals.cash.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{openTotals.cashCount} הזמנות</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/30">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <p className="text-xs text-muted-foreground">פייבוקס היום</p>
-              <p className="text-2xl font-black text-foreground">₪{openTotals.paybox.toLocaleString()}</p>
+              <p className="text-xl font-black text-foreground">₪{openTotals.paybox.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{openTotals.payboxCount} הזמנות</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">נתוני הכנסות מלאים</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">להצגת כל הנתונים יש להזין קוד</p>
-            <input
-              type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              value={codeInput}
-              onChange={(e) => {
-                setCodeInput(e.target.value);
-                setCodeError(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") tryUnlock();
-              }}
-              placeholder="קוד"
-              className="w-full h-12 rounded-lg border border-border bg-background px-4 text-center text-2xl tracking-[0.4em] text-foreground"
-            />
-            {codeError && <p className="text-sm text-destructive">קוד שגוי</p>}
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={rememberDevice}
-                onChange={(e) => setRememberDevice(e.target.checked)}
-                className="h-4 w-4 accent-[hsl(var(--primary))]"
-              />
-              זכור את המכשיר הזה ואל תבקש קוד בפעם הבאה
-            </label>
-            <button onClick={tryUnlock} className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-bold">
-              הצג נתונים
+        {!codeOpen ? (
+          <div className="flex justify-center pt-1">
+            <button
+              onClick={() => setCodeOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Lock size={14} />
+              נתוני הכנסות מלאים
             </button>
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          <Card className="max-w-xs mx-auto">
+            <CardContent className="p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">הזן קוד לצפייה בכל הנתונים</p>
+                <button
+                  onClick={() => {
+                    setCodeOpen(false);
+                    setCodeError(false);
+                  }}
+                  className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
+                  aria-label="סגור"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  autoFocus
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={codeInput}
+                  onChange={(e) => {
+                    setCodeInput(e.target.value);
+                    setCodeError(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") tryUnlock();
+                  }}
+                  placeholder="קוד"
+                  className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-center text-lg tracking-[0.3em] text-foreground"
+                />
+                <button
+                  onClick={tryUnlock}
+                  className="h-10 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground"
+                >
+                  אישור
+                </button>
+              </div>
+              {codeError && <p className="text-xs text-destructive">קוד שגוי</p>}
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={rememberDevice}
+                  onChange={(e) => setRememberDevice(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-[hsl(var(--primary))]"
+                />
+                זכור את המכשיר הזה
+              </label>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
