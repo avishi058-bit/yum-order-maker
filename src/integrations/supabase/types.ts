@@ -1285,6 +1285,7 @@ export type Database = {
           menu_item_overrides: Json
           menu_order: Json
           monthly_fixed_costs: number
+          monthly_wages: Json
           primary_color: string
           updated_at: string
           website_font_scale: number
@@ -1310,6 +1311,7 @@ export type Database = {
           menu_item_overrides?: Json
           menu_order?: Json
           monthly_fixed_costs?: number
+          monthly_wages?: Json
           primary_color?: string
           updated_at?: string
           website_font_scale?: number
@@ -1335,6 +1337,7 @@ export type Database = {
           menu_item_overrides?: Json
           menu_order?: Json
           monthly_fixed_costs?: number
+          monthly_wages?: Json
           primary_color?: string
           updated_at?: string
           website_font_scale?: number
