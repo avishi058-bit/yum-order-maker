@@ -1284,6 +1284,7 @@ export type Database = {
           kiosk_ui_scale: number
           menu_item_overrides: Json
           menu_order: Json
+          monthly_fixed_costs: number
           primary_color: string
           updated_at: string
           website_font_scale: number
@@ -1308,6 +1309,7 @@ export type Database = {
           kiosk_ui_scale?: number
           menu_item_overrides?: Json
           menu_order?: Json
+          monthly_fixed_costs?: number
           primary_color?: string
           updated_at?: string
           website_font_scale?: number
@@ -1332,6 +1334,7 @@ export type Database = {
           kiosk_ui_scale?: number
           menu_item_overrides?: Json
           menu_order?: Json
+          monthly_fixed_costs?: number
           primary_color?: string
           updated_at?: string
           website_font_scale?: number
