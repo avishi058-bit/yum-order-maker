@@ -8,6 +8,8 @@ import {
 } from "recharts";
 import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
+import { computeProfit } from "@/lib/profitStats";
+import { toast } from "sonner";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
   CalendarRange, Trophy, Flame, BarChart3, Lock, X,
@@ -253,6 +255,25 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     };
   }, [fetchStart, fetchEnd]);
 
+  const [monthlyFixed, setMonthlyFixed] = useState(0);
+  const [fixedInput, setFixedInput] = useState("0");
+  useEffect(() => {
+    (supabase as any).from("site_settings").select("id, monthly_fixed_costs").limit(1).maybeSingle()
+      .then(({ data }: any) => {
+        if (data) {
+          setMonthlyFixed(Number(data.monthly_fixed_costs) || 0);
+          setFixedInput(String(Number(data.monthly_fixed_costs) || 0));
+        }
+      });
+  }, []);
+  const saveFixed = async () => {
+    const v = Math.max(0, Number(fixedInput) || 0);
+    const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
+    if (!data) return;
+    const { error } = await (supabase as any).from("site_settings").update({ monthly_fixed_costs: v }).eq("id", data.id);
+    if (error) toast.error("השמירה נכשלה"); else { setMonthlyFixed(v); toast.success("נשמר"); }
+  };
+
   const isCounted = (o: Order) =>
     !UNCOUNTED_STATUSES.has(o.status) && !(o.payment_method === "credit" && !o.paid_at);
 
@@ -265,8 +286,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       return d >= start && d < end;
     });
     const ids = new Set(list.map((o) => o.id));
-    const { burgers, patties } = countBurgers(items.filter((i) => ids.has(i.order_id)));
+    const rangeItems = items.filter((i) => ids.has(i.order_id));
+    const { burgers, patties } = countBurgers(rangeItems);
     const revenue = list.reduce((s, o) => s + o.total, 0);
+    const creditRevenue = list.filter((o) => o.payment_method === "credit").reduce((s, o) => s + o.total, 0);
+    const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / DAY));
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, days, monthlyFixed });
     return {
       orders: list,
       revenue,
@@ -274,6 +299,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       avg: list.length ? revenue / list.length : 0,
       burgers,
       patties,
+      days,
+      profit,
     };
   };
 
@@ -701,6 +728,56 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Net profit */}
+      <Card className="border-emerald-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <DollarSign size={18} className="text-emerald-500" /> רווח נקי משוער · {ranges[0].label}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className={`text-3xl font-black ${primary.profit.profit >= 0 ? "text-emerald-500" : "text-destructive"}`}>
+            ₪{Math.round(primary.profit.profit).toLocaleString()}
+            <span className="text-sm font-medium text-muted-foreground mr-2">
+              ({Math.round(primary.profit.margin * 100)}% מההכנסה ללא מע״מ)
+            </span>
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {[
+              ["הכנסות כולל מע״מ", primary.revenue],
+              ["מע״מ (18%)", -primary.profit.vat],
+              ["עלות חומרי גלם", -primary.profit.foodCost],
+              ["עמלות אשראי", -primary.profit.creditFees],
+              [`הוצאות קבועות (${primary.days.toFixed(0)} ימים)`, -primary.profit.fixed],
+            ].map(([label, v]) => (
+              <div key={label as string} className="flex justify-between rounded-lg bg-muted/40 px-3 py-2">
+                <span className="text-muted-foreground">{label}</span>
+                <span className="font-bold">₪{Math.round(v as number).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <label className="text-muted-foreground">הוצאות קבועות חודשיות (₪):</label>
+            <input
+              type="number"
+              min={0}
+              value={fixedInput}
+              onChange={(e) => setFixedInput(e.target.value)}
+              className="w-28 rounded-md border bg-background px-2 py-1"
+            />
+            <button
+              onClick={saveFixed}
+              className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold"
+            >
+              שמור
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            שכירות, עובדים, חשמל וכו׳ — מתחלק לפי מספר הימים בתקופה. שתייה ומוצרים ללא עלות מוגדרת לא נספרים בעלות.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Month-to-date vs previous month */}
       {monthSelection && monthToDate && (
