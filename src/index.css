@@ -322,24 +322,61 @@
 }
 
 body.accessibility-black-yellow {
-  background: #000 !important;
+  --background: 0 0% 0%;
+  --foreground: 60 100% 50%;
+  --card: 0 0% 0%;
+  --card-foreground: 60 100% 50%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 60 100% 50%;
+  --primary: 60 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 0%;
+  --secondary-foreground: 60 100% 50%;
+  --muted: 0 0% 0%;
+  --muted-foreground: 60 100% 50%;
+  --accent: 60 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --border: 60 100% 50%;
+  --input: 60 100% 50%;
+  --ring: 60 100% 50%;
+  background-color: hsl(var(--background)) !important;
   background-image: none !important;
-  color: #ff0 !important;
+  color: hsl(var(--foreground)) !important;
 }
 
-/* Make every element see-through so the black body shows through.
-   (Forcing background-color:#000 here turned decorative overlays into
-   opaque black sheets that covered the whole page.) */
+/* Give every content surface an opaque base. Transparent cards, sticky bars
+   and dialogs previously exposed all layers underneath and made text overlap. */
 body.accessibility-black-yellow *:not(svg):not(path):not(img):not(video):not(canvas) {
-  background-color: transparent !important;
+  background-color: hsl(var(--background)) !important;
   background-image: none !important;
   box-shadow: none !important;
   text-shadow: none !important;
-  color: #ff0 !important;
-  -webkit-text-fill-color: #ff0 !important;
-  border-color: #ff0 !important;
+  color: hsl(var(--foreground)) !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
   opacity: 1 !important;
   backdrop-filter: none !important;
+}
+
+/* Decorative layers must remain transparent so they cannot become black
+   sheets above the real content. Dialog backdrops retain a visible scrim. */
+body.accessibility-black-yellow [class*="pointer-events-none"],
+body.accessibility-black-yellow [aria-hidden="true"][class*="absolute"],
+body.accessibility-black-yellow [class*="gradient"] {
+  background-color: transparent !important;
+}
+
+body.accessibility-black-yellow [data-radix-dialog-overlay],
+body.accessibility-black-yellow [data-radix-alert-dialog-overlay],
+body.accessibility-black-yellow [class*="overlay"],
+body.accessibility-black-yellow [class*="backdrop"] {
+  background-color: hsl(0 0% 0% / 0.92) !important;
+}
+
+body.accessibility-black-yellow :is(img, video, picture, canvas),
+body.accessibility-black-yellow button *,
+body.accessibility-black-yellow [role="button"] * {
+  background-color: transparent !important;
 }
 
 body.accessibility-black-yellow svg {
