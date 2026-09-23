@@ -260,6 +260,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [fixedInput, setFixedInput] = useState("0");
   const [wages, setWages] = useState<Record<string, number>>({});
   const [wageInput, setWageInput] = useState("");
+  const [shifts, setShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
+  useEffect(() => {
+    (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", fetchStart.toISOString()).lt("clock_in", fetchEnd.toISOString())
+      .then(({ data }: any) => setShifts(data || []));
+  }, [fetchStart, fetchEnd]);
   const [workDays, setWorkDays] = useState<Record<string, Set<string>>>({});
   useEffect(() => {
     (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages").limit(1).maybeSingle()
@@ -300,6 +305,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     return Math.max(actual, 1);
   };
 
+  const HOURLY_WAGE = 40;
   const isCounted = (o: Order) =>
     !UNCOUNTED_STATUSES.has(o.status) && !(o.payment_method === "credit" && !o.paid_at);
 
@@ -329,6 +335,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       wagesAlloc += (wages[k] || 0) * share;
       accountant += ACCOUNTANT_MONTHLY * share;
     });
+    const shiftHours = shifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; })
+      .reduce((a, sh) => a + (new Date(sh.clock_out || Date.now()).getTime() - new Date(sh.clock_in).getTime()) / 3600000, 0);
+    const shiftPay = shiftHours * HOURLY_WAGE;
+    wagesAlloc += shiftPay;
     const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
     const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant });
     return {
@@ -340,16 +350,18 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       patties,
       days,
       profit,
+      shiftHours,
+      shiftPay,
     };
   };
 
   const primary = useMemo(
     () => statsFor(ranges[0].start, ranges[0].end),
-    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays],
+    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts],
   );
   const secondary = useMemo(
     () => (ranges[1] ? statsFor(ranges[1].start, ranges[1].end) : null),
-    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays],
+    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts],
   );
 
   const filteredOrders = primary.orders;
@@ -825,6 +837,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (40 ₪/שעה, כלול בשכר)</span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה בתקופה: <b>{primary.days}</b></span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה החודש: <b>{workDays[currentMonthKey]?.size ?? 0}</b></span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ממוצע ימי עבודה בחודש: <b>{avgWorkDays ? avgWorkDays.toFixed(1) : "—"}</b></span>

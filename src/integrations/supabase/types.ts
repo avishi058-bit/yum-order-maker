@@ -1393,6 +1393,33 @@ export type Database = {
         }
         Relationships: []
       }
+      work_shifts: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          employee_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          employee_name: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          employee_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
