@@ -253,7 +253,7 @@ const KioskKeyboard = () => {
           transition={{ type: "spring", damping: 26, stiffness: 300 }}
           onPointerDown={handlePointerDown}
           dir="ltr"
-          className="fixed left-1/2 -translate-x-1/2 z-[10000] rounded-3xl bg-background/95 backdrop-blur border border-border shadow-2xl p-4"
+          className="fixed inset-x-0 mx-auto z-[10000] rounded-3xl bg-background/95 backdrop-blur border border-border shadow-2xl p-4"
           style={{
             bottom: "calc(2vh + env(safe-area-inset-bottom, 0px))",
             width: isNum ? "min(420px, 92vw)" : "min(760px, 94vw)",
