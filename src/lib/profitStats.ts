@@ -156,18 +156,21 @@ export const packagingCost = (orderItems: CountableOrderItem[]): number => {
   return cost + (bags + dealBags) * PACK.bag;
 };
 
-/** Dine-in: one cardboard tray (0.39) per burger/crispy, incl. deals & meals; fries share the tray */
+/** Dine-in: one cardboard tray (0.39) per burger/crispy (deals = tray per burger), plus one tray for each giant fries / friends mix */
 export const dineInPackagingCost = (orderItems: CountableOrderItem[]): number => {
-  let burgers = 0;
+  let trays = 0;
   for (const it of orderItems) {
     const qty = Number(it.quantity) || 0;
     const name = (it.item_name || "").trim();
     const id = (it.item_id || "").replace(/^meal-/, "") || NAME_TO_ID[name.replace(/^ארוחת\s+/, "")] || "";
-    if (id === "friends-deal") burgers += 3 * qty;
-    else if (id === "family-deal") burgers += 5 * qty;
-    else if (BURGER_IDS.has(id)) burgers += qty;
+    // כל המבורגר בדיל = כלי נפרד, והצ׳יפס הענק בדיל מוסיף כלי נוסף
+    if (id === "friends-deal") trays += (3 + 1) * qty;
+    else if (id === "family-deal") trays += (5 + 1) * qty;
+    // מיקס חברים מוגש בכלי של צ׳יפס ענק
+    else if (id === "friends-mix") trays += qty;
+    else if (BURGER_IDS.has(id)) trays += qty;
   }
-  return burgers * PACK.bag; // סירת קרטון = מחיר שקית 0.39
+  return trays * PACK.bag; // סירת קרטון = מחיר שקית 0.39
 };
 
 export const ACCOUNTANT_MONTHLY = 350; // before VAT
