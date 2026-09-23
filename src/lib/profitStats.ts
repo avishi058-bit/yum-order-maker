@@ -177,6 +177,8 @@ export const ACCOUNTANT_MONTHLY = 350; // before VAT
 export const NATIONAL_INSURANCE_RATE = 0.08;
 /** Frying oil: 5.5 L/week at 6.5 ₪/L before VAT */
 export const OIL_WEEKLY = 5.5 * 6.5;
+/** Trash bags: 1.2 ₪ per work day */
+export const TRASH_BAGS_DAILY = 1.2;
 
 export interface ProfitInput {
   revenue: number;
@@ -192,9 +194,11 @@ export interface ProfitInput {
   accountant: number;
   /** frying oil allocated to this range */
   oil?: number;
+  /** trash bags allocated to this range */
+  trashBags?: number;
 }
 
-export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant, oil = 0 }: ProfitInput) => {
+export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant, oil = 0, trashBags = 0 }: ProfitInput) => {
   const byOrder: Record<string, CountableOrderItem[]> = {};
   for (const i of items) if (takeawayIds?.has(i.order_id)) (byOrder[i.order_id] ??= []).push(i);
   const byDineOrder: Record<string, CountableOrderItem[]> = {};
@@ -206,8 +210,8 @@ export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dine
   const vat = revenue - netRevenue;
   const foodCost = items.reduce((s, i) => s + itemCost(i), 0);
   const creditFees = creditRevenue * CREDIT_FEE_RATE;
-  const beforeTax = netRevenue - foodCost - creditFees - packaging - fixed - wages - accountant - oil;
+  const beforeTax = netRevenue - foodCost - creditFees - packaging - fixed - wages - accountant - oil - trashBags;
   const nationalInsurance = beforeTax > 0 ? beforeTax * NATIONAL_INSURANCE_RATE : 0;
   const profit = beforeTax - nationalInsurance;
-  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, oil, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
+  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, oil, trashBags, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
 };
