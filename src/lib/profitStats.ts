@@ -156,21 +156,24 @@ export const packagingCost = (orderItems: CountableOrderItem[]): number => {
   return cost + (bags + dealBags) * PACK.bag;
 };
 
-/** Dine-in: one cardboard tray (0.39) per burger/crispy (deals = tray per burger), plus one tray for each giant fries / friends mix */
+/** Dine-in: extra 0.6 ₪ per burger/crispy served in the cabin */
+const DINE_IN_BURGER_EXTRA = 0.6;
+
+/** Dine-in: one cardboard tray (0.39) per burger/crispy (deals = tray per burger) + 0.6 per burger, plus one tray for each giant fries / friends mix */
 export const dineInPackagingCost = (orderItems: CountableOrderItem[]): number => {
-  let trays = 0;
+  let trays = 0, burgerTrays = 0;
   for (const it of orderItems) {
     const qty = Number(it.quantity) || 0;
     const name = (it.item_name || "").trim();
     const id = (it.item_id || "").replace(/^meal-/, "") || NAME_TO_ID[name.replace(/^ארוחת\s+/, "")] || "";
     // כל המבורגר בדיל = כלי נפרד, והצ׳יפס הענק בדיל מוסיף כלי נוסף
-    if (id === "friends-deal") trays += (3 + 1) * qty;
-    else if (id === "family-deal") trays += (5 + 1) * qty;
+    if (id === "friends-deal") { trays += (3 + 1) * qty; burgerTrays += 3 * qty; }
+    else if (id === "family-deal") { trays += (5 + 1) * qty; burgerTrays += 5 * qty; }
     // מיקס חברים מוגש בכלי של צ׳יפס ענק
     else if (id === "friends-mix") trays += qty;
-    else if (BURGER_IDS.has(id)) trays += qty;
+    else if (BURGER_IDS.has(id)) { trays += qty; burgerTrays += qty; }
   }
-  return trays * PACK.bag; // סירת קרטון = מחיר שקית 0.39
+  return trays * PACK.bag + burgerTrays * DINE_IN_BURGER_EXTRA; // סירת קרטון = מחיר שקית 0.39
 };
 
 export const ACCOUNTANT_MONTHLY = 350; // before VAT
