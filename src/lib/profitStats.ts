@@ -197,6 +197,8 @@ export interface ProfitInput {
   fixed: number;
   wages: number;
   accountant: number;
+  /** payslip prep allocated to this range (50 ₪/month only in months with shifts) */
+  payslip?: number;
   /** frying oil allocated to this range */
   oil?: number;
   /** trash bags allocated to this range */
