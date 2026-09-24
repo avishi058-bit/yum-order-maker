@@ -136,7 +136,11 @@ Deno.serve(async (req) => {
 
     const { error: updErr } = await supabase
       .from("orders")
-      .update({ status: newStatus, payment_method: "credit" })
+      .update({
+        status: newStatus,
+        payment_method: "credit",
+        paid_at: newStatus === "new" ? new Date().toISOString() : null,
+      })
       .eq("id", orderId)
       .eq("status", "pending_payment");
 
