@@ -1271,6 +1271,7 @@ export type Database = {
           banner_text: string | null
           business_hours: Json
           created_at: string
+          fixed_expenses: Json
           google_review_url: string | null
           id: string
           kiosk_card_image_size_px: number
@@ -1297,6 +1298,7 @@ export type Database = {
           banner_text?: string | null
           business_hours?: Json
           created_at?: string
+          fixed_expenses?: Json
           google_review_url?: string | null
           id?: string
           kiosk_card_image_size_px?: number
@@ -1323,6 +1325,7 @@ export type Database = {
           banner_text?: string | null
           business_hours?: Json
           created_at?: string
+          fixed_expenses?: Json
           google_review_url?: string | null
           id?: string
           kiosk_card_image_size_px?: number
