@@ -177,6 +177,8 @@ export const dineInPackagingCost = (orderItems: CountableOrderItem[]): number =>
 };
 
 export const ACCOUNTANT_MONTHLY = 350; // before VAT
+/** Payslip prep: 50 ₪ before VAT per month, only in months the employee worked */
+export const PAYSLIP_MONTHLY = 50;
 export const NATIONAL_INSURANCE_RATE = 0.08;
 /** Frying oil: 5.5 L/week at 6.5 ₪/L before VAT */
 export const OIL_WEEKLY = 5.5 * 6.5;
