@@ -3131,9 +3131,9 @@ const Kitchen = () => {
                 )}
 
                 {/* Footer */}
-                <div className="px-4 py-3 border-t border-border flex items-center justify-between gap-2">
+                <div className="px-4 py-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-lg text-primary">₪{order.total}</span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
                     {(() => { const isPending = pendingStatusIds.has(order.id); return (<>
                     {["new", "preparing", "ready"].includes(order.status) && (
                       <button
@@ -3168,7 +3168,7 @@ const Kitchen = () => {
                           : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
                       </button>
                     )}
-                    {order.payment_method === "cash" && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
+                    {(order.payment_method === "cash" || order.payment_method === "counter") && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
                       <button
                         onClick={() => markPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
@@ -3177,7 +3177,7 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id) ? "מעדכן..." : "שולם 💵"}
                       </button>
                     )}
-                    {order.payment_method === "cash" && order.queue_number != null && undoablePaid[order.id] && (
+                    {(order.payment_method === "cash" || order.payment_method === "counter") && order.queue_number != null && undoablePaid[order.id] && (
                       <button
                         onClick={() => unmarkPaid(order)}
                         disabled={paidPendingIds.has(order.id)}
