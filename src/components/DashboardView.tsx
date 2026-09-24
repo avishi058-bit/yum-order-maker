@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
-import { computeProfit, ACCOUNTANT_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
+import { computeProfit, ACCOUNTANT_MONTHLY, PAYSLIP_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
 import { toast } from "sonner";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -359,7 +359,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
     const oil = (days * OIL_WEEKLY) / 7; // שמן טיגון: עלות שבועית מתחלקת לימי עבודה
     const trashBags = days * TRASH_BAGS_DAILY; // שקיות זבל ליום עבודה
-    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant, oil, trashBags });
+    // תלוש שכר 50 ₪ לחודש — רק בחודשים שבהם העובד עבד בפועל, מתחלק לפי ימי העבודה
+    const shiftMonths = new Set(shifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; }).map((sh) => monthKey(new Date(sh.clock_in))));
+    let payslip = 0;
+    Object.entries(dayByMonth).forEach(([k, set]) => {
+      if (shiftMonths.has(k)) payslip += PAYSLIP_MONTHLY * (set.size / workDaysDivisor(k));
+    });
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant, payslip, oil, trashBags });
     return {
       orders: list,
       revenue,
@@ -829,6 +835,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["עמלות אשראי", -primary.profit.creditFees],
               ["שכר עובדים", -primary.profit.wages],
               ["רואת חשבון", -primary.profit.accountant],
+              ["הכנת תלוש שכר", -primary.profit.payslip],
               ["שמן טיגון", -primary.profit.oil],
               ["שקיות זבל", -primary.profit.trashBags],
               ["הוצאות קבועות", -primary.profit.fixed],
