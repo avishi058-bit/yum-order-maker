@@ -10,6 +10,8 @@ import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
 import { computeProfit, ACCOUNTANT_MONTHLY, PAYSLIP_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
 import { toast } from "sonner";
+import SuppliesManager from "@/components/SuppliesManager";
+import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
   CalendarRange, Trophy, Flame, BarChart3, Lock, X,
@@ -267,6 +269,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", fetchStart.toISOString()).lt("clock_in", fetchEnd.toISOString())
       .then(({ data }: any) => setShifts(data || []));
   }, [fetchStart, fetchEnd]);
+  const [supplies, setSupplies] = useState<SupplyPurchase[]>([]);
+  const loadSupplies = () => (supabase as any).from("supply_purchases").select("*").order("purchased_at", { ascending: false }).then(({ data }: any) => setSupplies(data || []));
+  useEffect(() => { loadSupplies(); }, []);
   const [workDays, setWorkDays] = useState<Record<string, Set<string>>>({});
   useEffect(() => {
     (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
@@ -365,10 +370,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     Object.entries(dayByMonth).forEach(([k, set]) => {
       if (shiftMonths.has(k)) payslip += PAYSLIP_MONTHLY * (set.size / workDaysDivisor(k));
     });
+    const suppliesCost = suppliesCostInRange(supplies, start, end > new Date() ? new Date() : end);
+    fixed += suppliesCost;
     const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant, payslip, oil, trashBags });
     return {
       orders: list,
       revenue,
+      suppliesCost,
       count: list.length,
       avg: list.length ? revenue / list.length : 0,
       burgers,
@@ -382,11 +390,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const primary = useMemo(
     () => statsFor(ranges[0].start, ranges[0].end),
-    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts],
+    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts, supplies],
   );
   const secondary = useMemo(
     () => (ranges[1] ? statsFor(ranges[1].start, ranges[1].end) : null),
-    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts],
+    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts, supplies],
   );
 
   const filteredOrders = primary.orders;
@@ -838,7 +846,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["הכנת תלוש שכר", -primary.profit.payslip],
               ["שמן טיגון", -primary.profit.oil],
               ["שקיות זבל", -primary.profit.trashBags],
-              ["הוצאות קבועות", -primary.profit.fixed],
+              ["מתכלים (סבון, מפיות, רטבים...)", -primary.suppliesCost],
+              ["הוצאות קבועות", -(primary.profit.fixed - primary.suppliesCost)],
               ["רווח לפני ביטוח לאומי", primary.profit.beforeTax],
               ["ביטוח לאומי (8%)", -primary.profit.nationalInsurance],
             ].map(([label, v]) => (
@@ -900,6 +909,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               </button>
             </div>
           </div>
+          <SuppliesManager list={supplies} onChange={loadSupplies} />
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (41.60 ₪/שעה כולל ביטוח לאומי, כלול בשכר)</span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה בתקופה: <b>{primary.days}</b></span>
