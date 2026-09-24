@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 Allow: /groups
+Allow: /otef-aza
+Allow: /llms.txt
 Disallow: /kitchen
 Disallow: /admin/
 Disallow: /station-setup
@@ -10,9 +12,11 @@ Disallow: /kiosk
 User-agent: Googlebot
 Allow: /
 Allow: /groups
+Allow: /otef-aza
+Allow: /llms.txt
 Disallow: /kitchen
 Disallow: /admin/
 Disallow: /station-setup
 Disallow: /login
 
-Sitemap: https://yum-order-maker.lovable.app/sitemap.xml
+Sitemap: https://habikta-burger.lovable.app/sitemap.xml
