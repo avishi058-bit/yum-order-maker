@@ -322,7 +322,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     return Math.max(actual, 1);
   };
 
-  const HOURLY_WAGE = 40;
+  const HOURLY_WAGE = 41.6; // 40 ₪ + ביטוח לאומי — עלות אמיתית למעסיק
   const isCounted = (o: Order) =>
     !UNCOUNTED_STATUSES.has(o.status) && !(o.payment_method === "credit" && !o.paid_at);
 
@@ -901,7 +901,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
-            <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (40 ₪/שעה, כלול בשכר)</span>
+            <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (41.60 ₪/שעה כולל ביטוח לאומי, כלול בשכר)</span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה בתקופה: <b>{primary.days}</b></span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה החודש: <b>{workDays[currentMonthKey]?.size ?? 0}</b></span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ממוצע ימי עבודה בחודש: <b>{avgWorkDays ? avgWorkDays.toFixed(1) : "—"}</b></span>
