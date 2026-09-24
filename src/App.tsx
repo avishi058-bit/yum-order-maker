@@ -40,6 +40,7 @@ const AdminLeads = lazy(() => import("./pages/AdminLeads"));
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const About = lazy(() => import("./pages/About"));
+const OtefAza = lazy(() => import("./pages/OtefAza"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/AccessibilityStatement"));
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/kiosk" element={<Kiosk />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/about" element={<About />} />
+              <Route path="/otef-aza" element={<OtefAza />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/accessibility-statement" element={<AccessibilityStatement />} />
