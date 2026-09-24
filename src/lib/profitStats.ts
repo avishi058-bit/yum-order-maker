@@ -217,8 +217,8 @@ export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dine
   const vat = revenue - netRevenue;
   const foodCost = items.reduce((s, i) => s + itemCost(i), 0);
   const creditFees = creditRevenue * CREDIT_FEE_RATE;
-  const beforeTax = netRevenue - foodCost - creditFees - packaging - fixed - wages - accountant - oil - trashBags;
+  const beforeTax = netRevenue - foodCost - creditFees - packaging - fixed - wages - accountant - payslip - oil - trashBags;
   const nationalInsurance = beforeTax > 0 ? beforeTax * NATIONAL_INSURANCE_RATE : 0;
   const profit = beforeTax - nationalInsurance;
-  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, oil, trashBags, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
+  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, payslip, oil, trashBags, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
 };
