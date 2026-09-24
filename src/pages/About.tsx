@@ -38,7 +38,8 @@ const About = () => (
         </ul>
       </section>
 
-      <div className="mt-10">
+      <div className="mt-10 flex gap-6">
+        <a href="/otef-aza" className="text-primary hover:underline font-bold">הסיפור שלנו בעוטף עזה</a>
         <a href="/" className="text-primary hover:underline font-bold">← חזרה לדף הראשי</a>
       </div>
     </div>
