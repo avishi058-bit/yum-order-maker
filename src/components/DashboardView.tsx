@@ -257,7 +257,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }, [fetchStart, fetchEnd]);
 
   const [monthlyFixed, setMonthlyFixed] = useState(0);
-  const [fixedInput, setFixedInput] = useState("0");
+  const [fixedExpenses, setFixedExpenses] = useState<{ label: string; monthly: number }[]>([]);
+  const [newExpLabel, setNewExpLabel] = useState("");
+  const [newExpAmount, setNewExpAmount] = useState("");
   const [wages, setWages] = useState<Record<string, number>>({});
   const [wageInput, setWageInput] = useState("");
   const [shifts, setShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
