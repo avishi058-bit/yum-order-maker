@@ -1348,6 +1348,39 @@ export type Database = {
         }
         Relationships: []
       }
+      supply_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          finished_at: string | null
+          id: string
+          includes_vat: boolean
+          name: string
+          notes: string | null
+          purchased_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          includes_vat?: boolean
+          name: string
+          notes?: string | null
+          purchased_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          includes_vat?: boolean
+          name?: string
+          notes?: string | null
+          purchased_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
