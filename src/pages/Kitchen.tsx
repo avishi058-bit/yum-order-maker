@@ -244,17 +244,26 @@ const playAutoAcceptChime = () => {
   const ctx = getAudioCtx();
   if (!ctx) return;
   const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(1320, now);
-  osc.frequency.exponentialRampToValueAtTime(1760, now + 0.16);
-  gain.gain.setValueAtTime(0.34, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-  osc.start(now);
-  osc.stop(now + 0.42);
+  const master = ctx.createGain();
+  master.connect(ctx.destination);
+  master.gain.setValueAtTime(0.36, now);
+  master.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+  // Bell-like fundamental with a quieter metallic overtone: one clear "ding".
+  [
+    { frequency: 1047, volume: 1 },
+    { frequency: 2093, volume: 0.22 },
+  ].forEach(({ frequency, volume }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(master);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(frequency, now);
+    gain.gain.setValueAtTime(volume, now);
+    osc.start(now);
+    osc.stop(now + 0.85);
+  });
 };
 
 const playRingtone = (ringtoneId: RingtoneId) => {
