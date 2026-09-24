@@ -841,21 +841,57 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <label className="text-muted-foreground">הוצאות קבועות חודשיות (₪):</label>
-            <input
-              type="number"
-              min={0}
-              value={fixedInput}
-              onChange={(e) => setFixedInput(e.target.value)}
-              className="w-28 rounded-md border bg-background px-2 py-1"
-            />
-            <button
-              onClick={saveFixed}
-              className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold"
-            >
-              שמור
-            </button>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between font-bold">
+              <span>הוצאות קבועות (₪ לחודש):</span>
+              <span>סה״כ ₪{Math.round(monthlyFixed).toLocaleString()}</span>
+            </div>
+            <div className="space-y-1.5">
+              {fixedExpenses.map((e, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2 py-1.5">
+                  <input
+                    value={e.label}
+                    onChange={(ev) => updateExpense(i, { label: ev.target.value })}
+                    className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={e.monthly}
+                    onChange={(ev) => updateExpense(i, { monthly: Math.max(0, Number(ev.target.value) || 0) })}
+                    className="w-24 rounded-md border bg-background px-2 py-1"
+                  />
+                  <button
+                    onClick={() => removeExpense(i)}
+                    className="rounded-md px-2 py-1 text-destructive font-bold"
+                    aria-label="מחק הוצאה"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                value={newExpLabel}
+                onChange={(e) => setNewExpLabel(e.target.value)}
+                placeholder="שם הוצאה חדשה"
+                className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1"
+              />
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={newExpAmount}
+                onChange={(e) => setNewExpAmount(e.target.value)}
+                placeholder="₪/חודש"
+                className="w-24 rounded-md border bg-background px-2 py-1"
+              />
+              <button onClick={addExpense} className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold">
+                הוסף
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (40 ₪/שעה, כלול בשכר)</span>
