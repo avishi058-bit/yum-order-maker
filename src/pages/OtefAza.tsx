@@ -6,7 +6,7 @@ const isHeading = (t: string) => t.length < 90 && !/[.:!]$/.test(t);
 
 const OtefAza = () => {
   useEffect(() => {
-    document.title = "המבורגר בעוטף עזה — הבקתה, כפר מימון";
+    document.title = "המבורגר בעוטף עזה — הבקתה, כפר מימון (תושיה)";
   }, []);
   const [title, ...rest] = blocks;
   return (
