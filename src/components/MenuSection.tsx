@@ -194,6 +194,7 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
   const displayName = nameOverride || item.name;
   const displayDesc = descOverride || item.description;
   const ingSize = 17 * fontScale;
+  const isDrink = item.category === "drink";
 
   const handleAdd = () => {
     if (browseOnly) return;
@@ -212,14 +213,14 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
     >
       {/* The source food photos are landscape. Keeping their native 16:9 ratio
           avoids enlarging and heavily cropping them, so they look sharper. */}
-      <div className="relative w-full aspect-video bg-muted overflow-hidden">
+      <div className={`relative w-full aspect-video bg-muted overflow-hidden ${isDrink ? "p-3" : ""}`}>
         {image ? (
           <img
             src={image}
             alt={item.name}
             width={800}
             height={450}
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${isDrink ? "object-contain" : "object-cover"}`}
             loading="eager"
             decoding="sync"
             {...{ fetchpriority: "high" as const }}
