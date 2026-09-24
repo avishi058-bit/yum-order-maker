@@ -205,7 +205,7 @@ export interface ProfitInput {
   trashBags?: number;
 }
 
-export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant, oil = 0, trashBags = 0 }: ProfitInput) => {
+export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant, payslip = 0, oil = 0, trashBags = 0 }: ProfitInput) => {
   const byOrder: Record<string, CountableOrderItem[]> = {};
   for (const i of items) if (takeawayIds?.has(i.order_id)) (byOrder[i.order_id] ??= []).push(i);
   const byDineOrder: Record<string, CountableOrderItem[]> = {};
