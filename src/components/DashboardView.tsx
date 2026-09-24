@@ -257,7 +257,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }, [fetchStart, fetchEnd]);
 
   const [monthlyFixed, setMonthlyFixed] = useState(0);
-  const [fixedInput, setFixedInput] = useState("0");
+  const [fixedExpenses, setFixedExpenses] = useState<{ label: string; monthly: number }[]>([]);
+  const [newExpLabel, setNewExpLabel] = useState("");
+  const [newExpAmount, setNewExpAmount] = useState("");
   const [wages, setWages] = useState<Record<string, number>>({});
   const [wageInput, setWageInput] = useState("");
   const [shifts, setShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
@@ -267,21 +269,36 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }, [fetchStart, fetchEnd]);
   const [workDays, setWorkDays] = useState<Record<string, Set<string>>>({});
   useEffect(() => {
-    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages").limit(1).maybeSingle()
+    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
       .then(({ data }: any) => {
         if (data) {
           setWages((data.monthly_wages as Record<string, number>) || {});
-          setMonthlyFixed(Number(data.monthly_fixed_costs) || 0);
-          setFixedInput(String(Number(data.monthly_fixed_costs) || 0));
+          const list = Array.isArray(data.fixed_expenses) ? (data.fixed_expenses as { label: string; monthly: number }[]) : [];
+          setFixedExpenses(list);
+          setMonthlyFixed(list.length ? list.reduce((s, e) => s + (Number(e.monthly) || 0), 0) : Number(data.monthly_fixed_costs) || 0);
         }
       });
   }, []);
-  const saveFixed = async () => {
-    const v = Math.max(0, Number(fixedInput) || 0);
+  const saveFixedExpenses = async (next: { label: string; monthly: number }[]) => {
     const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
     if (!data) return;
-    const { error } = await (supabase as any).from("site_settings").update({ monthly_fixed_costs: v }).eq("id", data.id);
-    if (error) toast.error("השמירה נכשלה"); else { setMonthlyFixed(v); toast.success("נשמר"); }
+    const { error } = await (supabase as any).from("site_settings").update({ fixed_expenses: next }).eq("id", data.id);
+    if (error) toast.error("השמירה נכשלה");
+    else {
+      setFixedExpenses(next);
+      setMonthlyFixed(next.reduce((s, e) => s + (Number(e.monthly) || 0), 0));
+      toast.success("נשמר");
+    }
+  };
+  const updateExpense = (i: number, patch: Partial<{ label: string; monthly: number }>) =>
+    void saveFixedExpenses(fixedExpenses.map((e, j) => (j === i ? { ...e, ...patch } : e)));
+  const removeExpense = (i: number) => void saveFixedExpenses(fixedExpenses.filter((_, j) => j !== i));
+  const addExpense = () => {
+    const label = newExpLabel.trim();
+    const monthly = Math.max(0, Number(newExpAmount) || 0);
+    if (!label || !monthly) { toast.error("יש למלא שם וסכום"); return; }
+    void saveFixedExpenses([...fixedExpenses, { label, monthly }]);
+    setNewExpLabel(""); setNewExpAmount("");
   };
 
   const saveWage = async () => {
@@ -824,21 +841,57 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <label className="text-muted-foreground">הוצאות קבועות חודשיות (₪):</label>
-            <input
-              type="number"
-              min={0}
-              value={fixedInput}
-              onChange={(e) => setFixedInput(e.target.value)}
-              className="w-28 rounded-md border bg-background px-2 py-1"
-            />
-            <button
-              onClick={saveFixed}
-              className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold"
-            >
-              שמור
-            </button>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between font-bold">
+              <span>הוצאות קבועות (₪ לחודש):</span>
+              <span>סה״כ ₪{Math.round(monthlyFixed).toLocaleString()}</span>
+            </div>
+            <div className="space-y-1.5">
+              {fixedExpenses.map((e, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2 py-1.5">
+                  <input
+                    value={e.label}
+                    onChange={(ev) => updateExpense(i, { label: ev.target.value })}
+                    className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={e.monthly}
+                    onChange={(ev) => updateExpense(i, { monthly: Math.max(0, Number(ev.target.value) || 0) })}
+                    className="w-24 rounded-md border bg-background px-2 py-1"
+                  />
+                  <button
+                    onClick={() => removeExpense(i)}
+                    className="rounded-md px-2 py-1 text-destructive font-bold"
+                    aria-label="מחק הוצאה"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                value={newExpLabel}
+                onChange={(e) => setNewExpLabel(e.target.value)}
+                placeholder="שם הוצאה חדשה"
+                className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1"
+              />
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={newExpAmount}
+                onChange={(e) => setNewExpAmount(e.target.value)}
+                placeholder="₪/חודש"
+                className="w-24 rounded-md border bg-background px-2 py-1"
+              />
+              <button onClick={addExpense} className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold">
+                הוסף
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (40 ₪/שעה, כלול בשכר)</span>
