@@ -269,21 +269,36 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   }, [fetchStart, fetchEnd]);
   const [workDays, setWorkDays] = useState<Record<string, Set<string>>>({});
   useEffect(() => {
-    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages").limit(1).maybeSingle()
+    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
       .then(({ data }: any) => {
         if (data) {
           setWages((data.monthly_wages as Record<string, number>) || {});
-          setMonthlyFixed(Number(data.monthly_fixed_costs) || 0);
-          setFixedInput(String(Number(data.monthly_fixed_costs) || 0));
+          const list = Array.isArray(data.fixed_expenses) ? (data.fixed_expenses as { label: string; monthly: number }[]) : [];
+          setFixedExpenses(list);
+          setMonthlyFixed(list.length ? list.reduce((s, e) => s + (Number(e.monthly) || 0), 0) : Number(data.monthly_fixed_costs) || 0);
         }
       });
   }, []);
-  const saveFixed = async () => {
-    const v = Math.max(0, Number(fixedInput) || 0);
+  const saveFixedExpenses = async (next: { label: string; monthly: number }[]) => {
     const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
     if (!data) return;
-    const { error } = await (supabase as any).from("site_settings").update({ monthly_fixed_costs: v }).eq("id", data.id);
-    if (error) toast.error("השמירה נכשלה"); else { setMonthlyFixed(v); toast.success("נשמר"); }
+    const { error } = await (supabase as any).from("site_settings").update({ fixed_expenses: next }).eq("id", data.id);
+    if (error) toast.error("השמירה נכשלה");
+    else {
+      setFixedExpenses(next);
+      setMonthlyFixed(next.reduce((s, e) => s + (Number(e.monthly) || 0), 0));
+      toast.success("נשמר");
+    }
+  };
+  const updateExpense = (i: number, patch: Partial<{ label: string; monthly: number }>) =>
+    void saveFixedExpenses(fixedExpenses.map((e, j) => (j === i ? { ...e, ...patch } : e)));
+  const removeExpense = (i: number) => void saveFixedExpenses(fixedExpenses.filter((_, j) => j !== i));
+  const addExpense = () => {
+    const label = newExpLabel.trim();
+    const monthly = Math.max(0, Number(newExpAmount) || 0);
+    if (!label || !monthly) { toast.error("יש למלא שם וסכום"); return; }
+    void saveFixedExpenses([...fixedExpenses, { label, monthly }]);
+    setNewExpLabel(""); setNewExpAmount("");
   };
 
   const saveWage = async () => {
