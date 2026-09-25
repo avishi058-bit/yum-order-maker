@@ -31,8 +31,9 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
         setAlreadyRegistered(true);
       }
     } catch {}
-    setNeedsInstall(iosNeedsInstall() || (!isStandalonePwa() && !isPushSupported()));
-    setUnsupported(!isPushSupported() && !iosNeedsInstall());
+    const installedOnHomeScreen = isStandalonePwa();
+    setNeedsInstall(!installedOnHomeScreen);
+    setUnsupported(installedOnHomeScreen && !isPushSupported());
   }, [open]);
 
   const handleEnable = async () => {
@@ -118,14 +119,15 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
                   <div>
                     <h3 className="text-lg font-black">קודם מתקינים את האפליקציה</h3>
                     <p className="text-xs text-muted-foreground">
-                      כדי לקבל התראה כשנפתח שוב, צריך להתקין את הבקתה במסך הבית ולאשר התראות
+                      כדי לקבל התראה כשנפתח שוב, קודם צריך להתקין את הבקתה במסך הבית
                     </p>
                   </div>
                 </div>
                 <ol className="text-sm text-muted-foreground space-y-2 mb-5 mr-4 list-decimal">
                   <li>לחצו על הכפתור למטה כדי לפתוח את דף ההתקנה</li>
                   <li>הוסיפו את האפליקציה למסך הבית</li>
-                  <li>פתחו אותה מהאייקון החדש וחזרו לכאן ללחוץ "הפעילו התראות"</li>
+                  <li>פתחו את הבקתה מהאייקון החדש במסך הבית</li>
+                  <li>לחצו שוב על "עדכנו אותי כשנפתח" ואשרו התראות</li>
                 </ol>
                 <Link
                   to="/install"
@@ -170,9 +172,6 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />}
                   הפעילו התראות
                 </button>
-                <p className="text-[11px] text-muted-foreground text-center mt-3">
-                  לא נשמור מספר טלפון — רק התראה אחת כשהאתר נפתח שוב
-                </p>
               </>
             )}
           </motion.div>
