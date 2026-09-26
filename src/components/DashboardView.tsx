@@ -379,7 +379,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     });
     const suppliesCost = suppliesCostInRange(supplies, start, end > new Date() ? new Date() : end);
     fixed += suppliesCost;
-    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant, payslip, oil, trashBags });
+    const profit = computeProfit({ revenue, creditRevenue, items: rangeItems, takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)), dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)), fixed, wages: wagesAlloc, accountant, payslip, oil, trashBags, unreported: electricity });
     return {
       orders: list,
       revenue,
