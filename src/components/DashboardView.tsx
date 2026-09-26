@@ -621,6 +621,72 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     return dailyData.reduce((max, d) => (d.revenue > max.revenue ? d : max), dailyData[0]);
   }, [dailyData]);
 
+  // ===== per-month net profit + margin % (12 months, YoY) =====
+  const monthlyProfit = useMemo(() => {
+    if (trendOrders.length === 0) return [];
+    const keys = lastMonths(12).reverse();
+    const shiftMonths = new Set(trendShifts.map((sh) => monthKey(new Date(sh.clock_in))));
+    return keys.map((k) => {
+      const { start, end } = monthRange(k);
+      const list = trendOrders.filter((o) => {
+        const d = new Date(o.created_at);
+        return d >= start && d < end;
+      });
+      if (list.length === 0) return { key: k, label: monthLabel(k), short: monthLabel(k).replace(/\s\d{4}$/, ""), profit: 0, margin: null as number | null, revenue: 0, netRevenue: 0 };
+      const ids = new Set(list.map((o) => o.id));
+      const rangeItems = trendItems.filter((i) => ids.has(i.order_id));
+      const revenue = list.reduce((s, o) => s + o.total, 0);
+      const creditRevenue = list.filter((o) => o.payment_method === "credit").reduce((s, o) => s + o.total, 0);
+      const daySet = new Set(list.map((o) => getBusinessDayStart(new Date(o.created_at)).toISOString().slice(0, 10)));
+      const share = daySet.size / workDaysDivisor(k);
+      const suppliesCost = suppliesCostInRange(supplies, start, end > new Date() ? new Date() : end);
+      const fixed = monthlyFixed * share + suppliesCost;
+      const shiftHours = trendShifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; })
+        .reduce((a, sh) => a + (new Date(sh.clock_out || Date.now()).getTime() - new Date(sh.clock_in).getTime()) / 3600000, 0);
+      const wagesAlloc = (wages[k] || 0) * share + shiftHours * HOURLY_WAGE;
+      const accountant = ACCOUNTANT_MONTHLY * share;
+      const electricity = electricityMonthly * share;
+      const oil = (daySet.size * OIL_WEEKLY) / 7;
+      const trashBags = daySet.size * TRASH_BAGS_DAILY;
+      const payslip = shiftMonths.has(k) ? PAYSLIP_MONTHLY * share : 0;
+      const p = computeProfit({
+        revenue, creditRevenue, items: rangeItems,
+        takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)),
+        dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)),
+        fixed, wages: wagesAlloc, accountant, payslip, oil, trashBags, unreported: electricity,
+      });
+      return { key: k, label: monthLabel(k), short: monthLabel(k).replace(/\s\d{4}$/, ""), profit: p.profit, margin: p.margin, revenue, netRevenue: p.netRevenue };
+    });
+  }, [trendOrders, trendItems, trendShifts, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, supplies]);
+
+  // ===== YoY: month vs same month last year + yearly average =====
+  const yoyData = useMemo(() => {
+    const byKey: Record<string, (typeof monthlyProfit)[number]> = {};
+    monthlyProfit.forEach((m) => (byKey[m.key] = m));
+    return monthlyProfit
+      .filter((m) => m.margin !== null)
+      .map((m) => {
+        const [y, mo] = m.key.split("-").map(Number);
+        const prevKey = `${y - 1}-${String(mo).padStart(2, "0")}`;
+        const prev = byKey[prevKey];
+        const prevMargin = prev && prev.margin !== null ? prev.margin : null;
+        return {
+          ...m,
+          prevLabel: prev ? prev.label : null,
+          prevMargin,
+          marginDelta: prevMargin !== null ? (m.margin! - prevMargin) * 100 : null,
+        };
+      });
+  }, [monthlyProfit]);
+
+  const yearlyAverage = useMemo(() => {
+    const withData = monthlyProfit.filter((m) => m.margin !== null && m.netRevenue > 0);
+    if (withData.length === 0) return null;
+    const totalProfit = withData.reduce((s, m) => s + m.profit, 0);
+    const totalNet = withData.reduce((s, m) => s + m.netRevenue, 0);
+    return { margin: totalNet ? totalProfit / totalNet : 0, profit: totalProfit, months: withData.length };
+  }, [monthlyProfit]);
+
   if (!unlocked) {
     return (
       <div dir="rtl" className="p-6 space-y-4 max-w-md mx-auto">
