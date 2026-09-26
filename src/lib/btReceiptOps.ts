@@ -44,7 +44,7 @@ const ING_LOOKUP: Record<string, { label: string; kind: "remove" | "add" }> = ((
   return m;
 })();
 
-const FRIED_RX = /צ['׳]?יפס|בטטה|טבעות|טמפורה|מיקס\s*חברים/;
+const FRIED_RX = /צ['׳]?יפס|טבעות|טמפורה|מיקס\s*חברים/;
 const DRINK_RX = /פחית|בקבוק|בירה|קולה|זירו|פאנטה|ספרייט|בלו|גולדסטאר|הייניקן|קורונה|מים|מוחיטו|אבטיח|ויינשטפאן|לאף|לאפ|גינס|הוגרדן|קאלסברג|קלסטברג|אנפילטר/;
 function isCustomizableBurger(name: string): boolean {
   if (!name || name === "רטבים") return false;
@@ -585,7 +585,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       if (!name) return null;
       if (/מיקס\s*חברים/.test(name)) return "מיקס חברים";
       if (/טבעות.*טמפורה|טמפורה/.test(name)) return "טבעות בצל בטמפורה";
-      if (/וופל|בטטה/.test(name)) return "וופל צ'יפס";
+      if (/וופל/.test(name)) return "וופל צ'יפס";
       if (/טבעות\s*בצל/.test(name)) return "טבעות בצל";
       if (/צ['׳]?יפס\s*ענק/.test(name)) return "צ'יפס ענק";
       if (/צ['׳]?יפס/.test(name)) return "צ'יפס רגיל";

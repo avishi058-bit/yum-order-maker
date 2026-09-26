@@ -170,7 +170,7 @@ const isDrinkOrMisc = (name: string): boolean =>
 export const isNumberableDish = (name: string | undefined | null): boolean => {
   const n = String(name || "").trim();
   if (!n || n === "רטבים") return false;
-  if (/צ['׳]?יפס|בטטה|טבעות|טמפורה|מיקס\s*חברים/.test(n)) return false;
+  if (/צ['׳]?יפס|טבעות|טמפורה|מיקס\s*חברים/.test(n)) return false;
   if (isDrinkOrMisc(n)) return false;
   return true;
 };
@@ -206,7 +206,7 @@ const detectFried = (name: string): FriedKind => {
   if (isFriendsMix(name)) return "friendsMix";
   // "טבעות בצל בטמפורה" / "טמפורה"
   if (/טבעות.*טמפורה|טמפורה/.test(name)) return "tempuraOnionSide";
-  if (/וופל|בטטה/.test(name)) return "sweetPotatoFries";
+  if (/וופל/.test(name)) return "sweetPotatoFries";
   if (/טבעות\s*בצל/.test(name)) return "onionRings";
   if (/צ['׳]?יפס/.test(name)) return "fries";
   return null;
