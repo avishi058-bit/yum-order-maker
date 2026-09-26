@@ -273,6 +273,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const loadSupplies = () => (supabase as any).from("supply_purchases").select("*").order("purchased_at", { ascending: false }).then(({ data }: any) => setSupplies(data || []));
   useEffect(() => { loadSupplies(); }, []);
   const [workDays, setWorkDays] = useState<Record<string, Set<string>>>({});
+  /** חשמל = הוצאה לא מדווחת: לא מנוכה לפני ביטוח לאומי אלא בסוף, אחריו */
+  const isElectricity = (e: { label: string }) => e.label.includes("חשמל");
+  const electricityMonthly = useMemo(
+    () => fixedExpenses.filter(isElectricity).reduce((s, e) => s + (Number(e.monthly) || 0), 0),
+    [fixedExpenses],
+  );
   useEffect(() => {
     (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
       .then(({ data }: any) => {
@@ -280,7 +286,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           setWages((data.monthly_wages as Record<string, number>) || {});
           const list = Array.isArray(data.fixed_expenses) ? (data.fixed_expenses as { label: string; monthly: number }[]) : [];
           setFixedExpenses(list);
-          setMonthlyFixed(list.length ? list.reduce((s, e) => s + (Number(e.monthly) || 0), 0) : Number(data.monthly_fixed_costs) || 0);
+          setMonthlyFixed(list.filter((e) => !isElectricity(e)).reduce((s, e) => s + (Number(e.monthly) || 0), 0));
         }
       });
   }, []);
@@ -291,7 +297,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     if (error) toast.error("השמירה נכשלה");
     else {
       setFixedExpenses(next);
-      setMonthlyFixed(next.reduce((s, e) => s + (Number(e.monthly) || 0), 0));
+      setMonthlyFixed(next.filter((e) => !isElectricity(e)).reduce((s, e) => s + (Number(e.monthly) || 0), 0));
       toast.success("נשמר");
     }
   };
