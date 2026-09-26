@@ -857,6 +857,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["הוצאות קבועות", -(primary.profit.fixed - primary.suppliesCost)],
               ["רווח לפני ביטוח לאומי", primary.profit.beforeTax],
               ["ביטוח לאומי (8%)", -primary.profit.nationalInsurance],
+              ["חשמל (לא מדווח — אחרי ביטוח לאומי)", -primary.profit.unreported],
             ].map(([label, v]) => (
               <div key={label as string} className="flex justify-between rounded-lg bg-muted/40 px-3 py-2">
                 <span className="text-muted-foreground">{label}</span>
