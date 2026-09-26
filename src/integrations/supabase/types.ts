@@ -1355,9 +1355,11 @@ export type Database = {
           finished_at: string | null
           id: string
           includes_vat: boolean
+          kind: string
           name: string
           notes: string | null
           purchased_at: string
+          supplier: string | null
         }
         Insert: {
           amount?: number
@@ -1365,9 +1367,11 @@ export type Database = {
           finished_at?: string | null
           id?: string
           includes_vat?: boolean
+          kind?: string
           name: string
           notes?: string | null
           purchased_at?: string
+          supplier?: string | null
         }
         Update: {
           amount?: number
@@ -1375,9 +1379,11 @@ export type Database = {
           finished_at?: string | null
           id?: string
           includes_vat?: boolean
+          kind?: string
           name?: string
           notes?: string | null
           purchased_at?: string
+          supplier?: string | null
         }
         Relationships: []
       }

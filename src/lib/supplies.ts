@@ -6,6 +6,8 @@ export type SupplyPurchase = {
   purchased_at: string; // YYYY-MM-DD
   finished_at: string | null;
   notes: string | null;
+  kind?: "supply" | "one_time";
+  supplier?: string | null;
 };
 
 const DAY = 86400000;
@@ -15,7 +17,7 @@ export const preVat = (p: SupplyPurchase) => (p.includes_vat ? Number(p.amount) 
 
 /** Average days a product lasts, based on finished purchases with the same name. */
 export function avgDuration(list: SupplyPurchase[], name: string): number | null {
-  const done = list.filter((p) => p.name.trim() === name.trim() && p.finished_at);
+  const done = list.filter((p) => p.kind !== "one_time" && p.name.trim() === name.trim() && p.finished_at);
   if (!done.length) return null;
   const sum = done.reduce((s, p) => s + Math.max(1, (toDay(p.finished_at!) - toDay(p.purchased_at)) / DAY), 0);
   return sum / done.length;
@@ -33,6 +35,11 @@ export function coverDays(list: SupplyPurchase[], p: SupplyPurchase): { days: nu
 export function suppliesCostInRange(list: SupplyPurchase[], start: Date, end: Date): number {
   let total = 0;
   for (const p of list) {
+    if (p.kind === "one_time") {
+      const t = toDay(p.purchased_at);
+      if (t >= start.getTime() - DAY + 1 && t < end.getTime()) total += preVat(p);
+      continue;
+    }
     const { days } = coverDays(list, p);
     const a = toDay(p.purchased_at);
     const b = a + days * DAY;

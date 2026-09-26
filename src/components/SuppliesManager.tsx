@@ -6,7 +6,9 @@ import { SupplyPurchase, avgDuration, coverDays, preVat } from "@/lib/supplies";
 const today = () => new Date().toISOString().slice(0, 10);
 const fmt = (d: string) => d.split("-").reverse().join("/");
 
-export default function SuppliesManager({ list, onChange }: { list: SupplyPurchase[]; onChange: () => void }) {
+export default function SuppliesManager({ list: all, onChange }: { list: SupplyPurchase[]; onChange: () => void }) {
+  const list = useMemo(() => all.filter((p) => p.kind !== "one_time"), [all]);
+  const oneTime = all.filter((p) => p.kind === "one_time").slice(0, 15);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [inclVat, setInclVat] = useState(true);
@@ -74,6 +76,22 @@ export default function SuppliesManager({ list, onChange }: { list: SupplyPurcha
           );
         })}
       </div>
+
+      {oneTime.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-muted-foreground">הוצאות חד-פעמיות</summary>
+          <div className="mt-1 space-y-1">
+            {oneTime.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/30 px-2 py-1">
+                <span className="flex-1">{p.name}{p.supplier ? ` · ${p.supplier}` : ""}</span>
+                <span>₪{preVat(p).toFixed(0)} לפני מע״מ</span>
+                <span className="text-muted-foreground">{fmt(p.purchased_at)}</span>
+                <button onClick={() => remove(p.id)} className="px-1 font-bold text-destructive" aria-label="מחק">✕</button>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
 
       {history.length > 0 && (
         <details>
