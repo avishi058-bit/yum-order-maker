@@ -222,9 +222,11 @@ export interface ProfitInput {
   oil?: number;
   /** trash bags allocated to this range */
   trashBags?: number;
+  /** unreported expense (e.g. electricity) — deducted only AFTER national insurance, not a tax-deductible cost */
+  unreported?: number;
 }
 
-export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant, payslip = 0, oil = 0, trashBags = 0 }: ProfitInput) => {
+export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dineInIds, fixed, wages, accountant, payslip = 0, oil = 0, trashBags = 0, unreported = 0 }: ProfitInput) => {
   const byOrder: Record<string, CountableOrderItem[]> = {};
   for (const i of items) if (takeawayIds?.has(i.order_id)) (byOrder[i.order_id] ??= []).push(i);
   const byDineOrder: Record<string, CountableOrderItem[]> = {};
@@ -238,6 +240,6 @@ export const computeProfit = ({ revenue, creditRevenue, items, takeawayIds, dine
   const creditFees = creditRevenue * CREDIT_FEE_RATE;
   const beforeTax = netRevenue - foodCost - creditFees - packaging - fixed - wages - accountant - payslip - oil - trashBags;
   const nationalInsurance = beforeTax > 0 ? beforeTax * NATIONAL_INSURANCE_RATE : 0;
-  const profit = beforeTax - nationalInsurance;
-  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, payslip, oil, trashBags, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
+  const profit = beforeTax - nationalInsurance - unreported;
+  return { netRevenue, vat, foodCost, packaging, creditFees, fixed, wages, accountant, payslip, oil, trashBags, unreported, beforeTax, nationalInsurance, profit, margin: netRevenue ? profit / netRevenue : 0 };
 };
