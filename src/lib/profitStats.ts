@@ -15,6 +15,8 @@ const C = {
   addon: 2,
   crispy: 9,
   fries: 3.5,
+  gfBun: 5, // לחמנייה ללא גלוטן
+  tempura: 5.83, // טבעות בצל בטמפורה למנה
 };
 
 /** base cost of one unit (without toppings) */
@@ -30,6 +32,7 @@ const ITEM_COST: Record<string, number> = {
   "crispy-chicken": C.crispy + C.bun + C.veg,
   fries: C.fries,
   "sweet-potato-fries": C.fries,
+  "tempura-onion": C.tempura,
   // מיקס חברים = מנה אחת מכל סוג: צ׳יפס, טבעות בצל, וופל צ׳יפס
   "friends-mix": 3 * C.fries,
   // one giant fries = 3 portions
@@ -56,6 +59,7 @@ const NAME_TO_ID: Record<string, string> = {
 const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "זוג קציצות סמאש", cost: 2 * C.patty },
   { match: "תוספת קציצה", cost: C.patty },
+  { match: "ללא גלוטן", cost: C.gfBun },
   { match: "ביצת עין", cost: C.egg },
   { match: "צ׳דר", cost: C.cheese },
   { match: "צ'דר", cost: C.cheese },
