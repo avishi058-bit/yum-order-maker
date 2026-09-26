@@ -123,6 +123,7 @@ const SIDE_SAUCE_COST: { re: RegExp; cost: number }[] = [
   { re: /קטשופ/, cost: 0.134 * SAUCE_OVERPOUR },
   { re: /חריף|צ[׳']ילי/, cost: 0.34 + SAUCE_CUP },
   { re: /שזיפ/, cost: 0.44 + SAUCE_CUP },
+  { re: /מייפל/, cost: 0.44 + SAUCE_CUP },
   { re: /איולי/, cost: 0.44 + SAUCE_CUP },
   { re: /חלפני/, cost: 0.44 + SAUCE_CUP },
 ];

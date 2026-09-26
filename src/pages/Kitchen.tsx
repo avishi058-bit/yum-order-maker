@@ -166,7 +166,7 @@ const itemOrder: Record<string, string[]> = {
 
   deal: ["family-deal", "friends-deal"],
   topping: ["onion-jam", "peanut-butter", "fried-onion", "crispy-onion-chips", "garlic-confit", "egg", "vegan-cheddar", "roastbeef", "extra-patty", "extra-vegan-patty", "extra-smash-patty", "hot-pepper-jam", "onion-rings-topping", "maple"],
-  sauce: ["ketchup", "mayo", "chili", "plum"],
+  sauce: ["ketchup", "mayo", "chili", "plum", "maple-syrup-sauce"],
   ingredient: ["lettuce", "tomato", "pickles", "aioli", "onion"],
   doneness: ["doneness-category", "doneness-m", "doneness-mw", "doneness-wd"],
 };
