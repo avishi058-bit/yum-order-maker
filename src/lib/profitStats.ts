@@ -16,7 +16,8 @@ const C = {
   crispy: 9,
   fries: 3.304, // 280 גרם × 11.80 ₪/ק"ג
   waffle: 4.2672, // 280 גרם × 15.24 ₪/ק"ג
-  onionRings: 5.824, // 280 גרם × 20.80 ₪/ק"ג
+  onionRings: 4.732, // טבעות בצל רגילות: 280 גרם × 16.90 ₪/ק"ג
+  onionRingsHomemade: 5.824, // טבעות בצל ביתיות (רינג בצל בטמפורה): 280 גרם × 20.80 ₪/ק"ג
   gfBun: 5, // לחמנייה ללא גלוטן
   tempura: 5.83, // טבעות בצל בטמפורה למנה
 };
@@ -75,8 +76,8 @@ const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "מיונז", cost: C.sauce },
   { match: "קטשופ", cost: C.sauce },
   { match: "איולי", cost: C.sauce },
-  { match: "רינג בצל", cost: C.onionRings }, // שלושה רינג בצל בטמפורה (לשעבר טבעות בצל ביתיות) — עלות כמו מנה
-  { match: "טבעות בצל", cost: C.onionRings }, // הזמנות ישנות עם השם הקודם
+  { match: "רינג בצל", cost: C.onionRingsHomemade }, // שלושה רינג בצל בטמפורה (לשעבר טבעות בצל ביתיות) — עלות כמו מנה ביתית
+  { match: "טבעות בצל", cost: C.onionRingsHomemade }, // הזמנות ישנות עם השם הקודם
   { match: "קציצה צמחונית", cost: 9 }, // לפני מע״מ
 ];
 
