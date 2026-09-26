@@ -1216,6 +1216,65 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         </CardContent>
       </Card>
 
+      {/* Monthly net profit margin + YoY */}
+      <Card className="border-emerald-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp size={18} className="text-emerald-400" />
+            אחוז רווח נקי לפי חודש
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {yearlyAverage && (
+            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm text-muted-foreground">ממוצע רווח נקי שנתי ({yearlyAverage.months} חודשים)</span>
+              <span className="text-xl font-black text-emerald-500">
+                {Math.round(yearlyAverage.margin * 100)}%
+                <span className="text-sm font-medium text-muted-foreground mr-2">· ₪{Math.round(yearlyAverage.profit).toLocaleString()} סה״כ</span>
+              </span>
+            </div>
+          )}
+          {yoyData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={yoyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="short" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v: number) => `${v}%`} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value.toFixed(1)}%`, "רווח נקי"]}
+                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
+                  />
+                  <Line type="monotone" dataKey={(m: any) => (m.margin === null ? null : m.margin * 100)} stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} name="margin" />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="space-y-1.5">
+                {yoyData.slice().reverse().map((m) => (
+                  <div key={m.key} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span className="w-24 shrink-0 text-muted-foreground">{m.label}</span>
+                    <span className="font-bold text-foreground">₪{Math.round(m.profit).toLocaleString()}</span>
+                    <span className={`font-black ${m.margin! >= 0 ? "text-emerald-500" : "text-destructive"}`}>
+                      {Math.round(m.margin! * 100)}%
+                    </span>
+                    {m.marginDelta !== null && (
+                      <span className={`mr-auto flex items-center gap-1 text-xs font-bold ${m.marginDelta >= 0 ? "text-green-400" : "text-red-400"}`}>
+                        {m.marginDelta >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                        {m.marginDelta >= 0 ? "+" : ""}{m.marginDelta.toFixed(1)}% מול {m.prevLabel}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                האחוז מחושב מתוך ההכנסה ללא מע״מ, אחרי כל ההוצאות וביטוח לאומי. ברגע שייסגרה שנה מלאה, כל חודש יושווה אוטומטית לחודש המקביל בשנה הקודמת.
+              </p>
+            </>
+          ) : (
+            <p className="text-center text-muted-foreground py-8">אין עדיין נתונים</p>
+          )}
+        </CardContent>
+      </Card>
+
 
       {/* Month comparison */}
       {mode === "compare" && secondary && ranges[1] && (
