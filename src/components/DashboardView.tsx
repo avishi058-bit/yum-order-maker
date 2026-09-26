@@ -11,6 +11,7 @@ import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
 import { computeProfit, ACCOUNTANT_MONTHLY, PAYSLIP_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
 import { toast } from "sonner";
 import SuppliesManager from "@/components/SuppliesManager";
+import InvoiceScanner from "@/components/InvoiceScanner";
 import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -1011,6 +1012,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               </button>
             </div>
           </div>
+          <InvoiceScanner onSaved={loadSupplies} addFixedExpense={(label, monthly) => saveFixedExpenses([...fixedExpenses, { label, monthly }])} />
           <SuppliesManager list={supplies} onChange={loadSupplies} />
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (41.60 ₪/שעה כולל ביטוח לאומי, כלול בשכר)</span>
