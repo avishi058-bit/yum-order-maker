@@ -7,6 +7,7 @@ export interface CountableOrderItem {
   quantity: number;
   toppings: string[] | null;
   meal_drink?: string | null;
+  meal_side?: string | null;
   deal_drinks?: unknown;
 }
 

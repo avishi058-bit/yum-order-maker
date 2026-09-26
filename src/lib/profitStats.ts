@@ -2,8 +2,8 @@
 import type { CountableOrderItem } from "@/lib/burgerStats";
 
 export const VAT_RATE = 0.18;
-/** Credit fee 0.78% before VAT */
-export const CREDIT_FEE_RATE = 0.0078 * (1 + VAT_RATE);
+/** Credit fee 0.78% before VAT — the VAT on the fee is deductible, so the real cost is 0.78% */
+export const CREDIT_FEE_RATE = 0.0078;
 
 const C = {
   patty: 8.36,
@@ -33,7 +33,7 @@ const ITEM_COST: Record<string, number> = {
   "smash-double-cheese": 2 * C.patty + C.bun + C.veg + 2 * C.cheese,
   "crispy-chicken": C.crispy + C.bun + C.veg,
   fries: C.fries,
-  "sweet-potato-fries": C.fries,
+  "sweet-potato-fries": C.waffle, // המזהה ההיסטורי של וופל צ׳יפס
   "waffle-fries": C.waffle,
   "onion-rings": C.onionRings,
   "tempura-onion": C.tempura,
@@ -91,6 +91,16 @@ const DRINK_COST: { re: RegExp; cost: number }[] = [
   { re: /פחית|קולה|זירו|פאנטה|ספרייט/, cost: 2.646 },
 ];
 
+/** Cost of the fried side chosen in a meal (default: regular fries) */
+export const sideCost = (side: string | null | undefined): number => {
+  const s = (side || "").trim();
+  if (!s) return C.fries;
+  if (/טמפורה/.test(s)) return C.tempura;
+  if (/טבעות/.test(s)) return C.onionRings;
+  if (/וופל/.test(s)) return C.waffle;
+  return C.fries;
+};
+
 export const drinkCost = (name: string | null | undefined): number => {
   const n = (name || "").trim();
   if (!n) return 0;
@@ -116,7 +126,7 @@ export const itemCost = (it: CountableOrderItem): number => {
   if (Array.isArray(it.deal_drinks)) {
     for (const d of it.deal_drinks as { name?: string }[]) unit += drinkCost(d?.name);
   }
-  if (isMeal) unit += C.fries;
+  if (isMeal) unit += sideCost((it as { meal_side?: string | null }).meal_side);
   for (const t of it.toppings ?? []) {
     const hit = TOPPING_COST.find((p) => t.includes(p.match));
     if (hit) unit += hit.cost * mult(t);
