@@ -112,15 +112,42 @@ const mult = (t: string) => {
   return m ? Number(m[1]) : 1;
 };
 
+// ── רטבים בצד ─────────────────────────────────────────────────────────────
+/** כוסית רוטב — 0.038 ₪ לפני מע״מ */
+export const SAUCE_CUP = 0.038;
+/** מיונז/קטשופ נמזגים ביד — בממוצע 1.7 מהכמות שהתבקשה */
+const SAUCE_OVERPOUR = 1.7;
+/** עלות רוטב אחד בצד לפי סוג (לפני מע״מ), כולל כוסית היכן שרלוונטי */
+const SIDE_SAUCE_COST: { re: RegExp; cost: number }[] = [
+  { re: /מיונז/, cost: 0.2988 * SAUCE_OVERPOUR },
+  { re: /קטשופ/, cost: 0.134 * SAUCE_OVERPOUR },
+  { re: /חריף|צ[׳']ילי/, cost: 0.34 + SAUCE_CUP },
+  { re: /שזיפ/, cost: 0.44 + SAUCE_CUP },
+  { re: /איולי/, cost: 0.44 + SAUCE_CUP },
+  { re: /חלפני/, cost: 0.44 + SAUCE_CUP },
+];
+
+/** עלות שורת "רטבים" — רק מה שהלקוח באמת לקח, לפי כמות בפועל */
+export const sideSaucesCost = (labels: string[] | null | undefined): number => {
+  let sum = 0;
+  for (const l of labels ?? []) {
+    const hit = SIDE_SAUCE_COST.find((s) => s.re.test(l));
+    if (hit) sum += hit.cost * mult(l);
+  }
+  return sum;
+};
+
 export const itemCost = (it: CountableOrderItem): number => {
   const qty = Number(it.quantity) || 0;
   const name = (it.item_name || "").trim();
+  if (name === "רטבים") return sideSaucesCost(it.toppings) * (qty || 1);
   const isMeal = (it.item_id || "").startsWith("meal-") || name.startsWith("ארוחת ");
   const baseId =
     (it.item_id || "").replace(/^meal-/, "") ||
     NAME_TO_ID[name.replace(/^ארוחת\s+/, "")] ||
     "";
   let unit = ITEM_COST[baseId] ?? drinkCost(name);
+
   // same drink cost whether sold alone or in a meal/deal — the price difference is already in the revenue
   if (it.meal_drink) unit += drinkCost(it.meal_drink);
   if (Array.isArray(it.deal_drinks)) {
