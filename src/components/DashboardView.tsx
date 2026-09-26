@@ -279,6 +279,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     () => fixedExpenses.filter(isElectricity).reduce((s, e) => s + (Number(e.monthly) || 0), 0),
     [fixedExpenses],
   );
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   useEffect(() => {
     (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
       .then(({ data }: any) => {
@@ -288,6 +289,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           setFixedExpenses(list);
           setMonthlyFixed(list.filter((e) => !isElectricity(e)).reduce((s, e) => s + (Number(e.monthly) || 0), 0));
         }
+        setSettingsLoaded(true);
       });
   }, []);
   const saveFixedExpenses = async (next: { label: string; monthly: number }[]) => {
