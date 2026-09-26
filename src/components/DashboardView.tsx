@@ -356,12 +356,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       const k = monthKey(ds);
       (dayByMonth[k] ??= new Set()).add(ds.toISOString().slice(0, 10));
     });
-    let fixed = 0, wagesAlloc = 0, accountant = 0;
+    let fixed = 0, wagesAlloc = 0, accountant = 0, electricity = 0;
     Object.entries(dayByMonth).forEach(([k, set]) => {
       const share = set.size / workDaysDivisor(k);
       fixed += monthlyFixed * share;
       wagesAlloc += (wages[k] || 0) * share;
       accountant += ACCOUNTANT_MONTHLY * share;
+      electricity += electricityMonthly * share;
     });
     const shiftHours = shifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; })
       .reduce((a, sh) => a + (new Date(sh.clock_out || Date.now()).getTime() - new Date(sh.clock_in).getTime()) / 3600000, 0);
