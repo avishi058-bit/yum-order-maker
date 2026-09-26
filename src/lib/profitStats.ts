@@ -63,7 +63,7 @@ const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "ביצת עין", cost: C.egg },
   { match: "צ׳דר", cost: C.cheese },
   { match: "צ'דר", cost: C.cheese },
-  { match: "ריבת בצל", cost: C.addon },
+  { match: "רוסטביף", cost: 6 },
   { match: "בצל מטוגן", cost: C.addon },
   { match: "קונפי שום", cost: C.addon },
   { match: "ריבת פלפלים", cost: C.addon },
