@@ -1869,7 +1869,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                 שימו לב: הצ׳יפס מטוגן בשמן שבו מטוגנים גם מוצרים עם גלוטן. טבעות בצל וטבעות בצל בטמפורה מכילות גלוטן.
               </p>
               <p className={`text-muted-foreground text-right leading-relaxed mb-2 ${isKiosk ? "text-base" : "text-sm"}`}>
-                תוספות המכילות גלוטן (שלוש טבעות בצל ביתיות / שבבי בצל קריספי) יוסרו אוטומטית ולא ניתן להוסיף אותן.
+                תוספות המכילות גלוטן (שלושה רינג בצל בטמפורה / שבבי בצל קריספי) יוסרו אוטומטית ולא ניתן להוסיף אותן.
               </p>
               <p className={`text-muted-foreground text-right leading-relaxed mb-5 ${isKiosk ? "text-base" : "text-sm"}`}>
                 הוספת לחמנייה ללא גלוטן בעלות של ₪4.

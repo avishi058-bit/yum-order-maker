@@ -75,7 +75,8 @@ const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "מיונז", cost: C.sauce },
   { match: "קטשופ", cost: C.sauce },
   { match: "איולי", cost: C.sauce },
-  { match: "טבעות בצל", cost: C.onionRings }, // טבעות בצל ביתיות — עלות כמו מנה
+  { match: "רינג בצל", cost: C.onionRings }, // שלושה רינג בצל בטמפורה (לשעבר טבעות בצל ביתיות) — עלות כמו מנה
+  { match: "טבעות בצל", cost: C.onionRings }, // הזמנות ישנות עם השם הקודם
   { match: "קציצה צמחונית", cost: 9 }, // לפני מע״מ
 ];
 

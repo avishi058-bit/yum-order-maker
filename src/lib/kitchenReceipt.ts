@@ -55,7 +55,7 @@ export const isBurgerItemName = (name: string | undefined | null): boolean =>
 //   - Special-Hadegel → auto +2 of tempuraOnionSide for every burger ordered
 //                       (the recipe ships with 2 tempura rings on top, but the
 //                        chef preps them as a side portion — listed separately).
-//   - Topping "שלושטבעות בצל ביתיות" → tempuraOnionTopping (separate counter)
+//   - Topping "שלושה רינג בצל בטמפורה" (לשעבר "שלוש טבעות בצל ביתיות") → tempuraOnionTopping (separate counter)
 //
 // SAUCES: read from a synthetic "רטבים" order_item line.
 //   item_name === "רטבים", toppings carry "name × qty" labels we parse back.
@@ -701,9 +701,9 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     );
     blueCheese += includesAny(it.toppings, ["גבינה כחולה"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
-    // Onion-rings TOPPING ("שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
+    // Onion-rings TOPPING ("שלושה רינג בצל בטמפורה", לשעבר "שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
     // ring units (3 per topping), aggregated together with rings from Special-Hadegel.
-    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "שלוש טבעות בצל", "טבעות בצל ביתיות"]) * 3 * qty;
+    tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "שלוש טבעות בצל", "טבעות בצל ביתיות", "רינג בצל"]) * 3 * qty;
 
     // ---- gluten-free bun swap ----
     // Use cleaned removals (without __OWNER__ sentinel) to avoid false matches.
