@@ -279,6 +279,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     () => fixedExpenses.filter(isElectricity).reduce((s, e) => s + (Number(e.monthly) || 0), 0),
     [fixedExpenses],
   );
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   useEffect(() => {
     (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
       .then(({ data }: any) => {
@@ -288,6 +289,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           setFixedExpenses(list);
           setMonthlyFixed(list.filter((e) => !isElectricity(e)).reduce((s, e) => s + (Number(e.monthly) || 0), 0));
         }
+        setSettingsLoaded(true);
       });
   }, []);
   const saveFixedExpenses = async (next: { label: string; monthly: number }[]) => {
@@ -563,6 +565,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [trendOrders, setTrendOrders] = useState<Order[]>([]);
   const [trendItems, setTrendItems] = useState<CountableOrderItem[]>([]);
   const [trendShifts, setTrendShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
+  const [trendLoaded, setTrendLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -608,7 +611,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       }
       setTrendItems(collected);
       const { data: sh } = await (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", start.toISOString());
-      if (!cancelled) setTrendShifts(sh || []);
+      if (!cancelled) {
+        setTrendShifts(sh || []);
+        setTrendLoaded(true);
+      }
     };
     void load();
     return () => {
@@ -918,6 +924,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {loading || !settingsLoaded ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">מחשב רווח נקי…</p>
+          ) : (
+          <>
           <p className={`text-3xl font-black ${primary.profit.profit >= 0 ? "text-emerald-500" : "text-destructive"}`}>
             ₪{Math.round(primary.profit.profit).toLocaleString()}
             <span className="text-sm font-medium text-muted-foreground mr-2">
@@ -1025,6 +1035,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           <p className="text-xs text-muted-foreground">
             שכר, רואת חשבון (350 ₪ לפני מע״מ) והוצאות קבועות מתחלקים לפי ימי העבודה בפועל בחודש (בחודש הנוכחי — לפי ממוצע ימי העבודה). שכירות, עובדים וכו׳ — מתחלק לפי מספר הימים בתקופה. שתייה ומוצרים ללא עלות מוגדרת לא נספרים בעלות. חשמל הוצאה לא מדווחת — מנוכה בסוף, אחרי ביטוח לאומי.
           </p>
+          </>
+          )}
         </CardContent>
       </Card>
 
@@ -1225,6 +1237,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
+          {!trendLoaded ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">מחשב רווח חודשי…</p>
+          ) : (
+          <>
           {yearlyAverage && (
             <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
               <span className="text-sm text-muted-foreground">ממוצע רווח נקי שנתי ({yearlyAverage.months} חודשים)</span>
@@ -1271,6 +1287,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             </>
           ) : (
             <p className="text-center text-muted-foreground py-8">אין עדיין נתונים</p>
+          )}
+          </>
           )}
         </CardContent>
       </Card>
