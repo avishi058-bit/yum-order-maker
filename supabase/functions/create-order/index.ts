@@ -504,6 +504,7 @@ Deno.serve(async (req: Request) => {
     "aioli-garlic-mint": 2,
     "house-aioli-sauce": 2,
     "pickled-jalapeno-sauce": 3,
+    "maple-syrup-sauce": 5,
   };
   let regularSauceQty = 0;
   let premiumSauceCost = 0;
