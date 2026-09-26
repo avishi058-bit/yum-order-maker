@@ -565,6 +565,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [trendOrders, setTrendOrders] = useState<Order[]>([]);
   const [trendItems, setTrendItems] = useState<CountableOrderItem[]>([]);
   const [trendShifts, setTrendShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
+  const [trendLoaded, setTrendLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -610,7 +611,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       }
       setTrendItems(collected);
       const { data: sh } = await (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", start.toISOString());
-      if (!cancelled) setTrendShifts(sh || []);
+      if (!cancelled) {
+        setTrendShifts(sh || []);
+        setTrendLoaded(true);
+      }
     };
     void load();
     return () => {
