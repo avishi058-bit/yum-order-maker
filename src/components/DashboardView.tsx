@@ -920,6 +920,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {loading || !settingsLoaded ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">מחשב רווח נקי…</p>
+          ) : (
+          <>
           <p className={`text-3xl font-black ${primary.profit.profit >= 0 ? "text-emerald-500" : "text-destructive"}`}>
             ₪{Math.round(primary.profit.profit).toLocaleString()}
             <span className="text-sm font-medium text-muted-foreground mr-2">
