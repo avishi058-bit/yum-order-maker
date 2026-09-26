@@ -1022,9 +1022,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
             if (!data) return;
             const { error } = await (supabase as any).from("site_settings").update({ veg_cost_approved: v }).eq("id", data.id);
-            if (error) return toast.error("השמירה נכשלה");
+            if (error) { toast.error("השמירה נכשלה"); return; }
             setVegCost(v); setVegCostState(v);
-            toast.success(v ? "עלות הירקות עודכנה ברווח הנקי" : "חזרנו לאומדן 1.50 ₪");
+            void toast.success(v ? "עלות הירקות עודכנה ברווח הנקי" : "חזרנו לאומדן 1.50 ₪");
           }} />
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (41.60 ₪/שעה כולל ביטוח לאומי, כלול בשכר)</span>
