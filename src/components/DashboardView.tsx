@@ -948,7 +948,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["הכנת תלוש שכר", -primary.profit.payslip],
               ["שמן טיגון", -primary.profit.oil],
               ["שקיות זבל", -primary.profit.trashBags],
-              ["מתכלים (סבון, מפיות, רטבים...)", -primary.suppliesCost],
+              ["מתכלים וחשבוניות חד-פעמיות", -primary.suppliesCost],
               ["הוצאות קבועות", -(primary.profit.fixed - primary.suppliesCost)],
               ["רווח לפני ביטוח לאומי", primary.profit.beforeTax],
               ["ביטוח לאומי (8%)", -primary.profit.nationalInsurance],
