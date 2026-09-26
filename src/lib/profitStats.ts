@@ -75,6 +75,8 @@ const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "מיונז", cost: C.sauce },
   { match: "קטשופ", cost: C.sauce },
   { match: "איולי", cost: C.sauce },
+  { match: "טבעות בצל", cost: C.onionRings }, // טבעות בצל ביתיות — עלות כמו מנה
+  { match: "קציצה צמחונית", cost: 9 }, // לפני מע״מ
 ];
 
 /** Drink unit costs before VAT. Order matters: first match wins. */
