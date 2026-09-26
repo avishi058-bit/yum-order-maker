@@ -1237,6 +1237,10 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
+          {!trendLoaded ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">מחשב רווח חודשי…</p>
+          ) : (
+          <>
           {yearlyAverage && (
             <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
               <span className="text-sm text-muted-foreground">ממוצע רווח נקי שנתי ({yearlyAverage.months} חודשים)</span>
