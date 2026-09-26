@@ -32,6 +32,41 @@ const PROMPT = `אתה מפענח חשבוניות/קבלות של ספקים ע
 - description בעברית, קצר.
 - אם התמונה אינה חשבונית: is_invoice=false.`;
 
+const PRODUCE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["is_invoice", "supplier", "date", "includes_vat", "lines"],
+  properties: {
+    is_invoice: { type: "boolean" },
+    supplier: { type: ["string", "null"] },
+    date: { type: ["string", "null"], description: "YYYY-MM-DD" },
+    includes_vat: { type: "boolean", description: "true if line totals include VAT" },
+    lines: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["raw_name", "quantity", "unit", "unit_price", "total", "item_key"],
+        properties: {
+          raw_name: { type: "string", description: "Product name exactly as printed" },
+          quantity: { type: ["number", "null"] },
+          unit: { type: ["string", "null"], description: "ק\"ג / יח' / ארגז" },
+          unit_price: { type: ["number", "null"] },
+          total: { type: ["number", "null"], description: "Line total" },
+          item_key: { type: "string", enum: ["lettuce", "tomato", "red_onion", "pickles", "white_onion", "other", "unknown"] },
+        },
+      },
+    },
+  },
+};
+
+const producePrompt = (aliases: { raw_name: string; label: string }[]) => `אתה מפענח חשבונית של ספק ירקות/מזון עבור מסעדת המבורגרים בישראל.
+החזר כל שורת מוצר בחשבונית בנפרד (שם כפי שמודפס, כמות, יחידה, מחיר ליחידה, סה"כ שורה).
+item_key: lettuce=חסה, tomato=עגבנייה, red_onion=בצל סגול, pickles=מלפפון חמוץ, white_onion=בצל לבן/יבש, other=מוצר ברור שאינו אחד מאלה.
+אם אינך בטוח לחלוטין מה המוצר — החזר "unknown". אל תנחש.
+${aliases.length ? "שמות שהבעלים כבר הגדיר:\n" + aliases.map((a) => `- "${a.raw_name}" = ${a.label}`).join("\n") : ""}
+אם התמונה אינה חשבונית: is_invoice=false ו-lines ריק.`;
+
 Deno.serve(async (req) => {
   const cors = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -55,6 +90,8 @@ Deno.serve(async (req) => {
     if (!/^data:image\/(jpeg|png|webp);base64,/.test(image) || image.length > 8_000_000)
       return json({ error: "תמונה לא תקינה" }, 400);
 
+    const produce = body?.mode === "produce";
+    const aliases = Array.isArray(body?.aliases) ? body.aliases.slice(0, 200).filter((a: any) => typeof a?.raw_name === "string" && typeof a?.label === "string") : [];
     const res = await fetch(GATEWAY, {
       method: "POST",
       headers: {
@@ -68,10 +105,10 @@ Deno.serve(async (req) => {
         store: false,
         reasoning: { effort: "low", summary: "auto" },
         include: ["reasoning.encrypted_content"],
-        text: { format: { type: "json_schema", name: "invoice", strict: true, schema: SCHEMA } },
+        text: { format: { type: "json_schema", name: "invoice", strict: true, schema: produce ? PRODUCE_SCHEMA : SCHEMA } },
         input: [{
           role: "user",
-          content: [{ type: "input_text", text: PROMPT }, { type: "input_image", image_url: image }],
+          content: [{ type: "input_text", text: produce ? producePrompt(aliases) : PROMPT }, { type: "input_image", image_url: image }],
         }],
       }),
     });
