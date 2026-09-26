@@ -14,7 +14,9 @@ const C = {
   cheese: 1.61,
   addon: 2,
   crispy: 9,
-  fries: 3.5,
+  fries: 3.304, // 280 גרם × 11.80 ₪/ק"ג
+  waffle: 4.2672, // 280 גרם × 15.24 ₪/ק"ג
+  onionRings: 4.732, // 280 גרם × 16.90 ₪/ק"ג
   gfBun: 5, // לחמנייה ללא גלוטן
   tempura: 5.83, // טבעות בצל בטמפורה למנה
 };
@@ -32,9 +34,11 @@ const ITEM_COST: Record<string, number> = {
   "crispy-chicken": C.crispy + C.bun + C.veg,
   fries: C.fries,
   "sweet-potato-fries": C.fries,
+  "waffle-fries": C.waffle,
+  "onion-rings": C.onionRings,
   "tempura-onion": C.tempura,
   // מיקס חברים = מנה אחת מכל סוג: צ׳יפס, טבעות בצל, וופל צ׳יפס
-  "friends-mix": 3 * C.fries,
+  "friends-mix": C.fries + C.waffle + C.onionRings,
   // one giant fries = 3 portions
   "family-deal": 5 * (C.patty + C.bun + C.veg) + 3 * C.fries,
   "friends-deal": 3 * (C.patty + C.bun + C.veg) + 3 * C.fries,
