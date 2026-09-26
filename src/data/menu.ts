@@ -61,7 +61,7 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   double: { description: "שתי קציצות של 220, בצל, עגבנייה, חסה, חמוצים ואיולי הבית", weight: "440 גרם" },
   "crazy-smash": { description: "שתי קציצות סמאש, חסה, איולי, ריבת פלפלים חריפים, חמוצים ומייפל", weight: "220 גרם", badge: "🌶️" },
   "smash-double-cheese": { description: "חסה, חמוצים ואיולי הבית, שתי קציצות סמאש עם שתי פרוסות צ׳דר טבעוני (הולך טוב עם ריבת בצל או חמאת בוטנים)", weight: "220 גרם", badge: "🧀", popular: true },
-  "special-hadegel": { description: "קציצת בקר, כל הירקות, איולי הבית, שתי טבעות בצל ביתיות, ריבת בצל ביין וקונפי שום", weight: "220 גרם" },
+  "special-hadegel": { description: "קציצת בקר, כל הירקות, איולי הבית, שני רינג בצל בטמפורה, ריבת בצל ביין וקונפי שום", weight: "220 גרם" },
   "crispy-chicken": { description: "פילה עוף בציפוי קריספי, חסה, בצל, חמוצים ואיולי הבית", weight: "", special: true },
   "meal-crispy-chicken": { description: "קריספי צ׳יקן + צ׳יפס + שתייה", weight: "", baseBurgerId: "crispy-chicken", special: true },
   "haf-mifsha": { description: "המבורגר צמחוני - חסה, עגבנייה, בצל, חמוצים ואיולי (מבושל באיזור בשרי, אין הפרדה מוחלטת)", weight: "", badge: "🌱" },
