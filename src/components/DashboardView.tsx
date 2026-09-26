@@ -560,6 +560,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   // ===== 12 month trend (loaded once) =====
   const [trend, setTrend] = useState<{ month: string; revenue: number; orders: number }[]>([]);
+  const [trendOrders, setTrendOrders] = useState<Order[]>([]);
+  const [trendItems, setTrendItems] = useState<CountableOrderItem[]>([]);
+  const [trendShifts, setTrendShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -567,11 +570,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       const start = monthRange(keys[0]).start;
       const { data } = await supabase
         .from("orders")
-        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone")
+        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in")
         .gte("created_at", start.toISOString())
         .order("created_at", { ascending: true });
       if (cancelled) return;
       const clean = excludeTestOrders((data ?? []) as Order[]).filter(isCounted);
+      setTrendOrders(clean);
       const map: Record<string, { revenue: number; orders: number }> = {};
       keys.forEach((k) => (map[k] = { revenue: 0, orders: 0 }));
       const wd: Record<string, Set<string>> = {};
@@ -591,6 +595,20 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         revenue: map[k].revenue,
         orders: map[k].orders,
       })));
+      // order items + shifts for per-month profit calculation
+      const ids = clean.map((o) => o.id);
+      const collected: CountableOrderItem[] = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data: rows } = await supabase
+          .from("order_items")
+          .select("order_id, item_id, item_name, quantity, toppings, meal_drink, meal_side, deal_drinks")
+          .in("order_id", ids.slice(i, i + 200));
+        if (rows) collected.push(...(rows as CountableOrderItem[]));
+        if (cancelled) return;
+      }
+      setTrendItems(collected);
+      const { data: sh } = await (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", start.toISOString());
+      if (!cancelled) setTrendShifts(sh || []);
     };
     void load();
     return () => {
