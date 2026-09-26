@@ -48,7 +48,6 @@ const MEAL_IDS = [
   "meal-double",
   "meal-crispy-chicken",
   "meal-haf-mifsha",
-  "meal-napoleon",
   "meal-avishai",
   "meal-special-hadegel",
   "meal-crazy-smash",
