@@ -8,10 +8,11 @@ import {
 } from "recharts";
 import { excludeTestOrders } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
-import { computeProfit, ACCOUNTANT_MONTHLY, PAYSLIP_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
+import { computeProfit, setVegCost, ACCOUNTANT_MONTHLY, PAYSLIP_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
 import { toast } from "sonner";
 import SuppliesManager from "@/components/SuppliesManager";
 import InvoiceScanner from "@/components/InvoiceScanner";
+import ProduceTracker from "@/components/ProduceTracker";
 import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -281,10 +282,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     [fixedExpenses],
   );
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [vegCost, setVegCostState] = useState<number | null>(null);
   useEffect(() => {
-    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses").limit(1).maybeSingle()
+    (supabase as any).from("site_settings").select("id, monthly_fixed_costs, monthly_wages, fixed_expenses, veg_cost_approved").limit(1).maybeSingle()
       .then(({ data }: any) => {
         if (data) {
+          setVegCost(data.veg_cost_approved);
+          setVegCostState(data.veg_cost_approved ?? null);
           setWages((data.monthly_wages as Record<string, number>) || {});
           const list = Array.isArray(data.fixed_expenses) ? (data.fixed_expenses as { label: string; monthly: number }[]) : [];
           setFixedExpenses(list);
@@ -400,11 +404,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const primary = useMemo(
     () => statsFor(ranges[0].start, ranges[0].end),
-    [orders, items, ranges, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, shifts, supplies],
+    [orders, items, ranges, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, shifts, supplies, vegCost],
   );
   const secondary = useMemo(
     () => (ranges[1] ? statsFor(ranges[1].start, ranges[1].end) : null),
-    [orders, items, ranges, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, shifts, supplies],
+    [orders, items, ranges, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, shifts, supplies, vegCost],
   );
 
   const filteredOrders = primary.orders;
@@ -664,7 +668,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       });
       return { key: k, label: monthLabel(k), short: monthLabel(k).replace(/\s\d{4}$/, ""), profit: p.profit, margin: p.margin, revenue, netRevenue: p.netRevenue };
     });
-  }, [trendOrders, trendItems, trendShifts, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, supplies]);
+  }, [trendOrders, trendItems, trendShifts, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, supplies, vegCost]);
 
   // ===== YoY: month vs same month last year + yearly average =====
   const yoyData = useMemo(() => {
@@ -1014,6 +1018,14 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </div>
           <InvoiceScanner onSaved={loadSupplies} addFixedExpense={(label, monthly) => saveFixedExpenses([...fixedExpenses, { label, monthly }])} />
           <SuppliesManager list={supplies} onChange={loadSupplies} />
+          <ProduceTracker approved={vegCost} onApprove={async (v) => {
+            const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
+            if (!data) return;
+            const { error } = await (supabase as any).from("site_settings").update({ veg_cost_approved: v }).eq("id", data.id);
+            if (error) { toast.error("השמירה נכשלה"); return; }
+            setVegCost(v); setVegCostState(v);
+            void toast.success(v ? "עלות הירקות עודכנה ברווח הנקי" : "חזרנו לאומדן 1.50 ₪");
+          }} />
           <div className="flex flex-wrap gap-2 text-sm">
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (41.60 ₪/שעה כולל ביטוח לאומי, כלול בשכר)</span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה בתקופה: <b>{primary.days}</b></span>

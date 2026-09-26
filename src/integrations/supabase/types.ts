@@ -1052,6 +1052,72 @@ export type Database = {
           },
         ]
       }
+      produce_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          prev_finished: boolean
+          purchased_at: string
+          quantity: number | null
+          raw_name: string | null
+          supplier: string | null
+          total: number
+          unit: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          prev_finished?: boolean
+          purchased_at?: string
+          quantity?: number | null
+          raw_name?: string | null
+          supplier?: string | null
+          total: number
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          prev_finished?: boolean
+          purchased_at?: string
+          quantity?: number | null
+          raw_name?: string | null
+          supplier?: string | null
+          total?: number
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Relationships: []
+      }
+      product_aliases: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          label: string | null
+          raw_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          label?: string | null
+          raw_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          label?: string | null
+          raw_name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1289,6 +1355,7 @@ export type Database = {
           monthly_wages: Json
           primary_color: string
           updated_at: string
+          veg_cost_approved: number | null
           website_font_scale: number
           website_modal_height_vh: number
         }
@@ -1316,6 +1383,7 @@ export type Database = {
           monthly_wages?: Json
           primary_color?: string
           updated_at?: string
+          veg_cost_approved?: number | null
           website_font_scale?: number
           website_modal_height_vh?: number
         }
@@ -1343,6 +1411,7 @@ export type Database = {
           monthly_wages?: Json
           primary_color?: string
           updated_at?: string
+          veg_cost_approved?: number | null
           website_font_scale?: number
           website_modal_height_vh?: number
         }
