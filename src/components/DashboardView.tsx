@@ -560,6 +560,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   // ===== 12 month trend (loaded once) =====
   const [trend, setTrend] = useState<{ month: string; revenue: number; orders: number }[]>([]);
+  const [trendOrders, setTrendOrders] = useState<Order[]>([]);
+  const [trendItems, setTrendItems] = useState<CountableOrderItem[]>([]);
+  const [trendShifts, setTrendShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -567,11 +570,12 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       const start = monthRange(keys[0]).start;
       const { data } = await supabase
         .from("orders")
-        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone")
+        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in")
         .gte("created_at", start.toISOString())
         .order("created_at", { ascending: true });
       if (cancelled) return;
       const clean = excludeTestOrders((data ?? []) as Order[]).filter(isCounted);
+      setTrendOrders(clean);
       const map: Record<string, { revenue: number; orders: number }> = {};
       keys.forEach((k) => (map[k] = { revenue: 0, orders: 0 }));
       const wd: Record<string, Set<string>> = {};
@@ -591,6 +595,20 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         revenue: map[k].revenue,
         orders: map[k].orders,
       })));
+      // order items + shifts for per-month profit calculation
+      const ids = clean.map((o) => o.id);
+      const collected: CountableOrderItem[] = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data: rows } = await supabase
+          .from("order_items")
+          .select("order_id, item_id, item_name, quantity, toppings, meal_drink, meal_side, deal_drinks")
+          .in("order_id", ids.slice(i, i + 200));
+        if (rows) collected.push(...(rows as CountableOrderItem[]));
+        if (cancelled) return;
+      }
+      setTrendItems(collected);
+      const { data: sh } = await (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", start.toISOString());
+      if (!cancelled) setTrendShifts(sh || []);
     };
     void load();
     return () => {
@@ -602,6 +620,72 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     if (dailyData.length === 0) return null;
     return dailyData.reduce((max, d) => (d.revenue > max.revenue ? d : max), dailyData[0]);
   }, [dailyData]);
+
+  // ===== per-month net profit + margin % (12 months, YoY) =====
+  const monthlyProfit = useMemo(() => {
+    if (trendOrders.length === 0) return [];
+    const keys = lastMonths(12).reverse();
+    const shiftMonths = new Set(trendShifts.map((sh) => monthKey(new Date(sh.clock_in))));
+    return keys.map((k) => {
+      const { start, end } = monthRange(k);
+      const list = trendOrders.filter((o) => {
+        const d = new Date(o.created_at);
+        return d >= start && d < end;
+      });
+      if (list.length === 0) return { key: k, label: monthLabel(k), short: monthLabel(k).replace(/\s\d{4}$/, ""), profit: 0, margin: null as number | null, revenue: 0, netRevenue: 0 };
+      const ids = new Set(list.map((o) => o.id));
+      const rangeItems = trendItems.filter((i) => ids.has(i.order_id));
+      const revenue = list.reduce((s, o) => s + o.total, 0);
+      const creditRevenue = list.filter((o) => o.payment_method === "credit").reduce((s, o) => s + o.total, 0);
+      const daySet = new Set(list.map((o) => getBusinessDayStart(new Date(o.created_at)).toISOString().slice(0, 10)));
+      const share = daySet.size / workDaysDivisor(k);
+      const suppliesCost = suppliesCostInRange(supplies, start, end > new Date() ? new Date() : end);
+      const fixed = monthlyFixed * share + suppliesCost;
+      const shiftHours = trendShifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; })
+        .reduce((a, sh) => a + (new Date(sh.clock_out || Date.now()).getTime() - new Date(sh.clock_in).getTime()) / 3600000, 0);
+      const wagesAlloc = (wages[k] || 0) * share + shiftHours * HOURLY_WAGE;
+      const accountant = ACCOUNTANT_MONTHLY * share;
+      const electricity = electricityMonthly * share;
+      const oil = (daySet.size * OIL_WEEKLY) / 7;
+      const trashBags = daySet.size * TRASH_BAGS_DAILY;
+      const payslip = shiftMonths.has(k) ? PAYSLIP_MONTHLY * share : 0;
+      const p = computeProfit({
+        revenue, creditRevenue, items: rangeItems,
+        takeawayIds: new Set(list.filter((o) => o.dine_in === false).map((o) => o.id)),
+        dineInIds: new Set(list.filter((o) => o.dine_in === true).map((o) => o.id)),
+        fixed, wages: wagesAlloc, accountant, payslip, oil, trashBags, unreported: electricity,
+      });
+      return { key: k, label: monthLabel(k), short: monthLabel(k).replace(/\s\d{4}$/, ""), profit: p.profit, margin: p.margin, revenue, netRevenue: p.netRevenue };
+    });
+  }, [trendOrders, trendItems, trendShifts, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, supplies]);
+
+  // ===== YoY: month vs same month last year + yearly average =====
+  const yoyData = useMemo(() => {
+    const byKey: Record<string, (typeof monthlyProfit)[number]> = {};
+    monthlyProfit.forEach((m) => (byKey[m.key] = m));
+    return monthlyProfit
+      .filter((m) => m.margin !== null)
+      .map((m) => {
+        const [y, mo] = m.key.split("-").map(Number);
+        const prevKey = `${y - 1}-${String(mo).padStart(2, "0")}`;
+        const prev = byKey[prevKey];
+        const prevMargin = prev && prev.margin !== null ? prev.margin : null;
+        return {
+          ...m,
+          prevLabel: prev ? prev.label : null,
+          prevMargin,
+          marginDelta: prevMargin !== null ? (m.margin! - prevMargin) * 100 : null,
+        };
+      });
+  }, [monthlyProfit]);
+
+  const yearlyAverage = useMemo(() => {
+    const withData = monthlyProfit.filter((m) => m.margin !== null && m.netRevenue > 0);
+    if (withData.length === 0) return null;
+    const totalProfit = withData.reduce((s, m) => s + m.profit, 0);
+    const totalNet = withData.reduce((s, m) => s + m.netRevenue, 0);
+    return { margin: totalNet ? totalProfit / totalNet : 0, profit: totalProfit, months: withData.length };
+  }, [monthlyProfit]);
 
   if (!unlocked) {
     return (
@@ -1128,6 +1212,65 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             </ResponsiveContainer>
           ) : (
             <p className="text-center text-muted-foreground py-12">אין עדיין נתונים לחודשים קודמים</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Monthly net profit margin + YoY */}
+      <Card className="border-emerald-500/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp size={18} className="text-emerald-400" />
+            אחוז רווח נקי לפי חודש
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {yearlyAverage && (
+            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm text-muted-foreground">ממוצע רווח נקי שנתי ({yearlyAverage.months} חודשים)</span>
+              <span className="text-xl font-black text-emerald-500">
+                {Math.round(yearlyAverage.margin * 100)}%
+                <span className="text-sm font-medium text-muted-foreground mr-2">· ₪{Math.round(yearlyAverage.profit).toLocaleString()} סה״כ</span>
+              </span>
+            </div>
+          )}
+          {yoyData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={240}>
+                <LineChart data={yoyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="short" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v: number) => `${v}%`} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value.toFixed(1)}%`, "רווח נקי"]}
+                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, direction: "rtl" }}
+                  />
+                  <Line type="monotone" dataKey={(m: any) => (m.margin === null ? null : m.margin * 100)} stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} name="margin" />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="space-y-1.5">
+                {yoyData.slice().reverse().map((m) => (
+                  <div key={m.key} className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                    <span className="w-24 shrink-0 text-muted-foreground">{m.label}</span>
+                    <span className="font-bold text-foreground">₪{Math.round(m.profit).toLocaleString()}</span>
+                    <span className={`font-black ${m.margin! >= 0 ? "text-emerald-500" : "text-destructive"}`}>
+                      {Math.round(m.margin! * 100)}%
+                    </span>
+                    {m.marginDelta !== null && (
+                      <span className={`mr-auto flex items-center gap-1 text-xs font-bold ${m.marginDelta >= 0 ? "text-green-400" : "text-red-400"}`}>
+                        {m.marginDelta >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                        {m.marginDelta >= 0 ? "+" : ""}{m.marginDelta.toFixed(1)}% מול {m.prevLabel}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                האחוז מחושב מתוך ההכנסה ללא מע״מ, אחרי כל ההוצאות וביטוח לאומי. ברגע שייסגרה שנה מלאה, כל חודש יושווה אוטומטית לחודש המקביל בשנה הקודמת.
+              </p>
+            </>
+          ) : (
+            <p className="text-center text-muted-foreground py-8">אין עדיין נתונים</p>
           )}
         </CardContent>
       </Card>
