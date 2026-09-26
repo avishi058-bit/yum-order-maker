@@ -397,11 +397,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
 
   const primary = useMemo(
     () => statsFor(ranges[0].start, ranges[0].end),
-    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts, supplies],
+    [orders, items, ranges, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, shifts, supplies],
   );
   const secondary = useMemo(
     () => (ranges[1] ? statsFor(ranges[1].start, ranges[1].end) : null),
-    [orders, items, ranges, monthlyFixed, wages, workDays, avgWorkDays, shifts, supplies],
+    [orders, items, ranges, monthlyFixed, electricityMonthly, wages, workDays, avgWorkDays, shifts, supplies],
   );
 
   const filteredOrders = primary.orders;
