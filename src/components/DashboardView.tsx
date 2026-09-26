@@ -1288,6 +1288,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           ) : (
             <p className="text-center text-muted-foreground py-8">אין עדיין נתונים</p>
           )}
+          </>
+          )}
         </CardContent>
       </Card>
 
