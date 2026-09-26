@@ -1,5 +1,5 @@
 // Net-profit estimate: revenue excl. VAT − food cost − credit fees − prorated fixed costs.
-import type { CountableOrderItem } from "@/lib/burgerStats";
+import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
 
 export const VAT_RATE = 0.18;
 /** Credit fee 0.78% before VAT — the VAT on the fee is deductible, so the real cost is 0.78% */
@@ -143,7 +143,17 @@ export const sideSaucesCost = (labels: string[] | null | undefined): number => {
   return sum;
 };
 
+/** Vegetable cost per burger — 1.50 estimate until the owner approves a measured value */
+export const VEG_ESTIMATE = C.veg;
+let vegCostPerBurger = C.veg;
+export const setVegCost = (v: number | null | undefined) => { vegCostPerBurger = v && v > 0 ? v : C.veg; };
+
 export const itemCost = (it: CountableOrderItem): number => {
+  const vegAdj = vegCostPerBurger === C.veg ? 0 : countBurgers([it]).burgers * (vegCostPerBurger - C.veg);
+  return baseItemCost(it) + vegAdj;
+};
+
+const baseItemCost = (it: CountableOrderItem): number => {
   const qty = Number(it.quantity) || 0;
   const name = (it.item_name || "").trim();
   if (name === "רטבים") return sideSaucesCost(it.toppings) * (qty || 1);
