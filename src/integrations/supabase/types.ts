@@ -972,6 +972,7 @@ export type Database = {
           payment_transaction_id: string | null
           queue_number: number | null
           scheduled_for: string | null
+          soldier_donation: number
           status: string
           ten_min_notified_at: string | null
           terms_accepted_at: string | null
@@ -1004,6 +1005,7 @@ export type Database = {
           payment_transaction_id?: string | null
           queue_number?: number | null
           scheduled_for?: string | null
+          soldier_donation?: number
           status?: string
           ten_min_notified_at?: string | null
           terms_accepted_at?: string | null
@@ -1036,6 +1038,7 @@ export type Database = {
           payment_transaction_id?: string | null
           queue_number?: number | null
           scheduled_for?: string | null
+          soldier_donation?: number
           status?: string
           ten_min_notified_at?: string | null
           terms_accepted_at?: string | null
@@ -1444,6 +1447,41 @@ export type Database = {
         }
         Relationships: []
       }
+      soldier_fund_ledger: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          note: string | null
+          order_id: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "soldier_fund_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supply_purchases: {
         Row: {
           amount: number
@@ -1594,6 +1632,10 @@ export type Database = {
       mark_order_paid: { Args: { p_order_id: string }; Returns: number }
       next_daily_queue_number: { Args: never; Returns: number }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
+      pay_order_from_soldier_fund: {
+        Args: { p_order_id: string }
+        Returns: number
+      }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }
         Returns: undefined
@@ -1612,6 +1654,8 @@ export type Database = {
         Args: { p_order_id: string; p_row: Json }
         Returns: undefined
       }
+      soldier_fund_balance: { Args: never; Returns: number }
+      soldier_fund_public_stats: { Args: never; Returns: Json }
       unmark_order_paid: { Args: { p_order_id: string }; Returns: boolean }
     }
     Enums: {

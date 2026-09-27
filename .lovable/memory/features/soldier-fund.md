@@ -1,0 +1,10 @@
+---
+name: Soldier fund ("הזמן חייל/ת")
+description: Checkout donation to a soldier fund; credited when order is paid; kitchen/dashboard pay orders from fund; public counter
+type: feature
+---
+- Offered at checkout on website AND kiosk: buttons 5,10,20,30,40,50,60 or custom, max 1,000₪.
+- Added to the order total; any payment method. Credited to fund only when the order is actually paid (paid_at set) — credit confirmed, or cash/paybox marked paid.
+- Fund balance managed by owner; kitchen AND dashboard can mark an order "paid from soldier fund" (deducts order total).
+- Public transparency: show total collected + number of soldiers fed.
+- Accounting: donation is NOT revenue when received (not a legal donation — prepayment); revenue counted when fund pays an order. Advise accountant re VAT timing.
