@@ -97,7 +97,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           {[
             "בוחרים סכום",
             "הכסף נשמר בקופה מיוחדת לחיילים",
-            "חייל/ת שמגיע/ה אלינו מקבל/ת פינוק/ספסוד עליכם :)",
+            "חייל/ת שמגיע/ה אלינו מקבל/ת פינוק/סבסוד עליכם :)",
           ].map((step, i) => (
             <div key={step}>
               <div className="text-2xl md:text-3xl font-black leading-snug">{step}</div>
