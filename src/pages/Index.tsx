@@ -30,6 +30,7 @@ import OrderSuccessModal from "@/components/OrderSuccessModal";
 // This trims the initial JS bundle significantly (ItemCustomizer alone ~1300 lines).
 const KioskCartDrawer = lazy(() => import("@/components/KioskCartDrawer"));
 const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
+const SoldierFundHowItWorks = lazy(() => import("@/components/SoldierFundHowItWorks"));
 const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
 const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
 const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
@@ -84,11 +85,19 @@ const Index = () => {
   const [checkoutSkipDetails, setCheckoutSkipDetails] = useState(false);
   // "הזמן חייל/ת" paid on its own (no food) from the entry page.
   const [donationOnlyCheckout, setDonationOnlyCheckout] = useState(false);
+  // Pending "הזמן חייל/ת" donation — mirrored from sessionStorage so the cart
+  // drawer can show it as an editable line before checkout.
+  const [pendingDonation, setPendingDonation] = useState<{ amount: number; termsAt: string | null } | null>(() => {
+    try { return JSON.parse(sessionStorage.getItem("soldier-pending-donation-v1") || "null"); } catch { return null; }
+  });
+  const [editDonationOpen, setEditDonationOpen] = useState(false);
   const savePendingDonation = (amount: number, termsAt: string) => {
     try { sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify({ amount, termsAt })); } catch { /* ignore */ }
+    setPendingDonation({ amount, termsAt });
   };
   const clearPendingDonation = () => {
     try { sessionStorage.removeItem("soldier-pending-donation-v1"); } catch { /* ignore */ }
+    setPendingDonation(null);
   };
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
   // When set, the customizer is opened in EDIT mode for this cart item.
@@ -817,6 +826,12 @@ const Index = () => {
             onEditItem={handleEditCartItem}
             isKiosk={isStation}
             isClosed={isClosed}
+            soldierDonation={pendingDonation?.amount ?? 0}
+            onEditDonation={() => setEditDonationOpen(true)}
+            onRemoveDonation={() => {
+              clearPendingDonation();
+              toast.info("התרומה ל'הזמן חייל/ת' הוסרה מההזמנה");
+            }}
           />
         )}
 
