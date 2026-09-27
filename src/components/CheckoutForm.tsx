@@ -419,6 +419,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     status: "new" | "pending_payment",
     allowDuplicate = false,
   ) => {
+    // Soldier-fund donations require regulation approval (also enforced server-side).
+    if (soldierDonation > 0 && !soldierTermsAt) {
+      throw new Error("כדי לתרום לקופת החיילים יש לאשר קודם את תקנון 'הזמן חייל/ת'");
+    }
     const isStation = localStorage.getItem("habakta_station") === "true";
     const isKioskPath = isKiosk;
     const orderSource: "website" | "kiosk" | "station" = isKioskPath
@@ -448,6 +452,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           .map((s) => ({ id: s.id, name: s.name, quantity: s.quantity })),
         freeSauces,
         soldierDonation,
+        // Regulation approval timestamp — required (server-verified) whenever
+        // soldierDonation > 0, and recorded in consent_events.
+        soldierFundTermsAcceptedAt: soldierDonation > 0 ? soldierTermsAt : null,
         // Preorder pickup time (optional). ISO datetime built from today + HH:MM.
         scheduledFor: (() => {
           if (!preorderEnabled || !preorderTime) return null;
@@ -1011,7 +1018,12 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {/* Step 4: Payment Method */}
         {step === "payment" && (
           <div className="space-y-4">
-            <SoldierDonation value={soldierDonation} onChange={setSoldierDonation} />
+            <SoldierDonation
+              value={soldierDonation}
+              onChange={setSoldierDonation}
+              termsAcceptedAt={soldierTermsAt}
+              onTermsAccept={(a) => setSoldierTermsAt(a ? new Date().toISOString() : null)}
+            />
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
             {/* 🛵 Delivery notice — website only, when this is a delivery order */}
