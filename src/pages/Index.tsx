@@ -835,6 +835,31 @@ const Index = () => {
           />
         )}
 
+        {/* Edit the pending "הזמן חייל/ת" amount from the cart */}
+        {editDonationOpen && (
+          <Suspense fallback={null}>
+            <SoldierFundHowItWorks
+              open={editDonationOpen}
+              onOpenChange={setEditDonationOpen}
+              approved
+              onApprove={() => { /* already approved when first chosen */ }}
+              donate={{
+                canOrder: !isClosed,
+                onContinueOrder: (amount) => {
+                  savePendingDonation(amount, pendingDonation?.termsAt ?? new Date().toISOString());
+                  setEditDonationOpen(false);
+                  toast.success(`🫡 עודכן ל־₪${amount} ל'הזמן חייל/ת'`);
+                },
+                onDonateOnly: (amount) => {
+                  savePendingDonation(amount, pendingDonation?.termsAt ?? new Date().toISOString());
+                  setEditDonationOpen(false);
+                  toast.success(`🫡 עודכן ל־₪${amount} ל'הזמן חייל/ת'`);
+                },
+              }}
+            />
+          </Suspense>
+        )}
+
         {sauceSelectorOpen && (
           <SauceSelector
             open={sauceSelectorOpen}
