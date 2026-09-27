@@ -82,6 +82,14 @@ const Index = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutSkipDetails, setCheckoutSkipDetails] = useState(false);
+  // "הזמן חייל/ת" paid on its own (no food) from the entry page.
+  const [donationOnlyCheckout, setDonationOnlyCheckout] = useState(false);
+  const savePendingDonation = (amount: number, termsAt: string) => {
+    try { sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify({ amount, termsAt })); } catch { /* ignore */ }
+  };
+  const clearPendingDonation = () => {
+    try { sessionStorage.removeItem("soldier-pending-donation-v1"); } catch { /* ignore */ }
+  };
   const [customizerItem, setCustomizerItem] = useState<MenuItem | null>(null);
   // When set, the customizer is opened in EDIT mode for this cart item.
   // On confirm, we replace the cart entry instead of appending a new one.
@@ -618,6 +626,16 @@ const Index = () => {
           onDeliveryChoice={isClosed ? undefined : handleDeliveryChoice}
           showDelivery={restaurantStatus.delivery_enabled}
           dineIn={dineIn}
+          soldierFundEnabled={restaurantStatus.soldier_fund_enabled !== false}
+          onSoldierContinueOrder={isClosed ? undefined : (amount, termsAt) => {
+            savePendingDonation(amount, termsAt);
+            toast.success(`🫡 ₪${amount} ל'הזמן חייל/ת' יתווספו בתשלום — עכשיו בוחרים מה לאכול`);
+          }}
+          onSoldierDonateOnly={(amount, termsAt) => {
+            savePendingDonation(amount, termsAt);
+            setDonationOnlyCheckout(true);
+            setCheckoutOpen(true);
+          }}
         />
       )}
       {isClosed ? (
@@ -829,15 +847,26 @@ const Index = () => {
         <AnimatePresence>
           {checkoutOpen && (
             <CheckoutForm
-              dineIn={dineIn}
-              items={cart}
-              total={getTotal()}
+              dineIn={donationOnlyCheckout ? null : dineIn}
+              donationOnly={donationOnlyCheckout}
+              items={donationOnlyCheckout ? [] : cart}
+              total={donationOnlyCheckout ? 0 : getTotal()}
               sauces={dineIn === false ? selectedSauces : []}
               freeSauces={freeSauces}
               skipDetails={checkoutSkipDetails}
               delivery={deliveryInfo ?? undefined}
-              onClose={() => { setCheckoutOpen(false); setCheckoutSkipDetails(false); }}
+              onClose={() => {
+                setCheckoutOpen(false); setCheckoutSkipDetails(false);
+                if (donationOnlyCheckout) { setDonationOnlyCheckout(false); clearPendingDonation(); }
+              }}
               onSuccess={(orderNumber, phone) => {
+                clearPendingDonation();
+                if (donationOnlyCheckout) {
+                  setDonationOnlyCheckout(false);
+                  setCheckoutOpen(false);
+                  toast.success("תודה רבה! 🫡 התשלום ל'הזמן חייל/ת' התקבל");
+                  return;
+                }
                 // Snapshot the cart BEFORE clearing — used for the
                 // "save as your regular" post-order prompt.
                 const orderedSnapshot = cart.slice();
