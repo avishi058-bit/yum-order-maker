@@ -35,6 +35,10 @@ interface KioskCartDrawerProps {
   isKiosk?: boolean;
   /** When true, ordering is not possible right now; the drawer saves a future order. */
   isClosed?: boolean;
+  /** "הזמן חייל/ת" donation picked on the entry page — shown as an editable cart line. */
+  soldierDonation?: number;
+  onEditDonation?: () => void;
+  onRemoveDonation?: () => void;
 }
 
 /**
@@ -57,11 +61,14 @@ const KioskCartDrawer = ({
   onEditItem,
   isKiosk = false,
   isClosed = false,
+  soldierDonation = 0,
+  onEditDonation,
+  onRemoveDonation,
 }: KioskCartDrawerProps) => {
   useBodyScrollLock(open);
   const getItemTotal = (item: CartItem) => computeCartItemTotal(item);
 
-  const total = items.reduce((sum, item) => sum + getItemTotal(item), 0);
+  const total = items.reduce((sum, item) => sum + getItemTotal(item), 0) + soldierDonation;
   const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const getToppingNames = (ids: string[]) => {
@@ -417,6 +424,44 @@ const KioskCartDrawer = ({
                     <Plus size={sz.addMoreIcon} />
                     הוסף עוד מנה
                   </motion.button>
+                </div>
+              )}
+
+              {/* "הזמן חייל/ת" donation line — editable / removable */}
+              {soldierDonation > 0 && (
+                <div className={isKiosk ? "px-6" : "px-4"}>
+                  <div className={`flex items-center justify-between gap-3 rounded-2xl border-2 border-green-500/40 bg-green-500/10 ${isKiosk ? "p-5" : "p-4"}`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={isKiosk ? "text-3xl" : "text-2xl"}>🫡</span>
+                      <div className="min-w-0">
+                        <p className={`font-black ${th.textMain} ${isKiosk ? "text-xl" : "text-base"}`}>הזמן חייל/ת</p>
+                        <p className={`${th.textMuted} ${isKiosk ? "text-sm" : "text-xs"}`}>פינוק לחיילים שמגיעים אלינו 💚</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-none">
+                      <span className={`font-black text-green-600 ${isKiosk ? "text-2xl" : "text-lg"}`}>₪{soldierDonation}</span>
+                      {onEditDonation && (
+                        <button
+                          onClick={onEditDonation}
+                          className={`flex items-center gap-1.5 rounded-full ${isKiosk ? 'bg-gray-50 border-2 border-gray-200 text-gray-900 hover:bg-gray-100 px-4 py-2.5 text-base' : 'bg-background border-2 border-border text-foreground hover:bg-secondary px-3 py-1.5 text-xs'} transition-colors font-bold`}
+                          aria-label="שנה סכום"
+                        >
+                          <Pencil size={isKiosk ? 18 : 12} />
+                          שנה
+                        </button>
+                      )}
+                      {onRemoveDonation && (
+                        <button
+                          onClick={onRemoveDonation}
+                          className={`${sz.qtyBtn} rounded-full ${th.destructiveBg} ${th.destructiveText} ${th.destructiveHover} transition-colors flex items-center justify-center active:scale-95`}
+                          aria-label="הסר תרומה"
+                          title="הסר תרומה"
+                        >
+                          <Trash2 size={sz.qtyIcon} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
