@@ -642,6 +642,11 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ops.push(sep());
     ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 26 }));
     ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
+  } else if (order.payment_method === "soldier_fund") {
+    ops.push(sep());
+    ops.push(asLine("שולם!", { align: "C", bold: true, size: 40 }));
+    ops.push(asLine("שולם מהזמן חייל/ת", { align: "C", bold: true, size: 32 }));
+    ops.push(asLine(`${order.total}₪ מהקופה`, { align: "C", bold: true, size: 28 }));
   } else if (order.payment_method === "paybox") {
     const paid = (order as any).queue_number != null;
     ops.push(sep());
