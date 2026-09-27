@@ -113,7 +113,15 @@ export const useBusinessHours = () => {
     return DEFAULT_HOURS;
   }, [settings]);
 
-  const status = useMemo(() => computeStatus(hours, now), [hours, now]);
+  // Always evaluate hours in Israel time, regardless of the device's time zone.
+  const status = useMemo(() => {
+    let il = now;
+    try {
+      il = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+      if (isNaN(il.getTime())) il = now;
+    } catch { /* keep device time */ }
+    return computeStatus(hours, il);
+  }, [hours, now]);
 
   return { hours, status, loading, updateSettings };
 };
