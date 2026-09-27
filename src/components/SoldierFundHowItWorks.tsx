@@ -10,6 +10,8 @@ import { X } from "lucide-react";
 export const SOLDIER_FUND_TERMS_VERSION = "soldier-fund-v1";
 export const SOLDIER_FUND_PRESETS = [5, 10, 20, 30, 40, 50, 60];
 export const SOLDIER_FUND_MAX = 1000;
+/** sessionStorage handoff of a donation picked on the entry page. */
+export const SOLDIER_PENDING_KEY = "soldier-pending-donation-v1";
 
 // Full regulation shown in the dialog. NOTE: draft — replace with the final
 // wording from the owner when provided.

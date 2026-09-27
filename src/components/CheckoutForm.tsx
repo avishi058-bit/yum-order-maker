@@ -1,5 +1,5 @@
 import SoldierDonation from "@/components/SoldierDonation";
-export const SOLDIER_PENDING_KEY = "soldier-pending-donation-v1";
+import { SOLDIER_PENDING_KEY } from "@/components/SoldierFundHowItWorks";
 import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
@@ -1164,6 +1164,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </div>
             )}
 
+            {!soldierOk && (
+              <p className="rounded-xl border-2 border-destructive/60 bg-destructive/10 p-3 text-center text-sm font-black text-destructive">
+                {soldierDonation > 0 ? "🫡 יש לאשר את תקנון 'הזמן חייל/ת' כדי להמשיך לתשלום" : "🫡 יש לבחור סכום"}
+              </p>
+            )}
             {isKiosk && !canSubmit && !submitting && (
               <div className="flex flex-col items-center gap-1 rounded-xl border-2 border-dashed border-amber-500/60 bg-amber-500/10 p-3 text-amber-700 animate-pulse">
                 <ArrowUp size={28} className="text-amber-600" />
