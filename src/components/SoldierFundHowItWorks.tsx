@@ -50,6 +50,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
   const [checked, setChecked] = useState(approved);
   const [amount, setAmount] = useState(0);
   const [custom, setCustom] = useState("");
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     if (open) setChecked(approved);
@@ -100,21 +101,35 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
         </button>
         <h2 className="text-2xl font-black">🫡 הזמן חייל/ת</h2>
 
-        <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2 text-sm leading-relaxed">
-          <div className="font-bold">איך זה עובד?</div>
-          <ol className="list-decimal pr-5 space-y-1 text-muted-foreground">
-            <li>בוחרים סכום — 5 עד 60 ₪ בלחיצה, או סכום אחר עד 1,000 ₪.</li>
-            <li>אפשר להוסיף אותו להזמנה, או לשלם רק על 'הזמן חייל/ת' בלי להזמין.</li>
-            <li>הכסף נשמר בקופה מיוחדת שמנוהלת ומבוקרת.</li>
-            <li>חייל/ת שמגיע/ה אלינו מקבל/ת אוכל מהקופה — ואפשר לראות באתר כמה נאסף וכמה חיילים פונקו 💚</li>
-          </ol>
+        <h2 className="text-3xl font-black text-center">🫡 הזמן חייל/ת</h2>
+
+        {/* צעדים גדולים ושיווקיים — בלי כיתוב מיותר */}
+        <div className="py-3 text-center space-y-1">
+          {[
+            "בוחרים סכום",
+            "הכסף נשמר בקופה מיוחדת לחיילים",
+            "חייל/ת שמגיע/ה אלינו מקבל/ת אוכל 💚",
+          ].map((step, i) => (
+            <div key={step}>
+              <div className="text-2xl md:text-3xl font-black leading-snug">{step}</div>
+              {i < 2 && <div className="text-xl font-black text-primary py-0.5">⬇️</div>}
+            </div>
+          ))}
         </div>
 
-        <div>
-          <div className="font-bold mb-1 text-sm">תקנון 'הזמן חייל/ת'</div>
-          <div className="rounded-xl border bg-muted/40 p-3 whitespace-pre-line text-xs leading-relaxed max-h-48 overflow-y-auto">
-            {SOLDIER_FUND_TERMS_TEXT}
-          </div>
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setShowTerms((v) => !v)}
+            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+          >
+            {showTerms ? "הסתרת התקנון" : "רוצים לקרוא את התקנון? 📜"}
+          </button>
+          {showTerms && (
+            <div className="mt-2 rounded-xl border bg-muted/40 p-3 whitespace-pre-line text-xs leading-relaxed max-h-48 overflow-y-auto text-right">
+              {SOLDIER_FUND_TERMS_TEXT}
+            </div>
+          )}
         </div>
 
         <label className={`flex items-start gap-2 cursor-pointer text-sm rounded-xl border-2 p-3 ${isApproved ? "border-primary/40 bg-primary/5" : "border-destructive/50 bg-destructive/5"}`}>
