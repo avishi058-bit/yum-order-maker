@@ -51,6 +51,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
   const [amount, setAmount] = useState(0);
   const [custom, setCustom] = useState("");
   const [showTerms, setShowTerms] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     if (open) setChecked(approved);
@@ -99,8 +100,6 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-2xl font-black">🫡 הזמן חייל/ת</h2>
-
         <h2 className="text-3xl font-black text-center">🫡 הזמן חייל/ת</h2>
 
         {/* צעדים גדולים ושיווקיים — בלי כיתוב מיותר */}
@@ -115,6 +114,21 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
               {i < 2 && <div className="text-xl font-black text-primary py-0.5">⬇️</div>}
             </div>
           ))}
+        </div>
+
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setShowAbout((v) => !v)}
+            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+          >
+            מה זה המיזם? 💚
+          </button>
+          {showAbout && (
+            <p className="mt-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm leading-relaxed text-right">
+              מיזם "הזמן חייל/ת" מאפשר ללקוחות להוסיף סכום לקופת החיילים, אשר מיועדת למימון אוכל עבור חיילים וחיילות המגיעים לבקתה.
+            </p>
+          )}
         </div>
 
         <div className="text-center">
