@@ -8,3 +8,6 @@ type: feature
 - Fund balance managed by owner; kitchen AND dashboard can mark an order "paid from soldier fund" (deducts order total).
 - Public transparency: show total collected + number of soldiers fed.
 - Accounting: donation is NOT revenue when received (not a legal donation — prepayment); revenue counted when fund pays an order. Advise accountant re VAT timing.
+- Entry page (HeroSection): prominent "פנק חייל/ת 🫡" button + "איך זה עובד?" below it (SoldierFundHowItWorks dialog) — shows even when closed for orders.
+- Donor MUST approve the regulation (תקנון, soldier-fund-v1) before donating: checkbox in SoldierDonation at checkout; enforced in create-order (400 without soldierFundTermsAcceptedAt) and logged to consent_events as kind "soldier_fund". Entry-page approval cached in localStorage key soldier-fund-terms-approved-v1 (display only — real proof is server-side).
+- Regulation text is a DRAFT in SoldierFundHowItWorks.tsx — owner will send final wording.
