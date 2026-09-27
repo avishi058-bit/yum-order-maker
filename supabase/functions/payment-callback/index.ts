@@ -56,7 +56,8 @@ Deno.serve(async (req) => {
     } else {
       data = Object.fromEntries(url.searchParams.entries());
     }
-    console.log("Payment callback received (token verified):", JSON.stringify(data));
+    // Log only field names — never raw payment payload (may contain card/customer data).
+    console.log("Payment callback received (token verified), fields:", Object.keys(data).join(","));
 
     // Z-Credit spells this differently across APIs: UniqueId / UniqueID / UID.
     const uuidRx = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
