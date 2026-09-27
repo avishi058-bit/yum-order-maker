@@ -1288,6 +1288,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sauce_stock_events: {
+        Row: {
+          created_at: string
+          event_date: string
+          id: string
+          kind: string
+          quantity: number
+          sauce: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string
+          id?: string
+          kind: string
+          quantity: number
+          sauce: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          id?: string
+          kind?: string
+          quantity?: number
+          sauce?: string
+        }
+        Relationships: []
+      }
       saved_carts: {
         Row: {
           created_at: string
