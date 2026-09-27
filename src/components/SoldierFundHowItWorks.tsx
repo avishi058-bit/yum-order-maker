@@ -31,7 +31,7 @@ interface SoldierFundHowItWorksProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   approved: boolean;
-  onApprove: () => void;
+  onApprove: (accepted: boolean) => void;
   /** When set, the dialog also lets the customer pick an amount and pay. */
   donate?: DonateOptions;
 }
@@ -142,7 +142,6 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           <input
             type="checkbox"
             checked={isApproved}
-            disabled={approved}
             onChange={(e) => approve(e.target.checked)}
             className="mt-1 w-5 h-5 accent-primary shrink-0"
           />
