@@ -29,14 +29,22 @@ const readCache = (): RestaurantStatus | null => {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    return { ...DEFAULT_STATUS, ...JSON.parse(raw) } as RestaurantStatus;
+    const parsed = JSON.parse(raw);
+    // Drop stale snapshots (older than 2h or legacy without timestamp) so an
+    // old "closed" value can never lock a customer out.
+    if (!parsed._ts || Date.now() - parsed._ts > 2 * 60 * 60 * 1000) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    delete parsed._ts;
+    return { ...DEFAULT_STATUS, ...parsed } as RestaurantStatus;
   } catch {
     return null;
   }
 };
 
 const writeCache = (s: RestaurantStatus) => {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...s, _ts: Date.now() })); } catch { /* ignore */ }
 };
 
 export const useRestaurantStatus = () => {
@@ -50,11 +58,16 @@ export const useRestaurantStatus = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const { data } = await supabase
-        .from("restaurant_status")
-        .select(SELECT_COLS)
-        .limit(1)
-        .single();
+      let data: unknown = null;
+      for (let attempt = 0; attempt < 3 && !data; attempt++) {
+        const res = await supabase
+          .from("restaurant_status")
+          .select(SELECT_COLS)
+          .limit(1)
+          .single();
+        data = res.data;
+        if (!data) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      }
       if (data) {
         setStatus(data as RestaurantStatus);
         writeCache(data as RestaurantStatus);
