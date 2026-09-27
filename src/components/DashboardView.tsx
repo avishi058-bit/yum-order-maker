@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import SuppliesManager from "@/components/SuppliesManager";
 import InvoiceScanner from "@/components/InvoiceScanner";
 import ProduceTracker from "@/components/ProduceTracker";
+import SauceStockTracker from "@/components/SauceStockTracker";
 import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -1018,6 +1019,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </div>
           <InvoiceScanner onSaved={loadSupplies} addFixedExpense={(label, monthly) => saveFixedExpenses([...fixedExpenses, { label, monthly }])} />
           <SuppliesManager list={supplies} onChange={loadSupplies} />
+          <SauceStockTracker />
           <ProduceTracker approved={vegCost} onApprove={async (v) => {
             const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();
             if (!data) return;
