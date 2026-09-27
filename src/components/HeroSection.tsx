@@ -6,6 +6,9 @@ import logo from "@/assets/logo.png";
 import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Phone } from "lucide-react";
+import SoldierFundHowItWorks from "@/components/SoldierFundHowItWorks";
+
+const FUND_TERMS_KEY = "soldier-fund-terms-approved-v1";
 
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
@@ -17,6 +20,10 @@ interface HeroSectionProps {
 const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
+  const [fundOpen, setFundOpen] = useState(false);
+  const [fundApproved, setFundApproved] = useState(
+    () => typeof window !== "undefined" && window.localStorage.getItem(FUND_TERMS_KEY) === "1"
+  );
   useEffect(() => {
     if (dineIn !== null) {
       setDance(false);
