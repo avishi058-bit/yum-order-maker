@@ -172,7 +172,41 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
             סגור להזמנות כרגע
           </motion.div>
         )}
+
+        {/* "הזמן חייל/ת" — prominent entry buttons */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mt-6 w-full max-w-md mx-auto flex flex-col items-center gap-2"
+        >
+          <button
+            type="button"
+            onClick={() => setFundOpen(true)}
+            className="w-full h-16 rounded-[2rem] font-black text-2xl bg-primary text-primary-foreground shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+          >
+            <span className="text-3xl">🫡</span>
+            <span>פנק חייל/ת</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFundOpen(true)}
+            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+          >
+            איך זה עובד?
+          </button>
+        </motion.div>
       </div>
+
+      <SoldierFundHowItWorks
+        open={fundOpen}
+        onOpenChange={setFundOpen}
+        approved={fundApproved}
+        onApprove={() => {
+          setFundApproved(true);
+          try { window.localStorage.setItem(FUND_TERMS_KEY, "1"); } catch { /* ignore */ }
+        }}
+      />
     </section>
   );
 };
