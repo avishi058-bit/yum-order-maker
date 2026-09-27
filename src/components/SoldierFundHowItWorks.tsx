@@ -21,7 +21,7 @@ export const SOLDIER_FUND_TERMS_TEXT = [
 
 export const SOLDIER_FUND_APPROVAL_TEXT =
   "אני מאשר/ת שקראתי והבנתי את תקנון 'הזמן חייל/ת': הסכום שאבחר מתווסף לתשלום על ההזמנה, " +
-  "יישמר בקופת החיילים וישמש להאכלה ופינוק של חיילים שמגיעים לבקתה. זו אינה תרומה מוכרת לצרכי מס.";
+  "יישמר בקופת 'הזמן חייל/ת' וישמש להאכלה ופינוק של חיילים שמגיעים לבקתה. זו אינה תרומה מוכרת לצרכי מס.";
 
 interface SoldierFundHowItWorksProps {
   open: boolean;
@@ -50,14 +50,14 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           🫡 הזמן חייל/ת
         </DialogTitle>
         <DialogDescription className="sr-only">
-          הסבר על קופת החיילים ותקנון התרומה של המבורגר הבקתה
+          הסבר על 'הזמן חייל/ת' ותקנון התרומה של המבורגר הבקתה
         </DialogDescription>
 
         <div className="space-y-4 text-sm leading-relaxed">
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-2">
             <div className="font-bold">איך זה עובד?</div>
             <ol className="list-decimal pr-5 space-y-1 text-muted-foreground">
-              <li>בקופה, לפני התשלום, בוחרים כמה כסף להוסיף לקופת החיילים — 5 עד 60 ₪ בלחיצה, או סכום אחר.</li>
+              <li>בקופה, לפני התשלום, בוחרים כמה כסף להוסיף ל'הזמן חייל/ת' — 5 עד 60 ₪ בלחיצה, או סכום אחר.</li>
               <li>הסכום מתווסף לתשלום על ההזמנה ומחויב יחד איתה.</li>
               <li>הכסף נשמר בקופה מיוחדת שמנוהלת ומבוקרת.</li>
               <li>חייל/ת שמגיע/ה אלינו מקבל/ת אוכל מהקופה — ואפשר לראות באתר כמה נאסף וכמה חיילים פונקו 💚</li>
@@ -75,7 +75,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
             <div className="rounded-xl bg-primary/10 border border-primary/30 p-3 text-center font-bold">
               {approved ? "התקנון כבר אושר ✓" : "תודה רבה! 🫡"}<br />
               <span className="text-sm font-medium text-muted-foreground">
-                בקופה בסיום ההזמנה פשוט בוחרים כמה להוסיף לקופת החיילים.
+                בקופה בסיום ההזמנה פשוט בוחרים כמה להוסיף ל'הזמן חייל/ת'.
               </span>
             </div>
           ) : (

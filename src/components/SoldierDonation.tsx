@@ -36,9 +36,9 @@ export default function SoldierDonation({
 
   return (
     <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3 space-y-2" dir="rtl">
-      <div className="font-bold">🎖️ הזמן חייל/ת</div>
+      <div className="font-bold">🫡 הזמן חייל/ת</div>
       <p className="text-xs text-muted-foreground">
-        רוצים להוסיף סכום לקופת החיילים? בכסף הזה אנחנו מאכילים ומפנקים חיילים שמגיעים אלינו.
+        רוצים להוסיף סכום ל'הזמן חייל/ת'? בכסף הזה אנחנו מאכילים ומפנקים חיילים שמגיעים אלינו.
       </p>
       {stats && Number(stats.collected) > 0 && (
         <p className="text-xs font-medium text-primary">

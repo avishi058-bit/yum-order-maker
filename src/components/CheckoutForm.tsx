@@ -421,7 +421,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   ) => {
     // Soldier-fund donations require regulation approval (also enforced server-side).
     if (soldierDonation > 0 && !soldierTermsAt) {
-      throw new Error("כדי לתרום לקופת החיילים יש לאשר קודם את תקנון 'הזמן חייל/ת'");
+      throw new Error("כדי לתרום ל'הזמן חייל/ת' יש לאשר קודם את תקנון 'הזמן חייל/ת'");
     }
     const isStation = localStorage.getItem("habakta_station") === "true";
     const isKioskPath = isKiosk;

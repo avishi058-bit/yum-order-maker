@@ -35,13 +35,13 @@ export default function SoldierFundPanel() {
 
   return (
     <div className="rounded-xl border bg-card p-4 space-y-3" dir="rtl">
-      <h3 className="font-bold">🎖️ קופת חיילים — הזמן חייל/ת</h3>
+      <h3 className="font-bold">🫡 הזמן חייל/ת</h3>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg bg-primary/10 p-2"><div className="text-xs">יתרה</div><div className="text-xl font-black">₪{balance.toFixed(0)}</div></div>
         <div className="rounded-lg bg-muted p-2"><div className="text-xs">נתרם סה״כ</div><div className="font-bold">₪{donated.toFixed(0)}</div></div>
         <div className="rounded-lg bg-muted p-2"><div className="text-xs">חיילים שקיבלו</div><div className="font-bold">{meals}</div></div>
       </div>
-      <p className="text-xs text-muted-foreground">תרומה נכנסת רק אחרי שההזמנה שולמה. לתשלום הזמנה מהקופה — כפתור "🎖️ מקופת חיילים" בכרטיס ההזמנה במטבח.</p>
+      <p className="text-xs text-muted-foreground">תרומה נכנסת רק אחרי שההזמנה שולמה. לתשלום הזמנה מהקופה — כפתור "🫡 מ'הזמן חייל/ת'" בכרטיס ההזמנה במטבח.</p>
       <div className="flex gap-2">
         <input className="w-24 border rounded-md p-2 bg-background" inputMode="decimal" placeholder="±₪" value={amount} onChange={(e) => setAmount(e.target.value)} />
         <input className="flex-1 border rounded-md p-2 bg-background" placeholder="הערה (למשל: פינוק לחיילים)" value={note} onChange={(e) => setNote(e.target.value)} />

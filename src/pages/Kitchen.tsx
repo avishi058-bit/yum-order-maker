@@ -1263,15 +1263,15 @@ const Kitchen = () => {
   // "הזמן חייל/ת" — pay the whole order from the soldier fund.
   const payFromSoldierFund = async (order: Order) => {
     if (paidPendingIds.has(order.id) || order.queue_number != null) return;
-    if (!window.confirm(`לשלם את הזמנה #${order.order_number} מקופת החיילים?`)) return;
+    if (!window.confirm(`לשלם את הזמנה #${order.order_number} מ'הזמן חייל/ת'?`)) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { error } = await (supabase as any).rpc("pay_order_from_soldier_fund", { p_order_id: order.id });
     setPaidPendingIds((s) => { const n = new Set(s); n.delete(order.id); return n; });
     if (error) {
-      toast.error(error.message?.includes("insufficient") ? "אין מספיק כסף בקופת החיילים" : "שגיאה בתשלום מהקופה");
+      toast.error(error.message?.includes("insufficient") ? "אין מספיק כסף בקופת 'הזמן חייל/ת'" : "שגיאה בתשלום מהקופה");
       return;
     }
-    toast.success("שולם מקופת החיילים 🎖️");
+    toast.success("שולם מ'הזמן חייל/ת' 🫡");
     fetchOrders();
   };
 
@@ -3040,7 +3040,7 @@ const Kitchen = () => {
                     <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי</p>
                   )}
                   {order.payment_method === "soldier_fund" && (
-                    <p className="text-sm font-black text-emerald-300 mt-1">🎖️ שולם מקופת חיילים</p>
+                    <p className="text-sm font-black text-emerald-300 mt-1">🫡 שולם מ'הזמן חייל/ת'</p>
                   )}
                   {Number((order as any).soldier_donation) > 0 && (
                     <p className="text-sm font-bold text-emerald-300 mt-1">🫡 כולל ₪{Number((order as any).soldier_donation)} ל'הזמן חייל/ת'</p>
@@ -3205,7 +3205,7 @@ const Kitchen = () => {
                         disabled={paidPendingIds.has(order.id)}
                         className="px-4 py-3 rounded-lg bg-emerald-700 text-white font-bold text-base hover:bg-emerald-600 active:scale-95 disabled:opacity-60"
                       >
-                        🎖️ מקופת חיילים
+                        🫡 מ'הזמן חייל/ת'
                       </button>
                     )}
                     {(order.payment_method === "cash" || order.payment_method === "counter") && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (

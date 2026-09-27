@@ -557,7 +557,7 @@ Deno.serve(async (req: Request) => {
   const soldierDonation = Math.round((body.soldierDonation || 0) * 100) / 100;
   // Donations require explicit approval of the soldier-fund regulation (תקנון).
   if (soldierDonation > 0 && !body.soldierFundTermsAcceptedAt) {
-    return jsonResponse({ error: "כדי לתרום לקופת החיילים נדרש אישור תקנון 'הזמן חייל/ת'" }, 400);
+    return jsonResponse({ error: "כדי לתרום ל'הזמן חייל/ת' נדרש אישור תקנון 'הזמן חייל/ת'" }, 400);
   }
   const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost + soldierDonation) * 100) / 100;
 
