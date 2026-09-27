@@ -88,7 +88,7 @@ export const TOPPINGS_PRICING: PricedOption[] = [
   { id: "extra-vegan-patty", name: "תוספת קציצה צמחונית", price: 28 },
   { id: "extra-smash-patty", name: "+ זוג קציצות סמאש (220)", price: 29 },
   { id: "onion-rings-topping", name: "שלוש טבעות בצל בטמפורה", price: 8 },
-  { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים)", price: 4 },
+  { id: "gluten-free-bun", name: "לחמנייה ללא גלוטן (מיוחדים)", price: 5 },
   { id: "arayes-extra-quarter", name: "רבע עראיס נוסף", price: 15 },
   { id: "lotus-spread", name: "ממרח לוטוס", price: 6 },
   { id: "pickled-jalapeno", name: "חלפניו מוחמץ ביתי", price: 3 },
