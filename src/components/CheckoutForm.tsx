@@ -518,6 +518,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // Delivery request finalization now happens inside create-order server-side
     // (validated by client_token). Client-side UPDATE is intentionally removed —
     // anon writes on delivery_requests are blocked by RLS.
+    try { sessionStorage.removeItem(SOLDIER_PENDING_KEY); } catch { /* ignore */ }
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
