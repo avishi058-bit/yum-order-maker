@@ -132,6 +132,8 @@ const BodySchema = z.object({
   allowDuplicate: z.boolean().optional().default(false),
   // "הזמן חייל/ת" — optional donation added to the total (max 1,000₪).
   soldierDonation: z.number().min(0).max(1000).optional().default(0),
+  // Regulation approval timestamp — required server-side when soldierDonation > 0.
+  soldierFundTermsAcceptedAt: z.string().min(1).max(64).optional().nullable(),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
@@ -540,6 +542,10 @@ Deno.serve(async (req: Request) => {
   const effectiveFreeSauces = Math.min(body.freeSauces, allowedFreeSauces);
   const extraSauces = Math.max(0, regularSauceQty - effectiveFreeSauces);
   const soldierDonation = Math.round((body.soldierDonation || 0) * 100) / 100;
+  // Donations require explicit approval of the soldier-fund regulation (תקנון).
+  if (soldierDonation > 0 && !body.soldierFundTermsAcceptedAt) {
+    return jsonResponse({ error: "כדי לתרום לקופת החיילים נדרש אישור תקנון 'הזמן חייל/ת'" }, 400);
+  }
   const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost + soldierDonation) * 100) / 100;
 
   // Normalize phone: kiosk no-phone flow sends "" — store a placeholder so
@@ -693,6 +699,15 @@ Deno.serve(async (req: Request) => {
   };
 
   await recordConsent({ ...consentBase, kind: "terms", createdAt: body.termsAcceptedAt });
+
+  // Soldier-fund regulation approval — proof that the donor approved before paying.
+  if (soldierDonation > 0) {
+    await recordConsent({
+      ...consentBase,
+      kind: "soldier_fund",
+      createdAt: body.soldierFundTermsAcceptedAt,
+    });
+  }
 
   // Gluten-free disclaimer — recorded per dish that used a gluten-free bun.
   const glutenItems = body.items
