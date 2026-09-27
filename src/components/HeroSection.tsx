@@ -206,9 +206,9 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn, s
         open={fundOpen && soldierFundEnabled}
         onOpenChange={setFundOpen}
         approved={fundApproved}
-        onApprove={() => {
-          setFundApproved(true);
-          try { window.localStorage.setItem(FUND_TERMS_KEY, "1"); } catch { /* ignore */ }
+        onApprove={(v) => {
+          setFundApproved(v);
+          try { v ? window.localStorage.setItem(FUND_TERMS_KEY, "1") : window.localStorage.removeItem(FUND_TERMS_KEY); } catch { /* ignore */ }
         }}
         donate={onSoldierDonateOnly ? {
           canOrder: !!onSoldierContinueOrder,

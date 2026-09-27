@@ -104,7 +104,7 @@ export default function SoldierDonation({
         open={termsOpen}
         onOpenChange={setTermsOpen}
         approved={!!termsAcceptedAt}
-        onApprove={() => onTermsAccept(true)}
+        onApprove={onTermsAccept}
       />
     </div>
   );

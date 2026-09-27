@@ -58,7 +58,9 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
 
   const approve = (v: boolean) => {
     setChecked(v);
-    if (v) onApprove();
+    onApprove(v);
+    // At checkout (no donate picker) approving is the only step — close right away.
+    if (v && !donate) onOpenChange(false);
   };
   const pick = (v: number) => { setCustom(""); setAmount(amount === v ? 0 : v); };
   const onCustom = (s: string) => {
@@ -66,7 +68,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
     setCustom(clean);
     setAmount(Math.min(SOLDIER_FUND_MAX, Number(clean) || 0));
   };
-  const isApproved = approved || checked;
+  const isApproved = checked;
   const canPay = amount > 0 && isApproved;
 
   return createPortal(
