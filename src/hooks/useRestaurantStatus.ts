@@ -66,6 +66,15 @@ export const useRestaurantStatus = () => {
 
     fetch();
 
+    // Re-sync when the tab returns to foreground / network reconnects, and
+    // periodically — realtime can silently drop on mobile background tabs,
+    // leaving a stale "closed" status on screen.
+    const onVisible = () => { if (document.visibilityState === "visible") fetch(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", fetch);
+    window.addEventListener("online", fetch);
+    const poll = setInterval(fetch, 60_000);
+
     const channel = supabase
       .channel(channelId.current)
       .on(
@@ -98,6 +107,10 @@ export const useRestaurantStatus = () => {
       .subscribe();
 
     return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", fetch);
+      window.removeEventListener("online", fetch);
+      clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, []);
