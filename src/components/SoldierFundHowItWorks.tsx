@@ -31,7 +31,7 @@ interface SoldierFundHowItWorksProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   approved: boolean;
-  onApprove: () => void;
+  onApprove: (accepted: boolean) => void;
   /** When set, the dialog also lets the customer pick an amount and pay. */
   donate?: DonateOptions;
 }
@@ -58,7 +58,9 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
 
   const approve = (v: boolean) => {
     setChecked(v);
-    if (v) onApprove();
+    onApprove(v);
+    // At checkout (no donate picker) approving is the only step — close right away.
+    if (v && !donate) onOpenChange(false);
   };
   const pick = (v: number) => { setCustom(""); setAmount(amount === v ? 0 : v); };
   const onCustom = (s: string) => {
@@ -66,7 +68,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
     setCustom(clean);
     setAmount(Math.min(SOLDIER_FUND_MAX, Number(clean) || 0));
   };
-  const isApproved = approved || checked;
+  const isApproved = checked;
   const canPay = amount > 0 && isApproved;
 
   return createPortal(
@@ -140,7 +142,6 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           <input
             type="checkbox"
             checked={isApproved}
-            disabled={approved}
             onChange={(e) => approve(e.target.checked)}
             className="mt-1 w-5 h-5 accent-primary shrink-0"
           />
