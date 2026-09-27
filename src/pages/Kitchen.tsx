@@ -1260,6 +1260,21 @@ const Kitchen = () => {
     fetchOrders();
   };
 
+  // "הזמן חייל/ת" — pay the whole order from the soldier fund.
+  const payFromSoldierFund = async (order: Order) => {
+    if (paidPendingIds.has(order.id) || order.queue_number != null) return;
+    if (!window.confirm(`לשלם את הזמנה #${order.order_number} מקופת החיילים?`)) return;
+    setPaidPendingIds((s) => new Set(s).add(order.id));
+    const { error } = await (supabase as any).rpc("pay_order_from_soldier_fund", { p_order_id: order.id });
+    setPaidPendingIds((s) => { const n = new Set(s); n.delete(order.id); return n; });
+    if (error) {
+      toast.error(error.message?.includes("insufficient") ? "אין מספיק כסף בקופת החיילים" : "שגיאה בתשלום מהקופה");
+      return;
+    }
+    toast.success("שולם מקופת החיילים 🎖️");
+    fetchOrders();
+  };
+
   // A credit order counts as paid ONLY once the terminal/gateway callback
   // confirmed the charge (status left pending_payment and did not fail).
   const isCreditConfirmed = (o: { payment_method: string | null; status: string }) =>
@@ -3014,6 +3029,12 @@ const Kitchen = () => {
                   {isCreditConfirmed(order) && (
                     <p className="text-sm font-black text-green-400 mt-1">💳 שולם באשראי</p>
                   )}
+                  {order.payment_method === "soldier_fund" && (
+                    <p className="text-sm font-black text-emerald-300 mt-1">🎖️ שולם מקופת חיילים</p>
+                  )}
+                  {Number((order as any).soldier_donation) > 0 && (
+                    <p className="text-sm font-bold text-emerald-300 mt-1">🎖️ כולל ₪{Number((order as any).soldier_donation)} לקופת חיילים</p>
+                  )}
                   {order.payment_method === "credit" && !isCreditConfirmed(order) && (
                     <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף — טרם שולם</p>
                   )}
@@ -3166,6 +3187,15 @@ const Kitchen = () => {
                         {paidPendingIds.has(order.id)
                           ? "מעדכן..."
                           : `בטל שולם ↩ (${Math.max(0, Math.ceil((undoablePaid[order.id] - Date.now()) / 1000))}s)`}
+                      </button>
+                    )}
+                    {["cash", "counter", "paybox"].includes(order.payment_method ?? "") && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (
+                      <button
+                        onClick={() => payFromSoldierFund(order)}
+                        disabled={paidPendingIds.has(order.id)}
+                        className="px-4 py-3 rounded-lg bg-emerald-700 text-white font-bold text-base hover:bg-emerald-600 active:scale-95 disabled:opacity-60"
+                      >
+                        🎖️ מקופת חיילים
                       </button>
                     )}
                     {(order.payment_method === "cash" || order.payment_method === "counter") && ["new", "preparing", "ready"].includes(order.status) && order.queue_number == null && (

@@ -130,6 +130,8 @@ const BodySchema = z.object({
   // Set to true only after the customer explicitly confirmed they want to send
   // an identical order again (duplicate-order guard below).
   allowDuplicate: z.boolean().optional().default(false),
+  // "הזמן חייל/ת" — optional donation added to the total (max 1,000₪).
+  soldierDonation: z.number().min(0).max(1000).optional().default(0),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
@@ -537,7 +539,8 @@ Deno.serve(async (req: Request) => {
   const allowedFreeSauces = burgerUnits > 0 ? burgerUnits * 3 : sideQuota;
   const effectiveFreeSauces = Math.min(body.freeSauces, allowedFreeSauces);
   const extraSauces = Math.max(0, regularSauceQty - effectiveFreeSauces);
-  const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost) * 100) / 100;
+  const soldierDonation = Math.round((body.soldierDonation || 0) * 100) / 100;
+  const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost + soldierDonation) * 100) / 100;
 
   // Normalize phone: kiosk no-phone flow sends "" — store a placeholder so
   // the NOT NULL column on `orders.customer_phone` stays satisfied without
@@ -604,6 +607,7 @@ Deno.serve(async (req: Request) => {
       delivery_request_id: body.deliveryRequestId ?? null,
       delivery_address: body.deliveryAddress ?? null,
       delivery_fee: body.deliveryFee ?? null,
+      soldier_donation: soldierDonation,
     })
     .select("id, order_number, total")
     .single();

@@ -14,6 +14,7 @@ import SuppliesManager from "@/components/SuppliesManager";
 import InvoiceScanner from "@/components/InvoiceScanner";
 import ProduceTracker from "@/components/ProduceTracker";
 import SauceStockTracker from "@/components/SauceStockTracker";
+import SoldierFundPanel from "@/components/SoldierFundPanel";
 import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
@@ -113,6 +114,10 @@ const DASHBOARD_CODE = "2138";
 const TRUSTED_KEY = "dashboard-trusted-device";
 
 type Mode = "today" | "yesterday" | "week" | "month" | "custom" | "pickMonth" | "compare";
+
+// Soldier-fund donations are not revenue when received — revenue is counted when the fund pays an order.
+const withoutDonation = (rows: any[] | null) =>
+  (rows ?? []).map((o) => ({ ...o, total: Number(o.total) - (Number(o.soldier_donation) || 0) }));
 
 const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -231,13 +236,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       setLoading(true);
       const { data } = await supabase
         .from("orders")
-        .select("id, order_number, total, status, created_at, payment_method, paid_at, order_source, dine_in, customer_name, customer_phone")
+        .select("id, order_number, total, status, created_at, payment_method, paid_at, order_source, dine_in, customer_name, customer_phone, soldier_donation")
         .gte("created_at", fetchStart.toISOString())
         .lt("created_at", fetchEnd.toISOString())
         .order("created_at", { ascending: true });
 
       if (cancelled) return;
-      const clean = excludeTestOrders((data ?? []) as Order[]);
+      const clean = excludeTestOrders(withoutDonation(data) as Order[]);
       setOrders(clean);
 
       const ids = clean.map((o) => o.id);
@@ -579,11 +584,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       const start = monthRange(keys[0]).start;
       const { data } = await supabase
         .from("orders")
-        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in")
+        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in, soldier_donation")
         .gte("created_at", start.toISOString())
         .order("created_at", { ascending: true });
       if (cancelled) return;
-      const clean = excludeTestOrders((data ?? []) as Order[]).filter(isCounted);
+      const clean = excludeTestOrders(withoutDonation(data) as Order[]).filter(isCounted);
       setTrendOrders(clean);
       const map: Record<string, { revenue: number; orders: number }> = {};
       keys.forEach((k) => (map[k] = { revenue: 0, orders: 0 }));
@@ -1019,6 +1024,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </div>
           <InvoiceScanner onSaved={loadSupplies} addFixedExpense={(label, monthly) => saveFixedExpenses([...fixedExpenses, { label, monthly }])} />
           <SuppliesManager list={supplies} onChange={loadSupplies} />
+          <SoldierFundPanel />
           <SauceStockTracker />
           <ProduceTracker approved={vegCost} onApprove={async (v) => {
             const { data } = await (supabase as any).from("site_settings").select("id").limit(1).maybeSingle();

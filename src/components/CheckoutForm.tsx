@@ -1,3 +1,4 @@
+import SoldierDonation from "@/components/SoldierDonation";
 import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
@@ -56,7 +57,9 @@ const resolveInvoiceEmail = (value: string): string | undefined => {
   return EMAIL_PATTERN.test(completed) ? completed : undefined;
 };
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery }, ref) => {
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total: cartTotal, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery }, ref) => {
+  const [soldierDonation, setSoldierDonation] = useState(0);
+  const total = Math.round((cartTotal + soldierDonation) * 100) / 100;
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
@@ -441,6 +444,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           .filter((s) => s.quantity > 0)
           .map((s) => ({ id: s.id, name: s.name, quantity: s.quantity })),
         freeSauces,
+        soldierDonation,
         // Preorder pickup time (optional). ISO datetime built from today + HH:MM.
         scheduledFor: (() => {
           if (!preorderEnabled || !preorderTime) return null;
@@ -1004,6 +1008,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {/* Step 4: Payment Method */}
         {step === "payment" && (
           <div className="space-y-4">
+            <SoldierDonation value={soldierDonation} onChange={setSoldierDonation} />
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
             {/* 🛵 Delivery notice — website only, when this is a delivery order */}
