@@ -119,7 +119,9 @@ const BodySchema = z.object({
   deliveryRequestClientToken: z.string().uuid().nullable().optional(),
   deliveryAddress: z.string().max(500).nullable().optional(),
   deliveryFee: z.number().min(0).max(10000).nullable().optional(),
-  items: z.array(CartItemSchema).min(1).max(50),
+  items: z.array(CartItemSchema).max(50),
+  // Donation-only checkout ("הזמן חייל/ת" from the entry page) — no food items.
+  donationOnly: z.boolean().optional().default(false),
   // Optional: sauces selected at checkout (chef-summary use). Server adds the
   // extra-sauce charge (1₪ per sauce above the free quota) to the total and
   // stores them as a synthetic order_item line for the kitchen receipt.
@@ -398,7 +400,7 @@ Deno.serve(async (req: Request) => {
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
-    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled")
+    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, soldier_fund_enabled")
     .limit(1);
   if (statusErr) {
     console.error("status fetch failed", statusErr);
@@ -411,7 +413,18 @@ Deno.serve(async (req: Request) => {
   if (isStationOrKiosk && !status.station_open) {
     return jsonResponse({ error: "התחנה סגורה כרגע" }, 403);
   }
-  if (!isStationOrKiosk && !status.website_open) {
+  const donationOnly = body.donationOnly === true;
+  if (donationOnly) {
+    if (body.items.length > 0 || !(body.soldierDonation > 0) || body.paymentMethod !== "credit") {
+      return jsonResponse({ error: "תרומה בלבד חייבת להיות בסכום חיובי ובאשראי" }, 400);
+    }
+  } else if (body.items.length < 1) {
+    return jsonResponse({ error: "העגלה ריקה" }, 400);
+  }
+  if ((body.soldierDonation || 0) > 0 && status.soldier_fund_enabled === false) {
+    return jsonResponse({ error: "'הזמן חייל/ת' אינו פעיל כרגע" }, 403);
+  }
+  if (!isStationOrKiosk && !status.website_open && !donationOnly) {
     return jsonResponse({ error: "האתר סגור כרגע להזמנות" }, 403);
   }
   const cashOk = isStationOrKiosk ? status.kiosk_cash_enabled : status.cash_enabled;
@@ -544,7 +557,7 @@ Deno.serve(async (req: Request) => {
   const soldierDonation = Math.round((body.soldierDonation || 0) * 100) / 100;
   // Donations require explicit approval of the soldier-fund regulation (תקנון).
   if (soldierDonation > 0 && !body.soldierFundTermsAcceptedAt) {
-    return jsonResponse({ error: "כדי לתרום לקופת החיילים נדרש אישור תקנון 'הזמן חייל/ת'" }, 400);
+    return jsonResponse({ error: "כדי לתרום ל'הזמן חייל/ת' נדרש אישור תקנון 'הזמן חייל/ת'" }, 400);
   }
   const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost + soldierDonation) * 100) / 100;
 
@@ -614,6 +627,7 @@ Deno.serve(async (req: Request) => {
       delivery_address: body.deliveryAddress ?? null,
       delivery_fee: body.deliveryFee ?? null,
       soldier_donation: soldierDonation,
+      donation_only: donationOnly,
     })
     .select("id, order_number, total")
     .single();
@@ -677,7 +691,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const { error: itemsErr } = await supabase.from("order_items").insert(orderItemsRows);
+  const { error: itemsErr } = orderItemsRows.length
+    ? await supabase.from("order_items").insert(orderItemsRows)
+    : { error: null };
   if (itemsErr) {
     console.error("order_items insert failed — rolling back order", itemsErr);
     await supabase.from("orders").delete().eq("id", order.id);

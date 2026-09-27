@@ -15,9 +15,13 @@ interface HeroSectionProps {
   onDeliveryChoice?: () => void;
   showDelivery?: boolean;
   dineIn: boolean | null;
+  /** Kitchen on/off switch for "הזמן חייל/ת". */
+  soldierFundEnabled?: boolean;
+  onSoldierContinueOrder?: (amount: number, termsAt: string) => void;
+  onSoldierDonateOnly?: (amount: number, termsAt: string) => void;
 }
 
-const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }: HeroSectionProps) => {
+const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn, soldierFundEnabled = true, onSoldierContinueOrder, onSoldierDonateOnly }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
@@ -173,8 +177,8 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
           </motion.div>
         )}
 
-        {/* "הזמן חייל/ת" — prominent entry buttons */}
-        <motion.div
+        {/* "הזמן חייל/ת" — prominent entry buttons (hidden when switched off in the kitchen) */}
+        {soldierFundEnabled && <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
@@ -186,7 +190,7 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
             className="w-full h-16 rounded-[2rem] font-black text-2xl bg-primary text-primary-foreground shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
           >
             <span className="text-3xl">🫡</span>
-            <span>פנק חייל/ת</span>
+            <span>הזמן חייל/ת</span>
           </button>
           <button
             type="button"
@@ -195,17 +199,22 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn }:
           >
             איך זה עובד?
           </button>
-        </motion.div>
+        </motion.div>}
       </div>
 
       <SoldierFundHowItWorks
-        open={fundOpen}
+        open={fundOpen && soldierFundEnabled}
         onOpenChange={setFundOpen}
         approved={fundApproved}
         onApprove={() => {
           setFundApproved(true);
           try { window.localStorage.setItem(FUND_TERMS_KEY, "1"); } catch { /* ignore */ }
         }}
+        donate={onSoldierDonateOnly ? {
+          canOrder: !!onSoldierContinueOrder,
+          onContinueOrder: (amount) => { setFundOpen(false); onSoldierContinueOrder?.(amount, new Date().toISOString()); },
+          onDonateOnly: (amount) => { setFundOpen(false); onSoldierDonateOnly(amount, new Date().toISOString()); },
+        } : undefined}
       />
     </section>
   );
