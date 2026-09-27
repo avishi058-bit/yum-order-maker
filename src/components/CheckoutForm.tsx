@@ -59,6 +59,9 @@ const resolveInvoiceEmail = (value: string): string | undefined => {
 
 const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total: cartTotal, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery }, ref) => {
   const [soldierDonation, setSoldierDonation] = useState(0);
+  // Regulation (תקנון) approval for the soldier-fund donation — required when
+  // donating; logged server-side in consent_events via create-order.
+  const [soldierTermsAt, setSoldierTermsAt] = useState<string | null>(null);
   const total = Math.round((cartTotal + soldierDonation) * 100) / 100;
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
