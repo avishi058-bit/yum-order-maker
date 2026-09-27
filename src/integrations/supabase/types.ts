@@ -958,6 +958,7 @@ export type Database = {
           delivery_fee: number | null
           delivery_request_id: string | null
           dine_in: boolean | null
+          donation_only: boolean
           estimated_ready_at: string | null
           id: string
           invoice_issued_at: string | null
@@ -991,6 +992,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_request_id?: string | null
           dine_in?: boolean | null
+          donation_only?: boolean
           estimated_ready_at?: string | null
           id?: string
           invoice_issued_at?: string | null
@@ -1024,6 +1026,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_request_id?: string | null
           dine_in?: boolean | null
+          donation_only?: boolean
           estimated_ready_at?: string | null
           id?: string
           invoice_issued_at?: string | null
@@ -1251,6 +1254,7 @@ export type Database = {
           preorder_enabled: boolean
           preorder_end_time: string
           preorder_start_time: string
+          soldier_fund_enabled: boolean
           station_open: boolean
           updated_at: string
           website_open: boolean
@@ -1268,6 +1272,7 @@ export type Database = {
           preorder_enabled?: boolean
           preorder_end_time?: string
           preorder_start_time?: string
+          soldier_fund_enabled?: boolean
           station_open?: boolean
           updated_at?: string
           website_open?: boolean
@@ -1285,6 +1290,7 @@ export type Database = {
           preorder_enabled?: boolean
           preorder_end_time?: string
           preorder_start_time?: string
+          soldier_fund_enabled?: boolean
           station_open?: boolean
           updated_at?: string
           website_open?: boolean
