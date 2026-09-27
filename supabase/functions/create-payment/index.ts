@@ -94,14 +94,16 @@ Deno.serve(async (req) => {
     const successUrl = `${PUBLIC_APP_URL}/order-confirmation/${body.orderId}`;
     const cancelUrl = `${PUBLIC_APP_URL}/checkout?cancelled=1`;
 
-    const cartItems = body.items.map((item) => ({
-      Amount: Number(item.price),
+    // Always charge the server-stored order total (never client item prices,
+    // which may be stale after a price change).
+    const cartItems = [{
+      Amount: Number(order.total),
       Currency: "ILS",
-      Name: item.name,
-      Description: item.description || item.name,
-      Quantity: Number(item.quantity),
+      Name: `הזמנה ${body.customerName}`.trim(),
+      Description: body.items.map((i) => `${i.quantity}x ${i.name}`).join(", ").slice(0, 200) || "הזמנה",
+      Quantity: 1,
       IsTaxFree: false,
-    }));
+    }];
 
     const zcreditBody = {
       Key: ZCREDIT_KEY,
