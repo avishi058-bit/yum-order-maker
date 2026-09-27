@@ -1,4 +1,5 @@
 import SoldierDonation from "@/components/SoldierDonation";
+export const SOLDIER_PENDING_KEY = "soldier-pending-donation-v1";
 import { useState, useEffect, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
@@ -46,6 +47,8 @@ interface CheckoutFormProps {
     customerName: string;
     customerPhone: string;
   };
+  /** "הזמן חייל/ת" only — no food, pay just the donation (credit only). */
+  donationOnly?: boolean;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,11 +60,15 @@ const resolveInvoiceEmail = (value: string): string | undefined => {
   return EMAIL_PATTERN.test(completed) ? completed : undefined;
 };
 
-const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total: cartTotal, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery }, ref) => {
-  const [soldierDonation, setSoldierDonation] = useState(0);
+const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, total: cartTotal, sauces = [], freeSauces = 0, onClose, onSuccess, skipDetails = false, dineIn, delivery, donationOnly = false }, ref) => {
+  // A donation picked on the entry page ("הזמן חייל/ת") is carried here.
+  const pendingDonation = (() => {
+    try { return JSON.parse(sessionStorage.getItem(SOLDIER_PENDING_KEY) || "null") as { amount: number; termsAt: string | null } | null; } catch { return null; }
+  })();
+  const [soldierDonation, setSoldierDonation] = useState(() => pendingDonation?.amount ?? 0);
   // Regulation (תקנון) approval for the soldier-fund donation — required when
   // donating; logged server-side in consent_events via create-order.
-  const [soldierTermsAt, setSoldierTermsAt] = useState<string | null>(null);
+  const [soldierTermsAt, setSoldierTermsAt] = useState<string | null>(() => pendingDonation?.termsAt ?? null);
   const total = Math.round((cartTotal + soldierDonation) * 100) / 100;
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
@@ -158,6 +165,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [verifyCaptchaRequired, setVerifyCaptchaRequired] = useState(false);
   const [verifyTurnstileToken, setVerifyTurnstileToken] = useState<string | null>(null);
   const { status: restaurantStatus } = useRestaurantStatus();
+  const soldierFundOn = restaurantStatus.soldier_fund_enabled !== false;
+  // Switched off from the kitchen → drop any donation from this checkout.
+  useEffect(() => {
+    if (!soldierFundOn && !donationOnly) setSoldierDonation(0);
+  }, [soldierFundOn, donationOnly]);
   const [termsWarning, setTermsWarning] = useState(false);
   // Preorder scheduling — pick a future pickup time within the allowed window.
 
@@ -452,6 +464,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           .map((s) => ({ id: s.id, name: s.name, quantity: s.quantity })),
         freeSauces,
         soldierDonation,
+        donationOnly,
         // Regulation approval timestamp — required (server-verified) whenever
         // soldierDonation > 0, and recorded in consent_events.
         soldierFundTermsAcceptedAt: soldierDonation > 0 ? soldierTermsAt : null,
@@ -744,14 +757,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
   const availablePaymentMethods = {
-    cash: isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled,
+    cash: !donationOnly && (isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled),
     credit: isKiosk ? restaurantStatus.kiosk_credit_enabled : restaurantStatus.credit_enabled,
     // Paybox — kiosk only, controlled by its own kitchen toggle.
-    paybox: isKiosk && restaurantStatus.kiosk_paybox_enabled,
+    paybox: !donationOnly && isKiosk && restaurantStatus.kiosk_paybox_enabled,
   };
 
   // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.
-  const canSubmit = termsAccepted && (isKiosk || !RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE || !!turnstileToken);
+  // "הזמן חייל/ת": a chosen amount without regulation approval blocks payment.
+  const soldierOk = (soldierDonation === 0 || !!soldierTermsAt) && (!donationOnly || soldierDonation > 0);
+  const canSubmit = soldierOk && termsAccepted && (isKiosk || !RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE || !!turnstileToken);
 
   return (
     <motion.div
@@ -1018,12 +1033,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         {/* Step 4: Payment Method */}
         {step === "payment" && (
           <div className="space-y-4">
-            <SoldierDonation
+            {(soldierFundOn || donationOnly) && <SoldierDonation
+              donationOnly={donationOnly}
               value={soldierDonation}
               onChange={setSoldierDonation}
               termsAcceptedAt={soldierTermsAt}
               onTermsAccept={(a) => setSoldierTermsAt(a ? new Date().toISOString() : null)}
-            />
+            />}
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
             {/* 🛵 Delivery notice — website only, when this is a delivery order */}
