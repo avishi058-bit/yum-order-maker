@@ -2,7 +2,7 @@ import { menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
 import { findTopping } from "@/lib/toppingsLookup";
 import type { CartItem } from "@/components/CartDrawer";
 
-export const MEAL_UPGRADE_PRICE = 23;
+export const MEAL_UPGRADE_PRICE = 25;
 
 /**
  * Returns true if the +23 meal upgrade should be charged on top of the item's
