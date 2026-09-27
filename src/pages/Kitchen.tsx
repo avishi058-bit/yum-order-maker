@@ -357,7 +357,7 @@ function persistPrintedOrder(id: string, printed: boolean) {
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
-  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, toggleSoldierFund, closeAll, openAll } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -2326,6 +2326,16 @@ const Kitchen = () => {
                 </button>
 
                 <button
+                  onClick={() => toggleSoldierFund(!restaurantStatus.soldier_fund_enabled)}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 ${
+                    restaurantStatus.soldier_fund_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">🫡 הזמן חייל/ת</span>
+                  <span>{restaurantStatus.soldier_fund_enabled ? "פעיל" : "כבוי"}</span>
+                </button>
+
+                <button
                   onClick={() => toggleHighLoad(!restaurantStatus.high_load)}
                   className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 border-2 ${
                     restaurantStatus.high_load
@@ -3033,7 +3043,7 @@ const Kitchen = () => {
                     <p className="text-sm font-black text-emerald-300 mt-1">🎖️ שולם מקופת חיילים</p>
                   )}
                   {Number((order as any).soldier_donation) > 0 && (
-                    <p className="text-sm font-bold text-emerald-300 mt-1">🎖️ כולל ₪{Number((order as any).soldier_donation)} לקופת חיילים</p>
+                    <p className="text-sm font-bold text-emerald-300 mt-1">🫡 כולל ₪{Number((order as any).soldier_donation)} ל'הזמן חייל/ת'</p>
                   )}
                   {order.payment_method === "credit" && !isCreditConfirmed(order) && (
                     <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף — טרם שולם</p>
