@@ -851,7 +851,7 @@ const Index = () => {
               donationOnly={donationOnlyCheckout}
               items={donationOnlyCheckout ? [] : cart}
               total={donationOnlyCheckout ? 0 : getTotal()}
-              sauces={dineIn === false ? selectedSauces : []}
+              sauces={!donationOnlyCheckout && dineIn === false ? selectedSauces : []}
               freeSauces={freeSauces}
               skipDetails={checkoutSkipDetails}
               delivery={deliveryInfo ?? undefined}
