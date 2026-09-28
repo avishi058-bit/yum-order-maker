@@ -179,6 +179,15 @@ export const kioskSoldierFund = {
   welcomeHint: "mt-3 text-xl font-bold text-foreground",
 };
 
+// ─── Kiosk On-screen Keyboard ────────────────────────────────────────
+
+export const kioskKeyboard = {
+  /** Floating keyboard floats near screen center (not docked to bottom) */
+  centerOffset: "-55%", // vertical translate from top:50% — slightly above true center
+  numericWidth: "min(420px, 92vw)",
+  fullWidth: "min(760px, 94vw)",
+};
+
 // ─── Hero Section Animations ─────────────────────────────────────────
 
 export const heroAnimations = {
