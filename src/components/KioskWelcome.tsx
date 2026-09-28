@@ -76,7 +76,7 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true, soldierFundEnabled = fa
                   <Button
                     type="button"
                     onClick={() => onStart(option.dineIn)}
-                    className="h-40 w-64 rounded-2xl border-4 border-primary-foreground/20 bg-primary text-4xl font-black text-primary-foreground shadow-2xl md:h-48 md:w-80 md:text-5xl"
+                    className="h-40 w-72 rounded-full border-4 border-primary-foreground/20 bg-primary text-4xl font-black text-primary-foreground shadow-2xl md:h-48 md:w-96 md:text-5xl"
                   >
                     {option.label}
                   </Button>
