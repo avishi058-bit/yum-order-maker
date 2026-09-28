@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import heroBurger from "@/assets/hero-burger.webp";
 import { Button } from "@/components/ui/button";
-import { kioskWelcomeAnimations } from "@/config/uiConfig";
+import { kioskSoldierFund, kioskWelcomeAnimations } from "@/config/uiConfig";
 
 /**
  * Welcome screen for the kiosk. Wrapped in React.memo so background re-renders
@@ -10,7 +10,14 @@ import { kioskWelcomeAnimations } from "@/config/uiConfig";
  * site_settings) do NOT re-render this component or restart its animations.
  * The screen must stay perfectly stable until the user touches it.
  */
-const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: boolean) => void; imagesReady?: boolean }) => {
+interface KioskWelcomeProps {
+  onStart: (dineIn: boolean) => void;
+  imagesReady?: boolean;
+  soldierFundEnabled?: boolean;
+  onSoldierFundClick?: () => void;
+}
+
+const KioskWelcomeImpl = ({ onStart, imagesReady = true, soldierFundEnabled = false, onSoldierFundClick }: KioskWelcomeProps) => {
   const [showChoices, setShowChoices] = useState(false);
 
   return (
@@ -76,6 +83,19 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: b
                 </motion.div>
               ))}
             </div>
+            {soldierFundEnabled && onSoldierFundClick && (
+              <motion.div {...kioskWelcomeAnimations.choiceButton(2)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onSoldierFundClick}
+                  className={kioskSoldierFund.welcomeButton}
+                >
+                  🫡 הזמן חייל/ת
+                </Button>
+                <p className={kioskSoldierFund.welcomeHint}>אפשר לתרום בלבד או להמשיך להזמנה</p>
+              </motion.div>
+            )}
           </motion.section>
         )}
       </AnimatePresence>

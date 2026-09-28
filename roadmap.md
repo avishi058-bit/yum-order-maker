@@ -1,6 +1,7 @@
 # Task roadmap
 
 ## Done
+- [x] Kiosk soldier fund: visible entry action, kiosk-sized donation dialog, cart editing and donation-only checkout
 - [x] Kiosk menu: compact white navigation on the right, with click navigation and continuous category scrolling
 - [x] Kiosk welcome: full-screen "לחצו להתחלה", then animated dine-in/takeaway choices
 - [x] Dashboard lock: compact card + small "נתוני הכנסות מלאים" button, compact code box, trusted device (verified in browser)

@@ -180,6 +180,11 @@ export const kioskCategoryNavigation = {
   },
 };
 
+export const kioskSoldierFund = {
+  welcomeButton: "mt-10 min-h-20 min-w-80 rounded-2xl border-2 border-primary bg-background/90 px-8 py-4 text-3xl font-black text-primary shadow-2xl backdrop-blur-sm",
+  welcomeHint: "mt-3 text-xl font-bold text-foreground",
+};
+
 // ─── Hero Section Animations ─────────────────────────────────────────
 
 export const heroAnimations = {
