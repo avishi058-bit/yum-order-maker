@@ -296,14 +296,14 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <header className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold">ניהול מלאי - הבקתה</h1>
           <p className="text-xs text-muted-foreground">
             {items.length} פריטים · עדכון בלייב
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap w-full sm:w-auto">
           <Link to={`/inventory/${token}/fridge`}>
             <Button size="sm" variant="outline" className="gap-1">
               <Refrigerator className="h-4 w-4" /> מקרר
