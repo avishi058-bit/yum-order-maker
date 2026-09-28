@@ -43,10 +43,16 @@
     <script>
       (function () {
         var isKitchen = window.location.pathname.indexOf('/kitchen') === 0;
-        document.write('<link rel="manifest" href="' + (isKitchen ? '/kitchen.webmanifest' : '/manifest.webmanifest') + '" />');
+        var isInventory = window.location.pathname.indexOf('/inventory') === 0;
+        var manifest = isKitchen ? '/kitchen.webmanifest' : (isInventory ? '/inventory.webmanifest' : '/manifest.webmanifest');
+        document.write('<link rel="manifest" href="' + manifest + '" />');
         if (isKitchen) {
           document.title = 'מטבח - הבקתה';
           window.__HABAKTA_KITCHEN_INSTALL__ = true;
+        }
+        if (isInventory) {
+          document.title = 'ניהול מלאי - הבקתה';
+          window.__HABAKTA_INVENTORY_INSTALL__ = true;
         }
       })();
     </script>
@@ -64,11 +70,15 @@
     <meta name="apple-mobile-web-app-title" content="הבקתה" />
     <script>
       (function () {
-        if (!window.__HABAKTA_KITCHEN_INSTALL__) return;
         var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
         var appName = document.querySelector('meta[name="application-name"]');
-        if (appleTitle) appleTitle.setAttribute('content', 'מטבח');
-        if (appName) appName.setAttribute('content', 'מטבח - הבקתה');
+        if (window.__HABAKTA_KITCHEN_INSTALL__) {
+          if (appleTitle) appleTitle.setAttribute('content', 'מטבח');
+          if (appName) appName.setAttribute('content', 'מטבח - הבקתה');
+        } else if (window.__HABAKTA_INVENTORY_INSTALL__) {
+          if (appleTitle) appleTitle.setAttribute('content', 'מלאי');
+          if (appName) appName.setAttribute('content', 'ניהול מלאי - הבקתה');
+        }
       })();
     </script>
 
