@@ -43,10 +43,16 @@
     <script>
       (function () {
         var isKitchen = window.location.pathname.indexOf('/kitchen') === 0;
-        document.write('<link rel="manifest" href="' + (isKitchen ? '/kitchen.webmanifest' : '/manifest.webmanifest') + '" />');
+        var isInventory = window.location.pathname.indexOf('/inventory') === 0;
+        var manifest = isKitchen ? '/kitchen.webmanifest' : (isInventory ? '/inventory.webmanifest' : '/manifest.webmanifest');
+        document.write('<link rel="manifest" href="' + manifest + '" />');
         if (isKitchen) {
           document.title = 'מטבח - הבקתה';
           window.__HABAKTA_KITCHEN_INSTALL__ = true;
+        }
+        if (isInventory) {
+          document.title = 'ניהול מלאי - הבקתה';
+          window.__HABAKTA_INVENTORY_INSTALL__ = true;
         }
       })();
     </script>
