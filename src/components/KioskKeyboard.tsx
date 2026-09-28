@@ -256,8 +256,9 @@ const KioskKeyboard = () => {
           dir="ltr"
           className="fixed inset-x-0 mx-auto z-[10000] rounded-3xl bg-background/95 backdrop-blur border border-border shadow-2xl p-4"
           style={{
-            bottom: "calc(2vh + env(safe-area-inset-bottom, 0px))",
-            width: isNum ? "min(420px, 92vw)" : "min(760px, 94vw)",
+            top: "50%",
+            translate: `0 ${kioskKeyboard.centerOffset}`,
+            width: isNum ? kioskKeyboard.numericWidth : kioskKeyboard.fullWidth,
           }}
           role="dialog"
           aria-label="מקלדת"
