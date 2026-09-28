@@ -168,12 +168,12 @@ export const kioskKeyboard = {
   fullWidth: "100vw",
   /** Container look — white panel, rounded top, subtle border */
   className:
-    "rounded-t-3xl bg-white text-foreground border border-border shadow-2xl",
-  /** Keys on the white panel */
+    "rounded-t-3xl bg-white text-gray-900 border border-gray-200 shadow-2xl",
+  /** Keys on the white panel (light, explicit grays — kiosk theme muted is dark) */
   keyClass:
-    "rounded-xl bg-muted text-foreground border border-border shadow-sm active:scale-95 active:bg-accent transition-transform flex items-center justify-center font-medium select-none",
+    "rounded-xl bg-white text-gray-900 border border-gray-200 shadow-sm active:scale-95 active:bg-gray-100 transition-transform flex items-center justify-center font-medium select-none",
   functionKeyClass:
-    "rounded-xl bg-muted text-foreground border border-border shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none",
+    "rounded-xl bg-gray-100 text-gray-900 border border-gray-200 shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none",
 };
 
 // ─── Hero Section Animations ─────────────────────────────────────────
