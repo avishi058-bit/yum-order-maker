@@ -164,9 +164,9 @@ export const kioskWelcomeAnimations = {
 export const kioskCategoryNavigation = {
   layout: {
     shell: "flex min-h-full w-full items-start bg-background",
-    sidebar: "sticky top-0 z-40 h-[calc(100vh-73px)] w-32 flex-none overflow-hidden border-l border-border bg-background shadow-sm",
+    sidebar: "sticky top-0 z-40 h-[calc(100vh-73px)] w-32 flex-none overflow-hidden border-l border-border bg-kiosk-nav text-kiosk-nav-foreground shadow-sm",
     sidebarList: "flex h-full flex-col justify-evenly py-2",
-    categoryButton: "relative h-auto min-h-14 w-full justify-center rounded-none px-2 py-3 text-center text-xl font-extrabold leading-tight transition-colors",
+    categoryButton: "relative h-auto min-h-14 w-full justify-center rounded-none px-2 py-3 text-center text-xl font-extrabold leading-tight text-kiosk-nav-foreground transition-colors",
     content: "min-w-0 flex-1 px-4 pb-32 pt-5",
   },
   section: {

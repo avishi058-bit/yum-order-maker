@@ -52,6 +52,9 @@
     --green: 142 76% 36%;
     --green-foreground: 0 0% 100%;
     --green-glow: 142 76% 54%;
+
+    --kiosk-nav-background: 0 0% 100%;
+    --kiosk-nav-foreground: 20 14% 10%;
   }
 
   /* Bright "warm sand" scope — used by the groups landing page */
