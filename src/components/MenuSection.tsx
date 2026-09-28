@@ -5,7 +5,6 @@ import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Button } from "@/components/ui/button";
-import { kioskCategoryNavigation } from "@/config/uiConfig";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -410,73 +409,6 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     }
     return items;
   };
-
-  if (isKiosk) {
-    return (
-      <section id="menu" className={kioskCategoryNavigation.layout.shell} dir="rtl">
-        <nav className={kioskCategoryNavigation.layout.sidebar} aria-label="קטגוריות תפריט">
-          <div className={kioskCategoryNavigation.layout.sidebarList}>
-            {visibleCategories.map((category) => {
-              const active = activeCategory === category.key;
-              return (
-                <Button
-                  key={category.key}
-                  type="button"
-                  variant="ghost"
-                  onClick={() => scrollToCategory(category.key)}
-                  aria-current={active ? "page" : undefined}
-                  className={`${kioskCategoryNavigation.layout.categoryButton} ${
-                    active ? "text-primary-foreground" : "text-kiosk-nav-foreground hover:bg-secondary"
-                  }`}
-                >
-                  {active && (
-                    <motion.span
-                      layoutId="kiosk-active-category"
-                      className="absolute inset-0 bg-primary"
-                      transition={kioskCategoryNavigation.activeIndicator.transition}
-                    />
-                  )}
-                  <span className="relative z-10 whitespace-normal">{category.label}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </nav>
-
-        <div className={kioskCategoryNavigation.layout.content}>
-          {visibleCategories.map((category) => {
-            const categoryItems = getItemsForCategory(category.key);
-            return (
-              <motion.div
-                key={category.key}
-                ref={(el) => { sectionRefs.current[category.key] = el; }}
-                data-category={category.key}
-                className="scroll-mt-5 pb-10"
-                {...kioskCategoryNavigation.section}
-              >
-                <h2 className="mb-5 border-r-4 border-primary pr-3 text-right font-black text-primary" style={{ fontSize: `${32 * fontScale}px` }}>
-                  {category.label}
-                </h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {categoryItems.map((item) => (
-                    <KioskTile
-                      key={`${category.key}-${item.id}`}
-                      item={item}
-                      onAdd={onAddItem}
-                      browseOnly={browseOnly}
-                      fontScale={fontScale}
-                      nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
-                      descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
