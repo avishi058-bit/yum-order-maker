@@ -426,7 +426,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
                   onClick={() => scrollToCategory(category.key)}
                   aria-current={active ? "page" : undefined}
                   className={`${kioskCategoryNavigation.layout.categoryButton} ${
-                    active ? "text-primary-foreground" : "text-foreground hover:bg-muted"
+                    active ? "text-primary-foreground" : "text-kiosk-nav-foreground hover:bg-secondary"
                   }`}
                 >
                   {active && (
