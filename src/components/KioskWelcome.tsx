@@ -31,7 +31,7 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true, soldierFundEnabled = fa
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/45 to-foreground/15" />
       </div>
 
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="sync" initial={false}>
         {!showChoices ? (
           <motion.div
             key="intro"
@@ -76,7 +76,7 @@ const KioskWelcomeImpl = ({ onStart, imagesReady = true, soldierFundEnabled = fa
                   <Button
                     type="button"
                     onClick={() => onStart(option.dineIn)}
-                    className="aspect-square h-56 rounded-full border-4 border-primary-foreground/20 bg-primary text-4xl font-black text-primary-foreground shadow-2xl md:h-72 md:text-5xl"
+                    className="h-40 w-64 rounded-2xl border-4 border-primary-foreground/20 bg-primary text-4xl font-black text-primary-foreground shadow-2xl md:h-48 md:w-80 md:text-5xl"
                   >
                     {option.label}
                   </Button>
