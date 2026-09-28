@@ -1516,9 +1516,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             <div className="text-5xl">🤔</div>
             <h3 className="text-xl font-black">כבר קיבלנו הזמנה זהה</h3>
             <p className={`${th.textMuted} text-sm`}>
-              {duplicateInfo.orderNumber
-                ? `הזמנה #${duplicateInfo.orderNumber} על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.`
-                : "הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול."}
+              הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.
               <br />
               לשלוח הזמנה נוספת בכל זאת?
             </p>

@@ -147,7 +147,8 @@ export function buildKitchenBonLines(order: ReceiptOrder): PrintLine[] {
   const lines: PrintLine[] = [];
   lines.push({ text: "הבקתה", align: "center", size: "double", bold: true });
   lines.push({ text: SEP, align: "center" });
-  lines.push({ text: `הזמנה #${order.order_number}`, align: "right", size: "doubleH", bold: true });
+  const bonNumber = order.bon_queue_number ?? order.queue_number;
+  if (bonNumber != null) lines.push({ text: `בון ${bonNumber}`, align: "right", size: "doubleH", bold: true });
   lines.push({ text: `שעה: ${time}`, align: "right" });
   if (order.customer_name) lines.push({ text: `שם: ${order.customer_name}`, align: "right" });
   if (order.customer_phone) lines.push({ text: `טלפון: ${order.customer_phone}`, align: "right" });

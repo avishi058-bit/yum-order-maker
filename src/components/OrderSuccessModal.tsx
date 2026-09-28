@@ -15,7 +15,7 @@ interface OrderSuccessModalProps {
  * went through — the main cause of accidental double orders was a confirmation
  * that was too subtle (toast only).
  */
-const OrderSuccessModal = ({ orderNumber, note, onClose }: OrderSuccessModalProps) => {
+const OrderSuccessModal = ({ note, onClose }: OrderSuccessModalProps) => {
   return (
     <div className="fixed inset-0 z-[10040] flex items-center justify-center p-4" dir="rtl">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
@@ -35,11 +35,6 @@ const OrderSuccessModal = ({ orderNumber, note, onClose }: OrderSuccessModalProp
 
         <h2 className="text-3xl font-black text-green-500">ההזמנה התקבלה!</h2>
         <p className="mt-1 text-muted-foreground">ההזמנה שלך נשלחה למטבח ✅</p>
-
-        <div className="my-6 rounded-2xl bg-muted/60 py-5">
-          <div className="text-sm text-muted-foreground">מספר הזמנה</div>
-          <div className="text-5xl font-black text-foreground">#{orderNumber}</div>
-        </div>
 
         {note && <p className="mb-4 text-base font-bold text-foreground">{note}</p>}
 

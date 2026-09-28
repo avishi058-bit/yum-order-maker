@@ -71,7 +71,7 @@ const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismis
           לקבל התראה כשההזמנה מוכנה? 🍔
         </h2>
         <p className={`text-muted-foreground ${inline ? "text-xs" : "text-sm"}`}>
-          נעדכן אותך רגע לפני שהזמנה #{orderNumber} מוכנה לאיסוף
+          נעדכן אותך רגע לפני שההזמנה שלך מוכנה לאיסוף
         </p>
       </div>
 

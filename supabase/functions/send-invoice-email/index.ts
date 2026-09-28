@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     const diff = Math.round((total - linesSum) * 100) / 100;
     if (items.length === 0) {
       items.push({
-        ItemDescription: `הזמנה מס' ${order.order_number ?? ""}`.trim(),
+        ItemDescription: "רכישה בהבקתה",
         ItemQuantity: 1,
         ItemPrice: total,
         IsTaxFree: false,

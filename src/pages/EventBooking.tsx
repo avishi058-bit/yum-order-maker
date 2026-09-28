@@ -592,7 +592,6 @@ const EventBooking = () => {
             <CardContent className="p-8 text-center space-y-4">
               <PartyPopper className="w-16 h-16 mx-auto text-primary" />
               <h2 className="text-2xl font-bold">האירוע נקבע! 🎉</h2>
-              <p className="text-muted-foreground">מספר הזמנה: <code className="bg-muted px-2 py-1 rounded">{bookingId}</code></p>
               <p>החוזה החתום נשמר במערכת. ניתן להוריד עותק PDF.</p>
               {pdfBlob && (
                 <Button onClick={() => downloadBlob(pdfBlob, `contract-${bookingId}.pdf`)} size="lg">

@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, order_number, customer_name, total, order_source")
+      .select("id, order_number, bon_queue_number, customer_name, total, order_source")
       .eq("id", order_id)
       .maybeSingle();
 
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     const customerName = (order.customer_name ?? "").trim() || "לקוח";
     const payload = JSON.stringify({
       title: `🔔 יש לך הזמנה חדשה ${sourceLabel}!`,
-      body: `מ${customerName} • הזמנה #${order.order_number} • ₪${order.total ?? ""}`,
+      body: `מ${customerName}${order.bon_queue_number != null ? ` • בון ${order.bon_queue_number}` : ""} • ₪${order.total ?? ""}`,
       tag: `kitchen-new-${order.order_number}`,
       url: "/kitchen",
       order_number: order.order_number,

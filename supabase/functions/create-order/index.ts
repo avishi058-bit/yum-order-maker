@@ -602,7 +602,7 @@ Deno.serve(async (req: Request) => {
           duplicate: true,
           existingOrderNumber: existing.order_number,
           existingStatus: existing.status,
-          error: `כבר קיימת הזמנה זהה על שמך (#${existing.order_number}) שנשלחה לפני רגע.`,
+          error: "כבר קיימת הזמנה זהה על שמך שנשלחה לפני רגע.",
         },
         409,
       );

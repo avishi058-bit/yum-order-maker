@@ -647,7 +647,6 @@ const Kiosk = () => {
             >
               <p className="text-8xl mb-6">🎉</p>
               <p className="text-4xl font-black text-gray-900 mb-3">הזמנתך התקבלה!</p>
-              <p className="text-5xl font-black text-primary mb-4">#{orderSuccess}</p>
               <div className="rounded-2xl border-4 border-primary bg-primary/10 px-6 py-5 mb-4">
                 {successPaymentMethod === "credit" ? (
                   <p className="text-5xl font-black text-primary leading-tight">
@@ -664,7 +663,7 @@ const Kiosk = () => {
                   </>
                 )}
               </div>
-              <p className="text-2xl text-gray-500">מספר ההזמנה שלך למעלה</p>
+              <p className="text-2xl text-gray-500">ההזמנה נשלחה למטבח</p>
             </motion.div>
           </motion.div>
         )}

@@ -796,7 +796,7 @@ const Kitchen = () => {
 
       if (!isFirstLoad) {
         newlyArrived.forEach((o) => {
-          toast.success(`🔔 הזמנה חדשה #${o.order_number}`, {
+          toast.success("🔔 הזמנה חדשה", {
             description: `${o.customer_name} • ₪${o.total}`,
             duration: 6000,
           });
@@ -1263,7 +1263,7 @@ const Kitchen = () => {
   // "הזמן חייל/ת" — pay the whole order from the soldier fund.
   const payFromSoldierFund = async (order: Order) => {
     if (paidPendingIds.has(order.id) || order.queue_number != null) return;
-    if (!window.confirm(`לשלם את הזמנה #${order.order_number} מ'הזמן חייל/ת'?`)) return;
+    if (!window.confirm(`לשלם את ההזמנה של ${order.customer_name} מ'הזמן חייל/ת'?`)) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { error } = await (supabase as any).rpc("pay_order_from_soldier_fund", { p_order_id: order.id });
     setPaidPendingIds((s) => { const n = new Set(s); n.delete(order.id); return n; });
@@ -1547,9 +1547,10 @@ const Kitchen = () => {
       const win = window.open("", "_blank", "width=400,height=600");
       if (!win) { toast.error("חלון ההדפסה נחסם"); return; }
       const safeName = (order.customer_name || "").replace(/[<>&]/g, "");
-      const safePhone = phoneRaw.replace(/[<>&]/g, "");
+       const safePhone = phoneRaw.replace(/[<>&]/g, "");
+       const bonNumber = order.bon_queue_number ?? order.queue_number;
       win.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>QR ${safeName}</title>
-<style>@page{size:58mm auto;margin:2mm}html,body{margin:0;padding:0;font-family:-apple-system,"Heebo",Arial,sans-serif}.wrap{display:flex;flex-direction:column;align-items:center;padding:2mm 0}img{width:38mm;height:38mm;image-rendering:pixelated}.name{font-size:14pt;font-weight:800;margin-top:2mm;text-align:center}.phone{font-size:13pt;font-weight:700;margin-top:.5mm;direction:ltr;letter-spacing:.5px}.order{font-size:9pt;color:#555;margin-top:1mm}</style></head><body><div class="wrap"><img src="${qrDataUrl}" alt="QR"/><div class="name">${safeName}</div><div class="phone">${safePhone}</div><div class="order">הזמנה #${order.order_number}</div></div><script>window.onload=function(){setTimeout(function(){window.print()},150)};window.onafterprint=function(){window.close()}<\/script></body></html>`);
+<style>@page{size:58mm auto;margin:2mm}html,body{margin:0;padding:0;font-family:-apple-system,"Heebo",Arial,sans-serif}.wrap{display:flex;flex-direction:column;align-items:center;padding:2mm 0}img{width:38mm;height:38mm;image-rendering:pixelated}.name{font-size:14pt;font-weight:800;margin-top:2mm;text-align:center}.phone{font-size:13pt;font-weight:700;margin-top:.5mm;direction:ltr;letter-spacing:.5px}.order{font-size:9pt;color:#555;margin-top:1mm}</style></head><body><div class="wrap"><img src="${qrDataUrl}" alt="QR"/><div class="name">${safeName}</div><div class="phone">${safePhone}</div>${bonNumber != null ? `<div class="order">בון ${bonNumber}</div>` : ""}</div><script>window.onload=function(){setTimeout(function(){window.print()},150)};window.onafterprint=function(){window.close()}<\/script></body></html>`);
       win.document.close();
     } catch (e: any) {
       console.warn("[Kitchen] QR print failed", e);
@@ -2935,7 +2936,9 @@ const Kitchen = () => {
                         {order.queue_number}
                       </span>
                     ) : null}
-                    <span className="font-bold">#{order.order_number}</span>
+                    {order.bon_queue_number != null && (
+                      <span className="font-bold">בון {order.bon_queue_number}</span>
+                    )}
                     {order.queue_number != null ? (
                       <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
                         {isCreditConfirmed(order) ? "שולם באשראי✅" : "שולם ✓"}
@@ -3169,7 +3172,7 @@ const Kitchen = () => {
                     {["new", "preparing", "ready"].includes(order.status) && (
                       <button
                         onClick={() => {
-                          if (order.status !== "new" && !window.confirm(`לבטל את הזמנה #${order.order_number}?`)) return;
+                           if (order.status !== "new" && !window.confirm(`לבטל את ההזמנה של ${order.customer_name}?`)) return;
                           updateStatus(order.id, "cancelled");
                         }}
                         disabled={isPending}
@@ -3314,9 +3317,6 @@ const Kitchen = () => {
                         </button>
                       </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground text-center">
-                      קישור מעקב: <span className="text-primary font-mono select-all">/track?order={order.order_number}</span>
-                    </p>
                   </div>
                 )}
               </div>
@@ -3345,7 +3345,7 @@ const Kitchen = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
-              <span className="font-bold text-foreground">תצוגת בון #{previewOrder.order_number}</span>
+               <span className="font-bold text-foreground">תצוגת בון{previewOrder.bon_queue_number != null ? ` ${previewOrder.bon_queue_number}` : ""}</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { printOrder(previewOrder); }}
