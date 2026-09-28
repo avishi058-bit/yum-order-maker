@@ -70,6 +70,8 @@ Deno.serve(async (req) => {
       "create_token",
       "revoke_token",
       "rotate_token",
+      "list_aliases",
+      "save_invoice",
     ]);
     if (ADMIN_ONLY_ACTIONS.has(action ?? "") && validation.scope !== "admin") {
       return json({ error: "insufficient_scope" }, 403);
@@ -516,6 +518,59 @@ Deno.serve(async (req) => {
       }
 
       // ---- Token management (admin-scope only) ----
+      case "list_aliases": {
+        const { data } = await supabase.from("product_aliases").select("raw_name, item_key, label").order("created_at", { ascending: false }).limit(300);
+        return json({ aliases: data ?? [] });
+      }
+
+      case "save_invoice": {
+        const VEG = ["lettuce", "tomato", "red_onion", "pickles", "white_onion"];
+        const CATS = [...VEG, "supply", "one_time"];
+        const b = body as any;
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(b.date ?? "") ? b.date : new Date().toISOString().slice(0, 10);
+        const supplier = typeof b.supplier === "string" ? b.supplier.trim().slice(0, 120) || null : null;
+        const inclVat = b.includes_vat !== false;
+        const lines = Array.isArray(b.lines) ? b.lines.slice(0, 100) : [];
+        const clean = lines
+          .map((l: any) => ({
+            raw_name: String(l?.raw_name ?? "").trim().replace(/\s+/g, " ").slice(0, 200),
+            name: String(l?.name ?? "").trim().slice(0, 120),
+            category: String(l?.category ?? ""),
+            quantity: Number(l?.quantity) || null,
+            unit: l?.unit ? String(l.unit).slice(0, 20) : null,
+            unit_price: Number(l?.unit_price) || null,
+            total: Number(l?.total) || 0,
+            remember: !!l?.remember,
+          }))
+          .filter((l: any) => CATS.includes(l.category));
+        if (!clean.length) return json({ error: "no_lines" }, 400);
+        const vat = inclVat ? 1.18 : 1;
+        const produce = clean.filter((l: any) => VEG.includes(l.category) && l.total > 0).map((l: any) => ({
+          purchased_at: date, supplier, item_key: l.category, raw_name: l.raw_name || l.name,
+          quantity: l.quantity, unit: l.unit,
+          unit_price: l.unit_price ? +(l.unit_price / vat).toFixed(4) : null,
+          total: +(l.total / vat).toFixed(2), prev_finished: true,
+        }));
+        const supplies = clean.filter((l: any) => !VEG.includes(l.category) && l.total > 0).map((l: any) => ({
+          name: l.name || l.raw_name, amount: l.total, includes_vat: inclVat, purchased_at: date,
+          kind: l.category === "one_time" ? "one_time" : "supply", supplier,
+          notes: l.quantity ? `${l.quantity}${l.unit ? " " + l.unit : ""} · מחשבונית` : "מחשבונית",
+        }));
+        const aliases = clean.filter((l: any) => l.remember && l.raw_name).map((l: any) => ({
+          raw_name: l.raw_name, item_key: l.category, label: l.name || l.raw_name,
+        }));
+        if (aliases.length) await supabase.from("product_aliases").upsert(aliases, { onConflict: "raw_name" });
+        if (produce.length) {
+          const { error } = await supabase.from("produce_purchases").insert(produce);
+          if (error) return json({ error: error.message }, 500);
+        }
+        if (supplies.length) {
+          const { error } = await supabase.from("supply_purchases").insert(supplies);
+          if (error) return json({ error: error.message }, 500);
+        }
+        return json({ ok: true, produce: produce.length, supplies: supplies.length, aliases: aliases.length });
+      }
+
       case "list_tokens": {
         const { data, error } = await supabase
           .from("inventory_access_tokens")

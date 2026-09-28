@@ -1,3 +1,4 @@
+import InventoryInvoiceScanner from "@/components/InventoryInvoiceScanner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,6 +136,7 @@ export default function Inventory() {
   const [purchaseFor, setPurchaseFor] = useState<InventoryItem | null>(null);
   const [correctionFor, setCorrectionFor] = useState<InventoryItem | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
 
   const call = useCallback(
@@ -307,6 +309,9 @@ export default function Inventory() {
               <Refrigerator className="h-4 w-4" /> מקרר
             </Button>
           </Link>
+          <Button size="sm" variant="outline" onClick={() => setShowScanner(true)}>
+            🧾 חשבונית
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setShowStats(true)}>
             <BarChart3 className="h-4 w-4 ml-1" /> דוחות
           </Button>
@@ -316,6 +321,7 @@ export default function Inventory() {
         </div>
       </header>
 
+      {showScanner && token && <InventoryInvoiceScanner token={token} onClose={() => setShowScanner(false)} />}
       <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
         {grouped.map((group) => (
           <section key={group.key} className="space-y-3">
