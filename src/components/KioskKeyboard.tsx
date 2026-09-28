@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Delete, CornerDownLeft } from "lucide-react";
+import { kioskKeyboard } from "@/config/uiConfig";
 
 /**
  * KioskKeyboard
