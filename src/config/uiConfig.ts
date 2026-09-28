@@ -122,6 +122,43 @@ export const modalAnimations = {
   },
 };
 
+// ─── Kiosk Welcome Animation ─────────────────────────────────────────
+
+export const kioskWelcomeAnimations = {
+  intro: {
+    initial: { opacity: 0, scale: 0.96 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 1.04 },
+    transition: { duration: 0.45, ease: "easeOut" as const },
+  },
+  brand: {
+    initial: { opacity: 0, y: -24 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.65, delay: 0.12, ease: "easeOut" as const },
+  },
+  tapPrompt: {
+    animate: { scale: [1, 1.06, 1], opacity: [0.82, 1, 0.82] },
+    transition: { duration: 1.7, repeat: Infinity, ease: "easeInOut" as const },
+  },
+  choices: {
+    initial: { opacity: 0, scale: 0.94 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.96 },
+    transition: { duration: 0.35, ease: "easeOut" as const },
+  },
+  choiceButton: (index: number) => ({
+    initial: { opacity: 0, scale: 0.15 },
+    animate: { opacity: 1, scale: 1 },
+    transition: {
+      type: "spring" as const,
+      damping: 13,
+      stiffness: 190,
+      mass: 0.85,
+      delay: 0.12 + index * 0.12,
+    },
+  }),
+};
+
 // ─── Hero Section Animations ─────────────────────────────────────────
 
 export const heroAnimations = {

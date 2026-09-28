@@ -1,7 +1,8 @@
-import { memo } from "react";
-import { motion } from "framer-motion";
+import { memo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import heroBurger from "@/assets/hero-burger.webp";
-
+import { Button } from "@/components/ui/button";
+import { kioskWelcomeAnimations } from "@/config/uiConfig";
 
 /**
  * Welcome screen for the kiosk. Wrapped in React.memo so background re-renders
@@ -10,67 +11,75 @@ import heroBurger from "@/assets/hero-burger.webp";
  * The screen must stay perfectly stable until the user touches it.
  */
 const KioskWelcomeImpl = ({ onStart, imagesReady = true }: { onStart: (dineIn: boolean) => void; imagesReady?: boolean }) => {
+  const [showChoices, setShowChoices] = useState(false);
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" dir="rtl">
-      {/* Background - bright overlay so the burger photo stays visible */}
+    <main className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden" dir="rtl">
       <div className="absolute inset-0">
         <img
           src={heroBurger}
           alt="המבורגר הבקתה"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/40 to-white/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/45 to-foreground/15" />
       </div>
 
-
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-8">
-        <div style={{ textShadow: "0 2px 8px rgba(0,0,0,0.65)" }}>
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-6xl md:text-8xl font-black mb-6 tracking-tight text-foreground"
+      <AnimatePresence mode="wait" initial={false}>
+        {!showChoices ? (
+          <motion.div
+            key="intro"
+            {...kioskWelcomeAnimations.intro}
+            className="relative z-10 flex h-full w-full items-center justify-center"
           >
-            ברוכים הבאים
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.75 }}
-            className="text-2xl md:text-3xl font-bold text-foreground mb-6"
-          >
-            {imagesReady ? "איך תרצו את ההזמנה?" : "טוען תפריט… ⏳"}
-          </motion.p>
-        </div>
-
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.85 }}
-          className="flex flex-row-reverse items-center gap-6"
-        >
-          {[
-            { label: "לשבת", dineIn: true },
-            { label: "לקחת", dineIn: false },
-          ].map((opt, i) => (
-            <motion.button
-              key={opt.label}
-              animate={{ scale: [1, 1.04, 1] }}
-              transition={{ duration: 1.6, delay: 1.5 + i * 0.2, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onStart(opt.dineIn)}
-              className="min-w-[14rem] md:min-w-[18rem] bg-white text-gray-900 font-black text-5xl md:text-6xl px-14 py-12 rounded-full shadow-2xl transition-all hover:shadow-xl active:scale-95"
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowChoices(true)}
+              aria-label="לחצו להתחלה"
+              className="h-full w-full rounded-none bg-transparent p-8 text-foreground hover:bg-transparent focus-visible:ring-4 focus-visible:ring-primary"
             >
-              {opt.label}
-            </motion.button>
-          ))}
-
-        </motion.div>
-      </div>
-    </div>
+              <motion.span
+                {...kioskWelcomeAnimations.brand}
+                className="flex flex-col items-center text-center drop-shadow-lg"
+              >
+                <span className="mb-10 text-7xl font-black md:text-9xl">הבקתה</span>
+                <motion.span
+                  {...kioskWelcomeAnimations.tapPrompt}
+                  className="text-3xl font-black md:text-5xl"
+                >
+                  {imagesReady ? "לחצו להתחלה" : "טוען תפריט…"}
+                </motion.span>
+              </motion.span>
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.section
+            key="choices"
+            {...kioskWelcomeAnimations.choices}
+            className="relative z-10 flex flex-col items-center px-8 text-center text-foreground drop-shadow-lg"
+          >
+            <h1 className="mb-4 text-6xl font-black md:text-8xl">ברוכים הבאים</h1>
+            <p className="mb-12 text-3xl font-bold md:text-4xl">איך תרצו את ההזמנה?</p>
+            <div className="flex flex-row-reverse items-center gap-8 md:gap-12">
+              {[
+                { label: "לשבת", dineIn: true },
+                { label: "לקחת", dineIn: false },
+              ].map((option, index) => (
+                <motion.div key={option.label} {...kioskWelcomeAnimations.choiceButton(index)}>
+                  <Button
+                    type="button"
+                    onClick={() => onStart(option.dineIn)}
+                    className="aspect-square h-56 rounded-full border-4 border-primary-foreground/20 bg-primary text-4xl font-black text-primary-foreground shadow-2xl md:h-72 md:text-5xl"
+                  >
+                    {option.label}
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+    </main>
   );
 };
 
