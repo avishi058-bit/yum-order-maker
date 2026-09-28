@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 
 interface OrderSuccessModalProps {
-  /** Optional hint shown under the order number (e.g. payment instructions). */
+  /** Optional payment instruction shown under the confirmation. */
   note?: string;
   onClose: () => void;
 }
