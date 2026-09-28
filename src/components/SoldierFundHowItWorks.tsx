@@ -34,9 +34,10 @@ interface SoldierFundHowItWorksProps {
   onApprove: (accepted: boolean) => void;
   /** When set, the dialog also lets the customer pick an amount and pay. */
   donate?: DonateOptions;
+  isKiosk?: boolean;
 }
 
-export default function SoldierFundHowItWorks({ open, onOpenChange, approved, onApprove, donate }: SoldierFundHowItWorksProps) {
+export default function SoldierFundHowItWorks({ open, onOpenChange, approved, onApprove, donate, isKiosk = false }: SoldierFundHowItWorksProps) {
   const [checked, setChecked] = useState(approved);
   const [amount, setAmount] = useState(0);
   const [custom, setCustom] = useState("");
@@ -81,7 +82,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
       onClick={() => onOpenChange(false)}
     >
       <div
-        className="relative w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl bg-background text-foreground p-5 shadow-2xl space-y-4"
+        className={`relative w-full overflow-y-auto rounded-2xl shadow-2xl ${isKiosk ? "max-w-3xl max-h-[94vh] bg-kiosk-nav p-8 text-kiosk-nav-foreground space-y-6" : "max-w-lg max-h-[88vh] bg-background p-5 text-foreground space-y-4"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -92,7 +93,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-3xl font-black text-center">🫡 הזמן חייל/ת</h2>
+        <h2 className={`${isKiosk ? "text-5xl" : "text-3xl"} font-black text-center`}>🫡 הזמן חייל/ת</h2>
 
         {/* צעדים גדולים ושיווקיים — בלי כיתוב מיותר */}
         <div className="py-3 text-center space-y-1">
@@ -102,7 +103,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
             "חייל/ת שמגיע/ה אלינו מקבל/ת פינוק/סבסוד עליכם :)",
           ].map((step, i) => (
             <div key={step}>
-              <div className="text-2xl md:text-3xl font-black leading-snug">{step}</div>
+              <div className={`${isKiosk ? "text-3xl" : "text-2xl md:text-3xl"} font-black leading-snug`}>{step}</div>
               {i < 2 && <div className="text-xl font-black text-primary py-0.5">⬇️</div>}
             </div>
           ))}
@@ -112,7 +113,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           <button
             type="button"
             onClick={() => setShowAbout((v) => !v)}
-            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+            className={`${isKiosk ? "text-xl text-kiosk-nav-foreground" : "text-sm text-muted-foreground hover:text-foreground"} underline underline-offset-4 transition-colors`}
           >
             מה זה המיזם? 💚
           </button>
@@ -127,7 +128,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           <button
             type="button"
             onClick={() => setShowTerms((v) => !v)}
-            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+            className={`${isKiosk ? "text-xl text-kiosk-nav-foreground" : "text-sm text-muted-foreground hover:text-foreground"} underline underline-offset-4 transition-colors`}
           >
             {showTerms ? "הסתרת התקנון" : "רוצים לקרוא את התקנון? 📜"}
           </button>
@@ -138,12 +139,12 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           )}
         </div>
 
-        <label className={`flex items-start gap-2 cursor-pointer text-sm rounded-xl border-2 p-3 ${isApproved ? "border-primary/40 bg-primary/5" : "border-destructive/50 bg-destructive/5"}`}>
+        <label className={`flex items-start gap-3 cursor-pointer rounded-xl border-2 p-3 ${isKiosk ? "text-xl" : "text-sm"} ${isApproved ? "border-primary/40 bg-primary/5" : "border-destructive/50 bg-destructive/5"}`}>
           <input
             type="checkbox"
             checked={isApproved}
             onChange={(e) => approve(e.target.checked)}
-            className="mt-1 w-5 h-5 accent-primary shrink-0"
+            className={`${isKiosk ? "w-8 h-8" : "w-5 h-5"} mt-1 accent-primary shrink-0`}
           />
           <span>
             {SOLDIER_FUND_APPROVAL_TEXT}
@@ -153,18 +154,18 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
 
         {donate ? (
           <div className="space-y-3">
-            <div className="font-bold">כמה להוסיף?</div>
+            <div className={`${isKiosk ? "text-2xl" : ""} font-bold`}>כמה להוסיף?</div>
             <div className="grid grid-cols-4 gap-2">
               {SOLDIER_FUND_PRESETS.map((v) => (
                 <button key={v} type="button" onClick={() => pick(v)}
-                  className={`rounded-lg border py-2 font-bold ${amount === v && !custom ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}>
+                  className={`rounded-lg border font-bold ${isKiosk ? "py-4 text-2xl" : "py-2"} ${amount === v && !custom ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}>
                   ₪{v}
                 </button>
               ))}
               <input
                 type="text" inputMode="numeric" placeholder="אחר"
                 value={custom} onChange={(e) => onCustom(e.target.value)}
-                className="rounded-lg border bg-background p-2 text-center"
+                className={`rounded-lg border bg-background p-2 text-center ${isKiosk ? "text-2xl" : ""}`}
                 aria-label={`סכום אחר עד ₪${SOLDIER_FUND_MAX}`}
               />
             </div>

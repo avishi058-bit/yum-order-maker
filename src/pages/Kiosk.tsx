@@ -19,6 +19,7 @@ const CheckoutForm = lazy(() => import("@/components/CheckoutForm"));
 const ItemCustomizer = lazy(() => import("@/components/ItemCustomizer"));
 const DealCustomizer = lazy(() => import("@/components/DealCustomizer"));
 const FamilyDealCustomizer = lazy(() => import("@/components/FamilyDealCustomizer"));
+const SoldierFundHowItWorks = lazy(() => import("@/components/SoldierFundHowItWorks"));
 // Inline DineInSelector - was a separate component but only used here
 const DineInSelector = ({ open, onSelect }: { open: boolean; onSelect: (dineIn: boolean) => void }) => {
   if (!open) return null;
@@ -97,6 +98,11 @@ const Kiosk = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const [soldierFundOpen, setSoldierFundOpen] = useState(false);
+  const [donationOnlyCheckout, setDonationOnlyCheckout] = useState(false);
+  const [pendingDonation, setPendingDonation] = useState<{ amount: number; termsAt: string | null } | null>(() => {
+    try { return JSON.parse(sessionStorage.getItem("soldier-pending-donation-v1") || "null"); } catch { return null; }
+  });
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
   const cartButtonCallbackRef = useCallback((node: HTMLDivElement | null) => {
@@ -349,6 +355,10 @@ const Kiosk = () => {
     setDrinkItem(null);
     setSauceSelectorOpen(false);
     setPreviewItem(null);
+    setSoldierFundOpen(false);
+    setDonationOnlyCheckout(false);
+    setPendingDonation(null);
+    try { sessionStorage.removeItem("soldier-pending-donation-v1"); } catch { /* ignore */ }
   }, []);
 
   const { countdown } = useKioskInactivityTimer(view === "menu", resetOrder);
@@ -367,9 +377,43 @@ const Kiosk = () => {
 
   if (view === "welcome") {
     return (
-      <KioskWelcome
-        onStart={handleWelcomeStart}
-      />
+      <>
+        <KioskWelcome
+          onStart={handleWelcomeStart}
+          soldierFundEnabled={restaurantStatus.soldier_fund_enabled !== false}
+          onSoldierFundClick={() => setSoldierFundOpen(true)}
+        />
+        <Suspense fallback={null}>
+          <SoldierFundHowItWorks
+            open={soldierFundOpen}
+            onOpenChange={setSoldierFundOpen}
+            approved={Boolean(pendingDonation?.termsAt)}
+            onApprove={() => { /* approval time is stored when a sum is confirmed */ }}
+            isKiosk
+            donate={{
+              canOrder: true,
+              onContinueOrder: (amount) => {
+                const termsAt = new Date().toISOString();
+                const donation = { amount, termsAt };
+                setPendingDonation(donation);
+                sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify(donation));
+                setSoldierFundOpen(false);
+                setView("menu");
+              },
+              onDonateOnly: (amount) => {
+                const termsAt = new Date().toISOString();
+                const donation = { amount, termsAt };
+                setPendingDonation(donation);
+                sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify(donation));
+                setSoldierFundOpen(false);
+                setDonationOnlyCheckout(true);
+                setView("menu");
+                setCheckoutOpen(true);
+              },
+            }}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -394,7 +438,7 @@ const Kiosk = () => {
       </div>
 
       {/* Floating green "סיום הזמנה" button — same as website */}
-      {totalItems > 0 && (
+      {(totalItems > 0 || (pendingDonation?.amount ?? 0) > 0) && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <button
             ref={cartButtonCallbackRef as any}
@@ -409,7 +453,7 @@ const Kiosk = () => {
               </span>
             </span>
             <span className="text-2xl">סיום הזמנה</span>
-            <span className="text-2xl font-black border-r border-white/30 pr-4">₪{getTotal()}</span>
+            <span className="text-2xl font-black border-r border-white/30 pr-4">₪{getTotal() + (pendingDonation?.amount ?? 0)}</span>
           </button>
         </div>
       )}
@@ -462,6 +506,12 @@ const Kiosk = () => {
         onEditItem={handleEditCartItem}
         isKiosk
         isClosed={isClosed}
+        soldierDonation={pendingDonation?.amount ?? 0}
+        onEditDonation={() => setSoldierFundOpen(true)}
+        onRemoveDonation={() => {
+          setPendingDonation(null);
+          try { sessionStorage.removeItem("soldier-pending-donation-v1"); } catch { /* ignore */ }
+        }}
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {
           if (item.id === "arayes-special" || item.id === "arayes-special-4") {
@@ -515,18 +565,52 @@ const Kiosk = () => {
         />
       </Suspense>
 
+      <Suspense fallback={null}>
+        <SoldierFundHowItWorks
+          open={soldierFundOpen}
+          onOpenChange={setSoldierFundOpen}
+          approved={Boolean(pendingDonation?.termsAt)}
+          onApprove={() => { /* approval time is stored when a sum is confirmed */ }}
+          isKiosk
+          donate={{
+            canOrder: true,
+            onContinueOrder: (amount) => {
+              const termsAt = new Date().toISOString();
+              const donation = { amount, termsAt };
+              setPendingDonation(donation);
+              sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify(donation));
+              setSoldierFundOpen(false);
+              setView("menu");
+            },
+            onDonateOnly: (amount) => {
+              const termsAt = new Date().toISOString();
+              const donation = { amount, termsAt };
+              setPendingDonation(donation);
+              sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify(donation));
+              setSoldierFundOpen(false);
+              setDonationOnlyCheckout(true);
+              setCheckoutOpen(true);
+            },
+          }}
+        />
+      </Suspense>
+
 
       <AnimatePresence>
         {checkoutOpen && (
           <Suspense fallback={null}>
             <CheckoutForm
               dineIn={dineIn}
-              items={cart}
-              total={getTotal()}
-              sauces={dineIn ? [] : selectedSauces}
+              donationOnly={donationOnlyCheckout}
+              items={donationOnlyCheckout ? [] : cart}
+              total={donationOnlyCheckout ? 0 : getTotal()}
+              sauces={donationOnlyCheckout || dineIn ? [] : selectedSauces}
               freeSauces={freeSauces}
               onClose={() => setCheckoutOpen(false)}
               onSuccess={(orderNumber, _phone, method) => {
+                setPendingDonation(null);
+                try { sessionStorage.removeItem("soldier-pending-donation-v1"); } catch { /* ignore */ }
+                setDonationOnlyCheckout(false);
                 setCheckoutOpen(false);
                 setOrderSuccess(orderNumber ?? 0);
                 setSuccessPaymentMethod(method ?? null);
