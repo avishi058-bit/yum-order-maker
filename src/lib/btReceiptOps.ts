@@ -693,7 +693,6 @@ export function buildRoundSummaryOps(orders: RoundOrder[]): FastOp[] {
     if (qNum) {
       ops.push(asLine(`${qNum}`, { align: "R", bold: true, size: 0 }));
     }
-    ops.push({ kind: "text", text: `#${o.order_number}`, align: "R", size: 1 });
     if (o.customer_name) {
       ops.push(asLine(o.customer_name, { align: "R", bold: true, size: 34 }));
     }
@@ -848,8 +847,9 @@ export function buildPhoneQrOps(order: ReceiptOrder): FastOp[] {
     ops.push({ kind: "qr", data: `tel:${telDigits}`, modulePx: 6, align: "C" });
     ops.push(feed(0.6));
   }
-  if ((order as any).order_number) {
-    ops.push(asLine(`הזמנה #${(order as any).order_number}`, { align: "C", bold: true, size: 26 }));
+  const bonNumber = order.bon_queue_number ?? order.queue_number;
+  if (bonNumber != null) {
+    ops.push(asLine(`בון ${bonNumber}`, { align: "C", bold: true, size: 26 }));
   }
   ops.push(feed(2));
   ops.push({ kind: "cut" });
@@ -1035,9 +1035,6 @@ export function buildInvoiceOps(inv: InvoicePrintData): FastOp[] {
     ops.push(asLine(`מסמך ${inv.invoiceNumber}`, { align: "C", bold: true, size: 39 }));
   }
   ops.push(asLine(when, { align: "C", size: 30 }));
-  if (inv.orderNumber != null) {
-    ops.push(asLine(`הזמנה ${inv.orderNumber}`, { align: "C", size: 30 }));
-  }
   ops.push(sep());
   if (inv.customerName) ops.push(asLine(`לכבוד: ${inv.customerName}`, { align: "R", size: 33 }));
   if (inv.customerPhone) ops.push(asLine(`טלפון: ${inv.customerPhone}`, { align: "R", size: 30 }));

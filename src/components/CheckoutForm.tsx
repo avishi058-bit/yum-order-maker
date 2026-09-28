@@ -583,7 +583,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           }
           toast({
             title: "התשלום אושר! 🎉",
-            description: `מספר הזמנה: #${order.orderNumber}`,
+            description: "ההזמנה נשלחה למטבח",
           });
           onSuccess(order.orderNumber, form.phone, "credit", order.orderId, form.name);
         } catch (e: any) {
@@ -740,7 +740,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       }
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
-        description: `מספר הזמנה: #${order.orderNumber}`,
+        description: "ההזמנה נשלחה למטבח",
       });
       onSuccess(order.orderNumber, form.phone, method, order.orderId, form.name);
     } catch (error: any) {
@@ -1516,9 +1516,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             <div className="text-5xl">🤔</div>
             <h3 className="text-xl font-black">כבר קיבלנו הזמנה זהה</h3>
             <p className={`${th.textMuted} text-sm`}>
-              {duplicateInfo.orderNumber
-                ? `הזמנה #${duplicateInfo.orderNumber} על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.`
-                : "הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול."}
+              הזמנה זהה על שמך נקלטה כבר לפני רגע ונמצאת בטיפול.
               <br />
               לשלוח הזמנה נוספת בכל זאת?
             </p>

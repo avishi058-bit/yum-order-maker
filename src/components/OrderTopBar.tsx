@@ -94,7 +94,7 @@ const OrderTopBar = () => {
 
     if (tracked.notificationsEnabled && Notification.permission === "granted") {
       try {
-        new Notification(`הזמנה #${tracked.orderNumber}`, {
+        new Notification("עדכון מהבקתה", {
           body: message,
           icon: "🍔",
           tag: `order-${tracked.orderNumber}`,
@@ -171,7 +171,7 @@ const OrderTopBar = () => {
                 {cfg.icon}
               </motion.div>
               <span className="font-bold text-sm">
-                הזמנה #{tracked.orderNumber} · {cfg.label}
+                 ההזמנה שלך · {cfg.label}
               </span>
               {timeLeft !== null && order.status === "preparing" && (
                 <span className="font-mono text-xs bg-white/20 px-2 py-0.5 rounded-full">

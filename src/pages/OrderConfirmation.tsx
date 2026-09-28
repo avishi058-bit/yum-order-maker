@@ -120,13 +120,6 @@ const OrderConfirmation = () => {
           <h1 className="text-3xl font-black text-green-500">איזה כיף! התשלום עבר בהצלחה!</h1>
           <p className="mt-3 text-lg text-foreground">חשבונית נשלחה אליך במייל :)</p>
 
-          {orderNumber != null && (
-            <div className="my-6 rounded-2xl bg-muted/60 py-5">
-              <div className="text-sm text-muted-foreground">מספר הזמנה</div>
-              <div className="text-5xl font-black text-foreground">#{orderNumber}</div>
-            </div>
-          )}
-
           <button
             onClick={goHomeTracking}
             className="mt-2 w-full rounded-full bg-green-600 py-4 text-lg font-black text-white transition-transform active:scale-95"

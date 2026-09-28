@@ -63,7 +63,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     // Send browser notification
     if (notificationsEnabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
-        new Notification(`הזמנה #${orderNumber}`, {
+        new Notification("עדכון מהבקתה", {
           body: message,
           icon: "🍔",
         });
@@ -239,7 +239,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
             >
               <X size={16} />
             </button>
-            <h2 className="text-lg font-black text-foreground">הזמנה #{orderNumber}</h2>
+             <h2 className="text-lg font-black text-foreground">מעקב אחרי ההזמנה</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -289,7 +289,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   open={showSmartPrompt}
                   phone={phone}
                   orderId={order?.id ?? null}
-                  orderNumber={orderNumber}
                   onAccept={() => {
                     setShowSmartPrompt(false);
                     handleEnableNotifications();

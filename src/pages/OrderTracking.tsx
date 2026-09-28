@@ -101,7 +101,7 @@ const OrderTracking = () => {
   if (!orderNumber || !phone) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <p className="text-muted-foreground">קישור לא תקין — חסר מספר הזמנה או טלפון</p>
+        <p className="text-muted-foreground">קישור המעקב אינו תקין</p>
       </div>
     );
   }
@@ -144,7 +144,7 @@ const OrderTracking = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6" dir="rtl">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-foreground mb-1">הזמנה #{order.order_number}</h1>
+          <h1 className="text-3xl font-black text-foreground mb-1">מעקב אחרי ההזמנה</h1>
           <p className="text-muted-foreground">{order.customer_name}</p>
         </div>
 

@@ -7,7 +7,6 @@ interface SmartPushPromptProps {
   open: boolean;
   phone: string;
   orderId?: string | null;
-  orderNumber: number;
   onAccept: () => void;
   onDismiss: () => void;
   /** When true, renders as an inline card instead of a full-screen modal. */
@@ -30,7 +29,7 @@ const logEvent = (action: "shown" | "accepted" | "dismissed" | "denied", phone: 
   } catch {}
 };
 
-const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismiss, inline = false }: SmartPushPromptProps) => {
+const SmartPushPrompt = ({ open, phone, orderId, onAccept, onDismiss, inline = false }: SmartPushPromptProps) => {
   useEffect(() => {
     if (open) logEvent("shown", phone, orderId);
   }, [open, phone, orderId]);
@@ -71,7 +70,7 @@ const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismis
           לקבל התראה כשההזמנה מוכנה? 🍔
         </h2>
         <p className={`text-muted-foreground ${inline ? "text-xs" : "text-sm"}`}>
-          נעדכן אותך רגע לפני שהזמנה #{orderNumber} מוכנה לאיסוף
+          נעדכן אותך רגע לפני שההזמנה שלך מוכנה לאיסוף
         </p>
       </div>
 

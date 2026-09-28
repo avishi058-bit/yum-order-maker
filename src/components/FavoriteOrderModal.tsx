@@ -1102,8 +1102,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                                 onClick={() => handleLoadFromOrder(order)}
                                 className="w-full text-right border border-border rounded-xl p-2.5 hover:bg-muted/50 transition-colors"
                               >
-                                <div className="flex justify-between mb-0.5">
-                                  <span className="text-xs font-bold text-foreground">#{order.order_number}</span>
+                                <div className="flex justify-end mb-0.5">
                                   <span className="text-xs text-muted-foreground">
                                     {new Date(order.created_at).toLocaleDateString("he-IL")} · ₪{Number(order.total).toFixed(0)}
                                   </span>

@@ -26,7 +26,6 @@ interface EditOrderModalProps {
   open: boolean;
   onClose: () => void;
   orderId: string;
-  orderNumber: number;
   items: EditableOrderItem[];
   onSaved: (result: { requires_reprint: boolean }) => void;
 }
@@ -43,7 +42,6 @@ export default function EditOrderModal({
   open,
   onClose,
   orderId,
-  orderNumber,
   items,
   onSaved,
 }: EditOrderModalProps) {
@@ -146,7 +144,7 @@ export default function EditOrderModal({
     <Dialog open={open} onOpenChange={(o) => !o && !saving && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle>עריכת הזמנה #{orderNumber}</DialogTitle>
+          <DialogTitle>עריכת הזמנה</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
