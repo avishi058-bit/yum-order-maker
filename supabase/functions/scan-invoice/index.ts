@@ -60,6 +60,44 @@ const PRODUCE_SCHEMA = {
   },
 };
 
+const GENERAL_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["is_invoice", "supplier", "date", "includes_vat", "lines"],
+  properties: {
+    is_invoice: { type: "boolean" },
+    supplier: { type: ["string", "null"] },
+    date: { type: ["string", "null"], description: "YYYY-MM-DD" },
+    includes_vat: { type: "boolean" },
+    lines: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["raw_name", "name_he", "quantity", "unit", "unit_price", "total", "category"],
+        properties: {
+          raw_name: { type: "string" },
+          name_he: { type: "string", description: "Short clear Hebrew name of the product" },
+          quantity: { type: ["number", "null"] },
+          unit: { type: ["string", "null"] },
+          unit_price: { type: ["number", "null"] },
+          total: { type: ["number", "null"] },
+          category: { type: "string", enum: ["lettuce", "tomato", "red_onion", "pickles", "white_onion", "supply", "one_time", "unknown"] },
+        },
+      },
+    },
+  },
+};
+
+const generalPrompt = (aliases: { raw_name: string; label: string }[]) => `אתה מפענח חשבונית ספק עבור מסעדת המבורגרים בישראל.
+החזר כל שורת מוצר בנפרד: שם כפי שמודפס, שם עברי ברור וקצר, כמות, יחידה, מחיר ליחידה, סה"כ שורה.
+category: lettuce=חסה, tomato=עגבנייה, red_onion=בצל סגול, pickles=מלפפון חמוץ, white_onion=בצל לבן/יבש,
+supply=מתכלה שנקנה שוב (חומרי גלם, רטבים, ניקיון, מפיות, אריזות, שתייה, בשר, לחמניות, צ'יפס וכו'),
+one_time=ציוד/תיקון חד פעמי.
+אם אינך בטוח לחלוטין מה המוצר (שם מקוצר, קוד, שם מסחרי לא מוכר) — category="unknown". אל תנחש.
+${aliases.length ? "שמות שהבעלים כבר הגדיר (השתמש בהם):\n" + aliases.map((a) => `- "${a.raw_name}" = ${a.label}`).join("\n") : ""}
+אם התמונה אינה חשבונית: is_invoice=false ו-lines ריק.`;
+
 const producePrompt = (aliases: { raw_name: string; label: string }[]) => `אתה מפענח חשבונית של ספק ירקות/מזון עבור מסעדת המבורגרים בישראל.
 החזר כל שורת מוצר בחשבונית בנפרד (שם כפי שמודפס, כמות, יחידה, מחיר ליחידה, סה"כ שורה).
 item_key: lettuce=חסה, tomato=עגבנייה, red_onion=בצל סגול, pickles=מלפפון חמוץ, white_onion=בצל לבן/יבש, other=מוצר ברור שאינו אחד מאלה.
@@ -78,20 +116,32 @@ Deno.serve(async (req) => {
     const anon = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
     });
-    const { data: u } = await anon.auth.getUser();
-    if (!u?.user) return json({ error: "unauthorized" }, 401);
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
-    const { data: isKitchen } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "kitchen" });
-    if (!isAdmin && !isKitchen) return json({ error: "forbidden" }, 403);
-
     const body = await req.json().catch(() => null);
+    const invToken = typeof body?.inventory_token === "string" ? body.inventory_token : "";
+    if (invToken.length >= 16) {
+      const { data: t } = await admin.from("inventory_access_tokens").select("scope, expires_at, revoked_at").eq("token", invToken).maybeSingle();
+      if (!t || t.revoked_at || t.scope !== "admin" || (t.expires_at && new Date(t.expires_at).getTime() < Date.now()))
+        return json({ error: "forbidden" }, 403);
+    } else {
+      const { data: u } = await anon.auth.getUser();
+      if (!u?.user) return json({ error: "unauthorized" }, 401);
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+      const { data: isKitchen } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "kitchen" });
+      if (!isAdmin && !isKitchen) return json({ error: "forbidden" }, 403);
+    }
+
     const image = typeof body?.image === "string" ? body.image : "";
     if (!/^data:image\/(jpeg|png|webp);base64,/.test(image) || image.length > 8_000_000)
       return json({ error: "תמונה לא תקינה" }, 400);
 
     const produce = body?.mode === "produce";
-    const aliases = Array.isArray(body?.aliases) ? body.aliases.slice(0, 200).filter((a: any) => typeof a?.raw_name === "string" && typeof a?.label === "string") : [];
+    const general = body?.mode === "general";
+    let aliases = Array.isArray(body?.aliases) ? body.aliases.slice(0, 200).filter((a: any) => typeof a?.raw_name === "string" && typeof a?.label === "string") : [];
+    if (general) {
+      const { data: al } = await admin.from("product_aliases").select("raw_name, item_key, label").limit(300);
+      aliases = (al ?? []).map((a: any) => ({ raw_name: a.raw_name, label: a.label || a.item_key }));
+    }
     const res = await fetch(GATEWAY, {
       method: "POST",
       headers: {
@@ -105,10 +155,10 @@ Deno.serve(async (req) => {
         store: false,
         reasoning: { effort: "low", summary: "auto" },
         include: ["reasoning.encrypted_content"],
-        text: { format: { type: "json_schema", name: "invoice", strict: true, schema: produce ? PRODUCE_SCHEMA : SCHEMA } },
+        text: { format: { type: "json_schema", name: "invoice", strict: true, schema: general ? GENERAL_SCHEMA : produce ? PRODUCE_SCHEMA : SCHEMA } },
         input: [{
           role: "user",
-          content: [{ type: "input_text", text: produce ? producePrompt(aliases) : PROMPT }, { type: "input_image", image_url: image }],
+          content: [{ type: "input_text", text: general ? generalPrompt(aliases) : produce ? producePrompt(aliases) : PROMPT }, { type: "input_image", image_url: image }],
         }],
       }),
     });
