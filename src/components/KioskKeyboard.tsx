@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Delete, CornerDownLeft } from "lucide-react";
+import { kioskKeyboard } from "@/config/uiConfig";
 
 /**
  * KioskKeyboard
@@ -9,7 +10,8 @@ import { Delete, CornerDownLeft } from "lucide-react";
  * - Hides on blur (with small grace period to avoid flicker)
  * - Numeric layout for type="tel" / "number", Hebrew otherwise
  * - Inserts characters via execCommand + native input event so React state updates
- * - Lives at the bottom, full width, fixed
+ * - Floats near the vertical center of the screen (easy to reach), fixed width
+ *   per layout — see kioskKeyboard in src/config/uiConfig.ts
  *
  * Usage: render <KioskKeyboard /> once at the root of the kiosk page.
  */
@@ -255,8 +257,9 @@ const KioskKeyboard = () => {
           dir="ltr"
           className="fixed inset-x-0 mx-auto z-[10000] rounded-3xl bg-background/95 backdrop-blur border border-border shadow-2xl p-4"
           style={{
-            bottom: "calc(2vh + env(safe-area-inset-bottom, 0px))",
-            width: isNum ? "min(420px, 92vw)" : "min(760px, 94vw)",
+            top: "50%",
+            translate: `0 ${kioskKeyboard.centerOffset}`,
+            width: isNum ? kioskKeyboard.numericWidth : kioskKeyboard.fullWidth,
           }}
           role="dialog"
           aria-label="מקלדת"
