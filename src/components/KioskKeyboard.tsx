@@ -10,7 +10,8 @@ import { kioskKeyboard } from "@/config/uiConfig";
  * - Hides on blur (with small grace period to avoid flicker)
  * - Numeric layout for type="tel" / "number", Hebrew otherwise
  * - Inserts characters via execCommand + native input event so React state updates
- * - Lives at the bottom, full width, fixed
+ * - Floats near the vertical center of the screen (easy to reach), fixed width
+ *   per layout — see kioskKeyboard in src/config/uiConfig.ts
  *
  * Usage: render <KioskKeyboard /> once at the root of the kiosk page.
  */
