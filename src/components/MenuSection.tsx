@@ -4,6 +4,8 @@ import { ShoppingBag, Star, Plus } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { Button } from "@/components/ui/button";
+import { kioskCategoryNavigation } from "@/config/uiConfig";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -383,6 +385,95 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
     (cat) => menuItems.some((i) => matchesCategory(i, cat.key) && isAvailable(availabilityIdFor(i.id)))
   );
 
+  useEffect(() => {
+    if (!visibleCategories.some((category) => category.key === activeCategory)) {
+      const firstCategory = visibleCategories[0];
+      if (firstCategory) setActiveCategory(firstCategory.key);
+    }
+  }, [activeCategory, visibleCategories]);
+
+  const getItemsForCategory = (key: CategoryKey) => {
+    let items = menuItems.filter((item) => matchesCategory(item, key) && isAvailable(availabilityIdFor(item.id)));
+    if (settings.menu_order && settings.menu_order.length > 0) {
+      items = [...items].sort((a, b) => {
+        const idxA = settings.menu_order.indexOf(a.id);
+        const idxB = settings.menu_order.indexOf(b.id);
+        return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+      });
+    }
+    if (key === "burger") {
+      items = [...items].sort((a, b) => {
+        if (a.id === "arayes-special") return 1;
+        if (b.id === "arayes-special") return -1;
+        return 0;
+      });
+    }
+    return items;
+  };
+
+  if (isKiosk) {
+    const activeMeta = visibleCategories.find((category) => category.key === activeCategory) ?? visibleCategories[0];
+    const activeItems = activeMeta ? getItemsForCategory(activeMeta.key) : [];
+
+    return (
+      <section id="menu" className={kioskCategoryNavigation.layout.shell} dir="rtl">
+        <nav className={kioskCategoryNavigation.layout.sidebar} aria-label="קטגוריות תפריט">
+          <div className="flex min-h-full flex-col py-4">
+            {visibleCategories.map((category) => {
+              const active = activeMeta?.key === category.key;
+              return (
+                <Button
+                  key={category.key}
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setActiveCategory(category.key)}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative h-auto min-h-16 w-full justify-start rounded-none px-4 py-4 text-right text-lg font-bold leading-snug transition-colors ${
+                    active ? "text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="kiosk-active-category"
+                      className="absolute inset-0 bg-primary"
+                      transition={kioskCategoryNavigation.activeIndicator.transition}
+                    />
+                  )}
+                  <span className="relative z-10 whitespace-normal">{category.label}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </nav>
+
+        <div className={kioskCategoryNavigation.layout.content}>
+          <AnimatePresence mode="wait" initial={false}>
+            {activeMeta && (
+              <motion.div key={activeMeta.key} {...kioskCategoryNavigation.panel}>
+                <h2 className="mb-5 border-r-4 border-primary pr-3 text-right font-black text-primary" style={{ fontSize: `${28 * fontScale}px` }}>
+                  {activeMeta.label}
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {activeItems.map((item) => (
+                    <KioskTile
+                      key={`${activeMeta.key}-${item.id}`}
+                      item={item}
+                      onAdd={onAddItem}
+                      browseOnly={browseOnly}
+                      fontScale={fontScale}
+                      nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
+                      descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="menu" className={`${isKiosk ? 'w-full max-w-none px-2 pt-4 pb-32 bg-white' : 'mx-auto max-w-2xl px-4 py-16'}`}>
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
@@ -433,23 +524,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       </div>
 
       {categories.map((cat) => {
-        let items = menuItems.filter((i) => matchesCategory(i, cat.key) && isAvailable(availabilityIdFor(i.id)));
-        // Apply custom order if set
-        if (settings.menu_order && settings.menu_order.length > 0) {
-          items = [...items].sort((a, b) => {
-            const idxA = settings.menu_order.indexOf(a.id);
-            const idxB = settings.menu_order.indexOf(b.id);
-            return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
-          });
-        }
-        // Always pin arayes-special to the END of the burgers section.
-        if (cat.key === "burger") {
-          items = [...items].sort((a, b) => {
-            if (a.id === "arayes-special") return 1;
-            if (b.id === "arayes-special") return -1;
-            return 0;
-          });
-        }
+        const items = getItemsForCategory(cat.key);
         if (items.length === 0) return null;
         return (
           <div
