@@ -161,10 +161,19 @@ export const kioskSoldierFund = {
 // ─── Kiosk On-screen Keyboard ────────────────────────────────────────
 
 export const kioskKeyboard = {
-  /** Floating keyboard floats near screen center (not docked to bottom) */
-  centerOffset: "-55%", // vertical translate from top:50% — slightly above true center
-  numericWidth: "min(420px, 92vw)",
-  fullWidth: "min(760px, 94vw)",
+  /** Docked near the bottom, raised off the very bottom edge */
+  bottomOffset: "1.25rem",
+  /** Full screen width */
+  numericWidth: "100vw",
+  fullWidth: "100vw",
+  /** Container look — white panel, rounded top, subtle border */
+  className:
+    "rounded-t-3xl bg-white text-gray-900 border border-gray-200 shadow-2xl",
+  /** Keys on the white panel (light, explicit grays — kiosk theme muted is dark) */
+  keyClass:
+    "rounded-xl bg-white text-gray-900 border border-gray-200 shadow-sm active:scale-95 active:bg-gray-100 transition-transform flex items-center justify-center font-medium select-none",
+  functionKeyClass:
+    "rounded-xl bg-gray-100 text-gray-900 border border-gray-200 shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none",
 };
 
 // ─── Hero Section Animations ─────────────────────────────────────────

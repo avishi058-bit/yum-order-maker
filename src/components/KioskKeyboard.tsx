@@ -239,10 +239,8 @@ const KioskKeyboard = () => {
   const nextLabel = nextLayout === "numeric" ? "123" : nextLayout === "english" ? "ABC" : "א-ב";
 
   const isNum = layout === "numeric";
-  const keyCls =
-    "rounded-xl bg-card text-foreground border border-border shadow-sm active:scale-95 active:bg-muted transition-transform flex items-center justify-center font-medium select-none";
-  const fnCls =
-    "rounded-xl bg-muted text-foreground border border-border shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none";
+  const keyCls = kioskKeyboard.keyClass;
+  const fnCls = kioskKeyboard.functionKeyClass;
 
   return (
     <AnimatePresence>
@@ -255,10 +253,9 @@ const KioskKeyboard = () => {
           transition={{ type: "spring", damping: 26, stiffness: 300 }}
           onPointerDown={handlePointerDown}
           dir="ltr"
-          className="fixed inset-x-0 mx-auto z-[10000] rounded-3xl bg-background/95 backdrop-blur border border-border shadow-2xl p-4"
+          className={`fixed inset-x-0 mx-auto z-[10000] p-4 ${kioskKeyboard.className}`}
           style={{
-            top: "50%",
-            translate: `0 ${kioskKeyboard.centerOffset}`,
+            bottom: kioskKeyboard.bottomOffset,
             width: isNum ? kioskKeyboard.numericWidth : kioskKeyboard.fullWidth,
           }}
           role="dialog"
