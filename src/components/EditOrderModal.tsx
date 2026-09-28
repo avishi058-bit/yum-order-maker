@@ -146,7 +146,7 @@ export default function EditOrderModal({
     <Dialog open={open} onOpenChange={(o) => !o && !saving && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle>עריכת הזמנה #{orderNumber}</DialogTitle>
+          <DialogTitle>עריכת הזמנה</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">

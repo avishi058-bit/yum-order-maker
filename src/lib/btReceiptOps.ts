@@ -1035,9 +1035,6 @@ export function buildInvoiceOps(inv: InvoicePrintData): FastOp[] {
     ops.push(asLine(`מסמך ${inv.invoiceNumber}`, { align: "C", bold: true, size: 39 }));
   }
   ops.push(asLine(when, { align: "C", size: 30 }));
-  if (inv.orderNumber != null) {
-    ops.push(asLine(`הזמנה ${inv.orderNumber}`, { align: "C", size: 30 }));
-  }
   ops.push(sep());
   if (inv.customerName) ops.push(asLine(`לכבוד: ${inv.customerName}`, { align: "R", size: 33 }));
   if (inv.customerPhone) ops.push(asLine(`טלפון: ${inv.customerPhone}`, { align: "R", size: 30 }));

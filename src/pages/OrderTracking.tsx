@@ -101,7 +101,7 @@ const OrderTracking = () => {
   if (!orderNumber || !phone) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <p className="text-muted-foreground">קישור לא תקין — חסר מספר הזמנה או טלפון</p>
+        <p className="text-muted-foreground">קישור המעקב אינו תקין</p>
       </div>
     );
   }

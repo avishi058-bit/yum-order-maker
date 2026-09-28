@@ -9,6 +9,7 @@
 - [x] Kiosk keyboards redesigned to brand style (numeric + Hebrew)
 - [x] Bon numbers restart each business day, no skipped numbers
 - [x] Dashboard: months back, day-over-day comparison, 12-month chart, top dishes, weekday performance
+- [x] Remove internal order numbers from all visible screens, notifications and printouts; retain daily bon numbers
 
 ## Open
 - [ ] Paybox: turn the switch on in "הגדרות עמדה" on the kitchen screen, then test an order (blocked: needs staff action on the till)

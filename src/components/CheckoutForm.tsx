@@ -583,7 +583,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           }
           toast({
             title: "התשלום אושר! 🎉",
-            description: `מספר הזמנה: #${order.orderNumber}`,
+            description: "ההזמנה נשלחה למטבח",
           });
           onSuccess(order.orderNumber, form.phone, "credit", order.orderId, form.name);
         } catch (e: any) {
@@ -740,7 +740,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       }
       toast({
         title: "ההזמנה נשלחה בהצלחה! 🎉",
-        description: `מספר הזמנה: #${order.orderNumber}`,
+        description: "ההזמנה נשלחה למטבח",
       });
       onSuccess(order.orderNumber, form.phone, method, order.orderId, form.name);
     } catch (error: any) {
