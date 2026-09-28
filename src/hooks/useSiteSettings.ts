@@ -101,7 +101,7 @@ export const useSiteSettings = () => {
   const fetchSettings = async () => {
     const { data, error } = await supabase
       .from("site_settings")
-      .select("*")
+      .select("id,kiosk_font_scale,website_font_scale,primary_color,background_color,menu_item_overrides,menu_order,banner_text,banner_enabled,business_hours,google_review_url,kiosk_modal_height_vh,kiosk_image_height_px,kiosk_image_scale,kiosk_card_image_size_px,kiosk_spacing_scale,kiosk_ui_scale,kiosk_lock_layout,kiosk_disable_zoom")
       .limit(1)
       .single();
     if (data && !error) {
