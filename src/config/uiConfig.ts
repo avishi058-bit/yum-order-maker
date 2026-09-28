@@ -128,8 +128,8 @@ export const kioskWelcomeAnimations = {
   intro: {
     initial: { opacity: 0, scale: 0.96 },
     animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 1.04 },
-    transition: { duration: 0.45, ease: "easeOut" as const },
+    exit: { opacity: 0 },
+    transition: { duration: 0.08, ease: "easeOut" as const },
   },
   brand: {
     initial: { opacity: 0, y: -24 },
@@ -141,21 +141,15 @@ export const kioskWelcomeAnimations = {
     transition: { duration: 1.7, repeat: Infinity, ease: "easeInOut" as const },
   },
   choices: {
-    initial: { opacity: 0, scale: 0.94 },
+    initial: { opacity: 0 },
     animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.96 },
-    transition: { duration: 0.35, ease: "easeOut" as const },
+    exit: { opacity: 0 },
+    transition: { duration: 0.1, ease: "easeOut" as const },
   },
-  choiceButton: (index: number) => ({
-    initial: { opacity: 0, scale: 0.15 },
+  choiceButton: (_index: number) => ({
+    initial: { opacity: 0, scale: 0.92 },
     animate: { opacity: 1, scale: 1 },
-    transition: {
-      type: "spring" as const,
-      damping: 13,
-      stiffness: 190,
-      mass: 0.85,
-      delay: 0.12 + index * 0.12,
-    },
+    transition: { duration: 0.12, ease: "easeOut" as const },
   }),
 };
 
