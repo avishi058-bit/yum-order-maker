@@ -82,7 +82,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
       onClick={() => onOpenChange(false)}
     >
       <div
-        className={`relative w-full overflow-y-auto rounded-2xl bg-background text-foreground shadow-2xl ${isKiosk ? "max-w-3xl max-h-[94vh] p-8 space-y-6" : "max-w-lg max-h-[88vh] p-5 space-y-4"}`}
+        className={`relative w-full overflow-y-auto rounded-2xl shadow-2xl ${isKiosk ? "max-w-3xl max-h-[94vh] bg-kiosk-nav p-8 text-kiosk-nav-foreground space-y-6" : "max-w-lg max-h-[88vh] bg-background p-5 text-foreground space-y-4"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -113,7 +113,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           <button
             type="button"
             onClick={() => setShowAbout((v) => !v)}
-            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+            className={`${isKiosk ? "text-xl text-kiosk-nav-foreground" : "text-sm text-muted-foreground hover:text-foreground"} underline underline-offset-4 transition-colors`}
           >
             מה זה המיזם? 💚
           </button>
@@ -128,7 +128,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           <button
             type="button"
             onClick={() => setShowTerms((v) => !v)}
-            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+            className={`${isKiosk ? "text-xl text-kiosk-nav-foreground" : "text-sm text-muted-foreground hover:text-foreground"} underline underline-offset-4 transition-colors`}
           >
             {showTerms ? "הסתרת התקנון" : "רוצים לקרוא את התקנון? 📜"}
           </button>
