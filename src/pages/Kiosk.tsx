@@ -377,11 +377,43 @@ const Kiosk = () => {
 
   if (view === "welcome") {
     return (
-      <KioskWelcome
-        onStart={handleWelcomeStart}
-        soldierFundEnabled={restaurantStatus.soldier_fund_enabled !== false}
-        onSoldierFundClick={() => setSoldierFundOpen(true)}
-      />
+      <>
+        <KioskWelcome
+          onStart={handleWelcomeStart}
+          soldierFundEnabled={restaurantStatus.soldier_fund_enabled !== false}
+          onSoldierFundClick={() => setSoldierFundOpen(true)}
+        />
+        <Suspense fallback={null}>
+          <SoldierFundHowItWorks
+            open={soldierFundOpen}
+            onOpenChange={setSoldierFundOpen}
+            approved={Boolean(pendingDonation?.termsAt)}
+            onApprove={() => { /* approval time is stored when a sum is confirmed */ }}
+            isKiosk
+            donate={{
+              canOrder: true,
+              onContinueOrder: (amount) => {
+                const termsAt = new Date().toISOString();
+                const donation = { amount, termsAt };
+                setPendingDonation(donation);
+                sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify(donation));
+                setSoldierFundOpen(false);
+                setView("menu");
+              },
+              onDonateOnly: (amount) => {
+                const termsAt = new Date().toISOString();
+                const donation = { amount, termsAt };
+                setPendingDonation(donation);
+                sessionStorage.setItem("soldier-pending-donation-v1", JSON.stringify(donation));
+                setSoldierFundOpen(false);
+                setDonationOnlyCheckout(true);
+                setView("menu");
+                setCheckoutOpen(true);
+              },
+            }}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -406,7 +438,7 @@ const Kiosk = () => {
       </div>
 
       {/* Floating green "סיום הזמנה" button — same as website */}
-      {totalItems > 0 && (
+      {(totalItems > 0 || (pendingDonation?.amount ?? 0) > 0) && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <button
             ref={cartButtonCallbackRef as any}
@@ -421,7 +453,7 @@ const Kiosk = () => {
               </span>
             </span>
             <span className="text-2xl">סיום הזמנה</span>
-            <span className="text-2xl font-black border-r border-white/30 pr-4">₪{getTotal()}</span>
+            <span className="text-2xl font-black border-r border-white/30 pr-4">₪{getTotal() + (pendingDonation?.amount ?? 0)}</span>
           </button>
         </div>
       )}
