@@ -1,6 +1,7 @@
 # Task roadmap
 
 ## Done
+- [x] Kiosk menu: vertical category navigation on the right with animated category transitions
 - [x] Kiosk welcome: full-screen "לחצו להתחלה", then animated dine-in/takeaway choices
 - [x] Dashboard lock: compact card + small "נתוני הכנסות מלאים" button, compact code box, trusted device (verified in browser)
 - [x] Color inversion / accessibility widget stays visible (portal + filters on app root)
