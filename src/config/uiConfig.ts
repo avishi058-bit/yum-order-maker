@@ -164,14 +164,16 @@ export const kioskWelcomeAnimations = {
 export const kioskCategoryNavigation = {
   layout: {
     shell: "flex min-h-full w-full items-start bg-background",
-    sidebar: "sticky top-0 z-40 h-[calc(100vh-73px)] w-44 flex-none overflow-y-auto border-l border-border bg-card",
-    content: "min-w-0 flex-1 px-5 pb-32 pt-6",
+    sidebar: "sticky top-0 z-40 h-[calc(100vh-73px)] w-32 flex-none overflow-hidden border-l border-border bg-kiosk-nav text-kiosk-nav-foreground shadow-sm",
+    sidebarList: "flex h-full flex-col justify-evenly py-2",
+    categoryButton: "relative h-auto min-h-14 w-full justify-center rounded-none px-2 py-3 text-center text-2xl font-extrabold leading-tight text-kiosk-nav-foreground transition-colors",
+    content: "min-w-0 flex-1 px-4 pb-32 pt-5",
   },
-  panel: {
-    initial: { opacity: 0, x: -22 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 22 },
-    transition: { duration: 0.24, ease: "easeOut" as const },
+  section: {
+    initial: { opacity: 0, y: 18 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.08 },
+    transition: { duration: 0.28, ease: "easeOut" as const },
   },
   activeIndicator: {
     transition: { type: "spring" as const, damping: 28, stiffness: 320 },

@@ -52,6 +52,10 @@ export default {
         },
         smoke: "hsl(var(--smoke))",
         "warm-glow": "hsl(var(--warm-glow))",
+        "kiosk-nav": {
+          DEFAULT: "hsl(var(--kiosk-nav-background))",
+          foreground: "hsl(var(--kiosk-nav-foreground))",
+        },
         green: {
           DEFAULT: "hsl(var(--green))",
           foreground: "hsl(var(--green-foreground))",

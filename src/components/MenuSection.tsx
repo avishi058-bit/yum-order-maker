@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ShoppingBag, Star, Plus } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
@@ -412,24 +412,21 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   };
 
   if (isKiosk) {
-    const activeMeta = visibleCategories.find((category) => category.key === activeCategory) ?? visibleCategories[0];
-    const activeItems = activeMeta ? getItemsForCategory(activeMeta.key) : [];
-
     return (
       <section id="menu" className={kioskCategoryNavigation.layout.shell} dir="rtl">
         <nav className={kioskCategoryNavigation.layout.sidebar} aria-label="קטגוריות תפריט">
-          <div className="flex min-h-full flex-col py-4">
+          <div className={kioskCategoryNavigation.layout.sidebarList}>
             {visibleCategories.map((category) => {
-              const active = activeMeta?.key === category.key;
+              const active = activeCategory === category.key;
               return (
                 <Button
                   key={category.key}
                   type="button"
                   variant="ghost"
-                  onClick={() => setActiveCategory(category.key)}
+                  onClick={() => scrollToCategory(category.key)}
                   aria-current={active ? "page" : undefined}
-                  className={`relative h-auto min-h-16 w-full justify-start rounded-none px-4 py-4 text-right text-lg font-bold leading-snug transition-colors ${
-                    active ? "text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className={`${kioskCategoryNavigation.layout.categoryButton} ${
+                    active ? "text-primary-foreground" : "text-kiosk-nav-foreground hover:bg-secondary"
                   }`}
                 >
                   {active && (
@@ -447,16 +444,23 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
         </nav>
 
         <div className={kioskCategoryNavigation.layout.content}>
-          <AnimatePresence mode="wait" initial={false}>
-            {activeMeta && (
-              <motion.div key={activeMeta.key} {...kioskCategoryNavigation.panel}>
-                <h2 className="mb-5 border-r-4 border-primary pr-3 text-right font-black text-primary" style={{ fontSize: `${28 * fontScale}px` }}>
-                  {activeMeta.label}
+          {visibleCategories.map((category) => {
+            const categoryItems = getItemsForCategory(category.key);
+            return (
+              <motion.div
+                key={category.key}
+                ref={(el) => { sectionRefs.current[category.key] = el; }}
+                data-category={category.key}
+                className="scroll-mt-5 pb-10"
+                {...kioskCategoryNavigation.section}
+              >
+                <h2 className="mb-5 border-r-4 border-primary pr-3 text-right font-black text-primary" style={{ fontSize: `${32 * fontScale}px` }}>
+                  {category.label}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {activeItems.map((item) => (
+                  {categoryItems.map((item) => (
                     <KioskTile
-                      key={`${activeMeta.key}-${item.id}`}
+                      key={`${category.key}-${item.id}`}
                       item={item}
                       onAdd={onAddItem}
                       browseOnly={browseOnly}
@@ -467,8 +471,8 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
                   ))}
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
+            );
+          })}
         </div>
       </section>
     );
