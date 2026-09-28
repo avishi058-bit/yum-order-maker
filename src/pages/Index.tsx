@@ -1054,7 +1054,6 @@ const Index = () => {
 
         {successOrder && (
           <OrderSuccessModal
-            orderNumber={successOrder.orderNumber}
             note={successOrder.note}
             onClose={() => setSuccessOrder(null)}
           />

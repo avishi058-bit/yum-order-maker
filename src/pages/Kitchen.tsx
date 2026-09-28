@@ -482,6 +482,8 @@ const Kitchen = () => {
     let cancelled = false;
     buildReceiptHtml({
       order_number: previewOrder.order_number,
+      bon_queue_number: previewOrder.bon_queue_number ?? null,
+      queue_number: previewOrder.queue_number ?? null,
       customer_name: previewOrder.customer_name,
       customer_phone: previewOrder.customer_phone,
       notes: previewOrder.notes,

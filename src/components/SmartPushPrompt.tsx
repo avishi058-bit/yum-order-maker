@@ -7,7 +7,6 @@ interface SmartPushPromptProps {
   open: boolean;
   phone: string;
   orderId?: string | null;
-  orderNumber: number;
   onAccept: () => void;
   onDismiss: () => void;
   /** When true, renders as an inline card instead of a full-screen modal. */
@@ -30,7 +29,7 @@ const logEvent = (action: "shown" | "accepted" | "dismissed" | "denied", phone: 
   } catch {}
 };
 
-const SmartPushPrompt = ({ open, phone, orderId, orderNumber, onAccept, onDismiss, inline = false }: SmartPushPromptProps) => {
+const SmartPushPrompt = ({ open, phone, orderId, onAccept, onDismiss, inline = false }: SmartPushPromptProps) => {
   useEffect(() => {
     if (open) logEvent("shown", phone, orderId);
   }, [open, phone, orderId]);

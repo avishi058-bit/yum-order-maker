@@ -289,7 +289,6 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   open={showSmartPrompt}
                   phone={phone}
                   orderId={order?.id ?? null}
-                  orderNumber={orderNumber}
                   onAccept={() => {
                     setShowSmartPrompt(false);
                     handleEnableNotifications();

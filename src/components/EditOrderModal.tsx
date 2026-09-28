@@ -26,7 +26,6 @@ interface EditOrderModalProps {
   open: boolean;
   onClose: () => void;
   orderId: string;
-  orderNumber: number;
   items: EditableOrderItem[];
   onSaved: (result: { requires_reprint: boolean }) => void;
 }
@@ -43,7 +42,6 @@ export default function EditOrderModal({
   open,
   onClose,
   orderId,
-  orderNumber,
   items,
   onSaved,
 }: EditOrderModalProps) {
