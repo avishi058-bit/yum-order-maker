@@ -4,6 +4,7 @@ description: Count-based usage audit (veg in units, packaging, bags, sauces with
 type: feature
 ---
 Started 30.9.2026. Profit calc unchanged until owner approves. Always ask when a dependency/qty is unclear.
+Profit calc changes only after owner approves, at end of each audit period. Every new period continues from the last count; averages are cumulative over ALL periods (total used ÷ total sold) for accuracy.
 Each product tracked only from its first count; owner enters "left now" + "new goods".
 Units & conversions (owner answers):
 - Lettuce: counted in units (not kg). Pickles: units = cans (פחית שימורים).
