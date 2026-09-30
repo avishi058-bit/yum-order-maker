@@ -98,6 +98,19 @@ export default function StockAudit({ token, onClose }: { token: string; onClose:
                       ))}
                     </div>
                   ))}
+                  {periods.length > 1 && (() => {
+                    const used = periods.reduce((s, r) => s + r.used, 0);
+                    return (
+                      <div className="rounded-md border border-primary p-2">
+                        <div className="text-xs font-bold">ממוצע מצטבר על כל {periods.length} תקופות הבדיקה: נוצל {n2(used)} {p.unit}</div>
+                        {p.drivers.map((d, j) => {
+                          const units = periods.reduce((s, r) => s + (r.drivers[j]?.units ?? 0), 0);
+                          const share = p.split ? p.split[j] : 1;
+                          return <div key={d.label} className="text-xs">{d.label}: {units} → <b>{units ? `${n2((used * share) / units)} ${p.unit} למנה` : "—"}</b></div>;
+                        })}
+                      </div>
+                    );
+                  })()}
                   {mine.length > 0 && (
                     <details className="text-xs">
                       <summary className="cursor-pointer text-muted-foreground">היסטוריית רישומים ({mine.length})</summary>
