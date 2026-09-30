@@ -291,7 +291,7 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 pb-4 pt-3 backdrop-blur">
+      <header className="pwa-safe-top sticky top-0 z-10 border-b border-border bg-background/95 px-4 pb-4 pt-3 backdrop-blur">
         <div className="mx-auto max-w-3xl space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>

@@ -261,7 +261,7 @@ ${refillList.length ? `<table>${rows}</table>` : `<div class="empty">המקרר 
 
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground pb-24">
-      <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
+      <header className="pwa-safe-top sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto p-3 flex items-center gap-2">
           <Link to={`/inventory/${token}`}>
             <Button size="icon" variant="ghost">
