@@ -15,10 +15,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash, BarChart3, ShoppingCart, PackageX, Refrigerator } from "lucide-react";
+import { Loader2, Plus, Minus, Settings, History, AlertTriangle, Trash2, Trash, BarChart3, ShoppingCart, PackageX, Refrigerator, Camera, ClipboardCheck, Search, MoreVertical, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { InventoryStats } from "@/components/InventoryStats";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 
 type Preset = { label: string; amount: number };
@@ -139,6 +145,8 @@ export default function Inventory() {
   const [showStats, setShowStats] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
 
 
   const call = useCallback(
@@ -238,6 +246,35 @@ export default function Inventory() {
     }));
   }, [items]);
 
+  const categories = useMemo(
+    () => [...new Set(items.map((item) => item.category))].sort((a, b) => categoryRank(a) - categoryRank(b)),
+    [items],
+  );
+  const attentionCount = useMemo(
+    () => items.filter((item) => Number(item.quantity) <= Number(item.low_threshold)).length,
+    [items],
+  );
+  const visibleItems = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase("he");
+    return items
+      .filter((item) => !needle || item.name.toLocaleLowerCase("he").includes(needle))
+      .filter((item) => {
+        if (filter === "all") return true;
+        if (filter === "attention") return Number(item.quantity) <= Number(item.low_threshold);
+        return item.category === filter;
+      })
+      .sort((a, b) => {
+        const urgencyA = Number(a.quantity) <= 0 ? 0 : Number(a.quantity) <= Number(a.low_threshold) ? 1 : 2;
+        const urgencyB = Number(b.quantity) <= 0 ? 0 : Number(b.quantity) <= Number(b.low_threshold) ? 1 : 2;
+        return urgencyA - urgencyB || categoryRank(a.category) - categoryRank(b.category) || a.sort_order - b.sort_order;
+      });
+  }, [filter, items, query]);
+  const visibleByCategory = useMemo(() => {
+    const map = new Map<string, InventoryItem[]>();
+    for (const item of visibleItems) map.set(item.category, [...(map.get(item.category) ?? []), item]);
+    return [...map.entries()].sort(([a], [b]) => categoryRank(a) - categoryRank(b));
+  }, [visibleItems]);
+
 
   const handleAdjust = async (item: InventoryItem, delta: number) => {
     // Optimistic update — instant visual feedback
@@ -298,49 +335,55 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <header className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-bold">ניהול מלאי - הבקתה</h1>
-          <p className="text-xs text-muted-foreground">
-            {items.length} פריטים · עדכון בלייב
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap w-full sm:w-auto">
-          <Link to={`/inventory/${token}/fridge`}>
-            <Button size="sm" variant="outline" className="gap-1">
-              <Refrigerator className="h-4 w-4" /> מקרר
-            </Button>
-          </Link>
-          <Button size="sm" variant="outline" onClick={() => setShowScanner(true)}>
-            🧾 חשבונית
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowAudit(true)}>
-            📋 ספירה
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowStats(true)}>
-            <BarChart3 className="h-4 w-4 ml-1" /> דוחות
-          </Button>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 ml-1" /> פריט
-          </Button>
+      <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 pb-4 pt-3 backdrop-blur">
+        <div className="mx-auto max-w-3xl space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">ניהול מלאי</h1>
+              <p className="text-sm text-muted-foreground">
+                {attentionCount ? `${attentionCount} פריטים דורשים טיפול` : "הכול נראה תקין"}
+              </p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="outline" aria-label="כלים נוספים"><MoreVertical className="h-5 w-5" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48" dir="rtl">
+                <DropdownMenuItem onSelect={() => setShowStats(true)} className="gap-2"><BarChart3 className="h-4 w-4" /> דוחות</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> הוספת פריט</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="outline" className="h-12 gap-2" onClick={() => setShowScanner(true)}><Camera className="h-5 w-5" /> חשבונית</Button>
+            <Button variant="outline" className="h-12 gap-2" onClick={() => setShowAudit(true)}><ClipboardCheck className="h-5 w-5" /> ספירה</Button>
+            <Button variant="outline" className="h-12 gap-2" asChild><Link to={`/inventory/${token}/fridge`}><Refrigerator className="h-5 w-5" /> מקרר</Link></Button>
+          </div>
+
+          <div className="relative">
+            <Search className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="חיפוש מוצר..." className="h-12 rounded-md bg-card pr-11 text-base" />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {[{ key: "all", label: "הכול" }, { key: "attention", label: `דורש טיפול${attentionCount ? ` (${attentionCount})` : ""}` }, ...categories.map((category) => ({ key: category, label: category }))].map((option) => (
+              <Button key={option.key} size="sm" variant={filter === option.key ? "default" : "secondary"} className="shrink-0" onClick={() => setFilter(option.key)} aria-pressed={filter === option.key}>{option.label}</Button>
+            ))}
+          </div>
         </div>
       </header>
 
       {showScanner && token && <InventoryInvoiceScanner token={token} onClose={() => setShowScanner(false)} />}
       {showAudit && token && <StockAudit token={token} onClose={() => setShowAudit(false)} />}
-      <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
-        {grouped.map((group) => (
-          <section key={group.key} className="space-y-3">
-            <h2 className="text-base font-bold border-b pb-1 px-1">
-              {group.label}
-            </h2>
-            {group.categories.map(([category, list]) => (
-              <div key={category}>
-                <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-1">
-                  {category}
-                </h3>
-                <div className="space-y-2">
-                  {list.map((item) => (
+      <main className="mx-auto max-w-3xl space-y-3 p-3 pb-32">
+        {visibleByCategory.map(([category, list], categoryIndex) => (
+          <details key={category} open={Boolean(query) || filter !== "all" || categoryIndex === 0 || list.some((item) => Number(item.quantity) <= Number(item.low_threshold))} className="group/category">
+            <summary className="mb-2 flex cursor-pointer list-none items-center justify-between rounded-md px-2 py-2 text-base font-bold hover:bg-muted/60">
+              <span>{category} <span className="text-sm font-normal text-muted-foreground">({list.length})</span></span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open/category:rotate-180" />
+            </summary>
+            <div className="space-y-2">
+              {list.map((item) => (
                     <ItemCard
                       key={item.id}
                       item={item}
@@ -360,16 +403,14 @@ export default function Inventory() {
                         }
                       }}
                     />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </section>
+              ))}
+            </div>
+          </details>
         ))}
 
-        {items.length === 0 && (
+        {visibleItems.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
-            אין פריטים. הוסף פריט ראשון בכפתור למעלה.
+            {items.length ? "לא נמצאו מוצרים מתאימים." : "אין פריטים. אפשר להוסיף פריט דרך תפריט הכלים."}
           </div>
         )}
       </main>
@@ -541,6 +582,7 @@ function ItemCard({
   onCorrection: () => void;
   onMarkOut: () => void;
 }) {
+  const [showActions, setShowActions] = useState(false);
 
   const isLow =
     Number(item.low_threshold) > 0 && Number(item.quantity) <= Number(item.low_threshold);
@@ -548,35 +590,33 @@ function ItemCard({
 
   return (
     <div
-      className={`rounded-lg border p-3 ${
+      className={`rounded-md border p-3 transition-colors ${
         isZero
           ? "border-destructive bg-destructive/5"
           : isLow
-          ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20"
+          ? "border-primary/60 bg-primary/5"
           : "border-border bg-card"
       }`}
     >
-      <div className="flex items-start justify-between mb-2 gap-2">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm truncate">{item.name}</div>
-          <div className="text-xs text-muted-foreground flex gap-2 flex-wrap">
+          <div className="truncate text-base font-bold">{item.name}</div>
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <span>{item.category}</span>
             {item.low_threshold > 0 && (
               <span>סף: {formatQty(Number(item.low_threshold), item.unit)}</span>
             )}
-            {Number(item.unit_cost) > 0 && (
-              <span>₪{Number(item.unit_cost).toFixed(2)}/יח׳</span>
-            )}
           </div>
         </div>
-        <div className="text-right whitespace-nowrap">
+        <div className="whitespace-nowrap text-left">
           <div
-            className={`text-lg font-bold ${
-              isZero ? "text-destructive" : isLow ? "text-yellow-700 dark:text-yellow-400" : ""
+            className={`text-xl font-bold ${
+              isZero ? "text-destructive" : isLow ? "text-primary" : ""
             }`}
           >
             {formatQty(Number(item.quantity), item.unit)}
-            {isZero && <Badge variant="destructive" className="mr-2">אזל</Badge>}
           </div>
+          {isZero && <Badge variant="destructive">אזל</Badge>}
           {(() => {
             const box = getBoxSize(item);
             const qty = Number(item.quantity);
@@ -595,13 +635,13 @@ function ItemCard({
 
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {item.presets.map((p, i) => (
           <Button
             key={i}
             size="sm"
             variant={p.amount >= 0 ? "secondary" : "outline"}
-            className="h-8 text-xs"
+            className="h-10 shrink-0 text-sm"
             onClick={() => onAdjust(p.amount)}
           >
             {p.amount > 0 && <Plus className="h-3 w-3 ml-0.5" />}
@@ -609,52 +649,55 @@ function ItemCard({
             {p.label}
           </Button>
         ))}
-        <div className="flex-1" />
+        <Button size="sm" variant="ghost" className="h-10 shrink-0 gap-1" onClick={() => setShowActions((open) => !open)} aria-expanded={showActions}>
+          <MoreVertical className="h-4 w-4" /> פעולות
+        </Button>
+      </div>
+      {showActions && (
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 sm:grid-cols-3">
         <Button
           size="sm"
-          variant="ghost"
-          className="h-8 px-2 text-blue-600 hover:bg-blue-600/10"
+          variant="outline"
+          className="h-10 justify-start gap-2"
           onClick={onPurchase}
-          title="רשום קנייה / הוסף למלאי"
         >
-          <ShoppingCart className="h-4 w-4" />
+          <ShoppingCart className="h-4 w-4" /> קנייה
         </Button>
         <Button
           size="sm"
-          variant="ghost"
-          className="h-8 px-2 text-slate-600 hover:bg-slate-600/10"
+          variant="outline"
+          className="h-10 justify-start gap-2"
           onClick={onCorrection}
-          title="הורד כמות (תיקון — לא נספר כפחת)"
         >
-          <Minus className="h-4 w-4" />
+          <Minus className="h-4 w-4" /> תיקון כמות
         </Button>
         {!isZero && (
           <Button
             size="sm"
-            variant="ghost"
-            className="h-8 px-2 text-orange-600 hover:bg-orange-600/10"
+            variant="outline"
+            className="h-10 justify-start gap-2"
             onClick={onMarkOut}
-            title="נגמר עכשיו (יירשם כפחת)"
           >
-            <PackageX className="h-4 w-4" />
+            <PackageX className="h-4 w-4" /> נגמר עכשיו
           </Button>
         )}
         <Button
           size="sm"
-          variant="ghost"
-          className="h-8 px-2 text-destructive hover:bg-destructive/10"
+          variant="outline"
+          className="h-10 justify-start gap-2 text-destructive"
           onClick={onWaste}
-          title="פחת / נזרק לפח"
         >
-          <Trash className="h-4 w-4" />
+          <Trash className="h-4 w-4" /> פחת / נזרק
         </Button>
-        <Button size="sm" variant="ghost" className="h-8 px-2" onClick={onShowLog}>
-          <History className="h-4 w-4" />
+        <Button size="sm" variant="outline" className="h-10 justify-start gap-2" onClick={onShowLog}>
+          <History className="h-4 w-4" /> היסטוריה
         </Button>
-        <Button size="sm" variant="ghost" className="h-8 px-2" onClick={onEdit}>
-          <Settings className="h-4 w-4" />
+        <Button size="sm" variant="outline" className="h-10 justify-start gap-2" onClick={onEdit}>
+          <Settings className="h-4 w-4" /> הגדרות
         </Button>
-      </div>
+        {Number(item.unit_cost) > 0 && <div className="col-span-2 px-1 text-xs text-muted-foreground sm:col-span-3">עלות: ₪{Number(item.unit_cost).toFixed(2)} ליחידה</div>}
+        </div>
+      )}
     </div>
   );
 }
