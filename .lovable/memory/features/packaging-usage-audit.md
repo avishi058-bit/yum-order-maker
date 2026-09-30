@@ -15,5 +15,6 @@ Units & conversions (owner answers):
 - קטשופ מנות & מיונז מנות: pre-portioned, takeaway ONLY; box = 996 / 900 portions; owner enters boxes.
 - קטשופ פאוץ׳ (13 ליטר) & מיונז דלי (5 ק״ג): dine-in ONLY; liters (mayo entered in kg ≈ liters).
 - שזיפים, צ׳ילי חריף, איולי: dine-in AND takeaway side; counted in liters from invoice; if liters missing — ask and remember product name.
+Invoice scan (save_invoice) auto-enters veg lines as audit "received" (kg→units: tomato ÷0.14, red_onion ÷0.135, white_onion kept kg); kg lines without known average are skipped for manual entry. Sauces still entered manually in the audit screen.
 No other sauces tracked. Drivers in audit: takeaway/dine-in orders (counted once per order) and items; side sauce toppings sold.
 Code: src/lib/stockAudit.ts, src/components/StockAudit.tsx, table stock_counts.
