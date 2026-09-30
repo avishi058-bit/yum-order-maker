@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Camera, ImageIcon, Loader2, X } from "lucide-react";
+import RecentInvoiceLines from "@/components/RecentInvoiceLines";
 
 const CATS: Record<string, string> = {
   lettuce: "חסה", tomato: "עגבנייה", red_onion: "בצל סגול", pickles: "מלפפון חמוץ", white_onion: "בצל לבן",
@@ -117,6 +118,7 @@ export default function InventoryInvoiceScanner({ token, onClose }: { token: str
         </div>
         {busy && <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> קורא את החשבונית...</div>}
         {!draft && !busy && <p className="text-center text-muted-foreground">החשבונית תישמר אוטומטית בניהול המטבח (הוצאות ועלות ירקות). מוצר שלא אזהה — אשאל אותך ואזכור לפעם הבאה.</p>}
+        {!draft && !busy && <RecentInvoiceLines token={token} />}
 
         {draft && (
           <div className="space-y-2">
