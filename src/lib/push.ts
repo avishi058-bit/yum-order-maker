@@ -257,3 +257,20 @@ export const subscribeReopenToPush = async (): Promise<{ ok: boolean; reason?: s
 
 
 
+
+/**
+ * Mark THIS device as allowed (or not) to receive the daily sales summary push.
+ * Only devices unlocked into the full kitchen dashboard stats should receive it.
+ */
+export const setDailySummaryForDevice = async (enabled: boolean): Promise<void> => {
+  try {
+    const sub = await getExistingSubscription();
+    if (!sub) return;
+    await supabase
+      .from("push_subscriptions")
+      .update({ receives_daily_summary: enabled } as any)
+      .eq("endpoint", sub.endpoint);
+  } catch (e) {
+    console.error("[push] set daily summary failed", e);
+  }
+};

@@ -113,7 +113,8 @@ Deno.serve(async (req) => {
     const { data: subs } = await supabase
       .from("push_subscriptions")
       .select("id, endpoint, p256dh, auth")
-      .eq("is_kitchen", true);
+      .eq("is_kitchen", true)
+      .eq("receives_daily_summary", true);
 
     if (!subs || subs.length === 0) {
       return new Response(JSON.stringify({ ok: true, sent: 0, total }), {
