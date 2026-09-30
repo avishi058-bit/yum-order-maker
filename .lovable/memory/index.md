@@ -16,4 +16,4 @@ Strict separation UI/logic/data. No console.log in prod (keep console.error). Mi
 - [Menu item inventory end-to-end](mem://features/menu-item-inventory-end-to-end) — New menu items must also be connected to kitchen availability, inventory, recipes, fridge, pricing, and orders
 - [Net profit](mem://features/net-profit) — Owner's ingredient costs, VAT 18%, credit fee, wages per month, accountant 350, 8% national insurance
 - [Soldier fund](mem://features/soldier-fund) — "הזמן חייל/ת" checkout donation (5–60 or custom ≤1000₪), credited on paid, kitchen/dashboard pay orders from fund, public counter
-- [Packaging usage audit](mem://features/packaging-usage-audit) — Takeaway packaging count started 30.9.2026; recount later; profit unchanged until approval
+- [Packaging usage audit](mem://features/packaging-usage-audit) — Packaging + sauces count started 30.9.2026; always ask unclear qty; profit unchanged until approval
