@@ -66,6 +66,12 @@ const sideSaucesSold = (match: string): Driver => ({
   per: (it) => toppingUnits(it, match),
 });
 
+/** side sauces the customers picked in the "רטבים" line of takeaway orders (×N counted) */
+const portionSaucesChosen = (match: string): Driver => ({
+  label: `${match} בצד שנבחר (טייק אווי)`,
+  per: (it) => (isTakeaway(it) && (it.item_name || "").trim() === "רטבים" ? toppingUnits(it, match) : 0),
+});
+
 export const AUDIT_PRODUCTS: AuditProduct[] = [
   // ===== ירקות — נספרים ביחידות =====
   { key: "lettuce", label: "חסה", group: "ירקות", unit: "יח׳", dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי חסה. נספר ביחידות", drivers: [{ label: "המבורגרים עם חסה", per: vegBurgers("חסה") }] },
@@ -83,8 +89,8 @@ export const AUDIT_PRODUCTS: AuditProduct[] = [
   { key: "fried_box_large", label: "מארז צ׳יפס גדול (דילים)", group: "אריזות", unit: "יח׳", dependsOn: "מארז גדול אחד לכל דיל חברים, דיל משפחתי ומיקס חברים", drivers: [{ label: "דילים ומיקס חברים", per: (it) => (DEAL_BOX_IDS.includes(it.item_id || "") ? q(it) : 0) }] },
   { key: "bags", label: "שקיות טייק אווי", group: "אריזות", unit: "יח׳", dependsOn: "רק הזמנות לקחת — בודקים כמה שקיות יוצאות ביחס למספר ההזמנות ולגודלן", drivers: [takeawayOrdersF, takeawayItems] },
   // ===== רטבים — מנות (טייק אווי בלבד) =====
-  { key: "ketchup_portions", label: "קטשופ מנות", group: "רטבים — מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 996, dependsOn: "רק לטייק אווי. ארגז = 996 מנות — מזין ארגזים והמערכת ממירה", drivers: [takeawayOrdersF, takeawayItems] },
-  { key: "mayo_portions", label: "מיונז מנות", group: "רטבים — מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 900, dependsOn: "רק לטייק אווי. ארגז = 900 מנות — מזין ארגזים והמערכת ממירה", drivers: [takeawayOrdersF, takeawayItems] },
+  { key: "ketchup_portions", label: "קטשופ מנות", group: "רטבים — מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 996, dependsOn: "רק לטייק אווי — לעומת סך רטבי קטשופ בצד שהלקוחות בחרו בתקופה. ארגז = 996 מנות", drivers: [portionSaucesChosen("קטשופ"), takeawayOrdersF] },
+  { key: "mayo_portions", label: "מיונז מנות", group: "רטבים — מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 900, dependsOn: "רק לטייק אווי — לעומת סך רטבי מיונז בצד שהלקוחות בחרו בתקופה. ארגז = 900 מנות", drivers: [portionSaucesChosen("מיונז"), takeawayOrdersF] },
   // ===== רטבים — ישיבה במקום =====
   { key: "ketchup_pouch", label: "קטשופ פאוץ׳", group: "רטבים — ישיבה", unit: "ליטר", dependsOn: "רק לישיבה במקום. פאוץ׳ של 13 ליטר", drivers: [dineInOrders, dineInItems] },
   { key: "mayo_bucket", label: "מיונז דלי", group: "רטבים — ישיבה", unit: "ליטר", receivedUnit: "ק״ג", receivedToUnit: 1, dependsOn: "רק לישיבה במקום. דלי של 5 ק״ג (ק״ג ≈ ליטר)", drivers: [dineInOrders, dineInItems] },
