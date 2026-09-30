@@ -72,6 +72,9 @@ Deno.serve(async (req) => {
       "rotate_token",
       "list_aliases",
       "save_invoice",
+      "recent_invoice_lines",
+      "update_invoice_line",
+      "delete_invoice_line",
     ]);
     if (ADMIN_ONLY_ACTIONS.has(action ?? "") && validation.scope !== "admin") {
       return json({ error: "insufficient_scope" }, 403);
@@ -569,6 +572,45 @@ Deno.serve(async (req) => {
           if (error) return json({ error: error.message }, 500);
         }
         return json({ ok: true, produce: produce.length, supplies: supplies.length, aliases: aliases.length });
+      }
+
+      case "recent_invoice_lines": {
+        const since = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+        const [p, s] = await Promise.all([
+          supabase.from("produce_purchases").select("id, purchased_at, supplier, raw_name, item_key, quantity, unit, total").gte("purchased_at", since).order("created_at", { ascending: false }).limit(200),
+          supabase.from("supply_purchases").select("id, purchased_at, supplier, name, amount, includes_vat, notes, kind").gte("purchased_at", since).order("created_at", { ascending: false }).limit(200),
+        ]);
+        return json({ produce: p.data ?? [], supplies: s.data ?? [] });
+      }
+
+      case "update_invoice_line": {
+        const b = body as any;
+        if (typeof b.id !== "string") return json({ error: "bad_id" }, 400);
+        if (b.table === "produce") {
+          const patch: Record<string, unknown> = {};
+          if (b.quantity !== undefined) patch.quantity = Number(b.quantity) || null;
+          if (b.total !== undefined) patch.total = Math.max(0, Number(b.total) || 0);
+          const { error } = await supabase.from("produce_purchases").update(patch).eq("id", b.id);
+          if (error) return json({ error: error.message }, 500);
+        } else if (b.table === "supply") {
+          const patch: Record<string, unknown> = {};
+          if (b.amount !== undefined) patch.amount = Math.max(0, Number(b.amount) || 0);
+          if (typeof b.notes === "string") patch.notes = b.notes.slice(0, 300);
+          if (typeof b.name === "string" && b.name.trim()) patch.name = b.name.trim().slice(0, 120);
+          const { error } = await supabase.from("supply_purchases").update(patch).eq("id", b.id);
+          if (error) return json({ error: error.message }, 500);
+        } else return json({ error: "bad_table" }, 400);
+        return json({ ok: true });
+      }
+
+      case "delete_invoice_line": {
+        const b = body as any;
+        if (typeof b.id !== "string") return json({ error: "bad_id" }, 400);
+        const t = b.table === "produce" ? "produce_purchases" : b.table === "supply" ? "supply_purchases" : null;
+        if (!t) return json({ error: "bad_table" }, 400);
+        const { error } = await supabase.from(t).delete().eq("id", b.id);
+        if (error) return json({ error: error.message }, 500);
+        return json({ ok: true });
       }
 
       case "list_tokens": {
