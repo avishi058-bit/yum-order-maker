@@ -32,7 +32,7 @@ export default function StockAudit({ token, onClose }: { token: string; onClose:
       if (!f) return [];
       const r = [];
       if (f.count.trim() !== "") r.push({ item_key: p.key, kind: "count", quantity: f.count, unit: p.unit, counted_at: now });
-      if (f.received.trim() !== "" && Number(f.received) > 0) r.push({ item_key: p.key, kind: "received", quantity: f.received, unit: p.unit, counted_at: now });
+      if (f.received.trim() !== "" && Number(f.received) > 0) r.push({ item_key: p.key, kind: "received", quantity: Number(f.received) * (p.receivedToUnit ?? 1), unit: p.unit, counted_at: now });
       return r;
     });
     if (!rows.length) return toast.error("לא הוזנה אף כמות");
@@ -84,9 +84,12 @@ export default function StockAudit({ token, onClose }: { token: string; onClose:
                     </label>
                     <label className="flex items-center gap-1">סחורה חדשה
                       <input inputMode="decimal" value={form[p.key]?.received ?? ""} onChange={(e) => setF(p.key, { received: e.target.value })} className="w-20 rounded-md border bg-background px-2 py-1" />
-                      {p.unit}
+                      {p.receivedUnit ?? p.unit}
                     </label>
                   </div>
+                  {p.receivedUnit && p.receivedUnit !== p.unit && (
+                    <div className="text-xs text-muted-foreground">סחורה חדשה מוזנת ב{p.receivedUnit} לפי החשבונית, ונשמרת ב{p.unit}</div>
+                  )}
                   {periods.map((r) => (
                     <div key={r.from} className="rounded-md bg-muted p-2">
                       <div className="text-xs">{fmtDate(r.from)} ← {fmtDate(r.to)}: היה {n2(r.start)} + נכנס {n2(r.received)} − נשאר {n2(r.end)} = <b>נוצל {n2(r.used)} {p.unit}</b></div>

@@ -1,13 +1,19 @@
 ---
 name: Stock usage audit
-description: Count-based usage audit per product (veg, packaging, sauces); tracking starts at each product's first count; dependencies per product
+description: Count-based usage audit (veg in units, packaging, bags, sauces with box/liter conversions); dependencies per owner; profit unchanged
 type: feature
 ---
-Started 30.9.2026. Profit calc unchanged until owner approves results. Always ask when a dependency/qty is unclear.
-Each product is tracked only from its first count (nothing earlier). Owner enters "left now" + "new goods" per product.
-Dependencies given by owner:
-- Veg (lettuce, tomato, red onion, pickles): all burgers of every kind + crispy chicken, incl. deals; EXCLUDE burgers where customer removed that veg.
-- White onion: 85% onion jam (incl. special-hadegel), 15% fried onion. NOT related to onion rings.
-- Fries box: fries, waffle fries, onion rings, tempura onion rings (and meal sides), dine-in AND takeaway.
-Still open: other packaging items, friends-mix/deals box usage, sauces.
+Started 30.9.2026. Profit calc unchanged until owner approves. Always ask when a dependency/qty is unclear.
+Each product tracked only from its first count; owner enters "left now" + "new goods".
+Units & conversions (owner answers):
+- Lettuce: counted in units (not kg). Pickles: units = cans (פחית שימורים).
+- Tomato: units; invoice in kg; average 140 g → ÷0.14. Red onion: units; average 135 g → ÷0.135.
+- White onion: kg; 85% onion jam (incl. special-hadegel), 15% fried onion; NOT onion rings.
+- מארז לצ׳יפס: fries, waffle fries, onion rings, tempura onion rings + meal sides, dine-in AND takeaway.
+- מארז צ׳יפס גדול: dedicated item for deals; 1 per family-deal / friends-deal / friends-mix.
+- שקיות: takeaway orders only; audit usage vs number AND size of takeaway orders.
+- קטשופ מנות & מיונז מנות: pre-portioned, takeaway ONLY; box = 996 / 900 portions; owner enters boxes.
+- קטשופ פאוץ׳ (13 ליטר) & מיונז דלי (5 ק״ג): dine-in ONLY; liters (mayo entered in kg ≈ liters).
+- שזיפים, צ׳ילי חריף, איולי: dine-in AND takeaway side; counted in liters from invoice; if liters missing — ask and remember product name.
+No other sauces tracked. Drivers in audit: takeaway/dine-in orders (counted once per order) and items; side sauce toppings sold.
 Code: src/lib/stockAudit.ts, src/components/StockAudit.tsx, table stock_counts.
