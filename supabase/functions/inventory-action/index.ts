@@ -569,6 +569,24 @@ Deno.serve(async (req) => {
         if (produce.length) {
           const { error } = await supabase.from("produce_purchases").insert(produce);
           if (error) return json({ error: error.message }, 500);
+          // auto-enter invoice goods as audit "received" stock (kg→units per product average)
+          const KG_PER_UNIT: Record<string, number> = { tomato: 0.14, red_onion: 0.135 };
+          const auditRows = produce.flatMap((p) => {
+            const qty = Number(p.quantity) || 0;
+            if (qty <= 0) return [];
+            const isKg = /kg|ק[״"']?ג/i.test(p.unit ?? "");
+            const kgPerUnit = KG_PER_UNIT[p.item_key as string];
+            const inKg = p.item_key === "white_onion";
+            if (isKg && !kgPerUnit && !inKg) return []; // no known average weight — left for manual entry
+            const units = kgPerUnit && isKg ? qty / kgPerUnit : qty;
+            return [{
+              item_key: p.item_key, kind: "received", quantity: +units.toFixed(3),
+              unit: inKg ? "ק״ג" : "יח׳",
+              counted_at: `${p.purchased_at}T12:00:00+03:00`,
+              note: `חשבונית${p.supplier ? " · " + p.supplier : ""}`,
+            }];
+          });
+          if (auditRows.length) await supabase.from("stock_counts").insert(auditRows);
         }
         if (supplies.length) {
           const { error } = await supabase.from("supply_purchases").insert(supplies);
