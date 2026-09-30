@@ -1488,6 +1488,39 @@ export type Database = {
           },
         ]
       }
+      stock_counts: {
+        Row: {
+          counted_at: string
+          created_at: string
+          id: string
+          item_key: string
+          kind: string
+          note: string | null
+          quantity: number
+          unit: string | null
+        }
+        Insert: {
+          counted_at?: string
+          created_at?: string
+          id?: string
+          item_key: string
+          kind?: string
+          note?: string | null
+          quantity?: number
+          unit?: string | null
+        }
+        Update: {
+          counted_at?: string
+          created_at?: string
+          id?: string
+          item_key?: string
+          kind?: string
+          note?: string | null
+          quantity?: number
+          unit?: string | null
+        }
+        Relationships: []
+      }
       supply_purchases: {
         Row: {
           amount: number

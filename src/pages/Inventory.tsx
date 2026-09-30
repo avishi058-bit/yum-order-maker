@@ -1,4 +1,5 @@
 import InventoryInvoiceScanner from "@/components/InventoryInvoiceScanner";
+import StockAudit from "@/components/StockAudit";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,6 +138,7 @@ export default function Inventory() {
   const [correctionFor, setCorrectionFor] = useState<InventoryItem | null>(null);
   const [showStats, setShowStats] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
 
 
   const call = useCallback(
@@ -312,6 +314,9 @@ export default function Inventory() {
           <Button size="sm" variant="outline" onClick={() => setShowScanner(true)}>
             🧾 חשבונית
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowAudit(true)}>
+            📋 ספירה
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setShowStats(true)}>
             <BarChart3 className="h-4 w-4 ml-1" /> דוחות
           </Button>
@@ -322,6 +327,7 @@ export default function Inventory() {
       </header>
 
       {showScanner && token && <InventoryInvoiceScanner token={token} onClose={() => setShowScanner(false)} />}
+      {showAudit && token && <StockAudit token={token} onClose={() => setShowAudit(false)} />}
       <main className="p-3 pb-32 max-w-3xl mx-auto space-y-6">
         {grouped.map((group) => (
           <section key={group.key} className="space-y-3">
