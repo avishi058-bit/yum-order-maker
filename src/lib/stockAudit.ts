@@ -56,12 +56,10 @@ const friedBoxes = (it: AuditItem) => {
 const isTakeaway = (it: AuditItem) => it.dine_in === false;
 const isDineIn = (it: AuditItem) => it.dine_in === true;
 
-const takeawayOrders: Driver = { label: "הזמנות טייק אווי", per: (_it, f) => f, }; // filtered below
 const takeawayOrdersF: Driver = { label: "הזמנות טייק אווי", per: (it, f) => (isTakeaway(it) ? f : 0) };
 const takeawayItems: Driver = { label: "פריטים בטייק אווי", per: (it) => (isTakeaway(it) ? q(it) : 0) };
 const dineInOrders: Driver = { label: "הזמנות בישיבה", per: (it, f) => (isDineIn(it) ? f : 0) };
 const dineInItems: Driver = { label: "פריטים בישיבה", per: (it) => (isDineIn(it) ? q(it) : 0) };
-const sideSauceSold: Driver = { label: "רטבים בצד שנמכרו (טייק אווי)", per: () => 0 }; // replaced below
 
 const sideSaucesSold = (match: string): Driver => ({
   label: "רטבים בצד שנמכרו (טייק אווי)",
