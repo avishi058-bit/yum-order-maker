@@ -95,12 +95,6 @@ function getBoxSize(item: InventoryItem): { size: number; label: string } | null
   return { size: biggest.amount, label: biggest.label };
 }
 
-// Top-level grouping of inventory categories into themed sections.
-const CATEGORY_GROUPS: { key: string; label: string; cats: string[] }[] = [
-  { key: "drinks", label: "שתיה", cats: ["בירות", "פחיות", "בקבוקים", "שתיה"] },
-  { key: "frozen", label: "קפואים", cats: ["בשר", "צ׳יפס", "לחם", "קפואים"] },
-];
-
 // Display order for inventory categories: fried items, toppings, vegetables, then drinks at the bottom.
 const CATEGORY_ORDER = [
   "בשר",
@@ -115,13 +109,6 @@ const CATEGORY_ORDER = [
   "בקבוקים",
   "שתיה",
 ];
-
-function groupKeyForCategory(cat: string): string {
-  for (const g of CATEGORY_GROUPS) {
-    if (g.cats.includes(cat)) return g.key;
-  }
-  return "other";
-}
 
 function categoryRank(cat: string): number {
   const idx = CATEGORY_ORDER.indexOf(cat);
@@ -214,37 +201,6 @@ export default function Inventory() {
       supabase.removeChannel(channel);
     };
   }, [authState]);
-
-  const grouped = useMemo(() => {
-    // Two-level grouping: super-group (drinks/frozen/other) → category → items
-    const superMap = new Map<string, Map<string, InventoryItem[]>>();
-    for (const item of items) {
-      const gk = groupKeyForCategory(item.category);
-      const catMap = superMap.get(gk) ?? new Map<string, InventoryItem[]>();
-      const arr = catMap.get(item.category) ?? [];
-      arr.push(item);
-      catMap.set(item.category, arr);
-      superMap.set(gk, catMap);
-    }
-    const orderedKeys = Array.from(superMap.keys()).sort((a, b) => {
-      const minA = Math.min(
-        ...Array.from(superMap.get(a)!.keys()).map(categoryRank),
-      );
-      const minB = Math.min(
-        ...Array.from(superMap.get(b)!.keys()).map(categoryRank),
-      );
-      return minA - minB;
-    });
-    return orderedKeys.map((k) => ({
-      key: k,
-      label:
-        CATEGORY_GROUPS.find((g) => g.key === k)?.label ??
-        "אחר",
-      categories: Array.from(superMap.get(k)!.entries()).sort(
-        ([catA], [catB]) => categoryRank(catA) - categoryRank(catB),
-      ),
-    }));
-  }, [items]);
 
   const categories = useMemo(
     () => [...new Set(items.map((item) => item.category))].sort((a, b) => categoryRank(a) - categoryRank(b)),
@@ -348,7 +304,7 @@ export default function Inventory() {
               <DropdownMenuTrigger asChild>
                 <Button size="icon" variant="outline" aria-label="כלים נוספים"><MoreVertical className="h-5 w-5" /></Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" dir="rtl">
+              <DropdownMenuContent align="end" className="w-48 text-right">
                 <DropdownMenuItem onSelect={() => setShowStats(true)} className="gap-2"><BarChart3 className="h-4 w-4" /> דוחות</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> הוספת פריט</DropdownMenuItem>
               </DropdownMenuContent>
