@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { setDailySummaryForDevice } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -142,6 +143,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [codeError, setCodeError] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
   const [codeOpen, setCodeOpen] = useState(false);
+
+  // Only a device unlocked into the full stats (and remembered) gets the daily summary push.
+  useEffect(() => {
+    let trusted = false;
+    try { trusted = localStorage.getItem(TRUSTED_KEY) === "1"; } catch { /* ignore */ }
+    setDailySummaryForDevice(unlocked && trusted);
+  }, [unlocked]);
 
   const tryUnlock = () => {
     if (codeInput !== DASHBOARD_CODE) {

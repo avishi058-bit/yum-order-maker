@@ -1,0 +1,1 @@
+ALTER TABLE public.push_subscriptions ADD COLUMN IF NOT EXISTS receives_daily_summary boolean NOT NULL DEFAULT false;

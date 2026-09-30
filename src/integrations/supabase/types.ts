@@ -1159,6 +1159,7 @@ export type Database = {
           is_kitchen: boolean
           order_id: string | null
           p256dh: string
+          receives_daily_summary: boolean
         }
         Insert: {
           auth: string
@@ -1170,6 +1171,7 @@ export type Database = {
           is_kitchen?: boolean
           order_id?: string | null
           p256dh: string
+          receives_daily_summary?: boolean
         }
         Update: {
           auth?: string
@@ -1181,6 +1183,7 @@ export type Database = {
           is_kitchen?: boolean
           order_id?: string | null
           p256dh?: string
+          receives_daily_summary?: boolean
         }
         Relationships: [
           {
