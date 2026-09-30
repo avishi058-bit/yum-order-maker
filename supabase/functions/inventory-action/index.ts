@@ -75,6 +75,9 @@ Deno.serve(async (req) => {
       "recent_invoice_lines",
       "update_invoice_line",
       "delete_invoice_line",
+      "stock_audit_data",
+      "add_stock_count",
+      "delete_stock_count",
     ]);
     if (ADMIN_ONLY_ACTIONS.has(action ?? "") && validation.scope !== "admin") {
       return json({ error: "insufficient_scope" }, 403);
@@ -609,6 +612,54 @@ Deno.serve(async (req) => {
         const t = b.table === "produce" ? "produce_purchases" : b.table === "supply" ? "supply_purchases" : null;
         if (!t) return json({ error: "bad_table" }, 400);
         const { error } = await supabase.from(t).delete().eq("id", b.id);
+        if (error) return json({ error: error.message }, 500);
+        return json({ ok: true });
+      }
+
+      // ---- Stock usage audit ----
+      case "stock_audit_data": {
+        const { data: counts } = await supabase.from("stock_counts").select("*").order("counted_at", { ascending: true }).limit(2000);
+        const list = counts ?? [];
+        if (!list.length) return json({ counts: [], items: [], purchases: [] });
+        const since = list[0].counted_at as string;
+        const [ordersRes, purchasesRes] = await Promise.all([
+          supabase.from("orders").select("id, dine_in, created_at").gte("created_at", since)
+            .not("status", "in", "(pending_payment,cancelled,payment_failed)").eq("donation_only", false).limit(10000),
+          supabase.from("produce_purchases").select("item_key, purchased_at, quantity, unit, total").gte("purchased_at", since.slice(0, 10)),
+        ]);
+        const orders = ordersRes.data ?? [];
+        const dine = new Map(orders.map((o: any) => [o.id, o.dine_in]));
+        const items: any[] = [];
+        const ids = orders.map((o: any) => o.id);
+        for (let i = 0; i < ids.length; i += 300) {
+          const { data } = await supabase.from("order_items")
+            .select("order_id, item_id, item_name, quantity, toppings, removals, with_meal, meal_side, deal_burgers, created_at")
+            .in("order_id", ids.slice(i, i + 300));
+          for (const r of data ?? []) items.push({ ...r, dine_in: dine.get(r.order_id) ?? null });
+        }
+        return json({ counts: list, items, purchases: purchasesRes.data ?? [] });
+      }
+
+      case "add_stock_count": {
+        const b = body as any;
+        const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 50).map((r: any) => ({
+          item_key: String(r?.item_key ?? "").slice(0, 60),
+          kind: r?.kind === "received" ? "received" : "count",
+          quantity: Math.max(0, Number(r?.quantity) || 0),
+          unit: r?.unit ? String(r.unit).slice(0, 20) : null,
+          note: r?.note ? String(r.note).slice(0, 300) : null,
+          counted_at: typeof r?.counted_at === "string" ? r.counted_at : new Date().toISOString(),
+        })).filter((r: any) => r.item_key);
+        if (!rows.length) return json({ error: "no_rows" }, 400);
+        const { error } = await supabase.from("stock_counts").insert(rows);
+        if (error) return json({ error: error.message }, 500);
+        return json({ ok: true });
+      }
+
+      case "delete_stock_count": {
+        const b = body as any;
+        if (typeof b.id !== "string") return json({ error: "bad_id" }, 400);
+        const { error } = await supabase.from("stock_counts").delete().eq("id", b.id);
         if (error) return json({ error: error.message }, 500);
         return json({ ok: true });
       }
