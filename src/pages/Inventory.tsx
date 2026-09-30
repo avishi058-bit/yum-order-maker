@@ -333,7 +333,7 @@ export default function Inventory() {
       {showAudit && token && <StockAudit token={token} onClose={() => setShowAudit(false)} />}
       <main className="mx-auto max-w-3xl space-y-3 p-3 pb-32">
         {visibleByCategory.map(([category, list], categoryIndex) => (
-          <details key={category} open={Boolean(query) || filter !== "all" || categoryIndex === 0 || list.some((item) => Number(item.quantity) <= Number(item.low_threshold))} className="group/category">
+          <details key={category} open={Boolean(query) || filter !== "all" || categoryIndex === 0} className="group/category">
             <summary className="mb-2 flex cursor-pointer list-none items-center justify-between rounded-md px-2 py-2 text-base font-bold hover:bg-muted/60">
               <span>{category} <span className="text-sm font-normal text-muted-foreground">({list.length})</span></span>
               <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open/category:rotate-180" />
@@ -554,7 +554,7 @@ function ItemCard({
           : "border-border bg-card"
       }`}
     >
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <Button variant="ghost" className="mb-3 h-auto w-full justify-between gap-3 px-0 py-0 text-right hover:bg-transparent" onClick={() => setShowActions((open) => !open)} aria-expanded={showActions}>
         <div className="flex-1 min-w-0">
           <div className="truncate text-base font-bold">{item.name}</div>
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -589,7 +589,7 @@ function ItemCard({
           })()}
         </div>
 
-      </div>
+      </Button>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {item.presets.map((p, i) => (
