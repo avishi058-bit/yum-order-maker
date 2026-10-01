@@ -159,7 +159,7 @@ const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
                   <div>
                     <h3 className="text-lg font-black">עדכנו אותי כשנפתח שוב</h3>
                     <p className="text-xs text-muted-foreground">
-                      נשלח התראה ישירות למכשיר ברגע שנפתח להזמנות — פעם אחת בלבד
+                      נשלח התראה ישירות למכשיר ברגע שנפתח להזמנות - פעם אחת בלבד
                     </p>
                   </div>
                 </div>

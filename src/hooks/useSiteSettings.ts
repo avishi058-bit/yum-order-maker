@@ -86,13 +86,13 @@ const writeCachedSettings = (s: SiteSettings) => {
   try {
     localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(s));
   } catch {
-    /* quota / private mode — ignore */
+    /* quota / private mode - ignore */
   }
 };
 
 export const useSiteSettings = () => {
   // Initialise from localStorage cache so kiosk-tuning vars (scale, sizes…)
-  // are applied on the very first render — no jump when the network reply lands.
+  // are applied on the very first render - no jump when the network reply lands.
   const [settings, setSettings] = useState<SiteSettings>(() => readCachedSettings() ?? defaultSettings);
   // If we already had a cached snapshot, treat the hook as ready immediately
   // so consumers (useKioskCSSVars) inject CSS vars on first paint.
@@ -127,7 +127,7 @@ export const useSiteSettings = () => {
         kiosk_lock_layout: d.kiosk_lock_layout ?? KIOSK_DEFAULTS.kiosk_lock_layout,
         kiosk_disable_zoom: d.kiosk_disable_zoom ?? KIOSK_DEFAULTS.kiosk_disable_zoom,
       };
-      // Skip state update if nothing actually changed — prevents downstream
+      // Skip state update if nothing actually changed - prevents downstream
       // effects (like useKioskCSSVars) from re-running on every realtime
       // heartbeat / unrelated-row update, which used to flicker the kiosk
       // welcome screen.

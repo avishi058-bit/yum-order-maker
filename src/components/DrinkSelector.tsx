@@ -159,7 +159,7 @@ const DrinkSelector = ({ item, onClose, onConfirm, isAvailable, isKiosk = false 
 
               <h3 className={`font-bold mb-1 ${isKiosk ? "text-4xl" : "text-xl"}`}>{item.name}</h3>
               <p className={`text-muted-foreground ${isKiosk ? "text-xl mb-8" : "text-sm mb-4"}`}>
-                בחר/י איזה {item.name} — ₪{item.price}
+                בחר/י איזה {item.name} - ₪{item.price}
               </p>
 
               <div className={isKiosk ? "space-y-4" : "space-y-2"}>

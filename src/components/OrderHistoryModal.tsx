@@ -111,7 +111,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
       });
     }
     if (cartItems.length === 0) {
-      toast({ title: "לא ניתן להזמין שוב", description: "הזמנה ישנה — חלק מהפריטים אינם זמינים" });
+      toast({ title: "לא ניתן להזמין שוב", description: "הזמנה ישנה - חלק מהפריטים אינם זמינים" });
       return;
     }
     onReorder(cartItems);
@@ -235,7 +235,7 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
                                     {it.deal_burgers.map((b: any, i: number) => (
                                       <li key={i}>
                                         {b.name || "המבורגר"}
-                                        {b.removals?.length ? ` — ${b.removals.join(", ")}` : ""}
+                                        {b.removals?.length ? ` - ${b.removals.join(", ")}` : ""}
                                         {Array.isArray(b.toppings) && b.toppings.length > 0 ? ` · + ${b.toppings.join(", ")}` : ""}
                                       </li>
                                     ))}

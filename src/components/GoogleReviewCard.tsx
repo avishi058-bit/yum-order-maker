@@ -65,7 +65,7 @@ export const GoogleReviewCard = ({
         ))}
       </div>
       <p className="text-base font-black text-foreground">אהבתם? דרגו אותנו בגוגל</p>
-      <p className="text-xs text-muted-foreground mt-1">לחצו כאן לדירוג מהיר — זה עוזר לנו מאוד</p>
+      <p className="text-xs text-muted-foreground mt-1">לחצו כאן לדירוג מהיר - זה עוזר לנו מאוד</p>
     </motion.a>
   );
 };

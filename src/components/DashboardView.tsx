@@ -116,7 +116,7 @@ const TRUSTED_KEY = "dashboard-trusted-device";
 
 type Mode = "today" | "yesterday" | "week" | "month" | "custom" | "pickMonth" | "compare";
 
-// Soldier-fund donations are not revenue when received — revenue is counted when the fund pays an order.
+// Soldier-fund donations are not revenue when received - revenue is counted when the fund pays an order.
 const withoutDonation = (rows: any[] | null) =>
   (rows ?? []).map((o) => ({ ...o, total: Number(o.total) - (Number(o.soldier_donation) || 0) }));
 
@@ -196,7 +196,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         const to = new Date(dayStartFromISO(customTo).getTime() + DAY);
         return [{
           key: "custom",
-          label: `${new Date(customFrom).toLocaleDateString("he-IL")} – ${new Date(customTo).toLocaleDateString("he-IL")}`,
+          label: `${new Date(customFrom).toLocaleDateString("he-IL")} - ${new Date(customTo).toLocaleDateString("he-IL")}`,
           start: from,
           end: to > from ? to : new Date(from.getTime() + DAY),
         }];
@@ -354,7 +354,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     return Math.max(actual, 1);
   };
 
-  const HOURLY_WAGE = 41.6; // 40 ₪ + ביטוח לאומי — עלות אמיתית למעסיק
+  const HOURLY_WAGE = 41.6; // 40 ₪ + ביטוח לאומי - עלות אמיתית למעסיק
   const isCounted = (o: Order) =>
     !UNCOUNTED_STATUSES.has(o.status) && !(o.payment_method === "credit" && !o.paid_at);
 
@@ -392,7 +392,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const days = Object.values(dayByMonth).reduce((a, s2) => a + s2.size, 0);
     const oil = (days * OIL_WEEKLY) / 7; // שמן טיגון: עלות שבועית מתחלקת לימי עבודה
     const trashBags = days * TRASH_BAGS_DAILY; // שקיות זבל ליום עבודה
-    // תלוש שכר 50 ₪ לחודש — רק בחודשים שבהם העובד עבד בפועל, מתחלק לפי ימי העבודה
+    // תלוש שכר 50 ₪ לחודש - רק בחודשים שבהם העובד עבד בפועל, מתחלק לפי ימי העבודה
     const shiftMonths = new Set(shifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; }).map((sh) => monthKey(new Date(sh.clock_in))));
     let payslip = 0;
     Object.entries(dayByMonth).forEach(([k, set]) => {
@@ -550,7 +550,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const map: Record<string, number> = {};
     items.forEach((i) => {
       if (!ids.has(i.order_id)) return;
-      const name = i.item_name ?? "—";
+      const name = i.item_name ?? "-";
       map[name] = (map[name] ?? 0) + (i.quantity ?? 1);
     });
     return Object.entries(map)
@@ -902,7 +902,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               <p className="text-2xl font-black text-foreground">
                 {hourlyData.length > 0
                   ? hourlyData.reduce((max, h) => (h.revenue > max.revenue ? h : max), hourlyData[0]).hour
-                  : "—"}
+                  : "-"}
               </p>
             </div>
           </CardContent>
@@ -970,7 +970,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               ["הוצאות קבועות", -(primary.profit.fixed - primary.suppliesCost)],
               ["רווח לפני ביטוח לאומי", primary.profit.beforeTax],
               ["ביטוח לאומי (8%)", -primary.profit.nationalInsurance],
-              ["חשמל (לא מדווח — אחרי ביטוח לאומי)", -primary.profit.unreported],
+              ["חשמל (לא מדווח - אחרי ביטוח לאומי)", -primary.profit.unreported],
             ].map(([label, v]) => (
               <div key={label as string} className="flex justify-between rounded-lg bg-muted/40 px-3 py-2">
                 <span className="text-muted-foreground">{label}</span>
@@ -1046,7 +1046,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             <span className="rounded-lg bg-muted/40 px-3 py-2">שעות אליה בירן: <b>{primary.shiftHours.toFixed(2)}</b> · ₪{Math.round(primary.shiftPay).toLocaleString()} (41.60 ₪/שעה כולל ביטוח לאומי, כלול בשכר)</span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה בתקופה: <b>{primary.days}</b></span>
             <span className="rounded-lg bg-muted/40 px-3 py-2">ימי עבודה החודש: <b>{workDays[currentMonthKey]?.size ?? 0}</b></span>
-            <span className="rounded-lg bg-muted/40 px-3 py-2">ממוצע ימי עבודה בחודש: <b>{avgWorkDays ? avgWorkDays.toFixed(1) : "—"}</b></span>
+            <span className="rounded-lg bg-muted/40 px-3 py-2">ממוצע ימי עבודה בחודש: <b>{avgWorkDays ? avgWorkDays.toFixed(1) : "-"}</b></span>
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <label className="text-muted-foreground">
@@ -1063,7 +1063,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             <button onClick={saveWage} className="rounded-md bg-primary px-3 py-1 text-primary-foreground font-bold">שמור</button>
           </div>
           <p className="text-xs text-muted-foreground">
-            שכר, רואת חשבון (350 ₪ לפני מע״מ) והוצאות קבועות מתחלקים לפי ימי העבודה בפועל בחודש (בחודש הנוכחי — לפי ממוצע ימי העבודה). שכירות, עובדים וכו׳ — מתחלק לפי מספר הימים בתקופה. שתייה ומוצרים ללא עלות מוגדרת לא נספרים בעלות. חשמל הוצאה לא מדווחת — מנוכה בסוף, אחרי ביטוח לאומי.
+            שכר, רואת חשבון (350 ₪ לפני מע״מ) והוצאות קבועות מתחלקים לפי ימי העבודה בפועל בחודש (בחודש הנוכחי - לפי ממוצע ימי העבודה). שכירות, עובדים וכו׳ - מתחלק לפי מספר הימים בתקופה. שתייה ומוצרים ללא עלות מוגדרת לא נספרים בעלות. חשמל הוצאה לא מדווחת - מנוכה בסוף, אחרי ביטוח לאומי.
           </p>
           </>
           )}
@@ -1076,7 +1076,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <CalendarRange size={18} className="text-emerald-400" />
-              {monthLabel(monthSelection.key)} מול {monthToDate.prevLabel} — {monthToDate.days} הימים הראשונים
+              {monthLabel(monthSelection.key)} מול {monthToDate.prevLabel} - {monthToDate.days} הימים הראשונים
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1092,7 +1092,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               <div className="rounded-lg border border-border p-3">
                 <p className="text-xs text-muted-foreground mb-1">שינוי</p>
                 {monthToDate.delta === null ? (
-                  <p className="text-xl font-black text-muted-foreground">—</p>
+                  <p className="text-xl font-black text-muted-foreground">-</p>
                 ) : (
                   <p className={`text-xl font-black flex items-center justify-center gap-1 ${monthToDate.delta >= 0 ? "text-green-400" : "text-red-400"}`}>
                     {monthToDate.delta >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
@@ -1148,21 +1148,21 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1"><Trophy size={14} className="text-yellow-400" /> היום החזק בתקופה</p>
-            <p className="text-lg font-black text-foreground">{bestDay ? bestDay.date : "—"}</p>
+            <p className="text-lg font-black text-foreground">{bestDay ? bestDay.date : "-"}</p>
             <p className="text-xs text-muted-foreground">{bestDay ? `₪${bestDay.revenue.toLocaleString()}` : ""}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1"><Flame size={14} className="text-orange-400" /> המנה הנמכרת ביותר</p>
-            <p className="text-lg font-black text-foreground truncate">{topItems[0]?.name ?? "—"}</p>
+            <p className="text-lg font-black text-foreground truncate">{topItems[0]?.name ?? "-"}</p>
             <p className="text-xs text-muted-foreground">{topItems[0] ? `${topItems[0].qty} יחידות` : ""}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground flex items-center gap-1"><Beef size={14} className="text-amber-400" /> קציצות להזמנה</p>
-            <p className="text-lg font-black text-foreground">{primary.count ? (primary.patties / primary.count).toFixed(1) : "—"}</p>
+            <p className="text-lg font-black text-foreground">{primary.count ? (primary.patties / primary.count).toFixed(1) : "-"}</p>
           </CardContent>
         </Card>
         <Card>
@@ -1171,7 +1171,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
             <p className="text-lg font-black text-foreground">
               {weekdayData.some((w) => w.revenue > 0)
                 ? weekdayData.reduce((max, w) => (w.revenue > max.revenue ? w : max), weekdayData[0]).name
-                : "—"}
+                : "-"}
             </p>
           </CardContent>
         </Card>

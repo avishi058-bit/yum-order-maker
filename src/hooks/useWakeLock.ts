@@ -25,7 +25,7 @@ export function useWakeLock(enabled: boolean = true) {
           wakeLockRef.current = null;
         });
       } catch (e) {
-        // user gesture may be required, or denied — ignore silently
+        // user gesture may be required, or denied - ignore silently
       }
     };
 

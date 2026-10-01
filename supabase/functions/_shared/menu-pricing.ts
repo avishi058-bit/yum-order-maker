@@ -1,7 +1,7 @@
 // SINGLE SOURCE OF TRUTH for menu pricing.
 // This file is imported by BOTH the frontend (src/data/menu.ts) and the
 // create-order edge function. When you add/remove an item, topping, side,
-// or drink option — edit this file ONLY.
+// or drink option - edit this file ONLY.
 //
 // UI-only metadata (descriptions, images, badges, weights, etc.) lives
 // in src/data/menu.ts and is merged on top of these bare records.

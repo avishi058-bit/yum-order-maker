@@ -25,7 +25,7 @@ const OfflineBanner = () => {
     >
       <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-sm font-bold">
         <WifiOff size={18} className="shrink-0" />
-        <span>אין חיבור לאינטרנט — המסך לא מתעדכן ({since})</span>
+        <span>אין חיבור לאינטרנט - המסך לא מתעדכן ({since})</span>
         <button
           onClick={() => window.location.reload()}
           className="flex items-center gap-1.5 rounded-lg bg-background/20 px-3 py-1 text-xs font-bold hover:bg-background/30 transition-colors"

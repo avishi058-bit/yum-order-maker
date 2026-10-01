@@ -1,7 +1,7 @@
-// Local Print Agent client — talks to a tiny Android companion app running
+// Local Print Agent client - talks to a tiny Android companion app running
 // on the same tablet at http://127.0.0.1:9100. The agent holds an open
 // Bluetooth connection to the receipt printer and writes raw ESC/POS bytes
-// directly — no RawBT, no Fully intent, no app switching.
+// directly - no RawBT, no Fully intent, no app switching.
 //
 // The agent source lives in /android-print-agent (Kotlin, NanoHTTPD).
 // Build once in Android Studio, install the APK on the kitchen tablet, and

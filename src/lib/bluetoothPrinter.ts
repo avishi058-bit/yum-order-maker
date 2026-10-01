@@ -21,7 +21,7 @@ const ESC = 0x1b;
 const GS = 0x1d;
 
 const CMD_INIT = [ESC, 0x40];
-const CMD_INTL_HEBREW = [ESC, 0x52, 7]; // ESC R n — international charset (7 ~ Hebrew on some)
+const CMD_INTL_HEBREW = [ESC, 0x52, 7]; // ESC R n - international charset (7 ~ Hebrew on some)
 const CMD_ALIGN_LEFT = [ESC, 0x61, 0];
 const CMD_ALIGN_CENTER = [ESC, 0x61, 1];
 const CMD_ALIGN_RIGHT = [ESC, 0x61, 2];
@@ -34,7 +34,7 @@ const CMD_FEED_3 = [ESC, 0x64, 3];
 const CMD_CUT = [GS, 0x56, 0x42, 0x00];
 
 // ---------- Encoding profiles ----------
-// CP862 (Hebrew DOS) — Hebrew letters at 0x80-0x9A
+// CP862 (Hebrew DOS) - Hebrew letters at 0x80-0x9A
 const CP862_HEBREW: Record<string, number> = {
   "א": 0x80, "ב": 0x81, "ג": 0x82, "ד": 0x83, "ה": 0x84,
   "ו": 0x85, "ז": 0x86, "ח": 0x87, "ט": 0x88, "י": 0x89,
@@ -45,7 +45,7 @@ const CP862_HEBREW: Record<string, number> = {
   "₪": 0x9c,
 };
 
-// CP1255 (Windows Hebrew) — Hebrew letters at 0xE0-0xFA
+// CP1255 (Windows Hebrew) - Hebrew letters at 0xE0-0xFA
 const CP1255_HEBREW: Record<string, number> = {
   "א": 0xe0, "ב": 0xe1, "ג": 0xe2, "ד": 0xe3, "ה": 0xe4,
   "ו": 0xe5, "ז": 0xe6, "ח": 0xe7, "ט": 0xe8, "י": 0xe9,
@@ -59,9 +59,9 @@ const CP1255_HEBREW: Record<string, number> = {
 export type EncodingProfile = "cp862-21" | "cp862-15" | "cp1255-33";
 
 const PROFILE_LABEL: Record<EncodingProfile, string> = {
-  "cp862-21": "CP862 (n=21) — Hebrew DOS",
-  "cp862-15": "CP862 (n=15) — Hebrew (Xprinter alt)",
-  "cp1255-33": "CP1255 (n=33) — Hebrew Windows",
+  "cp862-21": "CP862 (n=21) - Hebrew DOS",
+  "cp862-15": "CP862 (n=15) - Hebrew (Xprinter alt)",
+  "cp1255-33": "CP1255 (n=33) - Hebrew Windows",
 };
 
 function profileCharset(p: EncodingProfile): Record<string, number> {
@@ -165,7 +165,7 @@ export function buildKitchenBonLines(order: ReceiptOrder): PrintLine[] {
     }
     if (it.with_meal) {
       let m = "ארוחה";
-      if (it.meal_side) m += ` — ${it.meal_side}`;
+      if (it.meal_side) m += ` - ${it.meal_side}`;
       if (it.meal_drink) m += `, ${it.meal_drink}`;
       lines.push({ text: `→ ${m}`, align: "right" });
     }
@@ -283,7 +283,7 @@ export function startPrinterKeepAlive() {
       return;
     }
     if (!cachedChar) return;
-    // No bytes are sent to the printer — writing a keep-alive command could
+    // No bytes are sent to the printer - writing a keep-alive command could
     // interleave with a job and corrupt the stream. We only verify the GATT
     // link is still up and reconnect when it drops.
   }, KEEPALIVE_MS);
@@ -366,7 +366,7 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 }
 
 
-// WoR chunk size — BLE Web API does not expose negotiated MTU, and writing
+// WoR chunk size - BLE Web API does not expose negotiated MTU, and writing
 // larger than the link MTU silently truncates on some stacks → printer gets
 // a mangled byte stream and prints gibberish. Start optimistically at 512
 // (Android negotiates MTU 517 with most printers, giving a 512-byte payload)
@@ -375,7 +375,7 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 let _worChunkSize = 244;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
-  // Prefer write-without-response when the printer supports it — typically 3-5x
+  // Prefer write-without-response when the printer supports it - typically 3-5x
   // faster than write-with-response over BLE (no per-chunk ACK round-trip).
   // Falls back to write-with-response + retry for printers that only expose it.
   const supportsWoR = !!(char.properties as { writeWithoutResponse?: boolean }).writeWithoutResponse;
@@ -390,13 +390,13 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
         await writeWoR(slice);
         i = end;
       } catch (e) {
-        // MTU likely too big — shrink and retry this slice.
+        // MTU likely too big - shrink and retry this slice.
         if (_worChunkSize > 180) {
           _worChunkSize = 180;
           continue;
         }
 
-        // Already small — brief breather + one more try, then fall through.
+        // Already small - brief breather + one more try, then fall through.
         await new Promise((r) => setTimeout(r, 8));
         try { await writeWoR(slice); i = end; }
         catch { throw e; }
@@ -436,7 +436,7 @@ export async function printLines(lines: PrintLine[], profile: EncodingProfile = 
 }
 
 // =====================================================================
-// RASTER BITMAP PRINTING (recommended path — bypasses Hebrew codepage)
+// RASTER BITMAP PRINTING (recommended path - bypasses Hebrew codepage)
 // Renders existing HTML receipt via html2canvas, converts to 1-bit
 // monochrome bitmap, and sends as ESC/POS GS v 0 raster command.
 // =====================================================================
@@ -470,7 +470,7 @@ export function setPrintRotate180(on: boolean) {
 // ---------- Fast print mode (printer-side speed) ----------
 // Thermal printers default to a conservative heating profile: long heating
 // time + long cooling interval + medium motor speed. On a long bon that is
-// the single biggest source of slowness — the BLE transfer is usually done
+// the single biggest source of slowness - the BLE transfer is usually done
 // long before the paper stops moving.
 // Fast mode raises the heating-dot count (more head segments fire at once),
 // shortens the heating interval and asks for the printer's maximum speed.
@@ -484,7 +484,7 @@ export function setPrintFastMode(on: boolean) {
 
 // Emitted right after ESC @ on every job.
 // DISABLED: the heating/speed/density commands (ESC 7, GS ( K, DC2 #) are not
-// understood by every printer — some interpret the trailing bytes as data and
+// understood by every printer - some interpret the trailing bytes as data and
 // print gibberish. Reverted to the printer's own default profile.
 function printerSpeedCmds(): number[] {
   return [];
@@ -605,7 +605,7 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
   const { data } = ctx.getImageData(0, 0, outW, outH);
   const widthBytes = outW / 8;
   const bytes = new Uint8Array(widthBytes * outH);
-  // Floyd–Steinberg-ish simple threshold with luminance.
+  // Floyd-Steinberg-ish simple threshold with luminance.
   for (let y = 0; y < outH; y++) {
     for (let x = 0; x < outW; x++) {
       const i = (y * outW + x) * 4;
@@ -624,7 +624,7 @@ function canvasToMonoBytes(canvas: HTMLCanvasElement, targetWidthDots: number): 
 // Build ESC/POS bytes for a raster bitmap. Optimizations:
 //  - Crops leading/trailing all-white rows entirely.
 //  - Collapses any run of >=8 all-white rows in the middle into a single
-//    ESC J n motor-feed (printer advances paper without scanning) — this is
+//    ESC J n motor-feed (printer advances paper without scanning) - this is
 //    ~5-10x faster than rastering blank rows and saves a lot of bytes.
 //  - Splits ink bands into chunks <=128 rows for safe printer buffering.
 function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; height: number }): Uint8Array {
@@ -660,7 +660,7 @@ function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; heig
         remaining -= n;
       }
     } else if (blankRun > 0) {
-      // Tiny blank run — raster it inline to preserve spacing.
+      // Tiny blank run - raster it inline to preserve spacing.
       const rows = blankRun;
       out.push(GS, 0x76, 0x30, 0x00,
         widthBytes & 0xff, (widthBytes >> 8) & 0xff,
@@ -697,14 +697,14 @@ function buildRasterCommands(mono: { bytes: Uint8Array; widthBytes: number; heig
     }
   }
 
-  // Smaller paper feed before cut — saves time and tape.
+  // Smaller paper feed before cut - saves time and tape.
   out.push(ESC, 0x64, 2);
   out.push(...CMD_CUT);
   return new Uint8Array(out);
 }
 
 // =====================================================================
-// HYBRID FAST PRINTING — ESC/POS text + per-line Hebrew bitmaps.
+// HYBRID FAST PRINTING - ESC/POS text + per-line Hebrew bitmaps.
 // 10-30x faster than full-page raster, and avoids dense black areas
 // that bog down thermal printers.
 // =====================================================================
@@ -748,7 +748,7 @@ function _wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return out.length ? out : [text];
 }
 
-// Shared measurement canvas — created once and reused for every line render.
+// Shared measurement canvas - created once and reused for every line render.
 // Avoids paying for document.createElement + getContext on every Hebrew line.
 let _measureCtx: CanvasRenderingContext2D | null = null;
 function _getMeasureCtx(): CanvasRenderingContext2D {
@@ -760,7 +760,7 @@ function _getMeasureCtx(): CanvasRenderingContext2D {
 }
 
 // Render one Hebrew/Unicode line to a tightly-cropped 1-bit bitmap.
-// No background fill, no padding boxes — just the letter ink.
+// No background fill, no padding boxes - just the letter ink.
 function _renderHebToMono(
   text: string,
   opts: { width: number; px: number; bold: boolean; align: "L" | "C" | "R" },
@@ -813,7 +813,7 @@ function _renderHebToMono(
     }
   }
 
-  // Crop blank rows top + bottom — tight letter band only, no wasted feed.
+  // Crop blank rows top + bottom - tight letter band only, no wasted feed.
   const rowBlank = (r: number) => {
     for (let i = 0; i < widthBytes; i++) if (bytes[r * widthBytes + i] !== 0) return false;
     return true;
@@ -823,7 +823,7 @@ function _renderHebToMono(
   while (top < h && rowBlank(top)) top++;
   while (bot > top && rowBlank(bot)) bot--;
   if (top >= bot) {
-    // All blank — emit one feed row.
+    // All blank - emit one feed row.
     return { bytes: new Uint8Array(1), widthBytes: 1, height: 1, offsetX: 0 };
   }
 
@@ -836,7 +836,7 @@ function _renderHebToMono(
   while (left < width && colBlank(left)) left++;
   while (right > left && colBlank(right)) right--;
 
-  // Tight vertical padding — keeps line spacing but skips wasted blank rows.
+  // Tight vertical padding - keeps line spacing but skips wasted blank rows.
   const padT = Math.max(0, top - 1);
   const padB = Math.min(h - 1, bot + 1);
   const padL = Math.max(0, left - 1);
@@ -932,7 +932,7 @@ function _canvasToCroppedMono(
   return { bytes: cropped, widthBytes: cBytes, height: newH, offsetX };
 }
 
-// Customer name (big bold) + phone next to it (large, thin) — centered.
+// Customer name (big bold) + phone next to it (large, thin) - centered.
 function _renderHeaderToMono(
   name: string,
   phone: string | undefined,
@@ -1010,7 +1010,7 @@ function _renderTwoColToMono(
 
 // Render a QR code as a 1-bit bitmap so it travels through the same raster
 // pipeline as the rest of the receipt (no separate ESC/POS QR command needed,
-// works identically on every printer model — same path as the other "bons").
+// works identically on every printer model - same path as the other "bons").
 function _renderQrToMono(
   data: string,
   modulePx: number,
@@ -1109,7 +1109,7 @@ function _combineMonos(monos: Mono[], paperWidth: number): Mono {
 function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   const { bytes, widthBytes, height } = mono;
   const ROWS = 255;
-  // Detect runs of all-blank rows and replace them with ESC J motor feed —
+  // Detect runs of all-blank rows and replace them with ESC J motor feed -
   // ~5-10x faster than sending blank scan rows, and saves widthBytes per row.
   const MIN_BLANK_RUN = 3;
   const rowBlank = (y: number): boolean => {
@@ -1131,7 +1131,7 @@ function _emitRasterInto(buf: ByteBuf, mono: Mono) {
         remaining -= step;
       }
     } else if (blankRun > 0) {
-      // Tiny blank run — raster it inline to preserve exact spacing.
+      // Tiny blank run - raster it inline to preserve exact spacing.
       buf.pushArr([GS, 0x76, 0x30, 0x00,
         widthBytes & 0xff, (widthBytes >> 8) & 0xff,
         blankRun & 0xff, (blankRun >> 8) & 0xff]);
@@ -1325,7 +1325,7 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
     // the small feed(2) before cut. Append a blank band at the end of the
     // bitmap so after rotation the readable top gets the same lead-in gap as
     // the upright bon.
-    const LEAD_IN_DOTS = 110; // ~13mm @ 203dpi — matches the upright lead-in.
+    const LEAD_IN_DOTS = 110; // ~13mm @ 203dpi - matches the upright lead-in.
     const combinedBeforeLead = _combineMonos(monos, width);
     const existingEndFeed = _countTrailingBlankRows(combinedBeforeLead);
     const leadCompensation = Math.max(0, LEAD_IN_DOTS - existingEndFeed);
@@ -1356,7 +1356,7 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   // Approximate native-font column width: default font ≈ 12 dots per char @ size 1.
   const cols = Math.max(16, Math.min(48, Math.floor(width / 12)));
 
-  // Always combine pending monos into one full-width raster — safest across
+  // Always combine pending monos into one full-width raster - safest across
   // printer firmwares (some don't honor ESC $ before GS v 0 and print garbage).
   let pending: Mono[] = [];
   const flush = () => {
@@ -1384,7 +1384,7 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
       case "feed":
         flush();
         {
-          // Convert n "lines" to dots and emit ESC J <dots> (motor feed) — far
+          // Convert n "lines" to dots and emit ESC J <dots> (motor feed) - far
           // faster than printing n LFs (which scan blank rows). ~24 dots/line @ 203dpi.
           let dots = Math.max(1, Math.round((op.n ?? 1) * 24));
           while (dots > 0) {
@@ -1469,7 +1469,7 @@ export function getPrintQueueDepth(): number {
 }
 
 export async function printOps(ops: FastOp[]): Promise<void> {
-  // Build bytes BEFORE entering the queue — when several bons are queued, the
+  // Build bytes BEFORE entering the queue - when several bons are queued, the
   // next bon's rendering+raster work happens in parallel with the previous bon
   // still transmitting over BLE. This eliminates dead time between jobs.
   const bytes = buildOpsBytes(ops);
@@ -1480,7 +1480,7 @@ export async function printOps(ops: FastOp[]): Promise<void> {
 }
 
 
-// ---- Public printing API — now backed by the fast hybrid pipeline ----
+// ---- Public printing API - now backed by the fast hybrid pipeline ----
 
 // Lazy import to avoid the circular-import warning (btReceiptOps imports types
 // from this module).
@@ -1544,7 +1544,7 @@ export async function printHybridDiagnostic(): Promise<void> {
   ]);
 }
 
-// Legacy slow path kept for diagnostics — prints full HTML via raster.
+// Legacy slow path kept for diagnostics - prints full HTML via raster.
 // Not used by default anymore. Exported so callers that explicitly want the
 // pixel-perfect HTML rendering can still reach for it.
 export async function printHtmlBluetoothSlow(html: string): Promise<void> {
@@ -1559,7 +1559,7 @@ export async function printHtmlBluetoothSlow(html: string): Promise<void> {
 }
 
 
-// Encoding cycle test — kept as a non-Hebrew diagnostic only. Hebrew text-mode
+// Encoding cycle test - kept as a non-Hebrew diagnostic only. Hebrew text-mode
 // is disabled because this printer prints CP862/CP1255 bytes as gibberish.
 export async function printTestCycle(): Promise<void> {
   await printHybridDiagnostic();

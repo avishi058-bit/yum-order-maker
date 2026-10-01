@@ -7,7 +7,7 @@
  * Why a single shared layer instead of per-card elements?
  *  - Keeps the DOM cheap: at most ONE animating element on screen at a time.
  *  - Uses CSS transform/opacity only (GPU-friendly, no layout thrash).
- *  - Doesn't matter where the source unmounted — the ghost lives at the root.
+ *  - Doesn't matter where the source unmounted - the ghost lives at the root.
  *
  * Usage:
  *   const { flyToCart, registerCartTarget } = useFlyToCart();
@@ -43,7 +43,7 @@ const FlyToCartContext = createContext<FlyToCartContextValue | null>(null);
 export const useFlyToCart = () => {
   const ctx = useContext(FlyToCartContext);
   if (!ctx) {
-    // Soft fallback — if provider isn't mounted yet, no-op.
+    // Soft fallback - if provider isn't mounted yet, no-op.
     return {
       flyToCart: () => {},
       registerCartTarget: () => {},
@@ -66,7 +66,7 @@ export const FlyToCartProvider = ({ children }: { children: React.ReactNode }) =
       const target = cartTargetRef.current;
       if (!target) {
         // The cart icon may not have mounted yet (first item just added).
-        // Retry up to ~5 frames before giving up — keeps the animation
+        // Retry up to ~5 frames before giving up - keeps the animation
         // smooth on the very first add without holding it forever.
         if (attempt < 5) {
           requestAnimationFrame(() => launch(attempt + 1));
@@ -82,7 +82,7 @@ export const FlyToCartProvider = ({ children }: { children: React.ReactNode }) =
 
   const removeFly = useCallback((id: number) => {
     setFlies((prev) => prev.filter((f) => f.id !== id));
-    // No cart pulse — user requested a clean "lands in cart" feel without
+    // No cart pulse - user requested a clean "lands in cart" feel without
     // any blinking/bouncing on the destination.
   }, []);
 
@@ -116,7 +116,7 @@ const FlyLayer = ({ flies, onComplete }: { flies: ActiveFly[]; onComplete: (id: 
                 opacity: 0,
               }}
               transition={{
-                // Smooth glide — slight ease-in-out so the item gently
+                // Smooth glide - slight ease-in-out so the item gently
                 // accelerates and softly lands in the cart (no abrupt jump
                 // up or blink at the destination).
                 duration: 0.5,

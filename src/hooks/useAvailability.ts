@@ -5,7 +5,7 @@ export interface AvailabilityMap {
   [itemId: string]: boolean;
 }
 
-/** Ids that represent the same physical ingredient — availability is shared. */
+/** Ids that represent the same physical ingredient - availability is shared. */
 export const AVAILABILITY_ALIAS_GROUPS: string[][] = [
   ["pickled-jalapeno", "pickled-jalapeno-side", "pickled-jalapeno-sauce"],
 ];

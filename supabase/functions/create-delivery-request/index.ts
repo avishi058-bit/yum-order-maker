@@ -12,7 +12,7 @@ function roundHalfDown(x: number): number {
   return frac > 0.5 ? floor + 1 : floor;
 }
 
-// Server-side price computation — MUST mirror calculate-delivery-price.
+// Server-side price computation - MUST mirror calculate-delivery-price.
 // This is the trusted source of truth for delivery pricing.
 async function computePrice(opts: {
   lat: number | null;
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Server-side price computation — client price is IGNORED.
+    // Server-side price computation - client price is IGNORED.
     const priced = await computePrice({
       lat: latIn !== null && Number.isFinite(latIn) ? latIn : null,
       lng: lngIn !== null && Number.isFinite(lngIn) ? lngIn : null,

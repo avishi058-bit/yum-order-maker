@@ -9,7 +9,7 @@ export const PRODUCE_LABEL: Record<string, string> = {
   red_onion: "בצל סגול",
   pickles: "מלפפון חמוץ",
   white_onion: "בצל לבן (ריבה/מטוגן)",
-  other: "אחר — לא ירק לבורגר",
+  other: "אחר - לא ירק לבורגר",
 };
 
 export type ProducePurchase = {

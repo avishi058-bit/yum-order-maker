@@ -243,8 +243,8 @@ const EventsAdmin = () => {
                     ["potatoes_g", "פוטטוס למנה (גרם)"],
                     ["onion_rings_g", "טבעות בצל למנה (גרם)"],
                     ["waffle_g", "וופל למנה (גרם)"],
-                    ["default_eggs_per_guest", "ביצי עין — ברירת מחדל לסועד"],
-                    ["default_dessert_per_guest", "קינוח — ברירת מחדל לסועד"],
+                    ["default_eggs_per_guest", "ביצי עין - ברירת מחדל לסועד"],
+                    ["default_dessert_per_guest", "קינוח - ברירת מחדל לסועד"],
                   ] as [keyof KitchenPrepSettings, string][]).map(([k, label]) => (
                     <div key={k}>
                       <label className="text-sm font-medium block mb-1">{label}</label>

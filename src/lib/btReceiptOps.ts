@@ -32,7 +32,7 @@ import {
 
 // ---- Ingredient diff (matches the customizer view) ----
 // Translates the opaque removalId / addId tokens stored on order items into
-// human-readable Hebrew changes — exactly what the kitchen sees in the bun
+// human-readable Hebrew changes - exactly what the kitchen sees in the bun
 // preview in the app: "ללא בצל", "להוסיף עגבנייה", or "ללא שינויים".
 const ING_LOOKUP: Record<string, { label: string; kind: "remove" | "add" }> = (() => {
   const m: Record<string, { label: string; kind: "remove" | "add" }> = {};
@@ -117,7 +117,7 @@ function isChickenBurger(name: string): boolean {
   return /קריספי/.test(name || "");
 }
 
-// Ingredients that are out of stock are simply not on the bun — they must
+// Ingredients that are out of stock are simply not on the bun - they must
 // never be printed as remaining, nor as "ללא X".
 function soldOutVeg(): Set<string> {
   const out = new Set<string>();
@@ -165,9 +165,9 @@ function buildVeggieSummary(
   const finalArr = VEG_ORDER.filter((id) => final.has(id));
   const defArr = VEG_ORDER.filter((id) => def.has(id));
 
-  // ===== Regular burger (4 veggies + aioli) — new spec =====
+  // ===== Regular burger (4 veggies + aioli) - new spec =====
   // Only applies when there are no add-ons that changed the default set
-  // (e.g. add-tomato on a smash) — and only for non-smash burgers.
+  // (e.g. add-tomato on a smash) - and only for non-smash burgers.
   if (!isSmashBurger(name)) {
     const chicken = isChickenBurger(name);
     const VEG4 = ((chicken
@@ -218,14 +218,14 @@ function buildVeggieSummary(
       return { veg: remaining.join(" "), others };
     }
 
-    // Fallback for unusual combinations (e.g. mixed add+remove) — list final state
+    // Fallback for unusual combinations (e.g. mixed add+remove) - list final state
     return {
       veg: finalArr.length === 0 ? "בלי כלום" : finalArr.map((id) => VEGGIE_HEBREW[id]).join(" "),
       others,
     };
   }
 
-  // ===== Smash burger — new spec =====
+  // ===== Smash burger - new spec =====
   // Default = lettuce + pickles + aioli. Optional adds: tomato, onion.
   const SMASH_DEF = (["lettuce", "pickles", "aioli"] as readonly string[]).filter(
     (id) => !soldOut.has(id),
@@ -345,16 +345,16 @@ function dashSep(): FastOp {
   return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
 }
 
-// Map doneness label like "M — מדיום" / "MW — מדיום וואל" to short "M"/"MW"/"WD".
+// Map doneness label like "M - מדיום" / "MW - מדיום וואל" to short "M"/"MW"/"WD".
 function shortDoneness(label: string | null): string | null {
   if (!label) return null;
   const m = label.match(/\b(MW|WD|M)\b/);
   return m ? m[1] : label;
 }
 
-// Normalize drink name from meal/standalone "פחית — קולה" → "קולה"
+// Normalize drink name from meal/standalone "פחית - קולה" → "קולה"
 function cleanDrinkName(s: string): string {
-  return s.replace(/^.*?[—\-–]\s*/, "").trim();
+  return s.replace(/^.*?-\s*/, "").trim();
 }
 
 // ============================================================
@@ -376,12 +376,12 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
   // Daily running number, printed right under the name, bold and centered, so
   // the kitchen can order bons by arrival. Assigned at order creation and
-  // restarts from 1 every business day — unrelated to the order number.
+  // restarts from 1 every business day - unrelated to the order number.
   const bonNum = (order as any).bon_queue_number ?? order.queue_number ?? null;
   if (bonNum != null) {
     ops.push({ kind: "heb", text: String(bonNum), align: "C", bold: true, size: 40 });
   }
-  // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד — לא כאן.)
+  // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד - לא כאן.)
   ops.push(sep());
 
   // 2) Order type (small) + optional note
@@ -393,7 +393,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
   const realItems = order.order_items.filter((it) => it.item_name !== "רטבים");
 
-  // Identical dishes are intentionally NOT merged — each cart line prints on
+  // Identical dishes are intentionally NOT merged - each cart line prints on
   // its own, per kitchen request.
   const groups: Array<{ item: ReceiptOrderItem; qty: number }> = realItems.map((it) => ({
     item: it,
@@ -420,7 +420,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ? groups.filter((g) => !isStandaloneDrinkItem(g.item))
     : groups;
 
-  // Running dish number — printed on every main dish (burgers/mains) so the
+  // Running dish number - printed on every main dish (burgers/mains) so the
   // kitchen can write the same number on the wrapped dish. Fries/sides and
   // drinks are intentionally NOT numbered.
   let dishNo = 0;
@@ -445,7 +445,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       ops.push(feed(LINE_GAP));
     }
 
-    // Item name (big, bold) — qty only when >1, doneness inline at end
+    // Item name (big, bold) - qty only when >1, doneness inline at end
     // If it's a meal (upgraded or originally a meal), prefix with "ארוחת"
     const qtyStr = totalQty > 1 ? ` x${totalQty}` : "";
     const donSuffix = donShort ? ` ${donShort}` : "";
@@ -472,7 +472,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
 
 
-    // Toppings — printed right after the burger preferences/changes, before
+    // Toppings - printed right after the burger preferences/changes, before
     // the meal side / drinks / deal extras.
     const toppingsToPrint = printableToppings(it.toppings);
     if (toppingsToPrint.length > 0) {
@@ -566,7 +566,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   });
 
-  // 4) Order-level sauces (synthetic "רטבים" line) — always at bottom, no title
+  // 4) Order-level sauces (synthetic "רטבים" line) - always at bottom, no title
   const sauceItem = order.order_items.find((it) => it.item_name === "רטבים");
   if (sauceItem && sauceItem.toppings && sauceItem.toppings.length > 0) {
     ops.push(sep());
@@ -633,7 +633,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
 
 
-  // 6) Payment block — only when relevant
+  // 6) Payment block - only when relevant
   if (order.payment_method === "counter") {
     ops.push(sep());
     ops.push(asLine("לתשלום בקופה", { align: "C", bold: true, size: 30 }));
@@ -827,7 +827,7 @@ export function buildTestOps(): FastOp[] {
 }
 
 // ============================================================
-// PHONE QR — standalone bon
+// PHONE QR - standalone bon
 // ============================================================
 export function buildPhoneQrOps(order: ReceiptOrder): FastOp[] {
   const phone = (order.customer_phone || "").trim();

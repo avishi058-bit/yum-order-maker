@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       );
     }
     // NOTE: attempts are recorded ONLY for failed lookups (below). Successful
-    // lookups must not consume the budget — the tracking page polls every 8s
+    // lookups must not consume the budget - the tracking page polls every 8s
     // and would otherwise rate-limit a legitimate customer within ~80 seconds.
     const recordFailure = () =>
       supabase.rpc("record_rate_limit_attempt", {
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 
     // NOTE: order_number restarts daily, so the same number can exist on many
     // days. Fetch the recent candidates and pick the newest one matching the
-    // caller's phone — `.maybeSingle()` used to error out on duplicates, which
+    // caller's phone - `.maybeSingle()` used to error out on duplicates, which
     // broke tracking, status updates and the "I'm on the way" confirmation.
     const { data: candidates } = await supabase
       .from("orders")
@@ -103,14 +103,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Customer tapped "I saw it — I'm on the way"
+    // Customer tapped "I saw it - I'm on the way"
     if (action === "on_way" && !order.customer_on_way_at) {
       const nowIso = new Date().toISOString();
       await supabase.from("orders").update({ customer_on_way_at: nowIso }).eq("id", order.id);
       order.customer_on_way_at = nowIso;
     }
 
-    // Strip the phone from the response — caller already knows it
+    // Strip the phone from the response - caller already knows it
     const { customer_phone: _omit, ...safe } = order;
 
     return new Response(

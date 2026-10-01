@@ -177,7 +177,7 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn, s
           </motion.div>
         )}
 
-        {/* "הזמן חייל/ת" — prominent entry buttons (hidden when switched off in the kitchen) */}
+        {/* "הזמן חייל/ת" - prominent entry buttons (hidden when switched off in the kitchen) */}
         {soldierFundEnabled && <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

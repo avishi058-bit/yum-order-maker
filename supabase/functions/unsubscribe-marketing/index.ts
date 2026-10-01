@@ -1,4 +1,4 @@
-// Public unsubscribe endpoint — Israeli Spam Law (תיקון 40) requires an
+// Public unsubscribe endpoint - Israeli Spam Law (תיקון 40) requires an
 // immediate, no-login-required opt-out. Setting marketing_consent=false is
 // non-destructive so accepting a bare phone is acceptable; we still
 // rate-limit by IP to prevent abuse and log every event to consent_events.
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       req.headers.get('cf-connecting-ip') ||
       'unknown'
 
-    // Rate limit — 10 per hour per IP
+    // Rate limit - 10 per hour per IP
     const { data: allowed } = await supabase.rpc('check_rate_limit', {
       p_action: 'unsubscribe',
       p_key: ip,
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     const { phone } = parsed.data
 
-    // Look up customer (may not exist — still respond success to avoid enumeration).
+    // Look up customer (may not exist - still respond success to avoid enumeration).
     const { data: customer } = await supabase
       .from('customers')
       .select('id, phone, marketing_consent')

@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 
 const AccessibilityWidget = lazy(() => import("./AccessibilityWidget"));
 
-// Routes where the widget should NOT appear — internal staff / kiosk surfaces.
+// Routes where the widget should NOT appear - internal staff / kiosk surfaces.
 // Everything else is treated as a public route and gets the widget.
 const INTERNAL_ROUTE_PREFIXES = [
   "/kitchen",   // covers /kitchen, /kitchen/install

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-// supabase client no longer imported here — order fetch goes through the shared useOrderPoll hook
+// supabase client no longer imported here - order fetch goes through the shared useOrderPoll hook
 import { Bell, BellOff, X, ChefHat, CheckCircle, Package, Volume2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { isPushSupported, iosNeedsInstall, isIos, isStandalonePwa, subscribeToPush, getExistingSubscription } from "@/lib/push";
@@ -13,7 +13,7 @@ import { useOrderPoll } from "@/hooks/useOrderPoll";
 
 interface OrderLiveTrackerProps {
   orderNumber: number;
-  /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
+  /** Phone used at checkout - required to authorize order reads via the secure endpoint. */
   phone: string;
   onClose: () => void;
 }
@@ -22,7 +22,7 @@ const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869
 
 const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps) => {
   const { settings } = useSiteSettings();
-  // Shared polling hook — dedupes with OrderTopBar when both are mounted on /track.
+  // Shared polling hook - dedupes with OrderTopBar when both are mounted on /track.
   const order = useOrderPoll(orderNumber, phone);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -71,7 +71,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     }
   }, [order?.status, prevStatus, soundEnabled, notificationsEnabled, orderNumber]);
 
-  // Live countdown timer — ticks every second regardless of status so we can
+  // Live countdown timer - ticks every second regardless of status so we can
   // show "elapsed" while waiting and "remaining" while cooking.
   useEffect(() => {
     if (!order || order.status === "ready" || order.status === "completed") {
@@ -84,7 +84,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
         const diff = Math.max(0, Math.floor((new Date(order.estimated_ready_at).getTime() - Date.now()) / 1000));
         setTimeLeft(diff);
       } else {
-        // no ETA yet — show elapsed since order was placed
+        // no ETA yet - show elapsed since order was placed
         const elapsed = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 1000);
         setTimeLeft(-elapsed); // negative = elapsed
       }
@@ -120,7 +120,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
   const handleEnableNotifications = useCallback(async () => {
     setSoundEnabled(true);
 
-    // iOS check FIRST — on iOS Safari without PWA, Notification API doesn't exist.
+    // iOS check FIRST - on iOS Safari without PWA, Notification API doesn't exist.
     // Show a proper in-app modal with Add-to-Home-Screen instructions instead of
     // a broken native permission popup.
     if (iosNeedsInstall()) {
@@ -130,7 +130,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
     }
 
     // Browser doesn't support Web Push at all (e.g. older browser, in-app webview).
-    // Don't try to call requestPermission — just inform the user.
+    // Don't try to call requestPermission - just inform the user.
     if (!isPushSupported()) {
       if (isIos()) {
         // iOS in PWA but still missing APIs (very old iOS)
@@ -161,7 +161,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
 
     setNotificationsEnabled(true);
 
-    // STEP 2: Subscribe to push immediately (orderId optional — looked up by phone server-side).
+    // STEP 2: Subscribe to push immediately (orderId optional - looked up by phone server-side).
     const res = await subscribeToPush({ orderId: order?.id ?? null, customerPhone: phone });
     if (res.ok) {
       toast.success("מעולה! נעדכן אותך כשההזמנה מוכנה 🔔");
@@ -281,7 +281,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
               </div>
             ) : (
               <>
-                {/* Push-notification prompt — at the top of the live tracker,
+                {/* Push-notification prompt - at the top of the live tracker,
                     before the progress bar, so it sits above the timer in the
                     normal page flow instead of hiding it as a front layer. */}
                 <SmartPushPrompt
@@ -335,7 +335,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   </div>
                 </div>
 
-                {/* Timer — Wolt-style circular ring (preparing / new) */}
+                {/* Timer - Wolt-style circular ring (preparing / new) */}
                 {(order.status === "preparing" || order.status === "new") && timeLeft !== null && (() => {
                   const size = 200;
                   const stroke = 12;
@@ -434,7 +434,7 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                   </motion.div>
                 )}
 
-                {/* Waze navigation — visible while order is active */}
+                {/* Waze navigation - visible while order is active */}
                 {order.status !== "completed" && (
                   <a
                     href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"

@@ -12,7 +12,7 @@ interface SkibidiGuardContextValue {
   /** Returns true when the overlay animation was actually shown.
    *  Returns false when the 67 attempt is silently blocked (already shown once this session). */
   trigger: () => boolean;
-  /** Manually reset the "shown once" flag — e.g. when a new order starts. */
+  /** Manually reset the "shown once" flag - e.g. when a new order starts. */
   reset: () => void;
 }
 

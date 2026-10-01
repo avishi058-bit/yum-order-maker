@@ -163,7 +163,7 @@ export default function EditOrderModal({
                     <optgroup key={cat} label={CATEGORY_LABELS[cat] ?? cat}>
                       {list.map((m) => (
                         <option key={m.id} value={m.id}>
-                          {m.name} — ₪{m.price}
+                          {m.name} - ₪{m.price}
                         </option>
                       ))}
                     </optgroup>

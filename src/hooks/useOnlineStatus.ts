@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 /**
  * Connection watchdog.
  *
- * `navigator.onLine` alone is not enough — on a phone the Wi-Fi can stay
+ * `navigator.onLine` alone is not enough - on a phone the Wi-Fi can stay
  * "connected" while there is no real route to the server, which is exactly the
  * case where the kitchen screen looks frozen. So on top of the browser events
  * we run a lightweight periodic probe against the backend and report offline

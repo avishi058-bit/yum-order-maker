@@ -48,7 +48,7 @@ const AdminLeads = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-4">
-        <h1 className="text-3xl font-bold">לידים — קבוצות ואירועים</h1>
+        <h1 className="text-3xl font-bold">לידים - קבוצות ואירועים</h1>
         {loading && <p className="text-muted-foreground">טוען...</p>}
         {!loading && leads.length === 0 && <p className="text-muted-foreground">אין פניות עדיין</p>}
         {leads.map((l) => (

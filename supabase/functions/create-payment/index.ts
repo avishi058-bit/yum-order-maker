@@ -26,7 +26,7 @@ const BodySchema = z.object({
   items: z.array(CartItemSchema).min(1).max(100),
   customerName: z.string().max(200).optional().default(""),
   // Phone proves the caller owns the order. It may be empty for flows that
-  // don't collect a phone (kiosk / no-phone checkout) — in that case the
+  // don't collect a phone (kiosk / no-phone checkout) - in that case the
   // stored order must also have no real phone, otherwise we reject.
   customerPhone: z.string().max(30).optional().default(""),
   orderId: z.string().uuid(),
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     // Verify order exists, belongs to this caller (phone match), and total
     // matches. The phone check binds this session to the customer who placed
-    // the order — without it any UUID guess could open a checkout session for
+    // the order - without it any UUID guess could open a checkout session for
     // someone else's bill. Ownership + total mismatch both return the same
     // generic "order_not_found" so an attacker cannot distinguish the two.
     const supabase = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     const storedPhone = normalizePhone(order?.customer_phone ?? "");
     const givenPhone = normalizePhone(body.customerPhone);
-    // No-phone orders (kiosk flow) store a "—" placeholder → no digits at all.
+    // No-phone orders (kiosk flow) store a "-" placeholder → no digits at all.
     const phoneOk = storedPhone.length === 0 ? givenPhone.length === 0 : storedPhone === givenPhone;
     if (
       ordErr ||

@@ -9,7 +9,7 @@ interface TermsModalProps {
 }
 
 /**
- * Reusable Terms of Service modal — used inside the checkout flow so the
+ * Reusable Terms of Service modal - used inside the checkout flow so the
  * customer can read the terms without leaving the order. Sized larger on
  * kiosk for touch comfort.
  */

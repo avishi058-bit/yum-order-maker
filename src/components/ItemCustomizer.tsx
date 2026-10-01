@@ -136,14 +136,14 @@ interface ItemCustomizerProps {
   isAvailable?: (id: string) => boolean;
   /** Take-away (false) shows the optional "name on the dish" step at the end. */
   dineIn?: boolean | null;
-  /** When set, the customizer opens with these values prefilled — used for
+  /** When set, the customizer opens with these values prefilled - used for
    *  editing an item already in the cart. */
   initialState?: ItemCustomizerInitialState;
 }
 
 type Step = "customize" | "meal-upgrade" | "side-select" | "drink-select" | "extras";
 
-// Hero image collapse parameters (kept tiny — pure transform/opacity, no layout)
+// Hero image collapse parameters (kept tiny - pure transform/opacity, no layout)
 const HERO_HEIGHT = 280;          // initial hero height in px (mobile/web)
 const HERO_HEIGHT_KIOSK_DEFAULT = 380; // kiosk hero height (admin-tunable via CSS var)
 const HERO_MIN_SCALE = 0.55;      // scale at full collapse
@@ -172,7 +172,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const [selectedSide, setSelectedSide] = useState<string>("side-fries");
   const [selectedDrink, setSelectedDrink] = useState<string>("drink-cola");
   const [selectedDoneness, setSelectedDoneness] = useState<string>(DEFAULT_DONENESS);
-  // Optional "owner name" — chef sees who each dish belongs to.
+  // Optional "owner name" - chef sees who each dish belongs to.
   // Asked as the LAST step, and only for take-away orders.
   const [ownerName, setOwnerName] = useState("");
   const [nameStepOpen, setNameStepOpen] = useState(false);
@@ -225,7 +225,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setNameStepOpen(false);
       setStep("customize");
     } else {
-      // Fresh open — set defaults
+      // Fresh open - set defaults
       const defaults: Record<string, boolean> = {};
       ingredients.forEach(ing => {
         defaults[ing.id] = itemIsSmash ? ing.defaultSmash : ing.defaultRegular;
@@ -283,7 +283,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   // because Kiosk renders this component permanently with item=null.
   useBodyScrollLock(!!item);
 
-  // Drag state (refs only — no re-render while dragging)
+  // Drag state (refs only - no re-render while dragging)
   const dragState = useRef({
     active: false,
     startY: 0,
@@ -302,10 +302,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const showCollapsingHero = showHero && !isKiosk;
   const showStaticScrollHero = showHero && isKiosk;
 
-  // Apply hero transform from scrollTop — direct DOM, no setState.
+  // Apply hero transform from scrollTop - direct DOM, no setState.
   // Wolt-style: hero shrinks in real height (so content fills the gap and the
   // sticky header stays at the very top), while the image inside parallaxes & fades.
-  // SAME behavior on website + kiosk — only the base height differs (admin-tunable).
+  // SAME behavior on website + kiosk - only the base height differs (admin-tunable).
   const applyHeroTransform = useCallback((scrollTop: number) => {
     if (isKiosk) return;
     const hero = heroRef.current;
@@ -323,7 +323,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   }, [isKiosk]);
 
 
-  // Scroll handler — passive, RAF-throttled, no setState
+  // Scroll handler - passive, RAF-throttled, no setState
   const scrollRafRef = useRef(0);
   const handleScroll = useCallback(() => {
     if (scrollRafRef.current) return;
@@ -402,14 +402,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     });
   }, []);
 
-  // Drag-to-close — pointer events + RAF + transform on the sheet root
+  // Drag-to-close - pointer events + RAF + transform on the sheet root
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const sc = scrollRef.current;
     const target = e.target as HTMLElement | null;
     // Only enforce the "scroll is at top" guard when the drag actually starts
     // INSIDE the scrollable content. When the user grabs the header / pull-handle
     // (outside the scroll container), allow drag-to-close regardless of scroll
-    // position — important for kiosk where content is often scrolled past hero.
+    // position - important for kiosk where content is often scrolled past hero.
     const insideScroll = !!(sc && target && sc.contains(target));
     if (insideScroll && sc && sc.scrollTop > 0) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -513,12 +513,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       const dy = touch.clientY - startY;
       const dx = Math.abs(touch.clientX - startX);
       // If a pointer-driven drag is already active (kiosks fire both pointer +
-      // touch events), just keep feeding position into it — do NOT call
+      // touch events), just keep feeding position into it - do NOT call
       // beginDrag again or we would overwrite its pointerId and lock the drag.
       if (dragState.current.active) {
         // Only consume the gesture for DOWNWARD drags (drag-to-close).
         // Upward swipes must be allowed through so the browser can scroll
-        // the content natively — otherwise the modal feels frozen.
+        // the content natively - otherwise the modal feels frozen.
         if (dy <= 0) return;
         if (e.cancelable) e.preventDefault();
         applyDragPosition(touch.clientY);
@@ -596,9 +596,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const isBurger = item.category === "burger" || item.category === "meal";
   const isMeal = item.category === "meal";
   const isSmash = smashBurgerIds.includes(item.baseBurgerId || item.id);
-  // חף מפשע (צמחוני) — ללא בחירת מידת עשייה
+  // חף מפשע (צמחוני) - ללא בחירת מידת עשייה
   const isVegan = (item.baseBurgerId || item.id) === "haf-mifsha";
-  // קריספי צ׳יקן — עוף, ללא בחירת מידת עשייה
+  // קריספי צ׳יקן - עוף, ללא בחירת מידת עשייה
   const isChicken = (item.baseBurgerId || item.id) === "crispy-chicken";
 
   const VEGAN_CHEDDAR_MAX = 6;
@@ -613,14 +613,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const multiUnitLabel = (id: string) => (id === "vegan-cheddar" ? "לפרוסה" : "ליחידה");
 
 
-  // Paid toppings that contain gluten — blocked once a GF bun is chosen.
+  // Paid toppings that contain gluten - blocked once a GF bun is chosen.
   const GLUTEN_TOPPING_IDS = ["onion-rings-topping", "crispy-onion-chips"];
   const isGlutenFree = selectedToppings.includes("gluten-free-bun");
   const toppingNameById = (id: string) => toppings.find((t) => t.id === id)?.name || id;
 
   const toggleTopping = (id: string) => {
     if (isGlutenFree && GLUTEN_TOPPING_IDS.includes(id) && !selectedToppings.includes(id)) {
-      // Contains gluten — not selectable alongside a gluten-free bun
+      // Contains gluten - not selectable alongside a gluten-free bun
       return;
     }
     if (MULTI_TOPPING_MAX[id]) {
@@ -690,7 +690,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const computeRemovals = (): string[] => {
     const result: string[] = [];
     ingredients.forEach(ing => {
-      // Crispy chicken never has tomato — never emit a tomato removal/addition.
+      // Crispy chicken never has tomato - never emit a tomato removal/addition.
       if (isChicken && ing.id === "tomato") return;
       const isOn = ingredientState[ing.id] ?? (isSmash ? ing.defaultSmash : ing.defaultRegular);
       const def = isSmash ? ing.defaultSmash : ing.defaultRegular;
@@ -883,7 +883,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       <AnimatePresence>
       {item && (
         <>
-          {/* Backdrop for the main sheet — hidden when meal-upgrade modal is shown */}
+          {/* Backdrop for the main sheet - hidden when meal-upgrade modal is shown */}
           {!isMealUpgrade && (
             <motion.div
               ref={backdropRef}
@@ -955,7 +955,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       height: heroHeight,
                       // Contain layout/paint inside the hero so per-frame height
                       // changes during scroll don't trigger a reflow of the
-                      // surrounding modal — kills the scroll-jitter on kiosk.
+                      // surrounding modal - kills the scroll-jitter on kiosk.
                       contain: "layout paint size",
                       willChange: "height",
                     }}
@@ -1023,7 +1023,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       </div>
                     )}
 
-                    {/* Doneness selector — only for non-smash burgers, only if category is available */}
+                    {/* Doneness selector - only for non-smash burgers, only if category is available */}
                     {isBurger && !isSmash && !isVegan && !isChicken && (!isAvailable || isAvailable("doneness-category")) && (() => {
                       const visibleOptions = donenessOptions.filter(d => !isAvailable || isAvailable(d.id));
                       if (visibleOptions.length === 0) return null;
@@ -1117,7 +1117,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           <p className={`text-gray-500 text-right ${isKiosk ? "text-[20px] mb-5" : "text-sm mb-3"}`}>אפשר לבחור עד ל-9 פריטים</p>
                           {glutenRemovedNotice.length > 0 && (
                             <div className={`rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-right mb-3 ${isKiosk ? "p-4 text-[20px]" : "p-3 text-sm"}`}>
-                              ⚠️ הוסרו אוטומטית: {glutenRemovedNotice.join(", ")} — מכילים גלוטן ולכן לא ניתן להוסיף אותם עם לחמנייה ללא גלוטן.
+                              ⚠️ הוסרו אוטומטית: {glutenRemovedNotice.join(", ")} - מכילים גלוטן ולכן לא ניתן להוסיף אותם עם לחמנייה ללא גלוטן.
                             </div>
                           )}
                           <div className="space-y-0">
@@ -1134,7 +1134,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                                 // Non-smash burgers: hide smash extra patty, show regular extra patty.
                                 if (t.id === "extra-patty") return !isSmash;
                                 if (t.id === "extra-smash-patty") return isSmash;
-                                // Vegan extra patty — only for חף מפשע
+                                // Vegan extra patty - only for חף מפשע
                                 if (t.id === "extra-vegan-patty") return baseId === "haf-mifsha";
                                 return true;
                               })
@@ -1315,7 +1315,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           </div>
                         </div>
 
-                        {/* תוספות צד — שלח גם מנות עראיס (3 / 4 רבעים) יחד עם ההמבורגר */}
+                        {/* תוספות צד - שלח גם מנות עראיס (3 / 4 רבעים) יחד עם ההמבורגר */}
                         {!initialState && item.id !== "arayes-special" && item.id !== "arayes-special-4" && (() => {
                           const sideOptions = (["arayes-special", "arayes-special-4"] as const)
                             .map((id) => menuItems.find((m) => m.id === id))
@@ -1685,7 +1685,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
             </motion.div>
           )}
 
-          {/* Meal-upgrade — independent centered modal (fade + scale only, opens directly in center) */}
+          {/* Meal-upgrade - independent centered modal (fade + scale only, opens directly in center) */}
           {isMealUpgrade && (
             <>
               <motion.div
@@ -1824,7 +1824,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
 
       {/* Alcohol-consent gate for beer chosen as a meal-deal drink.
-          Rendered as a sibling of <AnimatePresence> — NOT as its child —
+          Rendered as a sibling of <AnimatePresence> - NOT as its child -
           so framer-motion does not try to forward a ref to a plain function
           component (which broke the modal from showing). */}
       <AlcoholConsentModal

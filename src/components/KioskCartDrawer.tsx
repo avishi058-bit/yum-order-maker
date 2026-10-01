@@ -26,7 +26,7 @@ interface KioskCartDrawerProps {
   onQuickAdd: (item: MenuItem) => void;
   /** Open the drink-variant selector (for cans / beers with sub-options). */
   onSelectDrink?: (item: MenuItem) => void;
-  /** "Add another item" — return to menu */
+  /** "Add another item" - return to menu */
   onBackToMenu: () => void;
   isAvailable: (id: string) => boolean;
   /** Reopens the customizer with this cart item's selections prefilled. */
@@ -35,7 +35,7 @@ interface KioskCartDrawerProps {
   isKiosk?: boolean;
   /** When true, ordering is not possible right now; the drawer saves a future order. */
   isClosed?: boolean;
-  /** "הזמן חייל/ת" donation picked on the entry page — shown as an editable cart line. */
+  /** "הזמן חייל/ת" donation picked on the entry page - shown as an editable cart line. */
   soldierDonation?: number;
   onEditDonation?: () => void;
   onRemoveDonation?: () => void;
@@ -121,7 +121,7 @@ const KioskCartDrawer = ({
     onQuickAdd(item);
   };
 
-  // Theme tokens — kiosk uses a high-contrast light theme for visibility on
+  // Theme tokens - kiosk uses a high-contrast light theme for visibility on
   // the kiosk screen; website keeps the app theme.
   const th = isKiosk
     ? {
@@ -165,7 +165,7 @@ const KioskCartDrawer = ({
         closedBannerText: "text-amber-900 dark:text-amber-100",
       };
 
-  // Size tokens — kiosk uses larger touch targets, website uses compact sizes
+  // Size tokens - kiosk uses larger touch targets, website uses compact sizes
   const sz = isKiosk
     ? {
         headerPad: "p-6",
@@ -283,7 +283,7 @@ const KioskCartDrawer = ({
             {isClosed && (
               <div className={`flex-none ${th.closedBannerBg} border-b ${th.closedBannerBorder} px-5 py-3`}>
                 <p className={`text-center ${th.closedBannerText} font-black text-sm md:text-base`}>
-                  ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם — חזרו ושלחו אותה בעצמכם כשנפתח.
+                  ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם - חזרו ושלחו אותה בעצמכם כשנפתח.
                 </p>
               </div>
             )}
@@ -325,7 +325,7 @@ const KioskCartDrawer = ({
                             </span>
                           </div>
 
-                          {/* Modifiers — compact list */}
+                          {/* Modifiers - compact list */}
                           <div className="space-y-1 mb-3">
                             {(() => {
                               const names = getRemovalNames(item.removals);
@@ -427,7 +427,7 @@ const KioskCartDrawer = ({
                 </div>
               )}
 
-              {/* "הזמן חייל/ת" donation line — editable / removable */}
+              {/* "הזמן חייל/ת" donation line - editable / removable */}
               {soldierDonation > 0 && (
                 <div className={isKiosk ? "px-6" : "px-4"}>
                   <div className={`flex items-center justify-between gap-3 rounded-2xl border-2 border-green-500/40 bg-green-500/10 ${isKiosk ? "p-5" : "p-4"}`}>

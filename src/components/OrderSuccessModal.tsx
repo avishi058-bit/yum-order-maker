@@ -11,7 +11,7 @@ interface OrderSuccessModalProps {
  * Large, unmistakable order confirmation.
  *
  * Shown right after an order is created so customers immediately see that it
- * went through — the main cause of accidental double orders was a confirmation
+ * went through - the main cause of accidental double orders was a confirmation
  * that was too subtle (toast only).
  */
 const OrderSuccessModal = ({ note, onClose }: OrderSuccessModalProps) => {

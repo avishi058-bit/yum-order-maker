@@ -276,7 +276,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
                         תוספות למנה ה{["ראשונה", "שנייה", "שלישית"][currentBurgerIndex]}
                       </h3>
                       <p className="text-sm text-muted-foreground text-right mb-4">
-                        אופציונלי — בתשלום נוסף על מחיר הדיל
+                        אופציונלי - בתשלום נוסף על מחיר הדיל
                       </p>
                       <div className="space-y-0">
                         {allToppings.map((t) => {

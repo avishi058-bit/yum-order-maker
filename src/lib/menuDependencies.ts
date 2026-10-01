@@ -106,7 +106,7 @@ export const getDishIngredients = (dishId: string): string[] => [
 
 /**
  * כל המרכיבים החיוניים של מנה, כולל מרכיבים של מרכיבים (רקורסיבי).
- * משמש להדלקה יזומה: אם מדליקים מנה מורכבת – כל מה שהיא צריכה זמין שוב.
+ * משמש להדלקה יזומה: אם מדליקים מנה מורכבת - כל מה שהיא צריכה זמין שוב.
  */
 export const getAllRequiredIngredients = (dishId: string): string[] => {
   const out = new Set<string>();

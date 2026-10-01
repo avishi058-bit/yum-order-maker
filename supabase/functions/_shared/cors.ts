@@ -1,11 +1,11 @@
 // Shared CORS helpers.
 //
 // TWO modes:
-// 1. `corsHeadersFor(req)` — for endpoints called from the browser. Reflects
+// 1. `corsHeadersFor(req)` - for endpoints called from the browser. Reflects
 //    the Origin header only if it matches one of our allow-listed sites
 //    (production, preview, sandbox, and localhost dev). Any other origin
 //    receives `null` and the browser blocks the request.
-// 2. `internalCorsHeaders` — for endpoints only invoked server-to-server
+// 2. `internalCorsHeaders` - for endpoints only invoked server-to-server
 //    (pg_net webhooks, cron). Sets `Access-Control-Allow-Origin: null`
 //    so no browser origin can invoke them.
 //

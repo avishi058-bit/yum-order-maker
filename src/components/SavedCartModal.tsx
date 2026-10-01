@@ -43,7 +43,7 @@ const SavedCartModal = ({
             style={{ willChange: "opacity" }}
           />
 
-          {/* Centered card — fade + scale only (no slide-up) */}
+          {/* Centered card - fade + scale only (no slide-up) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -73,7 +73,7 @@ const SavedCartModal = ({
                   <img src={cartBurgerIcon} alt="עגלה" className="w-full h-full object-cover" />
                 </div>
 
-                {/* Personal greeting — glowing green */}
+                {/* Personal greeting - glowing green */}
                 <h2
                   className="text-2xl font-black mb-2"
                   style={{
@@ -116,7 +116,7 @@ const SavedCartModal = ({
                   </div>
                 </div>
 
-                {/* Actions — two equal buttons side by side */}
+                {/* Actions - two equal buttons side by side */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={onResume}

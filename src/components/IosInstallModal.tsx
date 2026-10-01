@@ -71,7 +71,7 @@ const IosInstallModal = ({ open, onClose, postInstallOpen = false }: Props) => {
                     </p>
                     <p className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Bell className="text-amber-500" size={18} />
-                      אשרו התראות — כך תדעו מתי ההזמנה מוכנה 🍔
+                      אשרו התראות - כך תדעו מתי ההזמנה מוכנה 🍔
                     </p>
                   </div>
                   <button

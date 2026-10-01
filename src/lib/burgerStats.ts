@@ -31,7 +31,7 @@ for (const id of Object.keys(ITEM_UNITS)) {
   if (!id.endsWith("-deal")) ITEM_UNITS[`meal-${id}`] = ITEM_UNITS[id];
 }
 
-/** Legacy rows have no item_id — fall back to the Hebrew name */
+/** Legacy rows have no item_id - fall back to the Hebrew name */
 const NAME_TO_ID: Record<string, string> = {
   "קלאסי": "classic",
   "סמאש של מושבניקים": "smash-moshavnikim",

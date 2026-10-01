@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     const rawFwd = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
     const clientIp = rawFwd.split(',')[0].trim() || 'unknown'
 
-    // Permanent IP block — checks both exact IPs AND blocked /24 subnets.
+    // Permanent IP block - checks both exact IPs AND blocked /24 subnets.
     if (clientIp && clientIp !== 'unknown') {
       const { data: ipBlocked } = await supabase.rpc('is_ip_blocked', { p_ip: clientIp })
       if (ipBlocked === true) {
@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
       }
 
       // Three-tier defense for OTP verification:
-      // Tier 1 (soft — human mistakes): 6 failed attempts per phone / 15 min → short wait.
+      // Tier 1 (soft - human mistakes): 6 failed attempts per phone / 15 min → short wait.
       // Tier 2 (phone lockout): 15 failed attempts per phone / 2 hours → temporary block.
       // Tier 3 (IP hard block): 10 failed attempts per IP / 1 hour → PERMANENT IP BAN.
       //   In attack mode, the IP threshold tightens to 5 (still allows for
@@ -270,14 +270,14 @@ Deno.serve(async (req) => {
           // auto-block their /24 subnets and enable 24h attack mode.
           const { data: attackDetected } = await supabase.rpc('check_and_activate_attack_mode')
           if (attackDetected === true) {
-            console.error('🚨 ATTACK PATTERN DETECTED — /24 subnets auto-blocked, 24h high-alert mode ON')
+            console.error('🚨 ATTACK PATTERN DETECTED - /24 subnets auto-blocked, 24h high-alert mode ON')
           }
 
           return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
         }
       }
 
-      // Tier 2: temporary phone lockout (2h) — not permanent, avoids punishing innocent phone owners.
+      // Tier 2: temporary phone lockout (2h) - not permanent, avoids punishing innocent phone owners.
       const { data: hardAllowed } = await supabase.rpc('check_rate_limit', {
         p_action: 'otp_verify',
         p_key: phone,

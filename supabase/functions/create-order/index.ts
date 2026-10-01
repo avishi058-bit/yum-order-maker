@@ -59,7 +59,7 @@ function getEffectivePrice(
 const CartItemSchema = z.object({
   itemId: z.string().min(1).max(64),
   quantity: z.number().int().min(1).max(50),
-  // Optional friendly name override (e.g. "פחית — קולה") — used as item_name on
+  // Optional friendly name override (e.g. "פחית - קולה") - used as item_name on
   // order_items so the kitchen sees the chosen sub-variant. Server still uses
   // the canonical menu item for pricing.
   nameOverride: z.string().trim().max(160).optional(),
@@ -109,9 +109,9 @@ const BodySchema = z.object({
   // Without this the order is rejected (no silent default).
   termsAcceptedAt: z.string().datetime({ message: "termsAcceptedAt must be ISO datetime" }),
   // Optional: customer-requested pickup time (ISO datetime). When set, order is
-  // scheduled — kitchen displays it and can start preparing closer to the time.
+  // scheduled - kitchen displays it and can start preparing closer to the time.
   scheduledFor: z.string().datetime().nullable().optional(),
-  // Delivery (website only). When set, order is a delivery order — customer pays
+  // Delivery (website only). When set, order is a delivery order - customer pays
   // for the food here; delivery fee is paid directly to the courier (Bit/cash).
   deliveryRequestId: z.string().uuid().nullable().optional(),
   // Ownership proof for delivery_requests: only the client that created the
@@ -120,7 +120,7 @@ const BodySchema = z.object({
   deliveryAddress: z.string().max(500).nullable().optional(),
   deliveryFee: z.number().min(0).max(10000).nullable().optional(),
   items: z.array(CartItemSchema).max(50),
-  // Donation-only checkout ("הזמן חייל/ת" from the entry page) — no food items.
+  // Donation-only checkout ("הזמן חייל/ת" from the entry page) - no food items.
   donationOnly: z.boolean().optional().default(false),
   // Optional: sauces selected at checkout (chef-summary use). Server adds the
   // extra-sauce charge (1₪ per sauce above the free quota) to the total and
@@ -132,9 +132,9 @@ const BodySchema = z.object({
   // Set to true only after the customer explicitly confirmed they want to send
   // an identical order again (duplicate-order guard below).
   allowDuplicate: z.boolean().optional().default(false),
-  // "הזמן חייל/ת" — optional donation added to the total (max 1,000₪).
+  // "הזמן חייל/ת" - optional donation added to the total (max 1,000₪).
   soldierDonation: z.number().min(0).max(1000).optional().default(0),
-  // Regulation approval timestamp — required server-side when soldierDonation > 0.
+  // Regulation approval timestamp - required server-side when soldierDonation > 0.
   soldierFundTermsAcceptedAt: z.string().min(1).max(64).optional().nullable(),
 });
 
@@ -459,7 +459,7 @@ Deno.serve(async (req: Request) => {
     overrides = rawOverrides as Record<string, { price?: number }>;
   }
 
-  // Availability gate — main items, paid toppings and sauces.
+  // Availability gate - main items, paid toppings and sauces.
   // Some ingredients exist under several ids (topping / "on the side" / sauce);
   // disabling any one of them blocks the whole group.
   const ALIAS_GROUPS: string[][] = [
@@ -503,7 +503,7 @@ Deno.serve(async (req: Request) => {
 
   // Server-side pricing
   // Kitchen-defined custom toppings (public.custom_toppings) are selectable in
-  // the customizer — price them here too, otherwise the whole order is rejected.
+  // the customizer - price them here too, otherwise the whole order is rejected.
   const customToppings: Record<string, { name: string; price: number }> = {};
   const { data: customToppingRows } = await supabase
     .from("custom_toppings")
@@ -561,12 +561,12 @@ Deno.serve(async (req: Request) => {
   }
   const finalTotal = Math.round((pricing.total + extraSauces + premiumSauceCost + soldierDonation) * 100) / 100;
 
-  // Normalize phone: kiosk no-phone flow sends "" — store a placeholder so
+  // Normalize phone: kiosk no-phone flow sends "" - store a placeholder so
   // the NOT NULL column on `orders.customer_phone` stays satisfied without
   // polluting the customers table.
   const phoneForOrder = body.customerPhone && body.customerPhone.length >= 7
     ? body.customerPhone
-    : "—";
+    : "-";
 
   // Upsert customer only when we have a real phone number
   if (body.customerPhone && body.customerPhone.length >= 7) {
@@ -648,7 +648,7 @@ Deno.serve(async (req: Request) => {
           name: b.name,
           removals:
             b.removalNames && b.removalNames.length ? b.removalNames : b.removals ?? [],
-          // Per-burger paid toppings — stored as Hebrew names so the kitchen
+          // Per-burger paid toppings - stored as Hebrew names so the kitchen
           // receipt prints them and the fridge trigger resolves them by name.
           toppings: line.dealBurgerToppingNames?.[bi] ?? [],
         }))
@@ -669,7 +669,7 @@ Deno.serve(async (req: Request) => {
     };
   });
 
-  // Synthetic "רטבים" line — only used so the kitchen receipt builder can show
+  // Synthetic "רטבים" line - only used so the kitchen receipt builder can show
   // sauces in the chef summary. price=0 (charge already on the order total).
   // toppings carry "name × qty" so the receipt prints them as a sub-line.
   if (body.sauces.length > 0) {
@@ -695,7 +695,7 @@ Deno.serve(async (req: Request) => {
     ? await supabase.from("order_items").insert(orderItemsRows)
     : { error: null };
   if (itemsErr) {
-    console.error("order_items insert failed — rolling back order", itemsErr);
+    console.error("order_items insert failed - rolling back order", itemsErr);
     await supabase.from("orders").delete().eq("id", order.id);
     return jsonResponse({ error: "שגיאה ביצירת פריטי ההזמנה" }, 500);
   }
@@ -716,7 +716,7 @@ Deno.serve(async (req: Request) => {
 
   await recordConsent({ ...consentBase, kind: "terms", createdAt: body.termsAcceptedAt });
 
-  // Soldier-fund regulation approval — proof that the donor approved before paying.
+  // Soldier-fund regulation approval - proof that the donor approved before paying.
   if (soldierDonation > 0) {
     await recordConsent({
       ...consentBase,
@@ -725,7 +725,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Gluten-free disclaimer — recorded per dish that used a gluten-free bun.
+  // Gluten-free disclaimer - recorded per dish that used a gluten-free bun.
   const glutenItems = body.items
     .filter((it) => (it.toppings ?? []).includes("gluten-free-bun"))
     .map((it) => it.nameOverride || MENU_BY_ID.get(it.itemId)?.name || it.itemId);
@@ -735,7 +735,7 @@ Deno.serve(async (req: Request) => {
 
 
   // Finalize the delivery request server-side, verifying the client_token.
-  // Without a matching token the update is refused — no client can mark
+  // Without a matching token the update is refused - no client can mark
   // another customer's pending request as completed.
   if (body.deliveryRequestId && body.deliveryRequestClientToken) {
     await supabase

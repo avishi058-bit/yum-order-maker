@@ -37,7 +37,7 @@ export interface CartItem {
   mealDrinkId?: string;
   dealBurgers?: DealBurgerConfig[];
   dealDrinks?: DealDrinkChoice[];
-  /** Optional "owner name" — for orders with multiple items, lets the kitchen
+  /** Optional "owner name" - for orders with multiple items, lets the kitchen
    *  know which dish belongs to whom. Shown as a header line above the item
    *  on the printed receipt only (not stored in a separate DB column). */
   ownerName?: string;
@@ -181,7 +181,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
                                 {burger.name && <span className="font-bold text-foreground mr-1">({burger.name})</span>}
                                 {burger.removals.length > 0 && (
                                   <span className="mr-1">
-                                    — {getRemovalNames(burger.removals).join(", ")}
+                                    - {getRemovalNames(burger.removals).join(", ")}
                                   </span>
                                 )}
                               </div>
@@ -237,7 +237,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
                           <Trash2 size={isKiosk ? 22 : 14} />
                         </button>
                       </div>
-                      {/* Edit button — only for items that go through ItemCustomizer
+                      {/* Edit button - only for items that go through ItemCustomizer
                           (not deals, which use their own customizers). */}
                       {onEditItem && !item.dealBurgers && (
                         <button

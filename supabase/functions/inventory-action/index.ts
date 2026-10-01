@@ -1,9 +1,9 @@
 // Edge function: gateway for the inventory page.
 // All actions are gated by a token from public.inventory_access_tokens.
 // Tokens now support:
-//   - `expires_at`  — after this time, the token stops working
-//   - `revoked_at`  — manually killing a specific token
-//   - `scope`       — "admin" (full access + financial stats) or
+//   - `expires_at`  - after this time, the token stops working
+//   - `revoked_at`  - manually killing a specific token
+//   - `scope`       - "admin" (full access + financial stats) or
 //                     "inventory" (stock CRUD only, no revenue reads)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -577,7 +577,7 @@ Deno.serve(async (req) => {
             const isKg = /kg|ק[״"']?ג/i.test(p.unit ?? "");
             const kgPerUnit = KG_PER_UNIT[p.item_key as string];
             const inKg = p.item_key === "white_onion";
-            if (isKg && !kgPerUnit && !inKg) return []; // no known average weight — left for manual entry
+            if (isKg && !kgPerUnit && !inKg) return []; // no known average weight - left for manual entry
             const units = kgPerUnit && isKg ? qty / kgPerUnit : qty;
             return [{
               item_key: p.item_key, kind: "received", quantity: +units.toFixed(3),
@@ -713,7 +713,7 @@ Deno.serve(async (req) => {
           .select("id, label, scope, expires_at, created_at")
           .single();
         if (error) return json({ error: error.message }, 500);
-        // Return the token value ONCE — caller must save it now.
+        // Return the token value ONCE - caller must save it now.
         return json({ ok: true, token: newToken, record: data });
       }
 

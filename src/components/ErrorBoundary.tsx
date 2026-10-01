@@ -1,7 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 
 /**
- * Global error boundary — catches render errors anywhere in the tree
+ * Global error boundary - catches render errors anywhere in the tree
  * and shows a friendly Hebrew fallback instead of a blank white screen.
  */
 interface Props {
@@ -20,7 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Real errors only — useful for production monitoring
+    // Real errors only - useful for production monitoring
     console.error("App crashed:", error, info.componentStack);
   }
 
@@ -43,7 +43,7 @@ class ErrorBoundary extends Component<Props, State> {
             משהו השתבש
           </h1>
           <p className="text-muted-foreground">
-            אירעה תקלה לא צפויה. אנחנו כבר על זה — נסה לרענן את הדף.
+            אירעה תקלה לא צפויה. אנחנו כבר על זה - נסה לרענן את הדף.
           </p>
           <button
             onClick={this.handleReload}

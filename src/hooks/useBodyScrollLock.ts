@@ -3,13 +3,13 @@ import { useEffect } from "react";
 /**
  * iOS-safe body scroll lock.
  *
- * When `locked` is true, prevents the page behind the modal from scrolling —
+ * When `locked` is true, prevents the page behind the modal from scrolling -
  * including iOS Safari, where `overflow:hidden` alone is not enough (the page
  * still rubber-bands and can "escape" to the background).
  *
  * Strategy:
  *   - Capture current scroll position.
- *   - Set body to `position:fixed; top:-<scrollY>px; width:100%` — this freezes
+ *   - Set body to `position:fixed; top:-<scrollY>px; width:100%` - this freezes
  *     the visible viewport at exactly the same place without any visual jump.
  *   - On unlock, restore styles AND scroll the window back to where it was.
  *

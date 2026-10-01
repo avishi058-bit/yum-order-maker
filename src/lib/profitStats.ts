@@ -1,8 +1,8 @@
-// Net-profit estimate: revenue excl. VAT − food cost − credit fees − prorated fixed costs.
+// Net-profit estimate: revenue excl. VAT - food cost - credit fees - prorated fixed costs.
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
 
 export const VAT_RATE = 0.18;
-/** Credit fee 0.78% before VAT — the VAT on the fee is deductible, so the real cost is 0.78% */
+/** Credit fee 0.78% before VAT - the VAT on the fee is deductible, so the real cost is 0.78% */
 export const CREDIT_FEE_RATE = 0.0078;
 
 const C = {
@@ -76,7 +76,7 @@ const TOPPING_COST: { match: string; cost: number }[] = [
   { match: "מיונז", cost: C.sauce },
   { match: "קטשופ", cost: C.sauce },
   { match: "איולי", cost: C.sauce },
-  { match: "רינג בצל", cost: C.onionRingsHomemade }, // שלושה רינג בצל בטמפורה (לשעבר טבעות בצל ביתיות) — עלות כמו מנה ביתית
+  { match: "רינג בצל", cost: C.onionRingsHomemade }, // שלושה רינג בצל בטמפורה (לשעבר טבעות בצל ביתיות) - עלות כמו מנה ביתית
   { match: "טבעות בצל", cost: C.onionRingsHomemade }, // הזמנות ישנות עם השם הקודם
   { match: "קציצה צמחונית", cost: 9 }, // לפני מע״מ
 ];
@@ -118,9 +118,9 @@ const mult = (t: string) => {
 };
 
 // ── רטבים בצד ─────────────────────────────────────────────────────────────
-/** כוסית רוטב — 0.038 ₪ לפני מע״מ */
+/** כוסית רוטב - 0.038 ₪ לפני מע״מ */
 export const SAUCE_CUP = 0.038;
-/** מיונז/קטשופ נמזגים ביד — בממוצע 1.7 מהכמות שהתבקשה */
+/** מיונז/קטשופ נמזגים ביד - בממוצע 1.7 מהכמות שהתבקשה */
 const SAUCE_OVERPOUR = 1.7;
 /** עלות רוטב אחד בצד לפי סוג (לפני מע״מ), כולל כוסית היכן שרלוונטי */
 const SIDE_SAUCE_COST: { re: RegExp; cost: number }[] = [
@@ -133,7 +133,7 @@ const SIDE_SAUCE_COST: { re: RegExp; cost: number }[] = [
   { re: /חלפני/, cost: 0.44 + SAUCE_CUP },
 ];
 
-/** עלות שורת "רטבים" — רק מה שהלקוח באמת לקח, לפי כמות בפועל */
+/** עלות שורת "רטבים" - רק מה שהלקוח באמת לקח, לפי כמות בפועל */
 export const sideSaucesCost = (labels: string[] | null | undefined): number => {
   let sum = 0;
   for (const l of labels ?? []) {
@@ -143,7 +143,7 @@ export const sideSaucesCost = (labels: string[] | null | undefined): number => {
   return sum;
 };
 
-/** Vegetable cost per burger — 1.50 estimate until the owner approves a measured value */
+/** Vegetable cost per burger - 1.50 estimate until the owner approves a measured value */
 export const VEG_ESTIMATE = C.veg;
 let vegCostPerBurger = C.veg;
 export const setVegCost = (v: number | null | undefined) => { vegCostPerBurger = v && v > 0 ? v : C.veg; };
@@ -164,7 +164,7 @@ const baseItemCost = (it: CountableOrderItem): number => {
     "";
   let unit = ITEM_COST[baseId] ?? drinkCost(name);
 
-  // same drink cost whether sold alone or in a meal/deal — the price difference is already in the revenue
+  // same drink cost whether sold alone or in a meal/deal - the price difference is already in the revenue
   if (it.meal_drink) unit += drinkCost(it.meal_drink);
   if (Array.isArray(it.deal_drinks)) {
     for (const d of it.deal_drinks as { name?: string }[]) unit += drinkCost(d?.name);
@@ -197,7 +197,7 @@ export const packagingCost = (orderItems: CountableOrderItem[]): number => {
       dealBags += qty * (id === "family-deal" ? 2 : 1);
       continue;
     }
-    // מיקס חברים — אריזה אחת של צ׳יפס ענק, לא 3 אריזות נפרדות
+    // מיקס חברים - אריזה אחת של צ׳יפס ענק, לא 3 אריזות נפרדות
     if (id === "friends-mix") {
       cost += qty * PACK.giantFriesBox;
       mixUnits += qty;
@@ -265,7 +265,7 @@ export interface ProfitInput {
   oil?: number;
   /** trash bags allocated to this range */
   trashBags?: number;
-  /** unreported expense (e.g. electricity) — deducted only AFTER national insurance, not a tax-deductible cost */
+  /** unreported expense (e.g. electricity) - deducted only AFTER national insurance, not a tax-deductible cost */
   unreported?: number;
 }
 

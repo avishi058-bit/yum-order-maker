@@ -114,7 +114,7 @@ export const getExistingSubscription = async (): Promise<PushSubscription | null
 };
 
 /**
- * Subscribe THIS device as a kitchen device — it will receive a push every time
+ * Subscribe THIS device as a kitchen device - it will receive a push every time
  * a new order is created (via DB trigger → notify-kitchen-new-order edge fn).
  */
 export const subscribeKitchenToPush = async (): Promise<{ ok: boolean; reason?: string }> => {
@@ -182,7 +182,7 @@ export const isKitchenSubscribed = async (): Promise<boolean> => {
 };
 
 /**
- * Turn OFF kitchen push for THIS device — flips is_kitchen to false on the row
+ * Turn OFF kitchen push for THIS device - flips is_kitchen to false on the row
  * matching this device's endpoint so the kitchen notifier skips it.
  */
 export const unsubscribeKitchenFromPush = async (): Promise<{ ok: boolean; reason?: string }> => {

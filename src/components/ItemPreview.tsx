@@ -30,7 +30,7 @@ const ItemPreview = ({ item, onClose, onAdd, cartButtonRef }: ItemPreviewProps) 
       });
       setFlyAnim(true);
     } else {
-      // No image to animate — add directly
+      // No image to animate - add directly
       onAdd(item);
       onClose();
     }
@@ -132,7 +132,7 @@ const ItemPreview = ({ item, onClose, onAdd, cartButtonRef }: ItemPreviewProps) 
             </motion.button>
           </div>
 
-          {/* Confirmation — shown only after the user actually presses "הוסף לסל" */}
+          {/* Confirmation - shown only after the user actually presses "הוסף לסל" */}
           <AnimatePresence>
             {flyAnim && (
               <motion.div

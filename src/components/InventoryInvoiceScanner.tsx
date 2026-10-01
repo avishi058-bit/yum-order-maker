@@ -49,7 +49,7 @@ export default function InventoryInvoiceScanner({ token, onClose }: { token: str
         throw new Error(msg || "הפענוח נכשל");
       }
       const r = data.result;
-      if (!r.is_invoice) toast.warning("לא נראה כמו חשבונית — בדוק את הפרטים");
+      if (!r.is_invoice) toast.warning("לא נראה כמו חשבונית - בדוק את הפרטים");
       const { data: al } = await supabase.functions.invoke("inventory-action", { body: { token, action: "list_aliases" } });
       const aliases: { raw_name: string; item_key: string; label: string | null }[] = al?.aliases ?? [];
       const norm = (s: string) => s.trim().replace(/\s+/g, " ");
@@ -117,7 +117,7 @@ export default function InventoryInvoiceScanner({ token, onClose }: { token: str
           <Button size="lg" variant="outline" disabled={busy} onClick={() => galRef.current?.click()} className="gap-2"><ImageIcon className="h-5 w-5" /> מהגלריה</Button>
         </div>
         {busy && <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> קורא את החשבונית...</div>}
-        {!draft && !busy && <p className="text-center text-muted-foreground">החשבונית תישמר אוטומטית בניהול המטבח (הוצאות ועלות ירקות). מוצר שלא אזהה — אשאל אותך ואזכור לפעם הבאה.</p>}
+        {!draft && !busy && <p className="text-center text-muted-foreground">החשבונית תישמר אוטומטית בניהול המטבח (הוצאות ועלות ירקות). מוצר שלא אזהה - אשאל אותך ואזכור לפעם הבאה.</p>}
         {!draft && !busy && <RecentInvoiceLines token={token} />}
 
         {draft && (
@@ -129,14 +129,14 @@ export default function InventoryInvoiceScanner({ token, onClose }: { token: str
                 <option value="1">כולל מע״מ</option><option value="0">לפני מע״מ</option>
               </select>
             </div>
-            {unanswered > 0 && <div className="rounded-md bg-destructive/10 p-2 font-bold text-destructive">יש {unanswered} מוצרים שלא הבנתי — מה הם? אזכור את התשובה לפעם הבאה.</div>}
+            {unanswered > 0 && <div className="rounded-md bg-destructive/10 p-2 font-bold text-destructive">יש {unanswered} מוצרים שלא הבנתי - מה הם? אזכור את התשובה לפעם הבאה.</div>}
             {draft.lines.map((l, i) => (
               <div key={i} className={`space-y-1.5 rounded-md border p-2 ${!l.category || !l.name.trim() ? "border-2 border-destructive" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="font-bold">{l.raw_name || "—"}</div>
+                  <div className="font-bold">{l.raw_name || "-"}</div>
                   <button onClick={() => removeLine(i)} className="text-muted-foreground" aria-label="הסר שורה"><X className="h-4 w-4" /></button>
                 </div>
-                {l.unknown && <div className="text-destructive">❓ לא הכרתי — מה זה?</div>}
+                {l.unknown && <div className="text-destructive">❓ לא הכרתי - מה זה?</div>}
                 <div className="flex flex-wrap gap-1.5">
                   <input value={l.name} onChange={(e) => setLine(i, { name: e.target.value })} placeholder="מה המוצר? (למשל: צ׳יפס קלאסי)" className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1" />
                   <select value={l.category} onChange={(e) => setLine(i, { category: e.target.value })} className="rounded-md border bg-background px-1 py-1">

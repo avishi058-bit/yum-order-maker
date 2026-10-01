@@ -80,7 +80,7 @@ const ItemDetails = ({ item }: { item: CartItem }) => {
         })
         .filter(Boolean) as string[];
       const label = `המבורגר ${i + 1}${b.name ? ` (${b.name})` : ""}${
-        removalNames.length ? ` — בלי ${removalNames.join(", ")}` : ""
+        removalNames.length ? ` - בלי ${removalNames.join(", ")}` : ""
       }${toppingNames.length ? ` · + ${toppingNames.join(", ")}` : ""}`;
       lines.push(label);
     });
@@ -208,7 +208,7 @@ const SaveAsFavoriteModal = ({ open, items, onClose, onDone }: Props) => {
               לשמור {multi ? "מנות אלו" : "את המנה הזאת"} כקבוע שלך?
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
-              בהזמנה הבאה תוכל להזמין את הקבוע שלך בלחיצה אחת — בלי להתעסק שוב בכל הבחירות.
+              בהזמנה הבאה תוכל להזמין את הקבוע שלך בלחיצה אחת - בלי להתעסק שוב בכל הבחירות.
             </p>
             <p className="text-[11px] text-muted-foreground/80 mt-1.5 italic">
               (אל דאגה! תוכל לבצע עריכה גם לקבוע שלך אם תרצה לשנות משהו ;)

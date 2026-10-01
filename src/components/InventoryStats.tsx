@@ -261,7 +261,7 @@ export function InventoryStats({
                         <td className="p-2">{fmtQty(p.purchased_qty, p.unit)}</td>
                         <td className="p-2">{fmtQty(p.consumed_qty, p.unit)}</td>
                         <td className="p-2 text-destructive">{fmtQty(p.waste_qty, p.unit)}</td>
-                        <td className="p-2">{p.waste_value ? fmtMoney(p.waste_value) : "—"}</td>
+                        <td className="p-2">{p.waste_value ? fmtMoney(p.waste_value) : "-"}</td>
                       </tr>
                     ))}
                   </tbody>

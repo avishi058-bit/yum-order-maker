@@ -92,7 +92,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
               if (typeof Notification !== "undefined" && Notification.permission === "granted") {
                 const reg = await navigator.serviceWorker?.getRegistration("/sw.js");
                 const title = "🛵 נמצא שליח!";
-                const body = "השליח בדרך אליך — פתח/י את האפליקציה להשלמת ההזמנה";
+                const body = "השליח בדרך אליך - פתח/י את האפליקציה להשלמת ההזמנה";
                 if (reg) {
                   reg.showNotification(title, { body, icon: "/favicon.ico", badge: "/favicon.ico", tag: "delivery-approved" });
                 } else {
@@ -173,7 +173,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
       const { data, error } = await supabase.functions.invoke("calculate-delivery-price", {
         body: payload,
       });
-      // Out-of-range (25 min limit) — surface friendly message
+      // Out-of-range (25 min limit) - surface friendly message
       const errAny = error as any;
       if (errAny) {
         try {
@@ -184,7 +184,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
               description: details.message ?? "אנחנו מבצעים משלוחים עד 25 דקות נסיעה בלבד.",
               variant: "destructive",
             });
-            return true; // handled — don't fall through to zones
+            return true; // handled - don't fall through to zones
           }
         } catch { /* ignore */ }
       }
@@ -277,7 +277,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     }
     setSubmitting(true);
     // Price/payout are computed SERVER-SIDE inside the edge function.
-    // We never trust the client-provided price — the edge function calls
+    // We never trust the client-provided price - the edge function calls
     // Google Maps directly and inserts with service_role.
     const { data, error } = await supabase.functions.invoke("create-delivery-request", {
       body: {
@@ -301,7 +301,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
     }
     setRequestId((data as { id: string }).id);
     // client_token is the ownership proof for later finalize/cancel. Without
-    // it, no one — including the customer — can change this row (RLS blocks
+    // it, no one - including the customer - can change this row (RLS blocks
     // anon updates). It stays only in this browser session.
     setClientToken((data as { client_token: string }).client_token);
     setStage("searching");
@@ -460,13 +460,13 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
               <Loader2 className="mx-auto animate-spin text-primary" size={48} />
               <p className="text-xl font-black text-foreground">🔍 מחפשים לך שליח</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                נעדכן אותך מיד כשיימצא שליח. נשאר במסך זה — ההזמנה תיפתח אוטומטית.
+                נעדכן אותך מיד כשיימצא שליח. נשאר במסך זה - ההזמנה תיפתח אוטומטית.
               </p>
 
               {notifyStatus === "enabled" ? (
                 <div className="rounded-xl bg-green-500/10 border border-green-500/40 p-3 text-sm text-foreground flex items-center justify-center gap-2">
                   <Check size={18} className="text-green-500" />
-                  ההתראות מופעלות — נעדכן אותך ברגע שיימצא שליח
+                  ההתראות מופעלות - נעדכן אותך ברגע שיימצא שליח
                 </div>
               ) : (
                 <>
@@ -498,7 +498,7 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
                       <li>לחצו על כפתור השיתוף בסאפארי <b>⬆︎</b> ובחרו <b>"הוסף למסך הבית"</b>.</li>
                       <li>פתחו את האפליקציה מהאייקון שנוצר במסך הבית.</li>
                       <li>חזרו למסך זה ולחצו שוב על <b>"עדכנו אותי"</b> ואשרו התראות.</li>
-                      <li>אפשר לצאת מהאפליקציה — נשלח לכם התראה כשיימצא שליח.</li>
+                      <li>אפשר לצאת מהאפליקציה - נשלח לכם התראה כשיימצא שליח.</li>
                     </ol>
                   ) : notifyStatus === "denied" ? (
                     <ol className="list-decimal pr-5 space-y-1">
@@ -507,12 +507,12 @@ const DeliveryFlow = ({ open, onClose, onApproved }: Props) => {
                       <li>רעננו את הדף ולחצו שוב על <b>"עדכנו אותי"</b>.</li>
                     </ol>
                   ) : notifyStatus === "unsupported" ? (
-                    <p>הדפדפן שלכם לא תומך בהתראות. השאירו את המסך פתוח — ההזמנה תיפתח אוטומטית כשיימצא שליח.</p>
+                    <p>הדפדפן שלכם לא תומך בהתראות. השאירו את המסך פתוח - ההזמנה תיפתח אוטומטית כשיימצא שליח.</p>
                   ) : (
                     <ol className="list-decimal pr-5 space-y-1">
                       <li>לחצו על <b>"עדכנו אותי כשמגיע שליח"</b>.</li>
                       <li>אשרו את בקשת ההתראות שתופיע בדפדפן.</li>
-                      <li>אפשר לסגור את המסך — נשלח לכם התראה ברגע שיימצא שליח 🛵</li>
+                      <li>אפשר לסגור את המסך - נשלח לכם התראה ברגע שיימצא שליח 🛵</li>
                     </ol>
                   )}
                 </div>

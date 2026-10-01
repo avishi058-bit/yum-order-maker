@@ -3,7 +3,7 @@
 // via DB triggers. Returns requires_reprint=true if any non-drink item changed.
 //
 // SECURITY: prices are ALWAYS recomputed server-side from the shared
-// menu-pricing module — client-supplied `price` values are ignored. An
+// menu-pricing module - client-supplied `price` values are ignored. An
 // optional `discount` field is allowed but must be non-negative, capped
 // at the recomputed total, and is only accepted from admin callers.
 
@@ -21,7 +21,7 @@ import {
 interface EditItem {
   item_id: string;
   item_name: string;
-  price?: number; // IGNORED — server always recomputes.
+  price?: number; // IGNORED - server always recomputes.
   quantity: number;
   toppings?: string[]; // stored as Hebrew names on existing order_items
   removals?: string[];
@@ -49,20 +49,20 @@ function priceLine(it: EditItem): { unit: number; error?: string } {
   if (!menu) return { unit: 0, error: `unknown item: ${it.item_id}` };
   let unit = menu.price;
 
-  // Toppings (paid burger add-ons) — stored as Hebrew names on order_items.
+  // Toppings (paid burger add-ons) - stored as Hebrew names on order_items.
   for (const t of it.toppings ?? []) {
     const found = TOPPING_BY_NAME.get(t) ?? CUSTOM_TOPPING_BY_NAME.get(t);
     if (found) unit += found.price;
-    // Unknown names (custom toppings, sauce lines, etc.) count as 0 —
+    // Unknown names (custom toppings, sauce lines, etc.) count as 0 -
     // never treat unknowns as free-price overrides from the client.
   }
 
-  // Meal upgrade — only when the base is a plain burger.
+  // Meal upgrade - only when the base is a plain burger.
   if (it.with_meal && menu.category === "burger") {
     unit += MEAL_UPGRADE_PRICE;
   }
 
-  // Meal side / meal drink — stored as Hebrew names.
+  // Meal side / meal drink - stored as Hebrew names.
   if (it.meal_side) {
     const s = MEAL_SIDE_BY_NAME.get(it.meal_side);
     if (s) unit += s.price;
@@ -72,7 +72,7 @@ function priceLine(it: EditItem): { unit: number; error?: string } {
     if (d) unit += d.price;
   }
 
-  // Deal drinks — support both id and name, since older rows use either.
+  // Deal drinks - support both id and name, since older rows use either.
   if (Array.isArray(it.deal_drinks)) {
     for (const dd of it.deal_drinks) {
       const key = (dd && (dd.optionId || dd.id || dd.name)) as string | undefined;
@@ -82,7 +82,7 @@ function priceLine(it: EditItem): { unit: number; error?: string } {
     }
   }
 
-  // Deal burgers — extra paid toppings inside a deal (stored as Hebrew names).
+  // Deal burgers - extra paid toppings inside a deal (stored as Hebrew names).
   if (Array.isArray(it.deal_burgers)) {
     for (const b of it.deal_burgers) {
       if (Array.isArray(b?.toppings)) {
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
 
     const oldItems: any[] = order.order_items ?? [];
     // Synthetic lines without a menu id (e.g. the "רטבים" sauce-charge line)
-    // are not editable — preserve them as-is so their charge is not lost.
+    // are not editable - preserve them as-is so their charge is not lost.
     const preservedItems: any[] = oldItems.filter((oi) => !oi.item_id);
 
     const { data: customToppingRows } = await admin

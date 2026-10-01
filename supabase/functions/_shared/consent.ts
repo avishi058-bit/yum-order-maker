@@ -2,7 +2,7 @@
 //
 // Every explicit customer approval is persisted in public.consent_events with
 // the exact wording that was displayed, a version tag, timestamp, IP and
-// user-agent — so the business can prove after the fact that the customer
+// user-agent - so the business can prove after the fact that the customer
 // read and approved it.
 
 export const CONSENT_TEXTS = {

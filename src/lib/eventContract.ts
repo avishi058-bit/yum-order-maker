@@ -72,7 +72,7 @@ export async function generateContractPdf(opts: {
 
   container.innerHTML = `
     <div style="text-align:center;margin-bottom:8px">
-      <h1 style="font-size:24px;margin:0;font-weight:800">חוזה אירוע – המבורגר הבקתה</h1>
+      <h1 style="font-size:24px;margin:0;font-weight:800">חוזה אירוע - המבורגר הבקתה</h1>
     </div>
     <hr style="margin:16px 0;border:0;border-top:1px solid #ddd" />
     <div style="white-space:pre-wrap;text-align:right">${escapeHtml(opts.contractText)}</div>

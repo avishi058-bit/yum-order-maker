@@ -1,5 +1,5 @@
 /**
- * Runtime feature flags — temporary toggles for the soft-launch period.
+ * Runtime feature flags - temporary toggles for the soft-launch period.
  *
  * IMPORTANT: We are NOT removing any auth/OTP feature. Each flag below is a
  * single switch that bypasses behavior. Flip back to restore originals.

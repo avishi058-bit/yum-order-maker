@@ -1,6 +1,6 @@
 // Sends Web Push notifications to all subscribers of a given order.
 // Triggered by DB triggers when an order transitions status. Not called from
-// the browser — the Kitchen UI updates the order row and the trigger fires this.
+// the browser - the Kitchen UI updates the order row and the trigger fires this.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
 import { internalCorsHeaders as corsHeaders } from "../_shared/cors.ts";
@@ -108,8 +108,8 @@ Deno.serve(async (req) => {
     const titles = {
       ready: "ההזמנה שלך מוכנה לאיסוף ✅🥳",
       preparing: "ההזמנה שלך התקבלה במטבח 👨‍🍳",
-      ten_minutes: "ההזמנה שלך — עוד כ־10 דק׳ ומוכנה ⏰",
-      almost_ready: "ההזמנה שלך — עוד כ־5 דק׳ ומוכנה 🔥",
+      ten_minutes: "ההזמנה שלך - עוד כ־10 דק׳ ומוכנה ⏰",
+      almost_ready: "ההזמנה שלך - עוד כ־5 דק׳ ומוכנה 🔥",
     } as const;
     const bodies = {
       ready: `👇 לניווט למסעדה לחץ`,

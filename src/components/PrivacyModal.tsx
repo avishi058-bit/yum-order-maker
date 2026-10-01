@@ -9,7 +9,7 @@ interface PrivacyModalProps {
 }
 
 /**
- * Reusable Privacy Policy modal — used inside the checkout flow so the
+ * Reusable Privacy Policy modal - used inside the checkout flow so the
  * customer can read the privacy policy without leaving the order. Sized
  * larger on kiosk for touch comfort. Mirrors the structure of TermsModal
  * for visual consistency.

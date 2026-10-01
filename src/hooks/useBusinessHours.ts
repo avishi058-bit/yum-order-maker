@@ -7,7 +7,7 @@ export interface DayHours {
   to: string;   // "HH:MM"
 }
 
-export type BusinessHours = Record<string, DayHours>; // keys "0"–"6", 0 = Sunday
+export type BusinessHours = Record<string, DayHours>; // keys "0"-"6", 0 = Sunday
 
 export const DEFAULT_HOURS: BusinessHours = {
   "0": { open: true, from: "11:00", to: "23:00" },

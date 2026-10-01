@@ -1,7 +1,7 @@
 const CookiePolicy = () => (
   <div className="min-h-screen bg-background py-12 px-4" dir="rtl">
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-black text-foreground mb-4">מדיניות עוגיות (Cookies) – המבורגר הבקתה</h1>
+      <h1 className="text-3xl font-black text-foreground mb-4">מדיניות עוגיות (Cookies) - המבורגר הבקתה</h1>
       <p className="text-muted-foreground text-sm mb-8">עדכון אחרון: אפריל 2026</p>
 
       <section className="space-y-5 text-foreground/90 leading-relaxed">

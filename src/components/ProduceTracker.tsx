@@ -86,7 +86,7 @@ export default function ProduceTracker({ approved, onApprove }: { approved: numb
         throw new Error(msg || "הפענוח נכשל");
       }
       const r = data.result;
-      if (!r.is_invoice) toast.warning("לא נראה כמו חשבונית — בדוק את הפרטים");
+      if (!r.is_invoice) toast.warning("לא נראה כמו חשבונית - בדוק את הפרטים");
       const lines: Line[] = (r.lines || []).map((l: any) => {
         const alias = aliases.find((a) => norm(a.raw_name) === norm(l.raw_name || ""));
         const key = alias ? (KEYS.includes(alias.item_key) ? alias.item_key : "other") : l.item_key;
@@ -111,7 +111,7 @@ export default function ProduceTracker({ approved, onApprove }: { approved: numb
 
   const save = async () => {
     if (!draft) return;
-    if (draft.lines.some((l) => !l.item_key)) return toast.error("יש מוצרים שלא זיהיתי — בחר מה הם");
+    if (draft.lines.some((l) => !l.item_key)) return toast.error("יש מוצרים שלא זיהיתי - בחר מה הם");
     if (hasOnion && hadOnionBefore && draft.onionFinished === null) return toast.error("ענה אם ריבת הבצל הקודמת נגמרה");
     const vat = draft.inclVat ? 1.18 : 1;
     const rows = draft.lines.filter((l) => l.item_key !== "other" && Number(l.total) > 0).map((l) => ({
@@ -164,7 +164,7 @@ export default function ProduceTracker({ approved, onApprove }: { approved: numb
           {draft.lines.map((l, i) => (
             <div key={i} className={`space-y-1 rounded-md p-2 ${l.item_key ? "bg-background" : "border-2 border-destructive bg-background"}`}>
               <div className="font-bold">{l.raw_name}</div>
-              {!l.known && <div className="text-destructive">לא הכרתי את המוצר — מה זה? (אזכור לפעם הבאה)</div>}
+              {!l.known && <div className="text-destructive">לא הכרתי את המוצר - מה זה? (אזכור לפעם הבאה)</div>}
               <div className="flex flex-wrap gap-1.5">
                 <select value={l.item_key} onChange={(e) => setLine(i, { item_key: e.target.value })} className="rounded-md border bg-background px-1 py-1">
                   <option value="">בחר...</option>

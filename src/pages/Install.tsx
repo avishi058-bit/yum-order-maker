@@ -57,7 +57,7 @@ const Install = () => {
             התקינו את <span className="text-primary">הבקתה</span> 🍔
           </h1>
           <p className="text-base font-bold text-muted-foreground">
-            נלווה אתכם שלב-שלב — קל, מהיר וברור 👌
+            נלווה אתכם שלב-שלב - קל, מהיר וברור 👌
           </p>
         </motion.div>
 

@@ -1,5 +1,5 @@
 // Stock usage audit: counts per product, usage between counts vs. what was sold.
-// Tracking for a product starts only at its first count — nothing before that is used.
+// Tracking for a product starts only at its first count - nothing before that is used.
 // Owner enters "left now" + "new goods" per product. New goods may be entered in a
 // different unit (invoice kg, boxes) and converted to the tracked unit via receivedToUnit.
 
@@ -73,10 +73,10 @@ const portionSaucesChosen = (match: string): Driver => ({
 });
 
 export const AUDIT_PRODUCTS: AuditProduct[] = [
-  // ===== ירקות — נספרים ביחידות =====
+  // ===== ירקות - נספרים ביחידות =====
   { key: "lettuce", label: "חסה", group: "ירקות", unit: "יח׳", dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי חסה. נספר ביחידות", drivers: [{ label: "המבורגרים עם חסה", per: vegBurgers("חסה") }] },
-  { key: "tomato", label: "עגבנייה", group: "ירקות", unit: "יח׳", receivedUnit: "ק״ג", receivedToUnit: 1 / 0.14, dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי עגבנייה. חשבונית בק״ג — עגבנייה ממוצעת 140 גרם", drivers: [{ label: "המבורגרים עם עגבנייה", per: vegBurgers("עגבני") }] },
-  { key: "red_onion", label: "בצל סגול", group: "ירקות", unit: "יח׳", receivedUnit: "ק״ג", receivedToUnit: 1 / 0.135, dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי בצל. חשבונית בק״ג — בצל ממוצע 135 גרם", drivers: [{ label: "המבורגרים עם בצל", per: vegBurgers("בצל") }] },
+  { key: "tomato", label: "עגבנייה", group: "ירקות", unit: "יח׳", receivedUnit: "ק״ג", receivedToUnit: 1 / 0.14, dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי עגבנייה. חשבונית בק״ג - עגבנייה ממוצעת 140 גרם", drivers: [{ label: "המבורגרים עם עגבנייה", per: vegBurgers("עגבני") }] },
+  { key: "red_onion", label: "בצל סגול", group: "ירקות", unit: "יח׳", receivedUnit: "ק״ג", receivedToUnit: 1 / 0.135, dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי בצל. חשבונית בק״ג - בצל ממוצע 135 גרם", drivers: [{ label: "המבורגרים עם בצל", per: vegBurgers("בצל") }] },
   { key: "pickles", label: "מלפפון חמוץ", group: "ירקות", unit: "יח׳", dependsOn: "כל ההמבורגרים וקריספי צ׳יקן, בלי מי שביקש בלי חמוצים. נספר בפחיות שימורים", drivers: [{ label: "המבורגרים עם חמוצים", per: vegBurgers("חמוצ") }] },
   { key: "white_onion", label: "בצל לבן", group: "ירקות", unit: "ק״ג", split: [0.85, 0.15],
     dependsOn: "85% לריבת בצל (כולל ספיישל הדגל), 15% לבצל מטוגן. לא קשור לטבעות בצל",
@@ -85,19 +85,19 @@ export const AUDIT_PRODUCTS: AuditProduct[] = [
       { label: "מנות בצל מטוגן", per: (it) => toppingUnits(it, "בצל מטוגן") },
     ] },
   // ===== אריזות =====
-  { key: "fried_box", label: "מארז לצ׳יפס / טבעות", group: "אריזות", unit: "יח׳", dependsOn: "צ׳יפס, וופל צ׳יפס, טבעות בצל, טבעות בטמפורה ותוספת בארוחות — בישיבה ובטייק אווי", drivers: [{ label: "מנות מטוגנים", per: friedBoxes }] },
+  { key: "fried_box", label: "מארז לצ׳יפס / טבעות", group: "אריזות", unit: "יח׳", dependsOn: "צ׳יפס, וופל צ׳יפס, טבעות בצל, טבעות בטמפורה ותוספת בארוחות - בישיבה ובטייק אווי", drivers: [{ label: "מנות מטוגנים", per: friedBoxes }] },
   { key: "fried_box_large", label: "מארז צ׳יפס גדול (דילים)", group: "אריזות", unit: "יח׳", dependsOn: "מארז גדול אחד לכל דיל חברים, דיל משפחתי ומיקס חברים", drivers: [{ label: "דילים ומיקס חברים", per: (it) => (DEAL_BOX_IDS.includes(it.item_id || "") ? q(it) : 0) }] },
-  { key: "bags", label: "שקיות טייק אווי", group: "אריזות", unit: "יח׳", dependsOn: "רק הזמנות לקחת — בודקים כמה שקיות יוצאות ביחס למספר ההזמנות ולגודלן", drivers: [takeawayOrdersF, takeawayItems] },
-  // ===== רטבים — מנות (טייק אווי בלבד) =====
-  { key: "ketchup_portions", label: "קטשופ מנות", group: "רטבים — מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 996, dependsOn: "רק לטייק אווי — לעומת סך רטבי קטשופ בצד שהלקוחות בחרו בתקופה. ארגז = 996 מנות", drivers: [portionSaucesChosen("קטשופ"), takeawayOrdersF] },
-  { key: "mayo_portions", label: "מיונז מנות", group: "רטבים — מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 900, dependsOn: "רק לטייק אווי — לעומת סך רטבי מיונז בצד שהלקוחות בחרו בתקופה. ארגז = 900 מנות", drivers: [portionSaucesChosen("מיונז"), takeawayOrdersF] },
-  // ===== רטבים — ישיבה במקום =====
-  { key: "ketchup_pouch", label: "קטשופ פאוץ׳", group: "רטבים — ישיבה", unit: "ליטר", dependsOn: "רק לישיבה במקום. פאוץ׳ של 13 ליטר", drivers: [dineInOrders, dineInItems] },
-  { key: "mayo_bucket", label: "מיונז דלי", group: "רטבים — ישיבה", unit: "ליטר", receivedUnit: "ק״ג", receivedToUnit: 1, dependsOn: "רק לישיבה במקום. דלי של 5 ק״ג (ק״ג ≈ ליטר)", drivers: [dineInOrders, dineInItems] },
-  // ===== רטבים — גם בצד בטייק אווי =====
-  { key: "plum", label: "שזיפים", group: "רטבים — גם בצד", unit: "ליטר", dependsOn: "לישיבה במקום וגם רוטב בצד בטייק אווי. נספר בליטרים לפי החשבונית", drivers: [dineInOrders, sideSaucesSold("שזיפים")] },
-  { key: "chili", label: "צ׳ילי חריף", group: "רטבים — גם בצד", unit: "ליטר", dependsOn: "לישיבה במקום וגם רוטב בצד בטייק אווי. נספר בליטרים לפי החשבונית", drivers: [dineInOrders, sideSaucesSold("צ׳ילי")] },
-  { key: "aioli", label: "איולי", group: "רטבים — גם בצד", unit: "ליטר", dependsOn: "לישיבה במקום (כולל בהמבורגרים) וגם רוטב בצד בטייק אווי. נספר בליטרים לפי החשבונית", drivers: [dineInOrders, sideSaucesSold("איולי")] },
+  { key: "bags", label: "שקיות טייק אווי", group: "אריזות", unit: "יח׳", dependsOn: "רק הזמנות לקחת - בודקים כמה שקיות יוצאות ביחס למספר ההזמנות ולגודלן", drivers: [takeawayOrdersF, takeawayItems] },
+  // ===== רטבים - מנות (טייק אווי בלבד) =====
+  { key: "ketchup_portions", label: "קטשופ מנות", group: "רטבים - מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 996, dependsOn: "רק לטייק אווי - לעומת סך רטבי קטשופ בצד שהלקוחות בחרו בתקופה. ארגז = 996 מנות", drivers: [portionSaucesChosen("קטשופ"), takeawayOrdersF] },
+  { key: "mayo_portions", label: "מיונז מנות", group: "רטבים - מנות", unit: "מנות", receivedUnit: "ארגז", receivedToUnit: 900, dependsOn: "רק לטייק אווי - לעומת סך רטבי מיונז בצד שהלקוחות בחרו בתקופה. ארגז = 900 מנות", drivers: [portionSaucesChosen("מיונז"), takeawayOrdersF] },
+  // ===== רטבים - ישיבה במקום =====
+  { key: "ketchup_pouch", label: "קטשופ פאוץ׳", group: "רטבים - ישיבה", unit: "ליטר", dependsOn: "רק לישיבה במקום. פאוץ׳ של 13 ליטר", drivers: [dineInOrders, dineInItems] },
+  { key: "mayo_bucket", label: "מיונז דלי", group: "רטבים - ישיבה", unit: "ליטר", receivedUnit: "ק״ג", receivedToUnit: 1, dependsOn: "רק לישיבה במקום. דלי של 5 ק״ג (ק״ג ≈ ליטר)", drivers: [dineInOrders, dineInItems] },
+  // ===== רטבים - גם בצד בטייק אווי =====
+  { key: "plum", label: "שזיפים", group: "רטבים - גם בצד", unit: "ליטר", dependsOn: "לישיבה במקום וגם רוטב בצד בטייק אווי. נספר בליטרים לפי החשבונית", drivers: [dineInOrders, sideSaucesSold("שזיפים")] },
+  { key: "chili", label: "צ׳ילי חריף", group: "רטבים - גם בצד", unit: "ליטר", dependsOn: "לישיבה במקום וגם רוטב בצד בטייק אווי. נספר בליטרים לפי החשבונית", drivers: [dineInOrders, sideSaucesSold("צ׳ילי")] },
+  { key: "aioli", label: "איולי", group: "רטבים - גם בצד", unit: "ליטר", dependsOn: "לישיבה במקום (כולל בהמבורגרים) וגם רוטב בצד בטייק אווי. נספר בליטרים לפי החשבונית", drivers: [dineInOrders, sideSaucesSold("איולי")] },
 ];
 
 export type Period = { from: string; to: string; start: number; received: number; end: number; used: number; drivers: { label: string; units: number; perUnit: number | null }[] };
