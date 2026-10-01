@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
       })),
     };
 
-    // Already issued — return the stored document, don't create a second one.
+    // Already issued - return the stored document, don't create a second one.
     if (order.invoice_number) {
       return json({
         success: true,

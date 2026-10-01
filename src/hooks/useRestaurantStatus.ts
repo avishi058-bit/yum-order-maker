@@ -80,7 +80,7 @@ export const useRestaurantStatus = () => {
     fetch();
 
     // Re-sync when the tab returns to foreground / network reconnects, and
-    // periodically — realtime can silently drop on mobile background tabs,
+    // periodically - realtime can silently drop on mobile background tabs,
     // leaving a stale "closed" status on screen.
     const onVisible = () => { if (document.visibilityState === "visible") fetch(); };
     document.addEventListener("visibilitychange", onVisible);

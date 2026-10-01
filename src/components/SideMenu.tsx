@@ -167,7 +167,7 @@ const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
                         {name}
                         {isToday && <span className="mr-2 text-xs text-primary">(היום)</span>}
                       </span>
-                      <span>{day.open ? `${day.from} – ${day.to}` : "סגור"}</span>
+                      <span>{day.open ? `${day.from} - ${day.to}` : "סגור"}</span>
                     </li>
                   );
                 })}

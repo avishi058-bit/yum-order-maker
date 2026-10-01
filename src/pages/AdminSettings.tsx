@@ -124,14 +124,14 @@ const AdminSettings = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {/* טאב הקיוסק הוסתר זמנית — ההגדרות שמורות במסד הנתונים ולא השתנו. */}
+        {/* טאב הקיוסק הוסתר זמנית - ההגדרות שמורות במסד הנתונים ולא השתנו. */}
 
         {activeTab === "fonts" && (
           <div className="max-w-2xl mx-auto space-y-8">
             <div className="bg-card rounded-2xl p-6 border border-border">
               <div className="flex items-center gap-3 mb-6">
                 <Tablet size={24} className="text-primary" />
-                <h2 className="text-lg font-black">גודל כתב — קיוסק</h2>
+                <h2 className="text-lg font-black">גודל כתב - קיוסק</h2>
               </div>
               <input
                 type="range"
@@ -149,7 +149,7 @@ const AdminSettings = () => {
               </div>
               <div className="mt-4 p-4 bg-secondary/50 rounded-xl">
                 <p className="text-muted-foreground text-sm mb-2">תצוגה מקדימה:</p>
-                <p style={{ fontSize: `${18 * kioskScale}px` }} className="font-bold">סמאש דאבל צ׳יז — ₪66</p>
+                <p style={{ fontSize: `${18 * kioskScale}px` }} className="font-bold">סמאש דאבל צ׳יז - ₪66</p>
                 <p style={{ fontSize: `${14 * kioskScale}px` }} className="text-muted-foreground">חסה, חמוצים ואיולי הבית</p>
               </div>
             </div>
@@ -157,7 +157,7 @@ const AdminSettings = () => {
             <div className="bg-card rounded-2xl p-6 border border-border">
               <div className="flex items-center gap-3 mb-6">
                 <Monitor size={24} className="text-primary" />
-                <h2 className="text-lg font-black">גודל כתב — אתר</h2>
+                <h2 className="text-lg font-black">גודל כתב - אתר</h2>
               </div>
               <input
                 type="range"
@@ -175,7 +175,7 @@ const AdminSettings = () => {
               </div>
               <div className="mt-4 p-4 bg-secondary/50 rounded-xl">
                 <p className="text-muted-foreground text-sm mb-2">תצוגה מקדימה:</p>
-                <p style={{ fontSize: `${16 * websiteScale}px` }} className="font-bold">סמאש דאבל צ׳יז — ₪66</p>
+                <p style={{ fontSize: `${16 * websiteScale}px` }} className="font-bold">סמאש דאבל צ׳יז - ₪66</p>
                 <p style={{ fontSize: `${13 * websiteScale}px` }} className="text-muted-foreground">חסה, חמוצים ואיולי הבית</p>
               </div>
             </div>

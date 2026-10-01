@@ -57,7 +57,7 @@
     --kiosk-nav-foreground: 20 14% 10%;
   }
 
-  /* Bright "warm sand" scope — used by the groups landing page */
+  /* Bright "warm sand" scope - used by the groups landing page */
   .theme-sand {
     --background: 40 33% 98%;
     --foreground: 24 12% 12%;
@@ -100,7 +100,7 @@
 
 /* Accessibility styles */
 
-/* Global keyboard focus indicator — visible outline on every interactive
+/* Global keyboard focus indicator - visible outline on every interactive
    element when navigating with the Tab key. Uses the primary color for
    contrast against both light and dark surfaces. */
 :focus-visible {
@@ -109,7 +109,7 @@
   border-radius: 4px;
 }
 
-/* Real high-contrast mode per IS 5568 — yellow-on-black palette with
+/* Real high-contrast mode per IS 5568 - yellow-on-black palette with
    distinct button/link colors so the page keeps visual hierarchy instead
    of collapsing into a single flat color block. */
 .accessibility-high-contrast {
@@ -425,7 +425,7 @@ body.accessibility-black-yellow :is(img, video, canvas) {
 /* ─── Kiosk layout stability ─────────────────────────────────────────
    Active only when body has .kiosk-active. Prevents the "jumping" /
    resizing issues reported on the kiosk: no rubber-band scroll, no
-   pinch zoom, no font-size auto-adjust. Pure CSS — zero runtime cost.
+   pinch zoom, no font-size auto-adjust. Pure CSS - zero runtime cost.
 */
 body.kiosk-active {
   /* Prevent iOS Safari rubber-band overscroll */
@@ -438,7 +438,7 @@ body.kiosk-active {
 }
 
 body.kiosk-lock-layout {
-  /* Lock body — no scroll bounce, no horizontal jiggle.
+  /* Lock body - no scroll bounce, no horizontal jiggle.
      The kiosk shell uses its own fixed/overflow containers. */
   position: fixed;
   inset: 0;
@@ -461,9 +461,9 @@ body.kiosk-active textarea {
 
 /* ─── Kiosk live tuning (admin sliders) ──────────────────────────────
    These hooks make the admin sliders actually change visible kiosk UI.
-   All driven by CSS variables injected from useKioskCSSVars — no JS. */
+   All driven by CSS variables injected from useKioskCSSVars - no JS. */
 
-/* UI scale: scales the entire kiosk visually (transform — no reflow). */
+/* UI scale: scales the entire kiosk visually (transform - no reflow). */
 body.kiosk-active.kiosk-ui-scale-on {
   transform: scale(var(--kiosk-ui-scale, 1));
   transform-origin: top center;
@@ -483,7 +483,7 @@ body.kiosk-active {
   font-size: calc(1rem * var(--kiosk-font-scale, 1));
 }
 
-/* Hide scrollbars everywhere on the kiosk — touchscreen, no need for
+/* Hide scrollbars everywhere on the kiosk - touchscreen, no need for
    visible scroll thumbs/arrows that look like dead UI controls. */
 body.kiosk-active *::-webkit-scrollbar { display: none; }
 body.kiosk-active * { scrollbar-width: none; -ms-overflow-style: none; }
@@ -534,7 +534,7 @@ html.pwa-installed body {
   background-color: #ffffff !important;
 }
 html.pwa-installed body {
-  /* Fill the entire screen — no safe-area padding on body so the app
+  /* Fill the entire screen - no safe-area padding on body so the app
      spans edge-to-edge. Individual components handle insets where needed. */
   padding-top: 0;
   padding-bottom: 0;

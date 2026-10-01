@@ -167,7 +167,7 @@ const EventBooking = () => {
       if (!atVenue && !eventAddress.trim()) return "יש להזין כתובת או לסמן שהאירוע אצלנו";
       if (atVenue && !seatingPreference) return "יש לבחור סוג ישיבה לאירוע אצלנו";
       if (needsDrinkSelection && drinksTotal !== guests) {
-        return `בחירת שתייה: נבחרו ${drinksTotal} מתוך ${guests} — יש להתאים לפי מספר האורחים`;
+        return `בחירת שתייה: נבחרו ${drinksTotal} מתוך ${guests} - יש להתאים לפי מספר האורחים`;
       }
     }
     if (s === 4 && !acceptTerms) return "יש לאשר את תנאי החוזה";
@@ -254,7 +254,7 @@ const EventBooking = () => {
     <div dir="rtl" className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 py-6 px-4">
       <div className="max-w-3xl mx-auto">
         <header className="text-center mb-4">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">🚜🍔 הזמנת אירוע – הבקתה</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">🚜🍔 הזמנת אירוע - הבקתה</h1>
           <p className="text-muted-foreground">שולחן שוק • המבורגר הבקתה</p>
         </header>
 
@@ -266,8 +266,8 @@ const EventBooking = () => {
           </div>
           <p>
             כאשר בהשגחת <b>הרבנות המקומית שדות נגב</b>.
-            ההמבורגר: <b>בשר חלק</b> ברבנות. הירק: <b>גוש קטיף</b> — תעודת כשרות רגילה.
-            <span className="text-muted-foreground"> (תוספת רצועות רוסטביף — לא חלק)</span>.
+            ההמבורגר: <b>בשר חלק</b> ברבנות. הירק: <b>גוש קטיף</b> - תעודת כשרות רגילה.
+            <span className="text-muted-foreground"> (תוספת רצועות רוסטביף - לא חלק)</span>.
           </p>
           <p className="text-xs text-muted-foreground mt-2">תעודת כשרות מעודכנת מוצגת במקום ותצורף לחוזה.</p>
         </div>
@@ -296,7 +296,7 @@ const EventBooking = () => {
           ))}
         </div>
 
-        {/* STEP 1 — Packages */}
+        {/* STEP 1 - Packages */}
         {step === 1 && (
           <Card>
             <CardHeader>
@@ -407,7 +407,7 @@ const EventBooking = () => {
           </Card>
         )}
 
-        {/* STEP 2 — Date & Time */}
+        {/* STEP 2 - Date & Time */}
         {step === 2 && (
           <Card>
             <CardHeader>
@@ -443,7 +443,7 @@ const EventBooking = () => {
           </Card>
         )}
 
-        {/* STEP 3 — Details */}
+        {/* STEP 3 - Details */}
         {step === 3 && (
           <Card>
             <CardHeader>
@@ -456,7 +456,7 @@ const EventBooking = () => {
                 <div><Label>טלפון</Label><Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="05XXXXXXXX" /></div>
                 <div className="md:col-span-2"><Label>אימייל</Label><Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} /></div>
                 <div><Label>מס׳ ח.פ / עוסק <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={businessId} onChange={(e) => setBusinessId(e.target.value)} placeholder="9 ספרות" /></div>
-                <div><Label>שם על החשבונית <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={invoiceName} onChange={(e) => setInvoiceName(e.target.value)} placeholder="אם ריק — יופיע השם מלמעלה" /></div>
+                <div><Label>שם על החשבונית <span className="text-muted-foreground text-xs">(אופציונלי)</span></Label><Input value={invoiceName} onChange={(e) => setInvoiceName(e.target.value)} placeholder="אם ריק - יופיע השם מלמעלה" /></div>
                 <div className="md:col-span-2">
                   <Label>סוג אירוע</Label>
                   <Select value={eventType} onValueChange={setEventType}>
@@ -491,7 +491,7 @@ const EventBooking = () => {
                 </div>
               </div>
 
-              {/* Drinks — outside-venue events only. אצלנו במקום השתייה מסופקת ישירות ואין צורך שהלקוח יבחר. */}
+              {/* Drinks - outside-venue events only. אצלנו במקום השתייה מסופקת ישירות ואין צורך שהלקוח יבחר. */}
               {needsDrinkSelection && (
                 <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
                   <div>
@@ -527,14 +527,14 @@ const EventBooking = () => {
               )}
               {packageIncludesDrinks && atVenue && (
                 <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-                  🏠 האירוע מתקיים אצלנו במקום — השתייה תסופק ישירות ואין צורך לבחור מראש.
+                  🏠 האירוע מתקיים אצלנו במקום - השתייה תסופק ישירות ואין צורך לבחור מראש.
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* STEP 4 — Contract */}
+        {/* STEP 4 - Contract */}
         {step === 4 && (
           <Card>
             <CardHeader>
@@ -553,7 +553,7 @@ const EventBooking = () => {
           </Card>
         )}
 
-        {/* STEP 5 — Signatures */}
+        {/* STEP 5 - Signatures */}
         {step === 5 && (
           <Card>
             <CardHeader>
@@ -586,7 +586,7 @@ const EventBooking = () => {
           </Card>
         )}
 
-        {/* STEP 6 — Success */}
+        {/* STEP 6 - Success */}
         {step === 6 && (
           <Card>
             <CardContent className="p-8 text-center space-y-4">

@@ -4,7 +4,7 @@
  *
  * SECURITY:
  * - Guest access uses guest_id (an opaque client-generated UUID from localStorage
- *   — an attacker cannot enumerate guests).
+ *   - an attacker cannot enumerate guests).
  * - Phone-based access REQUIRES a matching device_token proving the caller is
  *   the customer who registered that phone. Without a valid device_token,
  *   requests keyed by phone are rejected. This prevents anyone from reading,

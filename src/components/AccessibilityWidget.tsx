@@ -88,7 +88,7 @@ const applyImageCaptions = (enabled: boolean) => {
   document.querySelectorAll<HTMLImageElement>("img[alt]").forEach((img) => {
     const alt = img.getAttribute("alt");
     if (!alt) return;
-    // idempotent — never re-insert a caption that already exists
+    // idempotent - never re-insert a caption that already exists
     if (img.nextElementSibling?.classList.contains(CAPTION_CLASS)) return;
     const caption = document.createElement("span");
     caption.className = CAPTION_CLASS;
@@ -135,7 +135,7 @@ const AccessibilityWidget = () => {
     const zoom = ZOOM_LEVELS[s.zoom] ?? 1;
     body.style.zoom = zoom === 1 ? "" : String(zoom);
 
-    // Color modes — mutually exclusive
+    // Color modes - mutually exclusive
     Object.values(COLOR_CLASSES).forEach((cls) => {
       body.classList.remove(cls);
       root.classList.remove(cls);
@@ -269,7 +269,7 @@ const AccessibilityWidget = () => {
 
   return createPortal(
     <>
-      {/* Floating button — position from uiConfig, draggable by finger */}
+      {/* Floating button - position from uiConfig, draggable by finger */}
       <motion.button
         drag
         dragMomentum={false}
@@ -348,7 +348,7 @@ const AccessibilityWidget = () => {
                 <div className="rounded-xl border border-border p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Type size={18} className="text-primary" />
-                    <span className="text-sm font-bold">גודל טקסט — {FONT_SIZES[state.fontSize]}</span>
+                    <span className="text-sm font-bold">גודל טקסט - {FONT_SIZES[state.fontSize]}</span>
                   </div>
                    <div className="grid grid-cols-2 gap-2">
                     <button
@@ -373,7 +373,7 @@ const AccessibilityWidget = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <ZoomIn size={18} className="text-primary" />
                     <span className="text-sm font-bold">
-                      גודל תצוגה — {Math.round(ZOOM_LEVELS[state.zoom] * 100)}%
+                      גודל תצוגה - {Math.round(ZOOM_LEVELS[state.zoom] * 100)}%
                     </span>
                   </div>
                    <div className="grid grid-cols-2 gap-2">

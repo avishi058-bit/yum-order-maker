@@ -14,7 +14,7 @@ interface OnWayButtonProps {
 }
 
 /**
- * "ראיתי — אני בדרך" confirmation. Shown everywhere the customer may be
+ * "ראיתי - אני בדרך" confirmation. Shown everywhere the customer may be
  * looking when the order turns ready (tracking page, live tracker modal,
  * top bar) so the kitchen reliably learns the customer is coming.
  */
@@ -74,7 +74,7 @@ const OnWayButton = ({
         compact ? "py-3 text-base" : "py-5 text-xl"
       } ${className}`}
     >
-      {loading ? "רגע..." : "ראיתי — אני בדרך 🚗"}
+      {loading ? "רגע..." : "ראיתי - אני בדרך 🚗"}
     </button>
   );
 };

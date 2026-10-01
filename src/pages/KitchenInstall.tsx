@@ -22,7 +22,7 @@ const KitchenInstall = () => {
         >
           כניסה למטבח
         </a>
-        <p className="text-sm text-muted-foreground">אם כבר התקנת אייקון קודם — מחק אותו והתקן מחדש מהקישור הזה.</p>
+        <p className="text-sm text-muted-foreground">אם כבר התקנת אייקון קודם - מחק אותו והתקן מחדש מהקישור הזה.</p>
       </section>
     </main>
   );

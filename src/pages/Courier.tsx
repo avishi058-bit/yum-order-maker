@@ -510,7 +510,7 @@ const CourierAuth = () => {
           options: { emailRedirectTo: `${window.location.origin}/courier` },
         });
         if (error) throw error;
-        toast({ title: "נרשמת ✅", description: "אם המערכת מבקשת אימות מייל — בדוק בתיבה" });
+        toast({ title: "נרשמת ✅", description: "אם המערכת מבקשת אימות מייל - בדוק בתיבה" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

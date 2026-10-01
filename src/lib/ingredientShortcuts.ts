@@ -1,6 +1,6 @@
 // Customer-preferences shortcut for the kitchen receipt / kitchen view.
 //
-// Rules (regular burger — 4 veggies + aioli, defined by user):
+// Rules (regular burger - 4 veggies + aioli, defined by user):
 //   Veggies = חסה, בצל, עגבנייה, חמוצים
 //   Sauce   = איולי (separate, NOT a veggie)
 //
@@ -43,7 +43,7 @@ interface ShortcutInfo {
   kind: RemovalShortcut;
   // Label to print on the receipt (or null when none).
   label: string | null;
-  // Removal IDs that the shortcut already covered — caller must skip them when
+  // Removal IDs that the shortcut already covered - caller must skip them when
   // rendering the per-line "ללא X" list to avoid duplicates.
   consumed: Set<string>;
 }

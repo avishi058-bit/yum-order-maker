@@ -19,7 +19,7 @@ export const IMPORTANT_TOPPING_IDS = [
 
 // מטוגנים שנשאל עליהם בפתיחת יום (רק אם כבויים)
 // הערה: tempura-onion תלוי בטופינג "שלוש טבעות בצל בטמפורה" (onion-rings-topping,
-// נשאל בשאלות הטופינגים) — אין צורך לשאול עליו בנפרד. אין קשר ל-onion-rings הרגילות.
+// נשאל בשאלות הטופינגים) - אין צורך לשאול עליו בנפרד. אין קשר ל-onion-rings הרגילות.
 export const FRIED_IDS = [
   "fries",
   "sweet-potato-fries",
@@ -27,11 +27,11 @@ export const FRIED_IDS = [
   "friends-mix",
 ];
 
-// "שחוט לי פרה" (אבישי) – דורש רוסטביף וביצת עין
+// "שחוט לי פרה" (אבישי) - דורש רוסטביף וביצת עין
 const AVISHAI_IDS = ["avishai", "meal-avishai"];
 const AVISHAI_DEPS = ["roastbeef", "egg"];
 
-// יום עסקי מתחיל ב-06:00 – לפני 6 בבוקר זה עדיין "אתמול"
+// יום עסקי מתחיל ב-06:00 - לפני 6 בבוקר זה עדיין "אתמול"
 const todayKey = () => {
   const d = new Date();
   if (d.getHours() < 6) d.setDate(d.getDate() - 1);
@@ -78,7 +78,7 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
     // שלב 1: תזכורת עדכון מלאי (תמיד)
     list.push({ id: "__inventory__", title: "", enableIds: [] });
 
-    // שלב 2: שחוט לי פרה – רק אם המנה או אחד המרכיבים כבויים
+    // שלב 2: שחוט לי פרה - רק אם המנה או אחד המרכיבים כבויים
     const avishaiOff =
       AVISHAI_IDS.some((id) => byId[id] && byId[id].available === false) ||
       AVISHAI_DEPS.some((id) => byId[id] && byId[id].available === false);
@@ -91,7 +91,7 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
       });
     }
 
-    // שלב 3: קציצת סמאש – אם כבויה, נשאל אם חזרה (אישור מדליק גם את מנות הסמאש)
+    // שלב 3: קציצת סמאש - אם כבויה, נשאל אם חזרה (אישור מדליק גם את מנות הסמאש)
     const SMASH_PATTY_ID = "smash-patty";
     if (byId[SMASH_PATTY_ID] && byId[SMASH_PATTY_ID].available === false) {
       list.push({
@@ -117,7 +117,7 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
       list.push({
         id,
         title: `${byId[id].item_name} זמין היום?`,
-        subtitle: "מטוגנים – בדיקת פתיחת יום",
+        subtitle: "מטוגנים - בדיקת פתיחת יום",
         enableIds: [id],
       });
     });
@@ -169,7 +169,7 @@ const DayOpenChecklist = ({ items, onEnable, onClose }: Props) => {
           {step.id === "__inventory__" ? (
             <>
               <div className="text-4xl text-center mb-3">📦</div>
-              <h2 className="text-2xl font-black text-center text-foreground">פתיחת יום – עדכון מלאי</h2>
+              <h2 className="text-2xl font-black text-center text-foreground">פתיחת יום - עדכון מלאי</h2>
               <p className="text-center text-muted-foreground mt-2">
                 לפני שמתחילים, כדאי לעדכן את המלאי ואת מילוי המקרר במסך המלאי.
               </p>

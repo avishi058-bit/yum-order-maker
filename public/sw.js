@@ -1,4 +1,4 @@
-// Service Worker for Push Notifications — habakta order tracking
+// Service Worker for Push Notifications - habakta order tracking
 // Minimal scope: push events only. No caching (avoids stale content issues).
 
 const SHOWN_TAGS = new Set();
@@ -22,7 +22,7 @@ self.addEventListener("push", (event) => {
   const title = data.title || "הבקתה";
   const tag = data.tag || `order-${data.order_number || Date.now()}`;
 
-  // Dedup — same tag within session won't show twice
+  // Dedup - same tag within session won't show twice
   if (SHOWN_TAGS.has(tag)) return;
   SHOWN_TAGS.add(tag);
   setTimeout(() => SHOWN_TAGS.delete(tag), 60_000);

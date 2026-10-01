@@ -54,7 +54,7 @@ export const getSlideAnimation = (direction: SlideDirection) => {
 };
 
 export const drawerAnimations = {
-  /** Cart drawer — slides from this direction */
+  /** Cart drawer - slides from this direction */
   cart: {
     direction: "right" as SlideDirection,
     transition: { type: "spring" as const, damping: 25, stiffness: 300 },
@@ -166,10 +166,10 @@ export const kioskKeyboard = {
   /** Full screen width */
   numericWidth: "100vw",
   fullWidth: "100vw",
-  /** Container look — white panel, rounded top, subtle border */
+  /** Container look - white panel, rounded top, subtle border */
   className:
     "rounded-t-3xl bg-white text-gray-900 border border-gray-200 shadow-2xl",
-  /** Keys on the white panel (light, explicit grays — kiosk theme muted is dark) */
+  /** Keys on the white panel (light, explicit grays - kiosk theme muted is dark) */
   keyClass:
     "rounded-xl bg-white text-gray-900 border border-gray-200 shadow-sm active:scale-95 active:bg-gray-100 transition-transform flex items-center justify-center font-medium select-none",
   functionKeyClass:

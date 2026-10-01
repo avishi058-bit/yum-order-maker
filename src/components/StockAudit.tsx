@@ -92,9 +92,9 @@ export default function StockAudit({ token, onClose }: { token: string; onClose:
                   )}
                   {periods.map((r) => (
                     <div key={r.from} className="rounded-md bg-muted p-2">
-                      <div className="text-xs">{fmtDate(r.from)} ← {fmtDate(r.to)}: היה {n2(r.start)} + נכנס {n2(r.received)} − נשאר {n2(r.end)} = <b>נוצל {n2(r.used)} {p.unit}</b></div>
+                      <div className="text-xs">{fmtDate(r.from)} ← {fmtDate(r.to)}: היה {n2(r.start)} + נכנס {n2(r.received)} - נשאר {n2(r.end)} = <b>נוצל {n2(r.used)} {p.unit}</b></div>
                       {r.drivers.map((d) => (
-                        <div key={d.label} className="text-xs">{d.label}: {d.units} → <b>{d.perUnit == null ? "—" : `${n2(d.perUnit)} ${p.unit} למנה`}</b></div>
+                        <div key={d.label} className="text-xs">{d.label}: {d.units} → <b>{d.perUnit == null ? "-" : `${n2(d.perUnit)} ${p.unit} למנה`}</b></div>
                       ))}
                     </div>
                   ))}
@@ -106,7 +106,7 @@ export default function StockAudit({ token, onClose }: { token: string; onClose:
                         {p.drivers.map((d, j) => {
                           const units = periods.reduce((s, r) => s + (r.drivers[j]?.units ?? 0), 0);
                           const share = p.split ? p.split[j] : 1;
-                          return <div key={d.label} className="text-xs">{d.label}: {units} → <b>{units ? `${n2((used * share) / units)} ${p.unit} למנה` : "—"}</b></div>;
+                          return <div key={d.label} className="text-xs">{d.label}: {units} → <b>{units ? `${n2((used * share) / units)} ${p.unit} למנה` : "-"}</b></div>;
                         })}
                       </div>
                     );

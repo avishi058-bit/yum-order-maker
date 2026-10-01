@@ -1,10 +1,10 @@
 // Z-Credit payment callback handler.
 // Security:
-// 1. Requires a shared-secret token in the URL — refuses any request without it.
+// 1. Requires a shared-secret token in the URL - refuses any request without it.
 // 2. Validates the returned amount against the stored order total before
 //    marking it as paid. Prevents a caller from marking a real order "paid"
 //    with a $0 payment.
-// 3. Only flips status when the order is currently 'pending_payment' — cannot
+// 3. Only flips status when the order is currently 'pending_payment' - cannot
 //    resurrect a cancelled order or downgrade a completed one.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     } else {
       data = Object.fromEntries(url.searchParams.entries());
     }
-    // Log only field names — never raw payment payload (may contain card/customer data).
+    // Log only field names - never raw payment payload (may contain card/customer data).
     console.log("Payment callback received (token verified), fields:", Object.keys(data).join(","));
 
     // Z-Credit spells this differently across APIs: UniqueId / UniqueID / UID.
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const orderId = candidates[0] ?? "";
     if (!orderId) {
       console.warn("payment-callback: no order id in payload");
-      // Always 200 — otherwise Z-Credit shows a postError and keeps retrying.
+      // Always 200 - otherwise Z-Credit shows a postError and keeps retrying.
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       data.HasError === false ||
       data.HasError === "false" ||
       Number(data.ReturnCode) === 0 ||
-      // Callbacks from the hosted checkout page carry no error fields at all —
+      // Callbacks from the hosted checkout page carry no error fields at all -
       // their presence with an approval number means the charge went through.
       (data.HasError === undefined &&
         data.ReturnCode === undefined &&
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
 
     let newStatus = isSuccess ? "new" : "payment_failed";
 
-    // Amount check — only enforce when Z-Credit actually sent an amount.
+    // Amount check - only enforce when Z-Credit actually sent an amount.
     if (isSuccess && paidAmount > 0 && Math.abs(paidAmount - Number(order.total)) > 0.01) {
       console.error(
         `payment-callback: amount mismatch order=${orderId} expected=${order.total} got=${paidAmount}`,

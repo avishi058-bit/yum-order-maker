@@ -101,7 +101,7 @@ export function computePrep(b: EventBookingLike, s: KitchenPrepSettings): PrepRe
   const regularBuns = Math.max(0, guests - gf - noBun);
   const gfBuns = gf;
 
-  // Vegetables — computed per burger portion (guests, regardless of variant)
+  // Vegetables - computed per burger portion (guests, regardless of variant)
   const burgersForVeg = guests;
   const tomatoG = burgersForVeg * s.tomato_g;
   const onionG = burgersForVeg * s.onion_g;
@@ -124,7 +124,7 @@ export function computePrep(b: EventBookingLike, s: KitchenPrepSettings): PrepRe
     waffleG = perThird * s.waffle_g;
   }
 
-  // Premium-only extras — default = per-guest, but manual counts win when set.
+  // Premium-only extras - default = per-guest, but manual counts win when set.
   const isPremium = tier === "premium";
   const eggs = isPremium
     ? b.eggs_count ?? Math.round(guests * s.default_eggs_per_guest)
@@ -160,7 +160,7 @@ export function computePrep(b: EventBookingLike, s: KitchenPrepSettings): PrepRe
   };
 }
 
-const kg = (v: number) => (v > 0 ? `${v.toFixed(2)} ק״ג` : "—");
+const kg = (v: number) => (v > 0 ? `${v.toFixed(2)} ק״ג` : "-");
 
 export function buildPrepHtml(b: EventBookingLike, r: PrepResult): string {
   const dt = new Date(b.event_date + "T00:00:00");
@@ -175,7 +175,7 @@ export function buildPrepHtml(b: EventBookingLike, r: PrepResult): string {
   const showPremium = r.tier === "premium";
 
   return `<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8"/>
-<title>בון הכנות — ${b.customer_name}</title>
+<title>בון הכנות - ${b.customer_name}</title>
 <style>
   @page { size: 80mm auto; margin: 4mm; }
   body { font-family: 'Heebo', Arial, sans-serif; color: #000; margin: 0; padding: 10px; }

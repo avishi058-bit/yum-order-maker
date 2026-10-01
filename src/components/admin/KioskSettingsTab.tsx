@@ -7,7 +7,7 @@ import { useSiteSettings, KIOSK_DEFAULTS, type SiteSettings } from "@/hooks/useS
  * Kiosk display tuning panel.
  *
  * All controls write to site_settings columns. The kiosk reads them via
- * useKioskCSSVars (which injects them as CSS variables on <html>) — this
+ * useKioskCSSVars (which injects them as CSS variables on <html>) - this
  * means changes are reflected instantly on the kiosk with ZERO runtime
  * overhead (CSS does the work, not JS).
  *
@@ -138,7 +138,7 @@ const KioskSettingsTab = () => {
       ...KIOSK_DEFAULTS,
       kiosk_font_scale: 1.0,
     });
-    toast.info("ערכי ברירת מחדל הוחזרו — לחץ 'שמור' להחלה");
+    toast.info("ערכי ברירת מחדל הוחזרו - לחץ 'שמור' להחלה");
   };
 
   return (
@@ -176,7 +176,7 @@ const KioskSettingsTab = () => {
 
       <SliderRow
         label="זום התמונה בחלונית"
-        hint="קנה מידה (scale) של התמונה. השפעה ויזואלית בלבד — לא משנה את גובה האזור."
+        hint="קנה מידה (scale) של התמונה. השפעה ויזואלית בלבד - לא משנה את גובה האזור."
         value={v.kiosk_image_scale}
         min={0.7}
         max={1.5}

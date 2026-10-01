@@ -147,7 +147,7 @@ export const DeliveryRequestsPanel = () => {
 
   const approve = async (id: string) => {
     const { error } = await supabase.from("delivery_requests").update({ status: "approved" }).eq("id", id);
-    if (error) toast.error(error.message); else toast.success("אושר — הלקוח יקבל עדכון");
+    if (error) toast.error(error.message); else toast.success("אושר - הלקוח יקבל עדכון");
   };
   const reject = async (id: string) => {
     const { error } = await supabase.from("delivery_requests").update({ status: "rejected" }).eq("id", id);
@@ -164,7 +164,7 @@ export const DeliveryRequestsPanel = () => {
           {requests.map((r) => (
             <div key={r.id} className="rounded-xl bg-card border border-border p-3 space-y-2">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-bold text-foreground">{r.customer_name || "—"}</span>
+                <span className="font-bold text-foreground">{r.customer_name || "-"}</span>
                 <a href={`tel:${r.customer_phone}`} className="text-primary underline text-xs">{r.customer_phone}</a>
                 <span className="text-xs text-muted-foreground">·</span>
                 <span className="text-xs text-muted-foreground">{r.zone_name}</span>

@@ -11,7 +11,7 @@ const STORAGE_KEY = "habakta_tracked_order";
 
 interface TrackedOrder {
   orderNumber: number;
-  /** Phone used at checkout — required to authorize order reads via the secure endpoint. */
+  /** Phone used at checkout - required to authorize order reads via the secure endpoint. */
   phone?: string;
   notificationsEnabled: boolean;
   soundEnabled: boolean;
@@ -68,7 +68,7 @@ const OrderTopBar = () => {
   useEffect(() => {
     if (!order || !tracked) return;
     if (prevStatus === null) {
-      // First observation for this order — seed prevStatus without notifying.
+      // First observation for this order - seed prevStatus without notifying.
       setPrevStatus(order.status);
       return;
     }

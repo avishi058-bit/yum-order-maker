@@ -1,5 +1,5 @@
 // Reads a photographed supplier invoice with AI and returns structured expense fields.
-// Admin/kitchen only. Nothing is saved here — the owner reviews and confirms in the dashboard.
+// Admin/kitchen only. Nothing is saved here - the owner reviews and confirms in the dashboard.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 
@@ -94,14 +94,14 @@ const generalPrompt = (aliases: { raw_name: string; label: string }[]) => `את�
 category: lettuce=חסה, tomato=עגבנייה, red_onion=בצל סגול, pickles=מלפפון חמוץ, white_onion=בצל לבן/יבש,
 supply=מתכלה שנקנה שוב (חומרי גלם, רטבים, ניקיון, מפיות, אריזות, שתייה, בשר, לחמניות, צ'יפס וכו'),
 one_time=ציוד/תיקון חד פעמי.
-אם אינך בטוח לחלוטין מה המוצר (שם מקוצר, קוד, שם מסחרי לא מוכר) — category="unknown". אל תנחש.
+אם אינך בטוח לחלוטין מה המוצר (שם מקוצר, קוד, שם מסחרי לא מוכר) - category="unknown". אל תנחש.
 ${aliases.length ? "שמות שהבעלים כבר הגדיר (השתמש בהם):\n" + aliases.map((a) => `- "${a.raw_name}" = ${a.label}`).join("\n") : ""}
 אם התמונה אינה חשבונית: is_invoice=false ו-lines ריק.`;
 
 const producePrompt = (aliases: { raw_name: string; label: string }[]) => `אתה מפענח חשבונית של ספק ירקות/מזון עבור מסעדת המבורגרים בישראל.
 החזר כל שורת מוצר בחשבונית בנפרד (שם כפי שמודפס, כמות, יחידה, מחיר ליחידה, סה"כ שורה).
 item_key: lettuce=חסה, tomato=עגבנייה, red_onion=בצל סגול, pickles=מלפפון חמוץ, white_onion=בצל לבן/יבש, other=מוצר ברור שאינו אחד מאלה.
-אם אינך בטוח לחלוטין מה המוצר — החזר "unknown". אל תנחש.
+אם אינך בטוח לחלוטין מה המוצר - החזר "unknown". אל תנחש.
 ${aliases.length ? "שמות שהבעלים כבר הגדיר:\n" + aliases.map((a) => `- "${a.raw_name}" = ${a.label}`).join("\n") : ""}
 אם התמונה אינה חשבונית: is_invoice=false ו-lines ריק.`;
 

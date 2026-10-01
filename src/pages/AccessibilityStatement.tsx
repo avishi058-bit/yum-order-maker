@@ -1,9 +1,9 @@
 /**
- * Accessibility Statement page — required by IS 5568 for the "הבקתה" website.
+ * Accessibility Statement page - required by IS 5568 for the "הבקתה" website.
  * Links from the site footer and from the AccessibilityWidget panel.
  *
  * The wording still requires a final review by legal counsel before being
- * considered fully compliant — this file implements the structural requirements
+ * considered fully compliant - this file implements the structural requirements
  * (business identity, coordinator contact, accommodations list, limitations,
  * complaint path) mandated by the standard.
  */
@@ -84,21 +84,21 @@ const AccessibilityStatement = () => (
         </p>
         <ul className="list-disc pr-6 mt-2 space-y-1">
           <li>
-            <b>מסמכי PDF</b> — הסכמים וחשבוניות המופקים מהאתר (למשל הסכמי אירועים)
+            <b>מסמכי PDF</b> - הסכמים וחשבוניות המופקים מהאתר (למשל הסכמי אירועים)
             עשויים שלא להיות נגישים במלואם. ניתן לפנות לרכז הנגישות לקבלת גרסה
             נגישה או חלופה טקסטואלית.
           </li>
           <li>
-            <b>תמונות דקורטיביות</b> — חלק מהאייקונים הקישוטיים באתר אינם כוללים
+            <b>תמונות דקורטיביות</b> - חלק מהאייקונים הקישוטיים באתר אינם כוללים
             טקסט חלופי, לפי הנחיות ה-WCAG לתמונות "presentational".
           </li>
           <li>
             <b>ממשק מטבח פנימי</b> (כתובת <code className="text-xs bg-muted px-1 rounded">/kitchen</code>)
             ואזור האדמין הם ממשקי-צוות פנימיים ואינם נחשבים חלק מהשירות
-            לציבור — לפיכך אין חובת הנגשה עליהם.
+            לציבור - לפיכך אין חובת הנגשה עליהם.
           </li>
           <li>
-            <b>מצב קיוסק</b> — בקיוסק הפיזי במקום, וידג'ט הנגישות זמין לצוות
+            <b>מצב קיוסק</b> - בקיוסק הפיזי במקום, וידג'ט הנגישות זמין לצוות
             הצמוד לעזרה ידנית לפי בקשה.
           </li>
         </ul>

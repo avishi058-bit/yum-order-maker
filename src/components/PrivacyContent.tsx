@@ -1,5 +1,5 @@
 /**
- * Shared Privacy Policy content — single source of truth, used both in
+ * Shared Privacy Policy content - single source of truth, used both in
  * the standalone /privacy page and inside the PrivacyModal during checkout.
  */
 const PrivacyContent = () => (

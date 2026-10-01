@@ -31,7 +31,7 @@ export function coverDays(list: SupplyPurchase[], p: SupplyPurchase): { days: nu
   return { days: Math.max(avg ?? 30, sinceBuy), estimated: true };
 }
 
-/** Pre-VAT cost of supplies allocated to [start, end) — spread evenly over the days each purchase lasted. */
+/** Pre-VAT cost of supplies allocated to [start, end) - spread evenly over the days each purchase lasted. */
 export function suppliesCostInRange(list: SupplyPurchase[], start: Date, end: Date): number {
   let total = 0;
   for (const p of list) {

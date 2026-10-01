@@ -49,7 +49,7 @@ export default function InvoiceScanner({
         throw new Error(msg || "הפענוח נכשל");
       }
       const r = data.result;
-      if (!r.is_invoice) toast.warning("לא נראה כמו חשבונית — בדוק את הפרטים");
+      if (!r.is_invoice) toast.warning("לא נראה כמו חשבונית - בדוק את הפרטים");
       setDraft({
         name: r.description || r.supplier || "",
         supplier: r.supplier || "",

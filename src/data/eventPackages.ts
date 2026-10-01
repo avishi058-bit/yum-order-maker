@@ -80,7 +80,7 @@ export const EVENT_PACKAGES: EventPackage[] = [
     name: "מסלול הבשרים",
     emoji: "🥩",
     pricePerPerson: 250,
-    description: "בישול על מנגל פחמים במקום – ~½ ק״ג בשר לאדם",
+    description: "בישול על מנגל פחמים במקום - ~½ ק״ג בשר לאדם",
     items: [
       "אנטריקוט, פיקניה, חצאי עראיס",
       "קבבים במתכון אישי, לבבות עוף, פרגית",

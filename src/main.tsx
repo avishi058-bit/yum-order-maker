@@ -58,8 +58,8 @@ if (!window.location.pathname.startsWith("/kiosk")) {
   } catch {}
 })();
 
-// Capture the Android install prompt as EARLY as possible — before React
-// mounts — otherwise Chrome may fire it before our useEffect attaches and we
+// Capture the Android install prompt as EARLY as possible - before React
+// mounts - otherwise Chrome may fire it before our useEffect attaches and we
 // lose it forever (resulting in the manual "3 steps" fallback on /install).
 (function captureInstallPrompt() {
   const w = window as unknown as { __deferredInstallPrompt?: Event };

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, ReceiptText, Smartphone } from "lucide-react";
 
 import QRCode from "qrcode";
-// DashboardView is lazy-loaded — pulls in recharts, admin-only, keep out of main bundle
+// DashboardView is lazy-loaded - pulls in recharts, admin-only, keep out of main bundle
 const DashboardView = lazy(() => import("@/components/DashboardView"));
 import { DeliveryZonesDialog, DeliveryRequestsPanel } from "@/components/kitchen/DeliveryPanel";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
@@ -94,12 +94,12 @@ interface OrderItem {
 interface Order {
   id: string;
   order_number: number;
-  /** Queue position — set when the order is marked paid. Null = still waiting for payment. */
+  /** Queue position - set when the order is marked paid. Null = still waiting for payment. */
   queue_number?: number | null;
-  /** Daily sequential number assigned at order creation — printed on the bon. */
+  /** Daily sequential number assigned at order creation - printed on the bon. */
   bon_queue_number?: number | null;
   paid_at?: string | null;
-  /** הלקוח לחץ "ראיתי – אני בדרך" במסך המעקב */
+  /** הלקוח לחץ "ראיתי - אני בדרך" במסך המעקב */
   customer_on_way_at?: string | null;
 
   customer_name: string;
@@ -144,7 +144,7 @@ const availabilityCategoryLabels: Record<string, string> = {
   doneness: "🔥 מידת עשייה",
 };
 
-// הארוחות העסקיות מאוחדות עם ההמבורגרים – אין קטגוריית "meal" נפרדת במסך
+// הארוחות העסקיות מאוחדות עם ההמבורגרים - אין קטגוריית "meal" נפרדת במסך
 const availabilityCategoryOrder = ["burger", "side", "drink", "deal", "topping", "sauce", "ingredient", "doneness"];
 
 // Fixed order of items within each category to match the menu
@@ -316,7 +316,7 @@ const playRingtone = (ringtoneId: RingtoneId) => {
   }
 };
 
-// Escalation thresholds (seconds) — saved in localStorage
+// Escalation thresholds (seconds) - saved in localStorage
 const DEFAULT_RED_AFTER = 60;
 const DEFAULT_AGGRESSIVE_AFTER = 120;
 const POLLING_FALLBACK_MS = 10000;
@@ -446,7 +446,7 @@ const Kitchen = () => {
   // and to prevent double-clicks that queue up multiple updates.
   const [pendingStatusIds, setPendingStatusIds] = useState<Set<string>>(new Set());
   const [paidPendingIds, setPaidPendingIds] = useState<Set<string>>(new Set());
-  // Orders marked paid within the last 30 seconds — staff can undo an accidental tap.
+  // Orders marked paid within the last 30 seconds - staff can undo an accidental tap.
   const [undoablePaid, setUndoablePaid] = useState<Record<string, number>>({});
   useEffect(() => {
     if (Object.keys(undoablePaid).length === 0) return;
@@ -501,7 +501,7 @@ const Kitchen = () => {
     };
   }, [previewOrder]);
 
-  // Lock body scroll while the receipt preview modal is open — prevents background
+  // Lock body scroll while the receipt preview modal is open - prevents background
   // scrolling on iOS/touch devices and traps the gesture inside the modal.
   useEffect(() => {
     if (!previewOrder) return;
@@ -533,7 +533,7 @@ const Kitchen = () => {
     return isNaN(v) ? DEFAULT_AGGRESSIVE_AFTER : v;
   });
 
-  // Auto-accept mode — new orders are accepted automatically after a short chime
+  // Auto-accept mode - new orders are accepted automatically after a short chime
   const [autoAccept, setAutoAccept] = useState<boolean>(
     () => localStorage.getItem("kitchen-auto-accept") === "1"
   );
@@ -594,7 +594,7 @@ const Kitchen = () => {
     };
   }, []);
 
-  // Push notifications — subscribe THIS device as a kitchen device so it
+  // Push notifications - subscribe THIS device as a kitchen device so it
   // receives a push every time a new order is created.
   const [pushEnabled, setPushEnabled] = useState(false);
   useEffect(() => {
@@ -604,12 +604,12 @@ const Kitchen = () => {
     const res = await subscribeKitchenToPush();
     if (res.ok) {
       setPushEnabled(true);
-      toast.success("עדכן אותי הופעל ✅ — תקבל התראה בטלפון על כל הזמנה חדשה");
+      toast.success("עדכן אותי הופעל ✅ - תקבל התראה בטלפון על כל הזמנה חדשה");
     } else {
       const msg: Record<string, string> = {
         unsupported: "הדפדפן לא תומך בהתראות",
         ios_needs_install: "ב-iOS צריך קודם להוסיף למסך הבית ואז להפעיל",
-        denied: "ההרשאה נדחתה — אפשר להפעיל מהגדרות הדפדפן",
+        denied: "ההרשאה נדחתה - אפשר להפעיל מהגדרות הדפדפן",
         sw_failed: "טעינת ה-Service Worker נכשלה",
         save_failed: "שמירת המנוי נכשלה",
       };
@@ -620,7 +620,7 @@ const Kitchen = () => {
     const res = await unsubscribeKitchenFromPush();
     if (res.ok) {
       setPushEnabled(false);
-      toast.success("עדכן אותי כובה — לא תקבל יותר התראות לטלפון");
+      toast.success("עדכן אותי כובה - לא תקבל יותר התראות לטלפון");
     } else {
       toast.error("נכשל לכבות התראות");
     }
@@ -676,7 +676,7 @@ const Kitchen = () => {
     return max;
   }, [orders, getEscalationLevel]);
 
-  // Repeating alert for new orders — cadence depends on escalation level
+  // Repeating alert for new orders - cadence depends on escalation level
   useEffect(() => {
     const hasNewOrders = orders.some((o) => o.status === "new");
 
@@ -709,11 +709,11 @@ const Kitchen = () => {
     if (data) setAvailabilityItems(data as AvailabilityItem[]);
   }, []);
 
-  // שאלות הזמינות מופיעות פעם אחת ביום עסקי (מתאפס ב-06:00) — בפתיחה הראשונה
+  // שאלות הזמינות מופיעות פעם אחת ביום עסקי (מתאפס ב-06:00) - בפתיחה הראשונה
   // של האתר. לא בכל יציאה וכניסה למסך המטבח, וגם לא אחרי סגירת אפליקציה/טאב
   // (sessionStorage מתאפס ב-PWA; localStorage נשמר).
   // חשוב: הטאבלט במטבח נשאר פתוח לילה שלם, לכן בודקים שוב מדי דקה וכשחוזרים
-  // למסך — אחרת יום עסקי חדש (06:00) לעולם לא יזוהה בלי רענון ידני.
+  // למסך - אחרת יום עסקי חדש (06:00) לעולם לא יזוהה בלי רענון ידני.
   useEffect(() => {
     if (availabilityItems.length === 0) return;
     let rolloverTimer: ReturnType<typeof setTimeout> | undefined;
@@ -732,7 +732,7 @@ const Kitchen = () => {
       check();
     };
 
-    // טיימר מדויק ל-06:00 הבא — מבטיח פתיחת יום חדש בדיוק בשעה,
+    // טיימר מדויק ל-06:00 הבא - מבטיח פתיחת יום חדש בדיוק בשעה,
     // גם אם המסך פתוח כל הלילה או שהמכשיר היה במצב שינה.
     const scheduleRollover = () => {
       const now = new Date();
@@ -833,7 +833,7 @@ const Kitchen = () => {
       pendingRefreshRef.current = true;
       return;
     }
-    // Skip if we just performed a local mutation — the optimistic update
+    // Skip if we just performed a local mutation - the optimistic update
     // already applied the change, and re-fetching everything would jank the UI.
     if (Date.now() < localMutationUntilRef.current) {
       pendingRefreshRef.current = true;
@@ -857,7 +857,7 @@ const Kitchen = () => {
     const availChannel = supabase
       .channel("availability-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "menu_availability" }, () => {
-        // מתעלמים מעדכונים שהגיעו בעקבות לחיצות מקומיות שלנו – אחרת ה-refetch
+        // מתעלמים מעדכונים שהגיעו בעקבות לחיצות מקומיות שלנו - אחרת ה-refetch
         // דורס את המצב האופטימיסטי באמצע שרשרת העדכונים והכפתורים "רוקדים"
         if (Date.now() < availLocalWriteUntilRef.current) return;
         fetchAvailability();
@@ -871,7 +871,7 @@ const Kitchen = () => {
       })
       .subscribe();
 
-    // Polling fallback — realtime already pushes updates instantly, so we only
+    // Polling fallback - realtime already pushes updates instantly, so we only
     // need a slow safety-net poll (every 10s) to catch dropped events. A tight
     // 3s poll on top of realtime kept re-fetching the whole orders table and
     // made status-button taps feel unresponsive.
@@ -900,10 +900,10 @@ const Kitchen = () => {
   // Race: orders INSERT realtime fires before order_items rows finish writing,
   // so the first fetch may return an order with an empty order_items array.
   // When that happens, fetch THIS order directly with its items (retrying a
-  // few times) and print as soon as items appear — no waiting for the next
+  // few times) and print as soon as items appear - no waiting for the next
   // poll cycle or for a manual confirmation.
   useEffect(() => {
-    // Auto-print every order as soon as it arrives — payment is marked later
+    // Auto-print every order as soon as it arrives - payment is marked later
     // (sometimes only at pickup), so the bon must not wait for a queue number.
     const printableOrders = orders.filter((o) =>
       ["new", "preparing", "ready"].includes(o.status),
@@ -947,7 +947,7 @@ const Kitchen = () => {
   }, [orders, autoPrint]);
 
   // מסנכרן מנות שתלויות במרכיב שהשתנה (רקורסיבי).
-  // חשוב: הסנכרון הוא חד-כיווני – כיבוי מרכיב יכול רק לכבות מנות,
+  // חשוב: הסנכרון הוא חד-כיווני - כיבוי מרכיב יכול רק לכבות מנות,
   // והדלקת מרכיב יכולה רק להדליק מנות שכל המרכיבים שלהן זמינים.
   const syncDependentDishes = async (
     changedItemId: string,
@@ -1051,7 +1051,7 @@ const Kitchen = () => {
   const enableItems = async (itemIds: string[]) => {
     let working = availabilityItems;
     for (const id of itemIds) {
-      // מנה מורכבת שמדליקים – גם המרכיבים שלה חוזרים לזמינות
+      // מנה מורכבת שמדליקים - גם המרכיבים שלה חוזרים לזמינות
       for (const ingId of getAllRequiredIngredients(id)) {
         const ing = working.find((i) => i.item_id === ingId);
         if (ing && !ing.available) working = await setAvailabilityFor(ingId, true, working);
@@ -1067,7 +1067,7 @@ const Kitchen = () => {
     }
   };
 
-  // מנות שבכיבוי שלהן יודעים בוודאות איזה מרכיב אזל – בלי לשאול
+  // מנות שבכיבוי שלהן יודעים בוודאות איזה מרכיב אזל - בלי לשאול
   const AUTO_MISSING_INGREDIENT: Record<string, string> = {
     "smash-double-cheese": "vegan-cheddar",
     "meal-smash-double-cheese": "vegan-cheddar",
@@ -1089,7 +1089,7 @@ const Kitchen = () => {
 
     working = await setAvailabilityFor(itemId, newValue, working);
 
-    // המבורגר והארוחה שלו הם כפתור אחד – אין מנה = אין ארוחה, ולהיפך
+    // המבורגר והארוחה שלו הם כפתור אחד - אין מנה = אין ארוחה, ולהיפך
     const linkedMeal = burgerToMeal[itemId];
     if (linkedMeal && working.some((i) => i.item_id === linkedMeal)) {
       if (!newValue) {
@@ -1122,7 +1122,7 @@ const Kitchen = () => {
       return;
     }
 
-    // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
+    // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים - נשאל מה חסר
     const availableDeps = getDishIngredients(itemId)
       .map((id) => working.find((i) => i.item_id === id))
       .filter((i): i is AvailabilityItem => !!i && i.available);
@@ -1136,7 +1136,7 @@ const Kitchen = () => {
     }
   };
 
-  // המנה כובתה בגלל מרכיב שאזל – לא בגלל כיבוי ידני אמיתי.
+  // המנה כובתה בגלל מרכיב שאזל - לא בגלל כיבוי ידני אמיתי.
   // מסירים את דגל הכיבוי הידני כדי שכשהמרכיב יחזור למלאי, המנה תידלק אוטומטית שוב.
   const handleMissingIngredientsConfirm = async (itemIds: string[]) => {
     const dishId = missingPrompt?.dishId;
@@ -1150,7 +1150,7 @@ const Kitchen = () => {
     setAvailabilityItems((prev) =>
       prev.map((i) => (i.item_id === dishId ? { ...i, manually_disabled: false } : i)),
     );
-    // גם הארוחה המקושרת – אותו דבר
+    // גם הארוחה המקושרת - אותו דבר
     const linkedMeal = burgerToMeal[dishId];
     if (linkedMeal) {
       await supabase
@@ -1192,7 +1192,7 @@ const Kitchen = () => {
     toast.success("נמחק");
   };
 
-  // שאלות פתיחת יום – מוצגות גם בלחיצה על "פתח הכל"
+  // שאלות פתיחת יום - מוצגות גם בלחיצה על "פתח הכל"
   const handleOpenAll = async () => {
     await openAll();
     setShowDayChecklist(true);
@@ -1215,7 +1215,7 @@ const Kitchen = () => {
     const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number != null).map((o) => o.id);
     const unpaidReadyCount = orders.filter((o) => o.status === "ready" && o.queue_number == null).length;
     if (paidReadyIds.length === 0) {
-      toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו — סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
+      toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו - סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
       return;
     }
     const prevOrders = orders;
@@ -1262,7 +1262,7 @@ const Kitchen = () => {
     fetchOrders();
   };
 
-  // "הזמן חייל/ת" — pay the whole order from the soldier fund.
+  // "הזמן חייל/ת" - pay the whole order from the soldier fund.
   const payFromSoldierFund = async (order: Order) => {
     if (paidPendingIds.has(order.id) || order.queue_number != null) return;
     if (!window.confirm(`לשלם את ההזמנה של ${order.customer_name} מ'הזמן חייל/ת'?`)) return;
@@ -1283,7 +1283,7 @@ const Kitchen = () => {
     o.payment_method === "credit" &&
     !["pending_payment", "payment_failed", "cancelled", "declined"].includes(o.status);
 
-  // Confirmed credit orders are already paid online — staff should not have to
+  // Confirmed credit orders are already paid online - staff should not have to
   // tap "שולם". Give them their queue position automatically (still via the
   // mark_order_paid RPC, never a DB default).
   const autoPaidRef = useRef<Set<string>>(new Set());
@@ -1335,7 +1335,7 @@ const Kitchen = () => {
 
 
   const updateStatus = async (orderId: string, newStatus: string, prepMinutes?: number) => {
-    // Guard against double-clicks — if this order is already being updated,
+    // Guard against double-clicks - if this order is already being updated,
     // ignore extra taps until the DB round-trip finishes.
     if (pendingStatusIds.has(orderId)) return;
 
@@ -1349,7 +1349,7 @@ const Kitchen = () => {
     }
 
 
-    // Optimistic update — flip the card immediately so the user sees instant
+    // Optimistic update - flip the card immediately so the user sees instant
     // feedback. We snapshot the prior state so we can roll back on error.
     const prevOrders = orders;
     setOrders((curr) =>
@@ -1387,14 +1387,14 @@ const Kitchen = () => {
       return;
     }
     if (!data || data.length === 0) {
-      console.warn("[Kitchen] Update returned no rows — likely RLS or session issue", { orderId, newStatus });
-      toast.error("העדכון לא בוצע — בדוק הרשאות / התחברות מחדש");
+      console.warn("[Kitchen] Update returned no rows - likely RLS or session issue", { orderId, newStatus });
+      toast.error("העדכון לא בוצע - בדוק הרשאות / התחברות מחדש");
       setOrders(prevOrders); // rollback
       return;
     }
 
     // Push notification is sent automatically by the DB trigger
-    // (public.notify_order_ready) — no client call needed. Removed to keep
+    // (public.notify_order_ready) - no client call needed. Removed to keep
     // the send-order-ready-push endpoint restricted to server-side callers.
   };
 
@@ -1419,14 +1419,14 @@ const Kitchen = () => {
     if (isPrinterConnected()) {
       printBluetoothReceipt(payload).catch((err) => {
         console.warn("[Kitchen] BT print failed", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+        toast.error("שגיאה בהדפסה בלוטות׳ - חבר מחדש את המדפסת ונסה שוב");
       });
       return;
     }
 
     // Local Print Agent (preferred): tiny Android app on the same tablet
     // holds an open BT socket and writes ESC/POS bytes directly. Completely
-    // silent — Kitchen stays visible. Falls back to RawBT if the agent is
+    // silent - Kitchen stays visible. Falls back to RawBT if the agent is
     // unreachable or returns an error.
     if (printMode === "agent") {
       printAgentReceipt(payload)
@@ -1443,7 +1443,7 @@ const Kitchen = () => {
           });
           if (info.status === "error") {
             console.warn("[Kitchen] Agent print failed, falling back to RawBT", info.error);
-            toast.warning("Agent לא זמין — שולח דרך RawBT");
+            toast.warning("Agent לא זמין - שולח דרך RawBT");
             printRawBTReceipt(payload).then((r) => setRawbtDebug(r));
           }
         });
@@ -1451,7 +1451,7 @@ const Kitchen = () => {
     }
     // RawBT: send ESC/POS bytes via the RawBT Android app over Bluetooth.
     // No window.print(), no browser print dialog. Silent/background via
-    // hidden-iframe rawbt: scheme — Kitchen stays visible.
+    // hidden-iframe rawbt: scheme - Kitchen stays visible.
     if (printMode === "rawbt") {
       printRawBTReceipt(payload)
         .then((info) => {
@@ -1477,7 +1477,7 @@ const Kitchen = () => {
       return;
     }
     if (printMode === "bt") {
-      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
 
@@ -1522,7 +1522,7 @@ const Kitchen = () => {
       printAgentPhoneQr(payload).then((info) => {
         if (info.status === "error") {
           console.warn("[Kitchen] Agent QR failed, falling back to RawBT", info.error);
-          toast.warning("Agent לא זמין — שולח QR דרך RawBT");
+          toast.warning("Agent לא זמין - שולח QR דרך RawBT");
           printRawBTPhoneQr(payload);
         }
       });
@@ -1741,7 +1741,7 @@ const Kitchen = () => {
         (o) =>
           ["new", "preparing"].includes(o.status) ||
           // A "ready" order that hasn't been paid yet stays on the active board
-          // so the payment button is always reachable — otherwise it looked stuck.
+          // so the payment button is always reachable - otherwise it looked stuck.
           (o.status === "ready" && o.queue_number == null),
       )
       .sort((a, b) => {
@@ -1762,7 +1762,7 @@ const Kitchen = () => {
   const displayOrders =
     viewMode === "active" ? activeOrders : viewMode === "ready" ? readyOrders : historyOrders;
 
-  // Active orders feeding the round bon — every order not yet completed/cancelled,
+  // Active orders feeding the round bon - every order not yet completed/cancelled,
   // sorted by queue position so the bon matches the physical order of work.
   const activeRoundOrders = useMemo(
     () =>
@@ -1788,12 +1788,12 @@ const Kitchen = () => {
     if (isPrinterConnected()) {
       printBluetoothRoundSummary(activeRoundOrders).catch((err) => {
         console.warn("[Kitchen] BT round print failed", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+        toast.error("שגיאה בהדפסה בלוטות׳ - חבר מחדש את המדפסת ונסה שוב");
       });
       return;
     }
     if (printMode === "bt") {
-      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
     if (printMode === "agent") {
@@ -1814,12 +1814,12 @@ const Kitchen = () => {
     if (isPrinterConnected()) {
       printBluetoothRoundChef(orders).catch((err) => {
         console.warn("[Kitchen] BT chef print failed", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+        toast.error("שגיאה בהדפסה בלוטות׳ - חבר מחדש את המדפסת ונסה שוב");
       });
       return;
     }
     if (printMode === "bt") {
-      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
     if (printMode === "agent") {
@@ -1871,12 +1871,12 @@ const Kitchen = () => {
       if (isPrinterConnected()) {
         printBluetoothFridgeRefill(refill).catch((err) => {
           console.warn("[Kitchen] BT fridge print failed", err);
-          toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+          toast.error("שגיאה בהדפסה בלוטות׳ - חבר מחדש את המדפסת ונסה שוב");
         });
         return;
       }
       if (printMode === "bt") {
-        toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+        toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
         return;
       }
       if (printMode === "agent") {
@@ -1890,7 +1890,7 @@ const Kitchen = () => {
         return;
       }
 
-      // Browser fallback — same as round summary fallback path.
+      // Browser fallback - same as round summary fallback path.
       const w = window.open("", "_blank", "width=380,height=600");
       if (!w) {
         toast.error("חלון ההדפסה נחסם");
@@ -1958,7 +1958,7 @@ const Kitchen = () => {
         return;
       }
       if (printMode === "bt") {
-        toast.error("מדפסת בלוטות׳ לא מחוברת — חבר מדפסת ונסה שוב");
+        toast.error("מדפסת בלוטות׳ לא מחוברת - חבר מדפסת ונסה שוב");
         return;
       }
       if (printMode === "agent") {
@@ -2013,14 +2013,14 @@ const Kitchen = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden" dir="rtl">
-      {/* Push notifications activation prompt — highest priority */}
+      {/* Push notifications activation prompt - highest priority */}
       {!pushEnabled && (
         <div
           className="bg-red-600 text-white text-center py-4 px-6 font-black text-base cursor-pointer animate-pulse flex items-center justify-center gap-2"
           onClick={handleEnableKitchenPush}
         >
           <Bell size={22} />
-          🔔 לחץ כאן להפעיל "עדכן אותי" — התראות לטלפון על הזמנות חדשות
+          🔔 לחץ כאן להפעיל "עדכן אותי" - התראות לטלפון על הזמנות חדשות
         </div>
       )}
       {/* Audio activation prompt */}
@@ -2134,7 +2134,7 @@ const Kitchen = () => {
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
               realtimeConnected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
             }`}
-            title={realtimeConnected ? "Realtime פעיל" : "Realtime מנותק — משתמש ב-polling"}
+            title={realtimeConnected ? "Realtime פעיל" : "Realtime מנותק - משתמש ב-polling"}
           >
             {realtimeConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
             <span>{realtimeConnected ? "Live" : "Polling"}</span>
@@ -2157,7 +2157,7 @@ const Kitchen = () => {
             className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
               showEventsPanel ? "bg-pink-500/40 text-pink-100" : "bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
             }`}
-            title="הזמנות אירועים — הכנות מטבח"
+            title="הזמנות אירועים - הכנות מטבח"
           >
             <span>🎉</span>
             <span>אירועים</span>
@@ -2190,7 +2190,7 @@ const Kitchen = () => {
                   }`}
                 >
                   <span className="flex items-center gap-2"><Bell size={14} /> עדכן אותי (התראה לטלפון)</span>
-                  <span>{pushEnabled ? "✓ פעיל — לחץ לכיבוי" : "כבוי — לחץ להפעלה"}</span>
+                  <span>{pushEnabled ? "✓ פעיל - לחץ לכיבוי" : "כבוי - לחץ להפעלה"}</span>
                 </button>
                 <button
                   onClick={() => setSoundEnabled(!soundEnabled)}
@@ -2280,7 +2280,7 @@ const Kitchen = () => {
                     restaurantStatus.cash_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן — אתר</span>
+                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן - אתר</span>
                   <span>{restaurantStatus.cash_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
@@ -2290,7 +2290,7 @@ const Kitchen = () => {
                     restaurantStatus.credit_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי — אתר</span>
+                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי - אתר</span>
                   <span>{restaurantStatus.credit_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
@@ -2304,7 +2304,7 @@ const Kitchen = () => {
                     restaurantStatus.kiosk_cash_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן — עמדה</span>
+                  <span className="flex items-center gap-2"><Banknote size={14} /> מזומן - עמדה</span>
                   <span>{restaurantStatus.kiosk_cash_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
@@ -2314,7 +2314,7 @@ const Kitchen = () => {
                     restaurantStatus.kiosk_credit_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי — עמדה</span>
+                  <span className="flex items-center gap-2"><CreditCard size={14} /> אשראי - עמדה</span>
                   <span>{restaurantStatus.kiosk_credit_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
@@ -2324,7 +2324,7 @@ const Kitchen = () => {
                     restaurantStatus.kiosk_paybox_enabled ? "bg-green-500/20 text-green-300" : "bg-destructive/20 text-destructive hover:bg-destructive/30"
                   }`}
                 >
-                  <span className="flex items-center gap-2"><Smartphone size={14} /> פייבוקס — עמדה</span>
+                  <span className="flex items-center gap-2"><Smartphone size={14} /> פייבוקס - עמדה</span>
                   <span>{restaurantStatus.kiosk_paybox_enabled ? "פעיל" : "כבוי"}</span>
                 </button>
 
@@ -2347,7 +2347,7 @@ const Kitchen = () => {
                   }`}
                 >
                   <span className="flex items-center gap-2">🔥 מצב עומס</span>
-                  <span>{restaurantStatus.high_load ? "פעיל — לקוחות רואים התראה" : "כבוי"}</span>
+                  <span>{restaurantStatus.high_load ? "פעיל - לקוחות רואים התראה" : "כבוי"}</span>
                 </button>
 
                 {/* 🕒 Preorder (הזמנה מראש) */}
@@ -2451,7 +2451,7 @@ const Kitchen = () => {
 
           {/* 🖨️ Print & Diagnostics group */}
           <div className="relative">
-            {/* Print settings live inside the ⚙️ settings panel — the old
+            {/* Print settings live inside the ⚙️ settings panel - the old
                 toolbar button was removed as it cluttered the header. */}
             {showPrintMenu && createPortal(<>
               <div role="button" tabIndex={0} aria-label="סגור תפריט הדפסה" onClick={() => setShowPrintMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowPrintMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
@@ -2574,7 +2574,7 @@ const Kitchen = () => {
             </>, document.body)}
           </div>
 
-          {/* Round bon (per-order detail) — preview + print */}
+          {/* Round bon (per-order detail) - preview + print */}
           <button
             onClick={() => setShowRoundSummary(true)}
             disabled={activeRoundOrders.length === 0}
@@ -2653,7 +2653,7 @@ const Kitchen = () => {
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                🎉 הזמנות אירועים — הכנות מטבח
+                🎉 הזמנות אירועים - הכנות מטבח
               </h3>
               <button
                 onClick={() => setShowEventsPanel(false)}
@@ -2725,7 +2725,7 @@ const Kitchen = () => {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <AlertTriangle size={16} className="text-yellow-400" />
-                הגדרות הסלמה — הזמנות שלא אושרו
+                הגדרות הסלמה - הזמנות שלא אושרו
               </h3>
               <button
                 onClick={() => {
@@ -3033,10 +3033,10 @@ const Kitchen = () => {
                     </p>
                   )}
                   {order.payment_method === "cash" && (
-                    <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן — לא שולם</p>
+                    <p className="text-sm font-bold text-yellow-400 mt-1">💵 מזומן - לא שולם</p>
                   )}
                   {order.payment_method === "paybox" && order.queue_number == null && (
-                    <p className="text-sm font-black text-purple-400 mt-1 animate-pulse">📲 פייבוקס — יש לבדוק צילום מסך של ההעברה</p>
+                    <p className="text-sm font-black text-purple-400 mt-1 animate-pulse">📲 פייבוקס - יש לבדוק צילום מסך של ההעברה</p>
                   )}
                   {order.payment_method === "paybox" && order.queue_number != null && (
                     <p className="text-sm font-black text-purple-300 mt-1">📲 שולם בפייבוקס</p>
@@ -3051,7 +3051,7 @@ const Kitchen = () => {
                     <p className="text-sm font-bold text-emerald-300 mt-1">🫡 כולל ₪{Number((order as any).soldier_donation)} ל'הזמן חייל/ת'</p>
                   )}
                   {order.payment_method === "credit" && !isCreditConfirmed(order) && (
-                    <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף — טרם שולם</p>
+                    <p className="text-sm font-bold text-orange-400 mt-1 animate-pulse">⏳ ממתין לאישור מהמסוף - טרם שולם</p>
                   )}
 
                   {order.payment_method === "counter" && (
@@ -3065,7 +3065,7 @@ const Kitchen = () => {
                     // Same logic as the printed bon (kitchenReceipt buildReceiptHtml):
                     // strip __FAVORITE__, __OWNER__:<name>, doneness-* out of the
                     // removals array; show owner as a header, doneness as 🔥,
-                    // and the rest as "— שינויים: a, b, c".
+                    // and the rest as "- שינויים: a, b, c".
                     const { ownerName, doneness, cleanedRemovals } = extractOwnerName(item.removals);
                     const isFavorite = item.removals?.some(r => r === "__FAVORITE__");
                     const toppingsToPrint = printableToppings(item.toppings);
@@ -3093,10 +3093,10 @@ const Kitchen = () => {
                                 <p className="text-xs font-extrabold text-red-400">{shortcutLbl}</p>
                               )}
                               {rest.length > 0 && (
-                                <p className="text-xs font-bold text-red-400">— שינויים: {rest.join(", ")}</p>
+                                <p className="text-xs font-bold text-red-400">- שינויים: {rest.join(", ")}</p>
                               )}
                               {noChanges && (
-                                <p className="text-xs font-bold text-muted-foreground">— ללא שינויים</p>
+                                <p className="text-xs font-bold text-muted-foreground">- ללא שינויים</p>
                               )}
                             </>
                           );
@@ -3106,7 +3106,7 @@ const Kitchen = () => {
                         )}
                         {item.with_meal && (
                           <p className="text-xs text-muted-foreground">
-                            → ארוחה{item.meal_side ? ` — ${item.meal_side}` : ""}{item.meal_drink ? `, ${item.meal_drink}` : ""}
+                            → ארוחה{item.meal_side ? ` - ${item.meal_side}` : ""}{item.meal_drink ? `, ${item.meal_drink}` : ""}
                           </p>
                         )}
                         {item.deal_burgers && Array.isArray(item.deal_burgers) && (
@@ -3121,8 +3121,8 @@ const Kitchen = () => {
                                   return (
                                     <>
                                       {bShort && <p className="font-extrabold text-red-400">{bShort}</p>}
-                                      {bRest.length > 0 && <p className="font-bold text-red-400">— שינויים: {bRest.join(", ")}</p>}
-                                      {noChanges && <p className="font-bold text-muted-foreground">— ללא שינויים</p>}
+                                      {bRest.length > 0 && <p className="font-bold text-red-400">- שינויים: {bRest.join(", ")}</p>}
+                                      {noChanges && <p className="font-bold text-muted-foreground">- ללא שינויים</p>}
                                     </>
                                   );
                                 })()}
@@ -3292,7 +3292,7 @@ const Kitchen = () => {
                         <Clock size={14} className="text-primary" />
                         זמן הכנה:
                         <span className="text-primary font-black text-base">
-                          {etaCountdown(order.estimated_ready_at) || "—"}
+                          {etaCountdown(order.estimated_ready_at) || "-"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -3374,7 +3374,7 @@ const Kitchen = () => {
         </div>
       )}
 
-      {/* Round-summary preview modal — shows aggregated chef summary for all
+      {/* Round-summary preview modal - shows aggregated chef summary for all
           orders currently in 'preparing' status. */}
       {showRoundSummary && (
         <div
@@ -3391,7 +3391,7 @@ const Kitchen = () => {
             <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
               <span className="font-bold text-foreground flex items-center gap-2">
                 <ClipboardList size={16} className="text-purple-400" />
-                בון הזמנות פעילות — {activeRoundOrders.length} הזמנות
+                בון הזמנות פעילות - {activeRoundOrders.length} הזמנות
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -3420,7 +3420,7 @@ const Kitchen = () => {
         </div>
       )}
 
-      {/* Round CHEF summary preview modal — aggregated counts only (no per-order detail). */}
+      {/* Round CHEF summary preview modal - aggregated counts only (no per-order detail). */}
       {showRoundChefSummary && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overscroll-contain touch-none"
@@ -3436,7 +3436,7 @@ const Kitchen = () => {
             <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
               <span className="font-bold text-foreground flex items-center gap-2">
                 <ListChecks size={16} className="text-orange-400" />
-                סיכום סבב לטבח — {activeRoundOrders.length} הזמנות
+                סיכום סבב לטבח - {activeRoundOrders.length} הזמנות
               </span>
               <div className="flex items-center gap-2">
                 <button

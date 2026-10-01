@@ -50,7 +50,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
 
     setLoading(true);
     try {
-      // Always register — backend validates that phone matches the name
+      // Always register - backend validates that phone matches the name
       // (returning users with the same name are treated as login).
       await register(phone, name.trim(), termsAccepted, marketingConsent);
       toast({ title: `ברוך הבא, ${name.trim().split(" ")[0]}! 🎉` });
@@ -92,7 +92,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
                   כדי שנוכל לעדכן אותך מתי ההמבורגר מוכן 🍔
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  הכנס/י את מספר הטלפון והשם שאיתם הזמנת — זה חד-פעמי, אחרי זה תיכנס/י אוטומטית תמיד :)
+                  הכנס/י את מספר הטלפון והשם שאיתם הזמנת - זה חד-פעמי, אחרי זה תיכנס/י אוטומטית תמיד :)
                 </p>
               </div>
 

@@ -13,7 +13,7 @@ const ingredientImages: Record<string, string> = {
 
 export type IngredientState = Record<string, boolean>;
 
-/** Default ingredient state for a regular (non-smash) burger — all ON. */
+/** Default ingredient state for a regular (non-smash) burger - all ON. */
 export const defaultRegularIngredientState = (): IngredientState => {
   const state: IngredientState = {};
   ingredients.forEach((ing) => {

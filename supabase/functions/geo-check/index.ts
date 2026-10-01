@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
   const country = await lookupCountry(ip);
   if (!country) {
-    // Fail open — don't punish users for a third-party outage.
+    // Fail open - don't punish users for a third-party outage.
     return new Response(
       JSON.stringify({ country: null, allowed: true, reason: "lookup_failed" }),
       { headers: { ...cors, "Content-Type": "application/json" } },

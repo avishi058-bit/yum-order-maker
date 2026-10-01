@@ -163,7 +163,7 @@ export default function InventoryFridge() {
   const markAllRefilled = async () => {
     const itemsToMark = refillList.map((d) => ({ id: d.id, qty: d.fridge_target }));
     if (!itemsToMark.length) {
-      toast.info("המקרר מלא — אין מה לעדכן");
+      toast.info("המקרר מלא - אין מה לעדכן");
       return;
     }
     try {
@@ -236,7 +236,7 @@ export default function InventoryFridge() {
 <h1>🧊 מילוי מקרר</h1>
 <div class="sub">${dateStr}</div>
 ${refillList.length ? `<table>${rows}</table>` : `<div class="empty">המקרר מלא ✅</div>`}
-<div class="footer">לאחר המילוי — לחץ "סמן כמולא" באפליקציה</div>
+<div class="footer">לאחר המילוי - לחץ "סמן כמולא" באפליקציה</div>
 <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),300);};</script>
 </body></html>`);
     w.document.close();

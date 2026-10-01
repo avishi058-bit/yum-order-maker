@@ -18,7 +18,7 @@ const BusinessStatusBar = () => {
   if (loading) return null;
 
   const todayLabel = status.todayHours.open
-    ? `היום ${status.todayHours.from}–${status.todayHours.to}`
+    ? `היום ${status.todayHours.from}-${status.todayHours.to}`
     : "היום סגור";
 
   return (
@@ -26,7 +26,7 @@ const BusinessStatusBar = () => {
       {restaurantStatus.high_load && (
         <div className="w-full bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 text-white px-3 py-2 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md animate-pulse">
           <Flame size={16} className="shrink-0" />
-          <span>עומס במטבח כרגע — זמני המתנה ארוכים מהרגיל, סבלנות ותודה 🙏</span>
+          <span>עומס במטבח כרגע - זמני המתנה ארוכים מהרגיל, סבלנות ותודה 🙏</span>
           <Flame size={16} className="shrink-0" />
         </div>
       )}
@@ -84,7 +84,7 @@ const BusinessStatusBar = () => {
                       {isToday && <span className="mr-2 text-xs text-primary">(היום)</span>}
                     </span>
                     <span>
-                      {day.open ? `${day.from} – ${day.to}` : "סגור"}
+                      {day.open ? `${day.from} - ${day.to}` : "סגור"}
                     </span>
                   </li>
                 );

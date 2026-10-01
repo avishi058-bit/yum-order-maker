@@ -7,7 +7,7 @@ export const MEAL_UPGRADE_PRICE = 25;
 /**
  * Returns true if the +23 meal upgrade should be charged on top of the item's
  * base price. Items that are themselves a "meal" (category === "meal") already
- * include the upgrade in their price — charging again would double-bill.
+ * include the upgrade in their price - charging again would double-bill.
  */
 export const shouldChargeMealUpgrade = (item: CartItem): boolean => {
   if (!item.withMeal) return false;

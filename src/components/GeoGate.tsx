@@ -13,7 +13,7 @@ type Status = "checking" | "allowed" | "blocked";
  * - Authenticated Supabase users (kitchen/admin/courier).
  * - Localhost / preview / editor sandbox.
  * - Anything running inside an iframe (Lovable preview editor).
- * - Lookup failure — fails open so a third-party outage doesn't block customers.
+ * - Lookup failure - fails open so a third-party outage doesn't block customers.
  */
 const GeoGate = ({ children }: { children: ReactNode }) => {
   const [status, setStatus] = useState<Status>("checking");

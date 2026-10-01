@@ -1,4 +1,4 @@
-// "הזמן חייל/ת" — optional checkout donation.
+// "הזמן חייל/ת" - optional checkout donation.
 // The donor must approve the regulation (תקנון) before the donation applies;
 // the regulation window opens automatically when an amount is picked, and the
 // approval is logged server-side in consent_events via create-order.
@@ -49,7 +49,7 @@ export default function SoldierDonation({
       <div className="font-bold">🫡 הזמן חייל/ת</div>
       <p className="text-xs text-muted-foreground">
         {donationOnly
-          ? "תשלום על 'הזמן חייל/ת' בלבד — בלי הזמנת אוכל."
+          ? "תשלום על 'הזמן חייל/ת' בלבד - בלי הזמנת אוכל."
           : "רוצים להוסיף סכום ל'הזמן חייל/ת'? בכסף הזה אנחנו מאכילים ומפנקים חיילים שמגיעים אלינו."}
       </p>
       {stats && Number(stats.collected) > 0 && (
@@ -77,7 +77,7 @@ export default function SoldierDonation({
         onBlur={() => { if (value > 0 && !termsAcceptedAt) setTermsOpen(true); }}
         className="w-full rounded-lg border bg-background p-2 text-center"
       />
-      {value > 0 && !donationOnly && <p className="text-xs text-center font-medium">₪{value} יתווספו לתשלום — תודה! 🙏</p>}
+      {value > 0 && !donationOnly && <p className="text-xs text-center font-medium">₪{value} יתווספו לתשלום - תודה! 🙏</p>}
 
       {value > 0 && (
         <div className={`rounded-lg border-2 p-2 space-y-2 ${termsAcceptedAt ? "border-primary/30 bg-primary/5" : "border-destructive/60 bg-destructive/10"}`}>

@@ -85,7 +85,7 @@ const Index = () => {
   const [checkoutSkipDetails, setCheckoutSkipDetails] = useState(false);
   // "הזמן חייל/ת" paid on its own (no food) from the entry page.
   const [donationOnlyCheckout, setDonationOnlyCheckout] = useState(false);
-  // Pending "הזמן חייל/ת" donation — mirrored from sessionStorage so the cart
+  // Pending "הזמן חייל/ת" donation - mirrored from sessionStorage so the cart
   // drawer can show it as an editable line before checkout.
   const [pendingDonation, setPendingDonation] = useState<{ amount: number; termsAt: string | null } | null>(() => {
     try { return JSON.parse(sessionStorage.getItem("soldier-pending-donation-v1") || "null"); } catch { return null; }
@@ -128,7 +128,7 @@ const Index = () => {
   const isIosDevice = typeof window !== "undefined" ? isIos() : false;
   const { canPrompt: canNativeInstall, promptInstall } = useInstallPrompt();
   const handleInstallClick = useCallback(async () => {
-    // iPhone/iPad: Safari can't trigger install programmatically — show manual steps.
+    // iPhone/iPad: Safari can't trigger install programmatically - show manual steps.
     if (isIosDevice) {
       setInstallModalOpen(true);
       return;
@@ -172,7 +172,7 @@ const Index = () => {
   const cartButtonRef = useRef<HTMLDivElement>(null);
   const { flyToCart, registerCartTarget } = useFlyToCart();
 
-  // Auto-prompt unauthenticated visitors to log in — ONLY inside the installed PWA on iOS,
+  // Auto-prompt unauthenticated visitors to log in - ONLY inside the installed PWA on iOS,
   // where Safari's storage is partitioned from the PWA so auto-login from the order can't work.
   // On Android PWA / regular web / kiosk we never prompt. Stops once the user is logged in.
   useEffect(() => {
@@ -260,7 +260,7 @@ const Index = () => {
 
   const handleCustomizerConfirm = useCallback(
     (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number; label?: string }>) => {
-      // BRIDGE mode: a caller (e.g. favorite modal) is awaiting the result —
+      // BRIDGE mode: a caller (e.g. favorite modal) is awaiting the result -
       // hand it back instead of touching the cart.
       if (customizerResolverRef.current) {
         customizerResolverRef.current({ item, quantity, selectedToppings, selectedRemovals, withMeal, mealSideId, mealDrinkId, ownerName });
@@ -293,7 +293,7 @@ const Index = () => {
             next.push({
               id: `${m.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               menuItemId: m.id,
-              name: s.label ? `${m.name} — ${s.label}` : m.name,
+              name: s.label ? `${m.name} - ${s.label}` : m.name,
               price: m.price,
               quantity: s.qty,
               toppings: [],
@@ -308,7 +308,7 @@ const Index = () => {
       setEditingCartId(null);
       setCustomizerInitial(undefined);
       // Stay on the menu after add. Fly the item toward the cart icon for
-      // a clear "added!" cue. Skip on EDIT (no fly — user is just updating).
+      // a clear "added!" cue. Skip on EDIT (no fly - user is just updating).
       if (!editingCartId) flyFromCenter();
     },
     [editingCartId, flyFromCenter]
@@ -401,11 +401,11 @@ const Index = () => {
   const handleDrinkConfirm = useCallback(
     (item: MenuItem, selectedDrink: string) => {
       setDrinkItem(null);
-      // Add the chosen drink variant directly to the cart — no second confirmation needed.
+      // Add the chosen drink variant directly to the cart - no second confirmation needed.
       addToCartDirect({
         ...item,
         id: `${item.id}-${selectedDrink}-${Date.now()}`,
-        name: `${item.name} — ${selectedDrink}`,
+        name: `${item.name} - ${selectedDrink}`,
         _menuItemId: item.id,
       } as MenuItem & { _menuItemId?: string });
       // Same fly-to-cart cue as the kiosk so the customer sees the can was added.
@@ -534,7 +534,7 @@ const Index = () => {
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
 
-      {/* Business hours status bar — sticky, public-facing only */}
+      {/* Business hours status bar - sticky, public-facing only */}
       {!isStation && <BusinessStatusBar />}
 
       {/* Top action row: hamburger menu + customer greeting / login */}
@@ -579,7 +579,7 @@ const Index = () => {
         </div>
       )}
 
-      {/* "Welcome back" hero strip + favorite-order CTA — full-width row, logged-in customers only */}
+      {/* "Welcome back" hero strip + favorite-order CTA - full-width row, logged-in customers only */}
       {!isStation && isLoggedIn && customer && !isClosed && (
         <div className="w-full px-4 py-3 bg-gradient-to-l from-green-500/10 via-primary/5 to-transparent border-b border-border" dir="rtl">
           <h2 className="text-lg sm:text-2xl font-black text-foreground leading-tight text-center sm:text-right">
@@ -638,7 +638,7 @@ const Index = () => {
           soldierFundEnabled={restaurantStatus.soldier_fund_enabled !== false}
           onSoldierContinueOrder={isClosed ? undefined : (amount, termsAt) => {
             savePendingDonation(amount, termsAt);
-            toast.success(`🫡 ₪${amount} ל'הזמן חייל/ת' יתווספו בתשלום — עכשיו בוחרים מה לאכול`);
+            toast.success(`🫡 ₪${amount} ל'הזמן חייל/ת' יתווספו בתשלום - עכשיו בוחרים מה לאכול`);
           }}
           onSoldierDonateOnly={(amount, termsAt) => {
             savePendingDonation(amount, termsAt);
@@ -656,7 +656,7 @@ const Index = () => {
           <p className="text-base text-muted-foreground mb-6 max-w-md mx-auto">
             {isManualClosure
               ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם."
-              : "המטבח סגור להזמנות כרגע — נשמח לראות אתכם בפעם הבאה!"}
+              : "המטבח סגור להזמנות כרגע - נשמח לראות אתכם בפעם הבאה!"}
           </p>
 
           <div className="mb-6">
@@ -669,7 +669,7 @@ const Index = () => {
               className="inline-flex flex-col items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-black px-8 py-5 rounded-2xl shadow-xl shadow-green-600/30 hover:scale-105 transition-transform"
             >
               <span className="text-xl">📝 הרכיבו הזמנה לשמירה</span>
-              <span className="text-sm font-normal opacity-90">תישמר אצלכם — תצטרכו לחזור ולשלוח אותה כשנפתח</span>
+              <span className="text-sm font-normal opacity-90">תישמר אצלכם - תצטרכו לחזור ולשלוח אותה כשנפתח</span>
             </button>
           </div>
 
@@ -692,7 +692,7 @@ const Index = () => {
           <div className="pb-10">
             <div className="sticky top-[72px] z-40 bg-amber-100 dark:bg-amber-950 border-y border-amber-200 dark:border-amber-800 py-3 px-4">
               <p className="text-center text-amber-900 dark:text-amber-100 font-black text-sm md:text-base">
-                ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם — חזרו ושלחו אותה בעצמכם כשנפתח.
+                ⚠️ המטבח סגור כרגע להזמנות. ההזמנה תישמר אצלכם - חזרו ושלחו אותה בעצמכם כשנפתח.
               </p>
             </div>
             <MenuSection
@@ -907,14 +907,14 @@ const Index = () => {
                   toast.success("תודה רבה! 🫡 התשלום ל'הזמן חייל/ת' התקבל");
                   return;
                 }
-                // Snapshot the cart BEFORE clearing — used for the
+                // Snapshot the cart BEFORE clearing - used for the
                 // "save as your regular" post-order prompt.
                 const orderedSnapshot = cart.slice();
                 setCheckoutOpen(false);
                 setCheckoutSkipDetails(false);
                 setCart([]);
                 setDeliveryInfo(null);
-                // Order was placed — discard any saved cart so the
+                // Order was placed - discard any saved cart so the
                 // "continue previous order" modal doesn't pop up later.
                 suppressNextSave();
                 void discardSaved();
@@ -945,10 +945,10 @@ const Index = () => {
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-3">
-          <p className="text-foreground font-bold">הַבִּקְתָּה — המבורגר של מושבניקים 🐄</p>
+          <p className="text-foreground font-bold">הַבִּקְתָּה - המבורגר של מושבניקים 🐄</p>
           <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
           <address className="not-italic text-muted-foreground text-sm space-y-1">
-            <p>המבורגר הבקתה — שלזינגר אבישי-אברהם, עוסק מורשה 213877103</p>
+            <p>המבורגר הבקתה - שלזינגר אבישי-אברהם, עוסק מורשה 213877103</p>
             <p>ערבי הנחל 22, תושיה, ישראל</p>
             <p>
               <a href="mailto:avishi058@gmail.com" className="text-primary hover:underline">avishi058@gmail.com</a>
@@ -1016,7 +1016,7 @@ const Index = () => {
               </div>
               <h3 className="text-2xl font-black mb-2">ההזמנה נשמרה אצלכם ✅</h3>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם — ההזמנה לא תישלח אוטומטית.
+                אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם - ההזמנה לא תישלח אוטומטית.
               </p>
               <button
                 onClick={() => setSavedConfirmOpen(false)}

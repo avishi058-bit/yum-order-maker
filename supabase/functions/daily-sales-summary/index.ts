@@ -13,7 +13,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
-// Test customers — excluded from the totals (mirrors src/lib/testCustomers.ts)
+// Test customers - excluded from the totals (mirrors src/lib/testCustomers.ts)
 const EXCLUDED_NAME_PATTERNS = ["טסט", "test", "בדיקה", "בדקה", "אבישי שלזינגר"];
 const EXCLUDED_PHONES = ["0539311200", "0501234567"];
 const normalize = (v?: string | null) =>

@@ -4,7 +4,7 @@
 // on customer web) so the first customizer/checkout tap feels instant.
 //
 // IMPORTANT: this is purely opportunistic prefetching. It never blocks the UI,
-// never re-renders anything, and silently swallows errors — if the network
+// never re-renders anything, and silently swallows errors - if the network
 // hiccups, React.lazy will just fetch on demand as a fallback.
 
 // Customizer-specific icons that are NOT already covered by preloadSelectorIcons.
@@ -44,7 +44,7 @@ let prefetchStarted = false;
 
 /**
  * Trigger dynamic-import of the customizer + checkout chunks and preload the
- * icons those chunks render. Idempotent — safe to call multiple times; only
+ * icons those chunks render. Idempotent - safe to call multiple times; only
  * fires once per page load.
  *
  * Returns a promise that resolves when the JS chunks are fetched. Callers may
@@ -54,7 +54,7 @@ export function prefetchCustomerFlow(): Promise<void> {
   if (prefetchStarted) return Promise.resolve();
   prefetchStarted = true;
 
-  // Warm images — non-blocking, browser cache only.
+  // Warm images - non-blocking, browser cache only.
   if (typeof window !== "undefined") {
     for (const src of CUSTOMIZER_ICONS) {
       const img = new Image();
@@ -64,7 +64,7 @@ export function prefetchCustomerFlow(): Promise<void> {
   }
 
   // Prefetch component chunks. These match the React.lazy() paths in
-  // Index.tsx and Kiosk.tsx — Vite dedups the same specifier so we don't
+  // Index.tsx and Kiosk.tsx - Vite dedups the same specifier so we don't
   // download twice.
   const imports: Array<Promise<unknown>> = [
     import("@/components/ItemCustomizer"),
@@ -76,7 +76,7 @@ export function prefetchCustomerFlow(): Promise<void> {
   return Promise.all(imports)
     .then(() => undefined)
     .catch(() => {
-      // Prefetch failure is silent — React.lazy will retry on real use.
+      // Prefetch failure is silent - React.lazy will retry on real use.
       prefetchStarted = false;
     });
 }

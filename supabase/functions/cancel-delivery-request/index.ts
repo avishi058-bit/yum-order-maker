@@ -1,5 +1,5 @@
 // Cancel a pending delivery request the customer just created.
-// Requires the client_token that was returned at INSERT time — proves
+// Requires the client_token that was returned at INSERT time - proves
 // ownership. Anonymous UPDATE on delivery_requests is closed at the RLS
 // level, so this function (running with the service role) is the only
 // way for an unauthenticated customer to cancel their own request.

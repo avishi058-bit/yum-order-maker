@@ -59,7 +59,7 @@ export default function RecentInvoiceLines({ token }: { token: string }) {
 
   return (
     <div className="space-y-3 pt-4">
-      <h3 className="font-bold">חשבוניות אחרונות — אפשר לתקן או להסיר שורה</h3>
+      <h3 className="font-bold">חשבוניות אחרונות - אפשר לתקן או להסיר שורה</h3>
       {[...groups.entries()].map(([k, list]) => (
         <div key={k} className="space-y-1.5 rounded-md border p-2">
           <div className="text-xs font-semibold text-muted-foreground">{k}</div>

@@ -46,7 +46,7 @@ interface Props {
   /**
    * Bridge: opens the parent's ItemCustomizer for `menuItem` and resolves with
    * the user's selections (or null if cancelled). Reuses the same toppings /
-   * removals / meal UI as the regular ordering flow — so the user can pick
+   * removals / meal UI as the regular ordering flow - so the user can pick
    * vegetables, doneness, and extras when defining or tweaking the favorite.
    */
   customizeMenuItem: (
@@ -142,7 +142,7 @@ const resultToCartItem = (r: CustomizerResult): CartItem => ({
 });
 
 /** Build a detailed, human-readable summary of a CartItem (doneness, vegetables,
- *  bun, toppings, meal upgrade, owner name) — so the customer sees exactly
+ *  bun, toppings, meal upgrade, owner name) - so the customer sees exactly
  *  what's in their favorite. */
 const describeCartItem = (it: CartItem): {
   donenessLabel?: string;
@@ -176,7 +176,7 @@ const describeCartItem = (it: CartItem): {
       else if (defaultOn && wasRemoved) removed.push(ing.name);
     }
     if (removalsClean.includes("dry")) {
-      vegetablesLine = "יבש — ללא ירקות ורטבים";
+      vegetablesLine = "יבש - ללא ירקות ורטבים";
     } else if (removed.length === 0) {
       vegetablesLine = present.length ? `כל הירקות (${present.join(", ")})` : "ללא ירקות";
     } else {
@@ -316,7 +316,7 @@ const sideToAvailability: Record<string, string> = {
 };
 
 /** Convert a meal-drink id to a standalone drink menuItem (used when the meal
- *  upgrade is broken because the side is gone — we keep the drink at full
+ *  upgrade is broken because the side is gone - we keep the drink at full
  *  price as a separate cart line). */
 const mealDrinkToStandalone = (drinkId: string): { menuItem: MenuItem; label: string } | null => {
   const drink = mealDrinkOptions.find((d) => d.id === drinkId);
@@ -328,7 +328,7 @@ const mealDrinkToStandalone = (drinkId: string): { menuItem: MenuItem; label: st
   else standaloneId = "beer-regular";
   const menuItem = menuItems.find((m) => m.id === standaloneId);
   if (!menuItem) return null;
-  return { menuItem, label: `${menuItem.name} (${drink.name}) — ₪${menuItem.price}` };
+  return { menuItem, label: `${menuItem.name} (${drink.name}) - ₪${menuItem.price}` };
 };
 
 /** What's broken in a single line item right now. */
@@ -346,7 +346,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   const [draft, setDraft] = useState<CartItem[]>([]);
   /** Working copy used by confirm view (per-order tweaks; doesn't replace saved favorite). */
   const [usingDraft, setUsingDraft] = useState<CartItem[]>([]);
-  /** Selected line ids in confirm view — only these go to checkout/cart. */
+  /** Selected line ids in confirm view - only these go to checkout/cart. */
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   /** True while the customizer is open in front of us. */
   const [customizing, setCustomizing] = useState(false);
@@ -493,7 +493,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       }
       return out;
     });
-    toast({ title: "העסקית בוטלה — השתייה נשארה במחיר מלא" });
+    toast({ title: "העסקית בוטלה - השתייה נשארה במחיר מלא" });
   };
 
   /** Drop the entire meal upgrade (no side, no drink). */
@@ -579,7 +579,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     const menuItem = menuItems.find((m) => m.id === target.menuItemId);
     if (!menuItem) return;
     if (menuItem.category !== "burger" && menuItem.category !== "meal") {
-      toast({ title: "פריט זה לא ניתן לעריכה — אפשר להסיר ולהוסיף מחדש" });
+      toast({ title: "פריט זה לא ניתן לעריכה - אפשר להסיר ולהוסיף מחדש" });
       return;
     }
     const updated = await runCustomizer(menuItem, cartItemToInitial(target));
@@ -647,7 +647,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
     const menuItem = menuItems.find((m) => m.id === target.menuItemId);
     if (!menuItem) return;
     if (menuItem.category !== "burger" && menuItem.category !== "meal") {
-      toast({ title: "פריט זה לא ניתן לעריכה — אפשר להסיר ולהוסיף מחדש" });
+      toast({ title: "פריט זה לא ניתן לעריכה - אפשר להסיר ולהוסיף מחדש" });
       return;
     }
     const updated = await runCustomizer(menuItem, cartItemToInitial(target));
@@ -715,13 +715,13 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
       return;
     }
     setDraft(items);
-    toast({ title: "ההזמנה נטענה — אפשר לערוך לפני שמירה" });
+    toast({ title: "ההזמנה נטענה - אפשר לערוך לפני שמירה" });
   };
 
   const handleLoadFromCart = () => {
     if (currentCart.length === 0) return;
     setDraft(refreshIds(currentCart));
-    toast({ title: "העגלה נטענה — אפשר לערוך לפני שמירה" });
+    toast({ title: "העגלה נטענה - אפשר לערוך לפני שמירה" });
   };
 
   const handleClearFavorite = async () => {
@@ -847,7 +847,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                   </>
                 )}
 
-                {/* CONFIRM view — use favorite, with per-order edits */}
+                {/* CONFIRM view - use favorite, with per-order edits */}
                 {!pickerOpen && view === "confirm" && (
                   <>
                     {hasAnyIssues && (
@@ -969,7 +969,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                     </p>
                     {usingDraft.length === 0 ? (
                       <div className="text-center text-muted-foreground py-6 text-sm border border-dashed border-border rounded-xl">
-                        אין מנות בקבוע — הוסף מנה למטה.
+                        אין מנות בקבוע - הוסף מנה למטה.
                       </div>
                     ) : (
                       <EditableList
@@ -1038,11 +1038,11 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                   </>
                 )}
 
-                {/* SETUP view — build/edit the saved favorite */}
+                {/* SETUP view - build/edit the saved favorite */}
                 {!pickerOpen && view === "setup" && (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      בנה את ההזמנה הקבועה שלך — לכל מנה אפשר לבחור ירקות, מידת עשייה ותוספות.
+                      בנה את ההזמנה הקבועה שלך - לכל מנה אפשר לבחור ירקות, מידת עשייה ותוספות.
                     </p>
 
                     {draft.length === 0 ? (
@@ -1152,7 +1152,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
                 <div className="space-y-1">
                   <h3 className="font-bold text-foreground text-base">למי המנה הזאת?</h3>
                   <p className="text-xs text-muted-foreground">
-                    כדי להבדיל בין המנות בקבוע — חובה להוסיף שם למנה הנוספת ({pendingNameDish.item.name}).
+                    כדי להבדיל בין המנות בקבוע - חובה להוסיף שם למנה הנוספת ({pendingNameDish.item.name}).
                   </p>
                 </div>
                 <input

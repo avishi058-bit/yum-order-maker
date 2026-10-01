@@ -1,7 +1,7 @@
 const About = () => (
   <div className="min-h-screen bg-background py-12 px-4" dir="rtl">
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-black text-foreground mb-6">אודות — המבורגר הבקתה</h1>
+      <h1 className="text-3xl font-black text-foreground mb-6">אודות - המבורגר הבקתה</h1>
 
       <section className="space-y-5 text-foreground/90 leading-relaxed">
         <p>
@@ -23,7 +23,7 @@ const About = () => (
 
         <h2 className="text-xl font-bold text-foreground pt-2">פרטי העסק</h2>
         <ul className="list-none space-y-1">
-          <li><strong>שם העסק:</strong> המבורגר הבקתה — שלזינגר אבישי-אברהם, עוסק מורשה</li>
+          <li><strong>שם העסק:</strong> המבורגר הבקתה - שלזינגר אבישי-אברהם, עוסק מורשה</li>
           <li><strong>ח.פ / ע.מ:</strong> 213877103</li>
           <li><strong>כתובת:</strong> ערבי הנחל 22, תושיה</li>
           <li><strong>מדינה:</strong> ישראל</li>

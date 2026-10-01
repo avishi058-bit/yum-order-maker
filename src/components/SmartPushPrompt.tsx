@@ -82,7 +82,7 @@ const SmartPushPrompt = ({ open, phone, orderId, onAccept, onDismiss, inline = f
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xl">🔕</span>
-            <p className="text-sm text-foreground font-medium">רק לגבי ההזמנה שלך — בלי ספאם</p>
+            <p className="text-sm text-foreground font-medium">רק לגבי ההזמנה שלך - בלי ספאם</p>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xl">👋</span>

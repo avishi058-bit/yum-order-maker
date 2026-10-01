@@ -168,18 +168,18 @@ const AdminConsents = () => {
                     >
                       {r.action === "granted" ? "אושר" : r.action}
                     </span>
-                    <span className="text-muted-foreground">{r.customer_name || "—"}</span>
-                    <span className="text-muted-foreground">{r.phone || "—"}</span>
+                    <span className="text-muted-foreground">{r.customer_name || "-"}</span>
+                    <span className="text-muted-foreground">{r.phone || "-"}</span>
                     {r.item_ref && <span className="text-muted-foreground">🍔 {r.item_ref}</span>}
                     <span className="text-muted-foreground mr-auto">{formatDate(r.created_at)}</span>
                   </div>
                 </button>
                 {expanded === r.id && (
                   <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground space-y-1">
-                    <p>מקור: {r.source || "—"} | שיטה: {r.method || "—"} | גרסה: {r.consent_text_version || "—"}</p>
-                    <p>IP: {r.ip_address || "—"}</p>
-                    <p className="break-all">דפדפן: {r.user_agent || "—"}</p>
-                    <p>מזהה הזמנה: {r.order_id || "—"}</p>
+                    <p>מקור: {r.source || "-"} | שיטה: {r.method || "-"} | גרסה: {r.consent_text_version || "-"}</p>
+                    <p>IP: {r.ip_address || "-"}</p>
+                    <p className="break-all">דפדפן: {r.user_agent || "-"}</p>
+                    <p>מזהה הזמנה: {r.order_id || "-"}</p>
                     {r.consent_text && (
                       <p className="rounded-lg bg-secondary p-2 leading-relaxed text-foreground">
                         {r.consent_text}

@@ -16,7 +16,7 @@ const fmt = (ms: number) => {
   return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;
 };
 
-/** Clock-in/out for the employee. Shows hours only — never wages. */
+/** Clock-in/out for the employee. Shows hours only - never wages. */
 export default function ShiftClock() {
   const [open, setOpen] = useState<{ id: string; clock_in: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,7 +37,7 @@ export default function ShiftClock() {
       if (!open) {
         const { error } = await (supabase as any).from("work_shifts").insert({ employee_name: SHIFT_EMPLOYEE });
         if (error) throw error;
-        toast.success(`${SHIFT_EMPLOYEE} — נכנס למשמרת`);
+        toast.success(`${SHIFT_EMPLOYEE} - נכנס למשמרת`);
       } else {
         const { error } = await (supabase as any).from("work_shifts").update({ clock_out: new Date().toISOString() }).eq("id", open.id);
         if (error) throw error;

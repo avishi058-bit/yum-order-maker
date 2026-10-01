@@ -206,7 +206,7 @@ const Kiosk = () => {
       return [...prev, { id: item.id, menuItemId, name: item.name, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false }];
     });
     // ItemPreview already plays its own fly animation, so no extra fly here
-    // (it would double-fire). Stay on menu — no auto-open.
+    // (it would double-fire). Stay on menu - no auto-open.
   }, []);
 
   const handleCustomizerConfirm = useCallback(
@@ -232,7 +232,7 @@ const Kiosk = () => {
             next.push({
               id: `${m.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               menuItemId: m.id,
-              name: s.label ? `${m.name} — ${s.label}` : m.name,
+              name: s.label ? `${m.name} - ${s.label}` : m.name,
               price: m.price,
               quantity: s.qty,
               toppings: [],
@@ -246,7 +246,7 @@ const Kiosk = () => {
       setCustomizerItem(null);
       setEditingCartId(null);
       setCustomizerInitial(undefined);
-      // Stay on menu after add — no auto-open. Fly to cart for clear feedback.
+      // Stay on menu after add - no auto-open. Fly to cart for clear feedback.
       if (!editingCartId) flyFromCenter();
     },
     [editingCartId, flyFromCenter]
@@ -293,11 +293,11 @@ const Kiosk = () => {
 
   const handleDrinkConfirm = useCallback((item: MenuItem, selectedDrink: string) => {
     setDrinkItem(null);
-    // Add directly to cart — no second confirmation preview on kiosk.
+    // Add directly to cart - no second confirmation preview on kiosk.
     const cartItemId = `${item.id}-${selectedDrink}-${Date.now()}`;
     setCart((prev) => [
       ...prev,
-      { id: cartItemId, menuItemId: item.id, name: `${item.name} — ${selectedDrink}`, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false },
+      { id: cartItemId, menuItemId: item.id, name: `${item.name} - ${selectedDrink}`, price: item.price, quantity: 1, toppings: [], removals: [], withMeal: false },
     ]);
     flyFromCenter();
   }, [flyFromCenter]);
@@ -437,7 +437,7 @@ const Kiosk = () => {
         </Suspense>
       </div>
 
-      {/* Floating green "סיום הזמנה" button — same as website */}
+      {/* Floating green "סיום הזמנה" button - same as website */}
       {(totalItems > 0 || (pendingDonation?.amount ?? 0) > 0) && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <button
@@ -710,7 +710,7 @@ const Kiosk = () => {
         )}
       </AnimatePresence>
 
-      {/* On-screen keyboard for kiosk — auto shows on input focus */}
+      {/* On-screen keyboard for kiosk - auto shows on input focus */}
       <Suspense fallback={null}>
         <KioskKeyboard />
       </Suspense>

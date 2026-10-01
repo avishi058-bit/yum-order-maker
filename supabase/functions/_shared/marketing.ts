@@ -1,9 +1,9 @@
-// Marketing message compliance helpers — Israeli Spam Law (חוק התקשורת תיקון 40).
+// Marketing message compliance helpers - Israeli Spam Law (חוק התקשורת תיקון 40).
 //
 // Any WhatsApp/SMS/email message that qualifies as "דבר פרסומת" MUST:
 //   1. Start with the word "פרסומת" clearly visible.
 //   2. Include the sender's identity ("הבקתה").
-//   3. Include a one-click, no-login-required unsubscribe mechanism —
+//   3. Include a one-click, no-login-required unsubscribe mechanism -
 //      currently: https://yum-order-maker.lovable.app/unsubscribe?phone=<phone>
 //   4. Only be sent to customers whose `customers.marketing_consent = true`,
 //      recorded via a granted `consent_events` row.
@@ -26,7 +26,7 @@ export function buildMarketingBody(opts: {
     '',
     opts.message.trim(),
     '',
-    `— ${SENDER_NAME}`,
+    `- ${SENDER_NAME}`,
     `להסרה מרשימת התפוצה: ${unsub}`,
   ].join('\n')
 }

@@ -1,5 +1,5 @@
-// Sauce consumption check (informational only — does not affect profit).
-// Usage between counts = previous stock + purchases − current count, divided by days.
+// Sauce consumption check (informational only - does not affect profit).
+// Usage between counts = previous stock + purchases - current count, divided by days.
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ export default function SauceStockTracker() {
     <div className="rounded-xl border bg-card p-4 space-y-3" dir="rtl">
       <div>
         <h3 className="font-bold">🥫 בדיקת צריכת רטבים</h3>
-        <p className="text-xs text-muted-foreground">רשום קנייה (ק״ג) וספירת מלאי (כמה נשאר). לבדיקה בלבד — לא משפיע על הרווח.</p>
+        <p className="text-xs text-muted-foreground">רשום קנייה (ק״ג) וספירת מלאי (כמה נשאר). לבדיקה בלבד - לא משפיע על הרווח.</p>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <select className="border rounded-md p-2 bg-background" value={sauce} onChange={(e) => setSauce(e.target.value)}>
@@ -83,7 +83,7 @@ export default function SauceStockTracker() {
             </div>
             <div className="text-xs text-muted-foreground">במלאי לפי ספירה אחרונה: {Number(level).toFixed(1)} ק״ג{bought ? ` + ${bought} נקנו מאז` : ""}</div>
             {out.slice(-3).reverse().map((p) => (
-              <div key={p.from + p.to} className="text-xs">{fmt(p.from)}–{fmt(p.to)}: {p.used.toFixed(1)} ק״ג ({p.perDay.toFixed(2)} ליום)</div>
+              <div key={p.from + p.to} className="text-xs">{fmt(p.from)}-{fmt(p.to)}: {p.used.toFixed(1)} ק״ג ({p.perDay.toFixed(2)} ליום)</div>
             ))}
           </div>
         );

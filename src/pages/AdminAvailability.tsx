@@ -84,7 +84,7 @@ const AdminAvailability = () => {
     };
   }, []);
 
-  // מסנכרן מנות התלויות במרכיב שהשתנה (רקורסיבי – מרכיב יכול להיות גם מנה)
+  // מסנכרן מנות התלויות במרכיב שהשתנה (רקורסיבי - מרכיב יכול להיות גם מנה)
   const syncDependentDishes = async (
     changedItemId: string,
     currentItems: AvailabilityItem[],
@@ -164,7 +164,7 @@ const AdminAvailability = () => {
     }
   };
 
-  // מנות שבכיבוי שלהן יודעים בוודאות איזה מרכיב אזל – בלי לשאול
+  // מנות שבכיבוי שלהן יודעים בוודאות איזה מרכיב אזל - בלי לשאול
   const AUTO_MISSING_INGREDIENT: Record<string, string> = {
     "smash-double-cheese": "vegan-cheddar",
     "meal-smash-double-cheese": "vegan-cheddar",
@@ -185,7 +185,7 @@ const AdminAvailability = () => {
         return;
       }
 
-      // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים – נשאל מה חסר
+      // כיבוי ידני של מנה מורכבת בזמן שכל המרכיבים דלוקים - נשאל מה חסר
       const deps = getDishIngredients(itemId);
       const availableDeps = deps
         .map((id) => updated.find((i) => i.item_id === id))
@@ -202,7 +202,7 @@ const AdminAvailability = () => {
 
 
 
-  // ארכיון: מנות שירדו מהתפריט — מוסתרות מהמסך, ניתנות להחזרה
+  // ארכיון: מנות שירדו מהתפריט - מוסתרות מהמסך, ניתנות להחזרה
   const setArchived = async (itemId: string, archived: boolean) => {
     const base = items;
     setItems((prev) => prev.map((i) => (i.item_id === itemId ? { ...i, archived } : i)));
@@ -319,7 +319,7 @@ const AdminAvailability = () => {
 
         {archivedItems.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-muted-foreground mb-3">🗄️ ארכיון — ירד מהתפריט</h2>
+            <h2 className="text-xl font-bold text-muted-foreground mb-3">🗄️ ארכיון - ירד מהתפריט</h2>
             <div className="bg-card rounded-xl border border-dashed border-border overflow-hidden opacity-80">
               {archivedItems.map((item, i) => (
                 <div

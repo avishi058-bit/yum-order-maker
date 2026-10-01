@@ -52,7 +52,7 @@ const AdminCouriers = lazy(() => import("./pages/AdminCouriers"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000, // 1 minute — avoid refetching on every remount
+      staleTime: 60_000, // 1 minute - avoid refetching on every remount
       gcTime: 5 * 60_000,
       refetchOnWindowFocus: false, // don't refetch on every tab switch
       retry: 1,

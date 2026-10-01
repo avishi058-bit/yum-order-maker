@@ -16,7 +16,7 @@ import {
 
 /**
  * Public order tracking page. Requires both order number AND phone in the URL
- * (e.g. /track?order=123&phone=0501234567) — phone acts as the auth token.
+ * (e.g. /track?order=123&phone=0501234567) - phone acts as the auth token.
  * Data is fetched via the secure `get-order-by-token` edge function.
  */
 const OrderTracking = () => {
@@ -45,7 +45,7 @@ const OrderTracking = () => {
     };
 
     fetchOrder();
-    // Poll every 10s — realtime would expose channel access; polling is safer here
+    // Poll every 10s - realtime would expose channel access; polling is safer here
     const interval = setInterval(fetchOrder, 10000);
     return () => clearInterval(interval);
   }, [orderNumber, phone]);
@@ -229,7 +229,7 @@ const OrderTracking = () => {
           </>
         )}
 
-        {/* Waze navigation — visible on the timer screen for all live statuses */}
+        {/* Waze navigation - visible on the timer screen for all live statuses */}
         {(order.status === "new" || order.status === "preparing" || order.status === "ready") && (
           <a
             href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
@@ -242,7 +242,7 @@ const OrderTracking = () => {
           </a>
         )}
 
-        {/* Push notification opt-in — hidden when order is already done */}
+        {/* Push notification opt-in - hidden when order is already done */}
         {order.status !== "ready" && order.status !== "completed" && order.status !== "cancelled" && isPushSupported() && (
           <div className="mt-6">
             {pushState === "subscribed" ? (

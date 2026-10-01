@@ -2,7 +2,7 @@
  * get-payment-status
  * Public endpoint used by the payment confirmation screen after returning
  * from the hosted checkout page. The order UUID acts as the (unguessable)
- * token. Returns only whether the payment went through plus the order number —
+ * token. Returns only whether the payment went through plus the order number -
  * no customer PII is exposed.
  *
  * Source of truth: Z-Credit's GetSessionStatus endpoint. We ask Z-Credit

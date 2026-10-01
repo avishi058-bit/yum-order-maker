@@ -85,7 +85,7 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
             updatedAt: data.updated_at,
           });
         } else if (ageHours > MAX_AGE_HOURS) {
-          // Expired — best-effort cleanup
+          // Expired - best-effort cleanup
           await supabase.functions.invoke("manage-saved-cart", {
             body: { action: "delete", ...identityBody() },
           });
@@ -139,7 +139,7 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
 
     saveTimerRef.current = window.setTimeout(() => {
       void persistCart(cart).catch(() => {
-        // Network / persistence errors are non-fatal — local cart still works
+        // Network / persistence errors are non-fatal - local cart still works
       });
     }, SAVE_DEBOUNCE_MS);
 

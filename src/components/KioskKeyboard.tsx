@@ -11,7 +11,7 @@ import { kioskKeyboard } from "@/config/uiConfig";
  * - Numeric layout for type="tel" / "number", Hebrew otherwise
  * - Inserts characters via execCommand + native input event so React state updates
  * - Floats near the vertical center of the screen (easy to reach), fixed width
- *   per layout — see kioskKeyboard in src/config/uiConfig.ts
+ *   per layout - see kioskKeyboard in src/config/uiConfig.ts
  *
  * Usage: render <KioskKeyboard /> once at the root of the kiosk page.
  */
@@ -73,7 +73,7 @@ function insertText(el: HTMLInputElement | HTMLTextAreaElement, text: string) {
   const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
   setter?.call(el, next);
 
-  // Fire native input event — React listens for this
+  // Fire native input event - React listens for this
   el.dispatchEvent(new Event("input", { bubbles: true }));
 
   // Restore caret after the inserted text
@@ -180,7 +180,7 @@ const KioskKeyboard = () => {
       }
     };
 
-    // Keep pinning the scroll for a short window — browsers (and smooth
+    // Keep pinning the scroll for a short window - browsers (and smooth
     // scrolling) can move the view a few frames after the edit lands.
     const onScroll = () => restore();
     document.addEventListener("scroll", onScroll, true);

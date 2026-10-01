@@ -82,12 +82,12 @@ const EventsKitchenPanel = () => {
     if (isPrinterConnected()) {
       printBluetoothEventPrep(m, prep).catch((err) => {
         console.warn("[Events] BT event-prep print failed", err);
-        toast.error("שגיאה בהדפסה בלוטות׳ — חבר מחדש את המדפסת ונסה שוב");
+        toast.error("שגיאה בהדפסה בלוטות׳ - חבר מחדש את המדפסת ונסה שוב");
       });
       return;
     }
     if (printMode === "bt") {
-      toast.error("מדפסת בלוטות׳ לא מחוברת — לחץ על הדפסה ואז חבר מדפסת");
+      toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
     if (printMode === "agent") {
@@ -100,7 +100,7 @@ const EventsKitchenPanel = () => {
       return;
     }
 
-    // Browser fallback — window.print() via HTML.
+    // Browser fallback - window.print() via HTML.
     const html = buildPrepHtml(m, prep);
     const w = window.open("", "_blank", "width=520,height=800");
     if (!w) {

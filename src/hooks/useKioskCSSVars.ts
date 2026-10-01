@@ -8,9 +8,9 @@ import { useSiteSettings } from "./useSiteSettings";
  * IMPORTANT design rule (kiosk stability):
  * The body classes and viewport meta are attached ONCE on mount and detached
  * ONCE on unmount. CSS variable updates from realtime settings happen in a
- * separate effect that only writes the vars — it does NOT remove/re-add the
+ * separate effect that only writes the vars - it does NOT remove/re-add the
  * body classes (which would briefly toggle styles like overscroll, font-size,
- * touch-action and the viewport meta — visible as a flicker / "refresh" of
+ * touch-action and the viewport meta - visible as a flicker / "refresh" of
  * the welcome screen every time site_settings is updated).
  */
 export function useKioskCSSVars(enabled: boolean) {
@@ -27,7 +27,7 @@ export function useKioskCSSVars(enabled: boolean) {
 
     document.body.classList.add("kiosk-active");
 
-    // Disable browser zoom (pinch/double-tap) on the kiosk — applied once.
+    // Disable browser zoom (pinch/double-tap) on the kiosk - applied once.
     let viewportTag = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
     const originalContent = viewportTag?.content ?? "";
     if (!viewportTag) {
@@ -53,7 +53,7 @@ export function useKioskCSSVars(enabled: boolean) {
   }, [enabled]);
 
   // ── 2) Apply CSS variables + layout/zoom toggles whenever settings change.
-  //     This effect is write-only — no DOM teardown/rebuild, so realtime
+  //     This effect is write-only - no DOM teardown/rebuild, so realtime
   //     settings updates do NOT cause the kiosk welcome screen to flicker.
   useEffect(() => {
     if (!enabled || loading) return;
@@ -74,7 +74,7 @@ export function useKioskCSSVars(enabled: boolean) {
     const openHero = document.querySelector<HTMLDivElement>("[data-kiosk-hero='true']");
     if (openHero) openHero.style.height = `${settings.kiosk_image_height_px}px`;
 
-    // Update the viewport meta only — no remove/re-add.
+    // Update the viewport meta only - no remove/re-add.
     const tag = viewportRef.current.tag;
     if (tag && settings.kiosk_disable_zoom) {
       const desired =

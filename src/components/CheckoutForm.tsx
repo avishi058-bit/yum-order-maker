@@ -47,7 +47,7 @@ interface CheckoutFormProps {
     customerName: string;
     customerPhone: string;
   };
-  /** "הזמן חייל/ת" only — no food, pay just the donation (credit only). */
+  /** "הזמן חייל/ת" only - no food, pay just the donation (credit only). */
   donationOnly?: boolean;
 }
 
@@ -66,7 +66,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     try { return JSON.parse(sessionStorage.getItem(SOLDIER_PENDING_KEY) || "null") as { amount: number; termsAt: string | null } | null; } catch { return null; }
   })();
   const [soldierDonation, setSoldierDonation] = useState(() => pendingDonation?.amount ?? 0);
-  // Regulation (תקנון) approval for the soldier-fund donation — required when
+  // Regulation (תקנון) approval for the soldier-fund donation - required when
   // donating; logged server-side in consent_events via create-order.
   const [soldierTermsAt, setSoldierTermsAt] = useState<string | null>(() => pendingDonation?.termsAt ?? null);
   const total = Math.round((cartTotal + soldierDonation) * 100) / 100;
@@ -116,7 +116,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // logged-in customers (we have their saved name + phone). Otherwise we MUST
   // collect at least a name (kiosk) or name + phone (website without OTP).
   // Without this step, create-order rejects the request because customerName
-  // would be an empty string and Zod validation fails — exactly the bug that
+  // would be an empty string and Zod validation fails - exactly the bug that
   // caused "שגיאה" when tapping payment in the kiosk.
   const effectiveSkipDetails = skipDetails || isLoggedIn;
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
@@ -145,7 +145,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [invoiceSaved, setInvoiceSaved] = useState(false);
 
 
-  // Set when the server detects an identical order sent minutes ago — we ask
+  // Set when the server detects an identical order sent minutes ago - we ask
   // the customer to confirm before creating a second one.
   const [duplicateInfo, setDuplicateInfo] = useState<{ orderNumber?: number; method: "cash" | "credit" | "counter" | "paybox" } | null>(null);
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -171,7 +171,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     if (!soldierFundOn && !donationOnly) setSoldierDonation(0);
   }, [soldierFundOn, donationOnly]);
   const [termsWarning, setTermsWarning] = useState(false);
-  // Preorder scheduling — pick a future pickup time within the allowed window.
+  // Preorder scheduling - pick a future pickup time within the allowed window.
 
   const [preorderEnabled, setPreorderEnabled] = useState(false);
   const [preorderTime, setPreorderTime] = useState<string>(""); // "HH:MM" today
@@ -371,14 +371,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       return;
     }
 
-    // Cash or counter — submit order immediately (no online payment).
+    // Cash or counter - submit order immediately (no online payment).
     await submitOrder(method);
   };
 
   // Map a cart item to the create-order Edge Function payload.
   // Includes Hebrew names for removals/dealBurger removals so they're stored as-is.
   const buildServerItem = (item: CartItem) => {
-    // Keep doneness-* entries as-is — the kitchen receipt + chef summary read
+    // Keep doneness-* entries as-is - the kitchen receipt + chef summary read
     // them directly via the "doneness-" prefix. Stripping them here caused the
     // bon to always fall back to "MW" (or show nothing) regardless of choice.
     const removalNames = item.removals
@@ -387,10 +387,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // `id` may be a unique cart key like `classic-1776430479457`. Use `menuItemId` as the
     // canonical pricing id; fall back to `id` for legacy carts that don't have it.
     const menuItemId = (item as CartItem & { menuItemId?: string }).menuItemId ?? item.id;
-    // Owner name is shown on the printed receipt only — we encode it as a
+    // Owner name is shown on the printed receipt only - we encode it as a
     // sentinel-prefixed entry inside removalNames (which the receipt builder
     // already iterates over). The receipt extracts and removes it before
-    // rendering. Stored as text only — no DB schema change required.
+    // rendering. Stored as text only - no DB schema change required.
     const ownerName = (item as CartItem & { ownerName?: string }).ownerName?.trim();
     const isFavorite = !!(item as CartItem & { isFavorite?: boolean }).isFavorite;
     const removalNamesWithMeta = [
@@ -400,7 +400,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     ];
     return {
       itemId: menuItemId,
-      // Send the cart's display name (e.g. "פחית — קולה") so the kitchen sees
+      // Send the cart's display name (e.g. "פחית - קולה") so the kitchen sees
       // the selected sub-variant instead of the canonical menu name.
       nameOverride: item.name,
       quantity: item.quantity,
@@ -465,7 +465,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         freeSauces,
         soldierDonation,
         donationOnly,
-        // Regulation approval timestamp — required (server-verified) whenever
+        // Regulation approval timestamp - required (server-verified) whenever
         // soldierDonation > 0, and recorded in consent_events.
         soldierFundTermsAcceptedAt: soldierDonation > 0 ? soldierTermsAt : null,
         // Preorder pickup time (optional). ISO datetime built from today + HH:MM.
@@ -480,7 +480,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         })(),
         // Delivery order (website only). Delivery fee NOT collected here.
         deliveryRequestId: delivery?.requestId ?? null,
-        // Ownership proof — server verifies this before marking the delivery
+        // Ownership proof - server verifies this before marking the delivery
         // request completed. Without it the server won't touch the row.
         deliveryRequestClientToken: delivery?.clientToken ?? null,
         deliveryAddress: delivery?.address ?? null,
@@ -516,7 +516,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
     // Delivery request finalization now happens inside create-order server-side
-    // (validated by client_token). Client-side UPDATE is intentionally removed —
+    // (validated by client_token). Client-side UPDATE is intentionally removed -
     // anon writes on delivery_requests are blocked by RLS.
     try { sessionStorage.removeItem(SOLDIER_PENDING_KEY); } catch { /* ignore */ }
     return data as { orderId: string; orderNumber: number; total: number };
@@ -635,7 +635,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           }
           unitPrice += toppingsCost;
 
-          // Meal upgrade cost — only when upgrading a burger to a meal.
+          // Meal upgrade cost - only when upgrading a burger to a meal.
           // Items already in the "meal" category include the upgrade in their base price.
           if (item.withMeal) {
             if (shouldChargeMealUpgrade(item)) {
@@ -683,7 +683,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       }
 
       // NOTE: successUrl / cancelUrl / callbackUrl are hard-coded server-side
-      // in the create-payment edge function. Do NOT pass them from the client —
+      // in the create-payment edge function. Do NOT pass them from the client -
       // otherwise an attacker can redirect payment notifications to their own
       // server. The server enforces amount = order.total as well.
       const response = await fetch(
@@ -746,7 +746,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     } catch (error: any) {
       console.error("Order error:", error);
       if (error?.duplicate) {
-        // Same order was already received minutes ago — ask before sending again.
+        // Same order was already received minutes ago - ask before sending again.
         setDuplicateInfo({ orderNumber: error.existingOrderNumber, method });
       } else {
         toast({ title: error.message || "שגיאה בשליחת ההזמנה, נסה שוב", variant: "destructive" });
@@ -760,7 +760,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const availablePaymentMethods = {
     cash: !donationOnly && (isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled),
     credit: isKiosk ? restaurantStatus.kiosk_credit_enabled : restaurantStatus.credit_enabled,
-    // Paybox — kiosk only, controlled by its own kitchen toggle.
+    // Paybox - kiosk only, controlled by its own kitchen toggle.
     paybox: !donationOnly && isKiosk && restaurantStatus.kiosk_paybox_enabled,
   };
 
@@ -1043,13 +1043,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             />}
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
-            {/* 🛵 Delivery notice — website only, when this is a delivery order */}
+            {/* 🛵 Delivery notice - website only, when this is a delivery order */}
             {delivery && (
               <div className="rounded-xl border-2 border-yellow-500/60 bg-yellow-500/10 p-4 space-y-3">
                 <div className="text-sm text-foreground leading-relaxed">
-                  <div className="font-black text-base mb-1">🛵 שים לב — הזמנת משלוח</div>
+                  <div className="font-black text-base mb-1">🛵 שים לב - הזמנת משלוח</div>
                   באתר זה אתה משלם רק על ההזמנה.<br />
-                  את דמי המשלוח (<b>{delivery.fee}₪</b> — {delivery.zoneName}) משלמים <b>ישירות לשליח</b> בעת קבלת ההזמנה.<br />
+                  את דמי המשלוח (<b>{delivery.fee}₪</b> - {delivery.zoneName}) משלמים <b>ישירות לשליח</b> בעת קבלת ההזמנה.<br />
                   ניתן לשלם לשליח באמצעות <b>Bit</b> או במזומן בלבד.
                 </div>
                 <div className={`text-xs ${th.textMuted}`}>
@@ -1070,7 +1070,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             )}
 
 
-            {/* 🕒 Preorder — schedule pickup for later within the allowed window */}
+            {/* 🕒 Preorder - schedule pickup for later within the allowed window */}
             {restaurantStatus.preorder_enabled && (() => {
               const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
               const end = (restaurantStatus.preorder_end_time || "22:00").slice(0, 5);
@@ -1096,7 +1096,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                         onChange={(e) => setPreorderTime(e.target.value)}
                         className="bg-secondary border border-border rounded px-3 py-2 text-foreground"
                       />
-                      <span className={`text-xs ${th.textMuted}`}>({start}–{end})</span>
+                      <span className={`text-xs ${th.textMuted}`}>({start}-{end})</span>
                     </div>
                   )}
                 </div>
@@ -1105,7 +1105,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
 
-            {/* Required terms acceptance — gates both payment buttons */}
+            {/* Required terms acceptance - gates both payment buttons */}
             <label
               className={`flex items-start gap-3 rounded-xl border-2 transition-colors cursor-pointer select-none ${
                 isKiosk ? "p-5" : "p-4"
@@ -1151,7 +1151,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </span>
             </label>
 
-            {/* Cloudflare Turnstile — anti-bot verification before payment */}
+            {/* Cloudflare Turnstile - anti-bot verification before payment */}
             {!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && (
               <div className="rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2">
                 <p className={`text-sm font-bold ${th.textMain}`}>אימות אבטחה</p>
@@ -1259,7 +1259,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
 
 
-              {/* Website cash payment — order goes to the kitchen right away and the
+              {/* Website cash payment - order goes to the kitchen right away and the
                   customer pays in person. Controlled by the website cash toggle. */}
               {!isKiosk && RUNTIME_FLAGS.ENABLE_PAY_AT_COUNTER && availablePaymentMethods.cash && (
                 <motion.button
@@ -1315,7 +1315,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
             </div>
 
-            {/* 🧾 Invoice by email — kiosk only, collected BEFORE payment.
+            {/* 🧾 Invoice by email - kiosk only, collected BEFORE payment.
                 Sent automatically after a successful card charge. */}
             {isKiosk && availablePaymentMethods.credit && (
               <div className="mt-2">
@@ -1325,7 +1325,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     onClick={() => setInvoiceOpen(true)}
                     className="w-full rounded-2xl border-4 border-green-500 bg-green-50 py-4 text-2xl font-black text-green-700 active:scale-95 transition-transform"
                   >
-                    ✅ חשבונית תישלח למייל — לחצו לעריכה
+                    ✅ חשבונית תישלח למייל - לחצו לעריכה
                   </button>
                 ) : !invoiceOpen ? (
                   <button
@@ -1358,7 +1358,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                         כתובת המייל אינה תקינה
                       </p>
                     )}
-                    <p className="text-lg font-bold text-gray-900">לכבוד (לא חובה — ברירת מחדל: שם ההזמנה)</p>
+                    <p className="text-lg font-bold text-gray-900">לכבוד (לא חובה - ברירת מחדל: שם ההזמנה)</p>
                     <input
                       type="text"
                       value={invoiceName}
@@ -1452,11 +1452,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       )}
 
 
-      {/* Terms + Privacy modals — rendered inside the checkout overlay so they stack above it */}
+      {/* Terms + Privacy modals - rendered inside the checkout overlay so they stack above it */}
       <TermsModal open={termsModalOpen} onClose={() => setTermsModalOpen(false)} isKiosk={isKiosk} />
       <PrivacyModal open={privacyModalOpen} onClose={() => setPrivacyModalOpen(false)} isKiosk={isKiosk} />
 
-      {/* Save-as-favorite prompt — appears AFTER customer details, BEFORE payment.
+      {/* Save-as-favorite prompt - appears AFTER customer details, BEFORE payment.
           Logged-in customers without a saved favorite get one chance to save the
           dishes they're about to order as their "regular". */}
       <SaveAsFavoriteModal
@@ -1469,7 +1469,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         }}
       />
 
-      {/* Paybox acknowledgement — the customer must confirm they transfer the
+      {/* Paybox acknowledgement - the customer must confirm they transfer the
           money now and show the confirmation screenshot to the cashier. */}
       {payboxConfirmOpen && (
         <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4" dir="rtl">
@@ -1494,7 +1494,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 }}
                 className={`w-full rounded-xl bg-primary text-primary-foreground font-black disabled:opacity-60 ${isKiosk ? "py-5 text-2xl" : "py-3"}`}
               >
-                מאשר/ת — שולח הזמנה ✅
+                מאשר/ת - שולח הזמנה ✅
               </button>
               <button
                 type="button"
@@ -1508,7 +1508,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         </div>
       )}
 
-      {/* Duplicate-order confirmation — prevents accidentally ordering twice */}
+      {/* Duplicate-order confirmation - prevents accidentally ordering twice */}
       {duplicateInfo && (
         <div className="fixed inset-0 z-[10050] flex items-center justify-center p-4" dir="rtl">
           <div className="absolute inset-0 bg-black/70" onClick={() => setDuplicateInfo(null)} />

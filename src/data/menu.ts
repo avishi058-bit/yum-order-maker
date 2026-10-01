@@ -3,7 +3,7 @@
 //   supabase/functions/_shared/menu-pricing.ts
 // This file overlays UI-only metadata (description, image, badge, etc.)
 // on top of those bare records. To add/remove an item or option, edit the
-// shared pricing file ONCE — both the frontend and the order server pick it up.
+// shared pricing file ONCE - both the frontend and the order server pick it up.
 
 import {
   MENU_ITEMS_PRICING,
@@ -89,10 +89,10 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "beer-regular": { description: "קלסטברג, גולדסטאר, הייניקן, קורונה, סטלה" },
   "beer-premium": { description: "הוגרדן, לאף, גולסטאר אנפילטר, פאולנר" },
   "beer-weiss": { description: "בירת חיטה גרמנית" },
-  "beer-shapira": { description: "בירת קראפט ירושלמית — Pale Ale 5%" },
+  "beer-shapira": { description: "בירת קראפט ירושלמית - Pale Ale 5%" },
   "beer-maccabi": { description: "בירת לאגר חזקה 7.9%" },
   "fuze-tea": { description: "תה קרח פיוז טי" },
-  "terminal-test": { description: "מוצר זמני לבדיקת סליקה — 10 אגורות" },
+  "terminal-test": { description: "מוצר זמני לבדיקת סליקה - 10 אגורות" },
 
   "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
   "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
@@ -135,7 +135,7 @@ export const smashModifications: Removal[] = [
   { id: "add-onion", name: "להוסיף בצל" },
 ];
 
-/** Ingredient checklist model — replaces the old removal radio buttons.
+/** Ingredient checklist model - replaces the old removal radio buttons.
  *  Each ingredient has a default ON/OFF state per burger type.
  *  The customer toggles ingredients on/off; we convert to removals/additions at submit. */
 export interface Ingredient {

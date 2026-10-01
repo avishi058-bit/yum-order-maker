@@ -81,7 +81,7 @@ const EventsKitchen = () => {
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">🎉 הזמנות אירועים — מטבח</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">🎉 הזמנות אירועים - מטבח</h1>
             <p className="text-sm text-muted-foreground">חישוב אוטומטי של חומרי גלם והדפסת בון הכנות</p>
           </div>
           <a href="/kitchen" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">

@@ -21,7 +21,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKi
   const [sauces, setSauces] = useState<Record<string, number>>({});
 
   // Split premium (priced) sauces from regular ones. Premium sauces never
-  // consume the free-sauce quota — they always cost their fixed price.
+  // consume the free-sauce quota - they always cost their fixed price.
   const isPremium = (id: string) => {
     const s = sauceOptions.find((x) => x.id === id);
     return !!(s && typeof s.price === "number" && s.price > 0);
@@ -114,7 +114,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKi
                   <span className={textMain}> · תוספת: <span className="text-primary font-bold">₪{extraCost}</span></span>
                 )}
               </p>
-              <p className={`text-xs ${textMuted} mt-1`}>כל רוטב מעבר ל-{freeSauces} — ₪1</p>
+              <p className={`text-xs ${textMuted} mt-1`}>כל רוטב מעבר ל-{freeSauces} - ₪1</p>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -197,7 +197,7 @@ const SauceSelector = ({ open, freeSauces, onClose, onConfirm, isAvailable, isKi
                 onClick={() => { onConfirm([]); setSauces({}); }}
                 className={`w-full ${skipText} text-sm py-2`}
               >
-                דלג — לא צריך רטבים בצד
+                דלג - לא צריך רטבים בצד
               </button>
             </div>
           </motion.div>

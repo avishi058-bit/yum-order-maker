@@ -5,7 +5,7 @@ interface WazeIconProps {
 
 /**
  * Waze brand mark. Uses the official cyan (#33CCFF) fill by default via
- * currentColor — set `text-white` (or any color) on the parent to override.
+ * currentColor - set `text-white` (or any color) on the parent to override.
  */
 export const WazeIcon = ({ size = 20, className = "" }: WazeIconProps) => (
   <svg

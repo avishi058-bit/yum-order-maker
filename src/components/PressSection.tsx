@@ -61,9 +61,9 @@ const ITEMS: PressItem[] = [
   },
   {
     outlet: "דרום אדום · הבשור",
-    title: "המבורגר הבקתה — המבורגר בוטיק באווירה כפרית",
+    title: "המבורגר הבקתה - המבורגר בוטיק באווירה כפרית",
     description:
-      "עמוד המקום באתר התיירות הרשמי של הבשור–דרום אדום, המתאר את הבקתה כהמבורגר בוטיק באווירה כפרית עם ישיבה בחוץ.",
+      "עמוד המקום באתר התיירות הרשמי של הבשור-דרום אדום, המתאר את הבקתה כהמבורגר בוטיק באווירה כפרית עם ישיבה בחוץ.",
     url: "https://dev.habsor.co.il/?p=26324",
     cta: "לעמוד המלא",
   },
@@ -142,7 +142,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Restaurant",
-  name: "הבקתה — המבורגר של מושבניקים",
+  name: "הבקתה - המבורגר של מושבניקים",
   subjectOf: [
     { "@type": "VideoObject", name: "אבישי שלזינגר - המבורגר הבקתה - מתארח בערוץ 13", url: VIDEO_URL },
     ...ITEMS.map((i) => ({
@@ -162,12 +162,12 @@ const PressSection = () => {
         <header className="text-center max-w-3xl mx-auto mb-8">
           <h2 id="press-heading" className="text-3xl md:text-4xl font-black mb-3">כתבו עלינו</h2>
           <p className="text-muted-foreground leading-relaxed">
-            מהטלוויזיה והעיתונות ועד אתרי האוכל והתיירות — לאורך השנים הגיעו לבקתה כתבים, מבקרי אוכל וגופי תקשורת
+            מהטלוויזיה והעיתונות ועד אתרי האוכל והתיירות - לאורך השנים הגיעו לבקתה כתבים, מבקרי אוכל וגופי תקשורת
             שסיפרו על ההמבורגר, האנשים, האווירה והסיפור שלנו בעוטף.
           </p>
         </header>
 
-        {/* Media wall — mobile: smooth snap carousel with edge fades; desktop: centered wrap */}
+        {/* Media wall - mobile: smooth snap carousel with edge fades; desktop: centered wrap */}
         <div className="relative mb-10">
           <div
             className="pointer-events-none absolute inset-y-0 right-0 w-10 z-10 md:hidden bg-gradient-to-l from-background to-transparent"
@@ -241,7 +241,7 @@ const PressSection = () => {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`${item.title} — ${item.outlet} (נפתח בחלון חדש)`}
+                  aria-label={`${item.title} - ${item.outlet} (נפתח בחלון חדש)`}
                   className="hover:underline"
                 >
                   {item.title}

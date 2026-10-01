@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 /**
  * Captures the Android `beforeinstallprompt` event so we can trigger the
  * native install prompt on demand (e.g. when the user taps our install button).
- * iOS Safari doesn't fire this event — callers should fall back to showing
+ * iOS Safari doesn't fire this event - callers should fall back to showing
  * the manual "Add to Home Screen" instructions.
  */
 export const useInstallPrompt = () => {

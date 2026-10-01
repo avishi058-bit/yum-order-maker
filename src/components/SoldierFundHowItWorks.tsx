@@ -1,4 +1,4 @@
-// "הזמן חייל/ת" — dialog: how it works + donor regulation (תקנון) and,
+// "הזמן חייל/ת" - dialog: how it works + donor regulation (תקנון) and,
 // from the entry page, a direct donation picker.
 // Rendered as its own full-screen layer (very high z-index) so it always
 // opens ABOVE the checkout window. Approval is logged server-side through
@@ -60,7 +60,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
   const approve = (v: boolean) => {
     setChecked(v);
     onApprove(v);
-    // At checkout (no donate picker) approving is the only step — close right away.
+    // At checkout (no donate picker) approving is the only step - close right away.
     if (v && !donate) onOpenChange(false);
   };
   const pick = (v: number) => { setCustom(""); setAmount(amount === v ? 0 : v); };
@@ -95,7 +95,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
         </button>
         <h2 className={`${isKiosk ? "text-5xl" : "text-3xl"} font-black text-center`}>🫡 הזמן חייל/ת</h2>
 
-        {/* צעדים גדולים ושיווקיים — בלי כיתוב מיותר */}
+        {/* צעדים גדולים ושיווקיים - בלי כיתוב מיותר */}
         <div className="py-3 text-center space-y-1">
           {[
             "בוחרים סכום",
@@ -148,7 +148,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
           />
           <span>
             {SOLDIER_FUND_APPROVAL_TEXT}
-            {!isApproved && <span className="text-destructive font-bold"> — חובה</span>}
+            {!isApproved && <span className="text-destructive font-bold"> - חובה</span>}
           </span>
         </label>
 
@@ -188,7 +188,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
               onClick={() => donate.onDonateOnly(amount)}
               className="w-full py-3 rounded-full font-black text-lg border-2 border-primary text-primary disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              רק 'הזמן חייל/ת' — לתשלום ₪{amount || 0} 💳
+              רק 'הזמן חייל/ת' - לתשלום ₪{amount || 0} 💳
             </button>
           </div>
         ) : (

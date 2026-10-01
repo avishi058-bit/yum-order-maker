@@ -39,14 +39,14 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Tapping a card only OPENS the item flow (preview / customizer).
-  // No "added to cart" feedback here — the confirmation animation belongs to
+  // No "added to cart" feedback here - the confirmation animation belongs to
   // the actual add action inside the preview/customizer modal.
   const handleAdd = () => {
     if (browseOnly) return;
     onAdd(item);
   };
 
-  // Fixed kiosk card height — locks every row to identical dimensions so no
+  // Fixed kiosk card height - locks every row to identical dimensions so no
   // card can grow/shrink based on text length, font load, or image presence.
   // This is the root cause of scroll "jumping" when scrolling through smash
   // burgers (longer descriptions wrap differently than shorter items).
@@ -114,9 +114,9 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
         <span className="text-primary font-bold" style={{ fontSize: `${(isKiosk ? 24 : 18) * fontScale}px` }}>₪{item.price}</span>
       </div>
 
-      {/* Image — kiosk size is admin-controlled via CSS var.
+      {/* Image - kiosk size is admin-controlled via CSS var.
           Container ALWAYS renders with FIXED dimensions (even when no image
-          exists) so every card in the list has the same height — eliminates
+          exists) so every card in the list has the same height - eliminates
           scroll jump caused by some items having images and others not. */}
       <div
         className={`relative flex-shrink-0 ${isKiosk ? "" : "w-28 h-28"}`}
@@ -139,7 +139,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
               // High fetch priority on kiosk so images aren't deprioritized
               // behind fonts / chunks when the menu first paints.
               {...(isKiosk ? { fetchpriority: "high" as const } : {})}
-              // Stale PWA/browser caches can hold a dead asset URL — retry once
+              // Stale PWA/browser caches can hold a dead asset URL - retry once
               // with a cache-busting query before giving up.
               onError={(e) => {
                 const el = e.currentTarget;
@@ -183,7 +183,7 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
 };
 
 /**
- * Kiosk tile — the chosen direction: a square card whose photo fills the tile
+ * Kiosk tile - the chosen direction: a square card whose photo fills the tile
  * width, the item name in bold under the photo, the dish's ingredients in
  * smaller (but still readable) text under the name, and the price + a "+"
  * affordance pinned to the bottom of the card.
@@ -223,7 +223,7 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
             loading="eager"
             decoding="sync"
             {...{ fetchpriority: "high" as const }}
-            // Stale PWA/browser caches can hold a dead asset URL — retry once
+            // Stale PWA/browser caches can hold a dead asset URL - retry once
             // with a cache-busting query before giving up.
             onError={(e) => {
               const el = e.currentTarget;
@@ -238,7 +238,7 @@ const KioskTile = ({ item, onAdd, fontScale = 1, nameOverride, descOverride, bro
           </span>
         )}
 
-        {/* Status tags — kept small so they never compete with the photo */}
+        {/* Status tags - kept small so they never compete with the photo */}
         <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
           {item.special && (
             <span className="inline-flex items-center gap-1 bg-foreground text-background text-xs font-bold px-2.5 py-1 rounded-full">
@@ -329,7 +329,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
   }, [activeCategory]);
 
   // Intersection observer for auto-highlighting active category.
-  // Debounced via rAF + timeout so state updates don't fire mid-scroll —
+  // Debounced via rAF + timeout so state updates don't fire mid-scroll -
   // setState during scroll forces React to reconcile the sticky tab bar
   // and was causing visible scroll "jumps" between menu sections.
   useEffect(() => {
@@ -413,7 +413,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
       {/* Dine-in / Takeaway toggle removed from kiosk - now at end of flow */}
 
       {/* Sticky category tabs - kiosk + website (different sizing).
-          NOTE: backdrop-blur removed — it caused per-frame re-sampling of the
+          NOTE: backdrop-blur removed - it caused per-frame re-sampling of the
           scrolling content underneath, producing jitter on the kiosk. Solid
           background is cheaper and visually equivalent here. */}
       <div

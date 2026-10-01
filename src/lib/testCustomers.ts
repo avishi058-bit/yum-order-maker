@@ -1,4 +1,4 @@
-// Customers/orders used for internal testing — excluded from all statistics & reports.
+// Customers/orders used for internal testing - excluded from all statistics & reports.
 const EXCLUDED_NAME_PATTERNS = [
   "טסט",
   "test",

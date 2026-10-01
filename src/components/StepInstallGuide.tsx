@@ -55,7 +55,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
           title: "לחצו על כפתור השיתוף",
           body: (
             <p>
-              בסרגל התחתון של Safari — האייקון של <b>ריבוע עם חץ למעלה</b>{" "}
+              בסרגל התחתון של Safari - האייקון של <b>ריבוע עם חץ למעלה</b>{" "}
               <Share className="inline text-primary -mt-1" size={18} />
             </p>
           ),
@@ -68,7 +68,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
             <p>
               גללו כלפי מטה בתפריט עד שתראו את השורה{" "}
               <b>"הוספה למסך הבית"</b>{" "}
-              <Plus className="inline text-primary -mt-1" size={16} /> — ולחצו עליה
+              <Plus className="inline text-primary -mt-1" size={16} /> - ולחצו עליה
             </p>
           ),
           icon: <ArrowDown size={40} />,
@@ -78,7 +78,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
           title: 'לחצו "הוסף" בפינה',
           body: (
             <p>
-              יופיע חלון בשם <b>"הבקתה"</b>. לחצו על <b>"הוסף"</b> בפינה הימנית העליונה — וזהו! 🎉
+              יופיע חלון בשם <b>"הבקתה"</b>. לחצו על <b>"הוסף"</b> בפינה הימנית העליונה - וזהו! 🎉
             </p>
           ),
           icon: <CheckCircle2 size={40} className="text-green-600" />,
@@ -94,7 +94,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
           body: (
             <div className="space-y-3">
               <p>
-                באייפון, כדי להוסיף אפליקציה למסך הבית — צריך <b>דפדפן Safari</b>{" "}
+                באייפון, כדי להוסיף אפליקציה למסך הבית - צריך <b>דפדפן Safari</b>{" "}
                 (הדפדפן הכחול עם המצפן 🧭), לא Chrome.
               </p>
               <button
@@ -150,7 +150,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
           title: 'בחרו "התקן אפליקציה"',
           body: (
             <p>
-              בתפריט חפשו <b>"התקן אפליקציה"</b> או <b>"הוסף למסך הבית"</b> — לחצו על השורה
+              בתפריט חפשו <b>"התקן אפליקציה"</b> או <b>"הוסף למסך הבית"</b> - לחצו על השורה
             </p>
           ),
           icon: <Download size={40} />,
@@ -158,7 +158,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
         },
         {
           title: "אשרו את ההתקנה",
-          body: <p>לחצו <b>"התקן"</b> בחלון שיקפוץ — האייקון יופיע במסך הבית 🎉</p>,
+          body: <p>לחצו <b>"התקן"</b> בחלון שיקפוץ - האייקון יופיע במסך הבית 🎉</p>,
           icon: <CheckCircle2 size={40} className="text-green-600" />,
           hint: "none",
         },
@@ -170,7 +170,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
         title: "פתחו את האתר בטלפון",
         body: (
           <p>
-            כדי להתקין את הבקתה כאפליקציה במסך הבית — פתחו את האתר{" "}
+            כדי להתקין את הבקתה כאפליקציה במסך הבית - פתחו את האתר{" "}
             <b>{typeof window !== "undefined" ? window.location.host : ""}</b> בטלפון
             (אייפון או אנדרואיד).
           </p>
@@ -281,7 +281,7 @@ const StepInstallGuide = ({ onDone, onClose }: Props) => {
           ))}
           <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 text-center">
             <p className="text-xs font-bold text-foreground">
-              💡 טיפ: תפריט השיתוף מכסה את המסך — לכן כל השלבים כאן ביחד, אין צורך לחזור לאתר בין לבין
+              💡 טיפ: תפריט השיתוף מכסה את המסך - לכן כל השלבים כאן ביחד, אין צורך לחזור לאתר בין לבין
             </p>
           </div>
         </div>

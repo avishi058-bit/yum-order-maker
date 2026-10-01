@@ -71,14 +71,14 @@ const PostInstallPermissionModal = () => {
       setOpen(true);
     };
 
-    // Case 1: Android — listen for installation event
+    // Case 1: Android - listen for installation event
     const onInstalled = () => {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
       setTimeout(() => maybeShow("install", true), 1500);
     };
     window.addEventListener("appinstalled", onInstalled);
 
-    // Case 2: iOS / already installed — opened via home-screen icon
+    // Case 2: iOS / already installed - opened via home-screen icon
     if (isStandalone()) {
       try { localStorage.setItem(INSTALLED_KEY, "1"); } catch {}
       setTimeout(() => maybeShow("install"), 1200);
@@ -88,7 +88,7 @@ const PostInstallPermissionModal = () => {
     const onRequest = () => maybeShow("order", true);
     window.addEventListener("request-notify-permission", onRequest);
 
-    // Case 4: app re-focused / tab visible again — nudge again if still default
+    // Case 4: app re-focused / tab visible again - nudge again if still default
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
       if (isStandalone()) maybeShow("install");
@@ -109,7 +109,7 @@ const PostInstallPermissionModal = () => {
 
   const dismiss = (markSeen = true) => {
     if (markSeen) {
-      // Soft dismiss — only set a cooldown timestamp, do NOT lock permanently.
+      // Soft dismiss - only set a cooldown timestamp, do NOT lock permanently.
       // We'll keep nudging until the user actually grants/denies permission.
       try { localStorage.setItem(DISMISSED_AT_KEY, String(Date.now())); } catch {}
     }
@@ -133,13 +133,13 @@ const PostInstallPermissionModal = () => {
         } catch {}
       }
     } catch {}
-    // Lock-in once user has actually responded to the OS prompt (granted OR denied) — stop nudging.
+    // Lock-in once user has actually responded to the OS prompt (granted OR denied) - stop nudging.
     try {
       if (typeof Notification !== "undefined" && Notification.permission !== "default") {
         localStorage.setItem(SEEN_KEY, "1");
       }
     } catch {}
-    // After permission flow — if not installed yet, explain why to add to home screen
+    // After permission flow - if not installed yet, explain why to add to home screen
     if (!isStandalone()) {
       if (isIos()) {
         // On iOS: open the install instructions modal directly (it contains the why explanation)
@@ -159,7 +159,7 @@ const PostInstallPermissionModal = () => {
     if (result === "accepted" || result === "dismissed") {
       dismiss(true);
     } else {
-      // Native prompt unavailable — keep modal open with the explanation
+      // Native prompt unavailable - keep modal open with the explanation
       dismiss(true);
     }
   };
@@ -224,7 +224,7 @@ const PostInstallPermissionModal = () => {
                       <span className="font-bold">עוברת להכנה ומוכנה לאיסוף ⏱️</span>
                       <br />
                       <span className="text-muted-foreground text-xs">
-                        גם אם תסגור את הדפדפן — נשלח לך התראה
+                        גם אם תסגור את הדפדפן - נשלח לך התראה
                       </span>
                     </>
                   ) : (
@@ -284,11 +284,11 @@ const PostInstallPermissionModal = () => {
                     הוסף את <b>הבקתה</b> למסך הבית של הטלפון 🏠✨
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    ככה ההתראה תקפוץ אצלך גם כשהדפדפן סגור — ותדע בדיוק
+                    ככה ההתראה תקפוץ אצלך גם כשהדפדפן סגור - ותדע בדיוק
                     מתי ההמבורגר חם ומוכן לאיסוף 🍔🔔
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    בלי האייקון במסך הבית — חלק מהטלפונים (במיוחד אייפון)
+                    בלי האייקון במסך הבית - חלק מהטלפונים (במיוחד אייפון)
                     פשוט לא יקפיצו לך התראה ⚠️
                   </p>
                 </div>

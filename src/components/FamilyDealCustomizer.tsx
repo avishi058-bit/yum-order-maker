@@ -341,7 +341,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                         תוספות למנה ה{["ראשונה", "שנייה", "שלישית", "רביעית", "חמישית"][currentBurgerIndex]}
                       </h3>
                       <p className="text-sm text-muted-foreground text-right mb-4">
-                        אופציונלי — בתשלום נוסף על מחיר הדיל
+                        אופציונלי - בתשלום נוסף על מחיר הדיל
                       </p>
                       <div className="space-y-0">
                         {allToppings.map((t) => {
@@ -438,7 +438,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                           onClick={() => setDrinkCount((c) => Math.max(1, c - 1))}
                           className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl font-bold"
                         >
-                          −
+                          -
                         </button>
                         <span className="text-3xl font-bold text-primary">{drinkCount}</span>
                         <button

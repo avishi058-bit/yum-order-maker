@@ -23,7 +23,7 @@ export const unavailableVeggieHebrew = (): Set<string> => {
   return out;
 };
 
-// Burger/meal item names — used to decide whether to print "ללא שינויים" when
+// Burger/meal item names - used to decide whether to print "ללא שינויים" when
 // the item has no removals, no additions and no toppings.
 const BURGER_ITEM_NAMES: Set<string> = (() => {
   const s = new Set<string>();
@@ -42,19 +42,19 @@ export const isBurgerItemName = (name: string | undefined | null): boolean =>
 //     - "סמאש" / "קרייזי"         → smash
 //     - any other meat burger     → +1 regular
 //   Topping "אקסטרה קציצה" → +1 regular patty (per the burger's category;
-//     for חף מפשע we still treat it as regular meat — that's a customer
+//     for חף מפשע we still treat it as regular meat - that's a customer
 //     decision, no auto-promotion to vegan).
 //   Egg ("ביצת עין"): +1 per topping; "אבישי" includes one
 //   Roastbeef: +1 per topping; "אבישי" includes one
 //   Buns: +1 per main item (kept regular by default, GF swap if requested).
 //
-// FRIED ITEMS (split by source — never merge):
+// FRIED ITEMS (split by source - never merge):
 //   - Standalone sides → counted by quantity
 //   - Meal side       → the chosen side (default fries if missing)
 //   - Friends-mix     → single un-split line
 //   - Special-Hadegel → auto +2 of tempuraOnionSide for every burger ordered
 //                       (the recipe ships with 2 tempura rings on top, but the
-//                        chef preps them as a side portion — listed separately).
+//                        chef preps them as a side portion - listed separately).
 //   - Topping "שלושה רינג בצל בטמפורה" (לשעבר "שלוש טבעות בצל ביתיות") → tempuraOnionTopping (separate counter)
 //
 // SAUCES: read from a synthetic "רטבים" order_item line.
@@ -81,9 +81,9 @@ export interface ReceiptOrderItem {
 
 export interface ReceiptOrder {
   order_number: number;
-  /** Position in today's preparation queue — assigned when the order is marked paid. */
+  /** Position in today's preparation queue - assigned when the order is marked paid. */
   queue_number?: number | null;
-  /** Daily sequential number assigned at order creation — printed on the bon. */
+  /** Daily sequential number assigned at order creation - printed on the bon. */
   bon_queue_number?: number | null;
   customer_name: string;
   customer_phone: string;
@@ -97,17 +97,17 @@ export interface ReceiptOrder {
 }
 
 export interface ChefSummary {
-  // Patties — split by type
+  // Patties - split by type
   regularPatties: number;
   smashPatties: number;
-  smashDoubleCheesePatties: number; // מתוך הסמאש — כמה מהם סמאש דאבל צ׳יז
+  smashDoubleCheesePatties: number; // מתוך הסמאש - כמה מהם סמאש דאבל צ׳יז
   veganPatties: number;
-  chickenFillets: number; // קריספי צ׳יקן — חזה עוף בציפוי
+  chickenFillets: number; // קריספי צ׳יקן - חזה עוף בציפוי
   // Built-in extras
   eggs: number;
   roastbeef: number;
   cheddarSlices: number;   // פרוסות צ׳דר טבעוני שנוספו כתוספת (סה"כ)
-  /** פירוט הצ׳דר לפי סוג הקציצה שעליה הוא נוסף — "קציצה רגילה" / "סמאש" / "קציצה טבעונית" / "קריספי צ׳יקן" */
+  /** פירוט הצ׳דר לפי סוג הקציצה שעליה הוא נוסף - "קציצה רגילה" / "סמאש" / "קציצה טבעונית" / "קריספי צ׳יקן" */
   cheddarByPatty: Map<string, number>;
   blueCheese: number;      // גבינה כחולה טבעונית שנוספה כתוספת
   // Buns
@@ -120,9 +120,9 @@ export interface ChefSummary {
   tempuraOnionSide: number;    //טבעות בצל בטמפורה (מנה בצד / שדרוג ציפס לטבעות בצל בארוחה עסקית)
   tempuraOnionTopping: number; //טבעות בצל בטמפורה ביחידות (טופינג שלוש טבעות + 2 טבעות מתוך ספיישל הדגל)
   friendsMix: number;
-  // Arayes — total quarters to prepare (3 per ספיישל עראיס, 4 per ספיישל 4 רבעים, +1 per topping "רבע עראיס נוסף")
+  // Arayes - total quarters to prepare (3 per ספיישל עראיס, 4 per ספיישל 4 רבעים, +1 per topping "רבע עראיס נוסף")
   arayesQuarters: number;
-  // Sauces — aggregated by name
+  // Sauces - aggregated by name
   sauces: Map<string, number>;
 }
 
@@ -131,7 +131,7 @@ export interface ChefSummary {
 
 const isSmashName = (name: string): boolean => /סמאש|קרייזי/.test(name);
 
-// סמאש דאבל צ׳יז — תת-סוג של סמאש, נספר בנפרד בכמויות לטבח
+// סמאש דאבל צ׳יז - תת-סוג של סמאש, נספר בנפרד בכמויות לטבח
 const isSmashDoubleCheeseName = (name: string): boolean =>
   isSmashName(name) && /דאבל\s*צ[׳'’]?\s*יז|double[-\s]?cheese/i.test(name);
 
@@ -140,7 +140,7 @@ const isDoubleName = (name: string): boolean => /כפולה/.test(name);
 const isVeganBurgerName = (name: string): boolean =>
   /חף\s*מפשע|haf[-\s]?mifsha/i.test(name);
 
-// קריספי צ׳יקן — חזה עוף, לא קציצת בקר ואין לו מידת עשייה
+// קריספי צ׳יקן - חזה עוף, לא קציצת בקר ואין לו מידת עשייה
 const isCrispyChickenName = (name: string): boolean =>
   /קריספי\s*צ׳?\'?יקן|crispy[-\s]?chicken/i.test(name);
 
@@ -149,7 +149,7 @@ const isAvishai = (name: string): boolean => /אבישי|שחוט לי פרה/.t
 
 const isFriendsMix = (name: string): boolean => /מיקס\s*חברים/.test(name);
 
-/** תווית סוג הקציצה של מנה — משמשת לפירוט הצ׳דר בסיכום לטבח. */
+/** תווית סוג הקציצה של מנה - משמשת לפירוט הצ׳דר בסיכום לטבח. */
 const pattyLabelForName = (name: string): string => {
   const n = String(name || "");
   if (isCrispyChickenName(n)) return "קריספי צ׳יקן";
@@ -181,7 +181,7 @@ const printableToppings = (toppings: string[] | null | undefined): string[] =>
 
 const isPattyTopping = (t: string): boolean => /קציצ/.test(String(t || ""));
 
-// שם התוספת בצד הלקוח הוא "+ זוג קציצות סמאש (220)" — במטבח ובבון נשאר השם הישן.
+// שם התוספת בצד הלקוח הוא "+ זוג קציצות סמאש (220)" - במטבח ובבון נשאר השם הישן.
 const kitchenToppingName = (s: string): string =>
   String(s || "").replace(/\+?\s*זוג קציצות סמאש(?:\s*\(220\))?/g, "קציצת סמאש");
 
@@ -222,9 +222,9 @@ const detectFried = (name: string): FriedKind => {
 const OWNER_PREFIX = "__OWNER__:";
 const DONENESS_PREFIX = "doneness-";
 const DONENESS_LABELS: Record<string, string> = {
-  "doneness-m": "M — מדיום",
-  "doneness-mw": "MW — מדיום וואל",
-  "doneness-wd": "WD — וואל דאן",
+  "doneness-m": "M - מדיום",
+  "doneness-mw": "MW - מדיום וואל",
+  "doneness-wd": "WD - וואל דאן",
 };
 const FAVORITE_MARKER = "__FAVORITE__";
 // Crispy chicken never comes with tomato, so "ללא עגבנייה" is noise on the bon.
@@ -239,14 +239,14 @@ export const extractOwnerName = (
   const cleaned: string[] = [];
   for (const r of removals) {
     if (typeof r === "string" && r === FAVORITE_MARKER) {
-      // Intentionally NOT shown on the printed kitchen receipt/bon — only on the kitchen display.
+      // Intentionally NOT shown on the printed kitchen receipt/bon - only on the kitchen display.
       continue;
     } else if (typeof r === "string" && r.startsWith(OWNER_PREFIX)) {
       ownerName = r.slice(OWNER_PREFIX.length).trim() || null;
     } else if (typeof r === "string" && r.startsWith(DONENESS_PREFIX)) {
       doneness = DONENESS_LABELS[r] || r;
     } else if (isChickenName(itemName) && typeof r === "string" && r.includes("עגבני")) {
-      // Crispy chicken has no tomato by default — skip tomato removals.
+      // Crispy chicken has no tomato by default - skip tomato removals.
       continue;
     } else {
       cleaned.push(r);
@@ -257,8 +257,8 @@ export const extractOwnerName = (
 
 // ---------- veggie-shortcut applied to Hebrew removal strings ----------
 //
-// Removals are stored as Hebrew labels ("ללא חסה", "ללא איולי", ...) — not
-// English IDs — so the ID-based logic in ingredientShortcuts.ts can't match
+// Removals are stored as Hebrew labels ("ללא חסה", "ללא איולי", ...) - not
+// English IDs - so the ID-based logic in ingredientShortcuts.ts can't match
 // them. This helper applies the same product rules directly on the Hebrew:
 //   • 4 veggies + aioli removed   → "יבש"
 //   • 4 veggies, aioli kept       → "רק איולי"
@@ -301,10 +301,10 @@ export const applyVeggieShortcut = (
     if (a) { addedVeggies.add(a); continue; }
     other.push(r);
   }
-  // Crispy chicken has no tomato at all — it must never appear as "remaining".
+  // Crispy chicken has no tomato at all - it must never appear as "remaining".
   const isChickenItem = isChickenName(itemName);
   if (isChickenItem) removedVeggies.delete("עגבנייה");
-  // Out-of-stock ingredients aren't on the bun at all — never list them as
+  // Out-of-stock ingredients aren't on the bun at all - never list them as
   // "remaining" and never print "ללא X" for them.
   const soldOut = unavailableVeggieHebrew();
   for (const n of soldOut) removedVeggies.delete(n);
@@ -318,7 +318,7 @@ export const applyVeggieShortcut = (
 
   // ----- Smash burger with mixed add+remove → render final veg state -----
   // Smash defaults = חסה, חמוצים, איולי. Adds available = בצל, עגבנייה.
-  // When the customer both adds and removes, listing deltas is confusing —
+  // When the customer both adds and removes, listing deltas is confusing -
   // show the chef the final bun composition directly (e.g. "חסה בצל איולי").
   if (isSmash && addedVeggies.size > 0 && (removedVeggies.size > 0 || aioliRemoved)) {
     const SMASH_DEFAULTS = new Set<string>(["חסה", "חמוצים"]);
@@ -344,7 +344,7 @@ export const applyVeggieShortcut = (
 
   // ----- Addition shortcut (smash burgers default to no onion/tomato) -----
   // Adding both onion + tomato (with no veggie or aioli removals) means the
-  // smash now has all 4 veggies + aioli — render as "כל הירקות + איולי".
+  // smash now has all 4 veggies + aioli - render as "כל הירקות + איולי".
   if (
     addedVeggies.has("בצל") &&
     addedVeggies.has("עגבנייה") &&
@@ -373,7 +373,7 @@ export const applyVeggieShortcut = (
     return { label, rest };
   }
 
-  // 0-1 removals total — no shortcut; keep verbatim "ללא X" rendering.
+  // 0-1 removals total - no shortcut; keep verbatim "ללא X" rendering.
   return { label: null, rest: cleanedRemovals };
 };
 
@@ -383,7 +383,7 @@ export const applyVeggieShortcut = (
 //
 // Maps a chosen drink (by name OR by id) to a chef-friendly label.
 // Used only on takeaway orders to print a "סיכום שתייה" block at the bottom
-// of the receipt — both standalone drinks and meal/deal drinks are aggregated.
+// of the receipt - both standalone drinks and meal/deal drinks are aggregated.
 const normaliseDrinkLabel = (raw: string): string | null => {
   const s = (raw || "").trim();
   if (!s) return null;
@@ -415,7 +415,7 @@ const normaliseDrinkLabel = (raw: string): string | null => {
   if (/תפוזים/.test(s)) return "תפוזים";
   if (/תפוחים/.test(s)) return "תפוחים";
   if (/מים/.test(s)) return "מים";
-  // Unrecognised — return raw (keeps it visible to chef rather than dropping)
+  // Unrecognised - return raw (keeps it visible to chef rather than dropping)
   return s;
 };
 
@@ -434,7 +434,7 @@ export function computeDrinkSummary(items: ReceiptOrderItem[]): DrinkSummary {
     if (it.item_name === "רטבים") continue; // synthetic line, not a drink
     const qty = it.quantity || 1;
 
-    // Standalone drinks (e.g. "פחית — קולה") — name itself is a drink
+    // Standalone drinks (e.g. "פחית - קולה") - name itself is a drink
     if (isDrinkOrMisc(it.item_name)) {
       add(normaliseDrinkLabel(it.item_name), qty);
     }
@@ -473,7 +473,7 @@ const parseSauceLabel = (label: string): { name: string; qty: number } => {
 // ---------- doneness summary ----------
 //
 // Aggregates doneness selections (M / MW / WD) across orders, EXCLUDING smash
-// patties and the vegan "חף מפשע" patty — those don't have doneness.
+// patties and the vegan "חף מפשע" patty - those don't have doneness.
 // Reads doneness from the removals array (encoded as "doneness-m" etc.) on
 // each main item AND on each entry of deal_burgers (family/friends deals).
 const DONENESS_SHORT: Record<string, string> = {
@@ -483,7 +483,7 @@ const DONENESS_SHORT: Record<string, string> = {
 };
 
 // Returns the doneness short-key for a burger. If none was selected/saved, falls
-// back to "MW" (medium-well) — that's the system-wide default for any burger
+// back to "MW" (medium-well) - that's the system-wide default for any burger
 // that supports doneness, so the chef summary should reflect it even when the
 // order item lacks an explicit doneness-* entry in removals.
 const extractDonenessKey = (removals: string[] | null | undefined): string | null => {
@@ -530,7 +530,7 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
     // "כפולה" = 2 patties → 2× the doneness count
     const multiplier = isDoubleName(name) ? 2 : 1;
     // Extra patty topping also adds another patty of the same doneness.
-    // The vegan variant ("תוספת קציצה צמחונית") has no doneness — exclude it.
+    // The vegan variant ("תוספת קציצה צמחונית") has no doneness - exclude it.
     const extraVeganPattiesForDoneness = includesAny(it.toppings, ["תוספת קציצה צמחונית", "קציצה צמחונית"]);
     const extraPatties = includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) - extraVeganPattiesForDoneness;
     add(extractDonenessKey(it.removals), qty * (multiplier + extraPatties));
@@ -539,7 +539,7 @@ export function computeDonenessSummary(items: ReceiptOrderItem[]): Map<string, n
   return counts;
 }
 
-// Render doneness map as ordered list of "<n> <LABEL>" rows (MW, M, WD order — MW first as it's the default/most common)
+// Render doneness map as ordered list of "<n> <LABEL>" rows (MW, M, WD order - MW first as it's the default/most common)
 const DONENESS_ORDER = ["MW", "M", "WD"];
 const DONENESS_FULL_LABELS: Record<string, string> = {
   M: "מדיום",
@@ -623,7 +623,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
           eggs += qty;
           roastbeef += qty;
         }
-        // צ׳דר שנוסף על המבורגר בתוך דיל — נספר לפי סוג הקציצה
+        // צ׳דר שנוסף על המבורגר בתוך דיל - נספר לפי סוג הקציצה
         addCheddar(
           pattyLabelForName(bn),
           includesAny((b as { toppings?: string[] })?.toppings, [
@@ -646,7 +646,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
       continue;
     }
 
-    // ---- Arayes special — count quarters (3 or 4 base) + "רבע עראיס נוסף" topping ----
+    // ---- Arayes special - count quarters (3 or 4 base) + "רבע עראיס נוסף" topping ----
     if (/עראיס/.test(name)) {
       const base = /4\s*רבעים/.test(name) ? 4 : 3;
       const extras = includesAny(it.toppings, ["רבע עראיס נוסף"]);
@@ -678,7 +678,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     }
 
     // ---- Special-Hadegel auto-extras: 2 tempura rings counted as INDIVIDUAL
-    //      units (not as a side portion) — chef preps them like single rings.
+    //      units (not as a side portion) - chef preps them like single rings.
     if (isSpecialHadegel(name)) {
       tempuraOnionTopping += 2 * qty;
     }
@@ -688,7 +688,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     const extraVeganPattyCount = includesAny(it.toppings, ["תוספת קציצה צמחונית", "קציצה צמחונית"]);
     veganPatties += extraVeganPattyCount * qty;
     // Regular extra patty topping → +1 regular meat patty
-    // (subtract vegan matches — they'd also match "תוספת קציצה" as a substring)
+    // (subtract vegan matches - they'd also match "תוספת קציצה" as a substring)
     regularPatties += (includesAny(it.toppings, ["אקסטרה קציצה (220", "תוספת קציצה"]) - extraVeganPattyCount) * qty;
     // Smash extra patty topping ("+ זוג קציצות סמאש (220)" / "+ קציצת סמאש") →
     // +1 smash patty in the chef summary.
@@ -701,7 +701,7 @@ export function computeChefSummary(items: ReceiptOrderItem[]): ChefSummary {
     );
     blueCheese += includesAny(it.toppings, ["גבינה כחולה"]) * qty;
     roastbeef += includesAny(it.toppings, ["רצועות רוסטביף", "רוסטביף"]) * qty;
-    // Onion-rings TOPPING ("שלושה רינג בצל בטמפורה", לשעבר "שלוש טבעות בצל ביתיות") — counted in INDIVIDUAL
+    // Onion-rings TOPPING ("שלושה רינג בצל בטמפורה", לשעבר "שלוש טבעות בצל ביתיות") - counted in INDIVIDUAL
     // ring units (3 per topping), aggregated together with rings from Special-Hadegel.
     tempuraOnionTopping += includesAny(it.toppings, ["שלושטבעות בצל", "שלוש טבעות בצל", "טבעות בצל ביתיות", "רינג בצל"]) * 3 * qty;
 
@@ -761,7 +761,7 @@ interface MergedLine {
 
 
 function mergeItems(items: ReceiptOrderItem[]): MergedLine[] {
-  // Identical dishes are intentionally NOT merged — the kitchen asked for each
+  // Identical dishes are intentionally NOT merged - the kitchen asked for each
   // cart line to be printed separately, even when two lines are the same dish.
   return items
     .filter((it) => it.item_name !== "רטבים")
@@ -789,7 +789,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     minute: "2-digit",
   });
 
-  // Generate a small `tel:` QR next to the phone number — kitchen staff /
+  // Generate a small `tel:` QR next to the phone number - kitchen staff /
   // delivery riders can scan it to call the customer instantly.
   // Inline SVG so it travels with the receipt HTML and prints reliably
   // (no external image fetch, no canvas color-conversion surprises).
@@ -807,7 +807,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     }
   }
 
-  // Running dish number (mains only — never fries/drinks).
+  // Running dish number (mains only - never fries/drinks).
   let dishNo = 0;
 
   const itemsHtml = merged
@@ -845,17 +845,17 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
         }
         if (rest.length > 0) {
-          html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(rest.join(", "))}</div>`;
+          html += `<div class="sub" style="font-weight:800;">- שינויים: ${escapeHtml(rest.join(", "))}</div>`;
         }
         // Burger with no veggie changes → say "ללא שינויים" explicitly.
         if (!shortcutLbl && rest.length === 0 && isBurgerItemName(it.item_name)) {
-          html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+          html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
         }
       }
       html += formatToppingsHtml(it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
-        if (it.meal_side) mealText += ` — ${it.meal_side}`;
+        if (it.meal_side) mealText += ` - ${it.meal_side}`;
         if (it.meal_drink) mealText += `, ${it.meal_drink}`;
         html += `<div class="sub">→ ${escapeHtml(mealText)}</div>`;
       }
@@ -868,10 +868,10 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           if (b.removals?.length > 0) {
             const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
-            if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
-            if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+            if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">- שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
+            if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
           } else {
-            html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+            html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
           }
           if (Array.isArray(b.toppings) && b.toppings.length > 0) {
             html += formatToppingsHtml(b.toppings);
@@ -913,7 +913,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.regularBuns > 0) bunRows.push(row("לחמנייה רגילה", summary.regularBuns));
   if (summary.glutenFreeBuns > 0) bunRows.push(row("לחמנייה ללא גלוטן", summary.glutenFreeBuns, true));
 
-  // Fried sides — keep types separate
+  // Fried sides - keep types separate
   const friedRows: string[] = [];
   if (summary.fries > 0) friedRows.push(row("צ׳יפס", summary.fries));
   if (summary.sweetPotatoFries > 0) friedRows.push(row("וופל צ׳יפס", summary.sweetPotatoFries));
@@ -931,7 +931,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   if (summary.eggs > 0) toppingRows.push(row("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(row("רצועות רוסטביף", summary.roastbeef));
 
-  // Cheeses — own section, same simple style as doneness
+  // Cheeses - own section, same simple style as doneness
   const cheeseRows: string[] = [];
   if (summary.smashDoubleCheesePatties > 0)
     cheeseRows.push(row("דאבל צ׳יז", summary.smashDoubleCheesePatties));
@@ -956,7 +956,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
        </div>`
     : "";
 
-  // ---- Drink summary — TAKEAWAY ONLY ----
+  // ---- Drink summary - TAKEAWAY ONLY ----
   // Dine-in serves drinks on the spot, so no aggregation needed.
   const isTakeaway =
     order.dine_in === false ||
@@ -988,19 +988,19 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   const payboxPaid = isPaybox && (order as any).queue_number != null;
   const paymentLine = order.payment_method === "soldier_fund"
     ? `<div class="paid" style="font-size:1.5em;font-weight:900;">🫡 שולם מ'הזמן חייל/ת'</div>
-       <div class="paid">₪${order.total} מהקופה — אין לגבות</div>`
+       <div class="paid">₪${order.total} מהקופה - אין לגבות</div>`
     : isPaybox
     ? payboxPaid
       ? `<div class="paid" style="font-size:1.4em;font-weight:900;">📲 שולם ₪${order.total} בפייבוקס</div>`
-      : `<div class="warn" style="font-size:1.3em;font-weight:900;">📲 פייבוקס — יש לבדוק צילום מסך של ההעברה</div>`
+      : `<div class="warn" style="font-size:1.3em;font-weight:900;">📲 פייבוקס - יש לבדוק צילום מסך של ההעברה</div>`
     : isCash
-    ? `<div class="warn">לא שולם — מזומן בעת המסירה</div>`
+    ? `<div class="warn">לא שולם - מזומן בעת המסירה</div>`
     : isCounter
     ? `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ לתשלום בקופה ⚠️</div>`
     : creditConfirmed
     ? `<div class="paid" style="font-size:1.5em;font-weight:900;">שולם ₪${order.total}!</div>
        <div class="paid">שולם באשראי</div>`
-    : `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ טרם התקבל אישור מהמסוף — יש לגבות תשלום ⚠️</div>`;
+    : `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ טרם התקבל אישור מהמסוף - יש לגבות תשלום ⚠️</div>`;
 
 
   return `<!DOCTYPE html>
@@ -1181,7 +1181,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   }
   @media print {
     body { width: auto; padding: 1mm 2mm; }
-    /* Make sure SVG QR keeps its black ink when printing — some browsers
+    /* Make sure SVG QR keeps its black ink when printing - some browsers
        drop colors on print without these flags. */
     .phone-qr svg, .phone-qr svg * {
       print-color-adjust: exact;
@@ -1253,13 +1253,13 @@ export async function printReceipt(order: ReceiptOrder) {
 // were received (oldest first → so the customer who ordered first gets served
 // first). Each block shows: order number, customer name, time received, and
 // every item with its toppings/changes/meal/deal details. NO aggregated chef
-// summary, NO drinks summary — pure per-order list for the kitchen.
+// summary, NO drinks summary - pure per-order list for the kitchen.
 export interface RoundOrder {
   id?: string;
   order_number: number;
-  /** Position in today's preparation queue — assigned when the order is marked paid. */
+  /** Position in today's preparation queue - assigned when the order is marked paid. */
   queue_number?: number | null;
-  /** Daily sequential number assigned at order creation — printed on the bon. */
+  /** Daily sequential number assigned at order creation - printed on the bon. */
   bon_queue_number?: number | null;
   customer_name?: string | null;
   created_at?: string | null;
@@ -1325,16 +1325,16 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           html += `<div class="sub" style="font-weight:900;">${escapeHtml(shortcutLbl)}</div>`;
         }
         if (rest.length > 0) {
-          html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(rest.join(", "))}</div>`;
+          html += `<div class="sub" style="font-weight:800;">- שינויים: ${escapeHtml(rest.join(", "))}</div>`;
         }
         if (!shortcutLbl && rest.length === 0 && isBurgerItemName(it.item_name)) {
-          html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+          html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
         }
       }
       html += formatToppingsHtml(it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
-        if (it.meal_side) mealText += ` — ${it.meal_side}`;
+        if (it.meal_side) mealText += ` - ${it.meal_side}`;
         if (it.meal_drink) mealText += `, ${it.meal_drink}`;
         html += `<div class="sub">→ ${escapeHtml(mealText)}</div>`;
       }
@@ -1345,10 +1345,10 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           if (b.removals?.length > 0) {
             const { label: bShort, rest: bRest } = applyVeggieShortcut(b.removals, b.name);
             if (bShort) html += `<div class="sub" style="font-weight:900;">${escapeHtml(bShort)}</div>`;
-            if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">— שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
-            if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+            if (bRest.length > 0) html += `<div class="sub" style="font-weight:800;">- שינויים: ${escapeHtml(bRest.join(", "))}</div>`;
+            if (!bShort && bRest.length === 0) html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
           } else {
-            html += `<div class="sub" style="font-weight:800;">— ללא שינויים</div>`;
+            html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
           }
           if (Array.isArray(b.toppings) && b.toppings.length > 0) {
             html += formatToppingsHtml(b.toppings);
@@ -1380,7 +1380,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
         ${status ? `<span class="status">${escapeHtml(status)}</span>` : ""}
       </div>
     </div>
-    <div class="order-items">${itemsHtml || '<div class="sub">— אין פריטים —</div>'}</div>
+    <div class="order-items">${itemsHtml || '<div class="sub">- אין פריטים -</div>'}</div>
     ${readyBtn}
   </div>`;
 }
@@ -1442,7 +1442,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   if (summary.eggs > 0) toppingRows.push(sumRow("ביצי עין", summary.eggs));
   if (summary.roastbeef > 0) toppingRows.push(sumRow("רצועות רוסטביף", summary.roastbeef));
 
-  // Cheeses — own section, same simple style as doneness
+  // Cheeses - own section, same simple style as doneness
   const cheeseRows: string[] = [];
   if (summary.smashDoubleCheesePatties > 0)
     cheeseRows.push(sumRow("דאבל צ׳יז", summary.smashDoubleCheesePatties));
@@ -1465,7 +1465,7 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
 
   const summaryHtml = sorted.length && summaryBody
     ? `<div class="summary">
-         <div class="summary-title">סיכום לטבח — סה״כ</div>
+         <div class="summary-title">סיכום לטבח - סה״כ</div>
          ${summaryBody}
        </div>`
     : "";
@@ -1677,9 +1677,9 @@ export function buildRoundSummaryHtml(orders: RoundOrder[], options: { interacti
   <div class="head">הזמנות פעילות<small>${time}</small></div>
   <div class="meta">${sorted.length} הזמנות · לפי סדר קבלה (ישן → חדש)</div>
   ${blocksHtml}
-  <!-- Chef summary intentionally omitted from active-orders bon — only per-order summaries are shown -->
+  <!-- Chef summary intentionally omitted from active-orders bon - only per-order summaries are shown -->
 
-  <div class="footer">המנה הראשונה ברשימה — להכין ראשונה</div>
+  <div class="footer">המנה הראשונה ברשימה - להכין ראשונה</div>
   ${interactive ? `<script>
     document.addEventListener('click', function(e) {
       var t = e.target;
@@ -1715,7 +1715,7 @@ export function printRoundSummary(orders: RoundOrder[]) {
 //
 // A standalone bon that contains ONLY the aggregated chef summary across all
 // active orders (קציצות / לחמניות / מטוגנים / תוספות / רטבים). No per-order
-// listing — useful when the chef just wants a quick rolled-up "what to fire"
+// listing - useful when the chef just wants a quick rolled-up "what to fire"
 // view without scrolling through every customer's bon.
 export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
   const allItems: ReceiptOrderItem[] = orders.flatMap((o) => o.order_items || []);
@@ -1776,7 +1776,7 @@ export function buildRoundChefSummaryHtml(orders: RoundOrder[]): string {
 
   const bodyHtml = summaryBody
     ? `<div class="summary">
-         <div class="summary-title">סיכום סבב — לטבח</div>
+         <div class="summary-title">סיכום סבב - לטבח</div>
          ${summaryBody}
        </div>`
     : `<div class="empty">אין מנות פעילות לסיכום</div>`;

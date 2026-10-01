@@ -9,7 +9,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
  * actively building an order join a shared channel; the kitchen subscribes
  * as a passive observer and sees the live count.
  *
- * We intentionally track NO identifying info — only an anonymous session id
+ * We intentionally track NO identifying info - only an anonymous session id
  * and a `role: "customer"` flag. The kitchen never sees who the customer is.
  */
 const CHANNEL_NAME = "customer-activity";

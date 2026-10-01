@@ -81,7 +81,7 @@ function formatDelta(d: number, unit: string): string {
   return `${sign}${formatQty(d, unit)}`;
 }
 
-// Extracts the "box size" from presets — the largest positive preset amount
+// Extracts the "box size" from presets - the largest positive preset amount
 // whose label looks like a box/package (ארגז/חבילה/קרטון). Returns null if none.
 function getBoxSize(item: InventoryItem): { size: number; label: string } | null {
   if (!item.presets?.length) return null;
@@ -233,7 +233,7 @@ export default function Inventory() {
 
 
   const handleAdjust = async (item: InventoryItem, delta: number) => {
-    // Optimistic update — instant visual feedback
+    // Optimistic update - instant visual feedback
     setItems((prev) =>
       prev.map((i) =>
         i.id === item.id ? { ...i, quantity: Number(i.quantity) + delta } : i,
@@ -738,7 +738,7 @@ function EditItemDialog({
             </div>
           </div>
           <div>
-            <Label>מחיר ליחידה (₪) — לחישוב שווי בלאי וקניות</Label>
+            <Label>מחיר ליחידה (₪) - לחישוב שווי בלאי וקניות</Label>
             <Input
               type="number"
               step="0.01"
@@ -975,7 +975,7 @@ function WasteDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trash className="h-5 w-5 text-destructive" />
-            פחת — {item.name}
+            פחת - {item.name}
           </DialogTitle>
           <DialogDescription>
             מה הכמות שנזרקה / התקלקלה? תרד מהמלאי ותירשם בלוג.
@@ -1078,7 +1078,7 @@ function PurchaseDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-blue-600" />
-            רישום קנייה — {item.name}
+            רישום קנייה - {item.name}
           </DialogTitle>
           <DialogDescription>
             הוספת מלאי + מחיר כדי שנדע לחשב שווי קניות וצריכה.
@@ -1146,7 +1146,7 @@ function PurchaseDialog({
             </div>
           )}
           <div>
-            <Label>מחיר כולל ששילמת (₪) — לא חובה</Label>
+            <Label>מחיר כולל ששילמת (₪) - לא חובה</Label>
             <Input
               type="number"
               inputMode="decimal"
@@ -1224,7 +1224,7 @@ function CorrectionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Minus className="h-5 w-5" />
-            הורדת כמות — {item.name}
+            הורדת כמות - {item.name}
           </DialogTitle>
           <DialogDescription>
             תיקון של המלאי (לא ייספר כפחת ולא ישפיע על הסטטיסטיקות).
