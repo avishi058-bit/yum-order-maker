@@ -82,14 +82,14 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
       onClick={() => onOpenChange(false)}
     >
       <div
-        className={`relative w-full overflow-y-auto rounded-2xl shadow-2xl ${isKiosk ? "max-w-3xl max-h-[94vh] bg-kiosk-nav p-8 text-kiosk-nav-foreground space-y-6" : "max-w-lg max-h-[88vh] bg-background p-5 text-foreground space-y-4"}`}
+        className={`relative w-full overflow-y-auto rounded-2xl shadow-2xl ${isKiosk ? "max-w-3xl max-h-[94vh] border border-border bg-kiosk-nav p-8 text-kiosk-nav-foreground space-y-6" : "max-w-lg max-h-[88vh] bg-background p-5 text-foreground space-y-4"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={() => onOpenChange(false)}
           aria-label="סגירה"
-          className="absolute left-3 top-3 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+          className={`absolute left-3 top-3 rounded-full p-1.5 ${isKiosk ? "border border-border bg-kiosk-nav text-kiosk-nav-foreground" : "text-muted-foreground hover:bg-muted"}`}
         >
           <X className="w-5 h-5" />
         </button>
@@ -118,7 +118,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
             מה זה המיזם? 💚
           </button>
           {showAbout && (
-            <p className="mt-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm leading-relaxed text-right">
+            <p className={`mt-2 rounded-xl border border-primary/20 p-3 text-right leading-relaxed ${isKiosk ? "bg-kiosk-nav text-xl text-kiosk-nav-foreground" : "bg-primary/5 text-sm"}`}>
               מיזם "הזמן חייל/ת" מאפשר ללקוחות להוסיף סכום לקופת החיילים, אשר מיועדת למימון אוכל עבור חיילים וחיילות המגיעים לבקתה.
             </p>
           )}
@@ -133,13 +133,13 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
             {showTerms ? "הסתרת התקנון" : "רוצים לקרוא את התקנון? 📜"}
           </button>
           {showTerms && (
-            <div className="mt-2 rounded-xl border bg-muted/40 p-3 whitespace-pre-line text-xs leading-relaxed max-h-48 overflow-y-auto text-right">
+            <div className={`mt-2 max-h-48 overflow-y-auto whitespace-pre-line rounded-xl border p-3 text-right leading-relaxed ${isKiosk ? "bg-kiosk-nav text-lg text-kiosk-nav-foreground" : "bg-muted/40 text-xs"}`}>
               {SOLDIER_FUND_TERMS_TEXT}
             </div>
           )}
         </div>
 
-        <label className={`flex items-start gap-3 cursor-pointer rounded-xl border-2 p-3 ${isKiosk ? "text-xl" : "text-sm"} ${isApproved ? "border-primary/40 bg-primary/5" : "border-destructive/50 bg-destructive/5"}`}>
+        <label className={`flex items-start gap-3 cursor-pointer rounded-xl border-2 p-3 ${isKiosk ? "bg-kiosk-nav text-xl text-kiosk-nav-foreground" : "text-sm"} ${isApproved ? "border-primary/40" : "border-destructive/50"}`}>
           <input
             type="checkbox"
             checked={isApproved}
@@ -158,19 +158,20 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
             <div className="grid grid-cols-4 gap-2">
               {SOLDIER_FUND_PRESETS.map((v) => (
                 <button key={v} type="button" onClick={() => pick(v)}
-                  className={`rounded-lg border font-bold ${isKiosk ? "py-4 text-2xl" : "py-2"} ${amount === v && !custom ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}>
+                  aria-pressed={amount === v && !custom}
+                  className={`rounded-lg border font-bold ${isKiosk ? "py-4 text-2xl" : "py-2"} ${amount === v && !custom ? "border-primary bg-primary text-primary-foreground" : isKiosk ? "border-border bg-kiosk-nav text-kiosk-nav-foreground" : "bg-background"}`}>
                   ₪{v}
                 </button>
               ))}
               <input
                 type="text" inputMode="numeric" placeholder="אחר"
                 value={custom} onChange={(e) => onCustom(e.target.value)}
-                className={`rounded-lg border bg-background p-2 text-center ${isKiosk ? "text-2xl" : ""}`}
+                className={`rounded-lg border p-2 text-center ${isKiosk ? "border-border bg-kiosk-nav text-2xl text-kiosk-nav-foreground placeholder:text-muted-foreground" : "bg-background"}`}
                 aria-label={`סכום אחר עד ₪${SOLDIER_FUND_MAX}`}
               />
             </div>
             {!canPay && (
-              <p className="text-xs text-center text-muted-foreground">
+              <p className={`${isKiosk ? "text-lg font-bold text-kiosk-nav-foreground" : "text-xs text-muted-foreground"} text-center`}>
                 {amount === 0 ? "בחרו סכום" : "יש לאשר את התקנון כדי להמשיך"}
               </p>
             )}
@@ -178,7 +179,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
               <button
                 type="button" disabled={!canPay}
                 onClick={() => donate.onContinueOrder(amount)}
-                className="w-full py-3 rounded-full font-black text-lg bg-primary text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                className={`w-full rounded-full bg-primary py-3 font-black text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40 ${isKiosk ? "min-h-16 text-2xl" : "text-lg"}`}
               >
                 הוסיפו ₪{amount || 0} והמשיכו להזמנה 🍔
               </button>
@@ -186,7 +187,7 @@ export default function SoldierFundHowItWorks({ open, onOpenChange, approved, on
             <button
               type="button" disabled={!canPay}
               onClick={() => donate.onDonateOnly(amount)}
-              className="w-full py-3 rounded-full font-black text-lg border-2 border-primary text-primary disabled:opacity-40 disabled:cursor-not-allowed"
+              className={`w-full rounded-full border-2 border-primary py-3 font-black text-primary disabled:cursor-not-allowed disabled:opacity-40 ${isKiosk ? "min-h-16 bg-kiosk-nav text-2xl" : "text-lg"}`}
             >
               רק 'הזמן חייל/ת' - לתשלום ₪{amount || 0} 💳
             </button>
