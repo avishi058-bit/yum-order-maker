@@ -354,7 +354,7 @@ function shortDoneness(label: string | null): string | null {
 
 // Normalize drink name from meal/standalone "פחית - קולה" → "קולה"
 function cleanDrinkName(s: string): string {
-  return s.replace(/^.*?[-\--]\s*/, "").trim();
+  return s.replace(/^.*?-\s*/, "").trim();
 }
 
 // ============================================================
