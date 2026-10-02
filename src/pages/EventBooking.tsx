@@ -18,7 +18,6 @@ import { EVENT_ADDONS, EVENT_PACKAGES, EVENT_TYPES, EVENT_DRINK_OPTIONS, PACKAGE
 import { fillTemplate, generateContractPdf, downloadBlob, fetchClientIp, type ContractData } from "@/lib/eventContract";
 import { cn } from "@/lib/utils";
 import EventStoryGallery from "@/components/EventStoryGallery";
-import { BUSINESS_SIGNATURE_SRC, getBusinessSignatureDataUrl } from "@/config/businessSignature";
 
 const VENUE_ADDRESS = "אצלינו במקום (המבורגר הבקתה)";
 const VENUE_MIN_GUESTS = 25;
@@ -71,7 +70,6 @@ const EventBooking = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const customerSigRef = useRef<SignatureCanvas | null>(null);
-  const [businessSignature, setBusinessSignature] = useState<string>("");
   
 
   useEffect(() => {
@@ -79,13 +77,12 @@ const EventBooking = () => {
     (async () => {
       const [{ data: blocked }, { data: settings }] = await Promise.all([
         supa.from("event_blocked_dates").select("blocked_date"),
-        supa.from("event_settings").select("contract_template, minimum_amount, business_signature").eq("id", 1).maybeSingle(),
+        supa.from("event_settings").select("contract_template, minimum_amount").eq("id", 1).maybeSingle(),
       ]);
       if (blocked) setBlockedDates(blocked.map((r: any) => new Date(r.blocked_date + "T00:00:00")));
       if (settings) {
         setContractTemplate(settings.contract_template || "");
         setMinimumAmount(Number(settings.minimum_amount) || 2000);
-        if (settings.business_signature) setBusinessSignature(settings.business_signature);
       }
     })();
   }, []);
@@ -188,9 +185,6 @@ const EventBooking = () => {
     setSubmitting(true);
     try {
       const customerSig = customerSigRef.current.getCanvas().toDataURL("image/png");
-      const businessSig = businessSignature || (await getBusinessSignatureDataUrl());
-      const ip = await fetchClientIp();
-      const signedAt = new Date().toISOString();
 
       const payload = {
         customer_name: customerName,
@@ -222,14 +216,17 @@ const EventBooking = () => {
           : {},
         contract_text: filledContract,
         customer_signature: customerSig,
-        business_signature: businessSig,
-        signed_at: signedAt,
-        client_ip: ip,
-        status: "signed",
       };
 
-      const { data, error } = await supa.from("event_bookings").insert(payload).select("id").single();
-      if (error) throw error;
+      // Saved server-side: the business signature is attached there.
+      const { data, error } = await supabase.functions.invoke("submit-event-booking", { body: payload });
+      if (error || !data?.id) {
+        const code = data?.error;
+        throw new Error(code === "rate_limited" ? "יותר מדי ניסיונות, נסו שוב מאוחר יותר" : "שגיאה בשמירת ההזמנה");
+      }
+      const businessSig: string = data.businessSignature;
+      const signedAt: string = data.signedAt;
+      const ip: string = data.clientIp ?? "";
 
       const blob = await generateContractPdf({
         contractText: filledContract,
@@ -570,13 +567,8 @@ const EventBooking = () => {
               </div>
               <div>
                 <Label className="mb-2 block">חתימת בעל העסק (חתומה מראש)</Label>
-                <div className="border rounded-lg bg-white flex items-center justify-center h-40">
-                  <img
-                    src={businessSignature || BUSINESS_SIGNATURE_SRC}
-                    alt="חתימת בעל העסק"
-                    loading="lazy"
-                    className="max-h-32 object-contain"
-                  />
+                <div className="border rounded-lg bg-white flex items-center justify-center h-20 text-sm text-muted-foreground">
+                  החתימה תצורף אוטומטית לחוזה לאחר החתימה שלך
                 </div>
               </div>
               <Button onClick={submitBooking} disabled={submitting} className="w-full" size="lg">
