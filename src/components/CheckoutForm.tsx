@@ -1253,7 +1253,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-lg text-foreground">
-                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן 💵"}
+                      {submitting && paymentMethod === "cash" ? "שולח הזמנה..." : "מזומן במסירה 💵"}
                     </div>
                     <div className="text-sm text-muted-foreground">תשלום במזומן בעת המסירה</div>
                   </div>
@@ -1279,9 +1279,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   </div>
                   <div className="text-right">
                     <div className={`font-bold text-lg ${isKiosk ? "text-gray-900" : "text-foreground"}`}>
-                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : isKiosk ? "מזומן בקופה💵" : "מזומן 💵"}
+                      {submitting && paymentMethod === "counter" ? "שולח הזמנה..." : isKiosk ? "מזומן בקופה💵" : "תשלום בקופה 🏪"}
                     </div>
-                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>תשלום במזומן בעסק</div>
+                    <div className={`text-sm ${isKiosk ? "text-gray-600" : "text-muted-foreground"}`}>משלמים במקום, בעת האיסוף</div>
                   </div>
                 </motion.button>
               )}
