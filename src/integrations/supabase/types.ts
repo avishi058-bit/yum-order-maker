@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           blocked_at: string
           blocked_by: string | null
+          expires_at: string | null
           id: string
           ip_address: string
           is_pattern: boolean
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           blocked_at?: string
           blocked_by?: string | null
+          expires_at?: string | null
           id?: string
           ip_address: string
           is_pattern?: boolean
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           blocked_at?: string
           blocked_by?: string | null
+          expires_at?: string | null
           id?: string
           ip_address?: string
           is_pattern?: boolean
@@ -62,6 +65,24 @@ export type Database = {
           id?: string
           phone?: string
           reason?: string
+        }
+        Relationships: []
+      }
+      business_private_settings: {
+        Row: {
+          business_signature: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          business_signature?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          business_signature?: string | null
+          id?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1668,6 +1689,14 @@ export type Database = {
         Returns: boolean
       }
       has_role_admin: { Args: { _uid: string }; Returns: boolean }
+      inventory_adjust: {
+        Args: { p_delta: number; p_item: string }
+        Returns: number
+      }
+      inventory_set_quantity: {
+        Args: { p_item: string; p_qty: number }
+        Returns: number
+      }
       is_approved_courier: { Args: { _uid: string }; Returns: boolean }
       is_attack_mode_active: { Args: never; Returns: boolean }
       is_ip_blocked: { Args: { p_ip: string }; Returns: boolean }
