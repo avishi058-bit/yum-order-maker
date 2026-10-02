@@ -348,8 +348,9 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     return past.length ? past.reduce((a, [, s]) => a + s.size, 0) / past.length : 0;
   }, [workDays, currentMonthKey]);
   /** divisor for spreading a month's costs: actual work days, or the average for the running month */
-  const workDaysDivisor = (k: string) => {
-    const actual = workDays[k]?.size ?? 0;
+  const workDaysDivisor = (k: string, inRange = 1) => {
+    // never spread more than 100% of a month onto the days in range (guards against work days not loaded yet)
+    const actual = Math.max(workDays[k]?.size ?? 0, inRange);
     if (k === currentMonthKey) return Math.max(actual, Math.round(avgWorkDays) || actual, 1);
     return Math.max(actual, 1);
   };
@@ -379,7 +380,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     });
     let fixed = 0, wagesAlloc = 0, accountant = 0, electricity = 0;
     Object.entries(dayByMonth).forEach(([k, set]) => {
-      const share = set.size / workDaysDivisor(k);
+      const share = set.size / workDaysDivisor(k, set.size);
       fixed += monthlyFixed * share;
       wagesAlloc += (wages[k] || 0) * share;
       accountant += ACCOUNTANT_MONTHLY * share;
@@ -396,7 +397,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const shiftMonths = new Set(shifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; }).map((sh) => monthKey(new Date(sh.clock_in))));
     let payslip = 0;
     Object.entries(dayByMonth).forEach(([k, set]) => {
-      if (shiftMonths.has(k)) payslip += PAYSLIP_MONTHLY * (set.size / workDaysDivisor(k));
+      if (shiftMonths.has(k)) payslip += PAYSLIP_MONTHLY * (set.size / workDaysDivisor(k, set.size));
     });
     const suppliesCost = suppliesCostInRange(supplies, start, end > new Date() ? new Date() : end);
     fixed += suppliesCost;
@@ -590,11 +591,19 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const load = async () => {
       const keys = lastMonths(12).reverse();
       const start = monthRange(keys[0]).start;
-      const { data } = await supabase
-        .from("orders")
-        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in, soldier_donation")
-        .gte("created_at", start.toISOString())
-        .order("created_at", { ascending: true });
+      // page through - a single request is capped at 1000 rows and would drop the newest months
+      const data: any[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data: page } = await supabase
+          .from("orders")
+          .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in, soldier_donation")
+          .gte("created_at", start.toISOString())
+          .order("created_at", { ascending: true })
+          .range(from, from + 999);
+        if (!page?.length) break;
+        data.push(...page);
+        if (page.length < 1000) break;
+      }
       if (cancelled) return;
       const clean = excludeTestOrders(withoutDonation(data) as Order[]).filter(isCounted);
       setTrendOrders(clean);
@@ -663,7 +672,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       const revenue = list.reduce((s, o) => s + o.total, 0);
       const creditRevenue = list.filter((o) => o.payment_method === "credit").reduce((s, o) => s + o.total, 0);
       const daySet = new Set(list.map((o) => getBusinessDayStart(new Date(o.created_at)).toISOString().slice(0, 10)));
-      const share = daySet.size / workDaysDivisor(k);
+      const share = daySet.size / workDaysDivisor(k, daySet.size);
       const suppliesCost = suppliesCostInRange(supplies, start, end > new Date() ? new Date() : end);
       const fixed = monthlyFixed * share + suppliesCost;
       const shiftHours = trendShifts.filter((sh) => { const d = new Date(sh.clock_in); return d >= start && d < end; })
@@ -943,7 +952,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {loading || !settingsLoaded ? (
+          {loading || !settingsLoaded || Object.keys(workDays).length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">מחשב רווח נקי…</p>
           ) : (
           <>
