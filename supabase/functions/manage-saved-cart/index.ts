@@ -63,24 +63,11 @@ Deno.serve(async (req) => {
     const isValidGuestId = (v: string) =>
       GUEST_ID_UUID.test(v) || GUEST_ID_TOKEN.test(v);
 
-    if (phone) {
-      if (
-        !device_token ||
-        typeof device_token !== "string" ||
-        device_token.length < 32
-      ) {
-        return jsonResponse({ error: "unauthorized" }, 401);
-      }
-      // Verify device_token belongs to this phone.
-      const { data: customer } = await supabase
-        .from("customers")
-        .select("phone")
-        .eq("device_token", device_token)
-        .eq("phone", phone)
-        .maybeSingle();
-      if (!customer) return jsonResponse({ error: "unauthorized" }, 401);
-      identityColumn = "phone";
-      identityValue = phone;
+    // Identity is ONLY the private, device-local guest_id. Phone-keyed access
+    // was removed: customer data is stored on the device, never looked up by phone.
+    void phone; void device_token;
+    if (false) {
+      identityColumn = "phone"; identityValue = "";
     } else if (guest_id && typeof guest_id === "string" && isValidGuestId(guest_id)) {
       identityColumn = "guest_id";
       identityValue = guest_id;
@@ -109,8 +96,8 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       const payload = {
-        phone: phone ?? null,
-        guest_id: phone ? null : guest_id,
+        phone: null,
+        guest_id: identityValue,
         customer_name: customer_name ?? null,
         items,
         dine_in: dine_in ?? null,

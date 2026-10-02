@@ -51,16 +51,8 @@ export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCa
   const phone = customer?.phone ?? null;
   const guestId = getOrCreateGuestId();
 
-  // When a phone is present, the edge function requires the customer's
-  // device_token to prove ownership. Guests are keyed by their private guest_id.
-  const identityBody = () => {
-    if (phone) {
-      const token = localStorage.getItem(DEVICE_TOKEN_KEY);
-      return { phone, device_token: token, guest_id: null };
-    }
-    return { phone: null, device_token: null, guest_id: guestId };
-  };
-
+  // Saved carts are keyed only by this device's private guest_id.
+  const identityBody = () => ({ phone: null, device_token: null, guest_id: guestId });
 
   // ── Initial fetch ────────────────────────────────────────────────────────
   useEffect(() => {
