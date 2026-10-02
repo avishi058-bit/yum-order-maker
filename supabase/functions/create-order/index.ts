@@ -402,7 +402,7 @@ Deno.serve(async (req: Request) => {
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
-    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, soldier_fund_enabled")
+    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, soldier_fund_enabled, preorder_enabled, preorder_start_time, preorder_end_time")
     .limit(1);
   if (statusErr) {
     console.error("status fetch failed", statusErr);
@@ -449,6 +449,58 @@ Deno.serve(async (req: Request) => {
   // "counter" = pay-at-counter (cash or card paid physically at the location).
   // Always allowed regardless of cash/credit toggles, since payment happens
   // in-person and is not gated by online payment availability.
+
+  // Scheduled (pre-)orders: validated against the kitchen's preorder settings.
+  if (body.scheduledFor) {
+    const when = new Date(body.scheduledFor);
+    const nowMs = Date.now();
+    if (!status.preorder_enabled) {
+      return jsonResponse({ error: "הזמנה מראש אינה זמינה כרגע" }, 400);
+    }
+    if (isNaN(when.getTime()) || when.getTime() < nowMs - 60_000) {
+      return jsonResponse({ error: "שעת האיסוף שנבחרה כבר עברה" }, 400);
+    }
+    if (when.getTime() > nowMs + 24 * 60 * 60 * 1000) {
+      return jsonResponse({ error: "אפשר להזמין מראש עד 24 שעות קדימה" }, 400);
+    }
+    const hm = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jerusalem", hour: "2-digit", minute: "2-digit", hour12: false,
+    }).format(when);
+    const toMin = (t: string) => {
+      const [h, m] = String(t).split(":").map(Number);
+      return ((h % 24) * 60) + (m || 0);
+    };
+    const t = toMin(hm);
+    const start = toMin(status.preorder_start_time ?? "00:00");
+    const end = toMin(status.preorder_end_time ?? "23:59");
+    const inWindow = start <= end ? t >= start && t <= end : t >= start || t <= end;
+    if (!inWindow) {
+      return jsonResponse({ error: "שעת האיסוף מחוץ לשעות ההזמנה מראש" }, 400);
+    }
+  }
+
+  // Delivery: address and fee come ONLY from the server-side delivery request,
+  // and only when the caller proves ownership with its client_token.
+  let deliveryRequestId: string | null = null;
+  let deliveryAddress: string | null = null;
+  let deliveryFee: number | null = null;
+  if (body.deliveryRequestId || body.deliveryRequestClientToken || body.deliveryAddress || body.deliveryFee) {
+    if (!body.deliveryRequestId || !body.deliveryRequestClientToken) {
+      return jsonResponse({ error: "בקשת המשלוח לא אומתה" }, 400);
+    }
+    const { data: dr } = await supabase
+      .from("delivery_requests")
+      .select("id, address, price, status, order_id")
+      .eq("id", body.deliveryRequestId)
+      .eq("client_token", body.deliveryRequestClientToken)
+      .maybeSingle();
+    if (!dr || dr.order_id || !["pending", "approved"].includes(dr.status)) {
+      return jsonResponse({ error: "בקשת המשלוח לא נמצאה או שכבר נסגרה" }, 400);
+    }
+    deliveryRequestId = dr.id;
+    deliveryAddress = dr.address;
+    deliveryFee = Number(dr.price);
+  }
 
   // Admin price overrides
   let overrides: Record<string, { price?: number }> = {};
@@ -572,9 +624,13 @@ Deno.serve(async (req: Request) => {
 
   // Upsert customer only when we have a real phone number
   if (body.customerPhone && body.customerPhone.length >= 7) {
+    // Insert only when new - never overwrite an existing customer's name.
     const { error: custErr } = await supabase
       .from("customers")
-      .upsert({ phone: body.customerPhone, name: body.customerName }, { onConflict: "phone" });
+      .upsert(
+        { phone: body.customerPhone, name: body.customerName },
+        { onConflict: "phone", ignoreDuplicates: true },
+      );
     if (custErr) console.warn("customer upsert non-fatal", custErr);
   }
 
@@ -625,9 +681,9 @@ Deno.serve(async (req: Request) => {
       dine_in: body.dineIn ?? null,
       terms_accepted_at: body.termsAcceptedAt,
       scheduled_for: body.scheduledFor ?? null,
-      delivery_request_id: body.deliveryRequestId ?? null,
-      delivery_address: body.deliveryAddress ?? null,
-      delivery_fee: body.deliveryFee ?? null,
+      delivery_request_id: deliveryRequestId,
+      delivery_address: deliveryAddress,
+      delivery_fee: deliveryFee,
       soldier_donation: soldierDonation,
       donation_only: donationOnly,
     })
@@ -739,7 +795,7 @@ Deno.serve(async (req: Request) => {
   // Finalize the delivery request server-side, verifying the client_token.
   // Without a matching token the update is refused - no client can mark
   // another customer's pending request as completed.
-  if (body.deliveryRequestId && body.deliveryRequestClientToken) {
+  if (deliveryRequestId && body.deliveryRequestClientToken) {
     await supabase
       .from("delivery_requests")
       .update({ status: "completed", order_id: order.id })
