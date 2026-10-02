@@ -11,6 +11,7 @@
  * confirms the charge, we mark the order paid here too.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { fetchSessionStatus, amountMatches } from "../_shared/zcreditSession.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,64 +25,6 @@ const json = (body: unknown, status = 200) =>
   });
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const STATUS_URL =
-  "https://pci.zcredit.co.il/webcheckout/api/WebCheckout/GetSessionStatus";
-
-type SessionOutcome = "paid" | "failed" | "pending" | "unknown";
-
-/** Ask Z-Credit what happened on the hosted payment page. */
-async function fetchSessionOutcome(sessionId: string): Promise<SessionOutcome> {
-  const key = Deno.env.get("ZCREDIT_KEY");
-  if (!key) return "unknown";
-
-  try {
-    const res = await fetch(STATUS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ Key: key, SessionId: sessionId }),
-    });
-    const result = await res.json().catch(() => null);
-    if (!res.ok || !result) return "unknown";
-
-    if (result.HasError === true && !result.Data) {
-      console.error("GetSessionStatus error:", JSON.stringify(result).slice(0, 500));
-      return "unknown";
-    }
-
-    const data = result.Data ?? result;
-
-    // Successful transactions are reported in PaymentsDetails / Transactions.
-    const txList: unknown[] =
-      (Array.isArray(data.PaymentsDetails) && data.PaymentsDetails) ||
-      (Array.isArray(data.Transactions) && data.Transactions) ||
-      [];
-
-    const anySuccess = txList.some((t) => {
-      const tx = t as Record<string, unknown>;
-      const code = tx.ReturnCode ?? tx.ResultCode ?? tx.Status;
-      return code === 0 || code === "0" || tx.IsSuccess === true;
-    });
-    if (anySuccess) return "paid";
-
-    const statusText = String(
-      data.SessionStatus ?? data.Status ?? data.PaymentStatus ?? "",
-    ).toLowerCase();
-
-    if (["paid", "success", "successful", "completed", "closed"].includes(statusText)) {
-      return "paid";
-    }
-    if (["failed", "declined", "error", "cancelled", "canceled", "expired"].includes(statusText)) {
-      return "failed";
-    }
-
-    // Nothing happened on the page yet.
-    return "pending";
-  } catch (err) {
-    console.error("GetSessionStatus fetch failed:", err);
-    return "unknown";
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -97,7 +40,7 @@ Deno.serve(async (req) => {
 
     const { data: order } = await supabase
       .from("orders")
-      .select("order_number, status, payment_method, payment_session_id")
+      .select("order_number, status, payment_method, payment_session_id, total")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -115,16 +58,27 @@ Deno.serve(async (req) => {
       paymentMethod === "credit";
 
     if (!alreadyPaid && order.payment_session_id) {
-      const outcome = await fetchSessionOutcome(order.payment_session_id);
-      if (outcome === "paid") {
+      const { outcome, amount } = await fetchSessionStatus(order.payment_session_id);
+      // Only a pending order can become paid, and only for the exact total -
+      // never resurrect a cancelled/refunded/failed order.
+      if (outcome === "paid" && status === "pending_payment" && amountMatches(amount, order.total)) {
         const { data: updated } = await supabase
           .from("orders")
           .update({ status: "new", payment_method: "credit", paid_at: new Date().toISOString() })
           .eq("id", orderId)
+          .eq("status", "pending_payment")
           .select("status, payment_method")
           .maybeSingle();
-        status = updated?.status ?? "new";
-        paymentMethod = updated?.payment_method ?? "credit";
+        if (updated) {
+          status = updated.status;
+          paymentMethod = updated.payment_method;
+        } else {
+          const { data: fresh } = await supabase.from("orders").select("status, payment_method").eq("id", orderId).maybeSingle();
+          status = fresh?.status ?? status;
+          paymentMethod = fresh?.payment_method ?? paymentMethod;
+        }
+      } else if (outcome === "paid" && status === "pending_payment") {
+        console.error(`get-payment-status: amount not confirmed order=${orderId} expected=${order.total} got=${amount}`);
       } else if (outcome === "failed" && status === "pending_payment") {
         await supabase.from("orders").update({ status: "payment_failed" }).eq("id", orderId);
         status = "payment_failed";
