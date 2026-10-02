@@ -9,6 +9,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
 
+import { loadTestCustomerFilter } from "../_shared/testCustomers.ts";
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -306,14 +307,7 @@ Deno.serve(async (req) => {
         const items = (itemsRes.data ?? []) as Item[];
         const movs = movsRes.data ?? [];
         // Exclude internal test customers from every calculation
-        const isTestCustomer = (name?: string | null, phone?: string | null) => {
-          const n = (name ?? "").trim().toLowerCase();
-          const p = (phone ?? "").replace(/[^0-9]/g, "");
-          const namePatterns = ["טסט", "test", "בדיקה", "בדקה", "אבישי שלזינגר"];
-          if (n && namePatterns.some((x) => n.includes(x.toLowerCase()))) return true;
-          if (p && ["0539311200", "0501234567"].some((x) => p.endsWith(x.slice(1)))) return true;
-          return false;
-        };
+        const isTestCustomer = await loadTestCustomerFilter(supabase);
         const allOrders = (ordersRes.data ?? []) as Array<{ id: string; total: number; customer_name?: string | null; customer_phone?: string | null }>;
         const excludedOrderIds = new Set(
           allOrders.filter((o) => isTestCustomer(o.customer_name, o.customer_phone)).map((o) => o.id),
