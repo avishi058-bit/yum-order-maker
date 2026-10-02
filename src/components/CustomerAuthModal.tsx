@@ -13,7 +13,7 @@ interface CustomerAuthModalProps {
 }
 
 const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps) => {
-  const { register, login } = useCustomerAuth();
+  const { register } = useCustomerAuth();
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -50,8 +50,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
 
     setLoading(true);
     try {
-      // Always register - backend validates that phone matches the name
-      // (returning users with the same name are treated as login).
+      // Saved on this device only.
       await register(phone, name.trim(), termsAccepted, marketingConsent);
       toast({ title: `ברוך הבא, ${name.trim().split(" ")[0]}! 🎉` });
       handleClose();
@@ -92,7 +91,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
                   כדי שנוכל לעדכן אותך מתי ההמבורגר מוכן 🍔
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  הכנס/י את מספר הטלפון והשם שאיתם הזמנת - זה חד-פעמי, אחרי זה תיכנס/י אוטומטית תמיד :)
+                  הכנס/י טלפון ושם - הפרטים נשמרים במכשיר הזה בלבד ומשמשים למילוי אוטומטי בהזמנה הבאה :)
                 </p>
               </div>
 

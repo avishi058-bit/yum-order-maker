@@ -44,8 +44,20 @@ const readLastOrderCustomer = (): { phone: string; name: string } | null => {
   } catch {}
   return null;
 };
-const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/customer-auth`;
-const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const MARKETING_PENDING_KEY = "habakta_marketing_pending";
+
+/** Marketing opt-in chosen on this device; sent once with the next order. */
+export const takePendingMarketingConsent = (phone: string): boolean => {
+  try {
+    const raw = localStorage.getItem(MARKETING_PENDING_KEY);
+    if (!raw) return false;
+    const v = JSON.parse(raw);
+    return v?.phone === phone && v?.consent === true;
+  } catch { return false; }
+};
+export const clearPendingMarketingConsent = () => {
+  try { localStorage.removeItem(MARKETING_PENDING_KEY); } catch {}
+};
 
 export interface CustomerData {
   name: string;
@@ -74,172 +86,87 @@ interface CustomerAuthContextType {
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | null>(null);
 
-async function callAuth(action: string, body: Record<string, unknown>) {
-  const res = await fetch(`${EDGE_URL}?action=${action}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", apikey: API_KEY },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "שגיאה");
-  return data;
-}
-
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [favoriteItems, setFavoriteState] = useState<CartItem[] | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Try auto-login on mount
+  // Device-only session: everything is read from this device's storage.
+  // The server never returns customer data by phone or token.
   useEffect(() => {
-    // Restore cached favorite immediately so UI doesn't flash
+    try { localStorage.removeItem(DEVICE_TOKEN_KEY); } catch {}
     try {
       const cachedFav = localStorage.getItem(FAVORITE_KEY);
       if (cachedFav) setFavoriteState(JSON.parse(cachedFav));
     } catch {}
-
-    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
-    if (!token) {
-      try {
-        const cached = localStorage.getItem(CUSTOMER_KEY);
-        if (cached) setCustomer(JSON.parse(cached));
-      } catch {}
-
-      // PWA opened standalone without a session → try to recover from the last order on this device.
-      // This handles the flow: order on website → install to home screen → open app for the first time.
-      const recovery = isStandalone() ? readLastOrderCustomer() : null;
-      if (recovery) {
-        callAuth("link-from-order", { phone: recovery.phone, name: recovery.name })
-          .then((data) => {
-            const c = data.customer as CustomerData & { favoriteItems?: CartItem[] | null };
-            localStorage.setItem(DEVICE_TOKEN_KEY, data.deviceToken);
-            localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
-            setCustomer({
-              name: c.name, phone: c.phone, isReturning: c.isReturning,
-              loginCount: c.loginCount, lastLoginAt: c.lastLoginAt,
-            });
-            const fav = c.favoriteItems ?? null;
-            setFavoriteState(fav);
-            if (fav) localStorage.setItem(FAVORITE_KEY, JSON.stringify(fav));
-            // Immediately ask for notification permission so they get real-time order updates.
-            setTimeout(() => {
-              try { window.dispatchEvent(new CustomEvent("request-notify-permission")); } catch {}
-            }, 800);
-          })
-          .catch(() => {})
-          .finally(() => setLoading(false));
-        return;
+    let restored: CustomerData | null = null;
+    try {
+      const cached = localStorage.getItem(CUSTOMER_KEY);
+      if (cached) {
+        const c = JSON.parse(cached);
+        if (c?.phone && c?.name) restored = { name: c.name, phone: c.phone, isReturning: true, loginCount: c.loginCount ?? 1 };
       }
-
-      setLoading(false);
-      return;
+    } catch {}
+    // PWA opened standalone for the first time: reuse this device's last order details.
+    if (!restored && isStandalone()) {
+      const rec = readLastOrderCustomer();
+      if (rec) {
+        restored = { name: rec.name, phone: rec.phone, isReturning: true, loginCount: 1 };
+        localStorage.setItem(CUSTOMER_KEY, JSON.stringify(restored));
+      }
     }
-
-    callAuth("auto-login", { deviceToken: token })
-      .then((data) => {
-        const c = data.customer as CustomerData & { favoriteItems?: CartItem[] | null };
-        setCustomer({
-          name: c.name,
-          phone: c.phone,
-          isReturning: c.isReturning,
-          loginCount: c.loginCount,
-          lastLoginAt: c.lastLoginAt,
-        });
-        localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
-        const fav = c.favoriteItems ?? null;
-        setFavoriteState(fav);
-        if (fav) localStorage.setItem(FAVORITE_KEY, JSON.stringify(fav));
-        else localStorage.removeItem(FAVORITE_KEY);
-      })
-      .catch(() => {
-        localStorage.removeItem(DEVICE_TOKEN_KEY);
-        localStorage.removeItem(CUSTOMER_KEY);
-        localStorage.removeItem(FAVORITE_KEY);
-      })
-      .finally(() => setLoading(false));
+    if (restored) setCustomer(restored);
+    setLoading(false);
   }, []);
 
-  const saveSession = useCallback((token: string, c: CustomerData & { favoriteItems?: CartItem[] | null }) => {
-    localStorage.setItem(DEVICE_TOKEN_KEY, token);
+  const saveLocal = useCallback((phone: string, name: string) => {
+    const c: CustomerData = { name, phone, isReturning: false, loginCount: 1 };
     localStorage.setItem(CUSTOMER_KEY, JSON.stringify(c));
-    setCustomer({
-      name: c.name, phone: c.phone, isReturning: c.isReturning,
-      loginCount: c.loginCount, lastLoginAt: c.lastLoginAt,
-    });
-    const fav = c.favoriteItems ?? null;
-    setFavoriteState(fav);
-    if (fav) localStorage.setItem(FAVORITE_KEY, JSON.stringify(fav));
-    else localStorage.removeItem(FAVORITE_KEY);
+    setCustomer(c);
   }, []);
 
-  const register = useCallback(async (phone: string, name: string, termsAccepted: boolean, marketingConsent: boolean) => {
-    const data = await callAuth("register", { phone, name, termsAccepted, marketingConsent });
-    saveSession(data.deviceToken, data.customer);
-  }, [saveSession]);
+  const register = useCallback(async (phone: string, name: string, _termsAccepted: boolean, marketingConsent: boolean) => {
+    saveLocal(phone, name);
+    try {
+      if (marketingConsent) localStorage.setItem(MARKETING_PENDING_KEY, JSON.stringify({ phone, consent: true }));
+      else localStorage.removeItem(MARKETING_PENDING_KEY);
+    } catch {}
+  }, [saveLocal]);
 
-  const login = useCallback(async (phone: string) => {
-    const data = await callAuth("login", { phone });
-    saveSession(data.deviceToken, data.customer);
-  }, [saveSession]);
+  const login = useCallback(async (_phone: string) => {
+    throw new Error("not_supported");
+  }, []);
 
-  const logout = useCallback(async () => {
-    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
-    if (token) {
-      try { await callAuth("logout", { deviceToken: token }); } catch {}
-    }
-    localStorage.removeItem(DEVICE_TOKEN_KEY);
+  const clearAll = useCallback(() => {
     localStorage.removeItem(CUSTOMER_KEY);
     localStorage.removeItem(FAVORITE_KEY);
     setCustomer(null);
     setFavoriteState(null);
   }, []);
 
-  const logoutAll = useCallback(async () => {
-    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
-    const phone = customer?.phone;
-    if (token && phone) {
-      try { await callAuth("logout-all", { deviceToken: token, phone }); } catch {}
-    }
-    localStorage.removeItem(DEVICE_TOKEN_KEY);
-    localStorage.removeItem(CUSTOMER_KEY);
-    localStorage.removeItem(FAVORITE_KEY);
-    setCustomer(null);
-    setFavoriteState(null);
-  }, [customer]);
+  const logout = useCallback(async () => { clearAll(); }, [clearAll]);
+  const logoutAll = useCallback(async () => { clearAll(); }, [clearAll]);
 
   const linkFromOrder = useCallback(async (phone: string, name: string) => {
-    if (localStorage.getItem(DEVICE_TOKEN_KEY)) return;
-    try {
-      const data = await callAuth("link-from-order", { phone, name });
-      saveSession(data.deviceToken, data.customer);
-    } catch (e) {
-      console.warn("[auth] linkFromOrder failed", e);
-    }
-  }, [saveSession]);
+    if (localStorage.getItem(CUSTOMER_KEY)) return;
+    saveLocal(phone, name);
+  }, [saveLocal]);
 
   const setFavoriteItems = useCallback(async (items: CartItem[] | null) => {
-    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
-    if (!token) throw new Error("not_logged_in");
-    await callAuth("set-favorite", { deviceToken: token, items });
     setFavoriteState(items);
     if (items) localStorage.setItem(FAVORITE_KEY, JSON.stringify(items));
     else localStorage.removeItem(FAVORITE_KEY);
   }, []);
 
   const updateName = useCallback(async (newName: string) => {
-    const token = localStorage.getItem(DEVICE_TOKEN_KEY);
-    if (!token) throw new Error("not_logged_in");
     const trimmed = newName.trim();
     if (!trimmed) throw new Error("שם לא יכול להיות ריק");
-    const data = await callAuth("update-name", { deviceToken: token, name: trimmed });
-    setCustomer((prev) => (prev ? { ...prev, name: data.name } : prev));
-    try {
-      const cached = localStorage.getItem(CUSTOMER_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        localStorage.setItem(CUSTOMER_KEY, JSON.stringify({ ...parsed, name: data.name }));
-      }
-    } catch {}
+    setCustomer((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, name: trimmed };
+      try { localStorage.setItem(CUSTOMER_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
   }, []);
 
   return (

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setTrackedOrder } from "@/components/OrderTopBar";
+import { confirmLocalOrder } from "@/lib/localOrderHistory";
 
 /**
  * Payment confirmation screen shown after returning from the hosted checkout.
@@ -30,6 +31,7 @@ const OrderConfirmation = () => {
       // Success screen ONLY when the server confirms a full, completed charge.
       if (!error && data?.paid === true) {
         setOrderNumber(data.orderNumber ?? null);
+        confirmLocalOrder(orderId, data.orderNumber ?? null);
         setState("paid");
         return;
       }

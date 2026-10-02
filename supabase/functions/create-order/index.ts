@@ -137,6 +137,9 @@ const BodySchema = z.object({
   soldierDonation: z.number().min(0).max(1000).optional().default(0),
   // Regulation approval timestamp - required server-side when soldierDonation > 0.
   soldierFundTermsAcceptedAt: z.string().min(1).max(64).optional().nullable(),
+  // Marketing opt-in chosen on the ordering device. Recorded ONLY together
+  // with a real order placed from that device (never via a standalone call).
+  marketingConsent: z.boolean().optional().default(false),
 });
 
 type CartItemInput = z.infer<typeof CartItemSchema>;
@@ -762,6 +765,30 @@ Deno.serve(async (req: Request) => {
   // Persist exactly what the customer approved, with IP + user-agent, so the
   // business has evidence if a claim is ever raised.
   const userAgent = req.headers.get("user-agent") || null;
+  if (body.marketingConsent === true && !isStationOrKiosk && /^05\d{8}$/.test(body.customerPhone || "")) {
+    const nowIso = new Date().toISOString();
+    const { data: cust } = await supabase
+      .from("customers")
+      .update({ marketing_consent: true, marketing_consent_at: nowIso })
+      .eq("phone", body.customerPhone)
+      .select("id")
+      .maybeSingle();
+    await supabase.from("consent_events").insert({
+      customer_id: cust?.id ?? null,
+      phone: body.customerPhone,
+      customer_name: body.customerName,
+      consent_type: "marketing",
+      action: "granted",
+      method: "order_checkbox",
+      consent_text_version: "2026-07-19",
+      consent_text: "אני מאשר/ת קבלת עדכונים, מבצעים והנחות ב-WhatsApp",
+      order_id: order.id,
+      source: body.orderSource,
+      ip_address: clientIp,
+      user_agent: req.headers.get("user-agent"),
+    });
+  }
+
   const consentBase = {
     supabase,
     phone: phoneForOrder,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Package, RefreshCw, ChevronDown, ChevronUp, Smartphone } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getLocalOrders } from "@/lib/localOrderHistory";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { menuItems, type MenuItem } from "@/data/menu";
 import type { CartItem } from "@/components/CartDrawer";
@@ -73,23 +73,8 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
 
   useEffect(() => {
     if (!open) return;
-    const deviceToken = localStorage.getItem("habakta_device_token");
-    if (!deviceToken) {
-      setOrders([]);
-      return;
-    }
-    setLoading(true);
-    supabase.functions
-      .invoke("get-customer-orders", { body: { deviceToken } })
-      .then(({ data, error }) => {
-        if (error) {
-          toast({ title: "שגיאה", description: "לא ניתן לטעון היסטוריה" });
-          setOrders([]);
-        } else {
-          setOrders(data?.orders ?? []);
-        }
-      })
-      .finally(() => setLoading(false));
+    setLoading(false);
+    setOrders(getLocalOrders() as unknown as HistoryOrder[]);
   }, [open]);
 
   const handleReorder = (order: HistoryOrder) => {
@@ -141,7 +126,10 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
             <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card sticky top-0">
               <div className="flex items-center gap-2">
                 <Package size={20} className="text-primary" />
-                <h2 className="text-lg font-bold text-foreground">ההזמנות שלי</h2>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">ההזמנות שלי</h2>
+                  <p className="text-xs text-muted-foreground">ההיסטוריה נשמרת במכשיר הזה בלבד</p>
+                </div>
               </div>
               <button
                 onClick={onClose}
@@ -185,9 +173,11 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                            <span className="font-bold text-foreground">הזמנה מתאריך {formatDate(order.created_at)}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${STATUS_COLOR[order.status] || "bg-muted text-muted-foreground"}`}>
-                            {STATUS_LABEL[order.status] || order.status}
-                          </span>
+                          {order.status && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${STATUS_COLOR[order.status] || "bg-muted text-muted-foreground"}`}>
+                              {STATUS_LABEL[order.status] || order.status}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
