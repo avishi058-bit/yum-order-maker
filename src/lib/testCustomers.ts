@@ -1,22 +1,33 @@
 // Customers/orders used for internal testing - excluded from all statistics & reports.
-const EXCLUDED_NAME_PATTERNS = [
-  "טסט",
-  "test",
-  "בדיקה",
-  "בדקה",
-  "אבישי שלזינגר",
-];
+// The list lives in the admin-only `test_customers` table (edited in the admin
+// screen). Call `loadTestCustomers()` before filtering; until it resolves the
+// filter excludes nothing.
+import { supabase } from "@/integrations/supabase/client";
 
-const EXCLUDED_PHONES = ["0539311200", "0501234567"];
+let namePatterns: string[] = [];
+let phones: string[] = [];
+let loading: Promise<void> | null = null;
 
 const normalize = (v?: string | null) =>
   (v || "").toString().trim().toLowerCase().replace(/[\u200f\u200e]/g, "");
 
+export const loadTestCustomers = (force = false): Promise<void> => {
+  if (loading && !force) return loading;
+  loading = (async () => {
+    const { data, error } = await (supabase as any).from("test_customers").select("kind, value");
+    if (error) return;
+    const rows = (data ?? []) as Array<{ kind: string; value: string }>;
+    namePatterns = rows.filter((r) => r.kind === "name").map((r) => normalize(r.value));
+    phones = rows.filter((r) => r.kind === "phone").map((r) => r.value.replace(/[^0-9]/g, "").replace(/^0/, ""));
+  })();
+  return loading;
+};
+
 export const isTestCustomer = (name?: string | null, phone?: string | null): boolean => {
   const n = normalize(name);
-  if (n && EXCLUDED_NAME_PATTERNS.some((p) => n.includes(normalize(p)))) return true;
+  if (n && namePatterns.some((p) => p && n.includes(p))) return true;
   const p = normalize(phone).replace(/[^0-9]/g, "");
-  if (p && EXCLUDED_PHONES.some((x) => p.endsWith(x.replace(/^0/, "")))) return true;
+  if (p && phones.some((x) => x && p.endsWith(x))) return true;
   return false;
 };
 
