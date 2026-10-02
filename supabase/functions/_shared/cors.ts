@@ -2,22 +2,41 @@
 //
 // TWO modes:
 // 1. `corsHeadersFor(req)` - for endpoints called from the browser. Reflects
-//    the Origin header only if it matches one of our allow-listed sites
-//    (production, preview, sandbox, and localhost dev). Any other origin
-//    receives `null` and the browser blocks the request.
+//    the Origin header only if it is one of OUR exact origins. Any other
+//    origin receives `null` and the browser blocks the request.
 // 2. `internalCorsHeaders` - for endpoints only invoked server-to-server
-//    (pg_net webhooks, cron). Sets `Access-Control-Allow-Origin: null`
-//    so no browser origin can invoke them.
+//    (pg_net webhooks, cron). Sets `Access-Control-Allow-Origin: null`.
 //
-// Both modes also cover the preflight `Access-Control-Allow-*` fields.
+// Allowed origins: the ALLOWED_ORIGINS env var (comma-separated) when set,
+// otherwise the built-in list below. PUBLIC_APP_URL (if set) is always added.
+// localhost / 127.0.0.1 are allowed for local development.
 
-const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
-  /^https:\/\/yum-order-maker\.lovable\.app$/,
-  /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
-  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
-  /^http:\/\/localhost(:\d+)?$/,
-  /^http:\/\/127\.0\.0\.1(:\d+)?$/,
+const DEFAULT_ORIGINS = [
+  "https://habikta-burger.lovable.app",
+  "https://id-preview--a11d489f-9e42-43ff-b3f5-02cfc468e993.lovable.app",
+  "https://a11d489f-9e42-43ff-b3f5-02cfc468e993.lovableproject.com",
 ];
+
+const LOCAL_DEV = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
+function buildAllowList(): Set<string> {
+  const fromEnv = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+    .split(",")
+    .map((s) => s.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+  const list = fromEnv.length ? fromEnv : [...DEFAULT_ORIGINS];
+  const appUrl = (Deno.env.get("PUBLIC_APP_URL") ?? "").trim().replace(/\/+$/, "");
+  if (appUrl) {
+    try { list.push(new URL(appUrl).origin); } catch { /* ignore */ }
+  }
+  return new Set(list);
+}
+
+const ALLOWED = buildAllowList();
+
+export function isAllowedOrigin(origin: string): boolean {
+  return ALLOWED.has(origin) || LOCAL_DEV.test(origin);
+}
 
 const COMMON_HEADERS = {
   "Access-Control-Allow-Headers":
@@ -28,10 +47,9 @@ const COMMON_HEADERS = {
 
 export function corsHeadersFor(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
-  const allowed = ALLOWED_ORIGIN_PATTERNS.some((re) => re.test(origin));
   return {
     ...COMMON_HEADERS,
-    "Access-Control-Allow-Origin": allowed ? origin : "null",
+    "Access-Control-Allow-Origin": isAllowedOrigin(origin) ? origin : "null",
   };
 }
 
