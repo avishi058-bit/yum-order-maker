@@ -87,6 +87,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    const isTestCustomer = await loadTestCustomerFilter(supabase);
     const UNCOUNTED = new Set(["cancelled", "pending_payment", "payment_failed", "declined"]);
     const counted = (orders ?? []).filter(
       (o) =>
