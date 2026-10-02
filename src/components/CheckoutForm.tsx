@@ -9,7 +9,8 @@ import { shouldChargeMealUpgrade, MEAL_UPGRADE_PRICE } from "@/lib/cartPricing";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
-import { useCustomerAuth, rememberLastOrderCustomer } from "@/contexts/CustomerAuthContext";
+import { useCustomerAuth, rememberLastOrderCustomer, takePendingMarketingConsent, clearPendingMarketingConsent } from "@/contexts/CustomerAuthContext";
+import { addLocalOrder } from "@/lib/localOrderHistory";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { validateIsraeliPhone } from "@/lib/utils";
 import { Banknote, CreditCard, Store, ArrowRight, ArrowUp, Smartphone } from "lucide-react";
@@ -490,6 +491,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         // True only when the customer confirmed they really want to resend an
         // identical order (duplicate guard).
         allowDuplicate,
+        // Marketing opt-in chosen on this device - recorded server-side only
+        // together with this order.
+        marketingConsent: !isKioskPath && !!form.phone && takePendingMarketingConsent(form.phone),
       },
     });
 
@@ -515,6 +519,33 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    clearPendingMarketingConsent();
+    // Device-only order history (never on shared kiosk/station screens).
+    if (!isKioskPath && !isStation && !donationOnly) {
+      addLocalOrder({
+        id: data.orderId,
+        order_number: data.orderNumber ?? null,
+        created_at: new Date().toISOString(),
+        total: Number(data.total) || 0,
+        payment_method: paymentMethod,
+        notes: form.notes || null,
+        items: items.map((it) => ({
+          item_id: it.menuItemId,
+          item_name: it.name,
+          price: it.price,
+          quantity: it.quantity,
+          toppings: it.toppings ?? [],
+          removals: it.removals ?? [],
+          with_meal: !!it.withMeal,
+          meal_side: it.mealSideId ?? null,
+          meal_drink: it.mealDrinkId ?? null,
+          deal_burgers: it.dealBurgers ?? null,
+          deal_drinks: it.dealDrinks ?? null,
+        })),
+        // Card orders appear only after the payment is confirmed.
+        confirmed: paymentMethod !== "credit",
+      });
+    }
     // Delivery request finalization now happens inside create-order server-side
     // (validated by client_token). Client-side UPDATE is intentionally removed -
     // anon writes on delivery_requests are blocked by RLS.

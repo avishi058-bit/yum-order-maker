@@ -173,9 +173,11 @@ const OrderHistoryModal = ({ open, onClose, onReorder }: Props) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                            <span className="font-bold text-foreground">הזמנה מתאריך {formatDate(order.created_at)}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${STATUS_COLOR[order.status] || "bg-muted text-muted-foreground"}`}>
-                            {STATUS_LABEL[order.status] || order.status}
-                          </span>
+                          {order.status && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${STATUS_COLOR[order.status] || "bg-muted text-muted-foreground"}`}>
+                              {STATUS_LABEL[order.status] || order.status}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
