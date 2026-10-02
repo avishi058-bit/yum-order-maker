@@ -987,6 +987,7 @@ export type Database = {
           notes: string | null
           order_number: number
           order_source: string
+          paid_amount: number | null
           paid_at: string | null
           payment_method: string | null
           payment_reference: string | null
@@ -1021,6 +1022,7 @@ export type Database = {
           notes?: string | null
           order_number?: number
           order_source?: string
+          paid_amount?: number | null
           paid_at?: string | null
           payment_method?: string | null
           payment_reference?: string | null
@@ -1055,6 +1057,7 @@ export type Database = {
           notes?: string | null
           order_number?: number
           order_source?: string
+          paid_amount?: number | null
           paid_at?: string | null
           payment_method?: string | null
           payment_reference?: string | null
@@ -1584,6 +1587,27 @@ export type Database = {
         }
         Relationships: []
       }
+      test_customers: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          value?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1679,6 +1703,10 @@ export type Database = {
       cleanup_old_rate_limit_attempts: { Args: never; Returns: undefined }
       cleanup_old_verification_codes: { Args: never; Returns: undefined }
       current_courier_id: { Args: never; Returns: string }
+      edit_order_apply: {
+        Args: { p_items: Json; p_order_id: string; p_total: number }
+        Returns: Json
+      }
       generate_daily_order_number: { Args: never; Returns: number }
       get_webhook_secret: { Args: never; Returns: string }
       has_role: {
