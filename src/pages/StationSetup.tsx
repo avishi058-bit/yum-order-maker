@@ -1,9 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAgentSecret, setAgentSecret } from "@/lib/localPrintAgent";
 
 const StationSetup = () => {
   const [isStation] = useState(() => localStorage.getItem("habakta_station") === "true");
   const navigate = useNavigate();
+  const [agentCode, setAgentCode] = useState("");
+  const [hasAgentCode, setHasAgentCode] = useState(() => !!getAgentSecret());
+
+  const saveAgentCode = () => {
+    const v = agentCode.trim();
+    if (v.length < 16) return;
+    setAgentSecret(v);
+    setAgentCode("");
+    setHasAgentCode(true);
+  };
 
   const enable = () => {
     localStorage.setItem("habakta_station", "true");
@@ -48,6 +59,32 @@ const StationSetup = () => {
               בטל עמדת הזמנות
             </button>
           )}
+        </div>
+
+        <div className="border-t border-border pt-6 space-y-3 text-right">
+          <h2 className="font-black text-foreground">🖨️ קוד אפליקציית ההדפסה</h2>
+          <p className="text-sm text-muted-foreground">
+            פתחו את אפליקציית ההדפסה בטאבלט והקלידו כאן את הקוד שמוצג בה. הקוד נשמר רק במכשיר הזה.
+          </p>
+          <p className="text-sm font-bold">{hasAgentCode ? "✅ קוד שמור במכשיר" : "⚠️ לא נשמר קוד - ההדפסה דרך האפליקציה לא תעבוד"}</p>
+          <div className="flex gap-2">
+            <input
+              value={agentCode}
+              onChange={(e) => setAgentCode(e.target.value)}
+              dir="ltr"
+              autoCapitalize="off"
+              autoComplete="off"
+              placeholder="קוד מהאפליקציה"
+              className="flex-1 bg-secondary border border-border rounded-xl px-3 py-2 text-foreground font-mono"
+            />
+            <button
+              onClick={saveAgentCode}
+              disabled={agentCode.trim().length < 16}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold disabled:opacity-50"
+            >
+              שמור
+            </button>
+          </div>
         </div>
       </div>
     </div>

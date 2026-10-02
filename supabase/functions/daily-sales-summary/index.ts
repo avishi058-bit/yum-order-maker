@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
 import { internalCorsHeaders as corsHeaders } from "../_shared/cors.ts";
+import { loadTestCustomerFilter } from "../_shared/testCustomers.ts";
 
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
@@ -12,19 +13,6 @@ const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:contact@example.c
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
-
-// Test customers - excluded from the totals (mirrors src/lib/testCustomers.ts)
-const EXCLUDED_NAME_PATTERNS = ["טסט", "test", "בדיקה", "בדקה", "אבישי שלזינגר"];
-const EXCLUDED_PHONES = ["0539311200", "0501234567"];
-const normalize = (v?: string | null) =>
-  (v || "").toString().trim().toLowerCase().replace(/[\u200f\u200e]/g, "");
-const isTestCustomer = (name?: string | null, phone?: string | null): boolean => {
-  const n = normalize(name);
-  if (n && EXCLUDED_NAME_PATTERNS.some((p) => n.includes(normalize(p)))) return true;
-  const p = normalize(phone).replace(/[^0-9]/g, "");
-  if (p && EXCLUDED_PHONES.some((x) => p.endsWith(x.replace(/^0/, "")))) return true;
-  return false;
-};
 
 /**
  * Fallback start of the current BUSINESS day (not calendar day).
@@ -99,6 +87,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    const isTestCustomer = await loadTestCustomerFilter(supabase);
     const UNCOUNTED = new Set(["cancelled", "pending_payment", "payment_failed", "declined"]);
     const counted = (orders ?? []).filter(
       (o) =>

@@ -39,15 +39,18 @@ object Config {
     const val SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB"
 
     /**
-     * Shared secret the browser client must send in `X-Agent-Secret` on every
-     * /print-raw call. Loopback binding already blocks the remote network,
-     * but any web page the tablet visits can also reach 127.0.0.1 — without
-     * this header, such a page could trigger nuisance prints (CSRF).
-     *
-     * MUST match the value at `src/lib/localPrintAgent.ts:AGENT_SECRET`.
-     * Change both together whenever you rotate this.
+     * Website origins allowed to call the agent (CORS). Any other page the
+     * tablet opens gets no CORS headers, so the browser blocks its requests.
      */
-    const val AGENT_SECRET = "kitchen-agent-fd6b0e29-4a1c-4d3e-9c7b-8f1a2e5d0c47"
+    val ALLOWED_ORIGINS: Set<String> = setOf(
+        "https://habikta-burger.lovable.app",
+        "https://id-preview--a11d489f-9e42-43ff-b3f5-02cfc468e993.lovable.app",
+        "https://a11d489f-9e42-43ff-b3f5-02cfc468e993.lovableproject.com",
+        "http://localhost:8080",
+    )
 
-    const val VERSION = "1.2.0"
+    /** Hosts accepted in the Host header (DNS-rebinding protection). */
+    val ALLOWED_HOSTS: Set<String> = setOf("127.0.0.1", "localhost")
+
+    const val VERSION = "1.3.0"
 }

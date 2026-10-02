@@ -27,12 +27,16 @@ class MainActivity : AppCompatActivity() {
         }
         statusText = TextView(this).apply {
             textSize = 16f
+            setTextIsSelectable(true)
             text = """
                 הבקתה — Print Agent
                 
                 מאזין על: http://127.0.0.1:${Config.HTTP_PORT}
                 מדפסות נתמכות: ${Config.KNOWN_PRINTERS.joinToString { it.namePrefix + "* (" + it.type.label + ")" }}
                 גרסה: ${Config.VERSION}
+
+                קוד חיבור לאתר (להקליד פעם אחת בעמוד /station-setup):
+                ${AgentSecret.get(this@MainActivity)}
                 
                 ההגדרה הזו רצה ברקע — אפשר לסגור את האפליקציה.
                 

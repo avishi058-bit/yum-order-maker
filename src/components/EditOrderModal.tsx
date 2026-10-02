@@ -103,7 +103,7 @@ export default function EditOrderModal({
       toast.error("חייב להישאר לפחות פריט אחד");
       return;
     }
-    if (working.some((it) => !it.item_id || it.quantity < 1)) {
+    if (working.some((it) => !it.item_id || !Number.isInteger(Number(it.quantity)) || it.quantity < 1 || it.quantity > 50)) {
       toast.error("יש פריט לא תקין");
       return;
     }
@@ -131,6 +131,10 @@ export default function EditOrderModal({
         throw new Error((data as any)?.error ?? error?.message ?? "שגיאה");
       }
       toast.success("ההזמנה עודכנה");
+      const warn = (data as any)?.payment_warning;
+      if (warn?.message) {
+        toast.warning(warn.message, { duration: 20000 });
+      }
       onSaved({ requires_reprint: !!(data as any)?.requires_reprint });
       onClose();
     } catch (e: any) {

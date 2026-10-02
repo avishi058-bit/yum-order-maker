@@ -41,13 +41,23 @@ const MEAL_DRINK_BY_NAME = new Map(MEAL_DRINKS_PRICING.map((d) => [d.name, d]));
 const DEAL_DRINK_BY_ID = new Map(DEAL_DRINKS_PRICING.map((d) => [d.id, d]));
 const DEAL_DRINK_BY_NAME = new Map(DEAL_DRINKS_PRICING.map((d) => [d.name, d]));
 
-// Kitchen-defined custom toppings, loaded per-request (name → price).
-let CUSTOM_TOPPING_BY_NAME = new Map<string, { name: string; price: number }>();
+type PriceCtx = {
+  // Kitchen-defined custom toppings, loaded per-request (name → price).
+  customToppings: Map<string, { name: string; price: number }>;
+  // Admin price overrides from site_settings.menu_item_overrides.
+  overrides: Record<string, { price?: number }>;
+};
 
-function priceLine(it: EditItem): { unit: number; error?: string } {
+function priceLine(it: EditItem, ctx: PriceCtx): { unit: number; error?: string } {
+  const CUSTOM_TOPPING_BY_NAME = ctx.customToppings;
   const menu = MENU_BY_ID.get(it.item_id);
-  if (!menu) return { unit: 0, error: `unknown item: ${it.item_id}` };
-  let unit = menu.price;
+  if (!menu) return { unit: 0, error: "unknown_item" };
+  const q = Number(it.quantity);
+  if (!Number.isInteger(q) || q < 1 || q > 50) return { unit: 0, error: "invalid_quantity" };
+  const ov = ctx.overrides?.[it.item_id];
+  let unit = ov && typeof ov.price === "number" && Number.isFinite(ov.price) && ov.price >= 0
+    ? ov.price
+    : menu.price;
 
   // Toppings (paid burger add-ons) - stored as Hebrew names on order_items.
   for (const t of it.toppings ?? []) {
@@ -160,7 +170,7 @@ Deno.serve(async (req) => {
     // Load order
     const { data: order, error: orderErr } = await admin
       .from("orders")
-      .select("id,status,order_items(*)")
+      .select("id,status,total,paid_at,paid_amount,payment_method,soldier_donation,order_items(*)")
       .eq("id", orderId)
       .maybeSingle();
     if (orderErr || !order) {
@@ -182,16 +192,27 @@ Deno.serve(async (req) => {
     const { data: customToppingRows } = await admin
       .from("custom_toppings")
       .select("name, price");
-    CUSTOM_TOPPING_BY_NAME = new Map(
-      (customToppingRows ?? []).map((r: any) => [r.name, { name: r.name, price: Number(r.price) || 0 }])
-    );
+    const { data: settingsRows } = await admin
+      .from("site_settings")
+      .select("menu_item_overrides")
+      .limit(1);
+    const rawOverrides = settingsRows?.[0]?.menu_item_overrides;
+    const ctx: PriceCtx = {
+      customToppings: new Map(
+        (customToppingRows ?? []).map((r: any) => [r.name, { name: r.name, price: Number(r.price) || 0 }])
+      ),
+      overrides: rawOverrides && typeof rawOverrides === "object"
+        ? rawOverrides as Record<string, { price?: number }>
+        : {},
+    };
 
     // ---- Server-side re-price. Reject unknown menu ids upfront. ----
     const priced: Array<{ item: EditItem; unit: number }> = [];
     for (const it of newItems) {
-      const p = priceLine(it);
+      const p = priceLine(it, ctx);
       if (p.error) {
-        return new Response(JSON.stringify({ error: p.error }), {
+        const msg = p.error === "invalid_quantity" ? "כמות חייבת להיות מספר שלם בין 1 ל-50" : "פריט לא מוכר בהזמנה";
+        return new Response(JSON.stringify({ error: msg, code: p.error }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -214,33 +235,7 @@ Deno.serve(async (req) => {
       if (!newSigs.has(signature(it)) && !isDrinkId(it.item_id)) requiresReprint = true;
     }
 
-    // Restore fridge for all old items
-    for (const oi of oldItems) {
-      const { error: restoreErr } = await admin.rpc("restore_fridge_for_order_item", {
-        p_order_id: orderId,
-        p_row: {
-          item_id: oi.item_id,
-          item_name: oi.item_name,
-          quantity: oi.quantity,
-          toppings: oi.toppings,
-          with_meal: oi.with_meal,
-          meal_side: oi.meal_side,
-          meal_drink: oi.meal_drink,
-          deal_burgers: oi.deal_burgers,
-          deal_drinks: oi.deal_drinks,
-        },
-      });
-      if (restoreErr) console.warn("[edit-order] restore failed", restoreErr);
-    }
-
-    // Delete old order_items
-    const { error: delErr } = await admin
-      .from("order_items")
-      .delete()
-      .eq("order_id", orderId);
-    if (delErr) throw delErr;
-
-    // Insert new order_items with server-computed prices.
+    // Server-computed rows (prices NEVER from the client).
     const rowsToInsert = priced.map(({ item: it, unit }) => ({
       order_id: orderId,
       item_id: it.item_id,
@@ -271,10 +266,9 @@ Deno.serve(async (req) => {
         deal_drinks: null,
       });
     }
-    const { error: insErr } = await admin.from("order_items").insert(rowsToInsert);
-    if (insErr) throw insErr;
 
-    // Server-computed total, minus a bounded admin discount.
+    // Server-computed total, minus a bounded admin discount, plus the
+    // soldier-fund donation which is not an editable line.
     const preservedGross = preservedItems.reduce(
       (s, oi) => s + Number(oi.price || 0) * Number(oi.quantity || 1),
       0
@@ -282,12 +276,40 @@ Deno.serve(async (req) => {
     const gross =
       priced.reduce((s, { unit, item }) => s + unit * Number(item.quantity), 0) + preservedGross;
     const discount = Math.min(requestedDiscount, gross);
-    const newTotal = Math.round((gross - discount) * 100) / 100;
+    const soldierDonation = Math.max(0, Number(order.soldier_donation) || 0);
+    const newTotal = Math.round((gross - discount + soldierDonation) * 100) / 100;
 
-    await admin
-      .from("orders")
-      .update({ total: newTotal, updated_at: new Date().toISOString() })
-      .eq("id", orderId);
+    // One transaction: restore fridge, delete, insert, update total.
+    const { data: applied, error: rpcErr } = await admin.rpc("edit_order_apply", {
+      p_order_id: orderId,
+      p_items: rowsToInsert,
+      p_total: newTotal,
+    });
+    if (rpcErr) {
+      console.error("[edit-order] apply failed", rpcErr);
+      const notEditable = String(rpcErr.message || "").includes("order_not_editable");
+      return new Response(
+        JSON.stringify({ error: notEditable ? "ההזמנה כבר לא ניתנת לעריכה" : "שמירת העריכה נכשלה, ההזמנה לא שונתה" }),
+        { status: notEditable ? 409 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Already-paid order whose total changed → warn the kitchen.
+    let paymentWarning: null | { paid_amount: number; new_total: number; difference: number; action: "collect" | "refund"; message: string } = null;
+    const paidAmount = (applied as any)?.paid ? Number((applied as any)?.paid_amount) : null;
+    if (paidAmount !== null && Number.isFinite(paidAmount) && Math.abs(newTotal - paidAmount) > 0.009) {
+      const diff = Math.round((newTotal - paidAmount) * 100) / 100;
+      const action = diff > 0 ? "collect" : "refund";
+      paymentWarning = {
+        paid_amount: paidAmount,
+        new_total: newTotal,
+        difference: Math.abs(diff),
+        action,
+        message: action === "collect"
+          ? `ההזמנה כבר שולמה (₪${paidAmount}). יש לגבות הפרש של ₪${Math.abs(diff)}.`
+          : `ההזמנה כבר שולמה (₪${paidAmount}). יש להחזיר ללקוח ₪${Math.abs(diff)}.`,
+      };
+    }
 
     return new Response(
       JSON.stringify({
@@ -296,12 +318,14 @@ Deno.serve(async (req) => {
         total: newTotal,
         gross,
         discount,
+        soldier_donation: soldierDonation,
+        payment_warning: paymentWarning,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     console.error("[edit-order] error", e);
-    return new Response(JSON.stringify({ error: String((e as Error)?.message ?? e) }), {
+    return new Response(JSON.stringify({ error: "שגיאה בעריכת ההזמנה" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

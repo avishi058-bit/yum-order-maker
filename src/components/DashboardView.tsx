@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, LineChart, Line, Legend, AreaChart, Area
 } from "recharts";
-import { excludeTestOrders } from "@/lib/testCustomers";
+import { excludeTestOrders, loadTestCustomers } from "@/lib/testCustomers";
 import { countBurgers, type CountableOrderItem } from "@/lib/burgerStats";
 import { computeProfit, setVegCost, ACCOUNTANT_MONTHLY, PAYSLIP_MONTHLY, OIL_WEEKLY, TRASH_BAGS_DAILY } from "@/lib/profitStats";
 import { toast } from "sonner";
@@ -249,6 +249,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         .lt("created_at", fetchEnd.toISOString())
         .order("created_at", { ascending: true });
 
+      await loadTestCustomers();
       if (cancelled) return;
       const clean = excludeTestOrders(withoutDonation(data) as Order[]);
       setOrders(clean);
@@ -604,6 +605,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         data.push(...page);
         if (page.length < 1000) break;
       }
+      await loadTestCustomers();
       if (cancelled) return;
       const clean = excludeTestOrders(withoutDonation(data) as Order[]).filter(isCounted);
       setTrendOrders(clean);

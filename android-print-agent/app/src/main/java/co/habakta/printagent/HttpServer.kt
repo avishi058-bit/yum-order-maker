@@ -16,18 +16,25 @@ import org.json.JSONObject
 class HttpServer(
     port: Int,
     private val printer: BluetoothPrinterClient,
+    private val secret: String,
 ) : NanoHTTPD("127.0.0.1", port) {
 
     override fun serve(session: IHTTPSession): Response {
-        // CORS — the website is on https://yum-order-maker.lovable.app /
-        // https://*.lovableproject.com etc. The server is bound to loopback
-        // only, but we also require an X-Agent-Secret header on /print-raw
-        // so a random webpage the tablet visits can't trigger prints.
-        val cors = mapOf(
-            "Access-Control-Allow-Origin" to "*",
+        // Host check: only 127.0.0.1 / localhost (blocks DNS-rebinding).
+        val host = (session.headers["host"] ?: "").substringBefore(":").lowercase()
+        if (host !in Config.ALLOWED_HOSTS) {
+            return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "forbidden host")
+        }
+
+        // CORS: reflect the Origin only when it is one of our sites.
+        val origin = session.headers["origin"] ?: ""
+        val cors = if (origin in Config.ALLOWED_ORIGINS) mapOf(
+            "Access-Control-Allow-Origin" to origin,
             "Access-Control-Allow-Methods" to "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers" to "Content-Type, X-Agent-Secret",
-        )
+            "Access-Control-Allow-Private-Network" to "true",
+            "Vary" to "Origin",
+        ) else mapOf("Vary" to "Origin")
 
         if (session.method == Method.OPTIONS) {
             return addHeaders(newFixedLengthResponse(Response.Status.OK, "text/plain", "ok"), cors)
@@ -39,7 +46,7 @@ class HttpServer(
                 session.method == Method.POST && session.uri == "/print-raw" -> {
                     val provided = session.headers["x-agent-secret"]
                         ?: session.headers["X-Agent-Secret"]
-                    if (provided != Config.AGENT_SECRET) {
+                    if (provided == null || !java.security.MessageDigest.isEqual(provided.toByteArray(), secret.toByteArray())) {
                         return addHeaders(
                             newFixedLengthResponse(
                                 Response.Status.UNAUTHORIZED,
@@ -62,7 +69,7 @@ class HttpServer(
                 newFixedLengthResponse(
                     Response.Status.INTERNAL_ERROR,
                     "application/json",
-                    JSONObject().put("error", e.message ?: "internal").toString(),
+                    JSONObject().put("error", "internal").toString(),
                 ),
                 cors,
             )
