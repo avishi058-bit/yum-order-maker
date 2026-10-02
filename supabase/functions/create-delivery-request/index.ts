@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { getClientIp } from '../_shared/clientIp.ts';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_maps';
 const ORIGIN_ADDRESS = 'דרך ערבי נחל 21, תושיה, ישראל';
@@ -123,9 +124,7 @@ Deno.serve(async (req) => {
 
     // Rate limit by IP: 10 delivery requests / 10 minutes per IP.
     const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      req.headers.get('x-real-ip') ||
-      'unknown';
+      getClientIp(req);
 
     const { data: allowed } = await supabase.rpc('check_rate_limit', {
       p_action: 'delivery_request_create',

@@ -105,6 +105,12 @@ item_key: lettuce=חסה, tomato=עגבנייה, red_onion=בצל סגול, pick
 ${aliases.length ? "שמות שהבעלים כבר הגדיר:\n" + aliases.map((a) => `- "${a.raw_name}" = ${a.label}`).join("\n") : ""}
 אם התמונה אינה חשבונית: is_invoice=false ו-lines ריק.`;
 
+/** Inventory tokens are stored as SHA-256 hex. */
+async function sha256Hex(v: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 Deno.serve(async (req) => {
   const cors = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -120,7 +126,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => null);
     const invToken = typeof body?.inventory_token === "string" ? body.inventory_token : "";
     if (invToken.length >= 16) {
-      const { data: t } = await admin.from("inventory_access_tokens").select("scope, expires_at, revoked_at").eq("token", invToken).maybeSingle();
+      const { data: t } = await admin.from("inventory_access_tokens").select("scope, expires_at, revoked_at").eq("token", await sha256Hex(invToken)).maybeSingle();
       if (!t || t.revoked_at || t.scope !== "admin" || (t.expires_at && new Date(t.expires_at).getTime() < Date.now()))
         return json({ error: "forbidden" }, 403);
     } else {

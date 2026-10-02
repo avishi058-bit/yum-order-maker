@@ -34,10 +34,12 @@ const EventsAdmin = () => {
       return;
     }
     const dataUrl = sigRef.current.getCanvas().toDataURL("image/png");
-    const { error } = await supa.from("event_settings").update({
+    // Stored in an admin-only table; attached to contracts server-side.
+    const { error } = await supa.from("business_private_settings").upsert({
+      id: 1,
       business_signature: dataUrl,
       updated_at: new Date().toISOString(),
-    }).eq("id", 1);
+    });
     if (error) { toast.error(error.message); return; }
     setSavedSignature(dataUrl);
     sigRef.current.clear();
@@ -45,17 +47,18 @@ const EventsAdmin = () => {
   };
 
   const load = async () => {
-    const [b, bd, s] = await Promise.all([
+    const [b, bd, s, priv] = await Promise.all([
       supa.from("event_bookings").select("*").order("created_at", { ascending: false }),
       supa.from("event_blocked_dates").select("*").order("blocked_date"),
-      supa.from("event_settings").select("*").eq("id", 1).maybeSingle(),
+      supa.from("event_settings").select("id, contract_template, minimum_amount, kitchen_prep").eq("id", 1).maybeSingle(),
+      supa.from("business_private_settings").select("business_signature").eq("id", 1).maybeSingle(),
     ]);
+    setSavedSignature(priv.data?.business_signature || "");
     setBookings(b.data || []);
     setBlocked(bd.data || []);
     if (s.data) {
       setContractTemplate(s.data.contract_template || "");
       setMinAmount(Number(s.data.minimum_amount) || 2000);
-      setSavedSignature(s.data.business_signature || "");
       if (s.data.kitchen_prep) setPrep({ ...DEFAULT_PREP_SETTINGS, ...s.data.kitchen_prep });
     }
   };

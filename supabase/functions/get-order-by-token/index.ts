@@ -10,6 +10,7 @@
  *   attacker cannot distinguish between the two.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { getClientIp } from "../_shared/clientIp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,9 +42,7 @@ Deno.serve(async (req) => {
 
     // ── Rate limit by IP ────────────────────────────────────────────────
     const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+      getClientIp(req);
 
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
       p_action: "order_lookup",
@@ -91,9 +90,20 @@ Deno.serve(async (req) => {
       .limit(20);
 
     const wanted = normalizePhone(phone);
-    const order = (candidates ?? []).find(
-      (o) => normalizePhone(o.customer_phone ?? "") === wanted,
-    );
+    // A real phone has 9+ digits. Orders without a phone (kiosk, stored as
+    // "-" or empty) can never be matched by phone.
+    const digits = (v: string) => v.replace(/\D/g, "");
+    if (digits(wanted).length < 9) {
+      await recordFailure();
+      return new Response(
+        JSON.stringify({ error: "not_found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const order = (candidates ?? []).find((o) => {
+      const stored = normalizePhone(o.customer_phone ?? "");
+      return digits(stored).length >= 9 && stored === wanted;
+    });
 
     if (!order) {
       await recordFailure();

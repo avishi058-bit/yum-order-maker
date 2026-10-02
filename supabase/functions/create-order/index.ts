@@ -18,6 +18,7 @@ import {
   toLookup,
 } from "../_shared/menu-pricing.ts";
 import { recordConsent } from "../_shared/consent.ts";
+import { getClientIp } from "../_shared/clientIp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -150,8 +151,9 @@ function jsonResponse(body: unknown, status = 200) {
 async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
   const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
   if (!secret) {
-    console.warn("TURNSTILE_SECRET_KEY not configured; skipping verification");
-    return true;
+    // Fail closed: never skip the bot check because of missing configuration.
+    console.error("TURNSTILE_SECRET_KEY not configured; rejecting request");
+    return false;
   }
 
   try {
@@ -333,7 +335,7 @@ Deno.serve(async (req: Request) => {
     if (!body.turnstileToken) {
       return jsonResponse({ error: "חסר אימות אבטחה. נסה לרענן את הדף." }, 400);
     }
-    const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const clientIp = getClientIp(req);
     const ok = await verifyTurnstileToken(body.turnstileToken, clientIp);
     if (!ok) {
       return jsonResponse({ error: "אימות האבטחה נכשל. נסה שוב." }, 403);
@@ -348,7 +350,7 @@ Deno.serve(async (req: Request) => {
 
   // Rate limit: prevent bots from flooding orders.
   // Website orders use the phone as key; station/kiosk orders fall back to IP.
-  const clientIp = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  const clientIp = getClientIp(req);
   const rateLimitKey = (body.customerPhone && body.customerPhone.length >= 7)
     ? body.customerPhone
     : `ip:${clientIp}`;

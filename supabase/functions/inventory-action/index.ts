@@ -21,6 +21,14 @@ interface TokenValidation {
   scope: TokenScope;
 }
 
+/** Tokens are stored as SHA-256 hex - the plain value never lives in the DB. */
+async function hashToken(token: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+const DEFAULT_TOKEN_DAYS = 90;
+
 async function validateToken(token: string | undefined): Promise<TokenValidation> {
   if (!token || typeof token !== "string" || token.length < 16) {
     return { ok: false, scope: "inventory" };
@@ -28,7 +36,7 @@ async function validateToken(token: string | undefined): Promise<TokenValidation
   const { data } = await supabase
     .from("inventory_access_tokens")
     .select("id, scope, expires_at, revoked_at")
-    .eq("token", token)
+    .eq("token", await hashToken(token))
     .maybeSingle();
   if (!data) return { ok: false, scope: "inventory" };
   if (data.revoked_at) return { ok: false, scope: "inventory" };
@@ -41,7 +49,9 @@ async function validateToken(token: string | undefined): Promise<TokenValidation
     .update({ last_used_at: new Date().toISOString() })
     .eq("id", data.id)
     .then(() => {});
-  return { ok: true, scope: (data.scope as TokenScope) ?? "admin" };
+  // Unknown / empty scope never grants anything.
+  if (data.scope !== "admin" && data.scope !== "inventory") return { ok: false, scope: "inventory" };
+  return { ok: true, scope: data.scope as TokenScope };
 }
 
 Deno.serve(async (req) => {
@@ -51,6 +61,12 @@ Deno.serve(async (req) => {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
+  // Never leak internal error text to the client - log it, return a generic code.
+  const fail = (where: string, err: unknown) => {
+    console.error(`inventory-action ${where} failed:`, (err as { message?: string })?.message ?? err);
+    return json({ error: "server_error" }, 500);
+  };
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -78,6 +94,8 @@ Deno.serve(async (req) => {
       "stock_audit_data",
       "add_stock_count",
       "delete_stock_count",
+      "delete_item",
+      "set_menu_available",
     ]);
     if (ADMIN_ONLY_ACTIONS.has(action ?? "") && validation.scope !== "admin") {
       return json({ error: "insufficient_scope" }, 403);
@@ -99,7 +117,7 @@ Deno.serve(async (req) => {
             .order("created_at", { ascending: false })
             .limit(200),
         ]);
-        if (itemsRes.error) return json({ error: itemsRes.error.message }, 500);
+        if (itemsRes.error) return fail(action ?? "", itemsRes.error);
         return json({
           items: itemsRes.data,
           recipes: recipesRes.data ?? [],
@@ -117,18 +135,11 @@ Deno.serve(async (req) => {
         if (!item_id || typeof delta !== "number") {
           return json({ error: "bad_params" }, 400);
         }
-        const { data: cur, error: e1 } = await supabase
-          .from("inventory_items")
-          .select("quantity")
-          .eq("id", item_id)
-          .maybeSingle();
-        if (e1 || !cur) return json({ error: "not_found" }, 404);
-        const next = Number(cur.quantity) + delta;
-        const { error: e2 } = await supabase
-          .from("inventory_items")
-          .update({ quantity: next })
-          .eq("id", item_id);
-        if (e2) return json({ error: e2.message }, 500);
+        // Atomic in SQL: quantity = quantity + delta.
+        const { data: nextQty, error: e2 } = await supabase.rpc("inventory_adjust", { p_item: item_id, p_delta: delta });
+        if (e2) return fail("adjust", e2);
+        if (nextQty == null) return json({ error: "not_found" }, 404);
+        const next = Number(nextQty);
         const finalReason =
           reason ?? (delta >= 0 ? "manual_add" : "manual_remove");
         await supabase.from("inventory_movements").insert({
@@ -149,17 +160,10 @@ Deno.serve(async (req) => {
         if (!item_id || typeof quantity !== "number") {
           return json({ error: "bad_params" }, 400);
         }
-        const { data: cur } = await supabase
-          .from("inventory_items")
-          .select("quantity")
-          .eq("id", item_id)
-          .maybeSingle();
-        const delta = quantity - Number(cur?.quantity ?? 0);
-        const { error } = await supabase
-          .from("inventory_items")
-          .update({ quantity })
-          .eq("id", item_id);
-        if (error) return json({ error: error.message }, 500);
+        const { data: deltaRes, error } = await supabase.rpc("inventory_set_quantity", { p_item: item_id, p_qty: quantity });
+        if (error) return fail("set_quantity", error);
+        if (deltaRes == null) return json({ error: "not_found" }, 404);
+        const delta = Number(deltaRes);
         await supabase.from("inventory_movements").insert({
           inventory_item_id: item_id,
           delta,
@@ -194,7 +198,7 @@ Deno.serve(async (req) => {
           .from("inventory_items")
           .update(clean)
           .eq("id", item_id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -224,7 +228,7 @@ Deno.serve(async (req) => {
           .from("inventory_items")
           .update(updates)
           .eq("id", item_id);
-        if (e2) return json({ error: e2.message }, 500);
+        if (e2) return fail(action ?? "", e2);
         await supabase.from("inventory_movements").insert({
           inventory_item_id: item_id,
           delta: qty,
@@ -289,7 +293,7 @@ Deno.serve(async (req) => {
             .lt("created_at", toIso),
         ]);
 
-        if (itemsRes.error) return json({ error: itemsRes.error.message }, 500);
+        if (itemsRes.error) return fail(action ?? "", itemsRes.error);
 
         type Item = {
           id: string;
@@ -389,13 +393,19 @@ Deno.serve(async (req) => {
 
       case "create_item": {
         const { item } = body as { item: Record<string, unknown> };
-        if (!item || !item.name) return json({ error: "bad_params" }, 400);
+        if (!item || typeof item.name !== "string" || !item.name.trim()) return json({ error: "bad_params" }, 400);
+        const allowedCreate = [
+          "name", "category", "unit", "quantity", "low_threshold", "presets", "menu_item_id",
+          "sort_order", "notes", "unit_cost", "fridge_target", "fridge_qty",
+        ];
+        const cleanItem: Record<string, unknown> = {};
+        for (const k of allowedCreate) if (k in item) cleanItem[k] = item[k];
         const { data, error } = await supabase
           .from("inventory_items")
-          .insert(item)
+          .insert(cleanItem)
           .select()
           .single();
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true, item: data });
       }
 
@@ -406,7 +416,7 @@ Deno.serve(async (req) => {
           .from("inventory_items")
           .delete()
           .eq("id", item_id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -434,7 +444,7 @@ Deno.serve(async (req) => {
             { menu_item_id, inventory_item_id, amount_per_unit },
             { onConflict: "menu_item_id,inventory_item_id" },
           );
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -451,7 +461,7 @@ Deno.serve(async (req) => {
             { item_id: menu_item_id, available },
             { onConflict: "item_id" },
           );
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -464,7 +474,7 @@ Deno.serve(async (req) => {
           .eq("inventory_item_id", item_id)
           .order("created_at", { ascending: false })
           .limit(Math.min(limit ?? 30, 200));
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ movements: data });
       }
 
@@ -477,7 +487,7 @@ Deno.serve(async (req) => {
           .from("inventory_items")
           .update({ fridge_target: Math.round(fridge_target) })
           .eq("id", item_id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -504,7 +514,7 @@ Deno.serve(async (req) => {
             .from("inventory_items")
             .update({ fridge_qty: Number(cur.fridge_target) || 0 })
             .eq("id", item_id);
-          if (error) return json({ error: error.message }, 500);
+          if (error) return fail(action ?? "", error);
           return json({ ok: true });
         }
         return json({ error: "bad_params" }, 400);
@@ -519,7 +529,7 @@ Deno.serve(async (req) => {
           .from("inventory_items")
           .update({ fridge_qty: Math.round(fridge_qty) })
           .eq("id", item_id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -568,7 +578,7 @@ Deno.serve(async (req) => {
         if (aliases.length) await supabase.from("product_aliases").upsert(aliases, { onConflict: "raw_name" });
         if (produce.length) {
           const { error } = await supabase.from("produce_purchases").insert(produce);
-          if (error) return json({ error: error.message }, 500);
+          if (error) return fail(action ?? "", error);
           // auto-enter invoice goods as audit "received" stock (kg→units per product average)
           const KG_PER_UNIT: Record<string, number> = { tomato: 0.14, red_onion: 0.135 };
           const auditRows = produce.flatMap((p) => {
@@ -590,7 +600,7 @@ Deno.serve(async (req) => {
         }
         if (supplies.length) {
           const { error } = await supabase.from("supply_purchases").insert(supplies);
-          if (error) return json({ error: error.message }, 500);
+          if (error) return fail(action ?? "", error);
         }
         return json({ ok: true, produce: produce.length, supplies: supplies.length, aliases: aliases.length });
       }
@@ -612,14 +622,14 @@ Deno.serve(async (req) => {
           if (b.quantity !== undefined) patch.quantity = Number(b.quantity) || null;
           if (b.total !== undefined) patch.total = Math.max(0, Number(b.total) || 0);
           const { error } = await supabase.from("produce_purchases").update(patch).eq("id", b.id);
-          if (error) return json({ error: error.message }, 500);
+          if (error) return fail(action ?? "", error);
         } else if (b.table === "supply") {
           const patch: Record<string, unknown> = {};
           if (b.amount !== undefined) patch.amount = Math.max(0, Number(b.amount) || 0);
           if (typeof b.notes === "string") patch.notes = b.notes.slice(0, 300);
           if (typeof b.name === "string" && b.name.trim()) patch.name = b.name.trim().slice(0, 120);
           const { error } = await supabase.from("supply_purchases").update(patch).eq("id", b.id);
-          if (error) return json({ error: error.message }, 500);
+          if (error) return fail(action ?? "", error);
         } else return json({ error: "bad_table" }, 400);
         return json({ ok: true });
       }
@@ -630,7 +640,7 @@ Deno.serve(async (req) => {
         const t = b.table === "produce" ? "produce_purchases" : b.table === "supply" ? "supply_purchases" : null;
         if (!t) return json({ error: "bad_table" }, 400);
         const { error } = await supabase.from(t).delete().eq("id", b.id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -670,7 +680,7 @@ Deno.serve(async (req) => {
         })).filter((r: any) => r.item_key);
         if (!rows.length) return json({ error: "no_rows" }, 400);
         const { error } = await supabase.from("stock_counts").insert(rows);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -678,7 +688,7 @@ Deno.serve(async (req) => {
         const b = body as any;
         if (typeof b.id !== "string") return json({ error: "bad_id" }, 400);
         const { error } = await supabase.from("stock_counts").delete().eq("id", b.id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -687,7 +697,7 @@ Deno.serve(async (req) => {
           .from("inventory_access_tokens")
           .select("id, label, scope, expires_at, revoked_at, created_at, last_used_at")
           .order("created_at", { ascending: false });
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ tokens: data ?? [] });
       }
 
@@ -697,10 +707,10 @@ Deno.serve(async (req) => {
           scope?: TokenScope;
           expires_in_days?: number;
         };
-        const nextScope: TokenScope = scope === "inventory" ? "inventory" : "admin";
+        const nextScope: TokenScope = scope === "admin" ? "admin" : "inventory";
         const days = typeof expires_in_days === "number" && expires_in_days > 0
           ? Math.min(365, Math.floor(expires_in_days))
-          : null;
+          : DEFAULT_TOKEN_DAYS;
         const expires_at = days ? new Date(Date.now() + days * 86400_000).toISOString() : null;
         // Cryptographically random URL-safe token (~44 chars).
         const buf = new Uint8Array(32);
@@ -709,10 +719,10 @@ Deno.serve(async (req) => {
           .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
         const { data, error } = await supabase
           .from("inventory_access_tokens")
-          .insert({ token: newToken, label: label ?? null, scope: nextScope, expires_at })
+          .insert({ token: await hashToken(newToken), label: label ?? null, scope: nextScope, expires_at })
           .select("id, label, scope, expires_at, created_at")
           .single();
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         // Return the token value ONCE - caller must save it now.
         return json({ ok: true, token: newToken, record: data });
       }
@@ -724,7 +734,7 @@ Deno.serve(async (req) => {
           .from("inventory_access_tokens")
           .update({ revoked_at: new Date().toISOString() })
           .eq("id", token_id);
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         return json({ ok: true });
       }
 
@@ -744,7 +754,7 @@ Deno.serve(async (req) => {
         if (!prev) return json({ error: "not_found" }, 404);
         const days = typeof expires_in_days === "number" && expires_in_days > 0
           ? Math.min(365, Math.floor(expires_in_days))
-          : null;
+          : DEFAULT_TOKEN_DAYS;
         const expires_at = days ? new Date(Date.now() + days * 86400_000).toISOString() : null;
         const buf = new Uint8Array(32);
         crypto.getRandomValues(buf);
@@ -753,14 +763,14 @@ Deno.serve(async (req) => {
         const { data, error } = await supabase
           .from("inventory_access_tokens")
           .insert({
-            token: newToken,
+            token: await hashToken(newToken),
             label: prev.label,
             scope: prev.scope,
             expires_at,
           })
           .select("id, label, scope, expires_at, created_at")
           .single();
-        if (error) return json({ error: error.message }, 500);
+        if (error) return fail(action ?? "", error);
         await supabase
           .from("inventory_access_tokens")
           .update({ revoked_at: new Date().toISOString() })
@@ -772,6 +782,7 @@ Deno.serve(async (req) => {
         return json({ error: "unknown_action" }, 400);
     }
   } catch (e) {
-    return json({ error: String(e) }, 500);
+    console.error("inventory-action error", e);
+    return json({ error: "server_error" }, 500);
   }
 });
