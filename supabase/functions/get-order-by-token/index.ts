@@ -90,9 +90,20 @@ Deno.serve(async (req) => {
       .limit(20);
 
     const wanted = normalizePhone(phone);
-    const order = (candidates ?? []).find(
-      (o) => normalizePhone(o.customer_phone ?? "") === wanted,
-    );
+    // A real phone has 9+ digits. Orders without a phone (kiosk, stored as
+    // "-" or empty) can never be matched by phone.
+    const digits = (v: string) => v.replace(/\D/g, "");
+    if (digits(wanted).length < 9) {
+      await recordFailure();
+      return new Response(
+        JSON.stringify({ error: "not_found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const order = (candidates ?? []).find((o) => {
+      const stored = normalizePhone(o.customer_phone ?? "");
+      return digits(stored).length >= 9 && stored === wanted;
+    });
 
     if (!order) {
       await recordFailure();
