@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from 'https://esm.sh/zod@3.22.4'
+import { getClientIp } from '../_shared/clientIp.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,9 +78,7 @@ Deno.serve(async (req) => {
 
     // Rate limit sensitive actions by IP to block enumeration / bot abuse.
     const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-      req.headers.get('cf-connecting-ip') ||
-      'unknown'
+      getClientIp(req)
     const rateLimited: Record<string, { max: number; window: string }> = {
       register: { max: 5, window: '1 hour' },
       login: { max: 10, window: '1 hour' },

@@ -5,6 +5,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from 'https://esm.sh/zod@3.22.4'
+import { getClientIp } from '../_shared/clientIp.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,9 +33,7 @@ Deno.serve(async (req) => {
 
   try {
     const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-      req.headers.get('cf-connecting-ip') ||
-      'unknown'
+      getClientIp(req)
 
     // Rate limit - 10 per hour per IP
     const { data: allowed } = await supabase.rpc('check_rate_limit', {

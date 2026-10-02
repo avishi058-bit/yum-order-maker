@@ -3,13 +3,13 @@
 // so a third-party outage never locks legitimate customers out.
 
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { getClientIp } from "../_shared/clientIp.ts";
 
 const ALLOWED_COUNTRIES = new Set(["IL"]);
 
-function getClientIp(req: Request): string | null {
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return req.headers.get("x-real-ip");
+function clientIpOrNull(req: Request): string | null {
+  const ip = getClientIp(req);
+  return ip === "unknown" ? null : ip;
 }
 
 function isPrivateIp(ip: string): boolean {
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
   const cors = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  const ip = getClientIp(req);
+  const ip = clientIpOrNull(req);
   if (!ip || isPrivateIp(ip)) {
     return new Response(
       JSON.stringify({ country: null, allowed: true, reason: "local" }),

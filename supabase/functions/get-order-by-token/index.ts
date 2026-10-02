@@ -10,6 +10,7 @@
  *   attacker cannot distinguish between the two.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { getClientIp } from "../_shared/clientIp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,9 +42,7 @@ Deno.serve(async (req) => {
 
     // ── Rate limit by IP ────────────────────────────────────────────────
     const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+      getClientIp(req);
 
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
       p_action: "order_lookup",
