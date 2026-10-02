@@ -8,3 +8,4 @@
 - The Android print agent secret is generated per install on the device and entered once in /station-setup (tablet localStorage), never shipped in site code.
 - Test customers live in the admin-managed `test_customers` table and every report/summary reads from it, so no personal data is hardcoded.
 - Order edits apply through the `edit_order_apply` RPC in one transaction, priced server-side with admin overrides, so a mid-way failure cannot leave an empty order.
+- Customer identity, favorites and order history live only in the customer's device storage; `customer-auth`/`get-customer-orders` are disabled stubs and saved carts use only the private guest_id, because there is no OTP to prove phone ownership. Marketing consent is recorded only inside `create-order` with a real order.
