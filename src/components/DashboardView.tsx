@@ -591,11 +591,19 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const load = async () => {
       const keys = lastMonths(12).reverse();
       const start = monthRange(keys[0]).start;
-      const { data } = await supabase
-        .from("orders")
-        .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in, soldier_donation")
-        .gte("created_at", start.toISOString())
-        .order("created_at", { ascending: true });
+      // page through - a single request is capped at 1000 rows and would drop the newest months
+      const data: any[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data: page } = await supabase
+          .from("orders")
+          .select("id, total, status, created_at, payment_method, paid_at, order_source, order_number, customer_name, customer_phone, dine_in, soldier_donation")
+          .gte("created_at", start.toISOString())
+          .order("created_at", { ascending: true })
+          .range(from, from + 999);
+        if (!page?.length) break;
+        data.push(...page);
+        if (page.length < 1000) break;
+      }
       if (cancelled) return;
       const clean = excludeTestOrders(withoutDonation(data) as Order[]).filter(isCounted);
       setTrendOrders(clean);
