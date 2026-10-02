@@ -226,11 +226,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         throw new Error(result.error || "שגיאה בשליחת הקוד");
       }
 
-      if (result.customerName) {
-        setCustomerName(result.customerName);
-        setForm(prev => ({ ...prev, name: result.customerName }));
-      }
-
       toast({ title: "הקוד נשלח לוואטסאפ! 📱" });
       setStep("otp");
     } catch (error: any) {
@@ -242,8 +237,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   };
 
   const handleVerifyOtp = async () => {
-    if (otpCode.length !== 4) {
-      toast({ title: "אנא הכנס קוד בן 4 ספרות", variant: "destructive" });
+    if (otpCode.length !== 6) {
+      toast({ title: "אנא הכנס קוד בן 6 ספרות", variant: "destructive" });
       return;
     }
     // If server previously asked for CAPTCHA (attack mode), require it here.
@@ -285,6 +280,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         throw new Error(result.error || "קוד שגוי");
       }
 
+      // The name is returned only after a successful verification.
+      if (result.customerName) {
+        setCustomerName(result.customerName);
+        setForm(prev => ({ ...prev, name: result.customerName }));
+      }
       toast({ title: "אומת בהצלחה! ✅" });
       setStep("details");
     } catch (error: any) {
@@ -854,17 +854,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             {customerName && (
               <p className="text-primary font-bold text-lg">כיף שחזרת, {customerName} :)</p>
             )}
-            <p className={`${th.textMuted} text-sm`}>שלחנו קוד בן 4 ספרות לוואטסאפ למספר {form.phone}</p>
+            <p className={`${th.textMuted} text-sm`}>שלחנו קוד בן 6 ספרות לוואטסאפ למספר {form.phone}</p>
             <div>
               <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>קוד אימות</label>
               <input
                 type="text"
-                maxLength={4}
+                maxLength={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                 className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
                 dir="ltr"
-                placeholder="____"
+                placeholder="______"
               />
             </div>
             {verifyCaptchaRequired && (
