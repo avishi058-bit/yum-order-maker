@@ -151,8 +151,9 @@ function jsonResponse(body: unknown, status = 200) {
 async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
   const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
   if (!secret) {
-    console.warn("TURNSTILE_SECRET_KEY not configured; skipping verification");
-    return true;
+    // Fail closed: never skip the bot check because of missing configuration.
+    console.error("TURNSTILE_SECRET_KEY not configured; rejecting request");
+    return false;
   }
 
   try {

@@ -4,6 +4,7 @@ const corsHeaders = {
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from 'https://esm.sh/zod@3.22.4'
+import { getClientIp } from '../_shared/clientIp.ts'
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio'
 const OTP_EXPIRY_MS = 5 * 60 * 1000
@@ -17,8 +18,9 @@ const jsonResponse = (body: Record<string, unknown>, status = 200) =>
 async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
   const secret = Deno.env.get('TURNSTILE_SECRET_KEY')
   if (!secret) {
-    console.warn('TURNSTILE_SECRET_KEY not configured; skipping verification')
-    return true
+    // Fail closed: without the secret we cannot tell humans from bots.
+    console.error('TURNSTILE_SECRET_KEY not configured; rejecting request')
+    return false
   }
 
   try {
@@ -68,7 +70,7 @@ const SendSchema = z.object({
 
 const VerifySchema = z.object({
   phone: z.string().regex(/^05\d{8}$/, 'מספר הטלפון חייב להתחיל ב-05 ולהכיל 10 ספרות'),
-  code: z.string().length(4),
+  code: z.string().regex(/^\d{6}$/),
   turnstileToken: z.string().min(1).max(2048).optional(),
 })
 
@@ -92,11 +94,10 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action')
     const body = await req.json()
 
-    // Extract client IP (first entry in x-forwarded-for is the real client).
-    const rawFwd = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
-    const clientIp = rawFwd.split(',')[0].trim() || 'unknown'
+    // Trusted client IP (cannot be spoofed via x-forwarded-for).
+    const clientIp = getClientIp(req)
 
-    // Permanent IP block - checks both exact IPs AND blocked /24 subnets.
+    // Temporary IP block (24h) - expired blocks are ignored by is_ip_blocked.
     if (clientIp && clientIp !== 'unknown') {
       const { data: ipBlocked } = await supabase.rpc('is_ip_blocked', { p_ip: clientIp })
       if (ipBlocked === true) {
@@ -127,7 +128,6 @@ Deno.serve(async (req) => {
       }
 
       const { phone, turnstileToken } = parsed.data
-      const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
       const turnstileOk = await verifyTurnstileToken(turnstileToken, clientIp)
       if (!turnstileOk) {
         return jsonResponse({ error: 'אימות האבטחה נכשל. נסה שוב.' }, 403)
@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
       await supabase.rpc('record_rate_limit_attempt', {
         p_action: 'otp_send',
         p_key: phone,
-        p_ip_address: req.headers.get('x-forwarded-for') || null,
+        p_ip_address: clientIp === 'unknown' ? null : clientIp,
       })
 
       if (!twilioConfigured) {
@@ -169,7 +169,11 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: 'מספר השולח בוואטסאפ לא מוגדר נכון' }, 500)
         }
 
-        const code = String(Math.floor(1000 + Math.random() * 9000))
+        // Cryptographically secure 6-digit code (rejection sampling avoids bias).
+        const buf = new Uint32Array(1)
+        let n = 0
+        do { crypto.getRandomValues(buf); n = buf[0] } while (n >= 4294000000)
+        const code = String(n % 1000000).padStart(6, '0')
 
         const twilioResponse = await fetch(`${GATEWAY_URL}/Messages.json`, {
           method: 'POST',
@@ -191,6 +195,8 @@ Deno.serve(async (req) => {
           return jsonResponse({ error: 'שגיאה בשליחת הקוד' }, 500)
         }
 
+        // Only one code may be valid at a time: retire all previous codes.
+        await supabase.from('verification_codes').update({ verified: true }).eq('phone', phone).eq('verified', false)
         await supabase.from('verification_codes').insert({
           phone,
           code,
@@ -198,18 +204,8 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Check if customer exists
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('name')
-        .eq('phone', phone)
-        .maybeSingle()
-
-      return jsonResponse({
-        success: true,
-        customerName: customer?.name || null,
-        devMode: !twilioConfigured,
-      })
+      // Never reveal the customer's name before the phone is verified.
+      return jsonResponse({ success: true, devMode: !twilioConfigured })
 
     } else if (action === 'verify') {
       const parsed = VerifySchema.safeParse(body)
@@ -241,11 +237,11 @@ Deno.serve(async (req) => {
       // Three-tier defense for OTP verification:
       // Tier 1 (soft - human mistakes): 6 failed attempts per phone / 15 min → short wait.
       // Tier 2 (phone lockout): 15 failed attempts per phone / 2 hours → temporary block.
-      // Tier 3 (IP hard block): 10 failed attempts per IP / 1 hour → PERMANENT IP BAN.
+      // Tier 3 (IP block): 10 failed attempts per IP / 1 hour → 24h IP block.
       //   In attack mode, the IP threshold tightens to 5 (still allows for
       //   normal human error) and CAPTCHA gating (above) filters out bots.
 
-      // Tier 3: permanent IP ban. Threshold tightens to 5 in attack mode.
+      // Tier 3: temporary (24h) IP block. Threshold tightens to 5 in attack mode.
       if (clientIp && clientIp !== 'unknown') {
         const ipMaxAttempts = underAttack ? 5 : 10
         const { data: ipAllowed } = await supabase.rpc('check_rate_limit', {
@@ -261,16 +257,18 @@ Deno.serve(async (req) => {
               reason: underAttack
                 ? `attack_mode_active: ${ipMaxAttempts}+ failed verifications`
                 : `brute_force_otp: ${ipMaxAttempts}+ failed verifications from same IP in 1 hour`,
+              blocked_at: new Date().toISOString(),
+              expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
             },
             { onConflict: 'ip_address' }
           )
-          console.warn('IP permanently blocked:', clientIp, 'underAttack:', underAttack)
+          console.warn('IP blocked for 24h:', clientIp, 'underAttack:', underAttack)
 
           // Attack-pattern detection: if 3+ IPs blocked in the last hour,
-          // auto-block their /24 subnets and enable 24h attack mode.
+          // enable 24h attack mode (no subnet blocking).
           const { data: attackDetected } = await supabase.rpc('check_and_activate_attack_mode')
           if (attackDetected === true) {
-            console.error('🚨 ATTACK PATTERN DETECTED - /24 subnets auto-blocked, 24h high-alert mode ON')
+            console.error('ATTACK PATTERN DETECTED - 24h high-alert mode ON')
           }
 
           return jsonResponse({ error: 'הגישה נחסמה עקב פעילות חשודה. יש לפנות לתמיכה.' }, 403)
@@ -329,7 +327,12 @@ Deno.serve(async (req) => {
 
       await supabase.from('verification_codes').update({ verified: true }).eq('id', record.id)
 
-      return jsonResponse({ success: true })
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('name')
+        .eq('phone', phone)
+        .maybeSingle()
+      return jsonResponse({ success: true, customerName: customer?.name || null })
     }
 
     return jsonResponse({ error: 'Invalid action' }, 400)
