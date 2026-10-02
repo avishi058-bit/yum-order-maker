@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     );
 
     // Establish identity: phone (auth) requires proof; guest_id is a private UUID.
-    let identityColumn: "phone" | "guest_id";
+    const identityColumn = "guest_id" as const;
     let identityValue: string;
 
     // A valid guest_id must look like a UUID or a hex/base64url string of
@@ -66,10 +66,7 @@ Deno.serve(async (req) => {
     // Identity is ONLY the private, device-local guest_id. Phone-keyed access
     // was removed: customer data is stored on the device, never looked up by phone.
     void phone; void device_token;
-    if (false) {
-      identityColumn = "phone"; identityValue = "";
-    } else if (guest_id && typeof guest_id === "string" && isValidGuestId(guest_id)) {
-      identityColumn = "guest_id";
+    if (guest_id && typeof guest_id === "string" && isValidGuestId(guest_id)) {
       identityValue = guest_id;
     } else {
       return jsonResponse({ error: "missing_identity" }, 400);

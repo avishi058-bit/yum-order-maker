@@ -4,7 +4,6 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import type { CartItem } from "@/components/CartDrawer";
 
 const GUEST_ID_KEY = "habakta_guest_id";
-const DEVICE_TOKEN_KEY = "habakta_device_token";
 const SAVE_DEBOUNCE_MS = 800;
 const MAX_AGE_HOURS = 48;
 
@@ -38,7 +37,7 @@ interface UseSavedCartArgs {
  * Manages the persisted "saved cart" for both guests and logged-in customers.
  *
  * All saved-cart access goes through the `manage-saved-cart` edge function,
- * which enforces ownership via guest_id (localStorage) or phone (auth).
+ * which enforces ownership via guest_id (localStorage) only.
  * The underlying table is RLS-locked from direct client access.
  */
 export function useSavedCart({ cart, dineIn, total, paused = false }: UseSavedCartArgs) {
