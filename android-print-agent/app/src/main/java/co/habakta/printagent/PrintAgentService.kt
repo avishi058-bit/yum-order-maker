@@ -26,7 +26,7 @@ class PrintAgentService : Service() {
         printer = BluetoothPrinterClient(this)
         printer.startAutoConnect()
 
-        http = HttpServer(Config.HTTP_PORT, printer)
+        http = HttpServer(Config.HTTP_PORT, printer, AgentSecret.get(this))
         try {
             http.start()
             Log.i(TAG, "HTTP server listening on 127.0.0.1:${Config.HTTP_PORT}")
