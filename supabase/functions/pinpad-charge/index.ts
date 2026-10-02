@@ -12,6 +12,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
 
 const ZCREDIT_WS_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CommitFullTransaction";
@@ -74,7 +75,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: ordErr } = await supabase
       .from("orders")
-      .select("id, total, status, customer_name, customer_phone, order_number")
+      .select("id, total, status, customer_name, customer_phone, order_number, soldier_donation, donation_only")
       .eq("id", parsed.data.orderId)
       .maybeSingle();
 
@@ -191,36 +192,14 @@ Deno.serve(async (req) => {
         orderId: order.id,
         responseKeys: Object.keys(result ?? {}),
       });
+    } else if (!(await claimInvoice(supabase, order.id))) {
+      invoiceMessage = "כבר הופקה חשבונית להזמנה זו";
     } else {
       const { data: rows } = await supabase
         .from("order_items")
         .select("item_name, price, quantity")
         .eq("order_id", order.id);
-      const items = (rows ?? [])
-        .filter((row) => Number(row.price) > 0)
-        .map((row) => ({
-          ItemDescription: String(row.item_name ?? "פריט").slice(0, 100),
-          ItemQuantity: Number(row.quantity) || 1,
-          ItemPrice: Number(row.price),
-          IsTaxFree: false,
-        }));
-      const linesSum = items.reduce((sumValue, item) => sumValue + item.ItemPrice * item.ItemQuantity, 0);
-      const difference = Math.round((sum - linesSum) * 100) / 100;
-      if (items.length === 0) {
-        items.push({
-          ItemDescription: "רכישה בהבקתה",
-          ItemQuantity: 1,
-          ItemPrice: sum,
-          IsTaxFree: false,
-        });
-      } else if (Math.abs(difference) >= 0.01) {
-        items.push({
-          ItemDescription: difference > 0 ? "תוספות" : "הנחה",
-          ItemQuantity: 1,
-          ItemPrice: difference,
-          IsTaxFree: false,
-        });
-      }
+      const items = buildInvoiceItems(rows ?? [], order);
 
       const invoicePayload = {
         TerminalNumber: TERMINAL.trim(),
@@ -270,6 +249,7 @@ Deno.serve(async (req) => {
         (invoiceResult?.ReturnCode != null && Number(invoiceResult.ReturnCode) !== 0);
 
       if (invoiceFailed) {
+        await releaseInvoice(supabase, order.id);
         invoiceMessage = invoiceResult?.ReturnMessage || "הפקת החשבונית נכשלה";
         console.error("pinpad-charge: invoice failed", {
           orderId: order.id,

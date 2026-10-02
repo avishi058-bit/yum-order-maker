@@ -8,6 +8,7 @@
 //    resurrect a cancelled order or downgrade a completed one.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fetchSessionStatus, amountMatches } from "../_shared/zcreditSession.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -105,7 +106,7 @@ Deno.serve(async (req) => {
     // Look up the order + validate amount + only flip from pending_payment.
     const { data: order, error: ordErr } = await supabase
       .from("orders")
-      .select("id, total, status")
+      .select("id, total, status, payment_session_id")
       .eq("id", orderId)
       .maybeSingle();
     if (ordErr || !order) {
@@ -133,6 +134,26 @@ Deno.serve(async (req) => {
         `payment-callback: amount mismatch order=${orderId} expected=${order.total} got=${paidAmount}`,
       );
       newStatus = "payment_failed";
+    }
+
+    // No amount in the payload - never trust the payload alone. Confirm the
+    // charge and its amount directly with Z-Credit via the stored session.
+    if (isSuccess && !(paidAmount > 0)) {
+      const verified = order.payment_session_id
+        ? await fetchSessionStatus(order.payment_session_id)
+        : { outcome: "unknown" as const, amount: null };
+      if (verified.outcome === "paid" && amountMatches(verified.amount, order.total)) {
+        newStatus = "new";
+      } else if (verified.outcome === "failed") {
+        newStatus = "payment_failed";
+      } else {
+        // Can't confirm yet - leave pending; get-payment-status will re-check.
+        console.warn(`payment-callback: unverified success order=${orderId} outcome=${verified.outcome}`);
+        return new Response(JSON.stringify({ received: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { error: updErr } = await supabase

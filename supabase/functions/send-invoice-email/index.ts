@@ -8,6 +8,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
 
 const INVOICE_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CreateInvoiceReceipt";
@@ -16,6 +17,14 @@ const INVOICE_URL =
 const TAX_RATE = 18;
 const BUSINESS_ADDRESS = "ערבי הנחל 22";
 const BUSINESS_CITY = "תושיה";
+
+function pickNumber(result: Record<string, unknown>): string | null {
+  for (const k of ["InvoiceReceiptNumber", "DocumentNumber", "InvoiceNumber", "ReceiptNumber", "DocNumber", "ReferenceNumber"]) {
+    const v = result?.[k];
+    if (v != null && String(v).trim() !== "" && String(v) !== "0") return String(v);
+  }
+  return null;
+}
 
 const BodySchema = z.object({
   orderId: z.string().uuid(),
@@ -46,10 +55,22 @@ Deno.serve(async (req) => {
     const parsed = BodySchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: "invalid_body" }, 400);
 
+    // Staff-only: require a signed-in admin/kitchen user.
+    const anon = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+    });
+    const { data: userRes } = await anon.auth.getUser();
+    if (!userRes?.user) return json({ error: "unauthorized" }, 401);
+
     const supabase = createClient(
       SUPABASE_URL,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+    const [{ data: isAdmin }, { data: isKitchen }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userRes.user.id, _role: "admin" }),
+      supabase.rpc("has_role", { _user_id: userRes.user.id, _role: "kitchen" }),
+    ]);
+    if (!isAdmin && !isKitchen) return json({ error: "forbidden" }, 403);
 
     // Basic abuse guard: a handful of sends per order.
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
@@ -67,7 +88,7 @@ Deno.serve(async (req) => {
     const { data: order } = await supabase
       .from("orders")
       .select(
-        "id, order_number, total, payment_method, payment_transaction_id, created_at, customer_name, customer_phone",
+        "id, order_number, total, payment_method, payment_transaction_id, created_at, customer_name, customer_phone, soldier_donation, donation_only, invoice_number, invoice_issued_at",
       )
       .eq("id", parsed.data.orderId)
       .maybeSingle();
@@ -81,38 +102,20 @@ Deno.serve(async (req) => {
       return json({ error: "order_too_old" }, 409);
     }
 
+    // One tax invoice per transaction - never issue a second one.
+    if (order.invoice_number || order.invoice_issued_at) {
+      return json({ error: "already_issued" }, 409);
+    }
+
     const { data: rows } = await supabase
       .from("order_items")
       .select("item_name, price, quantity")
       .eq("order_id", order.id);
 
-    const items = (rows ?? [])
-      .filter((r) => Number(r.price) > 0)
-      .map((r) => ({
-        ItemDescription: String(r.item_name ?? "פריט").slice(0, 100),
-        ItemQuantity: Number(r.quantity) || 1,
-        ItemPrice: Number(r.price),
-        IsTaxFree: false,
-      }));
+    const items = buildInvoiceItems(rows ?? [], order);
 
-    // Keep the document total identical to the amount actually charged.
-    const linesSum = items.reduce((s, i) => s + i.ItemPrice * i.ItemQuantity, 0);
-    const total = Number(order.total);
-    const diff = Math.round((total - linesSum) * 100) / 100;
-    if (items.length === 0) {
-      items.push({
-        ItemDescription: "רכישה בהבקתה",
-        ItemQuantity: 1,
-        ItemPrice: total,
-        IsTaxFree: false,
-      });
-    } else if (Math.abs(diff) >= 0.01) {
-      items.push({
-        ItemDescription: diff > 0 ? "תוספות" : "הנחה",
-        ItemQuantity: 1,
-        ItemPrice: diff,
-        IsTaxFree: false,
-      });
+    if (!(await claimInvoice(supabase, order.id))) {
+      return json({ error: "already_issued" }, 409);
     }
 
     const payload = {
@@ -147,6 +150,7 @@ Deno.serve(async (req) => {
       (result?.ReturnCode != null && Number(result.ReturnCode) !== 0);
 
     if (failed) {
+      await releaseInvoice(supabase, order.id);
       console.error("send-invoice-email: invoice failed", {
         orderId: order.id,
         code: result?.ReturnCode,
@@ -158,6 +162,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    await supabase
+      .from("orders")
+      .update({ invoice_number: pickNumber(result ?? {}), invoice_issued_at: new Date().toISOString() })
+      .eq("id", order.id);
     console.log("send-invoice-email: invoice sent", { orderId: order.id });
     return json({ success: true });
   } catch (e) {

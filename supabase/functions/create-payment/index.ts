@@ -88,6 +88,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Never open a payment page for an order that is already paid/cancelled.
+    if (order.status !== "pending_payment") {
+      return new Response(JSON.stringify({ error: "order_not_payable" }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Hardcode URLs server-side. Callback carries a secret token that
     // payment-callback verifies. Redirect URLs are locked to our app origin.
     const callbackUrl = `${SUPABASE_URL}/functions/v1/payment-callback?token=${encodeURIComponent(CALLBACK_SECRET)}`;
