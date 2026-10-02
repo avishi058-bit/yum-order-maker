@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       } else if (outcome === "paid" && status === "pending_payment") {
         console.error(`get-payment-status: amount not confirmed order=${orderId} expected=${order.total} got=${amount}`);
       } else if (outcome === "failed" && status === "pending_payment") {
-        await supabase.from("orders").update({ status: "payment_failed" }).eq("id", orderId);
+        await supabase.from("orders").update({ status: "payment_failed" }).eq("id", orderId).eq("status", "pending_payment");
         status = "payment_failed";
       }
     }

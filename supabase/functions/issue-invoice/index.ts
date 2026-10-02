@@ -8,6 +8,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
 
 const INVOICE_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CreateInvoiceReceipt";
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
     const { data: order } = await supabase
       .from("orders")
       .select(
-        "id, order_number, total, payment_method, payment_transaction_id, created_at, customer_name, customer_phone, invoice_number, invoice_issued_at",
+        "id, order_number, total, payment_method, payment_transaction_id, created_at, customer_name, customer_phone, invoice_number, invoice_issued_at, soldier_donation, donation_only",
       )
       .eq("id", parsed.data.orderId)
       .maybeSingle();
@@ -103,33 +104,8 @@ Deno.serve(async (req) => {
       .select("item_name, price, quantity")
       .eq("order_id", order.id);
 
-    const items = (rows ?? [])
-      .filter((r) => Number(r.price) > 0)
-      .map((r) => ({
-        ItemDescription: String(r.item_name ?? "פריט").slice(0, 100),
-        ItemQuantity: Number(r.quantity) || 1,
-        ItemPrice: Number(r.price),
-        IsTaxFree: false,
-      }));
-
-    const linesSum = items.reduce((s, i) => s + i.ItemPrice * i.ItemQuantity, 0);
+    const items = buildInvoiceItems(rows ?? [], order);
     const total = Number(order.total);
-    const diff = Math.round((total - linesSum) * 100) / 100;
-    if (items.length === 0) {
-      items.push({
-        ItemDescription: "רכישה בהבקתה",
-        ItemQuantity: 1,
-        ItemPrice: total,
-        IsTaxFree: false,
-      });
-    } else if (Math.abs(diff) >= 0.01) {
-      items.push({
-        ItemDescription: diff > 0 ? "תוספות" : "הנחה",
-        ItemQuantity: 1,
-        ItemPrice: diff,
-        IsTaxFree: false,
-      });
-    }
 
     const printable = {
       orderNumber: order.order_number,
@@ -145,12 +121,24 @@ Deno.serve(async (req) => {
     };
 
     // Already issued - return the stored document, don't create a second one.
-    if (order.invoice_number) {
+    if (order.invoice_number || order.invoice_issued_at) {
       return json({
         success: true,
         reissued: false,
         invoiceNumber: order.invoice_number,
         issuedAt: order.invoice_issued_at ?? order.created_at,
+        ...printable,
+      });
+    }
+
+    // Lock before calling Z-Credit so parallel requests can't issue twice.
+    if (!(await claimInvoice(supabase, order.id))) {
+      const { data: fresh } = await supabase.from("orders").select("invoice_number, invoice_issued_at").eq("id", order.id).maybeSingle();
+      return json({
+        success: true,
+        reissued: false,
+        invoiceNumber: fresh?.invoice_number ?? null,
+        issuedAt: fresh?.invoice_issued_at ?? order.created_at,
         ...printable,
       });
     }
@@ -187,6 +175,7 @@ Deno.serve(async (req) => {
       (result?.ReturnCode != null && Number(result.ReturnCode) !== 0);
 
     if (failed) {
+      await releaseInvoice(supabase, order.id);
       console.error("issue-invoice: failed", {
         orderId: order.id,
         code: result?.ReturnCode,
