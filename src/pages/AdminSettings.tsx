@@ -4,6 +4,7 @@ import { menuItems } from "@/data/menu";
 import { ArrowRight, GripVertical, Save, Monitor, Tablet, Type, Palette, MessageSquare, Eye, EyeOff, Clock, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import TestCustomersManager from "@/components/admin/TestCustomersManager";
 import { DAY_NAMES_HE, DEFAULT_HOURS } from "@/hooks/useBusinessHours";
 // NOTE: טאב הקיוסק הוסתר זמנית כדי למנוע שינוי בטעות.
 // כדי להחזיר: ייבא בחזרה את KioskSettingsTab, הוסף "kiosk" ל-activeTab type,
@@ -438,6 +439,8 @@ const AdminSettings = () => {
               <Save size={20} />
               שמור קישור
             </button>
+
+            <TestCustomersManager />
           </div>
         )}
       </div>

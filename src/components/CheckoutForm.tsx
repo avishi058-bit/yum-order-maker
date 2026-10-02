@@ -811,12 +811,12 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 required
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}"
+                className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}`}
                 placeholder="0501234567"
                 dir="ltr"
               />
             </div>
-            <div className="rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2">
+            <div className={`rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2`}>
               <p className={`text-sm font-bold ${th.textMain}`}>אימות אבטחה</p>
               <TurnstileWidget
                 action="send-otp"
@@ -870,7 +870,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               />
             </div>
             {verifyCaptchaRequired && (
-              <div className="rounded-lg ${th.secondarySoft} border ${th.border} p-3">
+              <div className={`rounded-lg ${th.secondarySoft} border ${th.border} p-3`}>
                 <p className="text-xs text-muted-foreground mb-2 text-center">
                   זוהתה פעילות חריגה במערכת. אנא השלם אימות אבטחה.
                 </p>
@@ -919,7 +919,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               <p className="text-primary font-bold text-lg mb-4">כיף שחזרת, {customerName} :)</p>
             )}
 
-            <div className="mb-6 ${th.secondarySoft} rounded-lg p-4 space-y-1 border ${th.border}">
+            <div className={`mb-6 ${th.secondarySoft} rounded-lg p-4 space-y-1 border ${th.border}`}>
               {items.map((item) => {
                 const tCounts = new Map<string, number>();
                 item.toppings.forEach((tId) => tCounts.set(tId, (tCounts.get(tId) || 0) + 1));
@@ -935,13 +935,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     <span>
                       {item.name} x{item.quantity}
                       {toppingNames.length > 0 && (
-                        <span className="${th.textMuted}"> ({toppingNames.join(", ")})</span>
+                        <span className={`${th.textMuted}`}> ({toppingNames.join(", ")})</span>
                       )}
                     </span>
                   </div>
                 );
               })}
-              <div className="border-t ${th.border} pt-2 mt-2 flex justify-between font-bold">
+              <div className={`border-t ${th.border} pt-2 mt-2 flex justify-between font-bold`}>
                 <span>סה״כ</span>
                 <span className="text-primary">₪{total}</span>
               </div>
@@ -974,7 +974,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                       }
                       setForm({ ...form, name: val });
                     }}
-                    className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}"
+                    className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}`}
                   />
                 </div>
               )}
@@ -990,7 +990,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}"
+                    className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}`}
                     placeholder="0501234567"
                     dir="ltr"
                   />
@@ -1009,7 +1009,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     }
                     setForm({ ...form, notes: val });
                   }}
-                  className="w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus} resize-none"
+                  className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus} resize-none`}
                   rows={2}
                   placeholder="הערות להזמנה"
                 />
@@ -1089,7 +1089,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   </label>
                   {preorderEnabled && (
                     <div className="mt-3 flex items-center gap-2 text-sm text-foreground">
-                      <span className="${th.textMuted}">שעת איסוף:</span>
+                      <span className={`${th.textMuted}`}>שעת איסוף:</span>
                       <input
                         type="time"
                         min={start}
@@ -1155,7 +1155,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
             {/* Cloudflare Turnstile - anti-bot verification before payment */}
             {!isKiosk && RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE && (
-              <div className="rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2">
+              <div className={`rounded-xl border ${th.border} ${th.secondarySoft} p-4 space-y-2`}>
                 <p className={`text-sm font-bold ${th.textMain}`}>אימות אבטחה</p>
                 <TurnstileWidget
                   action="submit-order"
