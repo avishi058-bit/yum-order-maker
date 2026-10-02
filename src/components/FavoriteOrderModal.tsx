@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Heart, Star, Trash2, Pencil, Check, Plus, ShoppingBag, ArrowRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getLocalOrders } from "@/lib/localOrderHistory";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useAvailability } from "@/hooks/useAvailability";
@@ -527,19 +528,7 @@ const FavoriteOrderModal = ({ open, onClose, onUseFavorite, currentCart, startIn
   // Lazy-load past orders only the first time the user enters setup view.
   useEffect(() => {
     if (!open || view !== "setup" || orders !== null) return;
-    const deviceToken = localStorage.getItem("habakta_device_token");
-    if (!deviceToken) {
-      setOrders([]);
-      return;
-    }
-    setLoadingOrders(true);
-    supabase.functions
-      .invoke("get-customer-orders", { body: { deviceToken } })
-      .then(({ data, error }) => {
-        if (error) setOrders([]);
-        else setOrders((data?.orders as HistoryOrder[]) ?? []);
-      })
-      .finally(() => setLoadingOrders(false));
+    setOrders(getLocalOrders() as unknown as HistoryOrder[]);
   }, [open, view, orders]);
 
   const usableOrders = useMemo(
