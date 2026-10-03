@@ -1463,7 +1463,7 @@ const Kitchen = () => {
   };
 
   // Print a standalone phone-QR bon through the same printer pipeline as the
-  // kitchen bon (BT → Agent → RawBT → browser). No window.print() / popup.
+  // kitchen bon (BT → RawBT → browser). No window.print() / popup.
   const printCustomerQr = async (order: Order) => {
     const phoneRaw = (order.customer_phone || "").trim();
     if (!phoneRaw) {
