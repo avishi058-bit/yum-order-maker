@@ -56,8 +56,6 @@ import {
   type PrintMode,
   type RawBTDebugInfo,
 } from "@/lib/rawbtPrinter";
-import { printAgentReceipt, printAgentRoundSummary, printAgentRoundChef, printAgentFridgeRefill, printAgentTest, printAgentPhoneQr, printAgentInvoice } from "@/lib/localPrintAgent";
-import { usePrintAgentHealth } from "@/hooks/usePrintAgentHealth";
 import { subscribeKitchenToPush, isKitchenSubscribed, unsubscribeKitchenFromPush } from "@/lib/push";
 import { useActiveCustomerCount } from "@/hooks/useCustomerActivity";
 import { ingredients } from "@/data/menu";
@@ -365,7 +363,6 @@ const Kitchen = () => {
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
   const [printMode, setPrintModeState] = useState<PrintMode>(() => getPrintMode());
   const [rawbtDebug, setRawbtDebug] = useState<RawBTDebugInfo | null>(null);
-  const [agentHealth, refreshAgentHealth] = usePrintAgentHealth(printMode === "agent");
   const [deliveryZonesOpen, setDeliveryZonesOpen] = useState(false);
 
   const handleQuickConnect = useCallback(async () => {
@@ -1424,31 +1421,6 @@ const Kitchen = () => {
       return;
     }
 
-    // Local Print Agent (preferred): tiny Android app on the same tablet
-    // holds an open BT socket and writes ESC/POS bytes directly. Completely
-    // silent - Kitchen stays visible. Falls back to RawBT if the agent is
-    // unreachable or returns an error.
-    if (printMode === "agent") {
-      printAgentReceipt(payload)
-        .then((info) => {
-          setRawbtDebug({
-            bytesLen: info.bytesLen,
-            b64Len: 0,
-            urlPreview: "",
-            transport: info.transport,
-            status: info.status,
-            error: info.error,
-            at: info.at,
-            orderNumber: info.orderNumber,
-          });
-          if (info.status === "error") {
-            console.warn("[Kitchen] Agent print failed, falling back to RawBT", info.error);
-            toast.warning("Agent לא זמין - שולח דרך RawBT");
-            printRawBTReceipt(payload).then((r) => setRawbtDebug(r));
-          }
-        });
-      return;
-    }
     // RawBT: send ESC/POS bytes via the RawBT Android app over Bluetooth.
     // No window.print(), no browser print dialog. Silent/background via
     // hidden-iframe rawbt: scheme - Kitchen stays visible.
@@ -1491,7 +1463,7 @@ const Kitchen = () => {
   };
 
   // Print a standalone phone-QR bon through the same printer pipeline as the
-  // kitchen bon (BT → Agent → RawBT → browser). No window.print() / popup.
+  // kitchen bon (BT → RawBT → browser). No window.print() / popup.
   const printCustomerQr = async (order: Order) => {
     const phoneRaw = (order.customer_phone || "").trim();
     if (!phoneRaw) {
@@ -1515,16 +1487,6 @@ const Kitchen = () => {
       printBluetoothPhoneQr(payload).catch((err) => {
         console.warn("[Kitchen] BT QR print failed", err);
         toast.error("שגיאה בהדפסת QR בבלוטות׳");
-      });
-      return;
-    }
-    if (printMode === "agent") {
-      printAgentPhoneQr(payload).then((info) => {
-        if (info.status === "error") {
-          console.warn("[Kitchen] Agent QR failed, falling back to RawBT", info.error);
-          toast.warning("Agent לא זמין - שולח QR דרך RawBT");
-          printRawBTPhoneQr(payload);
-        }
       });
       return;
     }
@@ -1796,12 +1758,6 @@ const Kitchen = () => {
       toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
       return;
     }
-    if (printMode === "agent") {
-      printAgentRoundSummary(activeRoundOrders).then((info) => {
-        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
-      });
-      return;
-    }
     if (printMode === "rawbt") {
       printRawBTRoundSummary(activeRoundOrders).then((info) => setRawbtDebug(info));
       return;
@@ -1820,12 +1776,6 @@ const Kitchen = () => {
     }
     if (printMode === "bt") {
       toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
-      return;
-    }
-    if (printMode === "agent") {
-      printAgentRoundChef(orders).then((info) => {
-        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
-      });
       return;
     }
     if (printMode === "rawbt") {
@@ -1877,12 +1827,6 @@ const Kitchen = () => {
       }
       if (printMode === "bt") {
         toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
-        return;
-      }
-      if (printMode === "agent") {
-        printAgentFridgeRefill(refill).then((info) => {
-          if (info.status === "error") toast.error("Agent לא זמין להדפסה");
-        });
         return;
       }
       if (printMode === "rawbt") {
@@ -1959,11 +1903,6 @@ const Kitchen = () => {
       }
       if (printMode === "bt") {
         toast.error("מדפסת בלוטות׳ לא מחוברת - חבר מדפסת ונסה שוב");
-        return;
-      }
-      if (printMode === "agent") {
-        const info = await printAgentInvoice(inv);
-        if (info.status === "error") toast.error("Agent לא זמין להדפסה");
         return;
       }
       if (printMode === "rawbt") {
@@ -2474,27 +2413,9 @@ const Kitchen = () => {
                 {/* Print mode */}
                 <div className="px-3 py-2 rounded-lg bg-muted text-foreground border border-border text-sm flex items-center justify-between">
                   <span className="text-muted-foreground text-xs">מצב הדפסה</span>
-                  <span className="font-bold">{btConnected ? "Bluetooth" : printMode === "agent" ? "Agent (מקומי)" : printMode}</span>
+                  <span className="font-bold">{btConnected ? "Bluetooth" : printMode}</span>
                 </div>
 
-                {/* Agent health */}
-                {printMode === "agent" && (
-                  <div
-                    className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-medium ${
-                      agentHealth?.ok
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : agentHealth?.reachable
-                        ? "bg-amber-500/20 text-amber-300"
-                        : "bg-red-500/20 text-red-300"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      {agentHealth?.ok ? <BluetoothConnected size={14} /> : <WifiOff size={14} />}
-                      סטטוס Agent
-                    </span>
-                    <span>{agentHealth?.ok ? "✓ מחובר" : agentHealth?.reachable ? "ללא מדפסת" : "לא זמין"}</span>
-                  </div>
-                )}
 
                 {/* Bluetooth connect */}
                 <button

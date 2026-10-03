@@ -20,7 +20,6 @@ import {
 } from "@/lib/eventKitchenPrep";
 import { isPrinterConnected, printBluetoothEventPrep } from "@/lib/bluetoothPrinter";
 import { getPrintMode, printRawBTEventPrep } from "@/lib/rawbtPrinter";
-import { printAgentEventPrep } from "@/lib/localPrintAgent";
 
 const supa = supabase as any;
 
@@ -88,11 +87,6 @@ const EventsKitchenPanel = () => {
     }
     if (printMode === "bt") {
       toast.error("מדפסת בלוטות׳ לא מחוברת - לחץ על הדפסה ואז חבר מדפסת");
-      return;
-    }
-    if (printMode === "agent") {
-      const info = await printAgentEventPrep(m, prep);
-      if (info.status === "error") toast.error("Agent לא זמין להדפסה");
       return;
     }
     if (printMode === "rawbt") {
