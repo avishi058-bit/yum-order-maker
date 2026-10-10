@@ -19,7 +19,7 @@ import SoldierFundPanel from "@/components/SoldierFundPanel";
 import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
-  CalendarRange, Trophy, Flame, BarChart3, Lock, X,
+  CalendarRange, Trophy, Flame, BarChart3, Lock, X, CreditCard, Smartphone,
 } from "lucide-react";
 
 interface Order {
@@ -454,6 +454,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     );
     const sum = (m: string) => todays.filter((o) => o.payment_method === m).reduce((s, o) => s + o.total, 0);
     const count = (m: string) => todays.filter((o) => o.payment_method === m).length;
+    // אשראי נספר רק אחרי שהתשלום אושר בפועל (paid_at) - אחרת עסקאות שנזנחו היו מנפחות את הסכום
+    const paidCredit = todays.filter((o) => o.payment_method === "credit" && o.paid_at);
     const todaysIds = new Set(todays.map((o) => o.id));
     const todaysItems = items.filter((i) => todaysIds.has(i.order_id));
     const portions = countBurgers(todaysItems).burgers;
@@ -462,6 +464,8 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
       cashCount: count("cash"),
       paybox: sum("paybox"),
       payboxCount: count("paybox"),
+      credit: paidCredit.reduce((s, o) => s + o.total, 0),
+      creditCount: paidCredit.length,
       portions,
     };
   }, [orders, items]);
