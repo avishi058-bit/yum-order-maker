@@ -19,7 +19,7 @@ import SoldierFundPanel from "@/components/SoldierFundPanel";
 import { suppliesCostInRange, type SupplyPurchase } from "@/lib/supplies";
 import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
-  CalendarRange, Trophy, Flame, BarChart3, Lock, X, CreditCard, Smartphone,
+  CalendarRange, Trophy, Flame, BarChart3, Lock, X, CreditCard, Smartphone, Wallet,
 } from "lucide-react";
 
 interface Order {
