@@ -21,6 +21,7 @@ import {
   TrendingUp, TrendingDown, ShoppingBag, DollarSign, Clock, Globe, Beef,
   CalendarRange, Trophy, Flame, BarChart3, Lock, X, CreditCard, Smartphone, Wallet,
 } from "lucide-react";
+import { dayPaymentTotals } from "@/lib/dayPayments";
 
 interface Order {
   id: string;
@@ -452,21 +453,11 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     const todays = orders.filter(
       (o) => !UNCOUNTED_STATUSES.has(o.status) && new Date(o.created_at) >= todayStart,
     );
-    const sum = (m: string) => todays.filter((o) => o.payment_method === m).reduce((s, o) => s + o.total, 0);
-    const count = (m: string) => todays.filter((o) => o.payment_method === m).length;
-    // אשראי נספר רק אחרי שהתשלום אושר בפועל (paid_at) - אחרת עסקאות שנזנחו היו מנפחות את הסכום
-    const paidCredit = todays.filter((o) => o.payment_method === "credit" && o.paid_at);
     const todaysIds = new Set(todays.map((o) => o.id));
     const todaysItems = items.filter((i) => todaysIds.has(i.order_id));
-    const portions = countBurgers(todaysItems).burgers;
     return {
-      cash: sum("cash"),
-      cashCount: count("cash"),
-      paybox: sum("paybox"),
-      payboxCount: count("paybox"),
-      credit: paidCredit.reduce((s, o) => s + o.total, 0),
-      creditCount: paidCredit.length,
-      portions,
+      ...dayPaymentTotals(orders, todayStart),
+      portions: countBurgers(todaysItems).burgers,
     };
   }, [orders, items]);
 
