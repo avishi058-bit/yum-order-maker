@@ -940,6 +940,37 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         </Card>
       </div>
 
+      {/* Today's takings by payment method (always the current business day, whatever period is selected) */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Wallet size={18} className="text-primary" /> היום לפי אמצעי תשלום
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3 text-center">
+              <DollarSign size={18} className="mx-auto mb-1 text-green-500" />
+              <p className="text-xs text-muted-foreground">מזומן</p>
+              <p className="text-xl font-black text-foreground">₪{Math.round(openTotals.cash).toLocaleString()}</p>
+              <p className="text-[11px] text-muted-foreground">{openTotals.cashCount} הזמנות</p>
+            </div>
+            <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-center">
+              <CreditCard size={18} className="mx-auto mb-1 text-blue-500" />
+              <p className="text-xs text-muted-foreground">אשראי</p>
+              <p className="text-xl font-black text-foreground">₪{Math.round(openTotals.credit).toLocaleString()}</p>
+              <p className="text-[11px] text-muted-foreground">{openTotals.creditCount} הזמנות</p>
+            </div>
+            <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-center">
+              <Smartphone size={18} className="mx-auto mb-1 text-purple-500" />
+              <p className="text-xs text-muted-foreground">פייבוקס</p>
+              <p className="text-xl font-black text-foreground">₪{Math.round(openTotals.paybox).toLocaleString()}</p>
+              <p className="text-[11px] text-muted-foreground">{openTotals.payboxCount} הזמנות</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Burgers & patties */}
       <div className="grid grid-cols-2 gap-4">
         <Card className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-amber-500/30">
