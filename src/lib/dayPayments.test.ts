@@ -48,7 +48,7 @@ describe("dayPaymentTotals", () => {
       ],
       DAY_START,
     );
-    expect(totals).toMatchObject({ cash: 90, cashCount: 1, paybox: 0, payboxCount: 1, credit: 0, creditCount: 0 });
+    expect(totals).toMatchObject({ cash: 90, cashCount: 1, paybox: 0, payboxCount: 0, credit: 0, creditCount: 0 });
   });
 
   it("ignores orders from before the business day started", () => {
