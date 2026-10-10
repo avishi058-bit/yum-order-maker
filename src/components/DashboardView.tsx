@@ -953,19 +953,19 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               <DollarSign size={18} className="mx-auto mb-1 text-green-500" />
               <p className="text-xs text-muted-foreground">מזומן</p>
               <p className="text-xl font-black text-foreground">₪{Math.round(openTotals.cash).toLocaleString()}</p>
-              <p className="text-[11px] text-muted-foreground">{openTotals.cashCount} הזמנות</p>
+              <p className="text-[11px] text-muted-foreground">{openTotals.cashCount === 1 ? "הזמנה אחת" : `${openTotals.cashCount} הזמנות`}</p>
             </div>
             <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-center">
               <CreditCard size={18} className="mx-auto mb-1 text-blue-500" />
               <p className="text-xs text-muted-foreground">אשראי</p>
               <p className="text-xl font-black text-foreground">₪{Math.round(openTotals.credit).toLocaleString()}</p>
-              <p className="text-[11px] text-muted-foreground">{openTotals.creditCount} הזמנות</p>
+              <p className="text-[11px] text-muted-foreground">{openTotals.creditCount === 1 ? "הזמנה אחת" : `${openTotals.creditCount} הזמנות`}</p>
             </div>
             <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-center">
               <Smartphone size={18} className="mx-auto mb-1 text-purple-500" />
               <p className="text-xs text-muted-foreground">פייבוקס</p>
               <p className="text-xl font-black text-foreground">₪{Math.round(openTotals.paybox).toLocaleString()}</p>
-              <p className="text-[11px] text-muted-foreground">{openTotals.payboxCount} הזמנות</p>
+              <p className="text-[11px] text-muted-foreground">{openTotals.payboxCount === 1 ? "הזמנה אחת" : `${openTotals.payboxCount} הזמנות`}</p>
             </div>
           </div>
         </CardContent>
