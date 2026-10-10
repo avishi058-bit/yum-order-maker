@@ -446,7 +446,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     { name: "לא סומן", value: sumBy(null) },
   ].filter((d) => d.value > 0);
 
-  // Always-visible (no code needed): today's cash + paybox takings
+  // Always-visible (no code needed): today's cash + paybox takings + portions served
   const openTotals = useMemo(() => {
     const todayStart = getBusinessDayStart();
     const todays = orders.filter(
@@ -454,8 +454,17 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     );
     const sum = (m: string) => todays.filter((o) => o.payment_method === m).reduce((s, o) => s + o.total, 0);
     const count = (m: string) => todays.filter((o) => o.payment_method === m).length;
-    return { cash: sum("cash"), cashCount: count("cash"), paybox: sum("paybox"), payboxCount: count("paybox") };
-  }, [orders]);
+    const todaysIds = new Set(todays.map((o) => o.id));
+    const todaysItems = items.filter((i) => todaysIds.has(i.order_id));
+    const portions = countBurgers(todaysItems).burgers;
+    return {
+      cash: sum("cash"),
+      cashCount: count("cash"),
+      paybox: sum("paybox"),
+      payboxCount: count("paybox"),
+      portions,
+    };
+  }, [orders, items]);
 
   const isHourly = mode === "today" || mode === "yesterday";
 
@@ -739,6 +748,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               <p className="text-xs text-muted-foreground">פייבוקס היום</p>
               <p className="text-xl font-black text-foreground">₪{openTotals.paybox.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{openTotals.payboxCount} הזמנות</p>
+            </CardContent>
+          </Card>
+          <Card className="col-span-2 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/30">
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground">מנות שהוצאו היום</p>
+              <p className="text-xl font-black text-foreground">{openTotals.portions.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">המבורגרים וקציצות בכל ההזמנות</p>
             </CardContent>
           </Card>
         </div>
