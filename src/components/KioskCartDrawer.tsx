@@ -97,11 +97,15 @@ const KioskCartDrawer = ({
   const recommendations = useMemo(() => {
     const inCartMenuIds = new Set(items.map((i) => i.menuItemId));
     const list = menuItems.filter((m) => {
-      if (!isAvailable(m.id)) return false;
       if (inCartMenuIds.has(m.id)) return false;
-      if (m.category === "side") return true;
-      if (m.category === "drink") return true;
-      return false;
+      if (m.category !== "side" && m.category !== "drink") return false;
+      // Drinks with variants (cans, bottles, beers): the base id is not tracked
+      // in inventory - show only if at least one variant is in stock.
+      const subs = drinkSubOptions[m.id];
+      if (subs && subs.length > 0) {
+        return subs.some((s) => isAvailable(drinkToAvailabilityId[s.id] || s.id));
+      }
+      return isAvailable(drinkToAvailabilityId[m.id] || m.id);
     });
     // Pin arayes-special first, then friends-mix
     return list.sort((a, b) => {
