@@ -750,6 +750,13 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
               <p className="text-xs text-muted-foreground">{openTotals.payboxCount} הזמנות</p>
             </CardContent>
           </Card>
+          <Card className="col-span-2 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/30">
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground">מנות שהוצאו היום</p>
+              <p className="text-xl font-black text-foreground">{openTotals.portions.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">המבורגרים וקציצות בכל ההזמנות</p>
+            </CardContent>
+          </Card>
         </div>
 
         {!codeOpen ? (
