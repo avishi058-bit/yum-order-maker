@@ -8,6 +8,7 @@ import {
   mealSideOptions,
   mealDrinkOptions,
   drinkSubOptions,
+  drinkToAvailabilityId,
   type MenuItem,
 } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
