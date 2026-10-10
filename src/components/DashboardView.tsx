@@ -446,7 +446,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     { name: "לא סומן", value: sumBy(null) },
   ].filter((d) => d.value > 0);
 
-  // Always-visible (no code needed): today's cash + paybox takings
+  // Always-visible (no code needed): today's cash + paybox takings + portions served
   const openTotals = useMemo(() => {
     const todayStart = getBusinessDayStart();
     const todays = orders.filter(
@@ -454,8 +454,17 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
     );
     const sum = (m: string) => todays.filter((o) => o.payment_method === m).reduce((s, o) => s + o.total, 0);
     const count = (m: string) => todays.filter((o) => o.payment_method === m).length;
-    return { cash: sum("cash"), cashCount: count("cash"), paybox: sum("paybox"), payboxCount: count("paybox") };
-  }, [orders]);
+    const todaysIds = new Set(todays.map((o) => o.id));
+    const todaysItems = items.filter((i) => todaysIds.has(i.order_id));
+    const portions = countBurgers(todaysItems).burgers;
+    return {
+      cash: sum("cash"),
+      cashCount: count("cash"),
+      paybox: sum("paybox"),
+      payboxCount: count("paybox"),
+      portions,
+    };
+  }, [orders, items]);
 
   const isHourly = mode === "today" || mode === "yesterday";
 
