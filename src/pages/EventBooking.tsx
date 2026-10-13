@@ -77,12 +77,13 @@ const EventBooking = () => {
     (async () => {
       const [{ data: blocked }, { data: settings }] = await Promise.all([
         supa.from("event_blocked_dates").select("blocked_date"),
-        supa.from("event_settings").select("contract_template, minimum_amount").eq("id", 1).maybeSingle(),
+        supa.rpc("get_public_event_settings"),
       ]);
       if (blocked) setBlockedDates(blocked.map((r: any) => new Date(r.blocked_date + "T00:00:00")));
       if (settings) {
-        setContractTemplate(settings.contract_template || "");
-        setMinimumAmount(Number(settings.minimum_amount) || 2000);
+        const s = settings as { contract_template?: string; minimum_amount?: number };
+        setContractTemplate(s.contract_template || "");
+        setMinimumAmount(Number(s.minimum_amount) || 2000);
       }
     })();
   }, []);
