@@ -25,6 +25,7 @@ import KioskWelcome from "@/components/KioskWelcome";
 import CustomerGreeting from "@/components/CustomerGreeting";
 import ItemPreview from "@/components/ItemPreview";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
+import Reveal from "@/components/Reveal";
 
 // Lazy-loaded: only needed once the user opens a modal/customizer/checkout.
 // This trims the initial JS bundle significantly (ItemCustomizer alone ~1300 lines).
@@ -630,7 +631,9 @@ const Index = () => {
       )}
 
       {!isStation && (
+        <Reveal>
         <HeroSection
+
           onDineInChoice={isClosed ? undefined : handleDineInChoice}
           onDeliveryChoice={isClosed ? undefined : handleDeliveryChoice}
           showDelivery={restaurantStatus.delivery_enabled}
