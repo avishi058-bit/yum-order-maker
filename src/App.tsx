@@ -9,6 +9,8 @@ import CookieBanner from "@/components/CookieBanner";
 import AccessibilityWidgetGlobal from "@/components/AccessibilityWidgetGlobal";
 import PostInstallPermissionModal from "@/components/PostInstallPermissionModal";
 import GeoGate from "@/components/GeoGate";
+import Seo from "@/components/Seo";
+import { SEO_PAGES } from "@/seo/pages";
 import OfflineBanner from "@/components/OfflineBanner";
 import { CustomerAuthProvider } from "@/contexts/CustomerAuthContext";
 import { FlyToCartProvider } from "@/contexts/FlyToCartContext";
@@ -35,6 +37,7 @@ const EventBooking = lazy(() => import("./pages/EventBooking"));
 const EventsAdmin = lazy(() => import("./pages/EventsAdmin"));
 const EventsKitchen = lazy(() => import("./pages/EventsKitchen"));
 const Groups = lazy(() => import("./pages/Groups"));
+const GroupsEn = lazy(() => import("./pages/GroupsEn"));
 const AdminLeads = lazy(() => import("./pages/AdminLeads"));
 
 // Lazy load legal pages
@@ -79,7 +82,7 @@ const App = () => (
           <GeoGate>
           <Suspense fallback={<Loading />}>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<><Seo page={SEO_PAGES.home} /><Index /></>} />
               <Route path="/index" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/install" element={<Install />} />
@@ -149,6 +152,7 @@ const App = () => (
               <Route path="/inventory/:token/fridge" element={<InventoryFridge />} />
               <Route path="/events" element={<EventBooking />} />
               <Route path="/groups" element={<Groups />} />
+              <Route path="/en/groups" element={<GroupsEn />} />
               <Route
                 path="/admin/leads"
                 element={

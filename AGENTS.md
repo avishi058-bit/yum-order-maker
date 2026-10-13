@@ -10,3 +10,4 @@
 - Test customers live in the admin-managed `test_customers` table and every report/summary reads from it, so no personal data is hardcoded.
 - Order edits apply through the `edit_order_apply` RPC in one transaction, priced server-side with admin overrides, so a mid-way failure cannot leave an empty order.
 - Customer identity, favorites and order history live only in the customer's device storage; `customer-auth`/`get-customer-orders` are disabled stubs and saved carts use only the private guest_id, because there is no OTP to prove phone ownership. Marketing consent is recorded only inside `create-order` with a real order.
+- Public-page SEO (title, description, canonical, hreflang, JSON-LD, crawler text) lives only in `src/seo/pages.ts`, read by both `<Seo />` and the build-time prerender plugin in `vite.config.ts`, so raw HTML and the running app never disagree; `index.html` keeps no canonical because it is the fallback for every route.
