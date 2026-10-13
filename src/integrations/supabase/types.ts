@@ -1708,6 +1708,7 @@ export type Database = {
         Returns: Json
       }
       generate_daily_order_number: { Args: never; Returns: number }
+      get_public_event_settings: { Args: never; Returns: Json }
       get_webhook_secret: { Args: never; Returns: string }
       has_role: {
         Args: {
