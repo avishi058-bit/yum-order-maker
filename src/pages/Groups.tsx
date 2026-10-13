@@ -599,7 +599,7 @@ const Groups = () => {
 
       <section className="max-w-5xl mx-auto px-4 py-12 space-y-6">
         <h2 className="text-2xl md:text-4xl font-black text-center text-primary">מתאמים הגעה?</h2>
-        {GROUPS_BOOKING_ENABLED ? <LeadForm id="lead-bottom" /> : <div className="flex justify-center"><WhatsAppButton /></div>}
+        {GROUPS_BOOKING_ENABLED ? <LeadForm id="lead-bottom" /> : <div className="flex justify-center text-lg"><WhatsAppTextLink label="דברו איתנו בוואטסאפ" /></div>}
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild size="lg" variant="outline">
             <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> {PHONE}</a>
