@@ -50,6 +50,19 @@ const WhatsAppButton = ({ className = "" }: { className?: string }) => (
   </Button>
 );
 
+/** Subtle text link - used instead of the big button everywhere except the hero and floating chip */
+const WhatsAppTextLink = ({ label = "לתיאום בוואטסאפ", light = false }: { label?: string; light?: boolean }) => (
+  <a
+    href={WHATSAPP}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`inline-flex items-center gap-1.5 font-bold underline underline-offset-4 hover:opacity-80 ${light ? "text-primary-foreground" : "text-primary"}`}
+  >
+    <WhatsAppIcon className="w-4 h-4" />
+    {label}
+  </a>
+);
+
 const LeadForm = ({ id }: { id: string }) => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -168,7 +181,7 @@ const PhotoCard = ({
         <Button asChild size="lg" className="w-full text-base">
           <a href={href}>{ctaLabel}</a>
         </Button>
-      ) : <WhatsAppButton className="w-full" />}
+      ) : <div className="flex justify-center"><WhatsAppTextLink /></div>}
     </div>
   </article>
 );
@@ -510,7 +523,7 @@ const Groups = () => {
                 לכן אנחנו עובדים בתיאום צמוד עם מדריך או מארגן הקבוצה לפני ההגעה, יודעים כמה אנשים מגיעים ומתי, ונערכים מראש כדי שהמטבח יעבוד בהתאם לזמן ההגעה של הקבוצה. השולחנות מוכנים במתכונת שוק - שניות לפני שהאוטובוס נחה, כדי שאף דקה לא תתבזבז. לקבוצות שממהרות, בתיאום מתאים, ניתן לבצע עצירה של כ-30-45 דקות ולהמשיך בסיור.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <WhatsAppButton />
+                <WhatsAppTextLink label="לתאום בוואטסאפ" light />
               </div>
             </div>
           </div>
@@ -586,7 +599,7 @@ const Groups = () => {
 
       <section className="max-w-5xl mx-auto px-4 py-12 space-y-6">
         <h2 className="text-2xl md:text-4xl font-black text-center text-primary">מתאמים הגעה?</h2>
-        {GROUPS_BOOKING_ENABLED ? <LeadForm id="lead-bottom" /> : <div className="flex justify-center"><WhatsAppButton /></div>}
+        {GROUPS_BOOKING_ENABLED ? <LeadForm id="lead-bottom" /> : <div className="flex justify-center text-lg"><WhatsAppTextLink label="דברו איתנו בוואטסאפ" /></div>}
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild size="lg" variant="outline">
             <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> {PHONE}</a>
