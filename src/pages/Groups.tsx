@@ -440,8 +440,9 @@ const Groups = () => {
     <div dir="rtl" className="theme-sand min-h-screen bg-background text-foreground">
       {/* Sticky top bar */}
       <header className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-md">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="max-w-5xl mx-auto px-4 min-h-16 py-1.5 flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <WazeLink />
             <a
               href={`tel:${PHONE}`}
               className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold"
