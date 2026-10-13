@@ -566,7 +566,7 @@ const Groups = () => {
       {/* Tourist testimonial from Canada - vertical 9:16 reel, bottom of the page */}
       <section aria-label="המלצת תיירים מקנדה" className="px-4 py-8 bg-background">
         <div className="max-w-5xl mx-auto space-y-5 text-center">
-          <h2 className="text-2xl md:text-4xl font-black text-primary">הגיעו עד מקנדה בשביל ההמבורגר 🇨🇦</h2>
+          <h2 className="text-2xl md:text-4xl font-black text-primary">תיירים שהגיעו אלינו מקנדה 🇨🇦</h2>
           <p className="text-base md:text-lg font-bold text-muted-foreground">ככה נראית ארוחת צהריים בהבקתה אחרי סיור בעוטף</p>
           <video
             className="block w-full max-w-[360px] mx-auto aspect-[9/16] rounded-lg bg-foreground object-contain"
