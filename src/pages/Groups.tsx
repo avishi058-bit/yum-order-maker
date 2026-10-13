@@ -50,6 +50,19 @@ const WhatsAppButton = ({ className = "" }: { className?: string }) => (
   </Button>
 );
 
+/** Subtle text link - used instead of the big button everywhere except the hero and floating chip */
+const WhatsAppTextLink = ({ label = "לתיאום בוואטסאפ" }: { label?: string }) => (
+  <a
+    href={WHATSAPP}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center gap-1.5 text-primary font-bold underline underline-offset-4 hover:opacity-80"
+  >
+    <WhatsAppIcon className="w-4 h-4" />
+    {label}
+  </a>
+);
+
 const LeadForm = ({ id }: { id: string }) => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
