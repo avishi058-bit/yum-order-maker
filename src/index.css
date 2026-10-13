@@ -282,6 +282,19 @@
 
 .accessibility-stop-animations,
 .accessibility-stop-animations *,
+/* Smooth, Apple-like scrolling across the site.
+   The .accessibility-stop-animations rule below overrides this with !important
+   for users who disable animations. */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .accessibility-stop-animations *::before,
 .accessibility-stop-animations *::after {
   animation: none !important;
