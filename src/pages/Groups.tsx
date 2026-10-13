@@ -51,12 +51,12 @@ const WhatsAppButton = ({ className = "" }: { className?: string }) => (
 );
 
 /** Subtle text link - used instead of the big button everywhere except the hero and floating chip */
-const WhatsAppTextLink = ({ label = "לתיאום בוואטסאפ" }: { label?: string }) => (
+const WhatsAppTextLink = ({ label = "לתיאום בוואטסאפ", light = false }: { label?: string; light?: boolean }) => (
   <a
     href={WHATSAPP}
     target="_blank"
     rel="noopener noreferrer"
-    className="inline-flex items-center gap-1.5 text-primary font-bold underline underline-offset-4 hover:opacity-80"
+    className={`inline-flex items-center gap-1.5 font-bold underline underline-offset-4 hover:opacity-80 ${light ? "text-primary-foreground" : "text-primary"}`}
   >
     <WhatsAppIcon className="w-4 h-4" />
     {label}
