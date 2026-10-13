@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Phone,
-  MessageCircle,
   MapPin,
   Users,
   Clock,
@@ -14,7 +13,6 @@ import {
   Globe2,
   CheckCircle2,
   ChevronDown,
-  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,9 +30,25 @@ import event3 from "@/assets/events/event3.jpeg.asset.json";
 import event4 from "@/assets/events/event4.jpeg.asset.json";
 import event5 from "@/assets/events/event5.jpeg.asset.json";
 import arayes from "@/assets/menu/arayes-special-opt.webp";
+import { GROUPS_BOOKING_ENABLED, GROUPS_WHATSAPP_URL } from "@/data/groupsContact";
+import { uiPositions } from "@/config/uiConfig";
 
 const PHONE = "058-4633555";
-const WHATSAPP = "https://wa.me/972584633555?text=%D7%94%D7%99%D7%99%2C%20%D7%90%D7%A0%D7%97%D7%A0%D7%95%20%D7%9E%D7%A2%D7%95%D7%A0%D7%99%D7%99%D7%A0%D7%99%D7%9D%20%D7%9C%D7%AA%D7%90%D7%9D%20%D7%94%D7%92%D7%A2%D7%94%20%D7%A9%D7%9C%20%D7%A7%D7%91%D7%95%D7%A6%D7%94";
+const WHATSAPP = GROUPS_WHATSAPP_URL;
+
+const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={`${className} text-green shrink-0`} fill="currentColor" aria-hidden="true">
+    <path d="M20.52 3.48A11.9 11.9 0 0 0 12.05 0C5.48 0 .13 5.35.13 11.92c0 2.1.55 4.15 1.6 5.96L0 24l6.25-1.64a11.9 11.9 0 0 0 5.8 1.48h.01c6.57 0 11.92-5.35 11.92-11.92 0-3.18-1.24-6.18-3.46-8.44ZM12.06 21.8a9.86 9.86 0 0 1-5.03-1.38l-.36-.22-3.71.98.99-3.62-.24-.37a9.85 9.85 0 0 1-1.51-5.27c0-5.46 4.44-9.9 9.9-9.9a9.84 9.84 0 0 1 7 2.9 9.84 9.84 0 0 1 2.9 7c0 5.46-4.44 9.9-9.94 9.88Zm5.43-7.41c-.3-.15-1.76-.87-2.03-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.25-.46-2.38-1.47-.88-.79-1.47-1.76-1.64-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.09 4.48.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35Z" />
+  </svg>
+);
+
+const WhatsAppButton = ({ className = "" }: { className?: string }) => (
+  <Button asChild size="lg" className={`h-auto min-h-12 whitespace-normal border border-green bg-card text-foreground hover:bg-card/90 text-base font-bold ${className}`}>
+    <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+      <WhatsAppIcon /> דברו איתנו בוואטסאפ
+    </a>
+  </Button>
+);
 
 const LeadForm = ({ id }: { id: string }) => {
   const [fullName, setFullName] = useState("");
@@ -47,6 +61,7 @@ const LeadForm = ({ id }: { id: string }) => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!GROUPS_BOOKING_ENABLED) return;
     if (!fullName.trim() || phone.trim().length < 6) {
       toast.error("נא למלא שם וטלפון");
       return;
@@ -149,9 +164,11 @@ const PhotoCard = ({
     </div>
     <div className="p-5 space-y-4">
       <p className="text-muted-foreground leading-relaxed">{text}</p>
-      <Button asChild size="lg" className="w-full text-base">
-        <a href={href}>{ctaLabel}</a>
-      </Button>
+      {GROUPS_BOOKING_ENABLED ? (
+        <Button asChild size="lg" className="w-full text-base">
+          <a href={href}>{ctaLabel}</a>
+        </Button>
+      ) : <WhatsAppButton className="w-full" />}
     </div>
   </article>
 );
@@ -394,7 +411,7 @@ const Groups = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold"
             >
-              <MessageCircle className="w-4 h-4" /> וואטסאפ
+              <WhatsAppIcon className="w-4 h-4" /> וואטסאפ
             </a>
           </div>
           <Link to="/" className="flex items-center gap-2">
@@ -419,17 +436,25 @@ const Groups = () => {
               אירוח קבוצות, משלחות וסיורים - עד 200 איש, בתיאום מראש, בלי לשבור את לוח הזמנים.
             </p>
             <div className="flex flex-wrap gap-3 pt-1">
-              <Button asChild size="lg" className="text-base h-12">
-                <a href="#lead-top">השאירו פרטים ונחזור אליכם</a>
-              </Button>
-              <Button asChild size="lg" variant="secondary" className="text-base h-12">
-                <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="ml-2 w-5 h-5" /> וואטסאפ
-                </a>
-              </Button>
+              <WhatsAppButton />
             </div>
           </div>
         </div>
+      </section>
+
+      <section aria-label="המדריך שסוגר סיור בעוטף" className="px-4 py-6 bg-background">
+        <video
+          className="block w-full max-w-[400px] mx-auto aspect-[9/16] rounded-lg bg-foreground object-contain"
+          controls
+          playsInline
+          muted
+          preload="metadata"
+          poster="/habikta-guide-otef-reel-poster.jpg"
+          aria-label="המדריך שסוגר סיור בעוטף"
+        >
+          <source src="/habikta-guide-otef-reel.mp4" type="video/mp4" />
+          הדפדפן אינו תומך בניגון הסרטון.
+        </video>
       </section>
 
       {/* Quick stats strip */}
@@ -468,16 +493,7 @@ const Groups = () => {
                 לכן אנחנו עובדים בתיאום צמוד עם מדריך או מארגן הקבוצה לפני ההגעה, יודעים כמה אנשים מגיעים ומתי, ונערכים מראש כדי שהמטבח יעבוד בהתאם לזמן ההגעה של הקבוצה. השולחנות מוכנים במתכונת שוק - שניות לפני שהאוטובוס נחה, כדי שאף דקה לא תתבזבז. לקבוצות שממהרות, בתיאום מתאים, ניתן לבצע עצירה של כ-30-45 דקות ולהמשיך בסיור.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button asChild size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-base h-12">
-                  <Link to="/events">
-                    <Calendar className="ml-2 w-5 h-5" /> להזמנת קבוצה ואירוע
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 text-base h-12">
-                  <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="ml-2 w-5 h-5" /> לתיאום מהיר בוואטסאפ
-                  </a>
-                </Button>
+                <WhatsAppButton />
               </div>
             </div>
           </div>
@@ -494,7 +510,7 @@ const Groups = () => {
           ))}
         </div>
 
-        <LeadForm id="lead-top" />
+        {GROUPS_BOOKING_ENABLED && <LeadForm id="lead-top" />}
 
         <section>
           <h2 className="text-2xl md:text-4xl font-black text-center text-primary mb-6">
@@ -553,27 +569,25 @@ const Groups = () => {
 
       <section className="max-w-5xl mx-auto px-4 py-12 space-y-6">
         <h2 className="text-2xl md:text-4xl font-black text-center text-primary">מתאמים הגעה?</h2>
-        <LeadForm id="lead-bottom" />
+        {GROUPS_BOOKING_ENABLED ? <LeadForm id="lead-bottom" /> : <div className="flex justify-center"><WhatsAppButton /></div>}
         <div className="flex flex-wrap justify-center gap-3">
           <Button asChild size="lg" variant="outline">
             <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> {PHONE}</a>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/"><Utensils className="ml-2 w-4 h-4" /> לתפריט ולהזמנה</Link>
           </Button>
         </div>
       </section>
 
       {/* Floating WhatsApp */}
+      <Button asChild size="icon" className={`${uiPositions.groupsWhatsApp.position} md:hidden w-14 h-14 rounded-full border border-green bg-card hover:bg-card/90 shadow-xl`}>
       <a
         href={WHATSAPP}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="שליחת הודעה בוואטסאפ"
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl"
+        aria-label="דברו איתנו בוואטסאפ"
       >
-        <MessageCircle className="w-7 h-7" />
+        <WhatsAppIcon className="w-7 h-7" />
       </a>
+      </Button>
     </div>
   );
 };

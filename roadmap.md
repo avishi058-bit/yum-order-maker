@@ -1,6 +1,7 @@
 # Task roadmap
 
 ## Done
+- [x] Groups campaign only: WhatsApp contact, reversible booking disablement, uploaded video and first-frame poster
 - [x] Kiosk soldier fund: visible entry action, kiosk-sized donation dialog, cart editing and donation-only checkout
 - [x] Kiosk menu: compact white navigation on the right, with click navigation and continuous category scrolling
 - [x] Kiosk welcome: full-screen "לחצו להתחלה", then animated dine-in/takeaway choices
