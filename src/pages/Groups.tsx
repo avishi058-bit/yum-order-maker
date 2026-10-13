@@ -444,11 +444,12 @@ const Groups = () => {
 
       <section aria-label="המדריך שסוגר סיור בעוטף" className="px-4 py-6 bg-background">
         <video
+          ref={videoRef}
           className="block w-full max-w-[400px] mx-auto aspect-[9/16] rounded-lg bg-foreground object-contain"
           controls
           playsInline
-          muted
-          preload="metadata"
+          autoPlay
+          preload="auto"
           poster="/habikta-guide-otef-reel-poster.jpg"
           aria-label="המדריך שסוגר סיור בעוטף"
         >
