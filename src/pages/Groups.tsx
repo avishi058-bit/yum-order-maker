@@ -181,7 +181,7 @@ const PhotoCard = ({
         <Button asChild size="lg" className="w-full text-base">
           <a href={href}>{ctaLabel}</a>
         </Button>
-      ) : <WhatsAppButton className="w-full" />}
+      ) : <div className="flex justify-center"><WhatsAppTextLink /></div>}
     </div>
   </article>
 );
