@@ -35,6 +35,21 @@ import { uiPositions } from "@/config/uiConfig";
 
 const PHONE = "058-4633555";
 const WHATSAPP = GROUPS_WHATSAPP_URL;
+const WAZE = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה";
+
+/** Waze navigation link - same address used across the ordering screens */
+const WazeLink = ({ className = "" }: { className?: string }) => (
+  <a
+    href={WAZE}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="נווטו אלינו עם Waze"
+    className={`inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold ${className}`}
+  >
+    <img src="/waze-icon.png" alt="" aria-hidden="true" className="w-4 h-4 rounded" />
+    נווטו אלינו
+  </a>
+);
 
 const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={`${className} text-green shrink-0`} fill="currentColor" aria-hidden="true">
@@ -425,8 +440,9 @@ const Groups = () => {
     <div dir="rtl" className="theme-sand min-h-screen bg-background text-foreground">
       {/* Sticky top bar */}
       <header className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-md">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="max-w-5xl mx-auto px-4 min-h-16 py-1.5 flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <WazeLink />
             <a
               href={`tel:${PHONE}`}
               className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold"
