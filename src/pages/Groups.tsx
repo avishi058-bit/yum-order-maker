@@ -578,14 +578,16 @@ const Groups = () => {
       </section>
 
       {/* Floating WhatsApp */}
-      <Button asChild size="icon" className={`${uiPositions.groupsWhatsApp.position} md:hidden w-14 h-14 rounded-full border border-green bg-card hover:bg-card/90 shadow-xl`}>
+      <Button asChild className={`${uiPositions.groupsWhatsApp.position} md:hidden h-14 px-6 rounded-full bg-green text-primary-foreground hover:bg-green/90 shadow-2xl ring-2 ring-green/40`}>
       <a
         href={WHATSAPP}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="דברו איתנו בוואטסאפ"
+        className="flex items-center gap-2 text-base font-bold"
       >
         <WhatsAppIcon className="w-7 h-7" />
+        דברו איתנו בוואטסאפ
       </a>
       </Button>
     </div>
