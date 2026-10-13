@@ -59,10 +59,10 @@ const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
-const WhatsAppButton = ({ className = "" }: { className?: string }) => (
+const WhatsAppButton = ({ className = "", label = "דברו איתנו בוואטסאפ" }: { className?: string; label?: string }) => (
   <Button asChild size="lg" className={`h-auto min-h-12 whitespace-normal border border-green bg-card text-foreground hover:bg-card/90 text-base font-bold ${className}`}>
     <a href={WHATSAPP} target="_blank" rel="noopener noreferrer">
-      <WhatsAppIcon /> דברו איתנו בוואטסאפ
+      <WhatsAppIcon /> {label}
     </a>
   </Button>
 );
@@ -560,6 +560,30 @@ const Groups = () => {
           <Button asChild size="lg" variant="outline">
             <a href={`tel:${PHONE}`}><Phone className="ml-2 w-5 h-5" /> {PHONE}</a>
           </Button>
+        </div>
+      </section>
+
+      {/* Tourist testimonial from Canada - vertical 9:16 reel, bottom of the page */}
+      <section aria-label="המלצת תיירים מקנדה" className="px-4 py-8 bg-background">
+        <div className="max-w-5xl mx-auto space-y-5 text-center">
+          <h2 className="text-2xl md:text-4xl font-black text-primary">הגיעו עד מקנדה בשביל ההמבורגר 🇨🇦</h2>
+          <p className="text-base md:text-lg font-bold text-muted-foreground">ככה נראית ארוחת צהריים בהבקתה אחרי סיור בעוטף</p>
+          <video
+            className="block w-full max-w-[360px] mx-auto aspect-[9/16] rounded-lg bg-foreground object-contain"
+            controls
+            playsInline
+            muted
+            loop
+            preload="metadata"
+            poster="/habikta-canada-reel-poster.jpg"
+            aria-label="תיירים מקנדה מספרים על ארוחת הצהריים שלהם בהבקתה"
+          >
+            <source src="/habikta-canada-reel.mp4" type="video/mp4" />
+            הדפדפן אינו תומך בניגון הסרטון.
+          </video>
+          <div className="flex justify-center">
+            <WhatsAppButton label="לתיאום ארוחה לקבוצה בווטסאפ" />
+          </div>
         </div>
       </section>
 

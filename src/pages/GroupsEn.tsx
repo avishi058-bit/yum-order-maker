@@ -11,9 +11,9 @@ const PHONE = "+972-58-4633555";
 const WAZE = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה";
 const page = SEO_PAGES.groupsEn;
 
-const WhatsAppButton = () => (
+const WhatsAppButton = ({ label = "Message us on WhatsApp" }: { label?: string }) => (
   <Button asChild size="lg" className="h-auto min-h-12 whitespace-normal border border-green bg-card text-foreground hover:bg-card/90 text-base font-bold">
-    <a href={GROUPS_WHATSAPP_URL_EN} target="_blank" rel="noopener noreferrer">Message us on WhatsApp</a>
+    <a href={GROUPS_WHATSAPP_URL_EN} target="_blank" rel="noopener noreferrer">{label}</a>
   </Button>
 );
 
@@ -158,6 +158,30 @@ const GroupsEn = () => {
           <Button asChild size="lg" variant="outline">
             <a href={`tel:${PHONE}`}><Phone className="mr-2 w-5 h-5" /> {PHONE}</a>
           </Button>
+        </div>
+      </section>
+
+      {/* Tourist testimonial from Canada - vertical 9:16 reel, bottom of the page */}
+      <section aria-label="Tourist testimonial from Canada" className="px-4 py-8 bg-background">
+        <div className="max-w-5xl mx-auto space-y-5 text-center">
+          <h2 className="text-2xl md:text-4xl font-black text-primary">They came all the way from Canada for the burger 🇨🇦</h2>
+          <p className="text-base md:text-lg font-bold text-muted-foreground">This is what a lunch at HaBikta looks like after a Gaza Envelope tour</p>
+          <video
+            className="block w-full max-w-[360px] mx-auto aspect-[9/16] rounded-lg bg-foreground object-contain"
+            controls
+            playsInline
+            muted
+            loop
+            preload="metadata"
+            poster="/habikta-canada-reel-poster.jpg"
+            aria-label="Tourists from Canada talk about their lunch at HaBikta"
+          >
+            <source src="/habikta-canada-reel.mp4" type="video/mp4" />
+            Your browser cannot play this video.
+          </video>
+          <div className="flex justify-center">
+            <WhatsAppButton label="Arrange a group meal on WhatsApp" />
+          </div>
         </div>
       </section>
     </div>
