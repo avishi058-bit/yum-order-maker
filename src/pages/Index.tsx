@@ -947,7 +947,7 @@ const Index = () => {
         </AnimatePresence>
       </Suspense>
 
-      {!isStation && <PressSection />}
+      {!isStation && <Reveal><PressSection /></Reveal>}
 
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-3">
