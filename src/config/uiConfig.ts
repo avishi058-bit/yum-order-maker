@@ -9,6 +9,10 @@
 // Values are Tailwind classes. Change to reposition floating elements.
 
 export const uiPositions = {
+  /** Contact action used only on the groups campaign page. */
+  groupsWhatsApp: {
+    position: "fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-5 z-50",
+  },
   /** Accessibility widget floating button */
   accessibility: {
     button: "fixed left-4 bottom-[7%] z-[60]",
