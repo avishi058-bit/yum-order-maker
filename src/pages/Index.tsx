@@ -649,6 +649,7 @@ const Index = () => {
             setCheckoutOpen(true);
           }}
         />
+        </Reveal>
       )}
       {isClosed ? (
         <div className="py-12 text-center px-6">
@@ -687,7 +688,9 @@ const Index = () => {
           )}
         </div>
       ) : dineIn !== null ? (
-        <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
+        <Reveal distance={20}>
+          <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
+        </Reveal>
       ) : null}
 
       {isClosed && browseMenuOpen && (
