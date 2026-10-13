@@ -338,6 +338,22 @@ const LONG_CONTENT: { title: string; paragraphs: string[] }[] = [
 ];
 
 const Groups = () => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Autoplay on page entry: try with sound at half volume; if the browser
+  // blocks unmuted autoplay, fall back to muted autoplay (volume stays 0.5
+  // so unmuting starts at half).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.volume = 0.5;
+    v.muted = false;
+    v.play().catch(() => {
+      v.muted = true;
+      v.play().catch(() => {});
+    });
+  }, []);
+
   useEffect(() => {
     const prevTitle = document.title;
     document.title = "אוכל לקבוצות בסיור בעוטף עזה | המבורגר הבקתה, כפר מימון";
