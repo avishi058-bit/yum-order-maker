@@ -31,6 +31,8 @@ import event4 from "@/assets/events/event4.jpeg.asset.json";
 import event5 from "@/assets/events/event5.jpeg.asset.json";
 import arayes from "@/assets/menu/arayes-special-opt.webp";
 import { GROUPS_BOOKING_ENABLED, GROUPS_WHATSAPP_URL } from "@/data/groupsContact";
+import Seo from "@/components/Seo";
+import { GROUPS_FAQ_HE, GROUPS_SECTIONS_HE, SEO_PAGES } from "@/seo/pages";
 import { uiPositions } from "@/config/uiConfig";
 
 const PHONE = "058-4633555";
@@ -266,36 +268,13 @@ const HIGHLIGHTS: { icon: typeof MapPin; text: string }[] = [
   { icon: Globe2, text: "ניסיון באירוח קבוצות מארצות הברית, קנדה וסין" },
 ];
 
-const FAQ: { q: string; a: string }[] = [
-  {
-    q: "מה גודל הקבוצה המינימלי והמקסימלי?",
-    a: "קבוצה אצלנו מוגדרת מ-20 משתתפים ומעלה, ובהזמנה מראש אנחנו נערכים לאירוח והסעדה של עד 200 איש. קיבולת הישיבה הרגילה של הבקתה היא כ-35 איש, ולכן קבוצות גדולות יותר מקבלות היערכות מיוחדת בהתאם לגודל הקבוצה, מזג האוויר וסגנון האירוח שנבחר.",
-  },
-  {
-    q: "מהו מינימום ההזמנה לקבוצה?",
-    a: "מינימום ההזמנה לקבוצה הוא 2,000 ₪ כולל מע״מ. המסלולים מתומחרים לפי אדם ומאפשרים לבחור מראש את רמת האירוח בהתאם לתקציב ולצרכים של הקבוצה.",
-  },
-  {
-    q: "כמה זמן לוקחת עצירת האוכל לקבוצה?",
-    a: "כאשר קבוצה ממהרת והכול מתואם מראש, ניתן לסיים אצלנו עצירת אוכל מלאה בתוך כ-30-45 דקות ולהמשיך לתחנה הבאה בסיור.",
-  },
-  {
-    q: "איפה האוטובוס עוצר?",
-    a: "יש חניה קרובה ונוחה לאוטובוסים ליד הבקתה, כך שהמשתתפים יורדים בסמוך למקום ולא צריכים ללכת מרחק משמעותי.",
-  },
-  {
-    q: "האם המקום כשר?",
-    a: "הבקתה פועלת בכשרות רגילה בהשגחת הרבנות שדות נגב. קציצת ההמבורגר עצמה עשויה מבשר חלק רבנות והירקות הם גוש קטיף. תעודת הכשרות של המקום היא כשרות רגילה, בין היתר מכיוון שתוספת הרוסטביף האופציונלית אינה מבשר חלק.",
-  },
-  {
-    q: "יש אפשרויות צמחוניות, טבעוניות או ללא גלוטן?",
-    a: "קיימת אפשרות להמבורגר צמחוני/טבעוני, אך הוא מוכן על אותה פלנצ׳ה של הבשר. קיימת גם אפשרות ללחמנייה ללא גלוטן, אך ההכנה נעשית בסביבה שבה קיים גלוטן. לקבוצות עם רגישויות או העדפות מיוחדות מומלץ לעדכן אותנו מראש.",
-  },
-  {
-    q: "האם המקום נגיש?",
-    a: "הגישה למקום אפשרית גם עבור אדם בכיסא גלגלים ברובה, אך קיימת מדרגה קטנה ולכן אין להציג את המקום כנגיש באופן מלא ללא בדיקה פרטנית של צורכי הקבוצה. במקום קיימים שני תאי שירותים - לנשים ולגברים.",
-  },
-];
+const FAQ = GROUPS_FAQ_HE;
+/** These long-content blocks are summarised in the visible SEO sections above, so they are not repeated in the collapsed story. */
+const VISIBLE_LONG_TITLES = new Set([
+  "עצירת אוכל שמשתלבת במסלול הסיור",
+  "עד 200 איש בהזמנה מראש",
+  "מסלולים מיוחדים לקבוצות - לפי אדם ולפי תקציב",
+]);
 
 /** Long-form content - kept in the DOM for search/AI crawlers, collapsed for humans. */
 const LONG_CONTENT: { title: string; paragraphs: string[] }[] = [
@@ -382,62 +361,9 @@ const Groups = () => {
     });
   }, []);
 
-  useEffect(() => {
-    const prevTitle = document.title;
-    document.title = "אוכל לקבוצות בסיור בעוטף עזה | המבורגר הבקתה, כפר מימון";
-    const desc = document.querySelector('meta[name="description"]');
-    const prevDesc = desc?.getAttribute("content") || "";
-    desc?.setAttribute(
-      "content",
-      "הבקתה בכפר מימון - עצירת צהריים לקבוצות ומשלחות בסיור בעוטף עזה, בין תקומה לאזור הנובה. עד 200 איש בהזמנה מראש, המבורגר 220 גרם, מסלולים לפי אדם."
-    );
-    const canonical = document.createElement("link");
-    canonical.rel = "canonical";
-    canonical.href = "https://yum-order-maker.lovable.app/groups";
-    document.head.appendChild(canonical);
-
-    const ld = document.createElement("script");
-    ld.type = "application/ld+json";
-    ld.textContent = JSON.stringify([
-      {
-        "@context": "https://schema.org",
-        "@type": "Restaurant",
-        name: "הבקתה - המבורגר של מושבניקים",
-        description:
-          "מסעדת המבורגרים בכפר מימון שבמועצה האזורית שדות נגב, בלב עוטף עזה, המארחת קבוצות, משלחות וסיורים בתיאום מראש.",
-        servesCuisine: "המבורגר",
-        telephone: "+972584633555",
-        url: "https://yum-order-maker.lovable.app/groups",
-        address: {
-          "@type": "PostalAddress",
-          addressLocality: "כפר מימון",
-          addressRegion: "מועצה אזורית שדות נגב",
-          addressCountry: "IL",
-        },
-        maximumAttendeeCapacity: 200,
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: FAQ.map((f) => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      },
-    ]);
-    document.head.appendChild(ld);
-
-    return () => {
-      document.title = prevTitle;
-      desc?.setAttribute("content", prevDesc);
-      canonical.remove();
-      ld.remove();
-    };
-  }, []);
-
   return (
     <div dir="rtl" className="theme-sand min-h-screen bg-background text-foreground">
+      <Seo page={SEO_PAGES.groups} />
       {/* Sticky top bar */}
       <header className="sticky top-0 z-40 bg-primary text-primary-foreground shadow-md">
         <div className="max-w-5xl mx-auto px-4 min-h-16 py-1.5 flex items-center justify-between gap-2">
@@ -457,6 +383,9 @@ const Groups = () => {
               className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1.5 text-sm font-bold"
             >
               <WhatsAppIcon className="w-4 h-4" /> וואטסאפ
+            </a>
+            <a href="/en/groups" hrefLang="en" lang="en" className="text-sm font-bold underline underline-offset-4 px-1">
+              English
             </a>
           </div>
           <Link to="/" className="flex items-center gap-2">
@@ -546,6 +475,17 @@ const Groups = () => {
         </div>
       </section>
       <main className="max-w-5xl mx-auto px-4 py-10 space-y-12">
+        <div className="space-y-8">
+          {GROUPS_SECTIONS_HE.map((s) => (
+            <section key={s.h2} className="space-y-3">
+              <h2 className="text-2xl md:text-3xl font-black text-primary">{s.h2}</h2>
+              {s.paragraphs.map((p) => (
+                <p key={p} className="text-base md:text-lg leading-relaxed text-foreground/90">{p}</p>
+              ))}
+            </section>
+          ))}
+        </div>
+
         <h2 className="text-2xl md:text-4xl font-black text-center text-primary">
           מה אפשר לעשות אצלנו
         </h2>
@@ -598,7 +538,7 @@ const Groups = () => {
               <ChevronDown className="w-5 h-5 text-primary shrink-0" />
             </summary>
             <div className="pt-5 space-y-6">
-              {LONG_CONTENT.map((s) => (
+              {LONG_CONTENT.filter((s) => !VISIBLE_LONG_TITLES.has(s.title)).map((s) => (
                 <article key={s.title} className="space-y-2">
                   <h3 className="text-lg font-black">{s.title}</h3>
                   {s.paragraphs.map((p, i) => (
