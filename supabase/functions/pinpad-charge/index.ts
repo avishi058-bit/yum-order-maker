@@ -167,6 +167,10 @@ Deno.serve(async (req) => {
       .update({
         status: "new",
         payment_method: "credit",
+        // Same as the web checkout: paid_at fires trg_soldier_fund_on_paid, so
+        // kiosk donation-only orders (auto-closed, never seen by the kitchen)
+        // still reach the soldier fund.
+        paid_at: new Date().toISOString(),
         // Needed later to email the Z-Credit invoice to the customer.
         payment_reference:
           result?.ReferenceNumber != null ? String(result.ReferenceNumber) : null,
