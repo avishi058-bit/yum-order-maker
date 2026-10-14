@@ -330,6 +330,14 @@ Deno.serve(async (req: Request) => {
   }
   const body = parsed.data;
 
+  // A credit order is paid only after Z-Credit / the PinPad confirms the charge
+  // (payment-callback, get-payment-status, pinpad-charge flip it to "new").
+  // Accepting "new" here would let any caller skip payment and still show up in
+  // the kitchen as "שולם באשראי".
+  if (body.paymentMethod === "credit" && body.status !== "pending_payment") {
+    return jsonResponse({ error: "credit_requires_pending_payment" }, 400);
+  }
+
   // Cloudflare Turnstile verification: optional during soft launch because some
   // mobile in-app browsers leave the Cloudflare iframe blank. Set
   // WEBSITE_REQUIRE_TURNSTILE=true to enforce it again.
