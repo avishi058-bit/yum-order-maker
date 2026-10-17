@@ -262,40 +262,40 @@ const KioskKeyboard = () => {
           aria-label="מקלדת"
         >
           {isNum ? (
-            <div className="grid grid-cols-3 gap-2.5" dir="ltr">
+            <div className={`grid grid-cols-3 ${kioskKeyboard.numGap}`} dir="ltr">
               {["1","2","3","4","5","6","7","8","9"].map((k) => (
                 <button key={k} type="button" onPointerDown={handlePointerDown} onClick={() => press(k)}
-                  className={`${keyCls} h-16 text-3xl`}>{k}</button>
+                  className={`${keyCls} ${kioskKeyboard.numKeyHeight} ${kioskKeyboard.numKeyText}`}>{k}</button>
               ))}
               <button type="button" onPointerDown={handlePointerDown} onClick={() => setLayout("hebrew")}
-                className={`${fnCls} h-16 text-base`}>א-ב</button>
+                className={`${fnCls} ${kioskKeyboard.numKeyHeight} ${kioskKeyboard.fnText}`}>א-ב</button>
               <button type="button" onPointerDown={handlePointerDown} onClick={() => press("0")}
-                className={`${keyCls} h-16 text-3xl`}>0</button>
+                className={`${keyCls} ${kioskKeyboard.numKeyHeight} ${kioskKeyboard.numKeyText}`}>0</button>
               <button type="button" onPointerDown={handlePointerDown} onClick={onBackspace}
-                className={`${fnCls} h-16`} aria-label="מחק"><Delete size={26} /></button>
+                className={`${fnCls} ${kioskKeyboard.numKeyHeight}`} aria-label="מחק"><Delete size={32} /></button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className={`flex flex-col ${kioskKeyboard.rowGap}`}>
               {rows.map((row, i) => (
-                <div key={i} className="flex flex-row-reverse gap-1.5 justify-center">
+                <div key={i} className={`flex flex-row-reverse ${kioskKeyboard.rowGap} justify-center`}>
                   {row.map((k, j) => (
                     <button key={j} type="button" onPointerDown={handlePointerDown} onClick={() => press(k)}
-                      className={`${keyCls} h-14 flex-1 max-w-[64px] min-w-0 text-2xl`}>{k}</button>
+                      className={`${keyCls} ${kioskKeyboard.keyHeight} flex-1 ${kioskKeyboard.maxKeyWidth} min-w-0 ${kioskKeyboard.keyText}`}>{k}</button>
                   ))}
                   {i === 0 && (
                     <button type="button" onPointerDown={handlePointerDown} onClick={onBackspace}
-                      className={`${fnCls} h-14 px-4`} aria-label="מחק"><Delete size={24} /></button>
+                      className={`${fnCls} ${kioskKeyboard.keyHeight} px-5`} aria-label="מחק"><Delete size={30} /></button>
                   )}
                 </div>
               ))}
-              <div className="flex flex-row-reverse gap-1.5">
+              <div className={`flex flex-row-reverse ${kioskKeyboard.rowGap}`}>
                 <button type="button" onPointerDown={handlePointerDown} onClick={onEnter}
-                  className="rounded-xl bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-1 h-14 px-5 font-semibold"
-                  aria-label="אנטר"><CornerDownLeft size={20} /><span>המשך</span></button>
+                  className={`rounded-2xl bg-primary text-primary-foreground shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2 ${kioskKeyboard.keyHeight} px-6 font-bold ${kioskKeyboard.fnText}`}
+                  aria-label="אנטר"><CornerDownLeft size={26} /><span>המשך</span></button>
                 <button type="button" onPointerDown={handlePointerDown} onClick={onSpace}
-                  className={`${keyCls} h-14 flex-1 text-base text-muted-foreground`} aria-label="רווח">רווח</button>
+                  className={`${keyCls} ${kioskKeyboard.keyHeight} flex-1 text-muted-foreground ${kioskKeyboard.fnText}`} aria-label="רווח">רווח</button>
                 <button type="button" onPointerDown={handlePointerDown} onClick={() => setLayout(nextLayout)}
-                  className={`${fnCls} h-14 px-5 text-base`}>{nextLabel}</button>
+                  className={`${fnCls} ${kioskKeyboard.keyHeight} px-6 ${kioskKeyboard.fnText}`}>{nextLabel}</button>
               </div>
             </div>
           )}
