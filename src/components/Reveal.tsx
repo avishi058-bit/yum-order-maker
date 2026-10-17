@@ -34,10 +34,16 @@ const Reveal = ({ children, delay = 0, distance = 28, className }: RevealProps) 
           }
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      // threshold 0: tall blocks (the whole menu) can never reach a ratio on small screens.
+      { threshold: 0, rootMargin: "0px 0px -8% 0px" }
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    // Safety net: never leave content hidden (e.g. programmatic scroll jumps).
+    const fallback = window.setTimeout(() => setVisible(true), 1500);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   return (
