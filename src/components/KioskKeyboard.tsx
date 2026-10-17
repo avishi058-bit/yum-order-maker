@@ -253,7 +253,7 @@ const KioskKeyboard = () => {
           transition={{ type: "spring", damping: 26, stiffness: 300 }}
           onPointerDown={handlePointerDown}
           dir="ltr"
-          className={`fixed inset-x-0 mx-auto z-[10000] p-4 ${kioskKeyboard.className}`}
+          className={`fixed inset-x-0 mx-auto z-[10000] ${kioskKeyboard.panelPadding} ${kioskKeyboard.className}`}
           style={{
             bottom: kioskKeyboard.bottomOffset,
             width: isNum ? kioskKeyboard.numericWidth : kioskKeyboard.fullWidth,
