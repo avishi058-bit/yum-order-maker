@@ -170,14 +170,29 @@ export const kioskKeyboard = {
   /** Full screen width */
   numericWidth: "100vw",
   fullWidth: "100vw",
+  /** Padding of the white panel around the keys */
+  panelPadding: "p-4 sm:p-6",
+  /**
+   * Key sizing. clamp() lets the keys grow to the biggest practical size on the
+   * big kiosk screen (11vh / 13vh of a 1080px screen = ~118px / ~140px tall)
+   * while still fitting a small screen, where they fall back to 64px / 76px.
+   */
+  keyHeight: "h-[clamp(64px,11vh,116px)]",
+  numKeyHeight: "h-[clamp(76px,13vh,136px)]",
+  keyText: "text-3xl",
+  numKeyText: "text-4xl",
+  fnText: "text-lg",
+  rowGap: "gap-2",
+  numGap: "gap-3",
+  maxKeyWidth: "max-w-[180px]",
   /** Container look - white panel, rounded top, subtle border */
   className:
     "rounded-t-3xl bg-white text-gray-900 border border-gray-200 shadow-2xl",
   /** Keys on the white panel (light, explicit grays - kiosk theme muted is dark) */
   keyClass:
-    "rounded-xl bg-white text-gray-900 border border-gray-200 shadow-sm active:scale-95 active:bg-gray-100 transition-transform flex items-center justify-center font-medium select-none",
+    "rounded-2xl bg-white text-gray-900 border border-gray-200 shadow-sm active:scale-95 active:bg-gray-100 transition-transform flex items-center justify-center font-medium select-none",
   functionKeyClass:
-    "rounded-xl bg-gray-100 text-gray-900 border border-gray-200 shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none",
+    "rounded-2xl bg-gray-100 text-gray-900 border border-gray-200 shadow-sm active:scale-95 transition-transform flex items-center justify-center font-semibold select-none",
 };
 
 // ─── Hero Section Animations ─────────────────────────────────────────
