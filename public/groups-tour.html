@@ -530,11 +530,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     {p:.7047, t:'12:30 · תיירים מכל העולם', h:'ככה זה נראה מבחוץ', d:'תיירים מקנדה מספרים על הצהריים שלהם אצלנו.', clock:true},
     {p:.8, t:'12:40 · ממשיכים', h:'שבעים ובזמן', d:'יוצאים בדיוק כמו שתכננתם.'},
     {p:.85, t:'12:50 · תקומה', h:'אתר המכוניות', d:'המכוניות שפונו מכביש 232. עדות שקטה ליום ההוא.', quiet:true, sign:['תקומה','אתר המכוניות'], memorial:true},
-    {p:.892, t:'13:00 · המסלול שלכם', h:'רוצים יום כזה?', d:'ממלאים פרטים, ושולחים לנו בוואטסאפ.', go:true}
+    {p:.892, t:'13:00 · המסלול שלכם', h:'רוצים לשדרג את הסיור שלכם עם עצירת צהריים אצלנו?', d:'ממלאים פרטים, ושולחים לנו בוואטסאפ.', go:true}
   ];
   const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
   function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
-    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cText').textContent=P.d;swap.classList.remove('out');};
+    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cTitle').style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';$('cText').textContent=P.d;swap.classList.remove('out');};
     if(reduce)apply();else{swap.classList.add('out');setTimeout(apply,180);}
     card.classList.toggle('quiet',!!P.quiet);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
     if(P.sign){$('signSmall').textContent=P.sign[0];$('signText').textContent=P.sign[1];sign.classList.toggle('bikta',!!P.bikta);sign.classList.toggle('memorial',!!P.memorial);sign.classList.add('on');}else sign.classList.remove('on');

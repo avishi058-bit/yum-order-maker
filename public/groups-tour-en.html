@@ -530,11 +530,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     {p:.7047, t:'12:30 · Guests from around the world', h:'In their own words', d:'Visitors from Canada on their lunch with us.', clock:true},
     {p:.8, t:'12:40 · Moving on', h:'Well fed and on time', d:'Leaving exactly when you planned.'},
     {p:.85, t:'12:50 · Tkuma', h:'The car memorial', d:'Cars cleared from Route 232. A silent witness to that day.', quiet:true, sign:['Tkuma','The car memorial'], memorial:true},
-    {p:.892, t:'13:00 · Your route', h:'Planning a day like this?', d:'Fill in a few details and send them to us on WhatsApp.', go:true}
+    {p:.892, t:'13:00 · Your route', h:'Want to upgrade your tour with a lunch stop at HaBikta?', d:'Fill in a few details and send them to us on WhatsApp.', go:true}
   ];
   const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
   function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
-    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cText').textContent=P.d;swap.classList.remove('out');};
+    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cTitle').style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';$('cText').textContent=P.d;swap.classList.remove('out');};
     if(reduce)apply();else{swap.classList.add('out');setTimeout(apply,180);}
     card.classList.toggle('quiet',!!P.quiet);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
     if(P.sign){$('signSmall').textContent=P.sign[0];$('signText').textContent=P.sign[1];sign.classList.toggle('bikta',!!P.bikta);sign.classList.toggle('memorial',!!P.memorial);sign.classList.add('on');}else sign.classList.remove('on');
