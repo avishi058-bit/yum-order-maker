@@ -21,9 +21,9 @@
 /* Layout: sticky full-screen stage. Drawn map, camera follows a white tour coach (side view) along the real order of stops; at the restaurant the coach doors open and photos pop over the map; then a form, guide quotes and directions below. Single deliberate look. */
 :root{
   color-scheme: light;
-  --paper:#ece2cb; --paper-2:#ddd0b1;
-  --ink:#2b2118; --ink-soft:#6b5a47;
-  --bus:#f2b705; --ember:#c8461f; --sign:#0f6b45; --night:#16120e;
+  --paper:#f4e6c4; --paper-2:#e6d2a6;
+  --ink:#2a1a10; --ink-soft:#5e4632;
+  --bus:#f7941d; --ember:#d9481c; --sign:#006b3c; --night:#1d130d;
   --wa:#0b7a41; --ember-text:#9e3614;
   --display:"Karantina","Assistant",system-ui,sans-serif;
   --body:"Assistant",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -303,12 +303,13 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .menu:not([hidden]){display:grid;position:fixed;z-index:110;top:calc(max(10px,env(safe-area-inset-top,0px)) + 54px);inset-inline-end:max(12px,env(safe-area-inset-left,0px));min-width:200px;background:var(--night);border:2px solid var(--bus);border-radius:14px;padding:6px;gap:4px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
   .menu a,.menu button{font:inherit;font-weight:800;font-size:16px;color:var(--paper);background:none;border:0;text-align:start;padding:12px 14px;border-radius:10px;text-decoration:none;cursor:pointer;min-height:44px}
   .menu a:hover,.menu button:hover{background:rgba(242,183,5,.18)}
-  .card{top:auto!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;max-height:50svh;border-radius:18px!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:hidden}
+  .card{top:auto!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;max-height:none;border-radius:18px!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:visible}
   .card::before,.card::after{top:8px}
-  .card h2{font-size:32px!important}
+  .card h2{font-size:30px!important;line-height:1}
+  .card .num{top:-14px}
   .card p#cText{font-size:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .card .clock svg{width:40px;height:40px}.card .clock b{font-size:30px}
-  .cphoto:not([hidden]){display:block;position:relative;margin:4px 0 2px;border-radius:10px;overflow:hidden;height:22svh;background:#2b1a0c;box-shadow:inset 0 0 0 3px #4a2c14}
+  .cphoto:not([hidden]){display:block;position:relative;margin:4px 0 2px;border-radius:10px;overflow:hidden;height:19svh;background:#2b1a0c;box-shadow:inset 0 0 0 3px #4a2c14}
   .cphoto img,.cphoto video{width:100%;height:100%;object-fit:cover;display:block;animation:fadeIn .5s ease}
   .cphoto figcaption{position:absolute;inset-inline:0;bottom:0;padding:18px 10px 8px;background:linear-gradient(transparent,rgba(22,18,14,.85));color:#fff8ea;font-weight:800;font-size:14px;line-height:1.25}
   .cphoto figcaption:empty{display:none}
@@ -350,29 +351,29 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   <div class="stage" id="stage">
     <svg id="mapsvg" viewBox="0 0 400 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
-        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#d4c6a4" stroke-width=".4"/></pattern>
-        <pattern id="wheat" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><line x1="0" y1="0" x2="0" y2="4" stroke="#9aa36a" stroke-width="1.2" opacity=".6"/></pattern>
-        <pattern id="plough" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)"><line x1="0" y1="0" x2="0" y2="5" stroke="#b79566" stroke-width="1" opacity=".5"/></pattern>
-        <g id="tree"><circle r="3.2" fill="#6e7d3d"/><circle cx="1.6" cy="-1" r="2" fill="#86964d"/></g>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#e6d0a0" stroke-width=".4"/></pattern>
+        <pattern id="wheat" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><line x1="0" y1="0" x2="0" y2="4" stroke="#b28a2e" stroke-width="1.1" opacity=".45"/></pattern>
+        <pattern id="plough" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)"><line x1="0" y1="0" x2="0" y2="5" stroke="#a5703a" stroke-width="1" opacity=".4"/></pattern>
+        <g id="tree"><circle r="3.2" fill="#3f7a35"/><circle cx="1.6" cy="-1" r="2" fill="#5f9a45"/></g>
         <linearGradient id="roof" x1="0" x2="1"><stop offset="0" stop-color="#d9dde1"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd4d9"/></linearGradient>
         <linearGradient id="beamSide" x1="0" x2="1"><stop offset="0" stop-color="#fff6c8" stop-opacity=".75"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></linearGradient>
         <filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
       </defs>
-      <rect x="-4000" y="-4000" width="9000" height="9000" fill="#ece2cb"/>
+      <rect x="-4000" y="-4000" width="9000" height="9000" fill="#f4e6c4"/>
       <rect x="-4000" y="-4000" width="9000" height="9000" fill="url(#grid)"/>
       <g id="fields"></g>
       <g id="country">
-        <path d="M820 -1860 L652 -1316 L584 -1174 L572 -1108 L556 -1036 L524 -964 L468 -964 L452 -852 L412 -700 L380 -564 L340 -436 L308 -364 L300 -340 L212 -140 L140 -36 L108 12 L44 84 L-124 244 L-460 396 L-940 420 L-1580 500 L-1580 -2060 L820 -2060 Z" fill="#a9c6cf"/>
-        <path d="M420 1652 L500 1676 L228 2580 L100 2580 Z" fill="#a9c6cf"/>
-        <ellipse cx="968" cy="-956" rx="40" ry="70" fill="#a9c6cf"/>
-        <ellipse cx="892" cy="76" rx="48" ry="190" fill="#a9c6cf"/>
-        <path d="M956 -868 C980 -620 916 -460 948 -260 S924 -140 932 -108" fill="none" stroke="#7fa6b3" stroke-width="10"/>
+        <path d="M820 -1860 L652 -1316 L584 -1174 L572 -1108 L556 -1036 L524 -964 L468 -964 L452 -852 L412 -700 L380 -564 L340 -436 L308 -364 L300 -340 L212 -140 L140 -36 L108 12 L44 84 L-124 244 L-460 396 L-940 420 L-1580 500 L-1580 -2060 L820 -2060 Z" fill="#7cc4d8"/>
+        <path d="M420 1652 L500 1676 L228 2580 L100 2580 Z" fill="#7cc4d8"/>
+        <ellipse cx="968" cy="-956" rx="40" ry="70" fill="#7cc4d8"/>
+        <ellipse cx="892" cy="76" rx="48" ry="190" fill="#7cc4d8"/>
+        <path d="M956 -868 C980 -620 916 -460 948 -260 S924 -140 932 -108" fill="none" stroke="#4fa3bd" stroke-width="10"/>
       </g>
       <g id="countryLabels" font-weight="800" font-family="Assistant, sans-serif">
         <circle cx="492" cy="-932" r="14" fill="#2b2118"/><text x="516" y="-916" font-size="54" fill="#2b2118">חיפה</text><circle cx="324" cy="-364" r="14" fill="#2b2118"/><text x="348" y="-348" font-size="54" fill="#2b2118">תל אביב</text><circle cx="668" cy="-116" r="14" fill="#2b2118"/><text x="692" y="-100" font-size="54" fill="#2b2118">ירושלים</text><circle cx="332" cy="300" r="14" fill="#2b2118"/><text x="356" y="316" font-size="54" fill="#2b2118">באר שבע</text><circle cx="460" cy="1652" r="14" fill="#2b2118"/><text x="484" y="1668" font-size="54" fill="#2b2118">אילת</text><circle cx="924" cy="-932" r="14" fill="#2b2118"/><text x="948" y="-916" font-size="54" fill="#2b2118">טבריה</text><circle cx="156" cy="-36" r="14" fill="#2b2118"/><text x="180" y="-20" font-size="54" fill="#2b2118">אשקלון</text>
-        <text x="-620" y="-540" font-size="70" fill="#4e7380" font-style="italic">הים התיכון</text>
-        <text x="996" y="100" font-size="44" fill="#4e7380">ים המלח</text>
-        <text x="1028" y="-956" font-size="44" fill="#4e7380">הכנרת</text>
+        <text x="-620" y="-540" font-size="70" fill="#21697f" font-style="italic">הים התיכון</text>
+        <text x="996" y="100" font-size="44" fill="#21697f">ים המלח</text>
+        <text x="1028" y="-956" font-size="44" fill="#21697f">הכנרת</text>
         <circle cx="130" cy="110" r="110" fill="#c8461f" opacity=".16"><animate attributeName="r" values="90;140;90" dur="2.2s" repeatCount="indefinite"/></circle>
         <circle cx="130" cy="110" r="70" fill="none" stroke="#c8461f" stroke-width="10"/>
         <text x="230" y="60" font-size="78" fill="#c8461f">עוטף עזה</text>
@@ -380,7 +381,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
       <path d="M380 340 C300 300 260 300 220 270 S120 230 20 205" fill="none" stroke="#5f8ea0" stroke-width="1.6" stroke-dasharray="2.5 3"/>
       <text x="246" y="296" font-size="6" fill="#5f8ea0" transform="rotate(-14 246 296)">נחל בשור</text>
-      <g id="minor" fill="none" stroke="#b9a983" stroke-width="2.2" stroke-linecap="round">
+      <g id="minor" fill="none" stroke="#cfa769" stroke-width="2.2" stroke-linecap="round">
         <path d="M182 62 C210 90 220 130 240 180 S270 260 332 300"/>
         <path d="M168 124 C186 140 190 160 186 172 S196 210 206 240"/>
         <path d="M128 150 C120 190 110 230 100 300"/>
@@ -388,14 +389,14 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <path d="M232 -60 C300 -20 360 10 430 40"/>
         <path d="M240 180 C280 170 330 160 420 140"/>
       </g>
-      <g id="moshavim" fill="#d9cba9" stroke="#b9a983" stroke-width=".8">
+      <g id="moshavim" fill="#ecd4a2" stroke="#c99a58" stroke-width=".8">
         <rect x="236" y="96" width="14" height="10" rx="2"/><rect x="96" y="214" width="12" height="9" rx="2"/>
         <rect x="150" y="186" width="13" height="9" rx="2"/><rect x="18" y="128" width="12" height="9" rx="2"/>
         <rect x="262" y="210" width="14" height="10" rx="2"/><rect x="214" y="22" width="12" height="9" rx="2"/>
       </g>
       <g id="trees"></g>
-      <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#3b342d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-      <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f2b705" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+      <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#2c241e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f7941d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
       <path d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
       <g font-size="6" fill="#6b5a47">
         <text x="186" y="172">נתיבות</text>
@@ -667,7 +668,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
   let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
   const fields=$('fields');
-  for(let i=0;i<46;i++){const x=-220+rnd()*820,y=-200+rnd()*700,w=30+rnd()*60,h=24+rnd()*50,a=rnd()*40-20;const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('transform',`rotate(${a} ${x+w/2} ${y+h/2})`);const kind=rnd(); r.setAttribute('fill',kind>.66?'#dfd29a':kind>.33?'#d8c3a0':'#c9cf9a'); r.setAttribute('opacity','.55'); fields.appendChild(r); const r2=r.cloneNode(); r2.setAttribute('fill',kind>.5?'url(#wheat)':'url(#plough)'); r2.setAttribute('opacity','1'); fields.appendChild(r2);}
+  for(let i=0;i<46;i++){const x=-220+rnd()*820,y=-200+rnd()*700,w=30+rnd()*60,h=24+rnd()*50,a=rnd()*40-20;const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('transform',`rotate(${a} ${x+w/2} ${y+h/2})`);const kind=rnd(); r.setAttribute('fill',kind>.66?'#f0c95a':kind>.33?'#dca66b':'#a2c463'); r.setAttribute('opacity','.5'); fields.appendChild(r); const r2=r.cloneNode(); r2.setAttribute('fill',kind>.5?'url(#wheat)':'url(#plough)'); r2.setAttribute('opacity','1'); fields.appendChild(r2);}
   const trees=$('trees');
   for(let l=0;l<total;l+=7){const p=road.getPointAtLength(l),q=road.getPointAtLength(Math.min(total,l+1));const nx=-(q.y-p.y),ny=q.x-p.x,n=Math.hypot(nx,ny)||1;[1,-1].forEach(side=>{if(rnd()<.55){const u=document.createElementNS(NS,'use');u.setAttribute('href','#tree');const d=10+rnd()*4;u.setAttribute('x',p.x+side*nx/n*d);u.setAttribute('y',p.y+side*ny/n*d);trees.appendChild(u);}});}
 
