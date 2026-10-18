@@ -19,7 +19,6 @@ import PrivacyModal from "@/components/PrivacyModal";
 import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
-import { getKioskKey } from "@/lib/kioskKey";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
 
 export interface CheckoutSauce {
@@ -587,7 +586,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               orderId: order.orderId,
               invoiceEmail: resolvedInvoiceEmail,
               invoiceName: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
-              kioskKey: getKioskKey() || undefined,
             },
           });
           if (pinErr) {

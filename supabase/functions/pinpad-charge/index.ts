@@ -26,17 +26,7 @@ const BodySchema = z.object({
   orderId: z.string().uuid(),
   invoiceEmail: z.string().trim().email().max(255).optional(),
   invoiceName: z.string().trim().max(100).optional(),
-  // Device secret saved on the kiosk via /station-setup.
-  kioskKey: z.string().max(256).optional(),
 });
-
-// Constant-time string compare so the kiosk key cannot be guessed by timing.
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let out = 0;
-  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return out === 0;
-}
 
 function pickInvoiceNumber(result: Record<string, unknown>): string | null {
   for (const key of ["InvoiceReceiptNumber", "DocumentNumber", "InvoiceNumber", "ReceiptNumber", "DocNumber", "ReferenceNumber"]) {
@@ -77,18 +67,6 @@ Deno.serve(async (req) => {
     const parsed = BodySchema.safeParse(rawBody);
     if (!parsed.success) return json({ error: "invalid_body" }, 400);
 
-    // Only the restaurant's kiosk may push a charge to the physical PinPad.
-    // Enforced once KIOSK_DEVICE_KEY is set, so the kiosk keeps working until
-    // the same key has been saved on it.
-    const KIOSK_KEY = Deno.env.get("KIOSK_DEVICE_KEY")?.trim();
-    if (KIOSK_KEY) {
-      if (!safeEqual(parsed.data.kioskKey?.trim() ?? "", KIOSK_KEY)) {
-        console.warn("pinpad-charge rejected: bad or missing kiosk key");
-        return json({ error: "unauthorized_device" }, 401);
-      }
-    } else {
-      console.warn("pinpad-charge: KIOSK_DEVICE_KEY not set - device check disabled");
-    }
 
     const supabase = createClient(
       SUPABASE_URL,

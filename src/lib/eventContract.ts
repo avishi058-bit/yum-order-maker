@@ -48,6 +48,9 @@ function escapeHtml(s: string): string {
  * html2canvas, and paginate into a jsPDF A4 document. This preserves Hebrew
  * characters (jsPDF's default fonts don't).
  */
+/** A signature must be a plain base64 PNG/JPEG/WebP data URL and nothing else. */
+export const SAFE_SIGNATURE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
 export async function generateContractPdf(opts: {
   contractText: string;
   customerSignature: string;
@@ -82,14 +85,23 @@ export async function generateContractPdf(opts: {
     <div style="margin-top:24px;display:flex;justify-content:space-between;gap:24px">
       <div style="flex:1;text-align:center">
         <div style="font-weight:700;margin-bottom:4px">חתימת בעל העסק</div>
-        <img src="${opts.businessSignature}" style="max-height:120px;max-width:100%;border-bottom:1px solid #999" />
+        <img data-sig="business" alt="" style="max-height:120px;max-width:100%;border-bottom:1px solid #999" />
       </div>
       <div style="flex:1;text-align:center">
         <div style="font-weight:700;margin-bottom:4px">חתימת לקוח</div>
-        <img src="${opts.customerSignature}" style="max-height:120px;max-width:100%;border-bottom:1px solid #999" />
+        <img data-sig="customer" alt="" style="max-height:120px;max-width:100%;border-bottom:1px solid #999" />
       </div>
     </div>
   `;
+
+  // Signatures are set as properties, never interpolated into HTML, and only
+  // when they really are base64 images - a stored signature is customer input.
+  const setSig = (which: string, src: string) => {
+    const img = container.querySelector<HTMLImageElement>(`img[data-sig="${which}"]`);
+    if (img && SAFE_SIGNATURE.test(src)) img.src = src;
+  };
+  setSig("business", opts.businessSignature);
+  setSig("customer", opts.customerSignature);
 
   document.body.appendChild(container);
   try {

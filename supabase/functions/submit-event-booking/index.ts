@@ -31,7 +31,9 @@ const BodySchema = z.object({
   min_applied: z.boolean(),
   drink_selections: z.record(z.number().int().min(0).max(10000)),
   contract_text: z.string().min(1).max(20000),
-  customer_signature: z.string().startsWith("data:image/").max(200000),
+  // Only a plain base64 image - this value is later rendered on the admin's
+  // screen, so anything else (quotes, attributes, scripts) is rejected here.
+  customer_signature: z.string().max(200000).regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/),
 });
 
 Deno.serve(async (req) => {
