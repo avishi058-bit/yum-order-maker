@@ -281,11 +281,10 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .ph.reelcard{display:none!important}
 .vcenter{position:absolute;inset:0;z-index:27;display:grid;place-items:center;background:rgba(22,18,14,.78);opacity:0;pointer-events:none;transition:opacity .45s;padding:70px 16px 24px}
 .vcenter.on{opacity:1;pointer-events:auto}
-.vbox{display:grid;justify-items:center;gap:12px;max-height:100%;transform:scale(.92);transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
-.vcenter.on .vbox{transform:none}
+.vbox{display:grid;justify-items:center;gap:12px;max-height:100%}
 .vcap{color:#fff8ea;font-family:var(--display);font-size:clamp(30px,3.6vw,46px);line-height:1;text-align:center;text-wrap:balance}
 .vframe{position:relative;height:min(64vh,64svh);aspect-ratio:9/16;max-width:88vw;background:#000;border:6px solid #fff;border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
-.vframe video{width:100%;height:100%;object-fit:cover;display:block}
+.vframe video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
 .vframe .unmute{bottom:12px;inset-inline:12px}
 .vskip{font:inherit;font-weight:800;font-size:16px;min-height:46px;padding:0 22px;border-radius:999px;border:2px solid var(--bus);background:transparent;color:var(--bus);cursor:pointer}
 .vskip:hover{background:var(--bus);color:var(--ink)}
@@ -824,7 +823,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     let anyPhoto=false; photos.forEach(o=>{ if(o.el!==reelCard){ const on=p>=o.a&&p<o.b; o.el.classList.toggle('in',on); if(on) anyPhoto=true; } });
     stage.classList.toggle('photo-on', phoneQ.matches ? phonePhoto(p) : (anyPhoto||(p>=.7164&&p<.8079)));
     const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
-    if(inReel){ reelClosed=false; if(!reelAsked&&!still&&!reelWatched){ reelAsked=true; if(reel.ended) reel.currentTime=0; playReel(); } }
+    // Safari draws only black (sound only) if play starts while the overlay is still fading in, so wait until it is fully shown
+    if(inReel){ reelClosed=false; if(!reelAsked&&!still&&!reelWatched){ reelAsked=true; if(reel.ended) reel.currentTime=0; setTimeout(()=>{ if(reelAsked&&reel.paused) playReel(); },500); } }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
     const showMini=false;  // scrolling past the video stops it
     $('vcenter').classList.toggle('on',inReel);
