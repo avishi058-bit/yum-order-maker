@@ -233,11 +233,13 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .credits a{color:inherit}
 
 @media (max-width:760px){
-  #trip{height:2400vh}
+  #trip{height:1750vh}
   .stage.photo-on .card{padding:10px 14px;gap:2px}
   .stage.photo-on .card #cText,.stage.photo-on .card .clock,.stage.photo-on .card .candle{display:none!important}
   .stage.photo-on .card h2{font-size:28px!important}
-  .ph .img{max-height:42svh}
+  .ph{width:min(var(--mw,var(--w)), calc(40svh * var(--arn,1.3333)))!important;padding:6px 6px var(--pb,6px)!important}
+  .ph.in{transform:translate(0,0) rotate(0deg)}
+  .ph.nocap{--pb:6px}
   .stage.photo-on .sign{opacity:0!important;transform:translate(-50%,-30px) scale(.4)!important}
   .ph{top:calc(var(--my,var(--y)) * .3 + 152px)!important}
   .card{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));width:auto;padding:14px 16px;box-shadow:5px 5px 0 var(--ink);gap:6px}
@@ -462,22 +464,22 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <div class="sign" id="sign"><small id="signSmall">Sderot</small><b id="signText">Garden of Heroism and Remembrance</b></div>
 
     <!-- Sderot (public domain, zstadler) -->
-    <figure class="ph" data-show=".059,.09" style="--x:5%;--y:15%;--w:27%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="The pillar monument, flags and memorial stones in the Garden of Heroism and Remembrance, Sderot"></div><span>Garden of Heroism and Remembrance, Sderot</span></figure>
-    <figure class="ph nocap" data-show=".071,.09" style="--x:24%;--y:28%;--w:13%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="The memorial pillars in Sderot against a blue sky"></div></figure>
+    <figure class="ph" data-show=".059,.09" style="--arn:1.3333;--x:5%;--y:15%;--w:27%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="The pillar monument, flags and memorial stones in the Garden of Heroism and Remembrance, Sderot"></div><span>Garden of Heroism and Remembrance, Sderot</span></figure>
+    <figure class="ph nocap" data-show=".071,.09" style="--arn:0.75;--x:24%;--y:28%;--w:13%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="The memorial pillars in Sderot against a blue sky"></div></figure>
     <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
-    <figure class="ph" data-show=".1633,.19" style="--x:4%;--y:20%;--w:34%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="The Nova festival memorial near Re’im, a field of memorial posts and flags among the trees"></div><span>Nova memorial site, Re’im</span><small>Photo: Zeev Stein, PikiWiki, CC BY 2.5</small></figure>
+    <figure class="ph" data-show=".1633,.19" style="--arn:2;--x:4%;--y:20%;--w:34%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="The Nova festival memorial near Re’im, a field of memorial posts and flags among the trees"></div><span>Nova memorial site, Re’im</span><small>Photo: Zeev Stein, PikiWiki, CC BY 2.5</small></figure>
     <!-- at the restaurant, after the coach doors open -->
-    <figure class="ph" data-show=".3709,.4093" style="--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="A rich serving table in front of HaBikta"></div><span>A generous market-style spread, fresh and ready the moment you arrive.</span></figure>
-    <figure class="ph" data-show=".4093,.4525" style="--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="A long table of burgers, fries and onion rings in front of HaBikta"></div><span>Five minutes in, the whole group has a full plate</span></figure>
-    <figure class="ph nocap" data-show=".4525,.4909" style="--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="HaBikta burgers"></div></figure>
-    <figure class="ph" data-show=".4909,.5341" style="--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="A youth delegation picking up burgers at the counter"></div><span>Tour groups from around the world, every day</span></figure>
-    <figure class="ph" data-show=".5341,.5822" style="--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="A large group eating on the lawn in the shade of the trees"></div><span>Seating on the lawn, in the shade of the trees</span></figure>
-    <figure class="ph nocap" data-show=".5822,.6248" style="--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="A group around a table on the lawn"></div></figure>
-    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button><button class="reelx" id="reelX" type="button" aria-label="Close video" hidden>✕</button><span>Visitors from Canada 🇨🇦</span></figure>
+    <figure class="ph" data-show=".3709,.4093" style="--arn:1.3333;--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="A rich serving table in front of HaBikta"></div><span>A generous market-style spread, fresh and ready the moment you arrive.</span></figure>
+    <figure class="ph" data-show=".4093,.4525" style="--arn:0.5625;--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="A long table of burgers, fries and onion rings in front of HaBikta"></div><span>Five minutes in, the whole group has a full plate</span></figure>
+    <figure class="ph nocap" data-show=".4525,.4909" style="--arn:1.6;--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="HaBikta burgers"></div></figure>
+    <figure class="ph" data-show=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="A youth delegation picking up burgers at the counter"></div><span>Tour groups from around the world, every day</span></figure>
+    <figure class="ph" data-show=".5341,.5822" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="A large group eating on the lawn in the shade of the trees"></div><span>Seating on the lawn, in the shade of the trees</span></figure>
+    <figure class="ph nocap" data-show=".5822,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="A group around a table on the lawn"></div></figure>
+    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--arn:0.5625;--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button><button class="reelx" id="reelX" type="button" aria-label="Close video" hidden>✕</button><span>Visitors from Canada 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
-    <figure class="ph" data-show=".8607,.9001" style="--x:5%;--y:16%;--w:26%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="A burnt car draped in Israeli flags at the car memorial near Tkuma"></div><span>Car memorial, Tkuma</span></figure>
-    <figure class="ph nocap" data-show=".8732,.9001" style="--x:18%;--y:50%;--w:17%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="A wall of burnt cars cleared from Route 232"></div></figure>
+    <figure class="ph" data-show=".8607,.9001" style="--arn:1.3333;--x:5%;--y:16%;--w:26%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="A burnt car draped in Israeli flags at the car memorial near Tkuma"></div><span>Car memorial, Tkuma</span></figure>
+    <figure class="ph nocap" data-show=".8732,.9001" style="--arn:1.3333;--x:18%;--y:50%;--w:17%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="A wall of burnt cars cleared from Route 232"></div></figure>
 
     <div class="card" id="card">
       <span class="num" id="cNum" hidden></span>

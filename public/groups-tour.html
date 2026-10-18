@@ -233,11 +233,13 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .credits a{color:inherit}
 
 @media (max-width:760px){
-  #trip{height:2400vh}
+  #trip{height:1750vh}
   .stage.photo-on .card{padding:10px 14px;gap:2px}
   .stage.photo-on .card #cText,.stage.photo-on .card .clock,.stage.photo-on .card .candle{display:none!important}
   .stage.photo-on .card h2{font-size:28px!important}
-  .ph .img{max-height:42svh}
+  .ph{width:min(var(--mw,var(--w)), calc(40svh * var(--arn,1.3333)))!important;padding:6px 6px var(--pb,6px)!important}
+  .ph.in{transform:translate(0,0) rotate(0deg)}
+  .ph.nocap{--pb:6px}
   .stage.photo-on .sign{opacity:0!important;transform:translate(-50%,-30px) scale(.4)!important}
   .ph{top:calc(var(--my,var(--y)) * .3 + 152px)!important}
   .card{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));width:auto;padding:14px 16px;box-shadow:5px 5px 0 var(--ink);gap:6px}
@@ -462,22 +464,22 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <div class="sign" id="sign"><small id="signSmall">שדרות</small><b id="signText">גן הגבורה והזיכרון</b></div>
 
     <!-- Sderot (public domain, zstadler) -->
-    <figure class="ph" data-show=".059,.09" style="--x:5%;--y:15%;--w:27%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="אנדרטת העמודים, הדגלים ואבני הזיכרון בגן הגבורה והזיכרון בשדרות"></div><span>גן הגבורה והזיכרון, שדרות</span></figure>
-    <figure class="ph nocap" data-show=".071,.09" style="--x:24%;--y:28%;--w:13%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="עמודי האנדרטה בשדרות על רקע שמיים כחולים"></div></figure>
+    <figure class="ph" data-show=".059,.09" style="--arn:1.3333;--x:5%;--y:15%;--w:27%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="אנדרטת העמודים, הדגלים ואבני הזיכרון בגן הגבורה והזיכרון בשדרות"></div><span>גן הגבורה והזיכרון, שדרות</span></figure>
+    <figure class="ph nocap" data-show=".071,.09" style="--arn:0.75;--x:24%;--y:28%;--w:13%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="עמודי האנדרטה בשדרות על רקע שמיים כחולים"></div></figure>
     <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
-    <figure class="ph" data-show=".1633,.19" style="--x:4%;--y:20%;--w:34%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
+    <figure class="ph" data-show=".1633,.19" style="--arn:2;--x:4%;--y:20%;--w:34%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
     <!-- at the restaurant, after the coach doors open -->
-    <figure class="ph" data-show=".3709,.4093" style="--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
-    <figure class="ph" data-show=".4093,.4525" style="--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
-    <figure class="ph nocap" data-show=".4525,.4909" style="--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
-    <figure class="ph" data-show=".4909,.5341" style="--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
-    <figure class="ph" data-show=".5341,.5822" style="--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
-    <figure class="ph nocap" data-show=".5822,.6248" style="--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
-    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><button class="reelx" id="reelX" type="button" aria-label="סגירת הסרטון" hidden>✕</button><span>תיירים מקנדה 🇨🇦</span></figure>
+    <figure class="ph" data-show=".3709,.4093" style="--arn:1.3333;--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
+    <figure class="ph" data-show=".4093,.4525" style="--arn:0.5625;--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
+    <figure class="ph nocap" data-show=".4525,.4909" style="--arn:1.6;--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
+    <figure class="ph" data-show=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
+    <figure class="ph" data-show=".5341,.5822" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
+    <figure class="ph nocap" data-show=".5822,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
+    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--arn:0.5625;--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><button class="reelx" id="reelX" type="button" aria-label="סגירת הסרטון" hidden>✕</button><span>תיירים מקנדה 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
-    <figure class="ph" data-show=".8607,.9001" style="--x:5%;--y:16%;--w:26%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
-    <figure class="ph nocap" data-show=".8732,.9001" style="--x:18%;--y:50%;--w:17%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="קיר של מכוניות שרופות שפונו מכביש 232"></div></figure>
+    <figure class="ph" data-show=".8607,.9001" style="--arn:1.3333;--x:5%;--y:16%;--w:26%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
+    <figure class="ph nocap" data-show=".8732,.9001" style="--arn:1.3333;--x:18%;--y:50%;--w:17%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="קיר של מכוניות שרופות שפונו מכביש 232"></div></figure>
 
     <div class="card" id="card">
       <span class="num" id="cNum" hidden></span>
