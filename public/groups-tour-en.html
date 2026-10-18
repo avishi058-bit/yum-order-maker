@@ -149,8 +149,13 @@ p{margin:0}
 .skip.gone{opacity:0;pointer-events:none}
 .nudge{position:fixed;z-index:90;left:50%;bottom:max(76px,calc(env(safe-area-inset-bottom,0px) + 76px));transform:translateX(-50%);display:grid;justify-items:center;gap:0;color:#fff8ea;text-shadow:0 2px 8px rgba(0,0,0,.7);opacity:0;transition:opacity .5s;pointer-events:none}
 .nudge.on{opacity:1}
-.nudge b{font-size:15px;margin-top:4px;background:rgba(22,18,14,.72);padding:4px 12px;border-radius:999px}
-.nudge .chev{width:22px;height:22px;border-right:4px solid var(--bus);border-bottom:4px solid var(--bus);transform:rotate(45deg);animation:nudge 1.2s ease-in-out infinite;margin-top:-8px}
+.nudge b{font-size:18px;margin-top:8px;background:var(--bus);color:var(--ink);text-shadow:none;padding:10px 20px;border-radius:999px;border:3px solid var(--ink);box-shadow:0 6px 0 var(--ink),0 0 0 0 rgba(242,183,5,.6);animation:nudgePulse 1.6s ease-out infinite}
+.nudge .mouse{width:30px;height:46px;border:3px solid #fff8ea;border-radius:16px;position:relative;margin-bottom:6px;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.nudge .mouse::after{content:"";position:absolute;left:50%;top:7px;width:6px;height:10px;margin-left:-3px;border-radius:3px;background:var(--bus);animation:wheel 1.2s infinite}
+.nudge.on{animation:nudgeIn .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes nudgeIn{from{transform:translate(-50%,24px) scale(.8)}to{transform:translate(-50%,0)}}
+@keyframes nudgePulse{0%{box-shadow:0 6px 0 var(--ink),0 0 0 0 rgba(242,183,5,.65)}80%,100%{box-shadow:0 6px 0 var(--ink),0 0 0 18px rgba(242,183,5,0)}}
+.nudge .chev{width:26px;height:26px;border-right:5px solid var(--bus);border-bottom:5px solid var(--bus);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));transform:rotate(45deg);animation:nudge 1.2s ease-in-out infinite;margin-top:-8px}
 .nudge .chev:nth-child(2){animation-delay:.18s}
 @keyframes nudge{0%,100%{opacity:.25;translate:0 -4px}50%{opacity:1;translate:0 4px}}
 .unmute{position:absolute;inset-inline:12px;bottom:44px;z-index:2;font:inherit;font-weight:800;font-size:15px;min-height:44px;border:0;border-radius:999px;background:var(--bus);color:var(--ink);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
@@ -271,11 +276,25 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .ph.in .img img,.cue i::after{animation:none!important}
 }
 
+/* video centered on the screen */
+.ph.reelcard{display:none!important}
+.vcenter{position:absolute;inset:0;z-index:27;display:grid;place-items:center;background:rgba(22,18,14,.78);opacity:0;pointer-events:none;transition:opacity .45s;padding:70px 16px 24px}
+.vcenter.on{opacity:1;pointer-events:auto}
+.vbox{display:grid;justify-items:center;gap:12px;max-height:100%;transform:scale(.92);transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.vcenter.on .vbox{transform:none}
+.vcap{color:#fff8ea;font-family:var(--display);font-size:clamp(30px,3.6vw,46px);line-height:1;text-align:center;text-wrap:balance}
+.vframe{position:relative;height:min(64vh,64svh);aspect-ratio:9/16;max-width:88vw;background:#000;border:6px solid #fff;border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.vframe video{width:100%;height:100%;object-fit:cover;display:block}
+.vframe .unmute{bottom:12px;inset-inline:12px}
+.vskip{font:inherit;font-weight:800;font-size:16px;min-height:46px;padding:0 22px;border-radius:999px;border:2px solid var(--bus);background:transparent;color:var(--bus);cursor:pointer}
+.vskip:hover{background:var(--bus);color:var(--ink)}
+
 /* ===== phones: map on top, one wooden card below, one menu ===== */
 .menu-btn,.menu,.cphoto{display:none}
 @media (max-width:760px){
   #trip{height:1750vh}
-  .lang,.motion,.skip,.sign,.hud .rail,.hud .state,.nudge b{display:none!important}
+  .lang,.motion,.skip,.sign,.hud .rail,.hud .state{display:none!important}
+  .nudge .mouse{display:none}
   .hud{background:none;padding-top:10px}
   #minor,#moshavim,#fields{display:none}
   .ph:not(.reelcard){display:none!important}
@@ -284,7 +303,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .menu:not([hidden]){display:grid;position:fixed;z-index:110;top:calc(max(10px,env(safe-area-inset-top,0px)) + 54px);inset-inline-end:max(12px,env(safe-area-inset-left,0px));min-width:200px;background:var(--night);border:2px solid var(--bus);border-radius:14px;padding:6px;gap:4px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
   .menu a,.menu button{font:inherit;font-weight:800;font-size:16px;color:var(--paper);background:none;border:0;text-align:start;padding:12px 14px;border-radius:10px;text-decoration:none;cursor:pointer;min-height:44px}
   .menu a:hover,.menu button:hover{background:rgba(242,183,5,.18)}
-  .card{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:auto!important;transform:none!important;max-height:52svh;border-radius:18px 18px 0 0!important;border-bottom:0!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:hidden}
+  .card{top:auto!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;max-height:50svh;border-radius:18px!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:hidden}
   .card::before,.card::after{top:8px}
   .card h2{font-size:32px!important}
   .card p#cText{font-size:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -296,7 +315,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .cphoto .unmute{bottom:8px;inset-inline:auto;inset-inline-end:8px;padding:0 12px;font-size:13px;min-height:36px}
   .stage.photo-on .card #cText{display:none}
   .stage.photo-on .card .clock{display:none!important}
-  .nudge{top:auto!important;bottom:calc(52svh + 8px)!important}
+  .nudge{top:auto!important;bottom:calc(50svh + 34px)!important}
+  .vframe{height:min(60svh,60vh)}
   .candle{bottom:auto;top:16px}
 }
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -312,7 +332,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   <button type="button" id="menuMotion">Pause animations</button>
   <a href="#book" id="menuSkip">Skip to the end ↓</a>
 </div>
-<div class="nudge" id="nudge" aria-hidden="true"><span class="chev"></span><span class="chev"></span><b id="nudgeText">Keep scrolling to drive on</b></div>
+<div class="nudge" id="nudge" aria-hidden="true"><span class="mouse"></span><span class="chev"></span><span class="chev"></span><b id="nudgeText">Keep scrolling ↓</b></div>
 <button class="motion" id="motionBtn" type="button" aria-pressed="false">Pause animations</button>
 <nav class="lang" aria-label="Language / שפה"><span class="globe" aria-hidden="true">🌐</span><a href="/groups-tour.html" hreflang="he" lang="he">עברית</a><span class="cur" aria-current="page">English</span></nav>
 <main id="main">
@@ -511,7 +531,14 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <figure class="ph" data-show=".4909,.5341" data-mshow=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="A youth delegation picking up burgers at the counter"></div><span>Tour groups from around the world, every day</span></figure>
     <figure class="ph" data-show=".5341,.5822" data-mshow=".5341,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="A large group eating on the lawn in the shade of the trees"></div><span>Seating on the lawn, in the shade of the trees</span></figure>
     <figure class="ph nocap" data-show=".5822,.6248" data-moff="1" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="A group around a table on the lawn"></div></figure>
-    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--arn:0.5625;--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button><button class="reelx" id="reelX" type="button" aria-label="Close video" hidden>✕</button><span>Visitors from Canada 🇨🇦</span></figure>
+    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" hidden><button class="reelx" id="reelX" type="button" hidden>✕</button></figure>
+    <div class="vcenter" id="vcenter">
+      <div class="vbox">
+        <p class="vcap">Visitors from Canada on their lunch with us 🇨🇦</p>
+        <div class="vframe"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button></div>
+        <button class="vskip" id="vskip" type="button">Skip the video ↓</button>
+      </div>
+    </div>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
     <figure class="ph" data-show=".8607,.9001" style="--arn:1.3333;--x:5%;--y:16%;--w:26%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="A burnt car draped in Israeli flags at the car memorial near Tkuma"></div><span>Car memorial, Tkuma</span></figure>
@@ -688,10 +715,9 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   const phoneQ=matchMedia('(max-width:760px)');
   const cPhoto=$('cPhoto'), cImg=$('cPhotoImg'), cCap=$('cPhotoCap'); let cKey='';
   // on phones the video plays inside the card
-  if(phoneQ.matches){ const v=$('reel'), u=$('unmute'); cPhoto.appendChild(v); cPhoto.appendChild(u); v.style.display='none'; }
   function phonePhoto(p){
     let pick=null; photos.forEach(o=>{ if(!o.moff&&!o.el.classList.contains('reelcard')&&p>=o.ma&&p<o.mb) pick=o; });
-    const inV=p>=.7164&&p<.8079, v=$('reel');
+    const inV=false, v=$('reel');
     const key=inV?'video':(pick?pick.el.querySelector('img').getAttribute('src'):'');
     if(key===cKey) return !!key; cKey=key;
     if(!key){ cPhoto.hidden=true; return false; }
@@ -783,7 +809,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     if(inReel){ reelClosed=false; if(reel.ended){ reel.currentTime=0; } if(reel.paused&&!still&&!reelWatched) playReel(); }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
     const showMini=false;  // scrolling past the video stops it
-    reelCard.classList.toggle('in',inReel||showMini); reelCard.classList.toggle('mini',showMini);
+    $('vcenter').classList.toggle('on',inReel);
     $('reelX').hidden=!showMini;
     if(!inReel&&!showMini){ if(!reel.paused) reel.pause(); reelWatched=false; }
 
@@ -792,10 +818,10 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     svcs.forEach((el,i)=>el.classList.toggle('on',svcOn&&p>=.6305+i*.0131));
 
     $('intro').classList.toggle('gone',p>.015);
-    $('nudgeText').textContent=(p>=.7164&&p<.8079&&reel.ended)?'Video finished. Scroll to continue':'Keep scrolling to drive on';
+    $('nudgeText').textContent=(p>=.7164&&p<.8079&&reel.ended)?'Video finished. Keep scrolling ↓':'Keep scrolling ↓';
     const tr=trip.getBoundingClientRect(); $('skip').classList.toggle('gone',tr.bottom<innerHeight*1.02);
     const inVideo=p>=.7164&&p<.8079, videoDone=reel.ended;
-    $('nudge').classList.toggle('on',p>.015&&p<.97&&now-lastScroll>(inVideo?1500:2200)&&(!inVideo||videoDone)&&!document.documentElement.classList.contains('still'));
+    $('nudge').classList.toggle('on',p>.015&&p<.97&&now-lastScroll>(inVideo?1200:1400)&&(!inVideo||videoDone)&&!document.documentElement.classList.contains('still'));
     requestAnimationFrame(render);
   }
   let lastScroll=performance.now();
@@ -804,6 +830,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false;
   reel.addEventListener('ended',()=>{ reelWatched=true; });
   $('reelX').addEventListener('click',()=>{ reelClosed=true; reel.pause(); });
+  $('vskip').addEventListener('click',()=>{ reel.pause(); const span=trip.offsetHeight-innerHeight; scrollTo({top:trip.offsetTop+span*.812,behavior:reduce?'auto':'smooth'}); });
   function playReel(){
     reelStarted=true;
     reel.preload='auto'; reel.muted=false; reel.volume=1;
