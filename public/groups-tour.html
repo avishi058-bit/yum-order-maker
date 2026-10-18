@@ -155,6 +155,12 @@ p{margin:0}
 @keyframes nudge{0%,100%{opacity:.25;translate:0 -4px}50%{opacity:1;translate:0 4px}}
 .unmute{position:absolute;inset-inline:12px;bottom:44px;z-index:2;font:inherit;font-weight:800;font-size:15px;min-height:44px;border:0;border-radius:999px;background:var(--bus);color:var(--ink);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .unmute[hidden]{display:none!important}
+/* keeps playing in a small window after you scroll past it */
+.ph.reelcard.mini{position:fixed;z-index:95;left:auto;top:auto;inset-inline-end:max(16px,env(safe-area-inset-left,0px));bottom:max(84px,calc(env(safe-area-inset-bottom,0px) + 84px));width:clamp(130px,13vw,190px);padding:5px 5px 5px;opacity:1;transform:none;transition:width .4s,opacity .3s}
+.ph.reelcard.mini span{display:none}
+.ph.reelcard.mini .unmute{bottom:8px;inset-inline:6px;font-size:12px;min-height:34px}
+.reelx{position:absolute;z-index:3;top:-12px;inset-inline-start:-12px;width:32px;height:32px;border-radius:50%;border:2px solid #fff;background:var(--ink);color:#fff;font-weight:800;cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+.reelx[hidden]{display:none!important}
 .lang{position:fixed;z-index:101;top:max(60px,calc(env(safe-area-inset-top,0px) + 60px));inset-inline-start:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--night);border:2px solid var(--bus);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .lang .globe{font-size:16px;padding:0 4px 0 6px}
 .lang .cur,.lang a{font:inherit;font-weight:800;font-size:15px;min-height:38px;display:inline-flex;align-items:center;padding:0 14px;border-radius:999px;text-decoration:none}
@@ -235,6 +241,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .lang{top:58px}.lang .cur,.lang a{font-size:14px;min-height:34px;padding:0 11px}
   .motion{bottom:auto;top:62px;left:max(12px,env(safe-area-inset-left,0px))}
   .nudge{bottom:auto;top:44%}
+  .ph.reelcard.mini{bottom:auto;top:150px;inset-inline-end:12px;width:120px}
   .ph{width:var(--mw,var(--w));left:var(--mx,var(--x));top:var(--my,var(--y));padding:5px 5px var(--pb,5px)}
   .ph.nocap{--pb:5px}
   .ph span{font-size:16px;padding-top:7px}
@@ -456,7 +463,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <figure class="ph" data-show=".4909,.5341" style="--x:5%;--y:14%;--w:42%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
     <figure class="ph" data-show=".5341,.5822" style="--x:12%;--y:10%;--w:24%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
     <figure class="ph nocap" data-show=".5822,.6248" style="--x:12%;--y:10%;--w:24%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
-    <figure class="ph" data-show=".7164,.8079" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><span>תיירים מקנדה 🇨🇦</span></figure>
+    <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><button class="reelx" id="reelX" type="button" aria-label="סגירת הסרטון" hidden>✕</button><span>תיירים מקנדה 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
     <figure class="ph" data-show=".8607,.9001" style="--x:5%;--y:16%;--w:29%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
@@ -701,8 +708,14 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
     const cp=clamp((p-.2814)/(.8079-.2814)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
-    photos.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
-    const reelOn=p>=.7164&&p<.8079&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused&&!reel.ended){playReel();} else if(!reelOn){ if(!reel.paused) reel.pause(); if(reel.ended) reel.currentTime=0; }
+    photos.forEach(o=>{ if(o.el!==reelCard) o.el.classList.toggle('in',p>=o.a&&p<o.b); });
+    const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
+    if(inReel){ reelClosed=false; if(reel.ended){ reel.currentTime=0; } if(reel.paused&&!still&&!reelWatched) playReel(); }
+    const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
+    const showMini=!inReel&&playing&&trip.getBoundingClientRect().bottom>innerHeight*.5;
+    reelCard.classList.toggle('in',inReel||showMini); reelCard.classList.toggle('mini',showMini);
+    $('reelX').hidden=!showMini;
+    if(!inReel&&!showMini){ if(!reel.paused) reel.pause(); reelWatched=false; }
 
     // services and the video sit on a dark layer over the map
     const svcOn=p>=.6248&&p<.7164; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.7164&&p<.8079));
@@ -718,7 +731,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   let lastScroll=performance.now();
   addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');},{passive:true});
   const unmute=$('unmute');
+  const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false;
+  reel.addEventListener('ended',()=>{ reelWatched=true; });
+  $('reelX').addEventListener('click',()=>{ reelClosed=true; reel.pause(); });
   function playReel(){
+    reelStarted=true;
     reel.preload='auto'; reel.muted=false; reel.volume=1;
     reel.play().then(()=>{unmute.hidden=true;}).catch(()=>{ reel.muted=true; reel.play().catch(()=>{}); unmute.hidden=false; });
   }
