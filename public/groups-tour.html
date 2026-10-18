@@ -90,6 +90,17 @@ p{margin:0}
 .ph small{position:absolute;top:calc(100% + 4px);inset-inline:0;text-align:center;font-size:10px;color:rgba(255,255,255,.9);text-shadow:0 1px 2px #000}
 @keyframes kb{from{transform:scale(1)}to{transform:scale(1.12) translate(-3%,-2%)}}
 
+.gallery{position:absolute;inset:0;z-index:13;pointer-events:none}
+.slide{position:absolute;inset:0;margin:0;opacity:0;transition:opacity .6s ease;background:var(--night);overflow:hidden}
+.slide.in{opacity:1}
+.slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.08);transition:transform 6s ease-out}
+.slide.in img{transform:scale(1)}
+.slide.tall img{object-fit:contain;z-index:1}
+.slide.tall::before{content:"";position:absolute;inset:-10%;background-image:var(--blur);background-size:cover;filter:blur(30px) brightness(.55)}
+.slide::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(22,18,14,.78))}
+.slide figcaption{position:absolute;z-index:2;bottom:max(80px,calc(env(safe-area-inset-bottom,0px) + 80px));left:max(32px,env(safe-area-inset-left,0px));right:calc(min(390px,34vw) + 72px);color:#fff8ea;font-family:var(--display);font-size:clamp(44px,5vw,84px);line-height:.95;text-wrap:balance;text-shadow:0 4px 24px rgba(0,0,0,.6);opacity:0;transform:translateY(20px);transition:opacity .5s .2s,transform .6s .2s}
+.slide.in figcaption{opacity:1;transform:none}
+
 /* dark layer over the map for the services and the video */
 .arrive{position:absolute;inset:0;z-index:12;opacity:0;pointer-events:none;transition:opacity .5s}
 .arrive.on{opacity:1}
@@ -184,6 +195,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .clock svg{width:44px;height:44px}.clock b{font-size:34px}
   .hud{gap:8px}.chip b{font-size:24px}.state{min-width:0}
   .hud .km{display:none}
+  .slide figcaption{left:16px;right:16px;bottom:auto;top:110px;font-size:40px}
+  .slide::after{background:linear-gradient(rgba(22,18,14,.7),transparent 40%)}
   .sign{top:108px}.sign b{font-size:34px}
   .skip{bottom:auto;top:62px;left:auto;right:max(12px,env(safe-area-inset-right,0px));transform:none;font-size:14px}
   .motion{bottom:auto;top:62px;left:max(12px,env(safe-area-inset-left,0px))}
@@ -362,13 +375,15 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <figure class="ph nocap" data-show=".0478,.07" style="--x:34%;--y:32%;--w:17%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="עמודי האנדרטה בשדרות על רקע שמיים כחולים"></div></figure>
     <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
     <figure class="ph" data-show=".1244,.16" style="--x:4%;--y:20%;--w:46%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
-    <!-- at the restaurant, after the coach doors open -->
-    <figure class="ph" data-show=".30,.355" style="--x:4%;--y:13%;--w:42%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
-    <figure class="ph" data-show=".355,.41" style="--x:12%;--y:9%;--w:20%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
-    <figure class="ph nocap" data-show=".41,.46" style="--x:4%;--y:18%;--w:44%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
-    <figure class="ph" data-show=".46,.515" style="--x:5%;--y:14%;--w:42%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
-    <figure class="ph" data-show=".515,.565" style="--x:12%;--y:10%;--w:24%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
-    <figure class="ph nocap" data-show=".565,.6094" style="--x:12%;--y:10%;--w:24%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
+    <!-- at the restaurant: one photo at a time, full screen -->
+    <div class="gallery" id="gallery" aria-hidden="true">
+      <figure class="slide" data-show=".30,.355"><img src="/tour/buffet.jpg" alt=""><figcaption>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</figcaption></figure>
+      <figure class="slide tall" data-show=".355,.41"><img src="/tour/buffet-tall.jpg" alt=""><figcaption>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</figcaption></figure>
+      <figure class="slide" data-show=".41,.46"><img src="/tour/burgers.jpg" alt=""></figure>
+      <figure class="slide" data-show=".46,.515"><img src="/tour/delegation.jpg" alt=""><figcaption>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</figcaption></figure>
+      <figure class="slide tall" data-show=".515,.565"><img src="/tour/trees.jpg" alt=""><figcaption>יושבים במדשאות תחת צל העצים</figcaption></figure>
+      <figure class="slide tall" data-show=".565,.6094"><img src="/tour/lawn.jpg" alt=""></figure>
+    </div>
     <figure class="ph" data-show=".7047,.8" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><span>תיירים מקנדה 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
@@ -531,6 +546,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   }
   const photos=[...document.querySelectorAll('.ph')].map(el=>{const [a,b]=el.dataset.show.split(',').map(Number);return {el,a,b};});
   const reel=$('reel');
+  const slides=[...document.querySelectorAll('.slide')].map(el=>{const [a,b]=el.dataset.show.split(',').map(Number); const src=el.querySelector('img').getAttribute('src'); el.style.setProperty('--blur',`url(${src})`); return {el,a,b};});
   const arrive=$('arrive'), services=$('services'), leafA=$('leafA'), leafB=$('leafB'), stepLight=$('stepLight');
   const wheels=[...document.querySelectorAll('#coach .wheel')], WX=[-21,-12.4,14];
   let dir=1, wheelRot=0;
@@ -579,6 +595,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
     const cp=clamp((p-.2519)/(.8-.2519)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
     photos.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
+    slides.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
     const reelOn=p>=.7047&&p<.8&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused&&!reel.ended){playReel();} else if(!reelOn){ if(!reel.paused) reel.pause(); if(reel.ended) reel.currentTime=0; }
 
     // services and the video sit on a dark layer over the map
