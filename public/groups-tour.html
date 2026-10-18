@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>יום סיור בעוטף עם עצירת צהריים בבקתה | הבקתה, תושיה</title>
+<meta name="description" content="מסלול סיור בעוטף: שדרות, אתר הנובה, צהריים לקבוצות בבקתה ואתר המכוניות בתקומה. עד 200 איש, כשר, 45 דקות ויוצאים בזמן. תיאום בוואטסאפ.">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="/favicon.ico">
+<meta property="og:title" content="יום סיור בעוטף עם עצירת צהריים בבקתה">
+<meta property="og:description" content="שולחן שוק עשיר ומפנק לקבוצות, מוכן לרגע שתגיעו. עד 200 איש, כשר.">
+<meta property="og:image" content="/tour/buffet.jpg">
+<meta property="og:locale" content="he_IL">
+<style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=Assistant:wght@400;600;800&display=swap">
+<style>
+/* Layout: sticky full-screen stage. Drawn map, camera follows a white tour coach (side view) along the real order of stops; at the restaurant the coach doors open and photos pop over the map; then a form, guide quotes and directions below. Single deliberate look. */
+:root{
+  color-scheme: light;
+  --paper:#ece2cb; --paper-2:#ddd0b1;
+  --ink:#2b2118; --ink-soft:#6b5a47;
+  --bus:#f2b705; --ember:#c8461f; --sign:#0f6b45; --night:#16120e;
+  --wa:#0b7a41; --ember-text:#9e3614;
+  --display:"Karantina","Assistant",system-ui,sans-serif;
+  --body:"Assistant",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;direction:rtl;overflow-x:hidden}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:.92;margin:0;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:3px solid var(--bus);outline-offset:3px}
+
+#trip{position:relative;height:1500vh}
+.stage{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100svh;overflow:hidden;background:var(--paper)}
+#mapsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#mapsvg text{font-family:var(--body);font-weight:800}
+.dim{position:absolute;inset:0;background:var(--night);opacity:0;pointer-events:none;transition:opacity .8s;z-index:2}
+
+/* HUD */
+.hud{position:absolute;top:0;inset-inline:0;z-index:30;display:flex;align-items:center;gap:14px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(var(--night),rgba(22,18,14,0));color:var(--paper)}
+.chip{display:flex;align-items:baseline;gap:6px;background:rgba(22,18,14,.78);border-radius:10px;padding:4px 10px;flex:none}
+.chip b{font-family:var(--display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.chip small{font-size:12px;font-weight:800;opacity:.8}
+.rail{flex:1;min-width:0;position:relative;height:30px}
+.rail .line{position:absolute;top:13px;inset-inline:0;height:4px;border-radius:2px;background:rgba(236,226,203,.25)}
+.rail .fill{position:absolute;top:13px;right:0;height:4px;border-radius:2px;background:var(--bus);width:0}
+.rail .dot{position:absolute;top:8px;width:14px;height:14px;border-radius:50%;background:var(--night);border:3px solid rgba(236,226,203,.5);transform:translateX(50%)}
+.rail .dot.past{border-color:var(--bus);background:var(--bus)}
+.rail .dot.bikta{width:20px;height:20px;top:5px;border-color:var(--ember)}
+.rail .dot.bikta.past{background:var(--ember)}
+.state{font-weight:800;font-size:13px;padding:5px 10px;border-radius:999px;background:var(--bus);color:var(--ink);flex:none;min-width:74px;text-align:center}
+.state.parked{background:var(--ember);color:#fff}
+
+/* stop card */
+.card{position:absolute;z-index:26;top:50%;right:max(24px,env(safe-area-inset-right,0px));transform:translateY(-50%);width:min(390px,34vw);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:22px 22px 20px;box-shadow:8px 8px 0 var(--ink);display:grid;gap:10px;transition:background .5s,color .5s,border-color .5s,box-shadow .5s}
+.card .time{font-weight:800;font-size:13px;letter-spacing:.06em;color:var(--ember-text);font-variant-numeric:tabular-nums}
+.card h2{font-size:clamp(44px,5vw,72px)}
+.card p{color:var(--ink-soft);font-size:17px}
+.card.quiet{background:var(--night);color:var(--paper);border-color:#4a3f33;box-shadow:none}
+.card.quiet p{color:#bfb39b}
+.card .swap{transition:opacity .25s,transform .25s}
+.card .swap.out{opacity:0;transform:translateY(8px)}
+.clock{display:none;align-items:center;gap:12px}
+.clock.on{display:flex}
+.clock svg{width:64px;height:64px;flex:none}
+.clock b{font-family:var(--display);font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+.go{display:none}
+.go.on{display:inline-block}
+.btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:11px 18px;text-decoration:none;display:inline-block;background:var(--ink);color:var(--paper);cursor:pointer}
+.btn.wa{background:var(--wa);color:#fff}
+
+/* road sign */
+.sign{position:absolute;z-index:24;top:76px;left:50%;transform:translate(-50%,-30px) scale(.4);opacity:0;background:var(--sign);color:#fff;border:3px solid #fff;outline:3px solid var(--sign);border-radius:8px;padding:6px 16px 8px;text-align:center;transition:transform .45s cubic-bezier(.3,1.6,.5,1),opacity .2s}
+.sign.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.sign b{display:block;font-family:var(--display);font-size:44px;line-height:1}
+.sign small{font-size:12px;font-weight:800;letter-spacing:.08em}
+.sign.bikta{background:var(--ember);outline-color:var(--ember)}
+.sign.memorial{background:#2c2620;outline-color:#2c2620}
+
+/* photos */
+.ph{position:absolute;z-index:20;left:var(--x);top:var(--y);width:var(--w);margin:0;background:#fff;padding:8px 8px var(--pb,34px);box-shadow:0 18px 40px rgba(0,0,0,.4);transform:translate(var(--fx),130vh) rotate(var(--fr));opacity:0;transition:transform .8s cubic-bezier(.2,.85,.25,1.1),opacity .3s}
+.ph.in{opacity:1;transform:translate(0,0) rotate(var(--r))}
+.ph.nocap{--pb:8px}
+.ph .img{overflow:hidden;aspect-ratio:var(--ar,4/3);background:var(--paper-2)}
+.ph img,.ph video{width:100%;height:100%;object-fit:cover;display:block}
+.ph.in .img img{animation:kb 9s ease-in-out infinite alternate}
+.ph span{position:absolute;bottom:7px;inset-inline:6px;text-align:center;font-weight:800;font-size:14px;line-height:1.2;color:var(--ink)}
+.ph small{position:absolute;top:calc(100% + 4px);inset-inline:0;text-align:center;font-size:10px;color:rgba(255,255,255,.9);text-shadow:0 1px 2px #000}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.12) translate(-3%,-2%)}}
+
+/* dark layer over the map for the services and the video */
+.arrive{position:absolute;inset:0;z-index:12;opacity:0;pointer-events:none;transition:opacity .5s}
+.arrive.on{opacity:1}
+.arrive .scrim{position:absolute;inset:0;background:rgba(22,18,14,.8)}
+
+/* services */
+.services{position:absolute;z-index:4;inset:0;display:grid;place-content:center;padding:90px max(24px,env(safe-area-inset-left,0px)) 40px max(430px,env(safe-area-inset-right,0px));pointer-events:none}
+.services h3{font-size:clamp(40px,5vw,64px);color:var(--bus);margin-bottom:18px;opacity:0;transition:opacity .4s}
+.services.on h3{opacity:1}
+.svc{display:grid;grid-template-columns:repeat(3,minmax(0,170px));gap:16px}
+.svc div{display:grid;justify-items:center;gap:8px;text-align:center;color:#fff8ea;font-weight:800;font-size:16px;line-height:1.25;opacity:0;transform:translateY(30px) scale(.9);transition:opacity .4s,transform .5s cubic-bezier(.3,1.5,.5,1)}
+.svc div.on{opacity:1;transform:none}
+.svc svg{width:86px;height:86px;overflow:visible}
+.svc svg .d{fill:none;stroke:var(--bus);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1s ease}
+.svc div.on svg .d{stroke-dashoffset:0}
+.svc svg .ring{fill:rgba(242,183,5,.12);stroke:none}
+.svc svg text{fill:var(--bus);font-family:var(--display);font-size:22px}
+
+/* intro */
+.intro{position:absolute;z-index:28;inset:0;display:grid;align-content:end;gap:14px;padding:0 max(24px,env(safe-area-inset-right,0px)) 13vh max(24px,env(safe-area-inset-left,0px));background:linear-gradient(transparent 30%,rgba(22,18,14,.85));color:var(--paper);transition:opacity .4s}
+.intro.gone{opacity:0;pointer-events:none}
+.intro .logo{width:84px;height:84px;border-radius:50%;border:3px solid var(--paper);object-fit:cover}
+.intro h1{font-size:clamp(60px,10vw,140px);max-width:13ch}
+.intro p{font-size:20px;max-width:44ch;color:#e5d9bf}
+.cue{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;color:var(--bus)}
+.cue i{display:block;width:28px;height:44px;border:3px solid var(--bus);border-radius:16px;position:relative}
+.cue i::after{content:"";position:absolute;left:50%;top:7px;width:5px;height:9px;margin-left:-2.5px;border-radius:3px;background:var(--bus);animation:wheel 1.4s infinite}
+@keyframes wheel{0%{transform:translateY(0);opacity:1}80%{transform:translateY(16px);opacity:0}100%{opacity:0}}
+
+/* accessibility helpers */
+.sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:fixed;z-index:100;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));background:var(--bus);color:var(--ink);font-weight:800;padding:10px 16px;border-radius:999px;transform:translateY(-200%);transition:transform .2s}
+.skip:focus{transform:none}
+.motion{position:fixed;z-index:100;bottom:max(12px,env(safe-area-inset-bottom,0px));left:max(12px,env(safe-area-inset-left,0px));font:inherit;font-size:14px;font-weight:800;min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--paper);background:var(--night);color:var(--paper);cursor:pointer}
+.motion[aria-pressed="true"]{background:var(--bus);color:var(--ink);border-color:var(--ink)}
+html.still *, html.still *::before, html.still *::after{animation:none!important;transition:none!important}
+.legal{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px}
+.legal a{color:var(--paper);font-weight:800}
+.find .addr{color:var(--ink);text-decoration:underline;text-underline-offset:6px}
+.form input:focus-visible,.form textarea:focus-visible{outline:3px solid var(--bus);outline-offset:2px}
+
+/* below the trip */
+.band{padding-block:64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band .in{max-width:1040px;margin-inline:auto;display:grid;gap:22px}
+.band h2{font-size:clamp(48px,8vw,92px)}
+.book{background:var(--night);color:var(--paper)}
+.book h2{color:var(--bus)}
+.book .grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:start}
+.form{display:grid;gap:14px}
+.form label{display:grid;gap:6px;font-weight:800;font-size:14px}
+.form input,.form textarea{font:inherit;font-size:17px;padding:11px 12px;border-radius:10px;border:2px solid #5a4b3c;background:#2a221b;color:var(--paper);width:100%}
+.form textarea{min-height:84px;resize:vertical}
+.form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form input[type=range]{padding:0;accent-color:var(--bus);border:0;background:transparent}
+.size-read{font-family:var(--display);font-size:38px;color:var(--bus);line-height:1}
+.preview{background:#e7dfd2;color:var(--ink);border-radius:14px;padding:16px;display:grid;gap:12px}
+.preview .bub{background:#d9fdd3;border-radius:10px 2px 10px 10px;padding:10px 12px;white-space:pre-wrap;font-size:15px;box-shadow:0 1px 1px rgba(0,0,0,.12)}
+.preview .note{font-size:14px;color:#4f4334}
+.preview .note a{color:var(--ink);font-weight:800}
+.quotes{background:var(--paper)}
+.qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.q{margin:0;background:#f6f0e2;border:2px solid var(--ink);border-radius:16px;padding:22px;display:grid;gap:12px;align-content:start;box-shadow:6px 6px 0 var(--ink)}
+.q b{font-family:var(--display);font-size:64px;line-height:.5;color:var(--ember)}
+.q blockquote{margin:0;font-size:20px;line-height:1.45;font-weight:600;color:var(--ink)}
+.q figcaption{font-weight:800;color:var(--ink-soft)}
+.q figcaption span,.rating span{color:#e3a600;letter-spacing:2px}
+.rating{display:flex;align-items:baseline;gap:10px;font-weight:800;color:var(--ink-soft)}
+.rating b{font-family:var(--display);font-size:56px;line-height:1;color:var(--ink)}
+.rnote{font-size:19px;color:var(--ink-soft);max-width:52ch}
+.btn.gbtn{justify-self:start;background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.find{background:var(--paper-2)}
+.find .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.addr{font-family:var(--display);font-size:clamp(40px,6vw,64px);line-height:1;user-select:all}
+.btn.waze{background:#33ccff;color:#06243a}
+.credits{background:var(--night);color:#cbbda3;font-size:14px}
+.credits ul{margin:0;padding-inline-start:18px;display:grid;gap:4px}
+.credits a{color:inherit}
+
+@media (max-width:760px){
+  .card{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));width:auto;padding:14px 16px;box-shadow:5px 5px 0 var(--ink);gap:6px}
+  .card h2{font-size:40px}
+  .card p{font-size:15px}
+  .clock svg{width:44px;height:44px}.clock b{font-size:34px}
+  .hud{gap:8px}.chip b{font-size:24px}.state{min-width:0}
+  .hud .km{display:none}
+  .sign{top:64px}.sign b{font-size:34px}
+  .ph{width:var(--mw,var(--w));left:var(--mx,var(--x));top:var(--my,var(--y));padding:5px 5px var(--pb,24px)}
+  .ph.nocap{--pb:5px}
+  .ph span{font-size:12px;bottom:4px}
+  .services{padding:80px 16px 240px;place-content:start center}
+  .svc{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .svc svg{width:56px;height:56px}
+  .svc div{font-size:13px}
+  .intro{padding-bottom:16vh}
+  .book .grid{grid-template-columns:1fr}
+  .form .three{grid-template-columns:1fr 1fr}
+  .qgrid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .ph,.sign,.card .swap,.dim,.arrive,.svc div,.svc svg .d{transition:none!important}
+  .ph.in .img img,.cue i::after{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+
+<a class="skip" href="#book">דלגו לתיאום העצירה</a>
+<button class="motion" id="motionBtn" type="button" aria-pressed="false">עצירת אנימציות</button>
+<main id="main">
+<section class="sr" aria-labelledby="srTitle">
+  <h1 id="srTitle">יום סיור בעוטף עם עצירת צהריים בבקתה</h1>
+  <p>עד 200 איש, כשר, 45 דקות ויוצאים בזמן. מסלול לדוגמה ליום סיור:</p>
+  <ol>
+    <li>09:00, שדרות: גן הגבורה והזיכרון, במקום שבו עמדה תחנת המשטרה.</li>
+    <li>10:40, רעים: אתר ההנצחה של פסטיבל נובה.</li>
+    <li>11:55, תושיה: עצירת צהריים בבקתה. שולחן שוק עשיר ומפנק מחכה לכם מוכן וטרי לרגע שתגיעו, כך שתוכלו לאכול ולהמשיך. במקום: שירותים, תעודת כשרות, פתרון לצליאקים, מנות צמחוניות וטבעוניות, וחניה לאוטובוס.</li>
+    <li>12:50, תקומה: אתר המכוניות.</li>
+  </ol>
+</section>
+<section id="trip" aria-hidden="true">
+  <div class="stage" id="stage">
+    <svg id="mapsvg" viewBox="0 0 400 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#d4c6a4" stroke-width=".4"/></pattern>
+        <pattern id="wheat" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><line x1="0" y1="0" x2="0" y2="4" stroke="#9aa36a" stroke-width="1.2" opacity=".6"/></pattern>
+        <pattern id="plough" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)"><line x1="0" y1="0" x2="0" y2="5" stroke="#b79566" stroke-width="1" opacity=".5"/></pattern>
+        <g id="tree"><circle r="3.2" fill="#6e7d3d"/><circle cx="1.6" cy="-1" r="2" fill="#86964d"/></g>
+        <linearGradient id="roof" x1="0" x2="1"><stop offset="0" stop-color="#d9dde1"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd4d9"/></linearGradient>
+        <linearGradient id="beamSide" x1="0" x2="1"><stop offset="0" stop-color="#fff6c8" stop-opacity=".75"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></linearGradient>
+        <filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+      </defs>
+      <rect x="-600" y="-600" width="1600" height="1600" fill="#ece2cb"/>
+      <rect x="-600" y="-600" width="1600" height="1600" fill="url(#grid)"/>
+      <g id="fields"></g>
+      <path d="M380 340 C300 300 260 300 220 270 S120 230 20 205" fill="none" stroke="#5f8ea0" stroke-width="1.6" stroke-dasharray="2.5 3"/>
+      <text x="246" y="296" font-size="6" fill="#5f8ea0" transform="rotate(-14 246 296)">נחל בשור</text>
+      <g id="trees"></g>
+      <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#3b342d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f2b705" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+      <path d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
+      <g font-size="9" fill="#2b2118">
+        <circle cx="194" cy="56" r="6" fill="#2b2118" opacity=".18"/><text x="204" y="58">שדרות</text>
+        <circle cx="176" cy="118" r="5" fill="#2b2118" opacity=".18"/><text x="184" y="116">תקומה</text>
+        <text x="186" y="172" font-size="6" fill="#6b5a47">נתיבות</text>
+        <text x="206" y="240" font-size="6" fill="#6b5a47">אופקים</text>
+        <circle cx="62" cy="178" r="4" fill="none" stroke="#6b5a47" stroke-width="1.2"/><text x="30" y="198" font-size="7" fill="#6b5a47">אתר הנובה</text>
+      </g>
+      <!-- the restaurant: a wooden hut with a hanging wooden sign -->
+      <circle cx="128" cy="150" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
+      <g transform="translate(124 140)">
+        <ellipse cx="0" cy="1" rx="22" ry="2.6" fill="#2b2118" opacity=".18"/>
+        <rect x="-17" y="-17" width="34" height="18" fill="#8a5a33" stroke="#3a2414" stroke-width=".8"/>
+        <path d="M-17 -12 H17 M-17 -7 H17 M-17 -2 H17" stroke="#6e4426" stroke-width=".6"/>
+        <path d="M-21 -17 L0 -31 L21 -17 Z" fill="#6b3f20" stroke="#3a2414" stroke-width=".8"/>
+        <path d="M-16 -20 L0 -28.5 L16 -20" fill="none" stroke="#8a5a33" stroke-width=".6"/>
+        <rect x="-3.4" y="-8" width="6.8" height="9" fill="#2b1a0c"/>
+        <rect x="-14" y="-9" width="6" height="5" fill="#f3d48a" stroke="#3a2414" stroke-width=".6"/>
+        <rect x="8" y="-9" width="6" height="5" fill="#f3d48a" stroke="#3a2414" stroke-width=".6"/>
+        <!-- wooden sign -->
+        <path d="M-9 -24 L-8 -17.5 M9 -24 L8 -17.5" stroke="#3a2414" stroke-width=".5"/>
+        <rect x="-13" y="-17.6" width="26" height="8" rx="1.2" fill="#c9925a" stroke="#4a2c14" stroke-width=".8" transform="translate(0 -6)"/>
+        <path d="M-12 -21.5 H12 M-12 -18.5 H12" stroke="#b07a45" stroke-width=".35" transform="translate(0 -1.6)"/>
+        <text x="0" y="-18.4" text-anchor="middle" font-size="6.4" fill="#2b1a0c" font-family="Karantina, Assistant, sans-serif" font-weight="700">הבקתה</text>
+      </g>
+      <!-- white tour coach, side view, facing right; wheels sit on the road -->
+      <g id="coach">
+        <g id="coachFlip">
+          <g transform="scale(.46)">
+            <ellipse cx="0" cy="1.2" rx="31" ry="2.6" fill="#000" opacity=".22"/>
+            <path id="beams" d="M31 -7 L58 -14 L58 2 L31 -4 Z" fill="url(#beamSide)" opacity="0"/>
+            <path d="M-32 -3 V-19 Q-32 -22 -29 -22 H23 Q29.5 -22 31 -15.5 L32.2 -8 V-3 Z" fill="url(#roof)" stroke="#9aa0a6" stroke-width=".5"/>
+            <rect x="-32" y="-23.2" width="18" height="1.6" rx=".8" fill="#d9dde1" stroke="#aab0b6" stroke-width=".3"/>
+            <rect x="-29" y="-19.4" width="48" height="7.2" rx="1.6" fill="#1d2b36"/>
+            <path d="M-22 -19.4 V-12.2 M-14 -19.4 V-12.2 M-6 -19.4 V-12.2 M2 -19.4 V-12.2 M10 -19.4 V-12.2" stroke="#e6e9ec" stroke-width=".7"/>
+            <path d="M24.5 -21 Q29.6 -21 30.6 -15 L31.3 -10.5 H25.6 Z" fill="#1d2b36"/>
+            <path d="M31 -19 L33.6 -19.6 L33.6 -15.6" fill="none" stroke="#22252a" stroke-width=".8"/>
+            <rect x="-32" y="-9.6" width="64.2" height="1.8" fill="#f2b705"/><rect x="-32" y="-7.6" width="64.2" height=".8" fill="#c8461f"/>
+            <!-- door: doorway behind two glass leaves -->
+            <rect x="19.6" y="-19.6" width="5.4" height="16.4" fill="#2a1f17"/>
+            <rect id="stepLight" x="19.8" y="-4.6" width="5" height="1" fill="#f3d48a" opacity="0"/>
+            <rect id="leafA" x="19.6" y="-19.6" width="2.7" height="16.4" fill="#2e4452" stroke="#c9ced3" stroke-width=".4"/>
+            <rect id="leafB" x="22.3" y="-19.6" width="2.7" height="16.4" fill="#2e4452" stroke="#c9ced3" stroke-width=".4"/>
+            <rect x="30.6" y="-7.2" width="1.6" height="2.2" rx=".4" fill="#fff4b0"/>
+            <rect id="tail" x="-32.4" y="-8.6" width="1.2" height="3" rx=".4" fill="#7a1b12"/>
+            <circle cx="-21" cy="-3" r="4.6" fill="#3b342d"/><circle cx="-12.4" cy="-3" r="4.6" fill="#3b342d"/><circle cx="14" cy="-3" r="4.6" fill="#3b342d"/>
+            <g class="wheel" transform="translate(-21 -3)"><circle r="3.6" fill="#16120e"/><circle r="1.7" fill="#8a8f95"/><rect x="-.35" y="-3.2" width=".7" height="1.6" fill="#8a8f95"/></g>
+            <g class="wheel" transform="translate(-12.4 -3)"><circle r="3.6" fill="#16120e"/><circle r="1.7" fill="#8a8f95"/><rect x="-.35" y="-3.2" width=".7" height="1.6" fill="#8a8f95"/></g>
+            <g class="wheel" transform="translate(14 -3)"><circle r="3.6" fill="#16120e"/><circle r="1.7" fill="#8a8f95"/><rect x="-.35" y="-3.2" width=".7" height="1.6" fill="#8a8f95"/></g>
+          </g>
+        </g>
+      </g>
+    </svg>
+    <div class="dim" id="dim"></div>
+
+    <!-- dark layer for the services and the video, over the map -->
+    <div class="arrive" id="arrive" aria-hidden="true">
+      <div class="scrim"></div>
+      <div class="services" id="services">
+        <h3>הכול מסודר מראש</h3>
+        <div class="svc">
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><circle class="d" pathLength="1" cx="36" cy="26" r="7"/><path class="d" pathLength="1" d="M28 40 H44 L46 70 H40 L39 84 M28 40 L26 70 H32 L33 84"/><circle class="d" pathLength="1" cx="66" cy="26" r="7"/><path class="d" pathLength="1" d="M58 40 H74 L80 66 H52 L58 40 M60 66 V84 M72 66 V84"/></svg>שירותים במקום</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><circle class="d" pathLength="1" cx="50" cy="50" r="34"/><path class="d" pathLength="1" d="M36 76 L30 92 L42 86 L50 94 L54 80 M64 76 L70 92 L58 86"/><text x="50" y="58" text-anchor="middle">כשר</text></svg>תעודת כשרות</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><path class="d" pathLength="1" d="M50 86 V20 M50 30 C40 26 38 18 42 14 C48 16 50 22 50 30 M50 30 C60 26 62 18 58 14 C52 16 50 22 50 30 M50 46 C40 42 38 34 42 30 M50 46 C60 42 62 34 58 30 M50 62 C40 58 38 50 42 46 M50 62 C60 58 62 50 58 46"/><path class="d" pathLength="1" d="M20 80 L80 20"/></svg>פתרון לצליאקים</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><path class="d" pathLength="1" d="M26 74 C26 38 52 22 80 22 C80 52 62 76 26 74 Z M26 74 C40 60 52 48 66 36"/></svg>מנות צמחוניות</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><path class="d" pathLength="1" d="M50 84 V52 M50 52 C50 36 38 28 24 30 C24 46 36 54 50 52 M50 58 C50 40 62 30 78 32 C78 50 64 60 50 58"/><path class="d" pathLength="1" d="M38 18 L50 40 L62 18"/></svg>מנות טבעוניות</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><rect class="d" pathLength="1" x="22" y="18" width="56" height="64" rx="8"/><path class="d" pathLength="1" d="M40 66 V32 H54 C64 32 64 50 54 50 H40"/></svg>חניה לאוטובוס</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud" role="group" aria-label="מצב הנסיעה">
+      <span class="chip"><b id="hClock">08:45</b><small>שעה</small></span>
+      <span class="chip km"><b id="hKm">0</b><small>ק״מ</small></span>
+      <div class="rail" aria-hidden="true"><span class="line"></span><span class="fill" id="rFill"></span></div>
+      <span class="state" id="hState">בנסיעה</span>
+    </div>
+
+    <div class="sign" id="sign"><small id="signSmall">שדרות</small><b id="signText">גן הגבורה והזיכרון</b></div>
+
+    <!-- Sderot (public domain, zstadler) -->
+    <figure class="ph" data-show=".05,.13" style="--x:5%;--y:15%;--w:31%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="אנדרטת העמודים, הדגלים ואבני הזיכרון בגן הגבורה והזיכרון בשדרות"></div><span>גן הגבורה והזיכרון, שדרות</span></figure>
+    <figure class="ph nocap" data-show=".08,.13" style="--x:34%;--y:32%;--w:17%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="עמודי האנדרטה בשדרות על רקע שמיים כחולים"></div></figure>
+    <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
+    <figure class="ph" data-show=".22,.30" style="--x:4%;--y:20%;--w:46%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
+    <!-- at the restaurant, after the coach doors open -->
+    <figure class="ph" data-show=".44,.70" style="--x:3%;--y:13%;--w:27%;--r:-3deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:11%;--mw:60%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
+    <figure class="ph" data-show=".50,.70" style="--x:31%;--y:11%;--w:15%;--r:4deg;--fr:24deg;--fx:20vw;--mx:62%;--my:28%;--mw:34%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
+    <figure class="ph nocap" data-show=".54,.70" style="--x:47%;--y:16%;--w:18%;--r:-5deg;--fr:-24deg;--fx:20vw;--mx:8%;--my:42%;--mw:42%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
+    <figure class="ph" data-show=".58,.70" style="--x:4%;--y:55%;--w:24%;--r:3deg;--fr:22deg;--fx:-30vw;--mx:6%;--my:44%;--mw:54%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
+    <figure class="ph" data-show=".62,.70" style="--x:30%;--y:52%;--w:14%;--r:-6deg;--fr:-26deg;--fx:20vw;--mx:58%;--my:40%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
+    <figure class="ph nocap" data-show=".65,.70" style="--x:46%;--y:56%;--w:13%;--r:5deg;--fr:20deg;--fx:20vw;--mx:34%;--my:56%;--mw:30%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
+    <figure class="ph" data-show=".78,.86" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" muted loop playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><span>תיירים מקנדה 🇨🇦</span></figure>
+
+    <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
+    <figure class="ph" data-show=".915,.965" style="--x:5%;--y:16%;--w:29%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
+    <figure class="ph nocap" data-show=".93,.965" style="--x:32%;--y:36%;--w:20%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="קיר של מכוניות שרופות שפונו מכביש 232"></div></figure>
+
+    <div class="card" id="card">
+      <div class="swap" id="swap">
+        <p class="time" id="cTime">08:45 · יוצאים</p>
+        <h2 id="cTitle">יוצאים לדרך</h2>
+        <p id="cText">אוטובוס, חמישים איש ויום עמוס.</p>
+      </div>
+      <div class="clock" id="clock">
+        <svg viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="30" fill="none" stroke="#ddd0b1" stroke-width="9"/><circle id="arc" cx="36" cy="36" r="30" fill="none" stroke="#c8461f" stroke-width="9" stroke-linecap="round" transform="rotate(-90 36 36)" stroke-dasharray="188.5" stroke-dashoffset="188.5"/></svg>
+        <div><b id="cMin">0</b> <span>דק׳ מתוך 45</span></div>
+      </div>
+      <a class="btn wa go" id="go" href="#book" tabindex="-1">לתיאום העצירה שלכם ↓</a>
+    </div>
+
+    <div class="intro" id="intro">
+      <img class="logo" src="/tour/logo.jpg" alt="הבקתה, המבורגר של מושבניקים">
+      <h1>יום סיור בעוטף עם עצירת צהריים בבקתה</h1>
+      <p>שדרות, אתר הנובה, צהריים בבקתה ואתר המכוניות בתקומה. עד 200 איש, כשר, 45 דקות ויוצאים בזמן.</p>
+      <div class="cue"><i></i> גללו למטה והאוטובוס יוצא לדרך</div>
+    </div>
+  </div>
+</section>
+
+<!-- form to WhatsApp -->
+<section class="band book" id="book" aria-labelledby="bookTitle" tabindex="-1">
+  <div class="in">
+    <h2 id="bookTitle">תאמו את העצירה שלכם</h2>
+    <div class="grid">
+      <form class="form" id="f" novalidate>
+        <label for="fSize">כמה אנשים בקבוצה? <span class="size-read" id="sizeRead">50</span>
+          <input id="fSize" type="range" min="10" max="200" step="5" value="50">
+        </label>
+        <div class="two">
+          <label for="fDate">תאריך<input id="fDate" type="date" value="2026-11-12"></label>
+          <label for="fTime">שעת הגעה משוערת<input id="fTime" type="time" value="12:00"></label>
+        </div>
+        <div class="three">
+          <label for="fVeg">צמחונים<input id="fVeg" type="number" min="0" max="200" value="4"></label>
+          <label for="fVegan">טבעונים<input id="fVegan" type="number" min="0" max="200" value="1"></label>
+          <label for="fGf">צליאקים<input id="fGf" type="number" min="0" max="200" value="1"></label>
+        </div>
+        <div class="two">
+          <label for="fName">שם המדריך / המארגן<input id="fName" type="text" value="" placeholder="למשל: יעל, מדריכה" autocomplete="name"></label>
+          <label for="fOrg">קבוצה / ארגון<input id="fOrg" type="text" value="" placeholder="למשל: משלחת מקנדה"></label>
+        </div>
+        <label for="fNote">הערות<textarea id="fNote" placeholder="מסלול היום, בקשות מיוחדות"></textarea></label>
+      </form>
+      <div class="preview">
+        <p class="note">ההודעה שתישלח:</p>
+        <div class="bub" id="msg"></div>
+        <a class="btn wa" id="send" href="https://wa.me/972584633555" target="_blank" rel="noopener noreferrer">שליחה בוואטסאפ</a>
+        <p class="note">או התקשרו: <b style="user-select:all">058-4633555</b></p>
+        <p class="note">הפרטים לא נשמרים באתר. הם נשלחים ישירות מהטלפון שלכם בוואטסאפ. <a href="/privacy" target="_blank" rel="noopener noreferrer">מדיניות הפרטיות</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Google rating + link only; no quoted reviews until the writers agree -->
+<section class="band quotes" aria-label="ביקורות מ-Google">
+  <div class="in">
+    <h2>מה אומרים עלינו</h2>
+    <p class="rating"><b>4.9</b> <span aria-hidden="true">★★★★★</span> 157 ביקורות ב-Google</p>
+    <p class="rnote">ביקורות אמיתיות של קבוצות, משפחות ולוחמים שעצרו אצלנו. קראו אותן בעמוד שלנו ב-Google.</p>
+    <a class="btn gbtn" href="https://www.google.com/maps/place/%D7%94%D7%91%D7%A7%D7%AA%D7%94+-+%D7%94%D7%9E%D7%91%D7%95%D7%A8%D7%92%D7%A8+%D7%A9%D7%9C+%D7%9E%D7%95%D7%A9%D7%91%D7%A0%D7%99%D7%A7%D7%99%D7%9D+%F0%9F%9A%9C%E2%80%AD/@31.4344164,34.5417627,17z/data=!4m8!3m7!1s0x15027f7fe4c54b13:0xb6a0a3fbd94f4810!8m2!3d31.4347276!4d34.5416983!9m1!1b1!16s%2Fg%2F11l723tdcs" target="_blank" rel="noopener noreferrer">לכל הביקורות ב-Google</a>
+  </div>
+</section>
+
+<!-- directions -->
+<section class="band find" id="find" aria-labelledby="findTitle">
+  <div class="in">
+    <h2 id="findTitle">איך מגיעים</h2>
+    <a class="addr" href="https://maps.google.com/?cid=13159698413254559760" target="_blank" rel="noopener noreferrer">דרך ערבי נחל 21, תושיה<span class="sr"> (נפתח בגוגל מפות בחלון חדש)</span></a>
+    <div class="row">
+      <a class="btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=31.4347276%2C34.5416983&amp;travelmode=driving" target="_blank" rel="noopener noreferrer">מסלול בגוגל מפות<span class="sr"> (נפתח בחלון חדש)</span></a>
+      <a class="btn waze" href="https://waze.com/ul?ll=31.4347276%2C34.5416983&amp;navigate=yes" target="_blank" rel="noopener noreferrer">ניווט בוויז<span class="sr"> (נפתח בחלון חדש)</span></a>
+    </div>
+    <p style="color:var(--ink-soft)">חניה לאוטובוסים צמוד למקום.</p>
+  </div>
+</section>
+
+</main>
+<footer class="band credits" aria-label="קרדיטים ומידע משפטי">
+  <div class="in">
+    <ul>
+      <li>גן הגבורה והזיכרון, שדרות: zstadler, ויקישיתוף, נחלת הכלל.</li>
+      <li>אתר ההנצחה, רעים: זאב שטיין, פיקיויקי ישראל, <a href="https://creativecommons.org/licenses/by/2.5/" target="_blank" rel="noopener noreferrer">CC BY 2.5</a>.</li>
+      <li>אתר המכוניות, תקומה: VELOCITY_club, ויקישיתוף, נחלת הכלל.</li>
+      <li>שאר התמונות: הבקתה.</li>
+    </ul>
+    <nav class="legal" aria-label="מידע משפטי">
+      <a href="/terms" target="_blank" rel="noopener noreferrer">תקנון האתר</a>
+      <a href="/privacy" target="_blank" rel="noopener noreferrer">מדיניות פרטיות</a>
+      <a href="/cookie-policy" target="_blank" rel="noopener noreferrer">מדיניות עוגיות</a>
+      <a href="/accessibility-statement" target="_blank" rel="noopener noreferrer">הצהרת נגישות</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  document.documentElement.lang='he'; document.documentElement.dir='rtl';
+  let reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motionBtn=$('motionBtn');
+  function setStill(on){ reduce=on||matchMedia('(prefers-reduced-motion: reduce)').matches; document.documentElement.classList.toggle('still',on); motionBtn.setAttribute('aria-pressed',on?'true':'false'); motionBtn.textContent=on?'הפעלת אנימציות':'עצירת אנימציות'; const m=$('mapsvg'); if(m&&m.pauseAnimations){ on?m.pauseAnimations():m.unpauseAnimations(); } const v=$('reel'); if(v&&on) v.pause(); try{localStorage.setItem('bikta-still',on?'1':'0');}catch(e){} }
+  motionBtn.addEventListener('click',()=>setStill(motionBtn.getAttribute('aria-pressed')!=='true'));
+  const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  const angLerp=(a,b,t)=>a+((((b-a)%360)+540)%360-180)*t;
+  const NS='http://www.w3.org/2000/svg';
+  const svg=$('mapsvg'), road=$('road'), trail=$('trail'), coach=$('coach');
+  const total=road.getTotalLength();
+  trail.style.strokeDasharray=total; trail.style.strokeDashoffset=total;
+
+  let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  const fields=$('fields');
+  for(let i=0;i<46;i++){const x=-220+rnd()*820,y=-200+rnd()*700,w=30+rnd()*60,h=24+rnd()*50,a=rnd()*40-20;const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('transform',`rotate(${a} ${x+w/2} ${y+h/2})`);r.setAttribute('fill',rnd()>.45?'url(#wheat)':'url(#plough)');fields.appendChild(r);}
+  const trees=$('trees');
+  for(let l=0;l<total;l+=7){const p=road.getPointAtLength(l),q=road.getPointAtLength(Math.min(total,l+1));const nx=-(q.y-p.y),ny=q.x-p.x,n=Math.hypot(nx,ny)||1;[1,-1].forEach(side=>{if(rnd()<.55){const u=document.createElementNS(NS,'use');u.setAttribute('href','#tree');const d=10+rnd()*4;u.setAttribute('x',p.x+side*nx/n*d);u.setAttribute('y',p.y+side*ny/n*d);trees.appendChild(u);}});}
+
+  function lenNear(x,y,from=0){let b=from,bd=1e9;for(let l=from;l<=total;l+=.5){const p=road.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=l;}}return b;}
+  const S={st:lenNear(228,-36)}; S.sd=lenNear(182,62); S.nv=lenNear(66,174,S.sd); S.bk=lenNear(128,150,S.nv); S.tk=lenNear(168,124,S.bk);
+  // [progress, road length, minutes after 09:00, camera width]
+  const K=[[0,S.st,-15,330],[.04,S.sd,0,130],[.13,S.sd,75,130],[.21,S.nv,100,140],[.30,S.nv,160,140],[.39,S.bk,175,125],[.86,S.bk,220,125],[.92,S.tk,232,130],[.97,S.tk,240,190],[1,total-6,250,260]];
+  function at(p){for(let i=0;i<K.length-1;i++){const a=K[i],b=K[i+1];if(p>=a[0]&&p<=b[0]){const t=ease((p-a[0])/((b[0]-a[0])||1));return [lerp(a[1],b[1],t),lerp(a[2],b[2],t),lerp(a[3],b[3],t)];}}const z=K[K.length-1];return [z[1],z[2],z[3]];}
+
+  const RAIL=[S.sd,S.nv,S.bk,S.tk]; const rail=document.querySelector('.rail');
+  const dots=RAIL.map((l,i)=>{const d=document.createElement('span');d.className='dot'+(i===2?' bikta':'');d.style.right=(l/total*100)+'%';rail.appendChild(d);return d;});
+
+  const PHASES=[
+    {p:0,   t:'08:45 · יוצאים', h:'יוצאים לדרך', d:'אוטובוס, חמישים איש ויום עמוס.'},
+    {p:.04, t:'09:00 · שדרות', h:'גן הגבורה והזיכרון', d:'במקום שבו עמדה תחנת המשטרה. כאן מתחיל היום.', sign:['שדרות','גן הגבורה והזיכרון'], memorial:true},
+    {p:.13, t:'10:15 · בדרך', h:'דרומה, כביש 232', d:'עשרים דקות נסיעה.'},
+    {p:.21, t:'10:40 · רעים', h:'אתר הנובה', d:'זוכרים את מי שבאו לרקוד ולא שבו.', quiet:true, sign:['רעים','אתר הנובה'], memorial:true},
+    {p:.30, t:'11:40 · עולים לאוטובוס', h:'בדרך לצהריים', d:'עוד רבע שעה, והשולחן כבר ערוך.'},
+    {p:.39, t:'11:55 · הבקתה', h:'הגענו', d:'האוטובוס חונה צמוד לדלת.', sign:['תושייה','הבקתה'], bikta:true, clock:true},
+    {p:.41, t:'11:56 · הדלתות נפתחות', h:'יורדים מהאוטובוס', d:'ישר אל השולחן.', clock:true},
+    {p:.47, t:'11:57 · נכנסים', h:'שולחן שוק עשיר ומפנק', d:'מחכה לכם מוכן וטרי לרגע שתגיעו, כך שתוכלו לאכול ולהמשיך.', clock:true},
+    {p:.60, t:'12:10 · כולם יושבים', h:'עד 200 איש', d:'משלחות, בתי ספר ותיירים מכל העולם.', clock:true},
+    {p:.70, t:'12:20 · הכול מסודר', h:'בלי הפתעות', d:'שירותים, כשרות, צליאקים, צמחונים וטבעונים. הכול מתואם מראש.', clock:true},
+    {p:.78, t:'12:30 · תיירים מכל העולם', h:'ככה זה נראה מבחוץ', d:'תיירים מקנדה מספרים על הצהריים שלהם אצלנו.', clock:true},
+    {p:.86, t:'12:40 · ממשיכים', h:'שבעים ובזמן', d:'יוצאים בדיוק כמו שתכננתם.'},
+    {p:.91, t:'12:50 · תקומה', h:'אתר המכוניות', d:'המכוניות שפונו מכביש 232. עדות שקטה ליום ההוא.', quiet:true, sign:['תקומה','אתר המכוניות'], memorial:true},
+    {p:.96, t:'13:00 · המסלול שלכם', h:'רוצים יום כזה?', d:'ממלאים פרטים, ושולחים לנו בוואטסאפ.', go:true}
+  ];
+  const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
+  function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
+    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cText').textContent=P.d;swap.classList.remove('out');};
+    if(reduce)apply();else{swap.classList.add('out');setTimeout(apply,180);}
+    card.classList.toggle('quiet',!!P.quiet);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
+    if(P.sign){$('signSmall').textContent=P.sign[0];$('signText').textContent=P.sign[1];sign.classList.toggle('bikta',!!P.bikta);sign.classList.toggle('memorial',!!P.memorial);sign.classList.add('on');}else sign.classList.remove('on');
+    $('dim').style.opacity=P.quiet?.5:0;
+  }
+  const photos=[...document.querySelectorAll('.ph')].map(el=>{const [a,b]=el.dataset.show.split(',').map(Number);return {el,a,b};});
+  const reel=$('reel');
+  const arrive=$('arrive'), services=$('services'), leafA=$('leafA'), leafB=$('leafB'), stepLight=$('stepLight');
+  const wheels=[...document.querySelectorAll('#coach .wheel')], WX=[-21,-12.4,14];
+  let dir=1, wheelRot=0;
+  const svcs=[...services.querySelectorAll('.svc > div')];
+
+  let lastLen=null,lastT=performance.now(),speed=0,cam=null,head=null;
+  const stage=$('stage'), trip=$('trip');
+  function progress(){const r=trip.getBoundingClientRect();const span=trip.offsetHeight-innerHeight;return span>0?clamp(-r.top/span):0;}
+
+  function render(now){
+    const p=progress();
+    const [len,mins,camW]=at(p);
+    const pt=road.getPointAtLength(len), a=road.getPointAtLength(Math.max(0,len-4)), b=road.getPointAtLength(Math.min(total,len+4));
+    const h=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+    const dt=Math.max(16,now-lastT); lastT=now;
+    const moved=lastLen===null?0:Math.abs(len-lastLen); const fwd=lastLen===null?0:len-lastLen; lastLen=len;
+    speed=lerp(speed,moved/dt*1000,.25); const moving=speed>2;
+    // face the way the road goes on screen; flip only on a clear change of direction
+    const sx=b.x-a.x; if(Math.abs(sx)>1.2) dir=(sx>=0?1:-1)*(fwd<0?-1:1);
+    wheelRot+=fwd*60;
+    wheels.forEach((w,i)=>w.setAttribute('transform',`translate(${WX[i]} -3) rotate(${wheelRot})`));
+    const bob=moving&&!reduce?Math.sin(now/80)*.25:0;
+    coach.setAttribute('transform',`translate(${pt.x} ${pt.y+2.2+bob})`);
+    $('coachFlip').setAttribute('transform',`scale(${dir} 1)`);
+    $('beams').setAttribute('opacity',moving?.9:0);
+    $('tail').setAttribute('fill',moving?'#7a1b12':'#ff3b2a');
+    // doors open while parked at the restaurant
+    const dOpen=clamp((p-.405)/.02)*clamp((.862-p)/.008), de=reduce?(dOpen>.5?1:0):1-Math.pow(1-dOpen,3);
+    leafA.setAttribute('transform',`translate(${-de*2.5} 0)`); leafB.setAttribute('transform',`translate(${de*2.5} 0)`);
+    stepLight.setAttribute('opacity',de);
+    trail.style.strokeDashoffset=total-len;
+
+    const W=stage.clientWidth,H=stage.clientHeight,narrow=W<760;
+    let cx=pt.x, cy=pt.y; const hh=camW*H/W;
+    if(narrow) cy+=hh*.16; else { cx+=camW*.17; cy-=hh*.12; }
+    if(!cam||reduce) cam={x:cx,y:cy,w:camW}; else {cam.x=lerp(cam.x,cx,.18); cam.y=lerp(cam.y,cy,.18); cam.w=lerp(cam.w,camW,.12);}
+    const ch=cam.w*H/W; svg.setAttribute('viewBox',`${cam.x-cam.w/2} ${cam.y-ch/2} ${cam.w} ${ch}`);
+
+    const tot=540+Math.round(mins), H2=Math.floor(tot/60), M2=tot%60;
+    $('hClock').textContent=`${String(H2).padStart(2,'0')}:${String(M2).padStart(2,'0')}`;
+    $('hKm').textContent=Math.round(len/total*58);
+    $('rFill').style.width=(len/total*100)+'%';
+    dots.forEach((d,i)=>d.classList.toggle('past',len>=RAIL[i]-1));
+    const st=$('hState'); st.textContent=moving?'בנסיעה':'עוצרים'; st.classList.toggle('parked',!moving);
+
+    let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
+    const cp=clamp((p-.40)/(.86-.40)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
+    photos.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
+    const reelOn=p>=.78&&p<.86&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused){reel.preload='auto';reel.play().catch(()=>{});} else if(!reelOn&&!reel.paused) reel.pause();
+
+    // services and the video sit on a dark layer over the map
+    const svcOn=p>=.70&&p<.78; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.78&&p<.86));
+    svcs.forEach((el,i)=>el.classList.toggle('on',svcOn&&p>=.705+i*.011));
+
+    $('intro').classList.toggle('gone',p>.015);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+  try{ if(localStorage.getItem('bikta-still')==='1') setStill(true); }catch(e){}
+
+  /* form → WhatsApp */
+  const f=id=>$(id);
+  function fmtDate(v){if(!v)return'';const [y,m,d]=v.split('-');return `${+d}.${+m}.${y}`;}
+  function build(){
+    f('sizeRead').textContent=f('fSize').value;
+    const name=f('fName').value.trim(), org=f('fOrg').value.trim(), note=f('fNote').value.trim();
+    const lines=[`היי, ${name?'כאן '+name:'שלום'}${org?' ('+org+')':''}.`,'נשמח לתאם עצירת צהריים בבקתה:',
+      `• ${f('fSize').value} איש`,`• ${fmtDate(f('fDate').value)}, הגעה בסביבות ${f('fTime').value}`,
+      `• צמחונים: ${f('fVeg').value||0}, טבעונים: ${f('fVegan').value||0}, צליאקים: ${f('fGf').value||0}`];
+    if(note) lines.push(`• ${note}`);
+    lines.push('תודה!');
+    const text=lines.join('\n'); f('msg').textContent=text;
+    f('send').href='https://wa.me/972584633555?text='+encodeURIComponent(text);
+  }
+  f('f').addEventListener('input',build); f('f').addEventListener('submit',e=>e.preventDefault()); build();
+})();
+</script>
+
+</body>
+</html>
