@@ -620,7 +620,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
       const tm=$('cTime'); tm.textContent=P.t; tm.classList.remove('roll'); void tm.offsetWidth; if(!reduce) tm.classList.add('roll');
       const h=$('cTitle'); h.textContent=''; h.style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';
       let k=0; P.h.split(' ').forEach((word,wi)=>{ if(wi) h.appendChild(document.createTextNode(' ')); const w=document.createElement('span'); w.className='w';
-        [...word].forEach(c=>{const sp=document.createElement('span'); sp.className='ch'; sp.textContent=c; if(!reduce) sp.style.animationDelay=Math.min(k++*28,650)+'ms'; else sp.style.animation='none'; w.appendChild(sp);}); h.appendChild(w); });
+        (word.match(/[0-9A-Za-z][0-9A-Za-z.,:'’\/-]*|./gu)||[]).forEach(c=>{const sp=document.createElement('span'); sp.className='ch'; sp.textContent=c; if(!reduce) sp.style.animationDelay=Math.min(k++*28,650)+'ms'; else sp.style.animation='none'; w.appendChild(sp);}); h.appendChild(w); });
       $('cText').textContent=P.d; swap.classList.remove('out');};
     if(reduce)apply();else{swap.classList.add('out');setTimeout(apply,180);}
     card.classList.toggle('quiet',!!P.quiet); card.classList.toggle('memorial',!!P.memorial);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
