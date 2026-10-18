@@ -57,11 +57,32 @@ p{margin:0}
 
 /* stop card */
 .card{position:absolute;z-index:26;top:50%;right:max(24px,env(safe-area-inset-right,0px));transform:translateY(-50%);width:min(390px,34vw);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:22px 22px 20px;box-shadow:8px 8px 0 var(--ink);display:grid;gap:10px;transition:background .5s,color .5s,border-color .5s,box-shadow .5s}
-.card .time{font-weight:800;font-size:13px;letter-spacing:.06em;color:var(--ember-text);font-variant-numeric:tabular-nums}
+.card{background:
+  linear-gradient(180deg,rgba(255,255,255,.18),rgba(0,0,0,.08)),
+  repeating-linear-gradient(180deg,#dcb683 0 34px,#c99f68 34px 36px),
+  repeating-linear-gradient(95deg,rgba(120,70,30,.06) 0 3px,transparent 3px 11px)!important;
+  border:3px solid #4a2c14!important;box-shadow:0 8px 0 #3a2414,0 24px 40px rgba(0,0,0,.35)!important;color:#2b1a0c}
+.card::before,.card::after{content:"";position:absolute;top:10px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d9d4c7,#6d6a63);box-shadow:0 1px 1px rgba(0,0,0,.5)}
+.card::before{right:12px}.card::after{left:12px}
+.card h2{color:#2b1a0c;text-shadow:0 1px 0 rgba(255,236,200,.55),0 -1px 0 rgba(60,30,10,.35)}
+.card .time{font-weight:800;font-size:13px;letter-spacing:.06em;color:#4a2510;font-variant-numeric:tabular-nums;display:inline-block}
+.card .time.roll{animation:roll .5s cubic-bezier(.3,1.4,.5,1)}
+@keyframes roll{from{transform:perspective(200px) rotateX(-90deg);opacity:.2}to{transform:none;opacity:1}}
+.card .num{position:absolute;top:-18px;inset-inline-start:22px;min-width:36px;height:36px;padding:0 8px;border-radius:999px;background:#2b1a0c;color:#f6e7c9;font-weight:800;font-size:14px;display:inline-flex;align-items:center;justify-content:center;border:2px solid #dcb683}
+.card .w{display:inline-block;white-space:nowrap}
+.card .ch{display:inline-block;animation:chIn .45s cubic-bezier(.3,1.3,.5,1) both}
+@keyframes chIn{from{opacity:0;transform:translateY(.45em) rotateX(70deg)}to{opacity:1;transform:none}}
+.candle{position:absolute;bottom:14px;inset-inline-end:16px;width:12px;height:30px;border-radius:3px;background:linear-gradient(90deg,#efe6d2,#fffaf0,#e3d6bb);display:none}
+.candle .flame{position:absolute;left:50%;top:-16px;width:10px;height:16px;margin-left:-5px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(circle at 50% 70%,#fff6c8,#ffc23d 45%,#e86a1c 75%,transparent 80%);transform-origin:50% 100%;animation:flicker 1.6s ease-in-out infinite}
+.candle::after{content:"";position:absolute;left:50%;top:-30px;width:44px;height:44px;margin-left:-22px;border-radius:50%;background:radial-gradient(rgba(255,200,90,.35),transparent 70%)}
+.card.memorial .candle{display:block}
+@keyframes flicker{0%,100%{transform:scale(1) rotate(-2deg)}30%{transform:scale(1.08,.94) rotate(2deg)}60%{transform:scale(.95,1.06) rotate(-1deg)}}
 .card h2{font-size:clamp(44px,5vw,72px)}
-.card p{color:var(--ink-soft);font-size:17px}
-.card.quiet{background:var(--night);color:var(--paper);border-color:#4a3f33;box-shadow:none}
-.card.quiet p{color:#bfb39b}
+.card p{color:#3a2412;font-size:17px;font-weight:600}
+.card.quiet{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.2)),repeating-linear-gradient(180deg,#3d2e22 0 34px,#33261c 34px 36px)!important;color:var(--paper)}
+.card.quiet h2{color:#f2e8d4;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.card.quiet .time{color:#e5c79a}
+.card.quiet p{color:#d6c9ae}
 .card .swap{transition:opacity .25s,transform .25s}
 .card .swap.out{opacity:0;transform:translateY(8px)}
 .clock{display:none;align-items:center;gap:12px}
@@ -162,8 +183,24 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .form .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .form input[type=range]{padding:0;accent-color:var(--bus);border:0;background:transparent}
 .size-read{font-family:var(--display);font-size:38px;color:var(--bus);line-height:1}
-.preview{background:#e7dfd2;color:var(--ink);border-radius:14px;padding:16px;display:grid;gap:12px}
-.preview .bub{background:#d9fdd3;border-radius:10px 2px 10px 10px;padding:10px 12px;white-space:pre-wrap;font-size:15px;box-shadow:0 1px 1px rgba(0,0,0,.12)}
+.ticket{position:relative;background:#f6efe0;color:var(--ink);border-radius:18px;padding:22px 22px 24px;box-shadow:0 18px 40px rgba(0,0,0,.35);
+  -webkit-mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat;
+          mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat}
+.ticket-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px;padding-bottom:12px;border-bottom:2px dashed #cdbf9f;font-family:var(--display);font-size:34px;line-height:1;color:var(--ember-text)}
+.ticket-head img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--ink)}
+.ticket label{color:var(--ink)}
+.ticket input,.ticket textarea{background:#fffaf0;border-color:#cdbf9f;color:var(--ink)}
+.ticket .size-read{color:var(--ember-text)}
+.ticket input[type=range]{accent-color:var(--ember)}
+.preview{background:#efeae2;background-image:radial-gradient(rgba(0,0,0,.04) 1px,transparent 1px);background-size:14px 14px;color:var(--ink);border-radius:16px;padding:0 0 16px;display:grid;gap:12px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.preview>*:not(.wa-top){margin-inline:16px}
+.wa-top{display:flex;align-items:center;gap:10px;background:#075e54;color:#fff;padding:10px 14px}
+.wa-top img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #fff}
+.wa-top b{display:block;font-size:16px;line-height:1.1}.wa-top small{font-size:13px;opacity:.85}
+.chat{display:flex}
+.preview .bub{position:relative;margin-inline-start:auto;max-width:92%;background:#d9fdd3;border-radius:12px 2px 12px 12px;padding:10px 12px 18px;white-space:pre-wrap;font-size:15px;box-shadow:0 1px 1px rgba(0,0,0,.14)}
+.preview .bub::after{content:"";position:absolute;top:0;inset-inline-end:-8px;border:8px solid transparent;border-top-color:#d9fdd3;border-inline-start-color:#d9fdd3}
+.preview .bub .meta{position:absolute;bottom:3px;inset-inline-end:8px;font-size:12px;color:#53bdeb}
 .preview .note{font-size:14px;color:#4f4334}
 .preview .note a{color:var(--ink);font-weight:800}
 .quotes{background:var(--paper)}
@@ -245,11 +282,41 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <linearGradient id="beamSide" x1="0" x2="1"><stop offset="0" stop-color="#fff6c8" stop-opacity=".75"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></linearGradient>
         <filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
       </defs>
-      <rect x="-600" y="-600" width="1600" height="1600" fill="#ece2cb"/>
-      <rect x="-600" y="-600" width="1600" height="1600" fill="url(#grid)"/>
+      <rect x="-4000" y="-4000" width="9000" height="9000" fill="#ece2cb"/>
+      <rect x="-4000" y="-4000" width="9000" height="9000" fill="url(#grid)"/>
       <g id="fields"></g>
+      <g id="country">
+        <path d="M820 -1860 L652 -1316 L584 -1174 L572 -1108 L556 -1036 L524 -964 L468 -964 L452 -852 L412 -700 L380 -564 L340 -436 L308 -364 L300 -340 L212 -140 L140 -36 L108 12 L44 84 L-124 244 L-460 396 L-940 420 L-1580 500 L-1580 -2060 L820 -2060 Z" fill="#a9c6cf"/>
+        <path d="M420 1652 L500 1676 L228 2580 L100 2580 Z" fill="#a9c6cf"/>
+        <ellipse cx="968" cy="-956" rx="40" ry="70" fill="#a9c6cf"/>
+        <ellipse cx="892" cy="76" rx="48" ry="190" fill="#a9c6cf"/>
+        <path d="M956 -868 C980 -620 916 -460 948 -260 S924 -140 932 -108" fill="none" stroke="#7fa6b3" stroke-width="10"/>
+      </g>
+      <g id="countryLabels" font-weight="800" font-family="Assistant, sans-serif">
+        <circle cx="492" cy="-932" r="14" fill="#2b2118"/><text x="516" y="-916" font-size="54" fill="#2b2118">חיפה</text><circle cx="324" cy="-364" r="14" fill="#2b2118"/><text x="348" y="-348" font-size="54" fill="#2b2118">תל אביב</text><circle cx="668" cy="-116" r="14" fill="#2b2118"/><text x="692" y="-100" font-size="54" fill="#2b2118">ירושלים</text><circle cx="332" cy="300" r="14" fill="#2b2118"/><text x="356" y="316" font-size="54" fill="#2b2118">באר שבע</text><circle cx="460" cy="1652" r="14" fill="#2b2118"/><text x="484" y="1668" font-size="54" fill="#2b2118">אילת</text><circle cx="924" cy="-932" r="14" fill="#2b2118"/><text x="948" y="-916" font-size="54" fill="#2b2118">טבריה</text><circle cx="156" cy="-36" r="14" fill="#2b2118"/><text x="180" y="-20" font-size="54" fill="#2b2118">אשקלון</text>
+        <text x="-620" y="-540" font-size="70" fill="#4e7380" font-style="italic">הים התיכון</text>
+        <text x="996" y="100" font-size="44" fill="#4e7380">ים המלח</text>
+        <text x="1028" y="-956" font-size="44" fill="#4e7380">הכנרת</text>
+        <circle cx="130" cy="110" r="110" fill="#c8461f" opacity=".16"><animate attributeName="r" values="90;140;90" dur="2.2s" repeatCount="indefinite"/></circle>
+        <circle cx="130" cy="110" r="70" fill="none" stroke="#c8461f" stroke-width="10"/>
+        <text x="230" y="60" font-size="78" fill="#c8461f">עוטף עזה</text>
+      </g>
+
       <path d="M380 340 C300 300 260 300 220 270 S120 230 20 205" fill="none" stroke="#5f8ea0" stroke-width="1.6" stroke-dasharray="2.5 3"/>
       <text x="246" y="296" font-size="6" fill="#5f8ea0" transform="rotate(-14 246 296)">נחל בשור</text>
+      <g id="minor" fill="none" stroke="#b9a983" stroke-width="2.2" stroke-linecap="round">
+        <path d="M182 62 C210 90 220 130 240 180 S270 260 332 300"/>
+        <path d="M168 124 C186 140 190 160 186 172 S196 210 206 240"/>
+        <path d="M128 150 C120 190 110 230 100 300"/>
+        <path d="M70 168 C58 150 48 132 40 112"/>
+        <path d="M232 -60 C300 -20 360 10 430 40"/>
+        <path d="M240 180 C280 170 330 160 420 140"/>
+      </g>
+      <g id="moshavim" fill="#d9cba9" stroke="#b9a983" stroke-width=".8">
+        <rect x="236" y="96" width="14" height="10" rx="2"/><rect x="96" y="214" width="12" height="9" rx="2"/>
+        <rect x="150" y="186" width="13" height="9" rx="2"/><rect x="18" y="128" width="12" height="9" rx="2"/>
+        <rect x="262" y="210" width="14" height="10" rx="2"/><rect x="214" y="22" width="12" height="9" rx="2"/>
+      </g>
       <g id="trees"></g>
       <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#3b342d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
       <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f2b705" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
@@ -303,14 +370,22 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <path d="M-17 -12 H17 M-17 -7 H17 M-17 -2 H17" stroke="#6e4426" stroke-width=".6"/>
         <path d="M-21 -17 L0 -31 L21 -17 Z" fill="#6b3f20" stroke="#3a2414" stroke-width=".8"/>
         <path d="M-16 -20 L0 -28.5 L16 -20" fill="none" stroke="#8a5a33" stroke-width=".6"/>
+        <rect x="9" y="-31" width="4" height="8" fill="#5a3418" stroke="#3a2414" stroke-width=".5"/>
+        <g fill="#efe9de">
+          <circle cx="11" cy="-33" r="1.6" opacity="0"><animate attributeName="cy" values="-33;-48" dur="3s" repeatCount="indefinite"/><animate attributeName="r" values="1.4;4" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="3s" repeatCount="indefinite"/></circle>
+          <circle cx="12" cy="-33" r="1.6" opacity="0"><animate attributeName="cy" values="-33;-48" dur="3s" begin="1s" repeatCount="indefinite"/><animate attributeName="r" values="1.4;4" dur="3s" begin="1s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="3s" begin="1s" repeatCount="indefinite"/></circle>
+          <circle cx="10" cy="-33" r="1.6" opacity="0"><animate attributeName="cy" values="-33;-48" dur="3s" begin="2s" repeatCount="indefinite"/><animate attributeName="r" values="1.4;4" dur="3s" begin="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="3s" begin="2s" repeatCount="indefinite"/></circle>
+        </g>
         <rect x="-3.4" y="-8" width="6.8" height="9" fill="#2b1a0c"/>
         <rect x="-14" y="-9" width="6" height="5" fill="#f3d48a" stroke="#3a2414" stroke-width=".6"/>
         <rect x="8" y="-9" width="6" height="5" fill="#f3d48a" stroke="#3a2414" stroke-width=".6"/>
-        <!-- wooden sign -->
+        <!-- wooden sign, gently swaying -->
+        <g><animateTransform attributeName="transform" type="rotate" values="-3 0 -24;3 0 -24;-3 0 -24" dur="2.6s" repeatCount="indefinite"/>
         <path d="M-9 -24 L-8 -17.5 M9 -24 L8 -17.5" stroke="#3a2414" stroke-width=".5"/>
         <rect x="-13" y="-17.6" width="26" height="8" rx="1.2" fill="#c9925a" stroke="#4a2c14" stroke-width=".8" transform="translate(0 -6)"/>
         <path d="M-12 -21.5 H12 M-12 -18.5 H12" stroke="#b07a45" stroke-width=".35" transform="translate(0 -1.6)"/>
         <text x="0" y="-18.4" text-anchor="middle" font-size="6.4" fill="#2b1a0c" font-family="Karantina, Assistant, sans-serif" font-weight="700">הבקתה</text>
+        </g>
       </g>
       <!-- white tour coach, side view, facing right; wheels sit on the road -->
       <g id="coach">
@@ -387,6 +462,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <figure class="ph nocap" data-show=".868,.896" style="--x:32%;--y:36%;--w:20%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="קיר של מכוניות שרופות שפונו מכביש 232"></div></figure>
 
     <div class="card" id="card">
+      <span class="num" id="cNum" hidden></span>
+      <span class="candle" aria-hidden="true"><i class="flame"></i></span>
       <div class="swap" id="swap">
         <p class="time" id="cTime">08:45 · יוצאים</p>
         <h2 id="cTitle">יוצאים לדרך</h2>
@@ -413,7 +490,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   <div class="in">
     <h2 id="bookTitle">תאמו את העצירה שלכם</h2>
     <div class="grid">
-      <form class="form" id="f" novalidate>
+      <form class="form ticket" id="f" novalidate>
+        <p class="ticket-head"><span>כרטיס הזמנה · עצירת צהריים</span><img src="/tour/logo.jpg" alt=""></p>
         <label for="fSize">כמה אנשים בקבוצה? <span class="size-read" id="sizeRead">50</span>
           <input id="fSize" type="range" min="10" max="200" step="5" value="50">
         </label>
@@ -433,8 +511,9 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <label for="fNote">הערות<textarea id="fNote" placeholder="מסלול היום, בקשות מיוחדות"></textarea></label>
       </form>
       <div class="preview">
+        <div class="wa-top"><img src="/tour/logo.jpg" alt=""><div><b>הבקתה · קבוצות</b><small dir="ltr">058-4633555</small></div></div>
         <p class="note">ההודעה שתישלח:</p>
-        <div class="bub" id="msg"></div>
+        <div class="chat"><div class="bub"><span id="msg"></span><span class="meta">✓✓</span></div></div>
         <a class="btn wa" id="send" href="https://wa.me/972584633555" target="_blank" rel="noopener noreferrer">שליחה בוואטסאפ</a>
         <p class="note">או התקשרו: <b style="user-select:all">058-4633555</b></p>
         <p class="note">הפרטים לא נשמרים באתר. הם נשלחים ישירות מהטלפון שלכם בוואטסאפ. <a href="/privacy" target="_blank" rel="noopener noreferrer">מדיניות הפרטיות</a></p>
@@ -503,15 +582,17 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
   let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
   const fields=$('fields');
-  for(let i=0;i<46;i++){const x=-220+rnd()*820,y=-200+rnd()*700,w=30+rnd()*60,h=24+rnd()*50,a=rnd()*40-20;const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('transform',`rotate(${a} ${x+w/2} ${y+h/2})`);r.setAttribute('fill',rnd()>.45?'url(#wheat)':'url(#plough)');fields.appendChild(r);}
+  for(let i=0;i<46;i++){const x=-220+rnd()*820,y=-200+rnd()*700,w=30+rnd()*60,h=24+rnd()*50,a=rnd()*40-20;const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('transform',`rotate(${a} ${x+w/2} ${y+h/2})`);const kind=rnd(); r.setAttribute('fill',kind>.66?'#dfd29a':kind>.33?'#d8c3a0':'#c9cf9a'); r.setAttribute('opacity','.55'); fields.appendChild(r); const r2=r.cloneNode(); r2.setAttribute('fill',kind>.5?'url(#wheat)':'url(#plough)'); r2.setAttribute('opacity','1'); fields.appendChild(r2);}
   const trees=$('trees');
   for(let l=0;l<total;l+=7){const p=road.getPointAtLength(l),q=road.getPointAtLength(Math.min(total,l+1));const nx=-(q.y-p.y),ny=q.x-p.x,n=Math.hypot(nx,ny)||1;[1,-1].forEach(side=>{if(rnd()<.55){const u=document.createElementNS(NS,'use');u.setAttribute('href','#tree');const d=10+rnd()*4;u.setAttribute('x',p.x+side*nx/n*d);u.setAttribute('y',p.y+side*ny/n*d);trees.appendChild(u);}});}
 
   function lenNear(x,y,from=0){let b=from,bd=1e9;for(let l=from;l<=total;l+=.5){const p=road.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=l;}}return b;}
   const S={st:lenNear(228,-36)}; S.sd=lenNear(182,62); S.nv=lenNear(66,174,S.sd); S.bk=lenNear(128,150,S.nv); S.tk=lenNear(168,124,S.bk);
   // [progress, road length, minutes after 09:00, camera width]
-  const K=[[0,S.st,-15,330],[.03,S.sd,0,130],[.07,S.sd,75,130],[.12,S.nv,100,140],[.16,S.nv,160,140],[.24,S.bk,175,125],[.8,S.bk,220,125],[.86,S.tk,232,130],[.9,S.tk,240,190],[1,total-6,250,260]];
-  function at(p){for(let i=0;i<K.length-1;i++){const a=K[i],b=K[i+1];if(p>=a[0]&&p<=b[0]){const t=ease((p-a[0])/((b[0]-a[0])||1));return [lerp(a[1],b[1],t),lerp(a[2],b[2],t),lerp(a[3],b[3],t)];}}const z=K[K.length-1];return [z[1],z[2],z[3]];}
+  const K=[[0,S.st,-15,-1],[.035,S.sd,0,130],[.07,S.sd,75,130],[.12,S.nv,100,140],[.16,S.nv,160,140],[.24,S.bk,175,125],[.252,S.bk,175.5,100],[.29,S.bk,178,100],[.305,S.bk,180,125],[.8,S.bk,220,125],[.86,S.tk,232,130],[.9,S.tk,240,190],[1,total-6,250,260]];
+  const CC={x:540,y:180};  // middle of the country, in map units
+  function countryW(){const W=stage.clientWidth||1,H=stage.clientHeight||1; return Math.max(1700,3400*W/H);}
+  function at(p){for(let i=0;i<K.length-1;i++){const a=K[i],b=K[i+1];if(p>=a[0]&&p<=b[0]){const t=ease((p-a[0])/((b[0]-a[0])||1));const wa=a[3]<0?countryW():a[3], wb=b[3]<0?countryW():b[3];return [lerp(a[1],b[1],t),lerp(a[2],b[2],t),Math.exp(lerp(Math.log(wa),Math.log(wb),t))];}}const z=K[K.length-1];return [z[1],z[2],z[3]];}
 
   const RAIL=[S.sd,S.nv,S.bk,S.tk]; const rail=document.querySelector('.rail');
   const dots=RAIL.map((l,i)=>{const d=document.createElement('span');d.className='dot'+(i===2?' bikta':'');d.style.right=(l/total*100)+'%';rail.appendChild(d);return d;});
@@ -534,9 +615,14 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   ];
   const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
   function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
-    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cTitle').style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';$('cText').textContent=P.d;swap.classList.remove('out');};
+    const apply=()=>{
+      const tm=$('cTime'); tm.textContent=P.t; tm.classList.remove('roll'); void tm.offsetWidth; if(!reduce) tm.classList.add('roll');
+      const h=$('cTitle'); h.textContent=''; h.style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';
+      let k=0; P.h.split(' ').forEach((word,wi)=>{ if(wi) h.appendChild(document.createTextNode(' ')); const w=document.createElement('span'); w.className='w';
+        [...word].forEach(c=>{const sp=document.createElement('span'); sp.className='ch'; sp.textContent=c; if(!reduce) sp.style.animationDelay=Math.min(k++*28,650)+'ms'; else sp.style.animation='none'; w.appendChild(sp);}); h.appendChild(w); });
+      $('cText').textContent=P.d; swap.classList.remove('out');};
     if(reduce)apply();else{swap.classList.add('out');setTimeout(apply,180);}
-    card.classList.toggle('quiet',!!P.quiet);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
+    card.classList.toggle('quiet',!!P.quiet); card.classList.toggle('memorial',!!P.memorial);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
     if(P.sign){$('signSmall').textContent=P.sign[0];$('signText').textContent=P.sign[1];sign.classList.toggle('bikta',!!P.bikta);sign.classList.toggle('memorial',!!P.memorial);sign.classList.add('on');}else sign.classList.remove('on');
     $('dim').style.opacity=P.quiet?.5:0;
   }
@@ -598,7 +684,10 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     const W=stage.clientWidth,H=stage.clientHeight,narrow=W<760;
     let cx=pt.x, cy=pt.y; const hh=camW*H/W;
     if(narrow) cy+=hh*.16; else { cx+=camW*.17; cy-=hh*.12; }
-    if(!cam||reduce) cam={x:cx,y:cy,w:camW}; else {cam.x=lerp(cam.x,cx,.18); cam.y=lerp(cam.y,cy,.18); cam.w=lerp(cam.w,camW,.12);}
+    const wide=clamp(Math.log(camW/400)/Math.log(countryW()/400));   // 0 = following the coach, 1 = whole country
+    cx=lerp(cx,CC.x,wide); cy=lerp(cy,CC.y,wide);
+    $('countryLabels').style.opacity=clamp((camW-500)/900);
+    if(!cam||reduce) cam={x:cx,y:cy,w:camW}; else {cam.x=lerp(cam.x,cx,.2); cam.y=lerp(cam.y,cy,.2); cam.w=Math.exp(lerp(Math.log(cam.w),Math.log(camW),.18));}
     const ch=cam.w*H/W; svg.setAttribute('viewBox',`${cam.x-cam.w/2} ${cam.y-ch/2} ${cam.w} ${ch}`);
 
     const tot=540+Math.round(mins), H2=Math.floor(tot/60), M2=tot%60;
@@ -606,6 +695,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     $('hKm').textContent=Math.round(len/total*58);
     $('rFill').style.width=(len/total*100)+'%';
     dots.forEach((d,i)=>d.classList.toggle('past',len>=RAIL[i]-1));
+    const nStop=RAIL.filter(l=>len>=l-1).length, cNum=$('cNum'); cNum.hidden=nStop===0; cNum.textContent='תחנה '+nStop+'/4';
     const st=$('hState'); st.textContent=moving?'בנסיעה':'עוצרים'; st.classList.toggle('parked',!moving);
 
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
