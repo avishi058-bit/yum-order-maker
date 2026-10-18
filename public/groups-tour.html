@@ -89,7 +89,7 @@ p{margin:0}
 .clock.on{display:flex}
 .clock svg{width:64px;height:64px;flex:none}
 .clock b{font-family:var(--display);font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
-.go{display:none}
+.go:not(.on){display:none!important}
 .go.on{display:inline-block}
 .btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:11px 18px;text-decoration:none;display:inline-block;background:var(--ink);color:var(--paper);cursor:pointer}
 .btn.wa{background:var(--wa);color:#fff}
@@ -237,7 +237,9 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .stage.photo-on .card{padding:10px 14px;gap:2px}
   .stage.photo-on .card #cText,.stage.photo-on .card .clock,.stage.photo-on .card .candle{display:none!important}
   .stage.photo-on .card h2{font-size:28px!important}
-  .ph .img{max-height:46svh}
+  .ph .img{max-height:42svh}
+  .stage.photo-on .sign{opacity:0!important;transform:translate(-50%,-30px) scale(.4)!important}
+  .ph{top:calc(var(--my,var(--y)) * .3 + 152px)!important}
   .card{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));width:auto;padding:14px 16px;box-shadow:5px 5px 0 var(--ink);gap:6px}
   .card h2{font-size:40px}
   .card p{font-size:15px}
@@ -248,7 +250,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .skip{bottom:auto;top:108px;left:auto;inset-inline-start:max(12px,env(safe-area-inset-right,0px));right:auto;transform:none;font-size:14px}
   .lang{top:58px}.lang .cur,.lang a{font-size:14px;min-height:34px;padding:0 11px}
   .motion{bottom:auto;top:62px;left:max(12px,env(safe-area-inset-left,0px))}
-  .nudge{bottom:auto;top:44%}
+  .nudge{top:auto;bottom:calc(190px + env(safe-area-inset-bottom,0px))}
   .ph.reelcard.mini{bottom:auto;top:150px;inset-inline-end:12px;width:120px}
   .ph{width:var(--mw,var(--w));left:var(--mx,var(--x));top:var(--my,var(--y));padding:5px 5px var(--pb,5px)}
   .ph.nocap{--pb:5px}
@@ -722,7 +724,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
     if(inReel){ reelClosed=false; if(reel.ended){ reel.currentTime=0; } if(reel.paused&&!still&&!reelWatched) playReel(); }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
-    const showMini=!inReel&&playing&&trip.getBoundingClientRect().bottom>innerHeight*.5;
+    const showMini=false;  // scrolling past the video stops it
     reelCard.classList.toggle('in',inReel||showMini); reelCard.classList.toggle('mini',showMini);
     $('reelX').hidden=!showMini;
     if(!inReel&&!showMini){ if(!reel.paused) reel.pause(); reelWatched=false; }
