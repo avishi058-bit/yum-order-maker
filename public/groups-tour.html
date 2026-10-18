@@ -828,7 +828,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     stage.classList.toggle('photo-on', phoneQ.matches ? phonePhoto(p) : (anyPhoto||(p>=.7164&&p<.8079)));
     const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
     // Safari draws only black (sound only) if play starts while the overlay is still fading in, so wait until it is fully shown
-    if(inReel){ reelClosed=false; if(!reelAsked&&!still&&!reelWatched){ reelAsked=true; if(reel.ended) reel.currentTime=0; setTimeout(()=>{ if(reelAsked&&reel.paused) playReel(); },500); } }
+    if(p>.6&&!reelBuffered){ reelBuffered=true; reel.preload='auto'; if(reel.paused&&reel.readyState<3) reel.load(); }
+    if(inReel){ reelClosed=false; if(!reelAsked&&!still&&!reelWatched){ reelAsked=true; if(reel.ended) reel.currentTime=0; setTimeout(()=>{ if(reelAsked&&reel.paused) playReel(); },250); } }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
     const showMini=false;  // scrolling past the video stops it
     $('vcenter').classList.toggle('on',inReel);
@@ -849,7 +850,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   let lastScroll=performance.now();
   addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');},{passive:true});
   const unmute=$('unmute');
-  const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false, reelAsked=false;
+  const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false, reelAsked=false, reelBuffered=false;
   reel.addEventListener('ended',()=>{ reelWatched=true; });
   $('reelX').addEventListener('click',()=>{ reelClosed=true; reel.pause(); });
   $('vskip').addEventListener('click',()=>{ reel.pause(); const span=trip.offsetHeight-innerHeight; scrollTo({top:trip.offsetTop+span*unwarp(.812),behavior:reduce?'auto':'smooth'}); });
@@ -857,12 +858,15 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     reelStarted=true;
     // one request per visit: with sound if the browser allows it, otherwise muted with a sound button,
     // and if even that is blocked, a play button
-    reel.preload='auto'; reel.muted=false; reel.volume=1;
-    reel.play().then(()=>{ unmute.hidden=true; }).catch(()=>{
-      reel.muted=true;
-      reel.play().then(()=>{ unmute.textContent=UNMUTE; unmute.hidden=false; })
-                 .catch(()=>{ unmute.textContent=PLAY; unmute.hidden=false; });
-    });
+    // browsers only allow sound after the visitor has tapped or clicked something; scrolling alone does not count,
+    // so without that we start muted straight away (no failed attempt first) and offer the sound button
+    reel.preload='auto';
+    const mutedStart=()=>{ reel.muted=true; reel.play().then(()=>{ unmute.textContent=UNMUTE; unmute.hidden=false; })
+                                              .catch(()=>{ unmute.textContent=PLAY; unmute.hidden=false; }); };
+    const active=navigator.userActivation?navigator.userActivation.hasBeenActive:true;
+    if(!active){ mutedStart(); return; }
+    reel.muted=false; reel.volume=1;
+    reel.play().then(()=>{ unmute.hidden=true; }).catch(mutedStart);
   }
   const UNMUTE=unmute.textContent, PLAY='▶ הפעלת הסרטון';
   unmute.addEventListener('click',()=>{ reel.muted=false; reel.volume=1; reel.play().catch(()=>{}); unmute.hidden=true; });
