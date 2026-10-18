@@ -32,7 +32,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;line-height:.92;margin:0;tex
 p{margin:0}
 :focus-visible{outline:3px solid var(--bus);outline-offset:3px}
 
-#trip{position:relative;height:1500vh}
+#trip{position:relative;height:1300vh}
 .stage{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100svh;overflow:hidden;background:var(--paper)}
 #mapsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
 #mapsvg text{font-family:var(--body);font-weight:800}
@@ -80,13 +80,13 @@ p{margin:0}
 .sign.memorial{background:#2c2620;outline-color:#2c2620}
 
 /* photos */
-.ph{position:absolute;z-index:20;left:var(--x);top:var(--y);width:var(--w);margin:0;background:#fff;padding:8px 8px var(--pb,34px);box-shadow:0 18px 40px rgba(0,0,0,.4);transform:translate(var(--fx),130vh) rotate(var(--fr));opacity:0;transition:transform .8s cubic-bezier(.2,.85,.25,1.1),opacity .3s}
+.ph{position:absolute;z-index:20;left:var(--x);top:var(--y);width:var(--w);margin:0;background:#fff;padding:8px 8px var(--pb,8px);box-shadow:0 18px 40px rgba(0,0,0,.4);transform:translate(var(--fx),130vh) rotate(var(--fr));opacity:0;transition:transform .8s cubic-bezier(.2,.85,.25,1.1),opacity .3s}
 .ph.in{opacity:1;transform:translate(0,0) rotate(var(--r))}
 .ph.nocap{--pb:8px}
 .ph .img{overflow:hidden;aspect-ratio:var(--ar,4/3);background:var(--paper-2)}
 .ph img,.ph video{width:100%;height:100%;object-fit:cover;display:block}
 .ph.in .img img{animation:kb 9s ease-in-out infinite alternate}
-.ph span{position:absolute;bottom:7px;inset-inline:6px;text-align:center;font-weight:800;font-size:14px;line-height:1.2;color:var(--ink)}
+.ph span{display:block;padding:7px 4px 1px;text-align:center;font-weight:800;font-size:14px;line-height:1.25;color:var(--ink);text-wrap:balance}
 .ph small{position:absolute;top:calc(100% + 4px);inset-inline:0;text-align:center;font-size:10px;color:rgba(255,255,255,.9);text-shadow:0 1px 2px #000}
 @keyframes kb{from{transform:scale(1)}to{transform:scale(1.12) translate(-3%,-2%)}}
 
@@ -121,8 +121,16 @@ p{margin:0}
 
 /* accessibility helpers */
 .sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-.skip{position:fixed;z-index:100;top:max(8px,env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));background:var(--bus);color:var(--ink);font-weight:800;padding:10px 16px;border-radius:999px;transform:translateY(-200%);transition:transform .2s}
-.skip:focus{transform:none}
+.skip{position:fixed;z-index:100;bottom:max(16px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--bus);color:var(--ink);font-weight:800;font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:8px 18px;border-radius:999px;border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink);text-decoration:none;transition:opacity .3s}
+.skip.gone{opacity:0;pointer-events:none}
+.nudge{position:fixed;z-index:90;left:50%;bottom:max(76px,calc(env(safe-area-inset-bottom,0px) + 76px));transform:translateX(-50%);display:grid;justify-items:center;gap:0;color:#fff8ea;text-shadow:0 2px 8px rgba(0,0,0,.7);opacity:0;transition:opacity .5s;pointer-events:none}
+.nudge.on{opacity:1}
+.nudge b{font-size:15px;margin-top:4px;background:rgba(22,18,14,.72);padding:4px 12px;border-radius:999px}
+.nudge .chev{width:22px;height:22px;border-right:4px solid var(--bus);border-bottom:4px solid var(--bus);transform:rotate(45deg);animation:nudge 1.2s ease-in-out infinite;margin-top:-8px}
+.nudge .chev:nth-child(2){animation-delay:.18s}
+@keyframes nudge{0%,100%{opacity:.25;translate:0 -4px}50%{opacity:1;translate:0 4px}}
+.unmute{position:absolute;inset-inline:12px;bottom:44px;z-index:2;font:inherit;font-weight:800;font-size:15px;min-height:44px;border:0;border-radius:999px;background:var(--bus);color:var(--ink);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.unmute[hidden]{display:none!important}
 .motion{position:fixed;z-index:100;bottom:max(12px,env(safe-area-inset-bottom,0px));left:max(12px,env(safe-area-inset-left,0px));font:inherit;font-size:14px;font-weight:800;min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--paper);background:var(--night);color:var(--paper);cursor:pointer}
 .motion[aria-pressed="true"]{background:var(--bus);color:var(--ink);border-color:var(--ink)}
 html.still *, html.still *::before, html.still *::after{animation:none!important;transition:none!important}
@@ -176,10 +184,13 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .clock svg{width:44px;height:44px}.clock b{font-size:34px}
   .hud{gap:8px}.chip b{font-size:24px}.state{min-width:0}
   .hud .km{display:none}
-  .sign{top:64px}.sign b{font-size:34px}
-  .ph{width:var(--mw,var(--w));left:var(--mx,var(--x));top:var(--my,var(--y));padding:5px 5px var(--pb,24px)}
+  .sign{top:108px}.sign b{font-size:34px}
+  .skip{bottom:auto;top:62px;left:auto;right:max(12px,env(safe-area-inset-right,0px));transform:none;font-size:14px}
+  .motion{bottom:auto;top:62px;left:max(12px,env(safe-area-inset-left,0px))}
+  .nudge{bottom:auto;top:44%}
+  .ph{width:var(--mw,var(--w));left:var(--mx,var(--x));top:var(--my,var(--y));padding:5px 5px var(--pb,5px)}
   .ph.nocap{--pb:5px}
-  .ph span{font-size:12px;bottom:4px}
+  .ph span{font-size:12px;padding-top:5px}
   .services{padding:80px 16px 240px;place-content:start center}
   .svc{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .svc svg{width:56px;height:56px}
@@ -198,7 +209,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 <body>
 
 
-<a class="skip" href="#book">דלגו לתיאום העצירה</a>
+<a class="skip" id="skip" href="#book">דלגו לסוף ↓</a>
+<div class="nudge" id="nudge" aria-hidden="true"><span class="chev"></span><span class="chev"></span><b>גללו להמשך הנסיעה</b></div>
 <button class="motion" id="motionBtn" type="button" aria-pressed="false">עצירת אנימציות</button>
 <main id="main">
 <section class="sr" aria-labelledby="srTitle">
@@ -232,12 +244,46 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
       <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#3b342d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
       <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f2b705" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
       <path d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
-      <g font-size="9" fill="#2b2118">
-        <circle cx="194" cy="56" r="6" fill="#2b2118" opacity=".18"/><text x="204" y="58">שדרות</text>
-        <circle cx="176" cy="118" r="5" fill="#2b2118" opacity=".18"/><text x="184" y="116">תקומה</text>
-        <text x="186" y="172" font-size="6" fill="#6b5a47">נתיבות</text>
-        <text x="206" y="240" font-size="6" fill="#6b5a47">אופקים</text>
-        <circle cx="62" cy="178" r="4" fill="none" stroke="#6b5a47" stroke-width="1.2"/><text x="30" y="198" font-size="7" fill="#6b5a47">אתר הנובה</text>
+      <g font-size="6" fill="#6b5a47">
+        <text x="186" y="172">נתיבות</text>
+        <text x="206" y="240">אופקים</text>
+      </g>
+      <!-- stop landmarks: each with a soft pulse, like the restaurant -->
+      <!-- Sderot: the memorial pillars -->
+      <circle cx="182" cy="62" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(200 50)">
+        <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
+        <rect x="-11" y="-1" width="22" height="2" fill="#cfc6b4"/>
+        <rect x="-8" y="-16" width="2" height="15" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="-4.5" y="-20" width="2" height="19" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="-1" y="-23" width="2" height="22" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="2.5" y="-19" width="2" height="18" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="6" y="-14" width="2" height="13" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <path d="M11 -1 V-14" stroke="#6b5a47" stroke-width=".5"/><path d="M11 -14 h6 v4 h-6" fill="#fff" stroke="#3b5ba5" stroke-width=".4"/><path d="M11 -12.7 h6 M11 -11.3 h6" stroke="#3b5ba5" stroke-width=".35"/>
+        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#2c2620"/>
+        <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">שדרות</text>
+      </g>
+      <!-- Nova site, Re'im: memorial poles among trees -->
+      <circle cx="66" cy="174" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(46 160)">
+        <ellipse cx="0" cy="1" rx="13" ry="2" fill="#2b2118" opacity=".18"/>
+        <use href="#tree" x="-10" y="-6"/><use href="#tree" x="10" y="-7"/>
+        <path d="M-6 0 V-10 M-2 0 V-12 M2 0 V-11 M6 0 V-9" stroke="#6b5a47" stroke-width=".6"/>
+        <path d="M-2 -12 h4 v2.6 h-4 Z M6 -9 h3.6 v2.4 h-3.6 Z" fill="#fff" stroke="#3b5ba5" stroke-width=".3"/>
+        <circle cx="-6" cy="-10" r="1.2" fill="#c8323a"/><circle cx="2" cy="-11" r="1.2" fill="#c8323a"/>
+        <rect x="-18" y="3" width="36" height="7" rx="1.2" fill="#2c2620"/>
+        <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">אתר הנובה</text>
+      </g>
+      <!-- Tkuma: the car site -->
+      <circle cx="168" cy="124" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(186 108)">
+        <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
+        <path d="M-10 -1 V-4 Q-10 -6 -8 -6 L-5 -10 H4 L7 -6 Q10 -6 10 -4 V-1 Z" fill="#7a4a2a" stroke="#3a2414" stroke-width=".5"/>
+        <path d="M-4 -9 H-0.5 V-6.4 H-6 Z M0.5 -9 H3.6 L5.6 -6.4 H0.5 Z" fill="#2b2118"/>
+        <circle cx="-5.5" cy="-1" r="2" fill="#2b2118"/><circle cx="5.5" cy="-1" r="2" fill="#2b2118"/>
+        <path d="M8 -6 V-16" stroke="#6b5a47" stroke-width=".5"/><path d="M8 -16 h6 v4 h-6 Z" fill="#fff" stroke="#3b5ba5" stroke-width=".35"/><path d="M8 -14.7 h6 M8 -13.3 h6" stroke="#3b5ba5" stroke-width=".3"/>
+        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#2c2620"/>
+        <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">תקומה</text>
       </g>
       <!-- the restaurant: a wooden hut with a hanging wooden sign -->
       <circle cx="128" cy="150" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
@@ -312,22 +358,22 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <div class="sign" id="sign"><small id="signSmall">שדרות</small><b id="signText">גן הגבורה והזיכרון</b></div>
 
     <!-- Sderot (public domain, zstadler) -->
-    <figure class="ph" data-show=".05,.13" style="--x:5%;--y:15%;--w:31%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="אנדרטת העמודים, הדגלים ואבני הזיכרון בגן הגבורה והזיכרון בשדרות"></div><span>גן הגבורה והזיכרון, שדרות</span></figure>
-    <figure class="ph nocap" data-show=".08,.13" style="--x:34%;--y:32%;--w:17%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="עמודי האנדרטה בשדרות על רקע שמיים כחולים"></div></figure>
+    <figure class="ph" data-show=".0344,.07" style="--x:5%;--y:15%;--w:31%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="אנדרטת העמודים, הדגלים ואבני הזיכרון בגן הגבורה והזיכרון בשדרות"></div><span>גן הגבורה והזיכרון, שדרות</span></figure>
+    <figure class="ph nocap" data-show=".0478,.07" style="--x:34%;--y:32%;--w:17%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="עמודי האנדרטה בשדרות על רקע שמיים כחולים"></div></figure>
     <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
-    <figure class="ph" data-show=".22,.30" style="--x:4%;--y:20%;--w:46%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
+    <figure class="ph" data-show=".1244,.16" style="--x:4%;--y:20%;--w:46%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
     <!-- at the restaurant, after the coach doors open -->
-    <figure class="ph" data-show=".44,.70" style="--x:3%;--y:13%;--w:27%;--r:-3deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:11%;--mw:60%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
-    <figure class="ph" data-show=".50,.70" style="--x:31%;--y:11%;--w:15%;--r:4deg;--fr:24deg;--fx:20vw;--mx:62%;--my:28%;--mw:34%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
-    <figure class="ph nocap" data-show=".54,.70" style="--x:47%;--y:16%;--w:18%;--r:-5deg;--fr:-24deg;--fx:20vw;--mx:8%;--my:42%;--mw:42%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
-    <figure class="ph" data-show=".58,.70" style="--x:4%;--y:55%;--w:24%;--r:3deg;--fr:22deg;--fx:-30vw;--mx:6%;--my:44%;--mw:54%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
-    <figure class="ph" data-show=".62,.70" style="--x:30%;--y:52%;--w:14%;--r:-6deg;--fr:-26deg;--fx:20vw;--mx:58%;--my:40%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
-    <figure class="ph nocap" data-show=".65,.70" style="--x:46%;--y:56%;--w:13%;--r:5deg;--fr:20deg;--fx:20vw;--mx:34%;--my:56%;--mw:30%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
-    <figure class="ph" data-show=".78,.86" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" muted loop playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><span>תיירים מקנדה 🇨🇦</span></figure>
+    <figure class="ph" data-show=".2996,.6094" style="--x:3%;--y:13%;--w:27%;--r:-3deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:11%;--mw:60%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
+    <figure class="ph" data-show=".3711,.6094" style="--x:31%;--y:11%;--w:15%;--r:4deg;--fr:24deg;--fx:20vw;--mx:62%;--my:28%;--mw:34%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
+    <figure class="ph nocap" data-show=".4187,.6094" style="--x:47%;--y:16%;--w:18%;--r:-5deg;--fr:-24deg;--fx:20vw;--mx:8%;--my:42%;--mw:42%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
+    <figure class="ph" data-show=".4664,.6094" style="--x:4%;--y:55%;--w:24%;--r:3deg;--fr:22deg;--fx:-30vw;--mx:6%;--my:44%;--mw:54%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
+    <figure class="ph" data-show=".514,.6094" style="--x:30%;--y:52%;--w:14%;--r:-6deg;--fr:-26deg;--fx:20vw;--mx:58%;--my:40%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
+    <figure class="ph nocap" data-show=".5498,.6094" style="--x:46%;--y:56%;--w:13%;--r:5deg;--fr:20deg;--fx:20vw;--mx:34%;--my:56%;--mw:30%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
+    <figure class="ph" data-show=".7047,.8" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" loop playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><span>תיירים מקנדה 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
-    <figure class="ph" data-show=".915,.965" style="--x:5%;--y:16%;--w:29%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
-    <figure class="ph nocap" data-show=".93,.965" style="--x:32%;--y:36%;--w:20%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="קיר של מכוניות שרופות שפונו מכביש 232"></div></figure>
+    <figure class="ph" data-show=".855,.896" style="--x:5%;--y:16%;--w:29%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
+    <figure class="ph nocap" data-show=".868,.896" style="--x:32%;--y:36%;--w:20%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="קיר של מכוניות שרופות שפונו מכביש 232"></div></figure>
 
     <div class="card" id="card">
       <div class="swap" id="swap">
@@ -453,7 +499,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   function lenNear(x,y,from=0){let b=from,bd=1e9;for(let l=from;l<=total;l+=.5){const p=road.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=l;}}return b;}
   const S={st:lenNear(228,-36)}; S.sd=lenNear(182,62); S.nv=lenNear(66,174,S.sd); S.bk=lenNear(128,150,S.nv); S.tk=lenNear(168,124,S.bk);
   // [progress, road length, minutes after 09:00, camera width]
-  const K=[[0,S.st,-15,330],[.04,S.sd,0,130],[.13,S.sd,75,130],[.21,S.nv,100,140],[.30,S.nv,160,140],[.39,S.bk,175,125],[.86,S.bk,220,125],[.92,S.tk,232,130],[.97,S.tk,240,190],[1,total-6,250,260]];
+  const K=[[0,S.st,-15,330],[.03,S.sd,0,130],[.07,S.sd,75,130],[.12,S.nv,100,140],[.16,S.nv,160,140],[.24,S.bk,175,125],[.8,S.bk,220,125],[.86,S.tk,232,130],[.9,S.tk,240,190],[1,total-6,250,260]];
   function at(p){for(let i=0;i<K.length-1;i++){const a=K[i],b=K[i+1];if(p>=a[0]&&p<=b[0]){const t=ease((p-a[0])/((b[0]-a[0])||1));return [lerp(a[1],b[1],t),lerp(a[2],b[2],t),lerp(a[3],b[3],t)];}}const z=K[K.length-1];return [z[1],z[2],z[3]];}
 
   const RAIL=[S.sd,S.nv,S.bk,S.tk]; const rail=document.querySelector('.rail');
@@ -461,19 +507,19 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
   const PHASES=[
     {p:0,   t:'08:45 · יוצאים', h:'יוצאים לדרך', d:'אוטובוס, חמישים איש ויום עמוס.'},
-    {p:.04, t:'09:00 · שדרות', h:'גן הגבורה והזיכרון', d:'במקום שבו עמדה תחנת המשטרה. כאן מתחיל היום.', sign:['שדרות','גן הגבורה והזיכרון'], memorial:true},
-    {p:.13, t:'10:15 · בדרך', h:'דרומה, כביש 232', d:'עשרים דקות נסיעה.'},
-    {p:.21, t:'10:40 · רעים', h:'אתר הנובה', d:'זוכרים את מי שבאו לרקוד ולא שבו.', quiet:true, sign:['רעים','אתר הנובה'], memorial:true},
-    {p:.30, t:'11:40 · עולים לאוטובוס', h:'בדרך לצהריים', d:'עוד רבע שעה, והשולחן כבר ערוך.'},
-    {p:.39, t:'11:55 · הבקתה', h:'הגענו', d:'האוטובוס חונה צמוד לדלת.', sign:['תושייה','הבקתה'], bikta:true, clock:true},
-    {p:.41, t:'11:56 · הדלתות נפתחות', h:'יורדים מהאוטובוס', d:'ישר אל השולחן.', clock:true},
-    {p:.47, t:'11:57 · נכנסים', h:'שולחן שוק עשיר ומפנק', d:'מחכה לכם מוכן וטרי לרגע שתגיעו, כך שתוכלו לאכול ולהמשיך.', clock:true},
-    {p:.60, t:'12:10 · כולם יושבים', h:'עד 200 איש', d:'משלחות, בתי ספר ותיירים מכל העולם.', clock:true},
-    {p:.70, t:'12:20 · הכול מסודר', h:'בלי הפתעות', d:'שירותים, כשרות, צליאקים, צמחונים וטבעונים. הכול מתואם מראש.', clock:true},
-    {p:.78, t:'12:30 · תיירים מכל העולם', h:'ככה זה נראה מבחוץ', d:'תיירים מקנדה מספרים על הצהריים שלהם אצלנו.', clock:true},
-    {p:.86, t:'12:40 · ממשיכים', h:'שבעים ובזמן', d:'יוצאים בדיוק כמו שתכננתם.'},
-    {p:.91, t:'12:50 · תקומה', h:'אתר המכוניות', d:'המכוניות שפונו מכביש 232. עדות שקטה ליום ההוא.', quiet:true, sign:['תקומה','אתר המכוניות'], memorial:true},
-    {p:.96, t:'13:00 · המסלול שלכם', h:'רוצים יום כזה?', d:'ממלאים פרטים, ושולחים לנו בוואטסאפ.', go:true}
+    {p:.03, t:'09:00 · שדרות', h:'גן הגבורה והזיכרון', d:'במקום שבו עמדה תחנת המשטרה. כאן מתחיל היום.', sign:['שדרות','גן הגבורה והזיכרון'], memorial:true},
+    {p:.07, t:'10:15 · בדרך', h:'דרומה, כביש 232', d:'עשרים דקות נסיעה.'},
+    {p:.12, t:'10:40 · רעים', h:'אתר הנובה', d:'זוכרים את מי שבאו לרקוד ולא שבו.', quiet:true, sign:['רעים','אתר הנובה'], memorial:true},
+    {p:.16, t:'11:40 · עולים לאוטובוס', h:'בדרך לצהריים', d:'עוד רבע שעה, והשולחן כבר ערוך.'},
+    {p:.24, t:'11:55 · הבקתה', h:'הגענו', d:'האוטובוס חונה צמוד לדלת.', sign:['תושייה','הבקתה'], bikta:true, clock:true},
+    {p:.2638, t:'11:56 · הדלתות נפתחות', h:'יורדים מהאוטובוס', d:'ישר אל השולחן.', clock:true},
+    {p:.3353, t:'11:57 · נכנסים', h:'שולחן שוק עשיר ומפנק', d:'מחכה לכם מוכן וטרי לרגע שתגיעו, כך שתוכלו לאכול ולהמשיך.', clock:true},
+    {p:.4902, t:'12:10 · כולם יושבים', h:'עד 200 איש', d:'משלחות, בתי ספר ותיירים מכל העולם.', clock:true},
+    {p:.6094, t:'12:20 · הכול מסודר', h:'בלי הפתעות', d:'שירותים, כשרות, צליאקים, צמחונים וטבעונים. הכול מתואם מראש.', clock:true},
+    {p:.7047, t:'12:30 · תיירים מכל העולם', h:'ככה זה נראה מבחוץ', d:'תיירים מקנדה מספרים על הצהריים שלהם אצלנו.', clock:true},
+    {p:.8, t:'12:40 · ממשיכים', h:'שבעים ובזמן', d:'יוצאים בדיוק כמו שתכננתם.'},
+    {p:.85, t:'12:50 · תקומה', h:'אתר המכוניות', d:'המכוניות שפונו מכביש 232. עדות שקטה ליום ההוא.', quiet:true, sign:['תקומה','אתר המכוניות'], memorial:true},
+    {p:.892, t:'13:00 · המסלול שלכם', h:'רוצים יום כזה?', d:'ממלאים פרטים, ושולחים לנו בוואטסאפ.', go:true}
   ];
   const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
   function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
@@ -512,7 +558,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     $('beams').setAttribute('opacity',moving?.9:0);
     $('tail').setAttribute('fill',moving?'#7a1b12':'#ff3b2a');
     // doors open while parked at the restaurant
-    const dOpen=clamp((p-.405)/.02)*clamp((.862-p)/.008), de=reduce?(dOpen>.5?1:0):1-Math.pow(1-dOpen,3);
+    const dOpen=clamp((p-.2579)/.0238)*clamp((.802-p)/.0095), de=reduce?(dOpen>.5?1:0):1-Math.pow(1-dOpen,3);
     leafA.setAttribute('transform',`translate(${-de*2.5} 0)`); leafB.setAttribute('transform',`translate(${de*2.5} 0)`);
     stepLight.setAttribute('opacity',de);
     trail.style.strokeDashoffset=total-len;
@@ -531,17 +577,27 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     const st=$('hState'); st.textContent=moving?'בנסיעה':'עוצרים'; st.classList.toggle('parked',!moving);
 
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
-    const cp=clamp((p-.40)/(.86-.40)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
+    const cp=clamp((p-.2519)/(.8-.2519)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
     photos.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
-    const reelOn=p>=.78&&p<.86&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused){reel.preload='auto';reel.play().catch(()=>{});} else if(!reelOn&&!reel.paused) reel.pause();
+    const reelOn=p>=.7047&&p<.8&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused){playReel();} else if(!reelOn&&!reel.paused) reel.pause();
 
     // services and the video sit on a dark layer over the map
-    const svcOn=p>=.70&&p<.78; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.78&&p<.86));
-    svcs.forEach((el,i)=>el.classList.toggle('on',svcOn&&p>=.705+i*.011));
+    const svcOn=p>=.6094&&p<.7047; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.7047&&p<.8));
+    svcs.forEach((el,i)=>el.classList.toggle('on',svcOn&&p>=.6153+i*.0131));
 
     $('intro').classList.toggle('gone',p>.015);
+    const tr=trip.getBoundingClientRect(); $('skip').classList.toggle('gone',tr.bottom<innerHeight*1.02);
+    $('nudge').classList.toggle('on',p>.015&&p<.97&&now-lastScroll>2200&&!document.documentElement.classList.contains('still'));
     requestAnimationFrame(render);
   }
+  let lastScroll=performance.now();
+  addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');},{passive:true});
+  const unmute=$('unmute');
+  function playReel(){
+    reel.preload='auto'; reel.muted=false; reel.volume=1;
+    reel.play().then(()=>{unmute.hidden=true;}).catch(()=>{ reel.muted=true; reel.play().catch(()=>{}); unmute.hidden=false; });
+  }
+  unmute.addEventListener('click',()=>{ reel.muted=false; reel.play().catch(()=>{}); unmute.hidden=true; });
   requestAnimationFrame(render);
   try{ if(localStorage.getItem('bikta-still')==='1') setStill(true); }catch(e){}
 
