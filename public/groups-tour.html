@@ -34,7 +34,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;line-height:.92;margin:0;tex
 p{margin:0}
 :focus-visible{outline:3px solid var(--bus);outline-offset:3px}
 
-#trip{position:relative;height:1050vh}
+#trip{position:relative;height:901vh}
 .stage{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100svh;overflow:hidden;background:var(--paper)}
 #mapsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
 #mapsvg text{font-family:var(--body);font-weight:800}
@@ -238,11 +238,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .credits a{color:inherit}
 
 @media (max-width:760px){
-  #trip{height:1750vh}
+  #trip{height:1502vh}
   .stage.photo-on .card{padding:10px 14px;gap:2px}
   .stage.photo-on .card #cText,.stage.photo-on .card .clock,.stage.photo-on .card .candle{display:none!important}
   .stage.photo-on .card h2{font-size:28px!important}
-  .ph{width:min(var(--mw,var(--w)), calc(40svh * var(--arn,1.3333)))!important;padding:6px 6px var(--pb,6px)!important}
+  .ph{width:min(var(--mw,var(--w)), calc(46svh * var(--arn,1.3333)))!important;padding:6px 6px var(--pb,6px)!important}
   .ph.in{transform:translate(0,0) rotate(0deg)}
   .ph.nocap{--pb:6px}
   .stage.photo-on .sign{opacity:0!important;transform:translate(-50%,-30px) scale(.4)!important}
@@ -292,7 +292,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 /* ===== phones: map on top, one wooden card below, one menu ===== */
 .menu-btn,.menu,.cphoto{display:none}
 @media (max-width:760px){
-  #trip{height:1750vh}
+  #trip{height:1502vh}
   .lang,.motion,.skip,.sign,.hud .rail,.hud .state{display:none!important}
   .nudge .mouse{display:none}
   .hud{background:none;padding-top:10px}
@@ -374,38 +374,37 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="-620" y="-540" font-size="70" fill="#21697f" font-style="italic">הים התיכון</text>
         <text x="996" y="100" font-size="44" fill="#21697f">ים המלח</text>
         <text x="1028" y="-956" font-size="44" fill="#21697f">הכנרת</text>
-        <circle cx="130" cy="110" r="110" fill="#c8461f" opacity=".16"><animate attributeName="r" values="90;140;90" dur="2.2s" repeatCount="indefinite"/></circle>
-        <circle cx="130" cy="110" r="70" fill="none" stroke="#c8461f" stroke-width="10"/>
+        <circle cx="220" cy="150" r="110" fill="#c8461f" opacity=".16"><animate attributeName="r" values="90;140;90" dur="2.2s" repeatCount="indefinite"/></circle>
+        <circle cx="220" cy="150" r="70" fill="none" stroke="#c8461f" stroke-width="10"/>
         <text x="230" y="60" font-size="78" fill="#c8461f">עוטף עזה</text>
       </g>
 
       <path d="M380 340 C300 300 260 300 220 270 S120 230 20 205" fill="none" stroke="#5f8ea0" stroke-width="1.6" stroke-dasharray="2.5 3"/>
       <text x="246" y="296" font-size="6" fill="#5f8ea0" transform="rotate(-14 246 296)">נחל בשור</text>
       <g id="minor" fill="none" stroke="#cfa769" stroke-width="2.2" stroke-linecap="round">
-        <path d="M182 62 C210 90 220 130 240 180 S270 260 332 300"/>
-        <path d="M168 124 C186 140 190 160 186 172 S196 210 206 240"/>
-        <path d="M128 150 C120 190 110 230 100 300"/>
-        <path d="M70 168 C58 150 48 132 40 112"/>
-        <path d="M232 -60 C300 -20 360 10 430 40"/>
-        <path d="M240 180 C280 170 330 160 420 140"/>
+        <path d="M90 100 C82 60 72 30 60 -10"/>
+        <path d="M190 96 C196 140 202 180 214 230"/>
+        <path d="M290 100 C292 60 302 20 322 -30"/>
+        <path d="M380 200 C420 196 462 190 520 180"/>
+        <path d="M380 300 C340 310 300 316 250 330"/>
       </g>
       <g id="moshavim" fill="#ecd4a2" stroke="#c99a58" stroke-width=".8">
-        <rect x="236" y="96" width="14" height="10" rx="2"/><rect x="96" y="214" width="12" height="9" rx="2"/>
+        <rect x="236" y="122" width="14" height="10" rx="2"/><rect x="96" y="214" width="12" height="9" rx="2"/>
         <rect x="150" y="186" width="13" height="9" rx="2"/><rect x="18" y="128" width="12" height="9" rx="2"/>
         <rect x="262" y="210" width="14" height="10" rx="2"/><rect x="214" y="22" width="12" height="9" rx="2"/>
       </g>
       <g id="trees"></g>
-      <path id="road" d="M232 -60 C236 -6 214 36 182 62 S96 156 66 174 C42 190 52 218 80 206 S114 166 128 150 S152 124 168 124 S272 116 320 150" fill="none" stroke="#2c241e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-      <path id="trail" d="M232 -60 C236 -6 214 36 182 62 S96 156 66 174 C42 190 52 218 80 206 S114 166 128 150 S152 124 168 124 S272 116 320 150" fill="none" stroke="#f7941d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
-      <path d="M232 -60 C236 -6 214 36 182 62 S96 156 66 174 C42 190 52 218 80 206 S114 166 128 150 S152 124 168 124 S272 116 320 150" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
+      <path id="road" d="M30 108 C50 104 70 101 90 100 S160 96 190 96 S260 99 290 100 C334 101 380 106 380 152 S380 182 380 200 S382 270 380 300" fill="none" stroke="#2c241e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="trail" d="M30 108 C50 104 70 101 90 100 S160 96 190 96 S260 99 290 100 C334 101 380 106 380 152 S380 182 380 200 S382 270 380 300" fill="none" stroke="#f7941d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+      <path d="M30 108 C50 104 70 101 90 100 S160 96 190 96 S260 99 290 100 C334 101 380 106 380 152 S380 182 380 200 S382 270 380 300" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
       <g font-size="6" fill="#6b5a47">
-        <text x="186" y="172">נתיבות</text>
-        <text x="206" y="240">אופקים</text>
+        <text x="214" y="196">נתיבות</text>
+        <text x="392" y="262">אופקים</text>
       </g>
       <!-- stop landmarks: each with a soft pulse, like the restaurant -->
       <!-- Sderot: the memorial pillars -->
-      <circle cx="182" cy="62" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
-      <g transform="translate(200 50)">
+      <circle cx="90" cy="100" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(108 88)">
         <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
         <rect x="-11" y="-1" width="22" height="2" fill="#cfc6b4"/>
         <rect x="-8" y="-16" width="2" height="15" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
@@ -418,8 +417,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">שדרות</text>
       </g>
       <!-- Nova site, Re'im: memorial poles among trees -->
-      <circle cx="66" cy="174" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
-      <g transform="translate(46 160)">
+      <circle cx="190" cy="96" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(170 82)">
         <ellipse cx="0" cy="1" rx="13" ry="2" fill="#2b2118" opacity=".18"/>
         <use href="#tree" x="-10" y="-6"/><use href="#tree" x="10" y="-7"/>
         <path d="M-6 0 V-10 M-2 0 V-12 M2 0 V-11 M6 0 V-9" stroke="#6b5a47" stroke-width=".6"/>
@@ -429,8 +428,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">אתר הנובה</text>
       </g>
       <!-- Tkuma: the car site -->
-      <circle cx="168" cy="124" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
-      <g transform="translate(186 108)">
+      <circle cx="380" cy="200" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(398 184)">
         <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
         <path d="M-10 -1 V-4 Q-10 -6 -8 -6 L-5 -10 H4 L7 -6 Q10 -6 10 -4 V-1 Z" fill="#7a4a2a" stroke="#3a2414" stroke-width=".5"/>
         <path d="M-4 -9 H-0.5 V-6.4 H-6 Z M0.5 -9 H3.6 L5.6 -6.4 H0.5 Z" fill="#2b2118"/>
@@ -440,8 +439,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">תקומה</text>
       </g>
       <!-- the restaurant: a wooden hut with a hanging wooden sign -->
-      <circle cx="128" cy="150" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
-      <g transform="translate(124 140)">
+      <circle cx="290" cy="100" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
+      <g transform="translate(286 90)">
         <ellipse cx="0" cy="1" rx="22" ry="2.6" fill="#2b2118" opacity=".18"/>
         <rect x="-17" y="-17" width="34" height="18" fill="#8a5a33" stroke="#3a2414" stroke-width=".8"/>
         <path d="M-17 -12 H17 M-17 -7 H17 M-17 -2 H17" stroke="#6e4426" stroke-width=".6"/>
@@ -527,12 +526,12 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
     <figure class="ph" data-show=".1633,.19" style="--arn:2;--x:4%;--y:20%;--w:34%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="אתר ההנצחה של פסטיבל נובה ליד רעים, שדה של עמודי זיכרון ודגלים בין העצים"></div><span>אתר ההנצחה, רעים</span><small>צילום: זאב שטיין, פיקיויקי, CC BY 2.5</small></figure>
     <!-- at the restaurant, after the coach doors open -->
-    <figure class="ph" data-show=".3709,.4093" data-mshow=".3709,.4909" style="--arn:1.3333;--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
-    <figure class="ph" data-show=".4093,.4525" data-moff="1" style="--arn:0.5625;--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
-    <figure class="ph nocap" data-show=".4525,.4909" data-moff="1" style="--arn:1.6;--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
-    <figure class="ph" data-show=".4909,.5341" data-mshow=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
-    <figure class="ph" data-show=".5341,.5822" data-mshow=".5341,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
-    <figure class="ph nocap" data-show=".5822,.6248" data-moff="1" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
+    <figure class="ph" data-show=".3709,.4093" data-mshow=".3709,.4909" style="--arn:1.3333;--x:4%;--y:13%;--w:36%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="שולחן הגשה עשיר מול הבקתה"></div><span>שולחן שוק עשיר מחכה לכם, מוכן וטרי לרגע שתגיעו.</span></figure>
+    <figure class="ph" data-show=".4093,.4525" data-moff="1" style="--arn:0.5625;--x:12%;--y:9%;--w:18%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="שולחן ארוך עם המבורגרים, צ׳יפס וטבעות בצל מול הבקתה"></div><span>5 דקות וכל הקבוצה כבר עם צלחת מלאה ביד</span></figure>
+    <figure class="ph nocap" data-show=".4525,.4909" data-moff="1" style="--arn:1.6;--x:4%;--y:18%;--w:37%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="המבורגרים של הבקתה"></div></figure>
+    <figure class="ph" data-show=".4909,.5341" data-mshow=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:36%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
+    <figure class="ph" data-show=".5341,.5822" data-mshow=".5341,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:22%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
+    <figure class="ph nocap" data-show=".5822,.6248" data-moff="1" style="--arn:0.75;--x:12%;--y:10%;--w:22%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
     <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" hidden><button class="reelx" id="reelX" type="button" hidden>✕</button></figure>
     <div class="vcenter" id="vcenter">
       <div class="vbox">
@@ -674,7 +673,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   for(let l=0;l<total;l+=7){const p=road.getPointAtLength(l),q=road.getPointAtLength(Math.min(total,l+1));const nx=-(q.y-p.y),ny=q.x-p.x,n=Math.hypot(nx,ny)||1;[1,-1].forEach(side=>{if(rnd()<.55){const u=document.createElementNS(NS,'use');u.setAttribute('href','#tree');const d=10+rnd()*4;u.setAttribute('x',p.x+side*nx/n*d);u.setAttribute('y',p.y+side*ny/n*d);trees.appendChild(u);}});}
 
   function lenNear(x,y,from=0){let b=from,bd=1e9;for(let l=from;l<=total;l+=.5){const p=road.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=l;}}return b;}
-  const S={st:lenNear(228,-36)}; S.sd=lenNear(182,62); S.nv=lenNear(66,174,S.sd); S.bk=lenNear(128,150,S.nv); S.tk=lenNear(168,124,S.bk);
+  const S={st:6}; S.sd=lenNear(90,100); S.nv=lenNear(190,96,S.sd); S.bk=lenNear(290,100,S.nv); S.tk=lenNear(380,200,S.bk);
   // [progress, road length, minutes after 09:00, camera width]
   const K=[[0,S.st,-15,-1],[.03,S.st,-12,150],[.06,S.sd,0,130],[.09,S.sd,75,130],[.16,S.nv,100,140],[.19,S.nv,160,140],[.27,S.bk,175,125],[.2815,S.bk,175.5,100],[.318,S.bk,178,100],[.3324,S.bk,180,125],[.8079,S.bk,220,125],[.8655,S.tk,232,130],[.9039,S.tk,240,190],[1,total-6,250,260]];
   const CC={x:540,y:180};  // middle of the country, in map units
@@ -763,7 +762,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
   let lastLen=null,lastT=performance.now(),speed=0,cam=null,head=null;
   const stage=$('stage'), trip=$('trip');
-  function progress(){const r=trip.getBoundingClientRect();const span=trip.offsetHeight-innerHeight;return span>0?clamp(-r.top/span):0;}
+  // the restaurant photos (.3615-.7164) scroll 40% faster than the rest of the trip
+  const PA=.3615, PB=.7164, PK=.6, CUT=(PB-PA)*(1-PK), LEN=1-CUT;
+  const warp=u=>{u*=LEN; return u<PA?u:u<PA+(PB-PA)*PK?PA+(u-PA)/PK:u+CUT;};
+  const unwarp=p=>(p<PA?p:p<PB?PA+(p-PA)*PK:p-CUT)/LEN;
+  function progress(){const r=trip.getBoundingClientRect();const span=trip.offsetHeight-innerHeight;return span>0?clamp(warp(clamp(-r.top/span))):0;}
 
   function render(now){
     const p=progress();
@@ -848,7 +851,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false, reelAsked=false;
   reel.addEventListener('ended',()=>{ reelWatched=true; });
   $('reelX').addEventListener('click',()=>{ reelClosed=true; reel.pause(); });
-  $('vskip').addEventListener('click',()=>{ reel.pause(); const span=trip.offsetHeight-innerHeight; scrollTo({top:trip.offsetTop+span*.812,behavior:reduce?'auto':'smooth'}); });
+  $('vskip').addEventListener('click',()=>{ reel.pause(); const span=trip.offsetHeight-innerHeight; scrollTo({top:trip.offsetTop+span*unwarp(.812),behavior:reduce?'auto':'smooth'}); });
   function playReel(){
     reelStarted=true;
     // one request per visit: with sound if the browser allows it, otherwise muted with a sound button,
