@@ -538,7 +538,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <div class="vcenter" id="vcenter">
       <div class="vbox">
         <p class="vcap">Visitors from Canada on their lunch with us 🇨🇦</p>
-        <div class="vframe"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button></div>
+        <div class="vframe"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="metadata" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button></div>
         <button class="vskip" id="vskip" type="button">Skip the video ↓</button>
       </div>
     </div>
@@ -824,12 +824,12 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     let anyPhoto=false; photos.forEach(o=>{ if(o.el!==reelCard){ const on=p>=o.a&&p<o.b; o.el.classList.toggle('in',on); if(on) anyPhoto=true; } });
     stage.classList.toggle('photo-on', phoneQ.matches ? phonePhoto(p) : (anyPhoto||(p>=.7164&&p<.8079)));
     const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
-    if(inReel){ reelClosed=false; if(reel.ended){ reel.currentTime=0; } if(reel.paused&&!still&&!reelWatched) playReel(); }
+    if(inReel){ reelClosed=false; if(!reelAsked&&!still&&!reelWatched){ reelAsked=true; if(reel.ended) reel.currentTime=0; playReel(); } }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
     const showMini=false;  // scrolling past the video stops it
     $('vcenter').classList.toggle('on',inReel);
     $('reelX').hidden=!showMini;
-    if(!inReel&&!showMini){ if(!reel.paused) reel.pause(); reelWatched=false; }
+    if(!inReel&&!showMini){ if(!reel.paused) reel.pause(); reelWatched=false; reelAsked=false; }
 
     // services and the video sit on a dark layer over the map
     const svcOn=p>=.6248&&p<.7164; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.7164&&p<.8079));
@@ -845,16 +845,23 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   let lastScroll=performance.now();
   addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');},{passive:true});
   const unmute=$('unmute');
-  const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false;
+  const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false, reelAsked=false;
   reel.addEventListener('ended',()=>{ reelWatched=true; });
   $('reelX').addEventListener('click',()=>{ reelClosed=true; reel.pause(); });
   $('vskip').addEventListener('click',()=>{ reel.pause(); const span=trip.offsetHeight-innerHeight; scrollTo({top:trip.offsetTop+span*.812,behavior:reduce?'auto':'smooth'}); });
   function playReel(){
     reelStarted=true;
+    // one request per visit: with sound if the browser allows it, otherwise muted with a sound button,
+    // and if even that is blocked, a play button
     reel.preload='auto'; reel.muted=false; reel.volume=1;
-    reel.play().then(()=>{unmute.hidden=true;}).catch(()=>{ reel.muted=true; reel.play().catch(()=>{}); unmute.hidden=false; });
+    reel.play().then(()=>{ unmute.hidden=true; }).catch(()=>{
+      reel.muted=true;
+      reel.play().then(()=>{ unmute.textContent=UNMUTE; unmute.hidden=false; })
+                 .catch(()=>{ unmute.textContent=PLAY; unmute.hidden=false; });
+    });
   }
-  unmute.addEventListener('click',()=>{ reel.muted=false; reel.play().catch(()=>{}); unmute.hidden=true; });
+  const UNMUTE=unmute.textContent, PLAY='▶ Play the video';
+  unmute.addEventListener('click',()=>{ reel.muted=false; reel.volume=1; reel.play().catch(()=>{}); unmute.hidden=true; });
   requestAnimationFrame(render);
   try{ if(localStorage.getItem('bikta-still')==='1') setStill(true); }catch(e){}
 
