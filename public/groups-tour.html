@@ -190,6 +190,9 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .form .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .form input[type=range]{padding:0;accent-color:var(--bus);border:0;background:transparent}
 .size-read{font-family:var(--display);font-size:38px;color:var(--bus);line-height:1}
+.size-row{display:flex;align-items:center;gap:10px}
+.form .size-num{width:140px;font-family:var(--display);font-size:40px;line-height:1;padding:4px 12px;text-align:center}
+.size-unit{font-family:var(--display);font-size:34px}
 .ticket{position:relative;background:#f6efe0;color:var(--ink);border-radius:18px;padding:22px 22px 24px;box-shadow:0 18px 40px rgba(0,0,0,.35);
   -webkit-mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat;
           mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat}
@@ -500,8 +503,9 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <div class="grid">
       <form class="form ticket" id="f" novalidate>
         <p class="ticket-head"><span>כרטיס הזמנה · עצירת צהריים</span><img src="/tour/logo.jpg" alt=""></p>
-        <label for="fSize">כמה אנשים בקבוצה? <span class="size-read" id="sizeRead">50</span>
-          <input id="fSize" type="range" min="10" max="200" step="5" value="50">
+        <label for="fSize">כמה אנשים בקבוצה?
+          <span class="size-row"><input id="fSize" type="number" inputmode="numeric" min="1" max="1000" step="1" value="50" class="size-num"><span class="size-unit">איש</span></span>
+          <input id="fSizeRange" type="range" min="1" max="250" step="1" value="50" aria-label="גודל הקבוצה, מחוון">
         </label>
         <div class="two">
           <label for="fDate">תאריך<input id="fDate" type="date" value="2026-11-12"></label>
@@ -747,16 +751,17 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   const f=id=>$(id);
   function fmtDate(v){if(!v)return'';const [y,m,d]=v.split('-');return `${+d}.${+m}.${y}`;}
   function build(){
-    f('sizeRead').textContent=f('fSize').value;
+    const n=Math.max(1,Math.round(+f('fSize').value||0)); if(document.activeElement!==f('fSizeRange')) f('fSizeRange').value=Math.min(250,n);
     const name=f('fName').value.trim(), org=f('fOrg').value.trim(), note=f('fNote').value.trim();
     const lines=[`היי, ${name?'כאן '+name:'שלום'}${org?' ('+org+')':''}.`,'נשמח לתאם עצירת צהריים בבקתה:',
-      `• ${f('fSize').value} איש`,`• ${fmtDate(f('fDate').value)}, הגעה בסביבות ${f('fTime').value}`,
+      `• ${n} איש`,`• ${fmtDate(f('fDate').value)}, הגעה בסביבות ${f('fTime').value}`,
       `• צמחונים: ${f('fVeg').value||0}, טבעונים: ${f('fVegan').value||0}, צליאקים: ${f('fGf').value||0}`];
     if(note) lines.push(`• ${note}`);
     lines.push('תודה!');
     const text=lines.join('\n'); f('msg').textContent=text;
     f('send').href='https://wa.me/972584633555?text='+encodeURIComponent(text);
   }
+  f('fSizeRange').addEventListener('input',()=>{ f('fSize').value=f('fSizeRange').value; });
   f('f').addEventListener('input',build); f('f').addEventListener('submit',e=>e.preventDefault()); build();
 })();
 </script>
