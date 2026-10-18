@@ -210,7 +210,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
 
 <a class="skip" id="skip" href="#book">דלגו לסוף ↓</a>
-<div class="nudge" id="nudge" aria-hidden="true"><span class="chev"></span><span class="chev"></span><b>גללו להמשך הנסיעה</b></div>
+<div class="nudge" id="nudge" aria-hidden="true"><span class="chev"></span><span class="chev"></span><b id="nudgeText">גללו להמשך הנסיעה</b></div>
 <button class="motion" id="motionBtn" type="button" aria-pressed="false">עצירת אנימציות</button>
 <main id="main">
 <section class="sr" aria-labelledby="srTitle">
@@ -369,7 +369,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     <figure class="ph" data-show=".46,.515" style="--x:5%;--y:14%;--w:42%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="משלחת צעירים לוקחת המבורגרים מהדוכן"></div><span>קבוצות תיירות מכל העולם שמגיעות אלינו מדי יום</span></figure>
     <figure class="ph" data-show=".515,.565" style="--x:12%;--y:10%;--w:24%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="קבוצה גדולה אוכלת על הדשא בצל העצים"></div><span>יושבים במדשאות תחת צל העצים</span></figure>
     <figure class="ph nocap" data-show=".565,.6094" style="--x:12%;--y:10%;--w:24%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="קבוצה סביב שולחן על הדשא"></div></figure>
-    <figure class="ph" data-show=".7047,.8" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" loop playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><span>תיירים מקנדה 🇨🇦</span></figure>
+    <figure class="ph" data-show=".7047,.8" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="תיירים מקנדה מספרים על ארוחת הצהריים בבקתה"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 הפעלת קול</button><span>תיירים מקנדה 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
     <figure class="ph" data-show=".855,.896" style="--x:5%;--y:16%;--w:29%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="מכונית שרופה עטופה בדגלי ישראל באתר המכוניות ליד תקומה"></div><span>אתר המכוניות, תקומה</span></figure>
@@ -579,15 +579,17 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
     const cp=clamp((p-.2519)/(.8-.2519)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
     photos.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
-    const reelOn=p>=.7047&&p<.8&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused){playReel();} else if(!reelOn&&!reel.paused) reel.pause();
+    const reelOn=p>=.7047&&p<.8&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused&&!reel.ended){playReel();} else if(!reelOn){ if(!reel.paused) reel.pause(); if(reel.ended) reel.currentTime=0; }
 
     // services and the video sit on a dark layer over the map
     const svcOn=p>=.6094&&p<.7047; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.7047&&p<.8));
     svcs.forEach((el,i)=>el.classList.toggle('on',svcOn&&p>=.6153+i*.0131));
 
     $('intro').classList.toggle('gone',p>.015);
+    $('nudgeText').textContent=(p>=.7047&&p<.8&&reel.ended)?'הסרטון נגמר. גללו להמשך':'גללו להמשך הנסיעה';
     const tr=trip.getBoundingClientRect(); $('skip').classList.toggle('gone',tr.bottom<innerHeight*1.02);
-    $('nudge').classList.toggle('on',p>.015&&p<.97&&now-lastScroll>2200&&!document.documentElement.classList.contains('still'));
+    const inVideo=p>=.7047&&p<.8, videoDone=reel.ended;
+    $('nudge').classList.toggle('on',p>.015&&p<.97&&now-lastScroll>(inVideo?1500:2200)&&(!inVideo||videoDone)&&!document.documentElement.classList.contains('still'));
     requestAnimationFrame(render);
   }
   let lastScroll=performance.now();
