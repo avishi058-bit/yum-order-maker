@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gaza Border Tour Day with Lunch at HaBikta | Tushiya, Israel</title>
+<meta name="description" content="A Gaza border tour route: Sderot, the Nova site, a group lunch at HaBikta and the car memorial in Tkuma. Up to 200 people, kosher, 45 minutes and back on schedule. Book on WhatsApp.">
+<meta name="robots" content="noindex, follow">
+<link rel="alternate" hreflang="he" href="/groups-tour.html">
+<link rel="alternate" hreflang="en" href="/groups-tour-en.html">
+<link rel="icon" href="/favicon.ico">
+<meta property="og:title" content="A Gaza border tour day, with lunch at HaBikta">
+<meta property="og:description" content="A generous market-style spread for groups, ready the moment you arrive. Up to 200 people, kosher.">
+<meta property="og:image" content="/tour/buffet.jpg">
+<meta property="og:locale" content="en_US">
+<style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=Assistant:wght@400;600;800&display=swap">
+<style>
+/* Layout: sticky full-screen stage. Drawn map, camera follows a white tour coach (side view) along the real order of stops; at the restaurant the coach doors open and photos pop over the map; then a form, guide quotes and directions below. Single deliberate look. */
+:root{
+  color-scheme: light;
+  --paper:#ece2cb; --paper-2:#ddd0b1;
+  --ink:#2b2118; --ink-soft:#6b5a47;
+  --bus:#f2b705; --ember:#c8461f; --sign:#0f6b45; --night:#16120e;
+  --wa:#0b7a41; --ember-text:#9e3614;
+  --display:"Karantina","Assistant",system-ui,sans-serif;
+  --body:"Assistant",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;direction:ltr;overflow-x:hidden}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:.92;margin:0;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:3px solid var(--bus);outline-offset:3px}
+
+#trip{position:relative;height:1300vh}
+.stage{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100svh;overflow:hidden;background:var(--paper)}
+#mapsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#mapsvg text{font-family:var(--body);font-weight:800}
+.dim{position:absolute;inset:0;background:var(--night);opacity:0;pointer-events:none;transition:opacity .8s;z-index:2}
+
+/* HUD */
+.hud{position:absolute;top:0;inset-inline:0;z-index:30;display:flex;align-items:center;gap:14px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(var(--night),rgba(22,18,14,0));color:var(--paper)}
+.chip{display:flex;align-items:baseline;gap:6px;background:rgba(22,18,14,.78);border-radius:10px;padding:4px 10px;flex:none}
+.chip b{font-family:var(--display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.chip small{font-size:12px;font-weight:800;opacity:.8}
+.rail{flex:1;min-width:0;position:relative;height:30px}
+.rail .line{position:absolute;top:13px;inset-inline:0;height:4px;border-radius:2px;background:rgba(236,226,203,.25)}
+.rail .fill{position:absolute;top:13px;left:0;height:4px;border-radius:2px;background:var(--bus);width:0}
+.rail .dot{position:absolute;top:8px;width:14px;height:14px;border-radius:50%;background:var(--night);border:3px solid rgba(236,226,203,.5);transform:translateX(-50%)}
+.rail .dot.past{border-color:var(--bus);background:var(--bus)}
+.rail .dot.bikta{width:20px;height:20px;top:5px;border-color:var(--ember)}
+.rail .dot.bikta.past{background:var(--ember)}
+.state{font-weight:800;font-size:13px;padding:5px 10px;border-radius:999px;background:var(--bus);color:var(--ink);flex:none;min-width:74px;text-align:center}
+.state.parked{background:var(--ember);color:#fff}
+
+/* stop card */
+.card{position:absolute;z-index:26;top:50%;right:max(24px,env(safe-area-inset-right,0px));transform:translateY(-50%);width:min(390px,34vw);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:22px 22px 20px;box-shadow:8px 8px 0 var(--ink);display:grid;gap:10px;transition:background .5s,color .5s,border-color .5s,box-shadow .5s}
+.card .time{font-weight:800;font-size:13px;letter-spacing:.06em;color:var(--ember-text);font-variant-numeric:tabular-nums}
+.card h2{font-size:clamp(44px,5vw,72px)}
+.card p{color:var(--ink-soft);font-size:17px}
+.card.quiet{background:var(--night);color:var(--paper);border-color:#4a3f33;box-shadow:none}
+.card.quiet p{color:#bfb39b}
+.card .swap{transition:opacity .25s,transform .25s}
+.card .swap.out{opacity:0;transform:translateY(8px)}
+.clock{display:none;align-items:center;gap:12px}
+.clock.on{display:flex}
+.clock svg{width:64px;height:64px;flex:none}
+.clock b{font-family:var(--display);font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+.go{display:none}
+.go.on{display:inline-block}
+.btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:11px 18px;text-decoration:none;display:inline-block;background:var(--ink);color:var(--paper);cursor:pointer}
+.btn.wa{background:var(--wa);color:#fff}
+
+/* road sign */
+.sign{position:absolute;z-index:24;top:76px;left:50%;transform:translate(-50%,-30px) scale(.4);opacity:0;background:var(--sign);color:#fff;border:3px solid #fff;outline:3px solid var(--sign);border-radius:8px;padding:6px 16px 8px;text-align:center;transition:transform .45s cubic-bezier(.3,1.6,.5,1),opacity .2s}
+.sign.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.sign b{display:block;font-family:var(--display);font-size:44px;line-height:1}
+.sign small{font-size:12px;font-weight:800;letter-spacing:.08em}
+.sign.bikta{background:var(--ember);outline-color:var(--ember)}
+.sign.memorial{background:#2c2620;outline-color:#2c2620}
+
+/* photos */
+.ph{position:absolute;z-index:20;left:var(--x);top:var(--y);width:var(--w);margin:0;background:#fff;padding:8px 8px var(--pb,8px);box-shadow:0 18px 40px rgba(0,0,0,.4);transform:translate(var(--fx),130vh) rotate(var(--fr));opacity:0;transition:transform .8s cubic-bezier(.2,.85,.25,1.1),opacity .3s}
+.ph.in{opacity:1;transform:translate(0,0) rotate(var(--r))}
+.ph.nocap{--pb:8px}
+.ph .img{overflow:hidden;aspect-ratio:var(--ar,4/3);background:var(--paper-2)}
+.ph img,.ph video{width:100%;height:100%;object-fit:cover;display:block}
+.ph.in .img img{animation:kb 9s ease-in-out infinite alternate}
+.ph span{display:block;padding:10px 6px 4px;text-align:center;font-weight:800;font-size:clamp(18px,1.6vw,24px);line-height:1.25;color:var(--ink);text-wrap:balance}
+.ph small{position:absolute;top:calc(100% + 4px);inset-inline:0;text-align:center;font-size:10px;color:rgba(255,255,255,.9);text-shadow:0 1px 2px #000}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.12) translate(-3%,-2%)}}
+
+/* dark layer over the map for the services and the video */
+.arrive{position:absolute;inset:0;z-index:12;opacity:0;pointer-events:none;transition:opacity .5s}
+.arrive.on{opacity:1}
+.arrive .scrim{position:absolute;inset:0;background:rgba(22,18,14,.8)}
+
+/* services */
+.services{position:absolute;z-index:4;inset:0;display:grid;place-content:center;padding:90px max(24px,env(safe-area-inset-left,0px)) 40px max(430px,env(safe-area-inset-right,0px));pointer-events:none}
+.services h3{font-size:clamp(40px,5vw,64px);color:var(--bus);margin-bottom:18px;opacity:0;transition:opacity .4s}
+.services.on h3{opacity:1}
+.svc{display:grid;grid-template-columns:repeat(3,minmax(0,170px));gap:16px}
+.svc div{display:grid;justify-items:center;gap:8px;text-align:center;color:#fff8ea;font-weight:800;font-size:16px;line-height:1.25;opacity:0;transform:translateY(30px) scale(.9);transition:opacity .4s,transform .5s cubic-bezier(.3,1.5,.5,1)}
+.svc div.on{opacity:1;transform:none}
+.svc svg{width:86px;height:86px;overflow:visible}
+.svc svg .d{fill:none;stroke:var(--bus);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1s ease}
+.svc div.on svg .d{stroke-dashoffset:0}
+.svc svg .ring{fill:rgba(242,183,5,.12);stroke:none}
+.svc svg text{fill:var(--bus);font-family:var(--display);font-size:22px}
+
+/* intro */
+.intro{position:absolute;z-index:28;inset:0;display:grid;align-content:end;gap:14px;padding:0 max(24px,env(safe-area-inset-right,0px)) 13vh max(24px,env(safe-area-inset-left,0px));background:linear-gradient(transparent 30%,rgba(22,18,14,.85));color:var(--paper);transition:opacity .4s}
+.intro.gone{opacity:0;pointer-events:none}
+.intro .logo{width:84px;height:84px;border-radius:50%;border:3px solid var(--paper);object-fit:cover}
+.intro h1{font-size:clamp(60px,10vw,140px);max-width:13ch}
+.intro p{font-size:20px;max-width:44ch;color:#e5d9bf}
+.cue{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;color:var(--bus)}
+.cue i{display:block;width:28px;height:44px;border:3px solid var(--bus);border-radius:16px;position:relative}
+.cue i::after{content:"";position:absolute;left:50%;top:7px;width:5px;height:9px;margin-left:-2.5px;border-radius:3px;background:var(--bus);animation:wheel 1.4s infinite}
+@keyframes wheel{0%{transform:translateY(0);opacity:1}80%{transform:translateY(16px);opacity:0}100%{opacity:0}}
+
+/* accessibility helpers */
+.sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:fixed;z-index:100;bottom:max(16px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--bus);color:var(--ink);font-weight:800;font-size:15px;min-height:44px;display:inline-flex;align-items:center;padding:8px 18px;border-radius:999px;border:2px solid var(--ink);box-shadow:0 4px 0 var(--ink);text-decoration:none;transition:opacity .3s}
+.skip.gone{opacity:0;pointer-events:none}
+.nudge{position:fixed;z-index:90;left:50%;bottom:max(76px,calc(env(safe-area-inset-bottom,0px) + 76px));transform:translateX(-50%);display:grid;justify-items:center;gap:0;color:#fff8ea;text-shadow:0 2px 8px rgba(0,0,0,.7);opacity:0;transition:opacity .5s;pointer-events:none}
+.nudge.on{opacity:1}
+.nudge b{font-size:15px;margin-top:4px;background:rgba(22,18,14,.72);padding:4px 12px;border-radius:999px}
+.nudge .chev{width:22px;height:22px;border-right:4px solid var(--bus);border-bottom:4px solid var(--bus);transform:rotate(45deg);animation:nudge 1.2s ease-in-out infinite;margin-top:-8px}
+.nudge .chev:nth-child(2){animation-delay:.18s}
+@keyframes nudge{0%,100%{opacity:.25;translate:0 -4px}50%{opacity:1;translate:0 4px}}
+.unmute{position:absolute;inset-inline:12px;bottom:44px;z-index:2;font:inherit;font-weight:800;font-size:15px;min-height:44px;border:0;border-radius:999px;background:var(--bus);color:var(--ink);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.unmute[hidden]{display:none!important}
+.lang{position:fixed;z-index:101;top:max(60px,calc(env(safe-area-inset-top,0px) + 60px));inset-inline-start:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--night);border:2px solid var(--bus);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.lang .globe{font-size:16px;padding:0 4px 0 6px}
+.lang .cur,.lang a{font:inherit;font-weight:800;font-size:15px;min-height:38px;display:inline-flex;align-items:center;padding:0 14px;border-radius:999px;text-decoration:none}
+.lang .cur{background:var(--bus);color:var(--ink)}
+.lang a{color:var(--paper)}
+.lang a:hover{background:rgba(242,183,5,.18)}
+.motion{position:fixed;z-index:100;bottom:max(12px,env(safe-area-inset-bottom,0px));left:max(12px,env(safe-area-inset-left,0px));font:inherit;font-size:14px;font-weight:800;min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--paper);background:var(--night);color:var(--paper);cursor:pointer}
+.motion[aria-pressed="true"]{background:var(--bus);color:var(--ink);border-color:var(--ink)}
+html.still *, html.still *::before, html.still *::after{animation:none!important;transition:none!important}
+.legal{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px}
+.legal a{color:var(--paper);font-weight:800}
+.find .addr{color:var(--ink);text-decoration:underline;text-underline-offset:6px}
+.form input:focus-visible,.form textarea:focus-visible{outline:3px solid var(--bus);outline-offset:2px}
+
+/* below the trip */
+.band{padding-block:64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band .in{max-width:1040px;margin-inline:auto;display:grid;gap:22px}
+.band h2{font-size:clamp(48px,8vw,92px)}
+.book{background:var(--night);color:var(--paper)}
+.book h2{color:var(--bus)}
+.book .grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:start}
+.form{display:grid;gap:14px}
+.form label{display:grid;gap:6px;font-weight:800;font-size:14px}
+.form input,.form textarea{font:inherit;font-size:17px;padding:11px 12px;border-radius:10px;border:2px solid #5a4b3c;background:#2a221b;color:var(--paper);width:100%}
+.form textarea{min-height:84px;resize:vertical}
+.form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form input[type=range]{padding:0;accent-color:var(--bus);border:0;background:transparent}
+.size-read{font-family:var(--display);font-size:38px;color:var(--bus);line-height:1}
+.preview{background:#e7dfd2;color:var(--ink);border-radius:14px;padding:16px;display:grid;gap:12px}
+.preview .bub{background:#d9fdd3;border-radius:10px 2px 10px 10px;padding:10px 12px;white-space:pre-wrap;font-size:15px;box-shadow:0 1px 1px rgba(0,0,0,.12)}
+.preview .note{font-size:14px;color:#4f4334}
+.preview .note a{color:var(--ink);font-weight:800}
+.quotes{background:var(--paper)}
+.qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.q{margin:0;background:#f6f0e2;border:2px solid var(--ink);border-radius:16px;padding:22px;display:grid;gap:12px;align-content:start;box-shadow:6px 6px 0 var(--ink)}
+.q b{font-family:var(--display);font-size:64px;line-height:.5;color:var(--ember)}
+.q blockquote{margin:0;font-size:20px;line-height:1.45;font-weight:600;color:var(--ink)}
+.q figcaption{font-weight:800;color:var(--ink-soft)}
+.q figcaption span,.rating span{color:#e3a600;letter-spacing:2px}
+.rating{display:flex;align-items:baseline;gap:10px;font-weight:800;color:var(--ink-soft)}
+.rating b{font-family:var(--display);font-size:56px;line-height:1;color:var(--ink)}
+.rnote{font-size:19px;color:var(--ink-soft);max-width:52ch}
+.btn.gbtn{justify-self:start;background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.find{background:var(--paper-2)}
+.find .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.addr{font-family:var(--display);font-size:clamp(40px,6vw,64px);line-height:1;user-select:all}
+.btn.waze{background:#33ccff;color:#06243a}
+.credits{background:var(--night);color:#cbbda3;font-size:14px}
+.credits ul{margin:0;padding-inline-start:18px;display:grid;gap:4px}
+.credits a{color:inherit}
+
+@media (max-width:760px){
+  .card{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));width:auto;padding:14px 16px;box-shadow:5px 5px 0 var(--ink);gap:6px}
+  .card h2{font-size:40px}
+  .card p{font-size:15px}
+  .clock svg{width:44px;height:44px}.clock b{font-size:34px}
+  .hud{gap:8px}.chip b{font-size:24px}.state{min-width:0}
+  .hud .km{display:none}
+  .sign{top:156px}.sign b{font-size:34px}
+  .skip{bottom:auto;top:108px;left:auto;inset-inline-start:max(12px,env(safe-area-inset-right,0px));right:auto;transform:none;font-size:14px}
+  .lang{top:58px}.lang .cur,.lang a{font-size:14px;min-height:34px;padding:0 11px}
+  .motion{bottom:auto;top:62px;left:max(12px,env(safe-area-inset-left,0px))}
+  .nudge{bottom:auto;top:44%}
+  .ph{width:var(--mw,var(--w));left:var(--mx,var(--x));top:var(--my,var(--y));padding:5px 5px var(--pb,5px)}
+  .ph.nocap{--pb:5px}
+  .ph span{font-size:16px;padding-top:7px}
+  .services{padding:80px 16px 240px;place-content:start center}
+  .svc{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .svc svg{width:56px;height:56px}
+  .svc div{font-size:13px}
+  .intro{padding-bottom:16vh}
+  .book .grid{grid-template-columns:1fr}
+  .form .three{grid-template-columns:1fr 1fr}
+  .qgrid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .ph,.sign,.card .swap,.dim,.arrive,.svc div,.svc svg .d{transition:none!important}
+  .ph.in .img img,.cue i::after{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+
+<a class="skip" id="skip" href="#book">Skip to the end ↓</a>
+<div class="nudge" id="nudge" aria-hidden="true"><span class="chev"></span><span class="chev"></span><b id="nudgeText">Keep scrolling to drive on</b></div>
+<button class="motion" id="motionBtn" type="button" aria-pressed="false">Pause animations</button>
+<nav class="lang" aria-label="Language / שפה"><span class="globe" aria-hidden="true">🌐</span><a href="/groups-tour.html" hreflang="he" lang="he">עברית</a><span class="cur" aria-current="page">English</span></nav>
+<main id="main">
+<section class="sr" aria-labelledby="srTitle">
+  <h1 id="srTitle">A day on the Gaza border tour, with lunch at HaBikta</h1>
+  <p>Up to 200 people, kosher, 45 minutes and back on schedule. A sample tour day:</p>
+  <ol>
+    <li>09:00, Sderot: the Garden of Heroism and Remembrance, where the police station once stood.</li>
+    <li>10:40, Re’im: the Nova festival memorial site.</li>
+    <li>11:55, Tushiya: lunch at HaBikta. A generous market-style spread is fresh and ready the moment you arrive, so you can eat and keep going. On site: restrooms, kosher certificate, gluten-free options, vegetarian and vegan dishes, and coach parking.</li>
+    <li>12:50, Tkuma: the car memorial.</li>
+  </ol>
+</section>
+<section id="trip" aria-hidden="true">
+  <div class="stage" id="stage">
+    <svg id="mapsvg" viewBox="0 0 400 380" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#d4c6a4" stroke-width=".4"/></pattern>
+        <pattern id="wheat" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><line x1="0" y1="0" x2="0" y2="4" stroke="#9aa36a" stroke-width="1.2" opacity=".6"/></pattern>
+        <pattern id="plough" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)"><line x1="0" y1="0" x2="0" y2="5" stroke="#b79566" stroke-width="1" opacity=".5"/></pattern>
+        <g id="tree"><circle r="3.2" fill="#6e7d3d"/><circle cx="1.6" cy="-1" r="2" fill="#86964d"/></g>
+        <linearGradient id="roof" x1="0" x2="1"><stop offset="0" stop-color="#d9dde1"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd4d9"/></linearGradient>
+        <linearGradient id="beamSide" x1="0" x2="1"><stop offset="0" stop-color="#fff6c8" stop-opacity=".75"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></linearGradient>
+        <filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+      </defs>
+      <rect x="-600" y="-600" width="1600" height="1600" fill="#ece2cb"/>
+      <rect x="-600" y="-600" width="1600" height="1600" fill="url(#grid)"/>
+      <g id="fields"></g>
+      <path d="M380 340 C300 300 260 300 220 270 S120 230 20 205" fill="none" stroke="#5f8ea0" stroke-width="1.6" stroke-dasharray="2.5 3"/>
+      <text x="246" y="296" font-size="6" fill="#5f8ea0" transform="rotate(-14 246 296)">Besor Stream</text>
+      <g id="trees"></g>
+      <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#3b342d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f2b705" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+      <path d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
+      <g font-size="6" fill="#6b5a47">
+        <text x="186" y="172">Netivot</text>
+        <text x="206" y="240">Ofakim</text>
+      </g>
+      <!-- stop landmarks: each with a soft pulse, like the restaurant -->
+      <!-- Sderot: the memorial pillars -->
+      <circle cx="182" cy="62" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(200 50)">
+        <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
+        <rect x="-11" y="-1" width="22" height="2" fill="#cfc6b4"/>
+        <rect x="-8" y="-16" width="2" height="15" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="-4.5" y="-20" width="2" height="19" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="-1" y="-23" width="2" height="22" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="2.5" y="-19" width="2" height="18" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <rect x="6" y="-14" width="2" height="13" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
+        <path d="M11 -1 V-14" stroke="#6b5a47" stroke-width=".5"/><path d="M11 -14 h6 v4 h-6" fill="#fff" stroke="#3b5ba5" stroke-width=".4"/><path d="M11 -12.7 h6 M11 -11.3 h6" stroke="#3b5ba5" stroke-width=".35"/>
+        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#2c2620"/>
+        <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">Sderot</text>
+      </g>
+      <!-- Nova site, Re'im: memorial poles among trees -->
+      <circle cx="66" cy="174" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(46 160)">
+        <ellipse cx="0" cy="1" rx="13" ry="2" fill="#2b2118" opacity=".18"/>
+        <use href="#tree" x="-10" y="-6"/><use href="#tree" x="10" y="-7"/>
+        <path d="M-6 0 V-10 M-2 0 V-12 M2 0 V-11 M6 0 V-9" stroke="#6b5a47" stroke-width=".6"/>
+        <path d="M-2 -12 h4 v2.6 h-4 Z M6 -9 h3.6 v2.4 h-3.6 Z" fill="#fff" stroke="#3b5ba5" stroke-width=".3"/>
+        <circle cx="-6" cy="-10" r="1.2" fill="#c8323a"/><circle cx="2" cy="-11" r="1.2" fill="#c8323a"/>
+        <rect x="-18" y="3" width="36" height="7" rx="1.2" fill="#2c2620"/>
+        <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">Nova site</text>
+      </g>
+      <!-- Tkuma: the car site -->
+      <circle cx="168" cy="124" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(186 108)">
+        <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
+        <path d="M-10 -1 V-4 Q-10 -6 -8 -6 L-5 -10 H4 L7 -6 Q10 -6 10 -4 V-1 Z" fill="#7a4a2a" stroke="#3a2414" stroke-width=".5"/>
+        <path d="M-4 -9 H-0.5 V-6.4 H-6 Z M0.5 -9 H3.6 L5.6 -6.4 H0.5 Z" fill="#2b2118"/>
+        <circle cx="-5.5" cy="-1" r="2" fill="#2b2118"/><circle cx="5.5" cy="-1" r="2" fill="#2b2118"/>
+        <path d="M8 -6 V-16" stroke="#6b5a47" stroke-width=".5"/><path d="M8 -16 h6 v4 h-6 Z" fill="#fff" stroke="#3b5ba5" stroke-width=".35"/><path d="M8 -14.7 h6 M8 -13.3 h6" stroke="#3b5ba5" stroke-width=".3"/>
+        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#2c2620"/>
+        <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">Tkuma</text>
+      </g>
+      <!-- the restaurant: a wooden hut with a hanging wooden sign -->
+      <circle cx="128" cy="150" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
+      <g transform="translate(124 140)">
+        <ellipse cx="0" cy="1" rx="22" ry="2.6" fill="#2b2118" opacity=".18"/>
+        <rect x="-17" y="-17" width="34" height="18" fill="#8a5a33" stroke="#3a2414" stroke-width=".8"/>
+        <path d="M-17 -12 H17 M-17 -7 H17 M-17 -2 H17" stroke="#6e4426" stroke-width=".6"/>
+        <path d="M-21 -17 L0 -31 L21 -17 Z" fill="#6b3f20" stroke="#3a2414" stroke-width=".8"/>
+        <path d="M-16 -20 L0 -28.5 L16 -20" fill="none" stroke="#8a5a33" stroke-width=".6"/>
+        <rect x="-3.4" y="-8" width="6.8" height="9" fill="#2b1a0c"/>
+        <rect x="-14" y="-9" width="6" height="5" fill="#f3d48a" stroke="#3a2414" stroke-width=".6"/>
+        <rect x="8" y="-9" width="6" height="5" fill="#f3d48a" stroke="#3a2414" stroke-width=".6"/>
+        <!-- wooden sign -->
+        <path d="M-9 -24 L-8 -17.5 M9 -24 L8 -17.5" stroke="#3a2414" stroke-width=".5"/>
+        <rect x="-13" y="-17.6" width="26" height="8" rx="1.2" fill="#c9925a" stroke="#4a2c14" stroke-width=".8" transform="translate(0 -6)"/>
+        <path d="M-12 -21.5 H12 M-12 -18.5 H12" stroke="#b07a45" stroke-width=".35" transform="translate(0 -1.6)"/>
+        <text x="0" y="-18.4" text-anchor="middle" font-size="6.4" fill="#2b1a0c" font-family="Karantina, Assistant, sans-serif" font-weight="700">HaBikta</text>
+      </g>
+      <!-- white tour coach, side view, facing right; wheels sit on the road -->
+      <g id="coach">
+        <g id="coachFlip">
+          <g transform="scale(.46)">
+            <ellipse cx="0" cy="1.2" rx="31" ry="2.6" fill="#000" opacity=".22"/>
+            <path id="beams" d="M31 -7 L58 -14 L58 2 L31 -4 Z" fill="url(#beamSide)" opacity="0"/>
+            <path d="M-32 -3 V-19 Q-32 -22 -29 -22 H23 Q29.5 -22 31 -15.5 L32.2 -8 V-3 Z" fill="url(#roof)" stroke="#9aa0a6" stroke-width=".5"/>
+            <rect x="-32" y="-23.2" width="18" height="1.6" rx=".8" fill="#d9dde1" stroke="#aab0b6" stroke-width=".3"/>
+            <rect x="-29" y="-19.4" width="48" height="7.2" rx="1.6" fill="#1d2b36"/>
+            <path d="M-22 -19.4 V-12.2 M-14 -19.4 V-12.2 M-6 -19.4 V-12.2 M2 -19.4 V-12.2 M10 -19.4 V-12.2" stroke="#e6e9ec" stroke-width=".7"/>
+            <path d="M24.5 -21 Q29.6 -21 30.6 -15 L31.3 -10.5 H25.6 Z" fill="#1d2b36"/>
+            <path d="M31 -19 L33.6 -19.6 L33.6 -15.6" fill="none" stroke="#22252a" stroke-width=".8"/>
+            <rect x="-32" y="-9.6" width="64.2" height="1.8" fill="#f2b705"/><rect x="-32" y="-7.6" width="64.2" height=".8" fill="#c8461f"/>
+            <!-- door: doorway behind two glass leaves -->
+            <rect x="19.6" y="-19.6" width="5.4" height="16.4" fill="#2a1f17"/>
+            <rect id="stepLight" x="19.8" y="-4.6" width="5" height="1" fill="#f3d48a" opacity="0"/>
+            <rect id="leafA" x="19.6" y="-19.6" width="2.7" height="16.4" fill="#2e4452" stroke="#c9ced3" stroke-width=".4"/>
+            <rect id="leafB" x="22.3" y="-19.6" width="2.7" height="16.4" fill="#2e4452" stroke="#c9ced3" stroke-width=".4"/>
+            <rect x="30.6" y="-7.2" width="1.6" height="2.2" rx=".4" fill="#fff4b0"/>
+            <rect id="tail" x="-32.4" y="-8.6" width="1.2" height="3" rx=".4" fill="#7a1b12"/>
+            <circle cx="-21" cy="-3" r="4.6" fill="#3b342d"/><circle cx="-12.4" cy="-3" r="4.6" fill="#3b342d"/><circle cx="14" cy="-3" r="4.6" fill="#3b342d"/>
+            <g class="wheel" transform="translate(-21 -3)"><circle r="3.6" fill="#16120e"/><circle r="1.7" fill="#8a8f95"/><rect x="-.35" y="-3.2" width=".7" height="1.6" fill="#8a8f95"/></g>
+            <g class="wheel" transform="translate(-12.4 -3)"><circle r="3.6" fill="#16120e"/><circle r="1.7" fill="#8a8f95"/><rect x="-.35" y="-3.2" width=".7" height="1.6" fill="#8a8f95"/></g>
+            <g class="wheel" transform="translate(14 -3)"><circle r="3.6" fill="#16120e"/><circle r="1.7" fill="#8a8f95"/><rect x="-.35" y="-3.2" width=".7" height="1.6" fill="#8a8f95"/></g>
+          </g>
+        </g>
+      </g>
+      <g id="people"></g>
+    </svg>
+    <div class="dim" id="dim"></div>
+
+    <!-- dark layer for the services and the video, over the map -->
+    <div class="arrive" id="arrive" aria-hidden="true">
+      <div class="scrim"></div>
+      <div class="services" id="services">
+        <h3>All arranged in advance</h3>
+        <div class="svc">
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><circle class="d" pathLength="1" cx="36" cy="26" r="7"/><path class="d" pathLength="1" d="M28 40 H44 L46 70 H40 L39 84 M28 40 L26 70 H32 L33 84"/><circle class="d" pathLength="1" cx="66" cy="26" r="7"/><path class="d" pathLength="1" d="M58 40 H74 L80 66 H52 L58 40 M60 66 V84 M72 66 V84"/></svg>Restrooms on site</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><circle class="d" pathLength="1" cx="50" cy="50" r="34"/><path class="d" pathLength="1" d="M36 76 L30 92 L42 86 L50 94 L54 80 M64 76 L70 92 L58 86"/><text x="50" y="58" text-anchor="middle">Kosher</text></svg>Kosher certificate</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><path class="d" pathLength="1" d="M50 86 V20 M50 30 C40 26 38 18 42 14 C48 16 50 22 50 30 M50 30 C60 26 62 18 58 14 C52 16 50 22 50 30 M50 46 C40 42 38 34 42 30 M50 46 C60 42 62 34 58 30 M50 62 C40 58 38 50 42 46 M50 62 C60 58 62 50 58 46"/><path class="d" pathLength="1" d="M20 80 L80 20"/></svg>Gluten-free options</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><path class="d" pathLength="1" d="M26 74 C26 38 52 22 80 22 C80 52 62 76 26 74 Z M26 74 C40 60 52 48 66 36"/></svg>Vegetarian dishes</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><path class="d" pathLength="1" d="M50 84 V52 M50 52 C50 36 38 28 24 30 C24 46 36 54 50 52 M50 58 C50 40 62 30 78 32 C78 50 64 60 50 58"/><path class="d" pathLength="1" d="M38 18 L50 40 L62 18"/></svg>Vegan dishes</div>
+          <div><svg viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="46"/><rect class="d" pathLength="1" x="22" y="18" width="56" height="64" rx="8"/><path class="d" pathLength="1" d="M40 66 V32 H54 C64 32 64 50 54 50 H40"/></svg>Coach parking</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud" role="group" aria-label="Trip status">
+      <span class="chip"><b id="hClock">08:45</b><small>time</small></span>
+      <span class="chip km"><b id="hKm">0</b><small>km</small></span>
+      <div class="rail" aria-hidden="true"><span class="line"></span><span class="fill" id="rFill"></span></div>
+      <span class="state" id="hState">Driving</span>
+    </div>
+
+    <div class="sign" id="sign"><small id="signSmall">Sderot</small><b id="signText">Garden of Heroism and Remembrance</b></div>
+
+    <!-- Sderot (public domain, zstadler) -->
+    <figure class="ph" data-show=".0344,.07" style="--x:5%;--y:15%;--w:31%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="The pillar monument, flags and memorial stones in the Garden of Heroism and Remembrance, Sderot"></div><span>Garden of Heroism and Remembrance, Sderot</span></figure>
+    <figure class="ph nocap" data-show=".0478,.07" style="--x:34%;--y:32%;--w:17%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="The memorial pillars in Sderot against a blue sky"></div></figure>
+    <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
+    <figure class="ph" data-show=".1244,.16" style="--x:4%;--y:20%;--w:46%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="The Nova festival memorial near Re’im, a field of memorial posts and flags among the trees"></div><span>Nova memorial site, Re’im</span><small>Photo: Zeev Stein, PikiWiki, CC BY 2.5</small></figure>
+    <!-- at the restaurant, after the coach doors open -->
+    <figure class="ph" data-show=".345,.385" style="--x:4%;--y:13%;--w:42%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="A rich serving table in front of HaBikta"></div><span>A generous market-style spread, fresh and ready the moment you arrive.</span></figure>
+    <figure class="ph" data-show=".385,.43" style="--x:12%;--y:9%;--w:20%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="A long table of burgers, fries and onion rings in front of HaBikta"></div><span>Five minutes in, the whole group has a full plate</span></figure>
+    <figure class="ph nocap" data-show=".43,.47" style="--x:4%;--y:18%;--w:44%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="HaBikta burgers"></div></figure>
+    <figure class="ph" data-show=".47,.515" style="--x:5%;--y:14%;--w:42%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="A youth delegation picking up burgers at the counter"></div><span>Tour groups from around the world, every day</span></figure>
+    <figure class="ph" data-show=".515,.565" style="--x:12%;--y:10%;--w:24%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="A large group eating on the lawn in the shade of the trees"></div><span>Seating on the lawn, in the shade of the trees</span></figure>
+    <figure class="ph nocap" data-show=".565,.6094" style="--x:12%;--y:10%;--w:24%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="A group around a table on the lawn"></div></figure>
+    <figure class="ph" data-show=".7047,.8" style="--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button><span>Visitors from Canada 🇨🇦</span></figure>
+
+    <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
+    <figure class="ph" data-show=".855,.896" style="--x:5%;--y:16%;--w:29%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="A burnt car draped in Israeli flags at the car memorial near Tkuma"></div><span>Car memorial, Tkuma</span></figure>
+    <figure class="ph nocap" data-show=".868,.896" style="--x:32%;--y:36%;--w:20%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="A wall of burnt cars cleared from Route 232"></div></figure>
+
+    <div class="card" id="card">
+      <div class="swap" id="swap">
+        <p class="time" id="cTime">08:45 · Departure</p>
+        <h2 id="cTitle">On the road</h2>
+        <p id="cText">One coach, fifty people and a full day ahead.</p>
+      </div>
+      <div class="clock" id="clock">
+        <svg viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="30" fill="none" stroke="#ddd0b1" stroke-width="9"/><circle id="arc" cx="36" cy="36" r="30" fill="none" stroke="#c8461f" stroke-width="9" stroke-linecap="round" transform="rotate(-90 36 36)" stroke-dasharray="188.5" stroke-dashoffset="188.5"/></svg>
+        <div><b id="cMin">0</b> <span>of 45 min</span></div>
+      </div>
+      <a class="btn wa go" id="go" href="#book" tabindex="-1">Book your stop ↓</a>
+    </div>
+
+    <div class="intro" id="intro">
+      <img class="logo" src="/tour/logo.jpg" alt="HaBikta, the moshav burger">
+      <h1>A day on the Gaza border tour, with lunch at HaBikta</h1>
+      <p>Sderot, the Nova site, lunch at HaBikta and the car memorial in Tkuma. Up to 200 people, kosher, 45 minutes and back on schedule.</p>
+      <div class="cue"><i></i> Scroll down and the coach sets off</div>
+    </div>
+  </div>
+</section>
+
+<!-- form to WhatsApp -->
+<section class="band book" id="book" aria-labelledby="bookTitle" tabindex="-1">
+  <div class="in">
+    <h2 id="bookTitle">Book your lunch stop</h2>
+    <div class="grid">
+      <form class="form" id="f" novalidate>
+        <label for="fSize">How many people in your group? <span class="size-read" id="sizeRead">50</span>
+          <input id="fSize" type="range" min="10" max="200" step="5" value="50">
+        </label>
+        <div class="two">
+          <label for="fDate">Date<input id="fDate" type="date" value="2026-11-12"></label>
+          <label for="fTime">Estimated arrival<input id="fTime" type="time" value="12:00"></label>
+        </div>
+        <div class="three">
+          <label for="fVeg">Vegetarians<input id="fVeg" type="number" min="0" max="200" value="4"></label>
+          <label for="fVegan">Vegans<input id="fVegan" type="number" min="0" max="200" value="1"></label>
+          <label for="fGf">Gluten-free<input id="fGf" type="number" min="0" max="200" value="1"></label>
+        </div>
+        <div class="two">
+          <label for="fName">Guide / organizer name<input id="fName" type="text" value="" placeholder="e.g. Yael, tour guide" autocomplete="name"></label>
+          <label for="fOrg">Group / organization<input id="fOrg" type="text" value="" placeholder="e.g. delegation from Canada"></label>
+        </div>
+        <label for="fNote">Notes<textarea id="fNote" placeholder="Your route for the day, special requests"></textarea></label>
+      </form>
+      <div class="preview">
+        <p class="note">Your message:</p>
+        <div class="bub" id="msg"></div>
+        <a class="btn wa" id="send" href="https://wa.me/972584633555" target="_blank" rel="noopener noreferrer">Send on WhatsApp</a>
+        <p class="note">Or call: <b style="user-select:all">058-4633555</b></p>
+        <p class="note">Nothing is stored on this site. Your details go straight from your phone via WhatsApp. <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Google rating + link only; no quoted reviews until the writers agree -->
+<section class="band quotes" aria-label="Google reviews">
+  <div class="in">
+    <h2>What people say</h2>
+    <p class="rating"><b>4.9</b> <span aria-hidden="true">★★★★★</span> 157 reviews on Google</p>
+    <p class="rnote">Real reviews from groups, families and soldiers who stopped by. Read them on our Google page.</p>
+    <a class="btn gbtn" href="https://www.google.com/maps/place/%D7%94%D7%91%D7%A7%D7%AA%D7%94+-+%D7%94%D7%9E%D7%91%D7%95%D7%A8%D7%92%D7%A8+%D7%A9%D7%9C+%D7%9E%D7%95%D7%A9%D7%91%D7%A0%D7%99%D7%A7%D7%99%D7%9D+%F0%9F%9A%9C%E2%80%AD/@31.4344164,34.5417627,17z/data=!4m8!3m7!1s0x15027f7fe4c54b13:0xb6a0a3fbd94f4810!8m2!3d31.4347276!4d34.5416983!9m1!1b1!16s%2Fg%2F11l723tdcs" target="_blank" rel="noopener noreferrer">All reviews on Google</a>
+  </div>
+</section>
+
+<!-- directions -->
+<section class="band find" id="find" aria-labelledby="findTitle">
+  <div class="in">
+    <h2 id="findTitle">Getting here</h2>
+    <a class="addr" href="https://maps.google.com/?cid=13159698413254559760" target="_blank" rel="noopener noreferrer">21 Arvei Nahal Rd, Tushiya<span class="sr"> (opens Google Maps in a new tab)</span></a>
+    <div class="row">
+      <a class="btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=31.4347276%2C34.5416983&amp;travelmode=driving" target="_blank" rel="noopener noreferrer">Directions in Google Maps<span class="sr"> (opens in a new tab)</span></a>
+      <a class="btn waze" href="https://waze.com/ul?ll=31.4347276%2C34.5416983&amp;navigate=yes" target="_blank" rel="noopener noreferrer">Navigate with Waze<span class="sr"> (opens in a new tab)</span></a>
+    </div>
+    <p style="color:var(--ink-soft)">Coach parking right next to us.</p>
+  </div>
+</section>
+
+</main>
+<footer class="band credits" aria-label="Credits and legal">
+  <div class="in">
+    <ul>
+      <li>Garden of Heroism and Remembrance, Sderot: zstadler, Wikimedia Commons, public domain.</li>
+      <li>Nova memorial site, Re’im: Zeev Stein, PikiWiki Israel, <a href="https://creativecommons.org/licenses/by/2.5/" target="_blank" rel="noopener noreferrer">CC BY 2.5</a>.</li>
+      <li>Car memorial, Tkuma: VELOCITY_club, Wikimedia Commons, public domain.</li>
+      <li>All other photos: HaBikta.</li>
+    </ul>
+    <nav class="legal" aria-label="Legal">
+      <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of use</a>
+      <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
+      <a href="/cookie-policy" target="_blank" rel="noopener noreferrer">Cookie policy</a>
+      <a href="/accessibility-statement" target="_blank" rel="noopener noreferrer">Accessibility statement</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  document.documentElement.lang='en'; document.documentElement.dir='ltr';
+  let reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motionBtn=$('motionBtn');
+  function setStill(on){ reduce=on||matchMedia('(prefers-reduced-motion: reduce)').matches; document.documentElement.classList.toggle('still',on); motionBtn.setAttribute('aria-pressed',on?'true':'false'); motionBtn.textContent=on?'Play animations':'Pause animations'; const m=$('mapsvg'); if(m&&m.pauseAnimations){ on?m.pauseAnimations():m.unpauseAnimations(); } const v=$('reel'); if(v&&on) v.pause(); try{localStorage.setItem('bikta-still',on?'1':'0');}catch(e){} }
+  motionBtn.addEventListener('click',()=>setStill(motionBtn.getAttribute('aria-pressed')!=='true'));
+  const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  const angLerp=(a,b,t)=>a+((((b-a)%360)+540)%360-180)*t;
+  const NS='http://www.w3.org/2000/svg';
+  const svg=$('mapsvg'), road=$('road'), trail=$('trail'), coach=$('coach');
+  const total=road.getTotalLength();
+  trail.style.strokeDasharray=total; trail.style.strokeDashoffset=total;
+
+  let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  const fields=$('fields');
+  for(let i=0;i<46;i++){const x=-220+rnd()*820,y=-200+rnd()*700,w=30+rnd()*60,h=24+rnd()*50,a=rnd()*40-20;const r=document.createElementNS(NS,'rect');r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('transform',`rotate(${a} ${x+w/2} ${y+h/2})`);r.setAttribute('fill',rnd()>.45?'url(#wheat)':'url(#plough)');fields.appendChild(r);}
+  const trees=$('trees');
+  for(let l=0;l<total;l+=7){const p=road.getPointAtLength(l),q=road.getPointAtLength(Math.min(total,l+1));const nx=-(q.y-p.y),ny=q.x-p.x,n=Math.hypot(nx,ny)||1;[1,-1].forEach(side=>{if(rnd()<.55){const u=document.createElementNS(NS,'use');u.setAttribute('href','#tree');const d=10+rnd()*4;u.setAttribute('x',p.x+side*nx/n*d);u.setAttribute('y',p.y+side*ny/n*d);trees.appendChild(u);}});}
+
+  function lenNear(x,y,from=0){let b=from,bd=1e9;for(let l=from;l<=total;l+=.5){const p=road.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=l;}}return b;}
+  const S={st:lenNear(228,-36)}; S.sd=lenNear(182,62); S.nv=lenNear(66,174,S.sd); S.bk=lenNear(128,150,S.nv); S.tk=lenNear(168,124,S.bk);
+  // [progress, road length, minutes after 09:00, camera width]
+  const K=[[0,S.st,-15,330],[.03,S.sd,0,130],[.07,S.sd,75,130],[.12,S.nv,100,140],[.16,S.nv,160,140],[.24,S.bk,175,125],[.8,S.bk,220,125],[.86,S.tk,232,130],[.9,S.tk,240,190],[1,total-6,250,260]];
+  function at(p){for(let i=0;i<K.length-1;i++){const a=K[i],b=K[i+1];if(p>=a[0]&&p<=b[0]){const t=ease((p-a[0])/((b[0]-a[0])||1));return [lerp(a[1],b[1],t),lerp(a[2],b[2],t),lerp(a[3],b[3],t)];}}const z=K[K.length-1];return [z[1],z[2],z[3]];}
+
+  const RAIL=[S.sd,S.nv,S.bk,S.tk]; const rail=document.querySelector('.rail');
+  const dots=RAIL.map((l,i)=>{const d=document.createElement('span');d.className='dot'+(i===2?' bikta':'');d.style.left=(l/total*100)+'%';rail.appendChild(d);return d;});
+
+  const PHASES=[
+    {p:0,   t:'08:45 · Departure', h:'On the road', d:'One coach, fifty people and a full day ahead.'},
+    {p:.03, t:'09:00 · Sderot', h:'Garden of Heroism and Remembrance', d:'Where the police station once stood. This is where the day begins.', sign:['Sderot','Garden of Heroism and Remembrance'], memorial:true},
+    {p:.07, t:'10:15 · On the road', h:'South on Route 232', d:'A twenty-minute drive.'},
+    {p:.12, t:'10:40 · Re’im', h:'Nova site', d:'Remembering those who came to dance and never came home.', quiet:true, sign:['Re’im','Nova site'], memorial:true},
+    {p:.16, t:'11:40 · Back on the coach', h:'Off to lunch', d:'Fifteen minutes away, and the table is already set.'},
+    {p:.24, t:'11:55 · HaBikta', h:'We’re here', d:'The coach parks right by the door.', sign:['Tushiya','HaBikta'], bikta:true, clock:true},
+    {p:.2638, t:'11:56 · Doors open', h:'Everyone off', d:'Straight to the table.', clock:true},
+    {p:.3353, t:'11:57 · Come on in', h:'A generous market-style spread', d:'Fresh and ready the moment you arrive, so you can eat and keep going.', clock:true},
+    {p:.4902, t:'12:10 · Everyone is seated', h:'Up to 200 people', d:'Delegations, schools and travelers from all over the world.', clock:true},
+    {p:.6094, t:'12:20 · All taken care of', h:'No surprises', d:'Restrooms, kosher food, gluten-free, vegetarian and vegan options. All arranged in advance.', clock:true},
+    {p:.7047, t:'12:30 · Guests from around the world', h:'In their own words', d:'Visitors from Canada on their lunch with us.', clock:true},
+    {p:.8, t:'12:40 · Moving on', h:'Well fed and on time', d:'Leaving exactly when you planned.'},
+    {p:.85, t:'12:50 · Tkuma', h:'The car memorial', d:'Cars cleared from Route 232. A silent witness to that day.', quiet:true, sign:['Tkuma','The car memorial'], memorial:true},
+    {p:.892, t:'13:00 · Your route', h:'Planning a day like this?', d:'Fill in a few details and send them to us on WhatsApp.', go:true}
+  ];
+  const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
+  function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
+    const apply=()=>{$('cTime').textContent=P.t;$('cTitle').textContent=P.h;$('cText').textContent=P.d;swap.classList.remove('out');};
+    if(reduce)apply();else{swap.classList.add('out');setTimeout(apply,180);}
+    card.classList.toggle('quiet',!!P.quiet);$('clock').classList.toggle('on',!!P.clock);$('go').classList.toggle('on',!!P.go);
+    if(P.sign){$('signSmall').textContent=P.sign[0];$('signText').textContent=P.sign[1];sign.classList.toggle('bikta',!!P.bikta);sign.classList.toggle('memorial',!!P.memorial);sign.classList.add('on');}else sign.classList.remove('on');
+    $('dim').style.opacity=P.quiet?.5:0;
+  }
+  const photos=[...document.querySelectorAll('.ph')].map(el=>{const [a,b]=el.dataset.show.split(',').map(Number);return {el,a,b};});
+  const reel=$('reel');
+  const arrive=$('arrive'), services=$('services'), leafA=$('leafA'), leafB=$('leafB'), stepLight=$('stepLight');
+  // passengers that step off at the restaurant and walk to the hut door
+  const peopleG=$('people'), SHIRTS=['#c8461f','#3b5ba5','#f2b705','#5c7a3a','#7a4a8a','#e0e0e0','#1e7f8a','#b8323a','#e58a2b','#2b2118'];
+  const people=SHIRTS.map((c,i)=>{
+    const g=document.createElementNS(NS,'g'); g.setAttribute('opacity','0');
+    g.innerHTML=`<line class="l1" x1="0" y1="0" x2="-.5" y2="1.5" stroke="#2b2118" stroke-width=".55" stroke-linecap="round"/><line class="l2" x1="0" y1="0" x2=".5" y2="1.5" stroke="#2b2118" stroke-width=".55" stroke-linecap="round"/><rect x="-.85" y="-2.6" width="1.7" height="2.8" rx=".7" fill="${c}"/><circle cx="0" cy="-3.4" r=".85" fill="#e2b48c"/>`;
+    peopleG.appendChild(g);
+    return {g,l1:g.querySelector('.l1'),l2:g.querySelector('.l2'),start:.283+i*.0042,dur:.022,side:(i%3-1)*1.6,phase:i*1.7};
+  });
+  const wheels=[...document.querySelectorAll('#coach .wheel')], WX=[-21,-12.4,14];
+  let dir=1, wheelRot=0;
+  const svcs=[...services.querySelectorAll('.svc > div')];
+
+  let lastLen=null,lastT=performance.now(),speed=0,cam=null,head=null;
+  const stage=$('stage'), trip=$('trip');
+  function progress(){const r=trip.getBoundingClientRect();const span=trip.offsetHeight-innerHeight;return span>0?clamp(-r.top/span):0;}
+
+  function render(now){
+    const p=progress();
+    const [len,mins,camW]=at(p);
+    const pt=road.getPointAtLength(len), a=road.getPointAtLength(Math.max(0,len-4)), b=road.getPointAtLength(Math.min(total,len+4));
+    const h=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+    const dt=Math.max(16,now-lastT); lastT=now;
+    const moved=lastLen===null?0:Math.abs(len-lastLen); const fwd=lastLen===null?0:len-lastLen; lastLen=len;
+    speed=lerp(speed,moved/dt*1000,.25); const moving=speed>2;
+    // face the way the road goes on screen; flip only on a clear change of direction
+    const sx=b.x-a.x; if(Math.abs(sx)>1.2) dir=(sx>=0?1:-1)*(fwd<0?-1:1);
+    wheelRot+=fwd*60;
+    wheels.forEach((w,i)=>w.setAttribute('transform',`translate(${WX[i]} -3) rotate(${wheelRot})`));
+    const bob=moving&&!reduce?Math.sin(now/80)*.25:0;
+    coach.setAttribute('transform',`translate(${pt.x} ${pt.y+2.2+bob})`);
+    $('coachFlip').setAttribute('transform',`scale(${dir} 1)`);
+    $('beams').setAttribute('opacity',moving?.9:0);
+    $('tail').setAttribute('fill',moving?'#7a1b12':'#ff3b2a');
+    // doors open while parked at the restaurant
+    const dOpen=clamp((p-.2579)/.0238)*clamp((.802-p)/.0095), de=reduce?(dOpen>.5?1:0):1-Math.pow(1-dOpen,3);
+    leafA.setAttribute('transform',`translate(${-de*2.5} 0)`); leafB.setAttribute('transform',`translate(${de*2.5} 0)`);
+    stepLight.setAttribute('opacity',de);
+    // passengers: from the coach door, down the step, across to the hut door
+    const doorX=pt.x+dir*10.3, doorY=pt.y+1.6, hutX=124, hutY=141.2;
+    people.forEach(m=>{
+      const t=clamp((p-m.start)/m.dur);
+      if(t<=0||t>=1||de<.5){ m.g.setAttribute('opacity','0'); return; }
+      const e=t<.15?t/.15*.12:.12+(t-.15)/.85*.88;           // a short step down, then the walk
+      const x=lerp(doorX,hutX+m.side,e), y=lerp(doorY,hutY,e)+(t<.15?0:Math.sin(e*Math.PI)*-2.2);
+      const a=t<.08?t/.08:(t>.86?(1-t)/.14:1);
+      const sw=reduce?0:Math.sin(now/110+m.phase)*.9;
+      m.l1.setAttribute('x2',(-.5+sw*.6).toFixed(2)); m.l2.setAttribute('x2',(.5-sw*.6).toFixed(2));
+      m.g.setAttribute('transform',`translate(${x.toFixed(2)} ${(y+(reduce?0:Math.abs(sw)*-.25)).toFixed(2)}) scale(${x<hutX+1?.95:1})`);
+      m.g.setAttribute('opacity',a.toFixed(2));
+    });
+    trail.style.strokeDashoffset=total-len;
+
+    const W=stage.clientWidth,H=stage.clientHeight,narrow=W<760;
+    let cx=pt.x, cy=pt.y; const hh=camW*H/W;
+    if(narrow) cy+=hh*.16; else { cx+=camW*.17; cy-=hh*.12; }
+    if(!cam||reduce) cam={x:cx,y:cy,w:camW}; else {cam.x=lerp(cam.x,cx,.18); cam.y=lerp(cam.y,cy,.18); cam.w=lerp(cam.w,camW,.12);}
+    const ch=cam.w*H/W; svg.setAttribute('viewBox',`${cam.x-cam.w/2} ${cam.y-ch/2} ${cam.w} ${ch}`);
+
+    const tot=540+Math.round(mins), H2=Math.floor(tot/60), M2=tot%60;
+    $('hClock').textContent=`${String(H2).padStart(2,'0')}:${String(M2).padStart(2,'0')}`;
+    $('hKm').textContent=Math.round(len/total*58);
+    $('rFill').style.width=(len/total*100)+'%';
+    dots.forEach((d,i)=>d.classList.toggle('past',len>=RAIL[i]-1));
+    const st=$('hState'); st.textContent=moving?'Driving':'Stopped'; st.classList.toggle('parked',!moving);
+
+    let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
+    const cp=clamp((p-.2519)/(.8-.2519)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
+    photos.forEach(o=>o.el.classList.toggle('in',p>=o.a&&p<o.b));
+    const reelOn=p>=.7047&&p<.8&&!document.documentElement.classList.contains('still'); if(reelOn&&reel.paused&&!reel.ended){playReel();} else if(!reelOn){ if(!reel.paused) reel.pause(); if(reel.ended) reel.currentTime=0; }
+
+    // services and the video sit on a dark layer over the map
+    const svcOn=p>=.6094&&p<.7047; services.classList.toggle('on',svcOn); arrive.classList.toggle('on',svcOn||(p>=.7047&&p<.8));
+    svcs.forEach((el,i)=>el.classList.toggle('on',svcOn&&p>=.6153+i*.0131));
+
+    $('intro').classList.toggle('gone',p>.015);
+    $('nudgeText').textContent=(p>=.7047&&p<.8&&reel.ended)?'Video finished. Scroll to continue':'Keep scrolling to drive on';
+    const tr=trip.getBoundingClientRect(); $('skip').classList.toggle('gone',tr.bottom<innerHeight*1.02);
+    const inVideo=p>=.7047&&p<.8, videoDone=reel.ended;
+    $('nudge').classList.toggle('on',p>.015&&p<.97&&now-lastScroll>(inVideo?1500:2200)&&(!inVideo||videoDone)&&!document.documentElement.classList.contains('still'));
+    requestAnimationFrame(render);
+  }
+  let lastScroll=performance.now();
+  addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');},{passive:true});
+  const unmute=$('unmute');
+  function playReel(){
+    reel.preload='auto'; reel.muted=false; reel.volume=1;
+    reel.play().then(()=>{unmute.hidden=true;}).catch(()=>{ reel.muted=true; reel.play().catch(()=>{}); unmute.hidden=false; });
+  }
+  unmute.addEventListener('click',()=>{ reel.muted=false; reel.play().catch(()=>{}); unmute.hidden=true; });
+  requestAnimationFrame(render);
+  try{ if(localStorage.getItem('bikta-still')==='1') setStill(true); }catch(e){}
+
+  /* form → WhatsApp */
+  const f=id=>$(id);
+  function fmtDate(v){if(!v)return'';const [y,m,d]=v.split('-');return `${+d}.${+m}.${y}`;}
+  function build(){
+    f('sizeRead').textContent=f('fSize').value;
+    const name=f('fName').value.trim(), org=f('fOrg').value.trim(), note=f('fNote').value.trim();
+    const lines=[`Hi, ${name?'this is '+name:'hello'}${org?' ('+org+')':''}.`,'We would like to book a lunch stop at HaBikta:',
+      `• ${f('fSize').value} people`,`• ${fmtDate(f('fDate').value)}, arriving around ${f('fTime').value}`,
+      `• Vegetarian: ${f('fVeg').value||0}, vegan: ${f('fVegan').value||0}, gluten-free: ${f('fGf').value||0}`];
+    if(note) lines.push(`• ${note}`);
+    lines.push('Thank you!');
+    const text=lines.join('\n'); f('msg').textContent=text;
+    f('send').href='https://wa.me/972584633555?text='+encodeURIComponent(text);
+  }
+  f('f').addEventListener('input',build); f('f').addEventListener('submit',e=>e.preventDefault()); build();
+})();
+</script>
+
+</body>
+</html>
