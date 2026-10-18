@@ -132,11 +132,12 @@ p{margin:0}
 .svc svg text{fill:var(--bus);font-family:var(--display);font-size:22px}
 
 /* intro */
-.intro{position:absolute;z-index:28;inset:0;display:grid;align-content:end;gap:14px;padding:0 max(24px,env(safe-area-inset-right,0px)) 13vh max(24px,env(safe-area-inset-left,0px));background:linear-gradient(transparent 30%,rgba(22,18,14,.85));color:var(--paper);transition:opacity .4s}
+.intro{position:absolute;z-index:28;inset:0;display:grid;align-content:end;gap:14px;padding:0 max(24px,env(safe-area-inset-right,0px)) 13vh max(24px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(22,18,14,.25) 0%,rgba(22,18,14,.72) 38%,rgba(22,18,14,.94) 100%);color:var(--paper);transition:opacity .4s}
 .intro.gone{opacity:0;pointer-events:none}
 .intro .logo{width:84px;height:84px;border-radius:50%;border:3px solid var(--paper);object-fit:cover}
-.intro h1{font-size:clamp(60px,10vw,140px);max-width:13ch}
-.intro p{font-size:20px;max-width:44ch;color:#e5d9bf}
+.intro h1{font-size:clamp(64px,10.5vw,150px);max-width:13ch;color:#fff8ea;text-shadow:0 4px 0 rgba(0,0,0,.35),0 10px 40px rgba(0,0,0,.65)}
+.intro h1 .hl{color:var(--bus)}
+.intro p{font-size:clamp(19px,1.8vw,24px);font-weight:700;max-width:44ch;color:#fff8ea;text-shadow:0 2px 12px rgba(0,0,0,.7)}
 .cue{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;color:var(--bus)}
 .cue i{display:block;width:28px;height:44px;border:3px solid var(--bus);border-radius:16px;position:relative}
 .cue i::after{content:"";position:absolute;left:50%;top:7px;width:5px;height:9px;margin-left:-2.5px;border-radius:3px;background:var(--bus);animation:wheel 1.4s infinite}
@@ -478,7 +479,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
     <div class="intro" id="intro">
       <img class="logo" src="/tour/logo.jpg" alt="הבקתה, המבורגר של מושבניקים">
-      <h1>יום סיור בעוטף עם עצירת צהריים בבקתה</h1>
+      <h1>יום סיור בעוטף עם <span class="hl">עצירת צהריים בבקתה</span></h1>
       <p>שדרות, אתר הנובה, צהריים בבקתה ואתר המכוניות בתקומה. עד 200 איש, כשר, 45 דקות ויוצאים בזמן.</p>
       <div class="cue"><i></i> גללו למטה והאוטובוס יוצא לדרך</div>
     </div>
