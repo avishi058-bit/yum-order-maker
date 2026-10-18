@@ -100,7 +100,7 @@ p{margin:0}
 .sign b{display:block;font-family:var(--display);font-size:44px;line-height:1}
 .sign small{font-size:12px;font-weight:800;letter-spacing:.08em}
 .sign.bikta{background:var(--ember);outline-color:var(--ember)}
-.sign.memorial{background:#2c2620;outline-color:#2c2620}
+.sign.memorial{background:var(--sign);outline-color:var(--sign)}
 
 /* photos */
 .ph{position:absolute;z-index:20;left:var(--x);top:var(--y);width:var(--w);margin:0;background:#fff;padding:8px 8px var(--pb,8px);box-shadow:0 18px 40px rgba(0,0,0,.4);transform:translate(var(--fx),130vh) rotate(var(--fr));opacity:0;transition:transform .8s cubic-bezier(.2,.85,.25,1.1),opacity .3s}
@@ -233,6 +233,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .credits a{color:inherit}
 
 @media (max-width:760px){
+  #trip{height:2400vh}
+  .stage.photo-on .card{padding:10px 14px;gap:2px}
+  .stage.photo-on .card #cText,.stage.photo-on .card .clock,.stage.photo-on .card .candle{display:none!important}
+  .stage.photo-on .card h2{font-size:28px!important}
+  .ph .img{max-height:46svh}
   .card{top:auto;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:none;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));width:auto;padding:14px 16px;box-shadow:5px 5px 0 var(--ink);gap:6px}
   .card h2{font-size:40px}
   .card p{font-size:15px}
@@ -348,7 +353,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <rect x="2.5" y="-19" width="2" height="18" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
         <rect x="6" y="-14" width="2" height="13" fill="#f4f1ea" stroke="#9a9283" stroke-width=".3"/>
         <path d="M11 -1 V-14" stroke="#6b5a47" stroke-width=".5"/><path d="M11 -14 h6 v4 h-6" fill="#fff" stroke="#3b5ba5" stroke-width=".4"/><path d="M11 -12.7 h6 M11 -11.3 h6" stroke="#3b5ba5" stroke-width=".35"/>
-        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#2c2620"/>
+        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#0f6b45" stroke="#ffffff" stroke-width=".7"/>
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">שדרות</text>
       </g>
       <!-- Nova site, Re'im: memorial poles among trees -->
@@ -359,7 +364,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <path d="M-6 0 V-10 M-2 0 V-12 M2 0 V-11 M6 0 V-9" stroke="#6b5a47" stroke-width=".6"/>
         <path d="M-2 -12 h4 v2.6 h-4 Z M6 -9 h3.6 v2.4 h-3.6 Z" fill="#fff" stroke="#3b5ba5" stroke-width=".3"/>
         <circle cx="-6" cy="-10" r="1.2" fill="#c8323a"/><circle cx="2" cy="-11" r="1.2" fill="#c8323a"/>
-        <rect x="-18" y="3" width="36" height="7" rx="1.2" fill="#2c2620"/>
+        <rect x="-18" y="3" width="36" height="7" rx="1.2" fill="#0f6b45" stroke="#ffffff" stroke-width=".7"/>
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">אתר הנובה</text>
       </g>
       <!-- Tkuma: the car site -->
@@ -370,7 +375,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <path d="M-4 -9 H-0.5 V-6.4 H-6 Z M0.5 -9 H3.6 L5.6 -6.4 H0.5 Z" fill="#2b2118"/>
         <circle cx="-5.5" cy="-1" r="2" fill="#2b2118"/><circle cx="5.5" cy="-1" r="2" fill="#2b2118"/>
         <path d="M8 -6 V-16" stroke="#6b5a47" stroke-width=".5"/><path d="M8 -16 h6 v4 h-6 Z" fill="#fff" stroke="#3b5ba5" stroke-width=".35"/><path d="M8 -14.7 h6 M8 -13.3 h6" stroke="#3b5ba5" stroke-width=".3"/>
-        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#2c2620"/>
+        <rect x="-15" y="3" width="30" height="7" rx="1.2" fill="#0f6b45" stroke="#ffffff" stroke-width=".7"/>
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">תקומה</text>
       </g>
       <!-- the restaurant: a wooden hut with a hanging wooden sign -->
@@ -712,7 +717,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
     const cp=clamp((p-.2814)/(.8079-.2814)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
-    photos.forEach(o=>{ if(o.el!==reelCard) o.el.classList.toggle('in',p>=o.a&&p<o.b); });
+    let anyPhoto=false; photos.forEach(o=>{ if(o.el!==reelCard){ const on=p>=o.a&&p<o.b; o.el.classList.toggle('in',on); if(on) anyPhoto=true; } });
+    stage.classList.toggle('photo-on',anyPhoto||(p>=.7164&&p<.8079));
     const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
     if(inReel){ reelClosed=false; if(reel.ended){ reel.currentTime=0; } if(reel.paused&&!still&&!reelWatched) playReel(); }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
