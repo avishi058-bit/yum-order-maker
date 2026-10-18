@@ -65,7 +65,7 @@ p{margin:0}
 .card::before,.card::after{content:"";position:absolute;top:10px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d9d4c7,#6d6a63);box-shadow:0 1px 1px rgba(0,0,0,.5)}
 .card::before{right:12px}.card::after{left:12px}
 .card h2{color:#2b1a0c;text-shadow:0 1px 0 rgba(255,236,200,.55),0 -1px 0 rgba(60,30,10,.35)}
-.card .time{font-weight:800;font-size:13px;letter-spacing:.06em;color:#4a2510;font-variant-numeric:tabular-nums;display:inline-block}
+.card .time{font-weight:800;font-size:15px;letter-spacing:.06em;color:#4a2510;font-variant-numeric:tabular-nums;display:inline-block}
 .card .time.roll{animation:roll .5s cubic-bezier(.3,1.4,.5,1)}
 @keyframes roll{from{transform:perspective(200px) rotateX(-90deg);opacity:.2}to{transform:none;opacity:1}}
 .card .num{position:absolute;top:-18px;inset-inline-start:22px;min-width:36px;height:36px;padding:0 8px;border-radius:999px;background:#2b1a0c;color:#f6e7c9;font-weight:800;font-size:14px;display:inline-flex;align-items:center;justify-content:center;border:2px solid #dcb683}
@@ -78,7 +78,7 @@ p{margin:0}
 .card.memorial .candle{display:block}
 @keyframes flicker{0%,100%{transform:scale(1) rotate(-2deg)}30%{transform:scale(1.08,.94) rotate(2deg)}60%{transform:scale(.95,1.06) rotate(-1deg)}}
 .card h2{font-size:clamp(44px,5vw,72px)}
-.card p{color:#3a2412;font-size:17px;font-weight:600}
+.card p{color:#24150a;font-size:19px;font-weight:700;line-height:1.45}
 .card.quiet{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.2)),repeating-linear-gradient(180deg,#3d2e22 0 34px,#33261c 34px 36px)!important;color:var(--paper)}
 .card.quiet h2{color:#f2e8d4;text-shadow:0 2px 0 rgba(0,0,0,.4)}
 .card.quiet .time{color:#e5c79a}
@@ -276,6 +276,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .ph.in .img img,.cue i::after{animation:none!important}
 }
 
+#confetti{position:absolute;inset:0;width:100%;height:100%;z-index:29;pointer-events:none}
 /* video centered on the screen */
 .ph.reelcard{display:none!important}
 .vcenter{position:absolute;inset:0;z-index:27;display:grid;place-items:center;background:rgba(22,18,14,.78);opacity:0;pointer-events:none;transition:opacity .45s;padding:70px 16px 24px}
@@ -303,11 +304,11 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .menu:not([hidden]){display:grid;position:fixed;z-index:110;top:calc(max(10px,env(safe-area-inset-top,0px)) + 54px);inset-inline-end:max(12px,env(safe-area-inset-left,0px));min-width:200px;background:var(--night);border:2px solid var(--bus);border-radius:14px;padding:6px;gap:4px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
   .menu a,.menu button{font:inherit;font-weight:800;font-size:16px;color:var(--paper);background:none;border:0;text-align:start;padding:12px 14px;border-radius:10px;text-decoration:none;cursor:pointer;min-height:44px}
   .menu a:hover,.menu button:hover{background:rgba(242,183,5,.18)}
-  .card{top:auto!important;bottom:calc(18px + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;max-height:none;border-radius:18px!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:visible}
+  .card{top:auto!important;bottom:calc(max(64px,9svh) + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;max-height:none;border-radius:18px!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:visible}
   .card::before,.card::after{top:8px}
   .card h2{font-size:30px!important;line-height:1}
   .card .num{top:-14px}
-  .card p#cText{font-size:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card p#cText{font-size:17px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .card .clock svg{width:40px;height:40px}.card .clock b{font-size:30px}
   .cphoto:not([hidden]){display:block;position:relative;margin:4px 0 2px;border-radius:10px;overflow:hidden;height:19svh;background:#2b1a0c;box-shadow:inset 0 0 0 3px #4a2c14}
   .cphoto img,.cphoto video{width:100%;height:100%;object-fit:cover;display:block;animation:fadeIn .5s ease}
@@ -316,7 +317,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .cphoto .unmute{bottom:8px;inset-inline:auto;inset-inline-end:8px;padding:0 12px;font-size:13px;min-height:36px}
   .stage.photo-on .card #cText{display:none}
   .stage.photo-on .card .clock{display:none!important}
-  .nudge{top:auto!important;bottom:calc(50svh + 34px)!important}
+  .nudge{top:auto!important;bottom:calc(50svh + 80px)!important}
   .vframe{height:min(60svh,60vh)}
   .candle{bottom:auto;top:16px}
 }
@@ -494,6 +495,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
       <g id="people"></g>
     </svg>
     <div class="dim" id="dim"></div>
+    <canvas id="confetti" aria-hidden="true"></canvas>
 
     <!-- dark layer for the services and the video, over the map -->
     <div class="arrive" id="arrive" aria-hidden="true">
@@ -689,7 +691,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     {p:.09, t:'10:15 · בדרך', h:'דרומה, כביש 232', d:'עשרים דקות נסיעה.'},
     {p:.16, t:'10:40 · רעים', h:'אתר הנובה', d:'זוכרים את מי שבאו לרקוד ולא שבו.', quiet:true, sign:['רעים','אתר הנובה'], memorial:true},
     {p:.19, t:'11:40 · עולים לאוטובוס', h:'בדרך לצהריים', d:'עוד רבע שעה, והשולחן כבר ערוך.'},
-    {p:.27, t:'11:55 · הבקתה', h:'הגענו', d:'האוטובוס חונה צמוד לדלת.', sign:['תושייה','הבקתה'], bikta:true, clock:true},
+    {p:.27, t:'11:55 · הבקתה', h:'הגענו', party:true, d:'האוטובוס חונה צמוד לדלת.', sign:['תושייה','הבקתה'], bikta:true, clock:true},
     {p:.2929, t:'11:56 · הדלתות נפתחות', h:'יורדים מהאוטובוס', d:'ישר אל השולחן.', clock:true},
     {p:.3615, t:'11:57 · נכנסים', h:'שולחן שוק עשיר ומפנק', d:'מחכה לכם מוכן וטרי לרגע שתגיעו, כך שתוכלו לאכול ולהמשיך.', clock:true},
     {p:.5103, t:'12:10 · כולם יושבים', h:'עד 200 איש', d:'משלחות, בתי ספר ותיירים מכל העולם.', clock:true},
@@ -700,7 +702,22 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     {p:.8963, t:'13:00 · המסלול שלכם', h:'רוצים לשדרג את הסיור שלכם עם עצירת צהריים אצלנו?', d:'ממלאים פרטים, ושולחים לנו בוואטסאפ.', go:true}
   ];
   const card=$('card'), swap=$('swap'), sign=$('sign'); let phase=-1;
-  function setPhase(i){if(i===phase)return;phase=i;const P=PHASES[i];
+  // confetti burst (brand colors), drawn on a canvas over the map
+  const cfx=$('confetti'), cctx=cfx.getContext('2d'); let bits=[], cfRun=false;
+  function confetti(){
+    if(reduce||document.documentElement.classList.contains('still')) return;
+    const W=cfx.width=cfx.clientWidth, H=cfx.height=cfx.clientHeight, COLORS=['#f7941d','#ffd23f','#d9481c','#006b3c','#ffffff','#7cc4d8'];
+    for(let i=0;i<160;i++){ const fromL=i%2===0; bits.push({x:fromL?W*.08:W*.92, y:H*.62, vx:(fromL?1:-1)*(3+Math.random()*7), vy:-(9+Math.random()*9), w:6+Math.random()*7, h:4+Math.random()*5, r:Math.random()*6.3, vr:(Math.random()-.5)*.35, c:COLORS[i%COLORS.length], life:0}); }
+    if(!cfRun){ cfRun=true; requestAnimationFrame(cfTick); }
+  }
+  function cfTick(){
+    const W=cfx.width, H=cfx.height; cctx.clearRect(0,0,W,H);
+    bits.forEach(b=>{ b.life++; b.vy+=.28; b.vx*=.99; b.x+=b.vx; b.y+=b.vy; b.r+=b.vr;
+      cctx.save(); cctx.translate(b.x,b.y); cctx.rotate(b.r); cctx.globalAlpha=Math.max(0,1-b.life/170); cctx.fillStyle=b.c; cctx.fillRect(-b.w/2,-b.h/2,b.w,b.h*Math.abs(Math.cos(b.life/6))); cctx.restore(); });
+    bits=bits.filter(b=>b.life<170&&b.y<H+40);
+    if(bits.length) requestAnimationFrame(cfTick); else { cfRun=false; cctx.clearRect(0,0,W,H); }
+  }
+  function setPhase(i){if(i===phase)return;const prev=phase;phase=i;const P=PHASES[i]; if(P.party&&prev<i) confetti();
     const apply=()=>{
       const tm=$('cTime'); tm.textContent=P.t; tm.classList.remove('roll'); void tm.offsetWidth; if(!reduce) tm.classList.add('roll');
       const h=$('cTitle'); h.textContent=''; h.style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';
