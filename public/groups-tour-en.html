@@ -270,12 +270,48 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .ph,.sign,.card .swap,.dim,.arrive,.svc div,.svc svg .d{transition:none!important}
   .ph.in .img img,.cue i::after{animation:none!important}
 }
+
+/* ===== phones: map on top, one wooden card below, one menu ===== */
+.menu-btn,.menu,.cphoto{display:none}
+@media (max-width:760px){
+  #trip{height:1750vh}
+  .lang,.motion,.skip,.sign,.hud .rail,.hud .state,.nudge b{display:none!important}
+  .hud{background:none;padding-top:10px}
+  #minor,#moshavim,#fields{display:none}
+  .ph:not(.reelcard){display:none!important}
+  .ph.reelcard{display:none!important}
+  .menu-btn{display:grid;place-items:center;position:fixed;z-index:110;top:max(10px,env(safe-area-inset-top,0px));inset-inline-end:max(12px,env(safe-area-inset-left,0px));width:46px;height:46px;border-radius:12px;border:2px solid var(--bus);background:var(--night);color:var(--paper);font-size:22px;cursor:pointer}
+  .menu:not([hidden]){display:grid;position:fixed;z-index:110;top:calc(max(10px,env(safe-area-inset-top,0px)) + 54px);inset-inline-end:max(12px,env(safe-area-inset-left,0px));min-width:200px;background:var(--night);border:2px solid var(--bus);border-radius:14px;padding:6px;gap:4px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .menu a,.menu button{font:inherit;font-weight:800;font-size:16px;color:var(--paper);background:none;border:0;text-align:start;padding:12px 14px;border-radius:10px;text-decoration:none;cursor:pointer;min-height:44px}
+  .menu a:hover,.menu button:hover{background:rgba(242,183,5,.18)}
+  .card{top:auto!important;bottom:0!important;left:0!important;right:0!important;width:auto!important;transform:none!important;max-height:52svh;border-radius:18px 18px 0 0!important;border-bottom:0!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:hidden}
+  .card::before,.card::after{top:8px}
+  .card h2{font-size:32px!important}
+  .card p#cText{font-size:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .clock svg{width:40px;height:40px}.card .clock b{font-size:30px}
+  .cphoto:not([hidden]){display:block;position:relative;margin:4px 0 2px;border-radius:10px;overflow:hidden;height:22svh;background:#2b1a0c;box-shadow:inset 0 0 0 3px #4a2c14}
+  .cphoto img,.cphoto video{width:100%;height:100%;object-fit:cover;display:block;animation:fadeIn .5s ease}
+  .cphoto figcaption{position:absolute;inset-inline:0;bottom:0;padding:18px 10px 8px;background:linear-gradient(transparent,rgba(22,18,14,.85));color:#fff8ea;font-weight:800;font-size:14px;line-height:1.25}
+  .cphoto figcaption:empty{display:none}
+  .cphoto .unmute{bottom:8px;inset-inline:auto;inset-inline-end:8px;padding:0 12px;font-size:13px;min-height:36px}
+  .stage.photo-on .card #cText{display:none}
+  .stage.photo-on .card .clock{display:none!important}
+  .nudge{top:auto!important;bottom:calc(52svh + 8px)!important}
+  .candle{bottom:auto;top:16px}
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
 
 
 <a class="skip" id="skip" href="#book">Skip to the end ↓</a>
+<button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menu"><span aria-hidden="true">☰</span><span class="sr">Menu</span></button>
+<div class="menu" id="menu" hidden>
+  <a class="mlang" href="/groups-tour.html" hreflang="he" lang="he">🌐 עברית</a>
+  <button type="button" id="menuMotion">Pause animations</button>
+  <a href="#book" id="menuSkip">Skip to the end ↓</a>
+</div>
 <div class="nudge" id="nudge" aria-hidden="true"><span class="chev"></span><span class="chev"></span><b id="nudgeText">Keep scrolling to drive on</b></div>
 <button class="motion" id="motionBtn" type="button" aria-pressed="false">Pause animations</button>
 <nav class="lang" aria-label="Language / שפה"><span class="globe" aria-hidden="true">🌐</span><a href="/groups-tour.html" hreflang="he" lang="he">עברית</a><span class="cur" aria-current="page">English</span></nav>
@@ -465,24 +501,25 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
     <!-- Sderot (public domain, zstadler) -->
     <figure class="ph" data-show=".059,.09" style="--arn:1.3333;--x:5%;--y:15%;--w:27%;--r:-4deg;--fr:-26deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/memorial-wide.jpg" alt="The pillar monument, flags and memorial stones in the Garden of Heroism and Remembrance, Sderot"></div><span>Garden of Heroism and Remembrance, Sderot</span></figure>
-    <figure class="ph nocap" data-show=".071,.09" style="--arn:0.75;--x:24%;--y:28%;--w:13%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="The memorial pillars in Sderot against a blue sky"></div></figure>
+    <figure class="ph nocap" data-show=".071,.09" data-moff="1" style="--arn:0.75;--x:24%;--y:28%;--w:13%;--r:5deg;--fr:28deg;--fx:20vw;--mx:58%;--my:24%;--mw:36%;--ar:3/4"><div class="img"><img src="/tour/memorial-pillars.jpg" alt="The memorial pillars in Sderot against a blue sky"></div></figure>
     <!-- Nova (CC BY 2.5, Zeev Stein / PikiWiki) -->
     <figure class="ph" data-show=".1633,.19" style="--arn:2;--x:4%;--y:20%;--w:34%;--r:-1.5deg;--fr:-10deg;--fx:-40vw;--mx:4%;--my:16%;--mw:92%;--ar:2/1"><div class="img"><img src="/tour/nova-site.jpg" alt="The Nova festival memorial near Re’im, a field of memorial posts and flags among the trees"></div><span>Nova memorial site, Re’im</span><small>Photo: Zeev Stein, PikiWiki, CC BY 2.5</small></figure>
     <!-- at the restaurant, after the coach doors open -->
-    <figure class="ph" data-show=".3709,.4093" style="--arn:1.3333;--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="A rich serving table in front of HaBikta"></div><span>A generous market-style spread, fresh and ready the moment you arrive.</span></figure>
-    <figure class="ph" data-show=".4093,.4525" style="--arn:0.5625;--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="A long table of burgers, fries and onion rings in front of HaBikta"></div><span>Five minutes in, the whole group has a full plate</span></figure>
-    <figure class="ph nocap" data-show=".4525,.4909" style="--arn:1.6;--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="HaBikta burgers"></div></figure>
-    <figure class="ph" data-show=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="A youth delegation picking up burgers at the counter"></div><span>Tour groups from around the world, every day</span></figure>
-    <figure class="ph" data-show=".5341,.5822" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="A large group eating on the lawn in the shade of the trees"></div><span>Seating on the lawn, in the shade of the trees</span></figure>
-    <figure class="ph nocap" data-show=".5822,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="A group around a table on the lawn"></div></figure>
+    <figure class="ph" data-show=".3709,.4093" data-mshow=".3709,.4909" style="--arn:1.3333;--x:4%;--y:13%;--w:30%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/buffet.jpg" alt="A rich serving table in front of HaBikta"></div><span>A generous market-style spread, fresh and ready the moment you arrive.</span></figure>
+    <figure class="ph" data-show=".4093,.4525" data-moff="1" style="--arn:0.5625;--x:12%;--y:9%;--w:15%;--r:2deg;--fr:22deg;--fx:20vw;--mx:20%;--my:10%;--mw:58%;--ar:9/16"><div class="img"><img src="/tour/buffet-tall.jpg" alt="A long table of burgers, fries and onion rings in front of HaBikta"></div><span>Five minutes in, the whole group has a full plate</span></figure>
+    <figure class="ph nocap" data-show=".4525,.4909" data-moff="1" style="--arn:1.6;--x:4%;--y:18%;--w:31%;--r:-2deg;--fr:-20deg;--fx:-40vw;--mx:6%;--my:14%;--mw:88%;--ar:16/10"><div class="img"><img src="/tour/burgers.jpg" alt="HaBikta burgers"></div></figure>
+    <figure class="ph" data-show=".4909,.5341" data-mshow=".4909,.5341" style="--arn:1.3333;--x:5%;--y:14%;--w:30%;--r:2deg;--fr:22deg;--fx:20vw;--mx:6%;--my:11%;--mw:88%"><div class="img"><img src="/tour/delegation.jpg" alt="A youth delegation picking up burgers at the counter"></div><span>Tour groups from around the world, every day</span></figure>
+    <figure class="ph" data-show=".5341,.5822" data-mshow=".5341,.6248" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:-2deg;--fr:-22deg;--fx:-40vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/trees.jpg" alt="A large group eating on the lawn in the shade of the trees"></div><span>Seating on the lawn, in the shade of the trees</span></figure>
+    <figure class="ph nocap" data-show=".5822,.6248" data-moff="1" style="--arn:0.75;--x:12%;--y:10%;--w:18%;--r:2deg;--fr:20deg;--fx:20vw;--mx:16%;--my:10%;--mw:66%;--ar:3/4"><div class="img"><img src="/tour/lawn.jpg" alt="A group around a table on the lawn"></div></figure>
     <figure class="ph reelcard" id="reelCard" data-show=".7164,.8079" style="--arn:0.5625;--x:10%;--y:13%;--w:20%;--r:-3deg;--fr:-20deg;--fx:-40vw;--mx:24%;--my:12%;--mw:52%;--ar:9/16"><div class="img"><video id="reel" src="/habikta-canada-reel.mp4" poster="/habikta-canada-reel-poster.jpg" playsinline preload="none" aria-label="Visitors from Canada talk about their lunch at HaBikta"></video></div><button class="unmute" id="unmute" type="button" hidden>🔊 Turn sound on</button><button class="reelx" id="reelX" type="button" aria-label="Close video" hidden>✕</button><span>Visitors from Canada 🇨🇦</span></figure>
 
     <!-- Tkuma: the burnt car lot (Wikimedia Commons, public domain, VELOCITY_club) -->
     <figure class="ph" data-show=".8607,.9001" style="--arn:1.3333;--x:5%;--y:16%;--w:26%;--r:-3deg;--fr:-24deg;--fx:-40vw;--mx:4%;--my:12%;--mw:58%;--ar:4/3"><div class="img"><img src="/tour/tkuma-flags.jpg" alt="A burnt car draped in Israeli flags at the car memorial near Tkuma"></div><span>Car memorial, Tkuma</span></figure>
-    <figure class="ph nocap" data-show=".8732,.9001" style="--arn:1.3333;--x:18%;--y:50%;--w:17%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="A wall of burnt cars cleared from Route 232"></div></figure>
+    <figure class="ph nocap" data-show=".8732,.9001" data-moff="1" style="--arn:1.3333;--x:18%;--y:50%;--w:17%;--r:4deg;--fr:26deg;--fx:20vw;--mx:56%;--my:26%;--mw:40%;--ar:4/3"><div class="img"><img src="/tour/tkuma-wall.jpg" alt="A wall of burnt cars cleared from Route 232"></div></figure>
 
     <div class="card" id="card">
       <span class="num" id="cNum" hidden></span>
+      <figure class="cphoto" id="cPhoto" hidden><img id="cPhotoImg" alt=""><figcaption id="cPhotoCap"></figcaption></figure>
       <span class="candle" aria-hidden="true"><i class="flame"></i></span>
       <div class="swap" id="swap">
         <p class="time" id="cTime">08:45 · Departure</p>
@@ -590,7 +627,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   document.documentElement.lang='en'; document.documentElement.dir='ltr';
   let reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const motionBtn=$('motionBtn');
-  function setStill(on){ reduce=on||matchMedia('(prefers-reduced-motion: reduce)').matches; document.documentElement.classList.toggle('still',on); motionBtn.setAttribute('aria-pressed',on?'true':'false'); motionBtn.textContent=on?'Play animations':'Pause animations'; const m=$('mapsvg'); if(m&&m.pauseAnimations){ on?m.pauseAnimations():m.unpauseAnimations(); } const v=$('reel'); if(v&&on) v.pause(); try{localStorage.setItem('bikta-still',on?'1':'0');}catch(e){} }
+  function setStill(on){ reduce=on||matchMedia('(prefers-reduced-motion: reduce)').matches; document.documentElement.classList.toggle('still',on); motionBtn.setAttribute('aria-pressed',on?'true':'false'); motionBtn.textContent=on?'Play animations':'Pause animations'; const mm=document.getElementById('menuMotion'); if(mm) mm.textContent=motionBtn.textContent; const m=$('mapsvg'); if(m&&m.pauseAnimations){ on?m.pauseAnimations():m.unpauseAnimations(); } const v=$('reel'); if(v&&on) v.pause(); try{localStorage.setItem('bikta-still',on?'1':'0');}catch(e){} }
   motionBtn.addEventListener('click',()=>setStill(motionBtn.getAttribute('aria-pressed')!=='true'));
   const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
   const lerp=(a,b,t)=>a+(b-a)*t;
@@ -647,7 +684,26 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     if(P.sign){$('signSmall').textContent=P.sign[0];$('signText').textContent=P.sign[1];sign.classList.toggle('bikta',!!P.bikta);sign.classList.toggle('memorial',!!P.memorial);sign.classList.add('on');}else sign.classList.remove('on');
     $('dim').style.opacity=P.quiet?.5:0;
   }
-  const photos=[...document.querySelectorAll('.ph')].map(el=>{const [a,b]=el.dataset.show.split(',').map(Number);return {el,a,b};});
+  const photos=[...document.querySelectorAll('.ph')].map(el=>{const [a,b]=el.dataset.show.split(',').map(Number); const ms=(el.dataset.mshow||el.dataset.show).split(',').map(Number); return {el,a,b,ma:ms[0],mb:ms[1],moff:el.dataset.moff==='1'};});
+  const phoneQ=matchMedia('(max-width:760px)');
+  const cPhoto=$('cPhoto'), cImg=$('cPhotoImg'), cCap=$('cPhotoCap'); let cKey='';
+  // on phones the video plays inside the card
+  if(phoneQ.matches){ const v=$('reel'), u=$('unmute'); cPhoto.appendChild(v); cPhoto.appendChild(u); v.style.display='none'; }
+  function phonePhoto(p){
+    let pick=null; photos.forEach(o=>{ if(!o.moff&&!o.el.classList.contains('reelcard')&&p>=o.ma&&p<o.mb) pick=o; });
+    const inV=p>=.7164&&p<.8079, v=$('reel');
+    const key=inV?'video':(pick?pick.el.querySelector('img').getAttribute('src'):'');
+    if(key===cKey) return !!key; cKey=key;
+    if(!key){ cPhoto.hidden=true; return false; }
+    cPhoto.hidden=false;
+    if(inV){ cImg.style.display='none'; v.style.display='block'; cCap.textContent=''; }
+    else { v.style.display='none'; cImg.style.display='block'; const im=pick.el.querySelector('img'); cImg.src=im.getAttribute('src'); cImg.alt=im.alt; const sp=pick.el.querySelector('span'); cCap.textContent=sp?sp.textContent:''; cImg.style.animation='none'; void cImg.offsetWidth; cImg.style.animation=''; }
+    return true;
+  }
+  const menuBtn=$('menuBtn'), menu=$('menu');
+  menuBtn.addEventListener('click',()=>{ const open=menu.hidden; menu.hidden=!open; menuBtn.setAttribute('aria-expanded',open?'true':'false'); });
+  menu.addEventListener('click',e=>{ if(e.target.closest('a,button')){ menu.hidden=true; menuBtn.setAttribute('aria-expanded','false'); } });
+  $('menuMotion').addEventListener('click',()=>$('motionBtn').click());
   const reel=$('reel');
   const arrive=$('arrive'), services=$('services'), leafA=$('leafA'), leafB=$('leafB'), stepLight=$('stepLight');
   // passengers that step off at the restaurant and walk to the hut door
@@ -704,7 +760,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 
     const W=stage.clientWidth,H=stage.clientHeight,narrow=W<760;
     let cx=pt.x, cy=pt.y; const hh=camW*H/W;
-    if(narrow) cy+=hh*.16; else { cx+=camW*.05; cy-=hh*.12; }
+    if(narrow) cy+=hh*.22; else { cx+=camW*.05; cy-=hh*.12; }
     const wide=clamp(Math.log(camW/400)/Math.log(countryW()/400));   // 0 = following the coach, 1 = whole country
     cx=lerp(cx,CC.x,wide); cy=lerp(cy,CC.y,wide);
     $('countryLabels').style.opacity=clamp((camW-500)/900);
@@ -722,7 +778,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     let pi=0; PHASES.forEach((P,i)=>{if(p>=P.p)pi=i;}); setPhase(pi);
     const cp=clamp((p-.2814)/(.8079-.2814)); $('arc').style.strokeDashoffset=188.5*(1-cp); $('cMin').textContent=Math.round(cp*45);
     let anyPhoto=false; photos.forEach(o=>{ if(o.el!==reelCard){ const on=p>=o.a&&p<o.b; o.el.classList.toggle('in',on); if(on) anyPhoto=true; } });
-    stage.classList.toggle('photo-on',anyPhoto||(p>=.7164&&p<.8079));
+    stage.classList.toggle('photo-on', phoneQ.matches ? phonePhoto(p) : (anyPhoto||(p>=.7164&&p<.8079)));
     const inReel=p>=.7164&&p<.8079, still=document.documentElement.classList.contains('still');
     if(inReel){ reelClosed=false; if(reel.ended){ reel.currentTime=0; } if(reel.paused&&!still&&!reelWatched) playReel(); }
     const playing=reelStarted&&!reel.ended&&!reel.paused&&!reelClosed;
