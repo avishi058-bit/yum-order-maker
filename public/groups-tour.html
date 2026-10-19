@@ -16,7 +16,7 @@
 <style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karantina:wght@400;700&family=Assistant:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap">
 <style>
 /* Layout: sticky full-screen stage. Drawn map, camera follows a white tour coach (side view) along the real order of stops; at the restaurant the coach doors open and photos pop over the map; then a form, guide quotes and directions below. Single deliberate look. */
 :root{
@@ -25,25 +25,29 @@
   --ink:#2a1a10; --ink-soft:#5e4632;
   --bus:#f7941d; --ember:#d9481c; --sign:#006b3c; --night:#1d130d;
   --wa:#0b7a41; --ember-text:#9e3614;
-  --display:"Karantina","Assistant",system-ui,sans-serif;
-  --body:"Assistant",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Rubik",system-ui,sans-serif;
+  --body:"Rubik",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;direction:rtl;overflow-x:hidden}
-h1,h2,h3{font-family:var(--display);font-weight:700;line-height:.92;margin:0;text-wrap:balance}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;letter-spacing:-.015em;margin:0;text-wrap:balance}
 p{margin:0}
 :focus-visible{outline:3px solid var(--bus);outline-offset:3px}
 
-#trip{position:relative;height:901vh}
+#trip{position:relative;height:1150vh}
 .stage{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100svh;overflow:hidden;background:var(--paper)}
 #mapsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
 #mapsvg text{font-family:var(--body);font-weight:800}
+/* calm map: no hatching, grid or side roads; soft flat fields, half the trees */
+#mapsvg rect[fill="url(#grid)"],#fields rect[fill^="url"],#minor,#moshavim{display:none}
+#fields,#mapsvg path[stroke="#5f8ea0"],#mapsvg text[fill="#5f8ea0"]{display:none}
+#trees use:not(:nth-child(3n)){display:none}
 .dim{position:absolute;inset:0;background:var(--night);opacity:0;pointer-events:none;transition:opacity .8s;z-index:2}
 
 /* HUD */
 .hud{position:absolute;top:0;inset-inline:0;z-index:30;display:flex;align-items:center;gap:14px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(var(--night),rgba(22,18,14,0));color:var(--paper)}
 .chip{display:flex;align-items:baseline;gap:6px;background:rgba(22,18,14,.78);border-radius:10px;padding:4px 10px;flex:none}
-.chip b{font-family:var(--display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.chip b{font-family:var(--display);font-weight:700;font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
 .chip small{font-size:12px;font-weight:800;opacity:.8}
 .rail{flex:1;min-width:0;position:relative;height:30px}
 .rail .line{position:absolute;top:13px;inset-inline:0;height:4px;border-radius:2px;background:rgba(236,226,203,.25)}
@@ -77,7 +81,7 @@ p{margin:0}
 .candle::after{content:"";position:absolute;left:50%;top:-30px;width:44px;height:44px;margin-left:-22px;border-radius:50%;background:radial-gradient(rgba(255,200,90,.35),transparent 70%)}
 .card.memorial .candle{display:block}
 @keyframes flicker{0%,100%{transform:scale(1) rotate(-2deg)}30%{transform:scale(1.08,.94) rotate(2deg)}60%{transform:scale(.95,1.06) rotate(-1deg)}}
-.card h2{font-size:clamp(44px,5vw,72px)}
+.card h2{font-size:clamp(32px,3.2vw,48px)}
 .card p{color:#24150a;font-size:19px;font-weight:700;line-height:1.45}
 .card.quiet{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.2)),repeating-linear-gradient(180deg,#3d2e22 0 34px,#33261c 34px 36px)!important;color:var(--paper)}
 .card.quiet h2{color:#f2e8d4;text-shadow:0 2px 0 rgba(0,0,0,.4)}
@@ -88,7 +92,7 @@ p{margin:0}
 .clock{display:none;align-items:center;gap:12px}
 .clock.on{display:flex}
 .clock svg{width:64px;height:64px;flex:none}
-.clock b{font-family:var(--display);font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+.clock b{font-family:var(--display);font-weight:800;font-size:36px;line-height:1;font-variant-numeric:tabular-nums}
 .go:not(.on){display:none!important}
 .go.on{display:inline-block}
 .btn{font:inherit;font-weight:800;border:0;border-radius:999px;padding:11px 18px;text-decoration:none;display:inline-block;background:var(--ink);color:var(--paper);cursor:pointer}
@@ -97,7 +101,7 @@ p{margin:0}
 /* road sign */
 .sign{position:absolute;z-index:24;top:76px;left:50%;transform:translate(-50%,-30px) scale(.4);opacity:0;background:var(--sign);color:#fff;border:3px solid #fff;outline:3px solid var(--sign);border-radius:8px;padding:6px 16px 8px;text-align:center;transition:transform .45s cubic-bezier(.3,1.6,.5,1),opacity .2s}
 .sign.on{opacity:1;transform:translate(-50%,0) scale(1)}
-.sign b{display:block;font-family:var(--display);font-size:44px;line-height:1}
+.sign b{display:block;font-family:var(--display);font-weight:800;font-size:32px;line-height:1}
 .sign small{font-size:12px;font-weight:800;letter-spacing:.08em}
 .sign.bikta{background:var(--ember);outline-color:var(--ember)}
 .sign.memorial{background:var(--sign);outline-color:var(--sign)}
@@ -120,7 +124,7 @@ p{margin:0}
 
 /* services */
 .services{position:absolute;z-index:4;inset:0;display:grid;place-content:center;padding:90px max(24px,env(safe-area-inset-left,0px)) 40px max(430px,env(safe-area-inset-right,0px));pointer-events:none}
-.services h3{font-size:clamp(40px,5vw,64px);color:var(--bus);margin-bottom:18px;opacity:0;transition:opacity .4s}
+.services h3{font-size:clamp(32px,3.6vw,48px);color:var(--bus);margin-bottom:18px;opacity:0;transition:opacity .4s}
 .services.on h3{opacity:1}
 .svc{display:grid;grid-template-columns:repeat(3,minmax(0,170px));gap:16px}
 .svc div{display:grid;justify-items:center;gap:8px;text-align:center;color:#fff8ea;font-weight:800;font-size:16px;line-height:1.25;opacity:0;transform:translateY(30px) scale(.9);transition:opacity .4s,transform .5s cubic-bezier(.3,1.5,.5,1)}
@@ -135,9 +139,9 @@ p{margin:0}
 .intro{position:absolute;z-index:28;inset:0;display:grid;align-content:end;gap:14px;padding:0 max(24px,env(safe-area-inset-right,0px)) 13vh max(24px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(22,18,14,.25) 0%,rgba(22,18,14,.72) 38%,rgba(22,18,14,.94) 100%);color:var(--paper);transition:opacity .4s}
 .intro.gone{opacity:0;pointer-events:none}
 .intro .logo{width:84px;height:84px;border-radius:50%;border:3px solid var(--paper);object-fit:cover}
-.intro h1{font-size:clamp(64px,10.5vw,150px);max-width:13ch;color:#fff8ea;text-shadow:0 4px 0 rgba(0,0,0,.35),0 10px 40px rgba(0,0,0,.65)}
+.intro h1{font-size:clamp(46px,6vw,92px);max-width:15ch;color:#fff8ea;text-shadow:0 4px 0 rgba(0,0,0,.35),0 10px 40px rgba(0,0,0,.65)}
 .intro h1 .hl{color:var(--bus)}
-.intro p{font-size:clamp(19px,1.8vw,24px);font-weight:700;max-width:44ch;color:#fff8ea;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+.intro p{font-size:clamp(19px,1.8vw,24px);font-weight:500;max-width:44ch;color:#fff8ea;text-shadow:0 2px 12px rgba(0,0,0,.7)}
 .cue{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;color:var(--bus)}
 .cue i{display:block;width:28px;height:44px;border:3px solid var(--bus);border-radius:16px;position:relative}
 .cue i::after{content:"";position:absolute;left:50%;top:7px;width:5px;height:9px;margin-left:-2.5px;border-radius:3px;background:var(--bus);animation:wheel 1.4s infinite}
@@ -183,7 +187,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 /* below the trip */
 .band{padding-block:64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .band .in{max-width:1040px;margin-inline:auto;display:grid;gap:22px}
-.band h2{font-size:clamp(48px,8vw,92px)}
+.band h2{font-size:clamp(36px,5vw,64px)}
 .book{background:var(--night);color:var(--paper)}
 .book h2{color:var(--bus)}
 .book .grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:start}
@@ -194,14 +198,14 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .form input[type=range]{padding:0;accent-color:var(--bus);border:0;background:transparent}
-.size-read{font-family:var(--display);font-size:38px;color:var(--bus);line-height:1}
+.size-read{font-family:var(--display);font-weight:800;font-size:30px;color:var(--bus);line-height:1}
 .size-row{display:flex;align-items:center;gap:10px}
-.form .size-num{width:140px;font-family:var(--display);font-size:40px;line-height:1;padding:4px 12px;text-align:center}
-.size-unit{font-family:var(--display);font-size:34px}
+.form .size-num{width:140px;font-family:var(--display);font-weight:800;font-size:32px;line-height:1;padding:4px 12px;text-align:center}
+.size-unit{font-family:var(--display);font-weight:700;font-size:26px}
 .ticket{position:relative;background:#f6efe0;color:var(--ink);border-radius:18px;padding:22px 22px 24px;box-shadow:0 18px 40px rgba(0,0,0,.35);
   -webkit-mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat;
           mask:radial-gradient(circle 11px at 0 50%,transparent 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 11px at 100% 50%,transparent 98%,#000) right/51% 100% no-repeat}
-.ticket-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px;padding-bottom:12px;border-bottom:2px dashed #cdbf9f;font-family:var(--display);font-size:34px;line-height:1;color:var(--ember-text)}
+.ticket-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 4px;padding-bottom:12px;border-bottom:2px dashed #cdbf9f;font-family:var(--display);font-weight:800;font-size:24px;line-height:1.1;color:var(--ember-text)}
 .ticket-head img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--ink)}
 .ticket label{color:var(--ink)}
 .ticket input,.ticket textarea{background:#fffaf0;border-color:#cdbf9f;color:var(--ink)}
@@ -226,19 +230,19 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .q figcaption{font-weight:800;color:var(--ink-soft)}
 .q figcaption span,.rating span{color:#e3a600;letter-spacing:2px}
 .rating{display:flex;align-items:baseline;gap:10px;font-weight:800;color:var(--ink-soft)}
-.rating b{font-family:var(--display);font-size:56px;line-height:1;color:var(--ink)}
+.rating b{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;color:var(--ink)}
 .rnote{font-size:19px;color:var(--ink-soft);max-width:52ch}
 .btn.gbtn{justify-self:start;background:transparent;color:var(--ink);border:2px solid var(--ink)}
 .find{background:var(--paper-2)}
 .find .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
-.addr{font-family:var(--display);font-size:clamp(40px,6vw,64px);line-height:1;user-select:all}
+.addr{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,46px);line-height:1;user-select:all}
 .btn.waze{background:#33ccff;color:#06243a}
 .credits{background:var(--night);color:#cbbda3;font-size:14px}
 .credits ul{margin:0;padding-inline-start:18px;display:grid;gap:4px}
 .credits a{color:inherit}
 
 @media (max-width:760px){
-  #trip{height:1502vh}
+  #trip{height:1900vh}
   .stage.photo-on .card{padding:10px 14px;gap:2px}
   .stage.photo-on .card #cText,.stage.photo-on .card .clock,.stage.photo-on .card .candle{display:none!important}
   .stage.photo-on .card h2{font-size:28px!important}
@@ -253,7 +257,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .clock svg{width:44px;height:44px}.clock b{font-size:34px}
   .hud{gap:8px}.chip b{font-size:24px}.state{min-width:0}
   .hud .km{display:none}
-  .sign{top:156px}.sign b{font-size:34px}
+  .sign{top:156px}.sign b{font-size:26px}
   .skip{bottom:auto;top:108px;left:auto;inset-inline-start:max(12px,env(safe-area-inset-right,0px));right:auto;transform:none;font-size:14px}
   .lang{top:58px}.lang .cur,.lang a{font-size:14px;min-height:34px;padding:0 11px}
   .motion{bottom:auto;top:62px;left:max(12px,env(safe-area-inset-left,0px))}
@@ -267,6 +271,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .svc svg{width:56px;height:56px}
   .svc div{font-size:13px}
   .intro{padding-bottom:16vh}
+  .intro h1{font-size:38px}
   .book .grid{grid-template-columns:1fr}
   .form .three{grid-template-columns:1fr 1fr}
   .qgrid{grid-template-columns:1fr}
@@ -282,7 +287,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 .vcenter{position:absolute;inset:0;z-index:27;display:grid;place-items:center;background:rgba(22,18,14,.78);opacity:0;pointer-events:none;transition:opacity .45s;padding:70px 16px 24px}
 .vcenter.on{opacity:1;pointer-events:auto}
 .vbox{display:grid;justify-items:center;gap:12px;max-height:100%}
-.vcap{color:#fff8ea;font-family:var(--display);font-size:clamp(30px,3.6vw,46px);line-height:1;text-align:center;text-wrap:balance}
+.vcap{color:#fff8ea;font-family:var(--display);font-weight:800;font-size:clamp(24px,2.8vw,36px);line-height:1;text-align:center;text-wrap:balance}
 .vframe{position:relative;height:min(64vh,64svh);aspect-ratio:9/16;max-width:88vw;background:#000;border:6px solid #fff;border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
 .vframe video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
 .vframe .unmute{bottom:12px;inset-inline:12px}
@@ -292,7 +297,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
 /* ===== phones: map on top, one wooden card below, one menu ===== */
 .menu-btn,.menu,.cphoto{display:none}
 @media (max-width:760px){
-  #trip{height:1502vh}
+  #trip{height:1900vh}
   .lang,.motion,.skip,.sign,.hud .rail,.hud .state{display:none!important}
   .nudge .mouse{display:none}
   .hud{background:none;padding-top:10px}
@@ -305,7 +310,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .menu a:hover,.menu button:hover{background:rgba(242,183,5,.18)}
   .card{top:auto!important;bottom:calc(max(64px,9svh) + env(safe-area-inset-bottom,0px))!important;left:10px!important;right:10px!important;width:auto!important;transform:none!important;max-height:none;border-radius:18px!important;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))!important;gap:6px!important;box-shadow:0 -10px 30px rgba(0,0,0,.35)!important;overflow:visible}
   .card::before,.card::after{top:8px}
-  .card h2{font-size:30px!important;line-height:1}
+  .card h2{font-size:26px!important;line-height:1.1}
   .card .num{top:-14px}
   .card p#cText{font-size:17px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .card .clock svg{width:40px;height:40px}.card .clock b{font-size:30px}
@@ -369,7 +374,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <ellipse cx="892" cy="76" rx="48" ry="190" fill="#7cc4d8"/>
         <path d="M956 -868 C980 -620 916 -460 948 -260 S924 -140 932 -108" fill="none" stroke="#4fa3bd" stroke-width="10"/>
       </g>
-      <g id="countryLabels" font-weight="800" font-family="Assistant, sans-serif">
+      <g id="countryLabels" font-weight="700" font-family="Rubik, sans-serif">
         <circle cx="492" cy="-932" r="14" fill="#2b2118"/><text x="516" y="-916" font-size="54" fill="#2b2118">חיפה</text><circle cx="324" cy="-364" r="14" fill="#2b2118"/><text x="348" y="-348" font-size="54" fill="#2b2118">תל אביב</text><circle cx="668" cy="-116" r="14" fill="#2b2118"/><text x="692" y="-100" font-size="54" fill="#2b2118">ירושלים</text><circle cx="332" cy="300" r="14" fill="#2b2118"/><text x="356" y="316" font-size="54" fill="#2b2118">באר שבע</text><circle cx="460" cy="1652" r="14" fill="#2b2118"/><text x="484" y="1668" font-size="54" fill="#2b2118">אילת</text><circle cx="924" cy="-932" r="14" fill="#2b2118"/><text x="948" y="-916" font-size="54" fill="#2b2118">טבריה</text><circle cx="156" cy="-36" r="14" fill="#2b2118"/><text x="180" y="-20" font-size="54" fill="#2b2118">אשקלון</text>
         <text x="-620" y="-540" font-size="70" fill="#21697f" font-style="italic">הים התיכון</text>
         <text x="996" y="100" font-size="44" fill="#21697f">ים המלח</text>
@@ -391,16 +396,16 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
       </g>
       <g id="moshavim" fill="#ecd4a2" stroke="#c99a58" stroke-width=".8">
         <rect x="236" y="96" width="14" height="10" rx="2"/><rect x="96" y="214" width="12" height="9" rx="2"/>
-        <rect x="150" y="186" width="13" height="9" rx="2"/><rect x="18" y="128" width="12" height="9" rx="2"/>
-        <rect x="262" y="210" width="14" height="10" rx="2"/><rect x="214" y="22" width="12" height="9" rx="2"/>
+        <rect x="80" y="246" width="13" height="9" rx="2"/><rect x="18" y="128" width="12" height="9" rx="2"/>
+        <rect x="300" y="290" width="14" height="10" rx="2"/><rect x="214" y="22" width="12" height="9" rx="2"/>
       </g>
       <g id="trees"></g>
-      <path id="road" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#2c241e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-      <path id="trail" d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f7941d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
-      <path d="M232 -60 C226 -10 206 34 182 62 C150 98 104 136 70 168 C62 176 64 186 78 182 C96 176 110 160 128 150 C142 142 154 132 168 124 C196 110 232 116 320 150" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
+      <path id="road" d="M190 -60 C189.5 -47.7 188.3 -6.3 187 14 C185.7 34.3 185.5 48.5 182 62 C178.5 75.5 171.5 83.7 166 95 C160.5 106.3 153.8 118.3 149 130 C144.2 141.7 139.7 154.7 137 165 C134.3 175.3 133 184.3 133 192 C133 199.7 134.7 204.3 137 211 C139.3 217.7 142.3 225.8 147 232 C151.7 238.2 158.5 244 165 248 C171.5 252 178.8 253.8 186 256 C193.2 258.2 200.7 259.5 208 261 C215.3 262.5 222.7 264.5 230 265 C237.3 265.5 244.7 265.2 252 264 C259.3 262.8 266.7 259.8 274 258 C281.3 256.2 280 254.7 296 253 C312 251.3 357.7 248.8 370 248" fill="none" stroke="#2c241e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path id="trail" d="M190 -60 C189.5 -47.7 188.3 -6.3 187 14 C185.7 34.3 185.5 48.5 182 62 C178.5 75.5 171.5 83.7 166 95 C160.5 106.3 153.8 118.3 149 130 C144.2 141.7 139.7 154.7 137 165 C134.3 175.3 133 184.3 133 192 C133 199.7 134.7 204.3 137 211 C139.3 217.7 142.3 225.8 147 232 C151.7 238.2 158.5 244 165 248 C171.5 252 178.8 253.8 186 256 C193.2 258.2 200.7 259.5 208 261 C215.3 262.5 222.7 264.5 230 265 C237.3 265.5 244.7 265.2 252 264 C259.3 262.8 266.7 259.8 274 258 C281.3 256.2 280 254.7 296 253 C312 251.3 357.7 248.8 370 248" fill="none" stroke="#f7941d" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+      <path d="M190 -60 C189.5 -47.7 188.3 -6.3 187 14 C185.7 34.3 185.5 48.5 182 62 C178.5 75.5 171.5 83.7 166 95 C160.5 106.3 153.8 118.3 149 130 C144.2 141.7 139.7 154.7 137 165 C134.3 175.3 133 184.3 133 192 C133 199.7 134.7 204.3 137 211 C139.3 217.7 142.3 225.8 147 232 C151.7 238.2 158.5 244 165 248 C171.5 252 178.8 253.8 186 256 C193.2 258.2 200.7 259.5 208 261 C215.3 262.5 222.7 264.5 230 265 C237.3 265.5 244.7 265.2 252 264 C259.3 262.8 266.7 259.8 274 258 C281.3 256.2 280 254.7 296 253 C312 251.3 357.7 248.8 370 248" fill="none" stroke="#f4efe2" stroke-width=".45" stroke-dasharray="2.4 2.8" opacity=".9"/>
       <g font-size="6" fill="#6b5a47">
-        <text x="186" y="172">נתיבות</text>
-        <text x="206" y="240">אופקים</text>
+        <text x="186" y="206">נתיבות</text>
+        <text x="150" y="292">אופקים</text>
       </g>
       <!-- stop landmarks: each with a soft pulse, like the restaurant -->
       <!-- Sderot: the memorial pillars -->
@@ -418,8 +423,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">שדרות</text>
       </g>
       <!-- Nova site, Re'im: memorial poles among trees -->
-      <circle cx="66" cy="174" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
-      <g transform="translate(46 160)">
+      <circle cx="137" cy="211" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(104 207)">
         <ellipse cx="0" cy="1" rx="13" ry="2" fill="#2b2118" opacity=".18"/>
         <use href="#tree" x="-10" y="-6"/><use href="#tree" x="10" y="-7"/>
         <path d="M-6 0 V-10 M-2 0 V-12 M2 0 V-11 M6 0 V-9" stroke="#6b5a47" stroke-width=".6"/>
@@ -429,8 +434,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">אתר הנובה</text>
       </g>
       <!-- Tkuma: the car site -->
-      <circle cx="168" cy="124" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
-      <g transform="translate(186 108)">
+      <circle cx="276" cy="250" r="12" fill="#3b4a5a" opacity=".14"><animate attributeName="r" values="8;15;8" dur="2.8s" repeatCount="indefinite"/></circle>
+      <g transform="translate(280 236)">
         <ellipse cx="0" cy="1" rx="12" ry="2" fill="#2b2118" opacity=".18"/>
         <path d="M-10 -1 V-4 Q-10 -6 -8 -6 L-5 -10 H4 L7 -6 Q10 -6 10 -4 V-1 Z" fill="#7a4a2a" stroke="#3a2414" stroke-width=".5"/>
         <path d="M-4 -9 H-0.5 V-6.4 H-6 Z M0.5 -9 H3.6 L5.6 -6.4 H0.5 Z" fill="#2b2118"/>
@@ -440,8 +445,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <text x="0" y="8.4" text-anchor="middle" font-size="5.2" fill="#f4f1ea" font-weight="800">תקומה</text>
       </g>
       <!-- the restaurant: a wooden hut with a hanging wooden sign -->
-      <circle cx="128" cy="150" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
-      <g transform="translate(124 140)">
+      <circle cx="208" cy="261" r="14" fill="#c8461f" opacity=".14"><animate attributeName="r" values="9;18;9" dur="2.2s" repeatCount="indefinite"/></circle>
+      <g transform="translate(205 254)">
         <ellipse cx="0" cy="1" rx="22" ry="2.6" fill="#2b2118" opacity=".18"/>
         <rect x="-17" y="-17" width="34" height="18" fill="#8a5a33" stroke="#3a2414" stroke-width=".8"/>
         <path d="M-17 -12 H17 M-17 -7 H17 M-17 -2 H17" stroke="#6e4426" stroke-width=".6"/>
@@ -461,7 +466,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
         <path d="M-9 -24 L-8 -17.5 M9 -24 L8 -17.5" stroke="#3a2414" stroke-width=".5"/>
         <rect x="-13" y="-17.6" width="26" height="8" rx="1.2" fill="#c9925a" stroke="#4a2c14" stroke-width=".8" transform="translate(0 -6)"/>
         <path d="M-12 -21.5 H12 M-12 -18.5 H12" stroke="#b07a45" stroke-width=".35" transform="translate(0 -1.6)"/>
-        <text x="0" y="-18.4" text-anchor="middle" font-size="6.4" fill="#2b1a0c" font-family="Karantina, Assistant, sans-serif" font-weight="700">הבקתה</text>
+        <text x="0" y="-18.4" text-anchor="middle" font-size="5" fill="#2b1a0c" font-family="Rubik, sans-serif" font-weight="800">הבקתה</text>
         </g>
       </g>
       <!-- white tour coach, side view, facing right; wheels sit on the road -->
@@ -674,7 +679,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   for(let l=0;l<total;l+=7){const p=road.getPointAtLength(l),q=road.getPointAtLength(Math.min(total,l+1));const nx=-(q.y-p.y),ny=q.x-p.x,n=Math.hypot(nx,ny)||1;[1,-1].forEach(side=>{if(rnd()<.55){const u=document.createElementNS(NS,'use');u.setAttribute('href','#tree');const d=10+rnd()*4;u.setAttribute('x',p.x+side*nx/n*d);u.setAttribute('y',p.y+side*ny/n*d);trees.appendChild(u);}});}
 
   function lenNear(x,y,from=0){let b=from,bd=1e9;for(let l=from;l<=total;l+=.5){const p=road.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=l;}}return b;}
-  const S={st:lenNear(228,-36)}; S.sd=lenNear(182,62); S.nv=lenNear(66,174,S.sd); S.bk=lenNear(128,150,S.nv); S.tk=lenNear(168,124,S.bk);
+  const S={st:lenNear(189,-30)}; S.sd=lenNear(182,62); S.nv=lenNear(137,211,S.sd); S.bk=lenNear(208,261,S.nv); S.tk=lenNear(274,258,S.bk);
   // [progress, road length, minutes after 09:00, camera width]
   const K=[[0,S.st,-15,-1],[.03,S.st,-12,150],[.06,S.sd,0,130],[.09,S.sd,75,130],[.16,S.nv,100,140],[.19,S.nv,160,140],[.27,S.bk,175,125],[.2815,S.bk,175.5,100],[.318,S.bk,178,100],[.3324,S.bk,180,125],[.8079,S.bk,220,125],[.8655,S.tk,232,130],[.9039,S.tk,240,190],[1,total-6,250,260]];
   const CC={x:540,y:180};  // middle of the country, in map units
@@ -719,7 +724,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   function setPhase(i){if(i===phase)return;const prev=phase;phase=i;const P=PHASES[i]; if(P.party&&prev<i) confetti();
     const apply=()=>{
       const tm=$('cTime'); tm.textContent=P.t; tm.classList.remove('roll'); void tm.offsetWidth; if(!reduce) tm.classList.add('roll');
-      const h=$('cTitle'); h.textContent=''; h.style.fontSize=P.h.length>28?'clamp(34px,3.4vw,50px)':'';
+      const h=$('cTitle'); h.textContent=''; h.style.fontSize=P.h.length>28?'clamp(26px,2.6vw,38px)':'';
       let k=0; P.h.split(' ').forEach((word,wi)=>{ if(wi) h.appendChild(document.createTextNode(' ')); const w=document.createElement('span'); w.className='w';
         (word.match(/[0-9A-Za-z][0-9A-Za-z.,:'’\/-]*|./gu)||[]).forEach(c=>{const sp=document.createElement('span'); sp.className='ch'; sp.textContent=c; if(!reduce) sp.style.animationDelay=Math.min(k++*28,650)+'ms'; else sp.style.animation='none'; w.appendChild(sp);}); h.appendChild(w); });
       $('cText').textContent=P.d; swap.classList.remove('out');};
@@ -791,7 +796,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     leafA.setAttribute('transform',`translate(${-de*2.5} 0)`); leafB.setAttribute('transform',`translate(${de*2.5} 0)`);
     stepLight.setAttribute('opacity',de);
     // passengers: from the coach door, down the step, across to the hut door
-    const doorX=pt.x+dir*10.3, doorY=pt.y+1.6, hutX=124, hutY=141.2;
+    const doorX=pt.x+dir*10.3, doorY=pt.y+1.6, hutX=205, hutY=255.2;
     people.forEach(m=>{
       const t=clamp((p-m.start)/m.dur);
       if(t<=0||t>=1||de<.5){ m.g.setAttribute('opacity','0'); return; }
@@ -848,7 +853,12 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     requestAnimationFrame(render);
   }
   let lastScroll=performance.now();
-  addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');},{passive:true});
+  // once the video has ended, the first scroll down carries straight on past it
+  let lastY=scrollY, afterReel=false;
+  addEventListener('scroll',()=>{lastScroll=performance.now(); $('nudge').classList.remove('on');
+    const y=scrollY, down=y>lastY; lastY=y; const p=progress();
+    if(down&&reel.ended&&!afterReel&&p>=.7164&&p<.8079){ afterReel=true; const span=trip.offsetHeight-innerHeight; scrollTo({top:trip.offsetTop+span*unwarp(.812),behavior:reduce?'auto':'smooth'}); setTimeout(()=>{afterReel=false;},1500); }
+  },{passive:true});
   const unmute=$('unmute');
   const reelCard=$('reelCard'); let reelStarted=false, reelClosed=false, reelWatched=false, reelAsked=false, reelBuffered=false;
   reel.addEventListener('ended',()=>{ reelWatched=true; });
