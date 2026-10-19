@@ -6,6 +6,7 @@
 <title>יום סיור בעוטף עם עצירת צהריים בבקתה | הבקתה, תושיה</title>
 <meta name="description" content="מסלול סיור בעוטף: שדרות, אתר הנובה, צהריים לקבוצות בבקתה ואתר המכוניות בתקומה. עד 200 איש, כשר, 45 דקות ויוצאים בזמן. תיאום בוואטסאפ.">
 <meta name="robots" content="noindex, follow">
+<script>if(/[?&]embed\b/.test(location.search))document.documentElement.classList.add('embed');</script>
 <link rel="alternate" hreflang="he" href="/groups-tour.html">
 <link rel="alternate" hreflang="en" href="/groups-tour-en.html">
 <link rel="icon" href="/favicon.ico">
@@ -281,6 +282,8 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
   .ph.in .img img,.cue i::after{animation:none!important}
 }
 
+/* inside the groups landing page: only the trip, no page chrome or booking blocks */
+html.embed .band,html.embed .lang,html.embed .skip,html.embed .menu-btn,html.embed .menu{display:none!important}
 #confetti{position:absolute;inset:0;width:100%;height:100%;z-index:29;pointer-events:none}
 /* video centered on the screen */
 .ph.reelcard{display:none!important}
@@ -897,6 +900,7 @@ html.still *, html.still *::before, html.still *::after{animation:none!important
     const text=lines.join('\n'); f('msg').textContent=text;
     f('send').href='https://wa.me/972584633555?text='+encodeURIComponent(text);
   }
+  if(document.documentElement.classList.contains('embed')){ const go=$('go'); go.href='https://wa.me/972584633555?text='+encodeURIComponent('היי, אני מארגן/ת סיור בעוטף ורוצה לתאם ארוחת צהריים לקבוצה'); go.target='_blank'; go.rel='noopener noreferrer'; go.textContent='לתיאום העצירה בוואטסאפ'; }
   f('fSizeRange').addEventListener('input',()=>{ f('fSize').value=f('fSizeRange').value; });
   f('f').addEventListener('input',build); f('f').addEventListener('submit',e=>e.preventDefault()); build();
 })();
