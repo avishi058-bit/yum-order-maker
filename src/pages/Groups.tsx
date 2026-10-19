@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Phone,
@@ -346,22 +346,6 @@ const LONG_CONTENT: { title: string; paragraphs: string[] }[] = [
 ];
 
 const Groups = () => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  // Autoplay on page entry: try with sound at half volume; if the browser
-  // blocks unmuted autoplay, fall back to muted autoplay (volume stays 0.5
-  // so unmuting starts at half).
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.volume = 0.5;
-    v.muted = false;
-    v.play().catch(() => {
-      v.muted = true;
-      v.play().catch(() => {});
-    });
-  }, []);
-
   return (
     <div dir="rtl" className="theme-sand min-h-screen bg-background text-foreground">
       <Seo page={SEO_PAGES.groups} />
@@ -421,12 +405,10 @@ const Groups = () => {
 
       <section aria-label="המדריך שסוגר סיור בעוטף" className="px-4 py-6 bg-background">
         <video
-          ref={videoRef}
           className="block w-full max-w-[400px] mx-auto aspect-[9/16] rounded-lg bg-foreground object-contain"
           controls
           playsInline
-          autoPlay
-          preload="auto"
+          preload="metadata"
           poster="/habikta-guide-otef-reel-poster.jpg"
           aria-label="המדריך שסוגר סיור בעוטף"
         >
