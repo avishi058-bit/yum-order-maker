@@ -283,10 +283,10 @@ Deno.serve(async (req) => {
 
       if (invoiceFailed) {
         await releaseInvoice(supabase, order.id);
-        invoiceMessage = invoiceResult?.ReturnMessage || "הפקת החשבונית נכשלה";
+        invoiceMessage = String(invoiceResult?.ReturnMessage ?? "") || "הפקת החשבונית נכשלה";
         console.error("pinpad-charge: invoice failed", {
           orderId: order.id,
-          httpStatus: invoiceResponse.status,
+          httpStatus: invoiceResponse?.status ?? null,
           code: invoiceResult?.ReturnCode,
           msg: invoiceResult?.ReturnMessage,
         });
