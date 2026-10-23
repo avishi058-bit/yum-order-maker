@@ -12,6 +12,8 @@
 // localhost / 127.0.0.1 are allowed for local development.
 
 const DEFAULT_ORIGINS = [
+  "https://habikta-burger.com",
+  "https://www.habikta-burger.com",
   "https://habikta-burger.lovable.app",
   "https://id-preview--a11d489f-9e42-43ff-b3f5-02cfc468e993.lovable.app",
   "https://a11d489f-9e42-43ff-b3f5-02cfc468e993.lovableproject.com",
