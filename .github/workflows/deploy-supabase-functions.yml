@@ -1,0 +1,31 @@
+# Deploys all Supabase edge functions to the NEW (self-hosted) Supabase project.
+# Runs only from the "migration" branch, so the live Lovable project is never touched.
+# Needs one GitHub secret: SUPABASE_ACCESS_TOKEN (added by the owner in repo settings).
+name: Deploy edge functions (new Supabase)
+
+on:
+  push:
+    branches: [migration]
+    paths: ["supabase/functions/**", ".github/workflows/deploy-supabase-functions.yml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/migration'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: zadnzblfjdcaufkvwptd
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Check token
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Add the SUPABASE_ACCESS_TOKEN secret in GitHub repo settings, then re-run this job."
+            exit 1
+          fi
+      - name: Deploy all functions
+        run: supabase functions deploy --project-ref "$PROJECT_REF" --use-api
