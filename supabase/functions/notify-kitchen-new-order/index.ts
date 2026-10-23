@@ -5,10 +5,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import webpush from "npm:web-push@3.6.7";
 import { internalCorsHeaders as corsHeaders } from "../_shared/cors.ts";
+import { loadVapid } from "../_shared/vapid.ts";
 
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:contact@example.com";
+const __vapid = await loadVapid();
+const VAPID_PUBLIC_KEY = __vapid.publicKey;
+const VAPID_PRIVATE_KEY = __vapid.privateKey;
+const VAPID_SUBJECT = __vapid.subject;
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
