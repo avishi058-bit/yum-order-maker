@@ -338,6 +338,7 @@ footer{padding-block:90px 30px;position:relative}
 
 /* ---------- editing ---------- */
 .editbar{position:fixed;z-index:160;bottom:calc(18px + env(safe-area-inset-bottom,0px));right:calc(18px + env(safe-area-inset-right,0px));display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 110px)}
+.editbar[hidden],.editbar [hidden]{display:none!important}
 .editbar button{font:900 15px var(--body);min-height:48px;padding:0 20px;border-radius:999px;border:2px solid var(--ink);background:var(--ink);color:var(--beige);cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 10px 26px -10px rgba(0,0,0,.5)}
 .editbar button.alt{background:var(--beige);color:var(--ink)}
 .editbar button:disabled{opacity:.6;cursor:wait}
