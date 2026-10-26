@@ -13,14 +13,14 @@ describe("public page prerender", () => {
   it("/groups has exactly one self canonical on the right domain", () => {
     const html = prerenderPage(tpl, SEO_PAGES.groups, renderBody(SEO_PAGES.groups));
     expect(count(html, /rel="canonical"/g)).toBe(1);
-    expect(html).toContain('<link rel="canonical" href="https://habikta-burger.lovable.app/groups" />');
+    expect(html).toContain('<link rel="canonical" href="https://habikta-burger.com/groups" />');
     expect(html).not.toContain("yum-order-maker");
     expect(html).toContain("<title>אוכל לקבוצות בסיור בעוטף עזה | ארוחת צהריים בהבקתה, כפר מימון</title>");
-    expect(html).toContain('hreflang="en" href="https://habikta-burger.lovable.app/en/groups"');
+    expect(html).toContain('hreflang="en" href="https://habikta-burger.com/en/groups"');
   });
   it("/en/groups is English LTR with its own canonical", () => {
     const html = prerenderPage(tpl, SEO_PAGES.groupsEn);
     expect(html).toContain('<html lang="en" dir="ltr">');
-    expect(html).toContain('<link rel="canonical" href="https://habikta-burger.lovable.app/en/groups" />');
+    expect(html).toContain('<link rel="canonical" href="https://habikta-burger.com/en/groups" />');
   });
 });

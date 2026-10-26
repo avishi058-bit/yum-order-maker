@@ -21,4 +21,4 @@ Disallow: /admin/
 Disallow: /station-setup
 Disallow: /login
 
-Sitemap: https://habikta-burger.lovable.app/sitemap.xml
+Sitemap: https://habikta-burger.com/sitemap.xml

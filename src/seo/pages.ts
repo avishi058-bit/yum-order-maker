@@ -4,7 +4,7 @@
  * by the build-time prerender plugin in vite.config.ts - so keep this file
  * free of asset imports and "@/..." aliases.
  */
-export const SITE_URL = "https://habikta-burger.lovable.app";
+export const SITE_URL = "https://habikta-burger.com";
 
 export type Faq = { q: string; a: string };
 export type Section = { h2: string; paragraphs: string[] };
@@ -185,6 +185,8 @@ export const SEO_PAGES = {
           "מסעדת המבורגרים כשרה בכפר מימון שבמועצה האזורית שדות נגב, בלב עוטף עזה, המארחת קבוצות, משלחות וסיורים בתיאום מראש.",
         url: `${SITE_URL}/groups`,
         telephone: "+972584633555",
+        logo: `${SITE_URL}/icons/icon-512.png`,
+        image: `${SITE_URL}/icons/icon-512.png`,
         servesCuisine: ["המבורגרים", "Burgers"],
         acceptsReservations: true,
         priceRange: "₪₪",
@@ -215,6 +217,8 @@ export const SEO_PAGES = {
           "Kosher burger restaurant in Kfar Maimon, Sdot Negev, in the Gaza Envelope, hosting tour groups and delegations by advance booking.",
         url: `${SITE_URL}/en/groups`,
         telephone: "+972584633555",
+        logo: `${SITE_URL}/icons/icon-512.png`,
+        image: `${SITE_URL}/icons/icon-512.png`,
         servesCuisine: ["Burgers"],
         acceptsReservations: true,
         priceRange: "₪₪",
@@ -247,6 +251,8 @@ export const SEO_PAGES = {
       name: "הבקתה - המבורגר של מושבניקים",
       url: `${SITE_URL}/otef-aza`,
       telephone: "+972584633555",
+        logo: `${SITE_URL}/icons/icon-512.png`,
+        image: `${SITE_URL}/icons/icon-512.png`,
       servesCuisine: ["המבורגרים", "Burgers"],
       acceptsReservations: true,
       address: ADDRESS_HE,
