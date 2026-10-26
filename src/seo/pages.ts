@@ -79,6 +79,17 @@ export const GROUPS_SECTIONS_HE: Section[] = [
       "המסלולים מתומחרים לפי אדם ולפי תקציב - מארוחת המבורגר קלאסית של 220 גרם, דרך מסלולים מורחבים ו״הכל כלול״, ועד מסלול בשרים מלא עם אנטריקוט, פיקניה, עראיס וקבבים.",
     ],
   },
+  {
+    h2: "מסלולים ומחירים לקבוצות (לאדם, כולל מע״מ)",
+    paragraphs: [
+      "המסלול הקלאסי - 69 ₪ לאדם: המבורגר 220 גרם, צ׳יפס, ירקות טריים (חסה, עגבנייה, בצל, חמוצים) ורטבים בסקוויזרים.",
+      "המסלול המשודרג - 82 ₪ לאדם: המבורגר 220 גרם, צ׳יפס, טבעות בצל ווופל צ׳יפס, פחית שתייה קרה וכד מים קרים עם קרח.",
+      "המסלול המפנק - 109 ₪ לאדם: שילוב מטוגנים עשיר, פחית וכד מים, תוספות שולחן (בצל מטוגן, ריבת בצל, פלפלים, שום קונפי) וסלט פירות עונתיים לקינוח.",
+      "הכל כלול - 139 ₪ לאדם: פתיחה של סוכריות עראיס על טחינה, שילוב מטוגנים מלא, שתייה חופשית, תוספות שולחן כולל ביצת עין, וסלט פירות.",
+      "מסלול הבשרים - 250 ₪ לאדם: כחצי ק״ג בשר לאדם - אנטריקוט, פיקניה, חצאי עראיס, קבבים, לבבות עוף ופרגית, עם מטוגנים, צ׳ימיצ׳ורי, סלטים ושתייה.",
+      "קבוצה מ-20 משתתפים, עד 200 בהזמנה מראש, מינימום הזמנה 2,000 ₪ כולל מע״מ. יש חלופות לצמחונים וללא גלוטן. תיאום בוואטסאפ: 058-4633555.",
+    ],
+  },
 ];
 
 export const GROUPS_FAQ_EN: Faq[] = [
@@ -132,6 +143,17 @@ export const GROUPS_SECTIONS_EN: Section[] = [
       "Menus are priced per person and by budget - from a classic 220 g burger meal, through extended and all-inclusive menus, to a full grill menu with entrecôte, picanha, arayes and kebabs.",
     ],
   },
+  {
+    h2: "Group menus and prices (per person, VAT included)",
+    paragraphs: [
+      "Classic - ₪69 per person: 220 g burger, fries, fresh vegetables (lettuce, tomato, onion, pickles) and squeeze-bottle sauces.",
+      "Upgraded - ₪82 per person: 220 g burger, fries, onion rings and waffle fries, a cold canned drink and a jug of iced water.",
+      "Premium - ₪109 per person: a rich mix of fries, a drink and iced water, table extras (fried onion, onion jam, peppers, garlic confit) and seasonal fruit salad.",
+      "All inclusive - ₪139 per person: arayes bites on tahini to start, the full fries mix, unlimited soft drinks, table extras including a fried egg, and fruit salad.",
+      "Meat feast - ₪250 per person: about half a kilo of meat per person - entrecôte, picanha, arayes, kebabs, chicken hearts and chicken thigh, with fries, chimichurri, salads and drinks.",
+      "Groups from 20 people, up to 200 with advance booking, ₪2,000 minimum including VAT. Vegetarian and gluten-free alternatives available. Book on WhatsApp: +972-58-463-3555.",
+    ],
+  },
 ];
 
 const ADDRESS_HE = {
@@ -141,6 +163,32 @@ const ADDRESS_HE = {
   addressRegion: "מועצה אזורית שדות נגב",
   postalCode: "8523000",
   addressCountry: "IL",
+};
+
+const GEO = { "@type": "GeoCoordinates", latitude: 31.4347276, longitude: 34.5416983 };
+const SAME_AS = [
+  "https://www.instagram.com/habikta_burgers/",
+  "https://www.tiktok.com/@habikta",
+];
+const AREA_SERVED = ["עוטף עזה", "Gaza Envelope", "שדות נגב", "כפר מימון", "תושיה", "תקומה", "אתר הנובה", "Nova festival site"];
+const GROUP_MENUS = [
+  { name: "המסלול הקלאסי / Classic", price: 69 },
+  { name: "המסלול המשודרג / Upgraded", price: 82 },
+  { name: "המסלול המפנק / Premium", price: 109 },
+  { name: "הכל כלול / All inclusive", price: 139 },
+  { name: "מסלול הבשרים / Meat feast", price: 250 },
+];
+const groupOffers = {
+  "@type": "OfferCatalog",
+  name: "Group lunch menus / מסלולי אירוח לקבוצות",
+  itemListElement: GROUP_MENUS.map((m) => ({
+    "@type": "Offer",
+    name: m.name,
+    price: m.price,
+    priceCurrency: "ILS",
+    eligibleQuantity: { "@type": "QuantitativeValue", minValue: 20, maxValue: 200, unitText: "people" },
+    priceSpecification: { "@type": "UnitPriceSpecification", price: m.price, priceCurrency: "ILS", unitText: "per person", valueAddedTaxIncluded: true },
+  })),
 };
 
 const faqLd = (faq: Faq[]) => ({
@@ -187,11 +235,16 @@ export const SEO_PAGES = {
         telephone: "+972584633555",
         logo: `${SITE_URL}/icons/icon-512.png`,
         image: `${SITE_URL}/icons/icon-512.png`,
+        geo: GEO,
+        sameAs: SAME_AS,
+        areaServed: AREA_SERVED,
         servesCuisine: ["המבורגרים", "Burgers"],
         acceptsReservations: true,
         priceRange: "₪₪",
         address: ADDRESS_HE,
         maximumAttendeeCapacity: 200,
+        hasOfferCatalog: groupOffers,
+        keywords: "איפה לאכול בסיור בעוטף, ארוחת צהריים לקבוצות בעוטף עזה, מסעדה ליד אתר הנובה, where to eat Gaza Envelope tour, lunch near Nova festival site, kosher restaurant Otef",
       },
       faqLd(GROUPS_FAQ_HE),
     ],
@@ -219,6 +272,9 @@ export const SEO_PAGES = {
         telephone: "+972584633555",
         logo: `${SITE_URL}/icons/icon-512.png`,
         image: `${SITE_URL}/icons/icon-512.png`,
+        geo: GEO,
+        sameAs: SAME_AS,
+        areaServed: AREA_SERVED,
         servesCuisine: ["Burgers"],
         acceptsReservations: true,
         priceRange: "₪₪",
@@ -231,6 +287,8 @@ export const SEO_PAGES = {
           addressCountry: "IL",
         },
         maximumAttendeeCapacity: 200,
+        hasOfferCatalog: groupOffers,
+        keywords: "איפה לאכול בסיור בעוטף, ארוחת צהריים לקבוצות בעוטף עזה, מסעדה ליד אתר הנובה, where to eat Gaza Envelope tour, lunch near Nova festival site, kosher restaurant Otef",
       },
       faqLd(GROUPS_FAQ_EN),
     ],
@@ -253,6 +311,9 @@ export const SEO_PAGES = {
       telephone: "+972584633555",
         logo: `${SITE_URL}/icons/icon-512.png`,
         image: `${SITE_URL}/icons/icon-512.png`,
+        geo: GEO,
+        sameAs: SAME_AS,
+        areaServed: AREA_SERVED,
       servesCuisine: ["המבורגרים", "Burgers"],
       acceptsReservations: true,
       address: ADDRESS_HE,
