@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     }
 
     const trackUrl = `/track?order=${order.order_number}&phone=${encodeURIComponent(order.customer_phone)}`;
-    const wazeUrl = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה";
+    const wazeUrl = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2021%20תושיה";
 
     const cta = "👇 לצפייה בטיימר בזמן אמת לחצו";
 

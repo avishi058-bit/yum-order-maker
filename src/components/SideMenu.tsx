@@ -182,12 +182,12 @@ const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
               </DialogHeader>
               <div className="space-y-4 text-sm">
                 <div className="space-y-1">
-                  <p className="font-bold text-foreground">📍 דרך ערבי נחל 23, תושיה</p>
+                  <p className="font-bold text-foreground">📍 דרך ערבי נחל 21, תושיה</p>
                   <p className="text-muted-foreground">בואו לטעום את הסמאש של מושבניקים, ישר מהבקתה.</p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <a
-                    href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+                    href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2021%20תושיה"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"

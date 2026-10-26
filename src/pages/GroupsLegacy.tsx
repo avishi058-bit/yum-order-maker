@@ -38,7 +38,7 @@ import { uiPositions } from "@/config/uiConfig";
 
 const PHONE = "058-4633555";
 const WHATSAPP = GROUPS_WHATSAPP_URL;
-const WAZE = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה";
+const WAZE = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2021%20תושיה";
 
 /** Waze navigation link - same address used across the ordering screens */
 const WazeLink = ({ className = "" }: { className?: string }) => (

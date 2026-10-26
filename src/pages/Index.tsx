@@ -547,7 +547,7 @@ const Index = () => {
           />
           <div className="flex items-center gap-2">
             <a
-              href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה"
+              href="https://waze.com/ul?q=דרך%20ערבי%20נחל%2021%20תושיה"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="נווט למסעדה עם Waze"

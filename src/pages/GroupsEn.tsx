@@ -8,7 +8,7 @@ import logo from "@/assets/habikta-logo.jpeg.asset.json";
 import event1 from "@/assets/events/event1.jpeg.asset.json";
 
 const PHONE = "+972-58-4633555";
-const WAZE = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2023%20תושיה";
+const WAZE = "https://waze.com/ul?q=דרך%20ערבי%20נחל%2021%20תושיה";
 const page = SEO_PAGES.groupsEn;
 
 const WhatsAppButton = ({ label = "Message us on WhatsApp" }: { label?: string }) => (
