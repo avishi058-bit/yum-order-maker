@@ -19,9 +19,14 @@ const INTERNAL_ROUTE_PREFIXES = [
 const isInternalRoute = (pathname: string) =>
   INTERNAL_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
+// Routes that render a full-screen static page with its own built-in widget
+// (same settings storage key), so the global one would only sit on top of it.
+const SELF_HOSTED_WIDGET_ROUTES = ["/groups"];
+
 const AccessibilityWidgetGlobal = () => {
   const { pathname } = useLocation();
   if (isInternalRoute(pathname)) return null;
+  if (SELF_HOSTED_WIDGET_ROUTES.includes(pathname.replace(/\/$/, ""))) return null;
   return (
     <Suspense fallback={null}>
       <AccessibilityWidget />

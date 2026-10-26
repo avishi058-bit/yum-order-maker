@@ -391,6 +391,51 @@ body.editing::after{content:"מצב עריכה - לוחצים על טקסט ומ
   *,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition:none!important}
   .loader{display:none}
 }
+
+/* ---------- accessibility (IS 5568) - own widget so every setting reaches this page ---------- */
+.a11y-btn{position:fixed;z-index:150;left:calc(24px + env(safe-area-inset-left,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;border:2px solid var(--mustard);background:var(--ink);color:var(--mustard);display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 26px -10px rgba(0,0,0,.55);transition:transform .25s;touch-action:none}
+.a11y-btn:hover{transform:scale(1.07)}
+.a11y-btn svg{width:26px;height:26px}
+.a11y-btn:focus-visible,.a11y-panel :focus-visible{outline:3px solid var(--flame);outline-offset:3px}
+.a11y-scrim{position:fixed;inset:0;z-index:170;background:rgba(29,18,16,.5)}
+.a11y-panel{position:fixed;top:0;right:0;bottom:0;z-index:171;width:340px;max-width:92vw;background:var(--beige-2);color:var(--ink);display:flex;flex-direction:column;font-family:Heebo,Arial,sans-serif;box-shadow:-20px 0 60px -20px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);direction:rtl}
+.a11y-panel.open{transform:none}
+.a11y-panel[hidden],.a11y-scrim[hidden]{display:none}
+.a11y-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--ink);color:var(--beige)}
+.a11y-head h2{margin:0;font:900 19px Heebo,Arial,sans-serif;display:flex;gap:8px;align-items:center}
+.a11y-head h2 svg{width:22px;height:22px;color:var(--mustard)}
+.a11y-x{width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:var(--beige);font-size:22px;cursor:pointer}
+.a11y-body{flex:1;overflow-y:auto;padding:14px;display:grid;gap:12px;align-content:start;overscroll-behavior:contain}
+.a11y-box{border:1.5px solid rgba(29,18,16,.15);border-radius:16px;padding:12px;background:#fff}
+.a11y-box b{display:block;font-size:14px;margin-bottom:8px}
+.a11y-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.a11y-panel button.a11y-o{min-height:44px;border-radius:12px;border:1.5px solid rgba(29,18,16,.15);background:#fff;color:var(--ink);font:700 14px Heebo,Arial,sans-serif;cursor:pointer;text-align:right;padding:10px 14px;width:100%}
+.a11y-panel button.a11y-o[aria-pressed="true"]{background:var(--flame);border-color:var(--flame);color:#fff}
+.a11y-row button.a11y-o{text-align:center}
+.a11y-cap{font-size:12px;font-weight:900;color:rgba(29,18,16,.6);margin:4px 2px 0}
+.a11y-foot{padding:14px;border-top:1.5px solid rgba(29,18,16,.12);display:grid;gap:8px}
+.a11y-foot a,.a11y-foot button{min-height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:700 13px Heebo,Arial,sans-serif;text-decoration:none;cursor:pointer;border:0}
+.a11y-foot .r{background:var(--ink);color:var(--beige)}
+.a11y-foot .l{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.a11y-foot .l a{background:#fff;color:var(--ink);border:1.5px solid rgba(29,18,16,.15)}
+.a11y-foot p{margin:0;font-size:11px;text-align:center;color:rgba(29,18,16,.65)}
+@media (max-width:640px){.a11y-btn{left:calc(20px + env(safe-area-inset-left,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+/* modes */
+html.a11y-filter-invert body>*:not(.a11y-ui){filter:invert(1) hue-rotate(180deg)}
+html.a11y-filter-invert body>*:not(.a11y-ui) img,html.a11y-filter-invert body>*:not(.a11y-ui) video{filter:invert(1) hue-rotate(180deg)}
+html.a11y-filter-mono body>*:not(.a11y-ui){filter:grayscale(1)}
+html.a11y-filter-sepia body>*:not(.a11y-ui){filter:sepia(.85)}
+html.a11y-hc body *:not(.a11y-ui):not(.a11y-ui *){background-color:#000!important;color:#fff!important;border-color:#fff!important;text-shadow:none!important}
+html.a11y-hc body a:not(.a11y-ui *){color:#ffeb3b!important}
+html.a11y-by body *:not(.a11y-ui):not(.a11y-ui *){background-color:#000!important;color:#ffeb3b!important;border-color:#ffeb3b!important;text-shadow:none!important}
+html.a11y-hc body,html.a11y-by body{background:#000!important}
+html.a11y-links a:not(.a11y-ui *){text-decoration:underline!important;outline:3px solid var(--flame)!important;outline-offset:2px}
+html.a11y-cursor,html.a11y-cursor *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M4 2l16 10-7 1.5L16 21l-3 1.2-3-7.6L4 19z' fill='%23000' stroke='%23fff' stroke-width='1.4'/%3E%3C/svg%3E") 4 2,auto!important}
+html.a11y-font body *:not(.a11y-ui *){font-family:Arial,"Heebo",sans-serif!important;letter-spacing:normal}
+html.a11y-lh body *:not(.a11y-ui *){line-height:1.9!important}
+html.a11y-ls body *:not(.a11y-ui *){letter-spacing:.12em!important;word-spacing:.16em!important}
+html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!important;outline-offset:4px}
+.a11y-alt{display:block;font:700 13px Arial,sans-serif;background:#fff;color:#000;padding:4px 8px;border:1px solid #000;position:relative;z-index:5}
 </style>
 
 <div class="loader nojs" id="loader" aria-hidden="true">
@@ -554,7 +599,7 @@ body.editing::after{content:"מצב עריכה - לוחצים על טקסט ומ
     <div class="rnote"><span class="vatpill" data-k="rvat">כל המחירים כוללים מע״מ</span><span data-k="rnote">הצצה במסלולים והמחירים • מינימום הזמנה 2,000 ₪</span></div>
     <div class="rtrack" id="rtrack">
       <svg class="rpath-svg" id="rpathSvg" aria-hidden="true"><path id="rpathBase" d="M0 0" fill="none" stroke="#e5391b" stroke-opacity=".35" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 16"/><path id="rpathDone" d="M0 0" fill="none" stroke="#e5391b" stroke-width="5" stroke-linecap="round"/></svg>
-      <div class="plate" id="plate" aria-hidden="true"><img class="pl-c pl-burger" src="img/t/burger.webp" alt=""><img class="pl-c pl-steak" src="img/t/steak.webp" alt=""><span class="pl-cap" id="plCap"></span></div>
+      <div class="plate" id="plate" aria-hidden="true"><img class="pl-c pl-burger" src="img/t/burger.webp" alt=""></div>
     <div class="rcards">
       <article class="rcard"><div class="bd"><span class="num">1</span><h3 data-k="r1n">המסלול הקלאסי</h3><span class="pricewrap"><span class="price" data-k="r1p">69 ₪ לאדם</span><span class="vat" data-k="r1v">כולל מע״מ</span></span><p data-k="r1d">המבורגר עסיסי, צ׳יפס קלאסי, ירקות ורטבים</p><ul class="incl"><li data-k="r1i1">המבורגר 220 גרם</li><li data-k="r1i2">צ׳יפס קלאסי</li><li data-k="r1i3">ירקות טריים: חסה, עגבנייה, בצל, חמוצים</li><li data-k="r1i4">רטבים בסקוויזרים</li></ul><a href="#book" data-k="r1c">לקבל הצעה ←</a></div></article>
       <article class="rcard"><div class="bd"><span class="num">2</span><h3 data-k="r2n">המסלול המשודרג</h3><span class="pricewrap"><span class="price" data-k="r2p">82 ₪ לאדם</span><span class="vat" data-k="r2v">כולל מע״מ</span></span><p data-k="r2d">שדרוג עם מטוגנים ושתייה קרה</p><ul class="incl"><li data-k="r2i1">המבורגר 220 גרם</li><li data-k="r2i2">צ׳יפס, טבעות בצל, וופל צ׳יפס</li><li data-k="r2i3">פחית שתייה קרה לבחירה</li><li data-k="r2i4">כד מים קרים עם קרח</li><li data-k="r2i5">ירקות טריים + רטבים</li></ul><a href="#book" data-k="r2c">לקבל הצעה ←</a></div></article>
@@ -682,6 +727,38 @@ body.editing::after{content:"מצב עריכה - לוחצים על טקסט ומ
   <button type="button" id="editToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m14 6 4 4"/></svg><span id="editLabel">עריכת טקסטים</span></button>
 </div>
 
+
+<div class="a11y-ui">
+  <button type="button" class="a11y-btn" id="a11yBtn" aria-label="פתיחת תפריט נגישות" aria-haspopup="dialog" aria-controls="a11yPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="4" r="1.6"/><path d="m18 19 1-7-6 1"/><path d="m5 8 3-3 5.5 3-2.36 3.5"/><path d="M4.24 14.5a5 5 0 0 0 6.88 6"/><path d="M13.76 17.5a5 5 0 0 0-6.88-6"/></svg></button>
+  <div class="a11y-scrim" id="a11yScrim" hidden></div>
+  <div class="a11y-panel" id="a11yPanel" role="dialog" aria-modal="true" aria-labelledby="a11yTitle" hidden>
+    <div class="a11y-head"><h2 id="a11yTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="4" r="1.6"/><path d="m18 19 1-7-6 1"/><path d="m5 8 3-3 5.5 3-2.36 3.5"/><path d="M4.24 14.5a5 5 0 0 0 6.88 6"/><path d="M13.76 17.5a5 5 0 0 0-6.88-6"/></svg> תפריט נגישות</h2><button type="button" class="a11y-x" id="a11yClose" aria-label="סגירת תפריט נגישות">&times;</button></div>
+    <div class="a11y-body" aria-live="polite">
+      <div class="a11y-box"><b id="a11yFsL">גודל טקסט</b><div class="a11y-row"><button type="button" class="a11y-o" data-step="fontSize" data-dir="1">+ הגדלה</button><button type="button" class="a11y-o" data-step="fontSize" data-dir="-1">- הקטנה</button></div></div>
+      <div class="a11y-box"><b id="a11yZL">גודל תצוגה</b><div class="a11y-row"><button type="button" class="a11y-o" data-step="zoom" data-dir="1">הגדלת מסך</button><button type="button" class="a11y-o" data-step="zoom" data-dir="-1">הקטנת מסך</button></div></div>
+      <p class="a11y-cap">התאמת צבעים</p>
+      <button type="button" class="a11y-o" data-mode="highContrast">ניגודיות גבוהה</button>
+      <button type="button" class="a11y-o" data-mode="invert">היפוך צבעים</button>
+      <button type="button" class="a11y-o" data-mode="monochrome">מונוכרום</button>
+      <button type="button" class="a11y-o" data-mode="sepia">ספיה</button>
+      <button type="button" class="a11y-o" data-mode="blackYellow">שחור־צהוב</button>
+      <p class="a11y-cap">התאמות תוכן</p>
+      <button type="button" class="a11y-o" data-flag="headingEmphasis">הדגשת כותרות</button>
+      <button type="button" class="a11y-o" data-flag="highlightLinks">הדגשת קישורים</button>
+      <button type="button" class="a11y-o" data-flag="imageDescriptions">תיאור תמונות</button>
+      <button type="button" class="a11y-o" data-flag="readableFont">גופן קריא</button>
+      <button type="button" class="a11y-o" data-flag="lineHeight">מרווח שורות</button>
+      <button type="button" class="a11y-o" data-flag="textSpacing">מרווח אותיות</button>
+      <button type="button" class="a11y-o" data-flag="bigCursor">סמן גדול</button>
+      <button type="button" class="a11y-o" data-flag="stopAnimations">ביטול הבהובים ואנימציות</button>
+    </div>
+    <div class="a11y-foot">
+      <button type="button" class="r" id="a11yReset">איפוס הגדרות</button>
+      <div class="l"><a href="/accessibility-statement" target="_top">הצהרת נגישות</a><a href="https://wa.me/972584633555?text=%D7%93%D7%99%D7%95%D7%95%D7%97%20%D7%A2%D7%9C%20%D7%91%D7%A2%D7%99%D7%99%D7%AA%20%D7%A0%D7%92%D7%99%D7%A9%D7%95%D7%AA%20%D7%91%D7%90%D7%AA%D7%A8" target="_blank" rel="noopener">דיווח על בעיה</a></div>
+      <p>אתר זה מונגש בהתאם לתקן הישראלי 5568 ולהנחיות WCAG 2.1 ברמה AA</p>
+    </div>
+  </div>
+</div>
 <a class="fab" href="https://wa.me/972584633555" target="_blank" rel="noopener" aria-label="וואטסאפ">
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.4-.7-2-1.3-.5-.5-1-1.1-1.3-1.7-.1-.2 0-.4.1-.5l.4-.5.3-.4v-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3c-.3.3-1 1-1 2.3s1 2.7 1.1 2.9c.1.2 2 3.1 4.9 4.3 1.8.8 2.5.8 3.4.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.3Z"/></svg>
 </a>
@@ -695,7 +772,8 @@ body.editing::after{content:"מצב עריכה - לוחצים על טקסט ומ
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script>
 (function(){
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var a11yStop = false; try{ a11yStop = !!(JSON.parse(localStorage.getItem('accessibility') || '{}').stopAnimations); }catch(e){}
+  var reduce = a11yStop || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var fine = window.matchMedia('(pointer: fine)').matches;
   var hasGsap = !!(window.gsap && window.ScrollTrigger && window.SplitText && window.MotionPathPlugin);
   var $ = function(s, r){ return (r || document).querySelector(s); };
@@ -974,62 +1052,15 @@ body.editing::after{content:"מצב עריכה - לוחצים על טקסט ומ
   /* ---------- the plate: a burger rides along the routes and collects each route's extras ---------- */
   (function(){
     var track = $('#rtrack'); if(!track) return;
-    var cards = $$('.rcard', track), plate = $('#plate'), base = $('#rpathBase'), done = $('#rpathDone'), svg = $('#rpathSvg'), cap = $('#plCap');
+    var cards = $$('.rcard', track), plate = $('#plate'), base = $('#rpathBase'), done = $('#rpathDone'), svg = $('#rpathSvg');
     var narrow = function(){ return window.matchMedia('(max-width: 900px)').matches; };
-    // what lands on the plate at each route (1 = classic ... 4 = all inclusive); route 5 swaps to the meats
-    var FOOD = [
-      {src: 'fries', lvl: 1}, {src: 'waffle', lvl: 2}, {src: 'rings2', lvl: 2}, {src: 'coke', lvl: 2},
-      {src: 'fried-onion', lvl: 3}, {src: 'onion-jam', lvl: 3}, {src: 'garlic', lvl: 3}, {src: 'pepperjam', lvl: 3}, {src: 'fruit', lvl: 3},
-      {src: 'arayes3', lvl: 4}, {src: 'drinks', lvl: 4}
-    ];
-    var MEAT = ['picanha', 'arayes3', 'kebab', 'hearts', 'pargit', 'chimi'];
-    var CAPS = ['', '+ צ׳יפס', '+ וופל צ׳יפס, טבעות בצל ופחית קולה', '+ בצל מטוגן, ריבת בצל, שום קונפי, ריבת פלפלים וסלט פירות', '+ סוכריות עראיס ושתייה ללא הגבלה', 'מסלול הבשרים: אנטריקוט, פיקניה, עראיס, קבבים, לבבות ופרגית'];
-    function addRing(list, cls){
-      return list.map(function(name, i){
-        var img = document.createElement('img'); img.className = 'pl-i ' + cls; img.src = 'img/t/' + name + '.webp'; img.alt = '';
-        var ang = -90 + i * 360 / list.length; img.dataset.ang = ang; plate.appendChild(img); return img;
-      });
-    }
-    var foodEls = addRing(FOOD.map(function(f){ return f.src; }), 'food');
-    var meatEls = addRing(MEAT, 'meat');
-    function place(){
-      var R = narrow() ? 40 : 46, W = narrow() ? 96 : 110;
-      foodEls.concat(meatEls).forEach(function(el){ var a = +el.dataset.ang * Math.PI / 180; el.style.left = (50 + R * Math.cos(a) / W * 100) + '%'; el.style.top = (50 + R * Math.sin(a) / W * 100) + '%'; });
-    }
-    place(); window.addEventListener('resize', place);
-    var level = 0, capTimer = null;
-    function pop(el, on){ gsap.to(el, on ? {opacity: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: .5, ease: 'back.out(2.4)', overwrite: 'auto'} : {opacity: 0, scale: .2, x: 0, y: 0, rotation: -60, duration: .3, ease: 'power2.in', overwrite: 'auto'}); }
-    // new arrivals land big next to the burger for a moment, then shrink onto the plate
-    function showcase(els){
-      var k = els.length, big = narrow() ? 3.4 : 3.4;
-      els.forEach(function(el, j){
-        var off = narrow() ? {x: -(105 + (j % 2) * 84), y: 40 + (Math.floor(j / 2) - (Math.ceil(k / 2) - 1) / 2) * 82} : {x: (j - (k - 1) / 2) * 100, y: 130};
-        if(narrow() && k <= 2){ off = {x: -105 - j * 84, y: 40}; }
-        gsap.timeline({overwrite: 'auto'})
-          .set(el, {x: off.x, y: off.y, scale: .2, rotation: -30, opacity: 0})
-          .to(el, {opacity: 1, scale: big, rotation: 0, duration: .5, delay: j * .1, ease: 'back.out(2)'})
-          .to(el, {x: 0, y: 0, scale: 1, duration: .7, ease: 'power3.inOut'}, '+=1.1');
-      });
-    }
+    // the burger just rides the trail and gives a little bounce at each route
+    var level = 0;
     function setLevel(L){
       if(L === level) return;
-      var meat = L >= 5, wasMeat = level >= 5, arrivals = [];
-      FOOD.forEach(function(f, i){
-        var on = !meat && L >= f.lvl, was = !wasMeat && level >= f.lvl;
-        if(on && !was){ if(L > level && f.lvl === L) arrivals.push(foodEls[i]); else pop(foodEls[i], true); }
-        else if(!on && was) pop(foodEls[i], false);
-      });
-      if(meat !== wasMeat){
-        if(meat) arrivals = arrivals.concat(meatEls); else meatEls.forEach(function(el){ pop(el, false); });
-        gsap.to('.pl-burger', {opacity: meat ? 0 : 1, scale: meat ? .3 : 1, duration: .35});
-        gsap.to('.pl-steak', {opacity: meat ? 1 : 0, scale: meat ? 1 : .3, duration: .45, ease: 'back.out(2)'});
-      }
-      if(arrivals.length) showcase(arrivals);
-      gsap.fromTo('.plate .pl-burger', {scale: .9}, {scale: meat ? .3 : 1, duration: .5, ease: 'elastic.out(1, .4)'});
-      if(L > level && CAPS[L]){ cap.textContent = CAPS[L]; cap.classList.add('show'); clearTimeout(capTimer); capTimer = setTimeout(function(){ cap.classList.remove('show'); }, 2600); }
+      gsap.fromTo('.plate .pl-burger', {scale: .85}, {scale: 1, duration: .5, ease: 'elastic.out(1, .4)', overwrite: 'auto'});
       level = L;
     }
-    gsap.set(foodEls.concat(meatEls), {opacity: 0, scale: .2});
     gsap.set('.plate .pl-c', {xPercent: -50, yPercent: -50, x: 0, y: 0});
 
     function pts(){
@@ -1214,3 +1245,92 @@ body.editing::after{content:"מצב עריכה - לוחצים על טקסט ומ
   }
 })();
 </script>
+<script>
+/* accessibility widget - shares its settings with the rest of the site (same storage key) */
+(function(){
+  var KEY = 'accessibility', FS = [1, 1.15, 1.3, 1.5, 1.8], ZOOM = [1, 1.1, 1.2, 1.3];
+  var MODES = {highContrast: 'a11y-hc', invert: 'a11y-filter-invert', monochrome: 'a11y-filter-mono', sepia: 'a11y-filter-sepia', blackYellow: 'a11y-by'};
+  var FLAGS = {highlightLinks: 'a11y-links', bigCursor: 'a11y-cursor', readableFont: 'a11y-font', lineHeight: 'a11y-lh', textSpacing: 'a11y-ls', headingEmphasis: 'a11y-heads'};
+  var def = {fontSize: 0, zoom: 0, colorMode: 'none', highlightLinks: false, bigCursor: false, stopAnimations: false, readableFont: false, lineHeight: false, textSpacing: false, headingEmphasis: false, imageDescriptions: false};
+  var st = {}; for(var k in def) st[k] = def[k];
+  try{ var sv = JSON.parse(localStorage.getItem(KEY) || '{}'); for(var k2 in sv) if(k2 in def) st[k2] = sv[k2]; }catch(e){}
+  var root = document.documentElement, $ = function(s){ return document.querySelector(s); };
+  var btn = $('#a11yBtn'), panel = $('#a11yPanel'), scrim = $('#a11yScrim'), closeB = $('#a11yClose');
+  var startAnim = st.stopAnimations, lastFocus = null;
+
+  function textEls(){
+    return Array.prototype.filter.call(document.querySelectorAll('body *:not(script):not(style):not(svg):not(svg *)'), function(el){
+      if(el.closest('.a11y-ui')) return false;
+      for(var n = el.firstChild; n; n = n.nextSibling) if(n.nodeType === 3 && n.nodeValue.trim()) return true;
+      return /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(el.tagName);
+    });
+  }
+  var lastFs = 1;
+  function applyFont(f){
+    if(f === lastFs) return;
+    textEls().forEach(function(el){
+      if(!el.dataset.a11yFs) el.dataset.a11yFs = parseFloat(getComputedStyle(el).fontSize) / lastFs;
+      el.style.fontSize = f === 1 ? '' : (el.dataset.a11yFs * f) + 'px';
+    });
+    lastFs = f;
+  }
+  function captions(on){
+    document.querySelectorAll('.a11y-alt').forEach(function(c){ c.remove(); });
+    if(!on) return;
+    document.querySelectorAll('img[alt]').forEach(function(img){
+      var a = img.getAttribute('alt'); if(!a || img.closest('.a11y-ui')) return;
+      var c = document.createElement('span'); c.className = 'a11y-alt'; c.textContent = a; img.insertAdjacentElement('afterend', c);
+    });
+  }
+  function apply(){
+    applyFont(FS[st.fontSize] || 1);
+    document.body.style.zoom = (ZOOM[st.zoom] || 1) === 1 ? '' : String(ZOOM[st.zoom]);
+    for(var m in MODES) root.classList.toggle(MODES[m], st.colorMode === m);
+    for(var f in FLAGS) root.classList.toggle(FLAGS[f], !!st[f]);
+    captions(!!st.imageDescriptions);
+    if(st.stopAnimations) document.querySelectorAll('video').forEach(function(v){ v.pause(); });
+    document.querySelectorAll('.a11y-panel [data-mode]').forEach(function(b){ b.setAttribute('aria-pressed', String(st.colorMode === b.dataset.mode)); });
+    document.querySelectorAll('.a11y-panel [data-flag]').forEach(function(b){ b.setAttribute('aria-pressed', String(!!st[b.dataset.flag])); });
+    $('#a11yFsL').textContent = 'גודל טקסט - ' + Math.round((FS[st.fontSize] || 1) * 100) + '%';
+    $('#a11yZL').textContent = 'גודל תצוגה - ' + Math.round((ZOOM[st.zoom] || 1) * 100) + '%';
+    try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){}
+    if(window.ScrollTrigger) setTimeout(function(){ ScrollTrigger.refresh(); }, 60);
+  }
+  function setOpen(on){
+    if(on){
+      lastFocus = document.activeElement; scrim.hidden = false; panel.hidden = false;
+      requestAnimationFrame(function(){ panel.classList.add('open'); closeB.focus(); });
+    } else {
+      panel.classList.remove('open'); scrim.hidden = true;
+      setTimeout(function(){ panel.hidden = true; }, 350);
+      if(st.stopAnimations !== startAnim){ location.reload(); return; }
+      (lastFocus || btn).focus();
+    }
+  }
+  btn.addEventListener('click', function(){ setOpen(true); });
+  closeB.addEventListener('click', function(){ setOpen(false); });
+  scrim.addEventListener('click', function(){ setOpen(false); });
+  document.addEventListener('keydown', function(e){
+    if(panel.hidden) return;
+    if(e.key === 'Escape'){ setOpen(false); return; }
+    if(e.key === 'Tab'){
+      var f = panel.querySelectorAll('button, a[href]'), a = f[0], z = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === a){ e.preventDefault(); z.focus(); }
+      else if(!e.shiftKey && document.activeElement === z){ e.preventDefault(); a.focus(); }
+    }
+  });
+  panel.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    if(b.dataset.step){ var key = b.dataset.step, max = (key === 'fontSize' ? FS : ZOOM).length - 1; st[key] = Math.min(max, Math.max(0, st[key] + (+b.dataset.dir))); }
+    else if(b.dataset.mode){ st.colorMode = st.colorMode === b.dataset.mode ? 'none' : b.dataset.mode; }
+    else if(b.dataset.flag){ st[b.dataset.flag] = !st[b.dataset.flag]; }
+    else if(b.id === 'a11yReset'){ for(var k in def) st[k] = def[k]; }
+    else return;
+    apply();
+  });
+  // wait for the loader / split text to settle before measuring text sizes
+  window.addEventListener('load', function(){ setTimeout(apply, 50); });
+  if(document.readyState === 'complete') setTimeout(apply, 50);
+})();
+</script>
+
