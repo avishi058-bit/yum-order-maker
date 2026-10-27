@@ -201,6 +201,12 @@ const faqLd = (faq: Faq[]) => ({
   })),
 });
 
+const TOUR_LUNCH_ALTERNATES = [
+  { hreflang: "he", path: "/otef-tour-lunch" },
+  { hreflang: "en", path: "/en/otef-tour-lunch" },
+  { hreflang: "x-default", path: "/otef-tour-lunch" },
+];
+
 const GROUPS_ALTERNATES = [
   { hreflang: "he", path: "/groups" },
   { hreflang: "en", path: "/en/groups" },
@@ -220,7 +226,6 @@ export const SEO_PAGES = {
     sections: GROUPS_SECTIONS_HE,
     faq: GROUPS_FAQ_HE,
     links: [
-      { href: "/en/groups", label: "English" },
       { href: "/otef-aza", label: "המבורגר בעוטף עזה" },
       { href: "/", label: "לתפריט ולהזמנה" },
     ],
@@ -280,7 +285,7 @@ export const SEO_PAGES = {
         priceRange: "₪₪",
         address: {
           "@type": "PostalAddress",
-          streetAddress: "21 Arvei Nahal Rd, Tushiya",
+          streetAddress: "21 Derech Arvei Nahal, Tushiya",
           addressLocality: "Kfar Maimon (Tushiya)",
           addressRegion: "Sdot Negev Regional Council",
           postalCode: "8523000",
@@ -322,6 +327,7 @@ export const SEO_PAGES = {
   otefTourLunch: {
     path: "/otef-tour-lunch",
     lang: "he",
+    alternates: TOUR_LUNCH_ALTERNATES,
     title: "איפה לאכול בסיור בעוטף עזה | עצירת צהריים לקבוצות - הבקתה, כפר מימון",
     description:
       "מתכננים סיור בעוטף? הבקתה בכפר מימון - 8 דק׳ מתקומה ו-13 דק׳ מאתר הנובה. עצירת צהריים לקבוצות של 20-200 איש, כשר, 30-45 דקות, מסלולים מ-69 ₪ לאדם.",
@@ -386,6 +392,84 @@ export const SEO_PAGES = {
         address: ADDRESS_HE,
         geo: GEO,
         servesCuisine: ["המבורגרים", "Burgers"],
+        maximumAttendeeCapacity: 200,
+        hasOfferCatalog: groupOffers,
+      },
+    },
+  },
+  otefTourLunchEn: {
+    path: "/en/otef-tour-lunch",
+    lang: "en",
+    alternates: TOUR_LUNCH_ALTERNATES,
+    title: "Where to Eat on a Gaza Envelope Tour | Group Lunch Stop - HaBikta, Kfar Maimon",
+    description:
+      "Planning a Gaza Envelope (Otef Aza) tour? HaBikta in Kfar Maimon is 8 min from Tkuma and 13 min from the Nova site. Kosher group lunch for 20-200 people in 30-45 minutes, from ₪69 per person.",
+    h1: "Where to eat on a Gaza Envelope tour",
+    intro:
+      "Planning a tour of the Gaza Envelope (Otef Aza) and looking for a lunch stop for your group? HaBikta in Kfar Maimon (Tushiya) sits right on the tour route - about 8 minutes from Tkuma and 13 minutes from the Nova festival site. We host groups of 20 to 200 people by advance booking, and a full lunch stop takes about 30-45 minutes.",
+    sections: [
+      {
+        h2: "The usual stops on a Gaza Envelope tour",
+        paragraphs: [
+          "Most tours of the area include some of these stops: the Nova festival site near Re'im, the burnt-cars site in Tkuma, the kibbutzim of Kfar Aza, Be'eri and Nahal Oz, and the town of Sderot.",
+          "HaBikta is right in the middle of that route: about 8 minutes by bus from Tkuma, 13 minutes from the Nova site and 15 minutes from Sderot. We are inside a moshav, so there is no city traffic and no hunting for bus parking - you stop for lunch along the way and carry on.",
+        ],
+      },
+      {
+        h2: "How the lunch stop works",
+        paragraphs: [
+          "1. Book ahead on WhatsApp with the number of people, the date and your arrival time.",
+          "2. Pick a menu that fits your budget.",
+          "3. On the day, the guide lets us know when the bus is on its way, and the kitchen times the food to your arrival.",
+          "4. The bus parks right outside and the market-style table is already set: burgers, fries, vegetables and sauces, and everyone builds their own plate.",
+          "5. Eat on the lawn, under the trees or in the covered pergola, then move on to your next stop.",
+        ],
+      },
+      {
+        h2: "What we serve and what it costs",
+        paragraphs: [
+          "Five group menus, per person including VAT: Classic ₪69, Upgraded ₪82, Premium ₪109, All inclusive ₪139 and Meat feast ₪250. Every menu includes a 220 g burger, and the larger menus add fries, drinks, table extras and dessert. Minimum order ₪2,000 including VAT. Full details on the groups page.",
+        ],
+      },
+      {
+        h2: "Kosher and dietary needs",
+        paragraphs: [
+          "Kosher under the supervision of the Sdot Negev rabbinate. Vegetarian and gluten-free alternatives are available - please tell us in advance how many you need.",
+        ],
+      },
+      {
+        h2: "Booking",
+        paragraphs: ["WhatsApp +972-58-463-3555. 21 Derech Arvei Nahal, Tushiya (Kfar Maimon), Israel."],
+      },
+    ],
+    links: [
+      { href: "/en/groups", label: "Group menus and booking →" },
+    ],
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: "Where to eat on a Gaza Envelope tour",
+      inLanguage: "en",
+      url: `${SITE_URL}/en/otef-tour-lunch`,
+      image: `${SITE_URL}/icons/icon-512.png`,
+      author: { "@type": "Organization", name: "HaBikta Burger", url: `${SITE_URL}/` },
+      publisher: { "@type": "Organization", name: "HaBikta Burger", logo: { "@type": "ImageObject", url: `${SITE_URL}/icons/icon-512.png` } },
+      datePublished: "2026-10-27",
+      about: {
+        "@type": "Restaurant",
+        name: "HaBikta Burger",
+        url: `${SITE_URL}/en/groups`,
+        telephone: "+972584633555",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "21 Derech Arvei Nahal, Tushiya",
+          addressLocality: "Kfar Maimon (Tushiya)",
+          addressRegion: "Sdot Negev Regional Council",
+          postalCode: "8523000",
+          addressCountry: "IL",
+        },
+        geo: GEO,
+        servesCuisine: ["Burgers"],
         maximumAttendeeCapacity: 200,
         hasOfferCatalog: groupOffers,
       },

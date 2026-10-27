@@ -30,6 +30,7 @@ function seoPrerender(): Plugin {
         { page: SEO_PAGES.groupsEn, body: renderBody(SEO_PAGES.groupsEn) },
         { page: SEO_PAGES.otefAza, body: renderBody(SEO_PAGES.otefAza, otefHtml) },
         { page: SEO_PAGES.otefTourLunch, body: renderBody(SEO_PAGES.otefTourLunch) },
+        { page: SEO_PAGES.otefTourLunchEn, body: renderBody(SEO_PAGES.otefTourLunchEn) },
       ];
       for (const { page, body } of pages) {
         const out = path.join(dist, page.path.replace(/^\//, ""), "index.html");

@@ -95,6 +95,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/otef-aza" element={<OtefAza />} />
               <Route path="/otef-tour-lunch" element={<OtefTourLunch />} />
+              <Route path="/en/otef-tour-lunch" element={<OtefTourLunch lang="en" />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/accessibility-statement" element={<AccessibilityStatement />} />
