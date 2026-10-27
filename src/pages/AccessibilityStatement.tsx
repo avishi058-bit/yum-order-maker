@@ -19,7 +19,7 @@ const AccessibilityStatement = () => (
         <h2 className="text-xl font-bold text-foreground mb-2">1. פרטי בית העסק</h2>
         <p>
           אתר <b>"המבורגר הבקתה"</b> מופעל על ידי שלזינגר אבישי-אברהם, עוסק מורשה,
-          ע.מ 213877103, שמקום עסקו בכתובת: ערבי הנחל 22, תושיה.
+          ע.מ 213877103, שמקום עסקו בכתובת: דרך ערבי נחל 21, תושיה.
         </p>
       </section>
 
@@ -42,7 +42,7 @@ const AccessibilityStatement = () => (
         <ul className="list-disc pr-6 mt-2 space-y-1">
           <li>📞 טלפון: <a href="tel:058-4633555" className="text-primary hover:underline">058-4633-555</a></li>
           <li>📧 דוא"ל: <a href="mailto:avishi058@gmail.com" className="text-primary hover:underline">avishi058@gmail.com</a></li>
-          <li>📮 כתובת: ערבי הנחל 22, תושיה</li>
+          <li>📮 כתובת: דרך ערבי נחל 21, תושיה</li>
         </ul>
         <p className="mt-2">אנו משתדלים לחזור לכל פנייה תוך מספר ימי עסקים.</p>
       </section>

@@ -1028,7 +1028,7 @@ export function buildInvoiceOps(inv: InvoicePrintData): FastOp[] {
   });
 
   ops.push(asLine("הבקתה", { align: "C", bold: true, size: 48 }));
-  ops.push(asLine("ערבי הנחל 22, תושיה", { align: "C", size: 30 }));
+  ops.push(asLine("דרך ערבי נחל 21, תושיה", { align: "C", size: 30 }));
   ops.push(sep());
   ops.push(asLine("חשבונית מס קבלה", { align: "C", bold: true, size: 42 }));
   if (inv.invoiceNumber) {

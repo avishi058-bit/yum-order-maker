@@ -14,7 +14,7 @@ const INVOICE_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CreateInvoiceReceipt";
 
 const TAX_RATE = 18;
-const BUSINESS_ADDRESS = "ערבי הנחל 22";
+const BUSINESS_ADDRESS = "דרך ערבי נחל 21";
 const BUSINESS_CITY = "תושיה";
 
 const BodySchema = z.object({

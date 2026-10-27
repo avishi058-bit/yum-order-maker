@@ -15,7 +15,7 @@ const INVOICE_URL =
 
 // Business details printed on the document.
 const TAX_RATE = 18;
-const BUSINESS_ADDRESS = "ערבי הנחל 22";
+const BUSINESS_ADDRESS = "דרך ערבי נחל 21";
 const BUSINESS_CITY = "תושיה";
 
 function pickNumber(result: Record<string, unknown>): string | null {

@@ -25,7 +25,7 @@ const About = () => (
         <ul className="list-none space-y-1">
           <li><strong>שם העסק:</strong> המבורגר הבקתה - שלזינגר אבישי-אברהם, עוסק מורשה</li>
           <li><strong>ח.פ / ע.מ:</strong> 213877103</li>
-          <li><strong>כתובת:</strong> ערבי הנחל 22, תושיה</li>
+          <li><strong>כתובת:</strong> דרך ערבי נחל 21, תושיה</li>
           <li><strong>מדינה:</strong> ישראל</li>
           <li>
             <strong>טלפון:</strong>{" "}
