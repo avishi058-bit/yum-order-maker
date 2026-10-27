@@ -436,6 +436,8 @@ html.a11y-lh body *:not(.a11y-ui *){line-height:1.9!important}
 html.a11y-ls body *:not(.a11y-ui *){letter-spacing:.12em!important;word-spacing:.16em!important}
 html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!important;outline-offset:4px}
 .a11y-alt{display:block;font:700 13px Arial,sans-serif;background:#fff;color:#000;padding:4px 8px;border:1px solid #000;position:relative;z-index:5}
+.mpanel .mlang{display:inline-block;margin-top:18px;color:var(--mustard);font-weight:900;font-size:16px;text-decoration:underline;text-underline-offset:4px}
+.pill.lang{padding:0 14px;min-width:48px;justify-content:center;font-family:var(--body);font-size:15px;font-weight:900;letter-spacing:.02em}
 </style>
 
 <div class="loader nojs" id="loader" aria-hidden="true">
@@ -451,6 +453,7 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
   <div class="wrap">
     <a class="brand" href="#top"><img src="img/logo.jpg" alt="הבקתה - המבורגר של מושבניקים"><b data-k="t01">הבקתה</b></a>
     <div class="hbtns">
+      <a class="pill line-b lang" href="/en/groups" target="_top" hreflang="en" lang="en" aria-label="English version">EN</a>
       <a class="pill red" href="#book" data-k="t06">לתאם עצירה</a>
       <button class="pill line-b" id="menuBtn" type="button" aria-expanded="false" aria-controls="mpanel"><span id="menuLbl">תפריט</span><span class="burgerico" aria-hidden="true"><i></i><i></i><i></i></span></button>
       <div class="mpanel" id="mpanel">
@@ -461,6 +464,7 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
           <a href="#world"><span data-k="t04">מי כבר היה</span></a>
           <a href="#book"><span data-k="t05">תיאום</span></a>
         </nav>
+        <a class="mlang" href="/en/groups" target="_top" hreflang="en" lang="en">English version</a>
         <small>כפר מימון · עוטף עזה</small>
       </div>
     </div>

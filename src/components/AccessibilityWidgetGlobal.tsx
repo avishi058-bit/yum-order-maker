@@ -21,7 +21,7 @@ const isInternalRoute = (pathname: string) =>
 
 // Routes that render a full-screen static page with its own built-in widget
 // (same settings storage key), so the global one would only sit on top of it.
-const SELF_HOSTED_WIDGET_ROUTES = ["/groups"];
+const SELF_HOSTED_WIDGET_ROUTES = ["/groups", "/en/groups"];
 
 const AccessibilityWidgetGlobal = () => {
   const { pathname } = useLocation();
