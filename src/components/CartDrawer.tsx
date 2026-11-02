@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, ShoppingBag, Pencil, Trash2 } from "lucide-react";
-import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions } from "@/data/menu";
+import { toppings, Topping, removalDisplayNames, menuItems, mealSideOptions, mealDrinkOptions, donenessOptions } from "@/data/menu";
 import { findTopping } from "@/lib/toppingsLookup";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { computeCartItemTotal } from "@/lib/cartPricing";
@@ -174,11 +174,14 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onCheckout, onEdit
                               return t ? { name: t.name, price: t.price } : null;
                             })
                             .filter(Boolean) as Array<{ name: string; price: number }>;
+                          const donenessId = burger.removals.find((r) => r.startsWith("doneness-"));
+                          const donenessLabel = donenessOptions.find((d) => d.id === donenessId)?.label;
                           return (
                             <div key={i} className={`${isKiosk ? 'text-lg' : 'text-xs'} text-muted-foreground`}>
                               <div>
                                 🍔 המבורגר {i + 1}
                                 {burger.name && <span className="font-bold text-foreground mr-1">({burger.name})</span>}
+                                {donenessLabel && <span className="mr-1">🔥 {donenessLabel}</span>}
                                 {burger.removals.length > 0 && (
                                   <span className="mr-1">
                                     - {getRemovalNames(burger.removals).join(", ")}
