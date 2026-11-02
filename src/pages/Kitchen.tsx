@@ -3037,10 +3037,12 @@ const Kitchen = () => {
                                 <p>{i + 1}. {b.name || ""}</p>
                                 {(() => {
                                   const bRemovals = b.removals || [];
-                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(bRemovals, b.name);
+                                  const { doneness: bDoneness, cleanedRemovals: bClean } = extractOwnerName(bRemovals);
+                                  const { label: bShort, rest: bRest } = applyVeggieShortcut(bClean, b.name);
                                   const noChanges = !bShort && bRest.length === 0;
                                   return (
                                     <>
+                                      {bDoneness && <p className="font-extrabold text-orange-400">🔥 {bDoneness}</p>}
                                       {bShort && <p className="font-extrabold text-red-400">{bShort}</p>}
                                       {bRest.length > 0 && <p className="font-bold text-red-400">- שינויים: {bRest.join(", ")}</p>}
                                       {noChanges && <p className="font-bold text-muted-foreground">- ללא שינויים</p>}

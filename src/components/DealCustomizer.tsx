@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { dealDrinkOptions, drinkToAvailabilityId, toppings as allToppings } from "@/data/menu";
+import { dealDrinkOptions, drinkToAvailabilityId, toppings as allToppings, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -72,6 +72,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
     defaultRegularIngredientState(),
   ]);
   const [burgerToppings, setBurgerToppings] = useState<string[][]>([[], [], []]);
+  const [burgerDoneness, setBurgerDoneness] = useState<string[]>([DEFAULT_DONENESS, DEFAULT_DONENESS, DEFAULT_DONENESS]);
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>(["", "", ""]);
 
   const currentBurgerIndex = burgerStepIndex(step);
@@ -113,6 +114,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
       defaultRegularIngredientState(),
     ]);
     setBurgerToppings([[], [], []]);
+    setBurgerDoneness([DEFAULT_DONENESS, DEFAULT_DONENESS, DEFAULT_DONENESS]);
     setSelectedDrinks(["", "", ""]);
   };
 
@@ -152,8 +154,12 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
         const drink = dealDrinkOptions.find((d) => d.id === dId)!;
         return { id: drink.id, name: drink.name, extraCost: drink.price };
       });
+      const donenessOn = !isAvailable || isAvailable("doneness-category");
       const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, idx) => ({
-        removals: ingredientStateToRemovals(state),
+        removals: [
+          ...ingredientStateToRemovals(state),
+          ...(donenessOn ? [burgerDoneness[idx] ?? DEFAULT_DONENESS] : []),
+        ],
         toppings: burgerToppings[idx] ?? [],
         name: burgerNames[idx]?.trim() || undefined,
       }));
@@ -252,6 +258,38 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
                           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
+                      {(!isAvailable || isAvailable("doneness-category")) && (
+                        <div className="mb-4">
+                          <h3 className={`font-bold text-right mb-2 ${isKiosk ? "text-xl" : "text-base"}`}>מידת עשייה</h3>
+                          <div className="flex gap-2">
+                            {donenessOptions
+                              .filter((d) => !isAvailable || isAvailable(d.id))
+                              .map((d) => {
+                                const active = burgerDoneness[currentBurgerIndex] === d.id;
+                                return (
+                                  <button
+                                    key={d.id}
+                                    aria-pressed={active}
+                                    onClick={() =>
+                                      setBurgerDoneness((prev) => {
+                                        const updated = [...prev];
+                                        updated[currentBurgerIndex] = d.id;
+                                        return updated;
+                                      })
+                                    }
+                                    className={`flex-1 py-2.5 rounded-xl border-2 font-bold text-sm transition-colors ${
+                                      active
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border bg-background"
+                                    }`}
+                                  >
+                                    {d.label}{d.recommended ? " ⭐" : ""}
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
                       <BurgerIngredientChecklist
                         state={burgerIngredients[currentBurgerIndex]}
                         onToggle={toggleIngredient}

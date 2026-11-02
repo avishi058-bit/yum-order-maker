@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { drinkToAvailabilityId, toppings as allToppings } from "@/data/menu";
+import { drinkToAvailabilityId, toppings as allToppings, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -77,6 +77,9 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   const [burgerToppings, setBurgerToppings] = useState<string[][]>(
     Array.from({ length: 5 }, () => [])
   );
+  const [burgerDoneness, setBurgerDoneness] = useState<string[]>(
+    Array.from({ length: 5 }, () => DEFAULT_DONENESS)
+  );
   const [wantsDrinks, setWantsDrinks] = useState<boolean | null>(null);
   const [drinkCount, setDrinkCount] = useState(0);
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>([]);
@@ -124,6 +127,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
     setBurgerNames(Array.from({ length: 5 }, () => ""));
     setBurgerIngredients(Array.from({ length: 5 }, () => defaultRegularIngredientState()));
     setBurgerToppings(Array.from({ length: 5 }, () => []));
+    setBurgerDoneness(Array.from({ length: 5 }, () => DEFAULT_DONENESS));
     setWantsDrinks(null);
     setDrinkCount(0);
     setSelectedDrinks([]);
@@ -157,8 +161,12 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   };
 
   const finishDeal = (drinks: DealDrinkChoice[]) => {
+    const donenessOn = !isAvailable || isAvailable("doneness-category");
     const cleanBurgers: DealBurgerConfig[] = burgerIngredients.map((state, i) => ({
-      removals: ingredientStateToRemovals(state),
+      removals: [
+        ...ingredientStateToRemovals(state),
+        ...(donenessOn ? [burgerDoneness[i] ?? DEFAULT_DONENESS] : []),
+      ],
       toppings: burgerToppings[i] ?? [],
       name: burgerNames[i]?.trim() || undefined,
     }));
@@ -315,6 +323,38 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
+                      {(!isAvailable || isAvailable("doneness-category")) && currentBurgerIndex >= 0 && (
+                        <div className="mb-4">
+                          <h3 className={`font-bold text-right mb-2 ${isKiosk ? "text-xl" : "text-base"}`}>מידת עשייה</h3>
+                          <div className="flex gap-2">
+                            {donenessOptions
+                              .filter((d) => !isAvailable || isAvailable(d.id))
+                              .map((d) => {
+                                const active = burgerDoneness[currentBurgerIndex] === d.id;
+                                return (
+                                  <button
+                                    key={d.id}
+                                    aria-pressed={active}
+                                    onClick={() =>
+                                      setBurgerDoneness((prev) => {
+                                        const updated = [...prev];
+                                        updated[currentBurgerIndex] = d.id;
+                                        return updated;
+                                      })
+                                    }
+                                    className={`flex-1 py-2.5 rounded-xl border-2 font-bold text-sm transition-colors ${
+                                      active
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border bg-background"
+                                    }`}
+                                  >
+                                    {d.label}{d.recommended ? " ⭐" : ""}
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
                       {currentBurgerIndex >= 0 && (
                         <BurgerIngredientChecklist
                           state={burgerIngredients[currentBurgerIndex]}
