@@ -511,15 +511,18 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
           ops.push(feed(1.0));
         }
         dishNo += 1;
-        ops.push(asLine(`${dishNo}. מנה ${i + 1}: ${b.name || ""}`.trim(), { align: "R", bold: true, size: 28 }));
+        const bRem = b.removals || [];
+        const { doneness: bDoneness, cleanedRemovals: bCleanRem } = extractOwnerName(bRem);
+        const bDonShort = shortDoneness(bDoneness);
+        const bHeader = `${dishNo}. מנה ${i + 1}: ${[b.name, bDonShort].filter(Boolean).join(" ")}`.trim();
+        ops.push(asLine(bHeader, { align: "R", bold: true, size: 28 }));
 
         ops.push(feed(LINE_GAP));
-        const bRem = b.removals || [];
         // Deal burgers are always classic burgers; b.name is the optional
         // owner-name label, so we pass the real burger type to the summary.
         const { veg, others } = buildVeggieSummary(
           "קלאסי",
-          extractOwnerName(bRem).cleanedRemovals,
+          bCleanRem,
         );
         ops.push(asLine(veg, { align: "R", bold: true, size: 26 }));
         ops.push(feed(LINE_GAP));
