@@ -1339,3 +1339,26 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
 })();
 </script>
 
+<script>
+/* Google Ads: count a WhatsApp lead (floating button, booking form, any wa.me link) as a conversion.
+   The ad click id lives on the parent page's tag (same origin), so fire through it when present. */
+(function(){
+  var SEND_TO = 'AW-17739623593/Ip8FCNr3lbEdEKnZ9IpC', last = 0;
+  function tag(){
+    try{ if(window.top !== window && typeof window.top.gtag === 'function') return window.top.gtag; }catch(e){}
+    if(typeof window.gtag !== 'function'){
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function(){ window.dataLayer.push(arguments); };
+      window.gtag('js', new Date()); window.gtag('config', 'AW-17739623593');
+      var s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=AW-17739623593'; document.head.appendChild(s);
+    }
+    return window.gtag;
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href*="wa.me/"]');
+    if(!a || a.closest('.a11y-foot') || document.body.classList.contains('editing')) return;
+    var now = Date.now(); if(now - last < 3000) return; last = now;
+    try{ tag()('event', 'conversion', {send_to: SEND_TO, transport_type: 'beacon'}); }catch(err){}
+  }, true);
+})();
+</script>

@@ -17,12 +17,12 @@
       http-equiv="Content-Security-Policy"
       content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://maps.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.gpteng.co;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://maps.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://cdn.gpteng.co;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' data: https://fonts.gstatic.com;
       img-src 'self' data: blob: https:;
-      connect-src 'self' https://challenges.cloudflare.com https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com https://api.zcredit.co.il;
-      frame-src 'self' https://challenges.cloudflare.com https://*.zcredit.co.il;
+      connect-src 'self' https://challenges.cloudflare.com https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://maps.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://api.zcredit.co.il;
+      frame-src 'self' https://challenges.cloudflare.com https://td.doubleclick.net https://www.googletagmanager.com https://*.zcredit.co.il;
       worker-src 'self' blob:;
       object-src 'none';
       base-uri 'self';
@@ -105,6 +105,14 @@
     </script>
     <script type="application/ld+json" id="site-jsonld">
       {"@context": "https://schema.org", "@type": "Restaurant", "name": "הבקתה - המבורגר של מושבניקים", "alternateName": ["המבורגר הבקתה", "HaBikta Burger"], "url": "https://habikta-burger.com/", "logo": "https://habikta-burger.com/icons/icon-512.png", "image": "https://habikta-burger.com/icons/icon-512.png", "geo": {"@type": "GeoCoordinates", "latitude": 31.4347276, "longitude": 34.5416983}, "sameAs": ["https://www.instagram.com/habikta_burgers/", "https://www.tiktok.com/@habikta"], "telephone": "+972584633555", "openingHoursSpecification": [{"@type": "OpeningHoursSpecification", "dayOfWeek": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"], "opens": "19:00", "closes": "23:30"}], "email": "avishi058@gmail.com", "servesCuisine": ["המבורגרים", "Burgers"], "priceRange": "₪₪", "acceptsReservations": true, "description": "מסעדת המבורגרים כשרה באווירה כפרית בכפר מימון, שדות נגב, עוטף עזה. קציצה 220 גרם, אירוח קבוצות וסיורים בעוטף עד 200 איש, אפשרויות צמחוניות, טבעוניות ולחמנייה ללא גלוטן.", "address": {"@type": "PostalAddress", "addressLocality": "כפר מימון (תושיה)", "addressRegion": "מועצה אזורית שדות נגב", "addressCountry": "IL"}, "areaServed": ["עוטף עזה", "שדות נגב", "כפר מימון", "תושיה", "תקומה", "יער שוקדה"], "founder": {"@type": "Person", "name": "אבישי שלזינגר"}, "hasMenu": "https://habikta-burger.com/", "amenityFeature": [{"@type": "LocationFeatureSpecification", "name": "ישיבה בחוץ ובסככה", "value": true}, {"@type": "LocationFeatureSpecification", "name": "חניה לאוטובוסים", "value": true}], "subjectOf": {"@type": "WebPage", "url": "https://habikta-burger.com/otef-aza"}}
+    </script>
+    <!-- Google Ads tag: keeps the ad click id so WhatsApp leads on /groups count as conversions -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17739623593"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17739623593');
     </script>
   </head>
 
