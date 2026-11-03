@@ -87,7 +87,7 @@ export const GROUPS_SECTIONS_HE: Section[] = [
       "המסלול המפנק - 109 ₪ לאדם: שילוב מטוגנים עשיר, פחית וכד מים, תוספות שולחן (בצל מטוגן, ריבת בצל, פלפלים, שום קונפי) וסלט פירות עונתיים לקינוח.",
       "הכל כלול - 139 ₪ לאדם: פתיחה של סוכריות עראיס על טחינה, שילוב מטוגנים מלא, שתייה חופשית, תוספות שולחן כולל ביצת עין, וסלט פירות.",
       "מסלול הבשרים - 250 ₪ לאדם: כחצי ק״ג בשר לאדם - אנטריקוט, פיקניה, חצאי עראיס, קבבים, לבבות עוף ופרגית, עם מטוגנים, צ׳ימיצ׳ורי, סלטים ושתייה.",
-      "קבוצה מ-20 משתתפים, עד 200 בהזמנה מראש, מינימום הזמנה 2,000 ₪ כולל מע״מ. יש חלופות לצמחונים וללא גלוטן. תיאום בוואטסאפ: 058-4633555.",
+      "קבוצה מ-20 משתתפים, עד 200 בהזמנה מראש, מינימום הזמנה 2,000 ₪ כולל מע״מ. יש חלופות לצמחונים וללא גלוטן. תיאום בוואטסאפ: 058-4633555, או בטלפון: 053-9311200.",
     ],
   },
 ];
@@ -151,7 +151,7 @@ export const GROUPS_SECTIONS_EN: Section[] = [
       "Premium - ₪109 per person: a rich mix of fries, a drink and iced water, table extras (fried onion, onion jam, peppers, garlic confit) and seasonal fruit salad.",
       "All inclusive - ₪139 per person: arayes bites on tahini to start, the full fries mix, unlimited soft drinks, table extras including a fried egg, and fruit salad.",
       "Meat feast - ₪250 per person: about half a kilo of meat per person - entrecôte, picanha, arayes, kebabs, chicken hearts and chicken thigh, with fries, chimichurri, salads and drinks.",
-      "Groups from 20 people, up to 200 with advance booking, ₪2,000 minimum including VAT. Vegetarian and gluten-free alternatives available. Book on WhatsApp: +972-58-463-3555.",
+      "Groups from 20 people, up to 200 with advance booking, ₪2,000 minimum including VAT. Vegetarian and gluten-free alternatives available. Book on WhatsApp: +972-58-463-3555, or call +972-53-931-1200.",
     ],
   },
 ];
