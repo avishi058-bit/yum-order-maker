@@ -38,7 +38,7 @@ export const CELEBRITY_NAMES = [
   "קים קרדשיאן", "kim kardashian", "קרדשיאן", "kardashian", "מיסטר ביסט", "mr beast", "ספיד", "speed", "אדריאנה לימה", "סנופ דוג", "snoop dogg", "אמינם", "eminem", "טופאק", "tupac", "דרייק", "drake", "טרוויס סקוט", "travis scott",
   "בן לאדן", "bin laden", "יחיא סינוואר", "חסן נסראללה", "איסמעיל האניה", "אדולף היטלר", "adolf hitler", "סטלין", "stalin", "מוסוליני",
   "הארי פוטר", "harry potter", "בוב ספוג", "spongebob", "סופר מריו", "super mario", "גון סנה", "john cena", "ריק אסטלי", "rick astley", "גיימס בונד", "james bond", "דארת ויידר", "darth vader", "גוקר", "joker", "תומאס שלבי", "thomas shelby", "וולטר וייט", "walter white",
-  "רומן זדורוב", "עלמה ציגלר", "כריסטיאנו", "cristiano", "סקיבידי",
+  "רומן זדורוב", "כריסטיאנו", "cristiano", "סקיבידי",
 ] as const;
 
 export function cleanCustomerName(name: string): string {
