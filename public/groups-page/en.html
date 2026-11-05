@@ -897,6 +897,9 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
     loader.remove(); typed.textContent = typedTxt; setupEditing(); return;
   }
   loader.classList.remove('nojs');
+  // arriving on a section link (#book, #routes...): no curtain intro, straight to that section
+  var deep = false; try{ deep = location.hash.length > 1 && !!document.querySelector(location.hash); }catch(e){}
+  if(deep) loader.style.display = 'none';
   gsap.registerPlugin(ScrollTrigger, SplitText, MotionPathPlugin);
   if(window.InertiaPlugin) gsap.registerPlugin(InertiaPlugin);
 
@@ -918,7 +921,7 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
   // arriving with #book / #routes (e.g. from an ad link): go there once the intro is done
   function goHash(){
     var id = location.hash; if(id.length < 2) return; var el = null; try{ el = $(id); }catch(e){} if(!el) return;
-    setTimeout(function(){ ScrollTrigger.refresh(); if(lenis) lenis.scrollTo(el, {offset: -70, duration: 1.6}); else el.scrollIntoView({behavior: 'smooth'}); }, 250);
+    setTimeout(function(){ ScrollTrigger.refresh(); if(lenis) lenis.scrollTo(el, deep ? {offset: -70, immediate: true} : {offset: -70, duration: 1.6}); else el.scrollIntoView(); }, deep ? 60 : 250);
   }
 
   // header hides on the way down and comes back on the way up
@@ -1196,6 +1199,7 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
   }
   function intro(){
     clearInterval(msgTimer);
+    if(deep){ loader.remove(); heroIn().progress(1); if(lenis) lenis.start(); ScrollTrigger.refresh(); goHash(); return; }
     var tl = gsap.timeline({onComplete: function(){ loader.remove(); if(lenis) lenis.start(); ScrollTrigger.refresh(); goHash(); }});
     tl.to('#lfront .stack, #lmsg', {scale: .6, opacity: 0, duration: .35, ease: 'power2.in'})
       .to(['.loader .c1', '.loader .c2', '.loader .c3'], {yPercent: -125, duration: 1, ease: 'power3.inOut', stagger: .13}, '-=.05')
@@ -1207,7 +1211,7 @@ html.a11y-heads :is(h1,h2,h3,h4):not(.a11y-ui *){outline:3px solid var(--flame)!
     return document.fonts ? Promise.race([document.fonts.ready, timeout(1500)]) : null;
   }).then(function(){
     $$('.reveal').forEach(function(el){ lineReveal(el); });
-    setTimeout(intro, Math.max(0, 2200 - performance.now()));
+    setTimeout(intro, deep ? 0 : Math.max(0, 2200 - performance.now()));
     ScrollTrigger.refresh();
     setupEditing();
   });
