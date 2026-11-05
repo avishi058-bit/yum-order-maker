@@ -1133,7 +1133,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
               const end = (restaurantStatus.preorder_end_time || "22:00").slice(0, 5);
               return (
-                <div className={`rounded-xl border-2 p-4 ${preorderEnabled ? "border-blue-500/50 bg-blue-500/5" : "border-border bg-secondary/40"}`}>
+                <div className={`rounded-2xl border p-4 transition-colors ${preorderEnabled ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/40"}`}>
                   <label className="flex items-center gap-3 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -1143,20 +1143,43 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     />
                     <span className="font-bold text-foreground">🕒 הזמנה מראש לשעה מאוחרת יותר</span>
                   </label>
-                  {preorderEnabled && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-foreground">
-                      <span className={`${th.textMuted}`}>שעת איסוף:</span>
-                      <input
-                        type="time"
-                        min={start}
-                        max={end}
-                        value={preorderTime}
-                        onChange={(e) => setPreorderTime(e.target.value)}
-                        className="bg-secondary border border-border rounded px-3 py-2 text-foreground"
-                      />
-                      <span className={`text-xs ${th.textMuted}`}>({start}-{end})</span>
-                    </div>
-                  )}
+                  {preorderEnabled && (() => {
+                    // Next three quarter-hour slots (at least 30 min ahead) inside the allowed window.
+                    const toMin = (hm: string) => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
+                    const fmt = (min: number) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+                    const il = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+                    const first = Math.max(toMin(start), Math.ceil((il.getHours() * 60 + il.getMinutes() + 30) / 15) * 15);
+                    const slots: string[] = [];
+                    for (let t = first; t <= toMin(end) && slots.length < 3; t += 15) slots.push(fmt(t));
+                    const custom = !!preorderTime && !slots.includes(preorderTime);
+                    const chip = (active: boolean) =>
+                      `h-11 px-4 rounded-xl text-[15px] font-bold transition-colors ${active ? "border-2 border-primary bg-primary/15 text-foreground" : "border border-border bg-background text-foreground hover:border-primary/40"}`;
+                    return (
+                      <div className="mt-3 flex flex-col gap-2">
+                        <span className={`text-sm ${th.textMuted}`}>שעת איסוף</span>
+                        <div className="flex flex-wrap gap-2">
+                          {slots.map((slot) => (
+                            <button key={slot} type="button" aria-pressed={preorderTime === slot} onClick={() => setPreorderTime(slot)} className={chip(preorderTime === slot)}>
+                              {slot}
+                            </button>
+                          ))}
+                          <label className={`${chip(custom)} inline-flex items-center gap-2 cursor-pointer`}>
+                            <span>שעה אחרת</span>
+                            <input
+                              type="time"
+                              min={start}
+                              max={end}
+                              value={custom ? preorderTime : ""}
+                              onChange={(e) => setPreorderTime(e.target.value)}
+                              aria-label="שעת איסוף אחרת"
+                              className="bg-transparent text-foreground w-[5.5rem] focus:outline-none"
+                            />
+                          </label>
+                        </div>
+                        <span className={`text-xs ${th.textMuted}`}>אפשר להזמין לאיסוף בין {start} ל-{end}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}

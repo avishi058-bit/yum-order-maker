@@ -247,3 +247,10 @@ export const nameValidationAnimation = {
   keyframes: "@keyframes customer-name-shake { 0%,100% { transform: translateX(0); } 25%,75% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }",
   css: ".animate-customer-name-shake { animation: customer-name-shake 240ms ease-in-out; } @media (prefers-reduced-motion: reduce) { .animate-customer-name-shake { animation: none; } } .accessibility-stop-animations .animate-customer-name-shake { animation: none !important; }",
 };
+
+// ─── Page transitions ────────────────────────────────────────────────
+// Opacity only: a transform on the page wrapper would re-anchor fixed
+// elements (cart button, modals) for the length of the animation.
+export const pageTransition = {
+  css: "@keyframes page-fade-in { from { opacity: 0; } to { opacity: 1; } } .page-fade-in { animation: page-fade-in 320ms cubic-bezier(0.22, 1, 0.36, 1); } @media (prefers-reduced-motion: reduce) { .page-fade-in { animation: none; } } .accessibility-stop-animations .page-fade-in { animation: none !important; }",
+};

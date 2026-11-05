@@ -26,6 +26,8 @@ import CustomerGreeting from "@/components/CustomerGreeting";
 import ItemPreview from "@/components/ItemPreview";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
 import Reveal from "@/components/Reveal";
+import ClosedOrderCard from "@/components/ClosedOrderCard";
+import HomeSkeleton from "@/components/HomeSkeleton";
 
 // Lazy-loaded: only needed once the user opens a modal/customizer/checkout.
 // This trims the initial JS bundle significantly (ItemCustomizer alone ~1300 lines).
@@ -60,7 +62,6 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { useSavedCart } from "@/hooks/useSavedCart";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import { useBusinessHours } from "@/hooks/useBusinessHours";
-import { Bell } from "lucide-react";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "sonner";
@@ -522,11 +523,7 @@ const Index = () => {
   // Until the open/closed state is known (first ever visit, no cached value),
   // show a spinner instead of optimistically rendering the "open" UI.
   if (!statusResolved) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary" />
-      </div>
-    );
+    return <HomeSkeleton />;
   }
 
   return (
@@ -604,11 +601,10 @@ const Index = () => {
         <KioskWelcome onStart={() => setShowKioskWelcome(false)} />
       )}
 
-      {isClosed && (
+      {/* Regular closure is explained by ClosedOrderCard; the strip stays only for a load closure. */}
+      {isClosed && isManualClosure && (
         <div className="bg-destructive text-destructive-foreground text-center py-4 px-6 font-bold text-lg sticky top-0 z-50">
-          {isManualClosure
-            ? "⏸️ האתר סגור כרגע עקב עומס · נחזור בקרוב!"
-            : "🚫 המסעדה סגורה כרגע להזמנות · נשמח לראות אתכם בפעם הבאה!"}
+          ⏸️ האתר סגור כרגע עקב עומס · נחזור בקרוב!
         </div>
       )}
 
@@ -652,41 +648,19 @@ const Index = () => {
         </Reveal>
       )}
       {isClosed ? (
-        <div className="py-12 text-center px-6">
-          <p className="text-6xl mb-4">{isManualClosure ? "⏸️" : "🔒"}</p>
-          <p className="text-2xl font-black text-foreground mb-2">
-            {isManualClosure ? "האתר סגור כרגע עקב עומס" : "ההזמנות סגורות כרגע"}
-          </p>
-          <p className="text-base text-muted-foreground mb-6 max-w-md mx-auto">
-            {isManualClosure
-              ? "אנחנו עובדים על להוריד את העומס ונחזור בהקדם."
-              : "המטבח סגור להזמנות כרגע - נשמח לראות אתכם בפעם הבאה!"}
-          </p>
-
-          <div className="mb-6">
-            <button
-              onClick={() => {
-                setDineIn(false);
-                setBrowseMenuOpen(true);
-                setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
-              }}
-              className="inline-flex flex-col items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-black px-8 py-5 rounded-2xl shadow-xl shadow-green-600/30 hover:scale-105 transition-transform"
-            >
-              <span className="text-xl">📝 הרכיבו הזמנה לשמירה</span>
-              <span className="text-sm font-normal opacity-90">תישמר אצלכם - תצטרכו לחזור ולשלוח אותה כשנפתח</span>
-            </button>
-          </div>
-
-          {!isStation && (
-            <button
-              onClick={() => setReopenModalOpen(true)}
-              className="inline-flex items-center gap-2 border border-primary/30 bg-primary/10 text-primary font-bold px-6 py-3 rounded-xl hover:bg-primary/20 transition-colors"
-            >
-              <Bell size={20} />
-              עדכנו אותי כשנפתח שוב
-            </button>
-          )}
-        </div>
+        <ClosedOrderCard
+          isManualClosure={isManualClosure}
+          minutesUntilOpen={businessStatus.minutesUntilOpen}
+          nextOpenDay={businessStatus.nextOpenDay}
+          nextOpenAt={businessStatus.nextOpenAt}
+          todayIndex={new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" })).getDay()}
+          onBuildOrder={() => {
+            setDineIn(false);
+            setBrowseMenuOpen(true);
+            setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
+          }}
+          onNotifyMe={isStation ? undefined : () => setReopenModalOpen(true)}
+        />
       ) : dineIn !== null ? (
         <Reveal distance={20}>
           <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />

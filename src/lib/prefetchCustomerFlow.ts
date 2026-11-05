@@ -22,7 +22,7 @@ import extraPattyImg from "@/assets/extra-patty.webp";
 import donenessMediumImg from "@/assets/doneness-medium.webp";
 import donenessMediumWellImg from "@/assets/doneness-medium-well.webp";
 import donenessWellDoneImg from "@/assets/doneness-well-done.webp";
-import cheddarIcon from "@/assets/menu/cheddar-icon.png";
+import cheddarIcon from "@/assets/menu/cheddar-icon.webp";
 
 const CUSTOMIZER_ICONS: string[] = [
   aioliImg,

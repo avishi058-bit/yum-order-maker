@@ -9,32 +9,32 @@ import onionRingsSideImg from "@/assets/onion-rings.webp";
 import tempuraOnionRingsImg from "@/assets/tempura-onion-rings.webp";
 
 // Drinks
-import drinkColaImg from "@/assets/drink-cola.png";
-import drinkZeroImg from "@/assets/drink-zero.png";
-import drinkSpriteImg from "@/assets/drink-sprite.png";
-import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.png";
-import drinkFantaImg from "@/assets/drink-fanta.png";
-import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.png";
-import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.png";
-import drinkSodaImg from "@/assets/drink-soda.png";
-import drinkWaterImg from "@/assets/drink-water.png";
-import drinkBluImg from "@/assets/drink-blu.png";
-import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.png";
-import drinkBluMojitoImg from "@/assets/drink-blu-mojito.png";
-import drinkBluDayImg from "@/assets/drink-blu-day.png";
-import drinkBluMelonAppleImg from "@/assets/drink-blu-melon-apple.png";
-import drinkGoldstarImg from "@/assets/drink-goldstar.png";
+import drinkColaImg from "@/assets/drink-cola.webp";
+import drinkZeroImg from "@/assets/drink-zero.webp";
+import drinkSpriteImg from "@/assets/drink-sprite.webp";
+import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.webp";
+import drinkFantaImg from "@/assets/drink-fanta.webp";
+import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.webp";
+import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.webp";
+import drinkSodaImg from "@/assets/drink-soda.webp";
+import drinkWaterImg from "@/assets/drink-water.webp";
+import drinkBluImg from "@/assets/drink-blu.webp";
+import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.webp";
+import drinkBluMojitoImg from "@/assets/drink-blu-mojito.webp";
+import drinkBluDayImg from "@/assets/drink-blu-day.webp";
+import drinkBluMelonAppleImg from "@/assets/drink-blu-melon-apple.webp";
+import drinkGoldstarImg from "@/assets/drink-goldstar.webp";
 import drinkUnfilteredImg from "@/assets/drink-unfiltered.webp";
-import drinkStellaImg from "@/assets/drink-stella.png";
-import drinkHeinekenImg from "@/assets/drink-heineken.png";
-import drinkCoronaImg from "@/assets/drink-corona.png";
-import drinkCarlsbergImg from "@/assets/drink-carlsberg.png";
-import drinkPaulanerImg from "@/assets/drink-paulaner.png";
-import drinkWeissImg from "@/assets/drink-weiss.png";
-import drinkFlavoredWaterAppleImg from "@/assets/drink-flavored-water-apple.png";
-import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.png";
-import drinkGrapesImg from "@/assets/drink-grapes.png";
-import drinkApplesImg from "@/assets/drink-apples.png";
+import drinkStellaImg from "@/assets/drink-stella.webp";
+import drinkHeinekenImg from "@/assets/drink-heineken.webp";
+import drinkCoronaImg from "@/assets/drink-corona.webp";
+import drinkCarlsbergImg from "@/assets/drink-carlsberg.webp";
+import drinkPaulanerImg from "@/assets/drink-paulaner.webp";
+import drinkWeissImg from "@/assets/drink-weiss.webp";
+import drinkFlavoredWaterAppleImg from "@/assets/drink-flavored-water-apple.webp";
+import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.webp";
+import drinkGrapesImg from "@/assets/drink-grapes.webp";
+import drinkApplesImg from "@/assets/drink-apples.webp";
 
 const SELECTOR_ICONS: string[] = [
   friesRegularImg,
