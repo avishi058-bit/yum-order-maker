@@ -20,7 +20,7 @@ import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
-import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, STAFF_NAME_MESSAGE } from "@/lib/nameValidation";
+import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, CUSTOMER_NAME_REPEAT_MESSAGE, STAFF_NAME_MESSAGE } from "@/lib/nameValidation";
 import { nameValidationAnimation } from "@/config/uiConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -143,7 +143,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   });
   const nameValid = validateCustomerName(form.name, { context: nameContext }).ok;
   const nameInvalid = nameTouched && !nameValid;
-  const nameMessage = nameContext === "staff" ? STAFF_NAME_MESSAGE : CUSTOMER_NAME_MESSAGE;
+  // nameShake counts invalid attempts; from the second one the tone gets firmer.
+  const nameMessage = nameContext === "staff" ? STAFF_NAME_MESSAGE : nameShake >= 2 ? CUSTOMER_NAME_REPEAT_MESSAGE : CUSTOMER_NAME_MESSAGE;
   const checkName = () => {
     setNameTouched(true);
     if (!nameValid) setNameShake((value) => value + 1);
