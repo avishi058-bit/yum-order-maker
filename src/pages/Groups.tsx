@@ -31,7 +31,7 @@ const Groups = ({ lang = "he" }: { lang?: "he" | "en" }) => {
       <Seo page={page} />
       <h1 className="sr-only">{page.title}</h1>
       <iframe
-        src={lang === "en" ? "/groups-page/en.html" : "/groups-page/index.html"}
+        src={(lang === "en" ? "/groups-page/en.html" : "/groups-page/index.html") + (typeof window !== "undefined" && /^#[a-z-]+$/.test(window.location.hash) ? window.location.hash : "")}
         title={lang === "en" ? "HaBikta Burger - group lunch stop" : "המבורגר הבקתה - עצירת צהריים לקבוצות"}
         className="fixed inset-0 z-40 h-[100dvh] w-full border-0 bg-[#f4e4d0]"
         allow="autoplay; fullscreen"
