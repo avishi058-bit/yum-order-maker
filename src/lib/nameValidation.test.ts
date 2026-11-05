@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateCustomerName, cleanCustomerName, normalizeBlockedName } from "./nameValidation";
+import { validateCustomerName, cleanCustomerName, normalizeBlockedName, containsProfanity } from "./nameValidation";
 
 describe("customer name rules", () => {
   it.each(["זין על פ", "ז.י.ן", "זיןןן", "ניגר אידיוט", "אני הומו", "אוראל יומטוב המלך", "67", "נבו שחר6767", "שש שבעש שבע", "יכין אמיתי תצעק את השם שלי ותקבל טיפ", "י", "ייי", "asdasdasd", "שולץ הגבר"])("blocks %s", (name) => {
@@ -54,5 +54,14 @@ describe("customer name rules", () => {
     expect(validateCustomerName("שולץ", { context: "customer", extraBlocked: extra }).ok).toBe(false);
     expect(validateCustomerName("דני סמימי מכוער", { context: "customer", extraBlocked: extra }).ok).toBe(false);
     expect(validateCustomerName("יואב", { context: "customer", extraBlocked: extra }).ok).toBe(true);
+  });
+  it("does not block the word של (part of real names like שלזינגר)", () => {
+    expect(validateCustomerName("אבישי שלזינגר", { context: "customer" }).ok).toBe(true);
+  });
+  it.each(["בלי בצל יא זין", "ז י ן", "fuck you", "תביאו מהר יא בן זונה", "כוס אמק"])("blocks profanity in notes: %s", (text) => {
+    expect(containsProfanity(text)).toBe(true);
+  });
+  it.each(["בלי בצל, רוטב בצד בבקשה", "כוס קולה עם קרח", "אפס מלח", "תודה רבה!", "זינגר יאסוף", "אמא שלי אוספת"])("allows normal notes: %s", (text) => {
+    expect(containsProfanity(text)).toBe(false);
   });
 });

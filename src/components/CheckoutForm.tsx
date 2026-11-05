@@ -20,7 +20,7 @@ import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
-import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, CUSTOMER_NAME_REPEAT_MESSAGE, STAFF_NAME_MESSAGE } from "@/lib/nameValidation";
+import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, CUSTOMER_NAME_REPEAT_MESSAGE, STAFF_NAME_MESSAGE, NOTES_MESSAGE, containsProfanity } from "@/lib/nameValidation";
 import { nameValidationAnimation } from "@/config/uiConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -145,10 +145,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const nameInvalid = nameTouched && !nameValid;
   // nameShake counts invalid attempts; from the second one the tone gets firmer.
   const nameMessage = nameContext === "staff" ? STAFF_NAME_MESSAGE : nameShake >= 2 ? CUSTOMER_NAME_REPEAT_MESSAGE : CUSTOMER_NAME_MESSAGE;
+  const notesInvalid = containsProfanity(form.notes);
   const checkName = () => {
     setNameTouched(true);
     if (!nameValid) setNameShake((value) => value + 1);
-    return nameValid;
+    return nameValid && !notesInvalid;
   };
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
@@ -1063,12 +1064,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus} resize-none`}
                   rows={2}
                   placeholder="הערות להזמנה"
+                  aria-invalid={notesInvalid}
+                  aria-describedby={notesInvalid ? "checkout-notes-error" : undefined}
                 />
+                {notesInvalid && <p id="checkout-notes-error" role="alert" className="animate-customer-name-shake mt-2 text-sm text-destructive">{NOTES_MESSAGE}</p>}
               </div>
               <div className="flex gap-3 pt-2">
                 <Button
                   type="submit"
-                  disabled={!nameValid}
+                  disabled={!nameValid || notesInvalid}
                   className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full active:scale-[0.98] transition-transform"
                 >
                   המשך לתשלום 💳

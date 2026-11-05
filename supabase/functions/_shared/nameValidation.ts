@@ -41,6 +41,18 @@ export const CELEBRITY_NAMES = [
   "רומן זדורוב", "כריסטיאנו", "cristiano", "סקיבידי",
 ] as const;
 
+// Curses and slurs, also checked in order notes. Only real profanity here:
+// everyday note words ("כוס", "בצד", "בבקשה", "אפס") must never be listed.
+export const PROFANITY_WORDS = [
+  "זין", "הזין", "זיון", "זיונים", "מזדיין", "מזדיינת", "תזדיין", "זונה", "זונות", "שרמוטה", "שרמוטות", "אחושרמוטה", "מניאק", "מניאקית",
+  "כוסאמק", "כוסעמק", "כוסאמא", "כוסאוכתק", "אמק", "אחותק", "חרא", "חרה", "אידיוט", "ניגר", "הומו", "ההומו", "הומואים", "גיי", "מכוער", "מכוערת",
+  "מטומטם", "מטומטמת", "דביל", "דבילית", "אהבל", "טמבל", "מפגר", "מפגרת", "קוקסינל", "ערבוש", "כושי", "פרענק", "צחצח", "נבלה", "חלאה", "מחבל", "נאצי",
+  "בליאט", "סוקה", "פידור", "fuck", "fucker", "fucking", "motherfucker", "shit", "bitch", "asshole", "cunt", "dick", "pussy", "slut", "whore", "nigger", "nigga", "faggot", "fag", "retard", "porn",
+  "יא חמור", "בן זונה", "בת זונה", "כוס אמק", "כוס עמק", "כוס אמא", "כוס אוכתק", "לך תזדיין", "יא מטומטם", "יא אהבל", "יא זבל", "יא חזיר", "יא כלב",
+] as const;
+
+export const NOTES_MESSAGE = "בבקשה לכתוב הערה בלי מילים גסות :)";
+
 export function cleanCustomerName(name: string): string {
   return name.trim().replace(/\s+/gu, " ");
 }
@@ -53,14 +65,15 @@ function normalize(name: string): string {
 }
 
 const contextualWords = new Set(["שש", "שבע", "סבן", "עין"].map(normalize));
-const words = new Set(CUSTOMER_NAME_BLOCKLIST.filter((entry) => !entry.includes(" "))
+const NAME_LIST = [...CUSTOMER_NAME_BLOCKLIST, ...PROFANITY_WORDS];
+const words = new Set(NAME_LIST.filter((entry) => !entry.includes(" "))
   .map(normalize).filter((entry) => !contextualWords.has(entry)));
-const phrases = CUSTOMER_NAME_BLOCKLIST.filter((entry) => entry.includes(" "))
+const phrases = NAME_LIST.filter((entry) => entry.includes(" "))
   .map((entry) => normalize(entry).replace(/\s/g, ""));
 const celebrityWords = new Set(CELEBRITY_NAMES.filter((entry) => !entry.includes(" ")).map(normalize));
 // Words that are never a name on their own ("אני הומו", "ליהי עם א").
-// "שלי" and "בדיקה" stay allowed: "יואב שלי" is a real name.
-const NOT_A_NAME_WORDS = new Set(["אני", "אתה", "את", "של", "עם", "לא", "כן", "אבא", "אמא", "לקוח", "לקוחה", "אורח", "אורחת", "הבקתה"].map(normalize));
+// "של", "שלי" and "בדיקה" stay allowed: "יואב שלי", "שלזינגר" are real names.
+const NOT_A_NAME_WORDS = new Set(["אני", "אתה", "את", "עם", "לא", "כן", "אבא", "אמא", "לקוח", "לקוחה", "אורח", "אורחת", "הבקתה"].map(normalize));
 
 // Keyboard rows (Hebrew and English). Four neighbouring keys in a row = gibberish.
 const KEYBOARD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm", "קראטוןםפ", "שדגכעיחלךף", "זסבהנמצתץ"];
@@ -118,4 +131,29 @@ export function validateCustomerName(
   if ((has("סבן") && has("סיקס")) || (has("שש") && has("שבע")) || (has("עין") && has("ביצת"))) return { ok: false };
   // אח and גבר are in `words`, so only standalone tokens are blocked.
   return { ok: true };
+}
+
+const profanityWords = new Set(PROFANITY_WORDS.filter((entry) => !entry.includes(" ")).map(normalize));
+const profanityPhrases = PROFANITY_WORDS.filter((entry) => entry.includes(" ")).map((entry) => normalize(entry).replace(/\s/g, ""));
+
+/** True when free text (order notes) contains a curse or slur, as a whole word. */
+export function containsProfanity(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const tokens = normalize(text).split(/[^\p{L}]+/u).filter(Boolean);
+  // Re-join letters typed one by one ("ז י ן") into a single word.
+  const joined: string[] = [];
+  let run = "";
+  for (const token of tokens) {
+    if (token.length === 1) { run += token; continue; }
+    if (run) { joined.push(run); run = ""; }
+    joined.push(token);
+  }
+  if (run) joined.push(run);
+  if (joined.some((token) => profanityWords.has(token))) return true;
+  for (let i = 0; i < joined.length; i++) {
+    const pair = joined[i] + (joined[i + 1] ?? "");
+    const triple = pair + (joined[i + 2] ?? "");
+    if (profanityPhrases.some((phrase) => phrase === pair || phrase === triple)) return true;
+  }
+  return false;
 }

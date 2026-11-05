@@ -19,7 +19,7 @@ import {
 } from "../_shared/menu-pricing.ts";
 import { recordConsent } from "../_shared/consent.ts";
 import { getClientIp } from "../_shared/clientIp.ts";
-import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, STAFF_NAME_MESSAGE } from "../_shared/nameValidation.ts";
+import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, STAFF_NAME_MESSAGE, NOTES_MESSAGE, containsProfanity } from "../_shared/nameValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -333,6 +333,9 @@ Deno.serve(async (req: Request) => {
   body.customerName = cleanCustomerName(body.customerName);
   // Customer checks are free/pure. Only station requests that need the staff
   // exception perform identity checks; the caller's source flag is not proof.
+  if (containsProfanity(body.notes)) {
+    return jsonResponse({ error: NOTES_MESSAGE }, 400);
+  }
   // Names the staff blocked from the kitchen screen. A lookup failure must never
   // stop orders, so it falls back to the built-in list only.
   let staffBlocked: string[] = [];
