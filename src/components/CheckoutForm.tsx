@@ -20,6 +20,10 @@ import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
+import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, STAFF_NAME_MESSAGE } from "@/lib/nameValidation";
+import { nameValidationAnimation } from "@/config/uiConfig";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 export interface CheckoutSauce {
   id: string;
@@ -77,6 +81,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && /^\/kiosk\/?$/.test(window.location.pathname);
+  const { isStaff } = useAuth();
+  const nameContext = !isKiosk && localStorage.getItem("habakta_station") === "true" && isStaff() ? "staff" : "customer";
+  const [nameTouched, setNameTouched] = useState(false);
+  const [nameShake, setNameShake] = useState(0);
 
   // Kiosk uses a high-contrast light theme for readability on the kiosk screen.
   const th = isKiosk
@@ -133,6 +141,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     phone: isLoggedIn && customer ? customer.phone : "",
     notes: "",
   });
+  const nameValid = validateCustomerName(form.name, { context: nameContext }).ok;
+  const nameInvalid = nameTouched && !nameValid;
+  const nameMessage = nameContext === "staff" ? STAFF_NAME_MESSAGE : CUSTOMER_NAME_MESSAGE;
+  const checkName = () => {
+    setNameTouched(true);
+    if (!nameValid) setNameShake((value) => value + 1);
+    return nameValid;
+  };
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -300,10 +316,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
   const handleDetailsSubmit = (e?: React.FormEvent | React.MouseEvent) => {
     if (e && "preventDefault" in e) e.preventDefault();
-    if (!form.name.trim()) {
-      toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
-      return;
-    }
+    if (!checkName()) return;
     // Website (no logged-in user, OTP skipped) → phone is required.
     // Kiosk → phone field is hidden, no validation.
     if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && !isLoggedIn) {
@@ -333,6 +346,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const handlePaymentSelect = async (method: "cash" | "credit" | "counter" | "paybox") => {
     // Guard against double-clicks while a previous submission is in flight
     if (submitting) return;
+    if (!checkName()) {
+      setStep("details");
+      return;
+    }
     // Hard gate: terms + privacy must be accepted before any payment can proceed
     if (!termsAccepted) {
       setTermsWarning(true);
@@ -432,6 +449,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     status: "new" | "pending_payment",
     allowDuplicate = false,
   ) => {
+    if (!checkName()) throw new Error(nameMessage);
     // Soldier-fund donations require regulation approval (also enforced server-side).
     if (soldierDonation > 0 && !soldierTermsAt) {
       throw new Error("כדי לתרום ל'הזמן חייל/ת' יש לאשר קודם את תקנון 'הזמן חייל/ת'");
@@ -446,7 +464,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
     const { data, error } = await supabase.functions.invoke("create-order", {
       body: {
-        customerName: form.name,
+        customerName: cleanCustomerName(form.name),
         // Kiosk skip-phone flow: send empty string; server normalizes to placeholder.
         customerPhone: (isKioskPath && RUNTIME_FLAGS.KIOSK_SKIP_PHONE) ? "" : form.phone,
         notes: form.notes || null,
@@ -798,7 +816,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.
   // "הזמן חייל/ת": a chosen amount without regulation approval blocks payment.
   const soldierOk = (soldierDonation === 0 || !!soldierTermsAt) && (!donationOnly || soldierDonation > 0);
-  const canSubmit = soldierOk && termsAccepted && (isKiosk || !RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE || !!turnstileToken);
+  const canSubmit = nameValid && soldierOk && termsAccepted && (isKiosk || !RUNTIME_FLAGS.WEBSITE_REQUIRE_TURNSTILE || !!turnstileToken);
 
   return (
     <motion.div
@@ -979,12 +997,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             </div>
 
             <form onSubmit={handleDetailsSubmit} className="space-y-4">
-              {!isLoggedIn && (
+              {(!isLoggedIn || !nameValid || nameTouched) && (
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>
+                  <style>{nameValidationAnimation.keyframes + nameValidationAnimation.css}</style>
+                  <label htmlFor="checkout-customer-name" className={`block text-sm font-medium mb-1 ${th.textMain}`}>
                     שם מלא <span className="text-destructive">*</span>
                   </label>
                   <input
+                    id="checkout-customer-name"
                     type="text"
                     required
                     autoFocus={isKiosk}
@@ -996,17 +1016,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                       }
                     }}
                     value={form.name}
+                    aria-invalid={nameInvalid}
+                    aria-describedby={nameInvalid ? "checkout-customer-name-error" : undefined}
+                    onBlur={checkName}
                     onChange={(e) => {
                       const val = e.target.value;
-                      if (containsSixtySeven(val)) {
-                        triggerSkibidi();
-                        setForm({ ...form, name: "" });
-                        return;
-                      }
                       setForm({ ...form, name: val });
                     }}
-                    className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus}`}
+                    className={`w-full ${th.inputBg} border ${nameInvalid ? "border-destructive focus:ring-destructive" : `${th.inputBorder} ${th.inputFocus}`} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2`}
                   />
+                  {nameInvalid && <p key={nameShake} id="checkout-customer-name-error" role="alert" className="animate-customer-name-shake mt-2 text-sm text-destructive">{nameMessage}</p>}
                 </div>
               )}
               {/* Website (no logged-in user) → phone field shown here when OTP is bypassed.
@@ -1046,12 +1065,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button
+                <Button
                   type="submit"
+                  disabled={!nameValid}
                   className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full active:scale-[0.98] transition-transform"
                 >
                   המשך לתשלום 💳
-                </button>
+                </Button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onClose(); }}

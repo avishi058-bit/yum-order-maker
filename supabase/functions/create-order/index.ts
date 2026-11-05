@@ -19,6 +19,7 @@ import {
 } from "../_shared/menu-pricing.ts";
 import { recordConsent } from "../_shared/consent.ts";
 import { getClientIp } from "../_shared/clientIp.ts";
+import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, STAFF_NAME_MESSAGE } from "../_shared/nameValidation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -329,6 +330,30 @@ Deno.serve(async (req: Request) => {
     );
   }
   const body = parsed.data;
+  body.customerName = cleanCustomerName(body.customerName);
+  // Customer checks are free/pure. Only station requests that need the staff
+  // exception perform identity checks; the caller's source flag is not proof.
+  if (!validateCustomerName(body.customerName, { context: "customer" }).ok) {
+    let staff = false;
+    if (body.orderSource === "station") {
+      const authHeader = req.headers.get("authorization") ?? "";
+      const url = Deno.env.get("SUPABASE_URL");
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (url && anonKey && serviceKey && authHeader.startsWith("Bearer ")) {
+        const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+        const { data: identity } = await userClient.auth.getUser();
+        if (identity.user) {
+          const admin = createClient(url, serviceKey);
+          const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", identity.user.id);
+          staff = roles?.some((row) => row.role === "admin" || row.role === "kitchen") ?? false;
+        }
+      }
+    }
+    if (!staff || !validateCustomerName(body.customerName, { context: "staff" }).ok) {
+      return jsonResponse({ error: staff ? STAFF_NAME_MESSAGE : CUSTOMER_NAME_MESSAGE }, 400);
+    }
+  }
 
   // A credit order is paid only after Z-Credit / the PinPad confirms the charge
   // (payment-callback, get-payment-status, pinpad-charge flip it to "new").
