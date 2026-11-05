@@ -58,15 +58,46 @@ const words = new Set(CUSTOMER_NAME_BLOCKLIST.filter((entry) => !entry.includes(
 const phrases = CUSTOMER_NAME_BLOCKLIST.filter((entry) => entry.includes(" "))
   .map((entry) => normalize(entry).replace(/\s/g, ""));
 const celebrityWords = new Set(CELEBRITY_NAMES.filter((entry) => !entry.includes(" ")).map(normalize));
+// Words that are never a name on their own ("אני הומו", "ליהי עם א").
+// "שלי" and "בדיקה" stay allowed: "יואב שלי" is a real name.
+const NOT_A_NAME_WORDS = new Set(["אני", "אתה", "את", "של", "עם", "לא", "כן", "אבא", "אמא", "לקוח", "לקוחה", "אורח", "אורחת", "הבקתה"].map(normalize));
+
+// Keyboard rows (Hebrew and English). Four neighbouring keys in a row = gibberish.
+const KEYBOARD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm", "קראטוןםפ", "שדגכעיחלךף", "זסבהנמצתץ"];
+const KEYBOARD_RUNS = KEYBOARD_ROWS.flatMap((row) => {
+  const runs: string[] = [];
+  for (const line of [row, [...row].reverse().join("")]) {
+    for (let i = 0; i + 4 <= line.length; i++) runs.push(line.slice(i, i + 4));
+  }
+  return runs;
+});
+
+function looksLikeGibberish(saved: string): boolean {
+  const plain = saved.toLowerCase().replace(/[\u0591-\u05C7\p{Cf}]/gu, "");
+  // A Hebrew final letter can only end a word: "יותםיעכ", "אסףים".
+  if (/[ךםןףץ](?=[\u05D0-\u05EA])/u.test(plain)) return true;
+  const compact = plain.replace(/[^\p{L}]/gu, "");
+  return KEYBOARD_RUNS.some((run) => compact.includes(run));
+}
+
+/** The form a staff-blocked name is stored in (blocked_customer_names.normalized). */
+export function normalizeBlockedName(name: string): string {
+  return normalize(name);
+}
+
 const celebrityGroups = CELEBRITY_NAMES.filter((entry) => entry.includes(" ")).map((entry) => normalize(entry).split(" "));
 
-export function validateCustomerName(name: string, { context }: { context: "customer" | "staff" }): { ok: boolean } {
+export function validateCustomerName(
+  name: string,
+  { context, extraBlocked = [] }: { context: "customer" | "staff"; extraBlocked?: readonly string[] },
+): { ok: boolean } {
   const saved = cleanCustomerName(name);
   if ((saved.match(/\p{L}/gu)?.length ?? 0) < 2) return { ok: false };
   if (context === "staff") return { ok: true };
   if (/\p{N}/u.test(saved) || saved.length > 25 || saved.split(" ").length > 3 || /(\p{L})\1{2,}/u.test(name)) {
     return { ok: false };
   }
+  if (looksLikeGibberish(saved)) return { ok: false };
   const normalized = normalize(saved);
   const tokens = normalized.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
   const compact = normalized.replace(/\s/g, "");
@@ -76,6 +107,12 @@ export function validateCustomerName(name: string, { context }: { context: "cust
   if (phrases.some((phrase) => phrase.length > 3 && compact.includes(phrase))) return { ok: false };
   if (tokens.some((token) => celebrityWords.has(token)) || celebrityWords.has(compact)) return { ok: false };
   if (celebrityGroups.some((group) => group.every((word) => tokens.includes(word)) || compact === group.join(""))) return { ok: false };
+  if (tokens.some((token) => NOT_A_NAME_WORDS.has(token))) return { ok: false };
+  // Names the staff blocked from the kitchen screen (already normalized).
+  for (const entry of extraBlocked) {
+    if (!entry) continue;
+    if (entry.includes(" ") ? compact.includes(entry.replace(/\s/g, "")) : tokens.includes(entry) || compact === entry) return { ok: false };
+  }
   const has = (word: string) => tokens.includes(normalize(word));
   // סבן and בת שבע are real names; only the joke combinations are blocked.
   if ((has("סבן") && has("סיקס")) || (has("שש") && has("שבע")) || (has("עין") && has("ביצת"))) return { ok: false };

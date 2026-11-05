@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { BlockNameButton } from "@/components/kitchen/BlockNameButton";
 import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, ReceiptText, Smartphone } from "lucide-react";
 
 import QRCode from "qrcode";
@@ -2940,7 +2941,10 @@ const Kitchen = () => {
 
                 {/* Customer info */}
                 <div className="px-4 py-3 border-b border-border bg-secondary/30">
-                  <p className="font-bold text-foreground">{order.customer_name}</p>
+                  <p className="font-bold text-foreground flex items-center gap-1 flex-wrap">
+                    {order.customer_name}
+                    <BlockNameButton name={order.customer_name} />
+                  </p>
                   <p className="text-sm text-muted-foreground">📞 {order.customer_phone}</p>
                   {order.customer_address && (
                     <p className="text-sm text-muted-foreground">📍 {order.customer_address}</p>

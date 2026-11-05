@@ -333,7 +333,19 @@ Deno.serve(async (req: Request) => {
   body.customerName = cleanCustomerName(body.customerName);
   // Customer checks are free/pure. Only station requests that need the staff
   // exception perform identity checks; the caller's source flag is not proof.
-  if (!validateCustomerName(body.customerName, { context: "customer" }).ok) {
+  // Names the staff blocked from the kitchen screen. A lookup failure must never
+  // stop orders, so it falls back to the built-in list only.
+  let staffBlocked: string[] = [];
+  {
+    const url = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (url && serviceKey) {
+      const { data } = await createClient(url, serviceKey, { auth: { persistSession: false } })
+        .from("blocked_customer_names").select("normalized");
+      staffBlocked = (data ?? []).map((row: { normalized: string }) => row.normalized);
+    }
+  }
+  if (!validateCustomerName(body.customerName, { context: "customer", extraBlocked: staffBlocked }).ok) {
     let staff = false;
     if (body.orderSource === "station") {
       const authHeader = req.headers.get("authorization") ?? "";

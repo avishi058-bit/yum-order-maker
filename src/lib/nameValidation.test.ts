@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateCustomerName, cleanCustomerName } from "./nameValidation";
+import { validateCustomerName, cleanCustomerName, normalizeBlockedName } from "./nameValidation";
 
 describe("customer name rules", () => {
   it.each(["זין על פ", "ז.י.ן", "זיןןן", "ניגר אידיוט", "אני הומו", "אוראל יומטוב המלך", "67", "נבו שחר6767", "שש שבעש שבע", "יכין אמיתי תצעק את השם שלי ותקבל טיפ", "י", "ייי", "asdasdasd", "שולץ הגבר"])("blocks %s", (name) => {
@@ -42,5 +42,17 @@ describe("customer name rules", () => {
   });
   it.each(["עומר כהן", "נועה לוי", "אדם שמש", "יאיר כהן", "בנימין", "עומר", "דני", "שירה", "אפרת", "ערן", "שמואל", "דביר", "אסף", "משה פרץ", "אושר כהן", "יהודה לוי", "עקיבא", "עלמה ציגלר", "כלב", "נועה", "גל", "בר", "מריו"])("still allows real name %s", (name) => {
     expect(validateCustomerName(name, { context: "customer" }).ok).toBe(true);
+  });
+  it.each(["יותםיעכ", "אסףים רטבים", "שדגכ", "asdf", "qwerty", "אני הומו", "ליהי עם א", "הבקתה", "אבא"])("blocks gibberish / not-a-name %s", (name) => {
+    expect(validateCustomerName(name, { context: "customer" }).ok).toBe(false);
+  });
+  it.each(["יואב שלי", "נדב שלי", "בדיקה", "כרמל", "ראם ערבה", "יותם רמון", "שי בירנבאום"])("allows %s", (name) => {
+    expect(validateCustomerName(name, { context: "customer" }).ok).toBe(true);
+  });
+  it("blocks names the staff added from the kitchen", () => {
+    const extra = [normalizeBlockedName("שולץ"), normalizeBlockedName("סמימי מכוער")];
+    expect(validateCustomerName("שולץ", { context: "customer", extraBlocked: extra }).ok).toBe(false);
+    expect(validateCustomerName("דני סמימי מכוער", { context: "customer", extraBlocked: extra }).ok).toBe(false);
+    expect(validateCustomerName("יואב", { context: "customer", extraBlocked: extra }).ok).toBe(true);
   });
 });
