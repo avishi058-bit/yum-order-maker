@@ -242,3 +242,8 @@ export const timing = {
   /** Overlay click transition duration */
   overlayFadeDuration: 0.2,
 };
+
+export const nameValidationAnimation = {
+  keyframes: "@keyframes customer-name-shake { 0%,100% { transform: translateX(0); } 25%,75% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }",
+  css: ".animate-customer-name-shake { animation: customer-name-shake 240ms ease-in-out; } @media (prefers-reduced-motion: reduce) { .animate-customer-name-shake { animation: none; } } .accessibility-stop-animations .animate-customer-name-shake { animation: none !important; }",
+};

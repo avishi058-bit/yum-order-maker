@@ -16,6 +16,7 @@
 - [x] SEO: self canonicals, prerendered /groups /otef-aza /en/groups, English groups page, hreflang, sitemap
 
 ## Open
+- [ ] Targeted customer-name validation: shared rules, customer/staff inputs, server enforcement, minimum-letter DB guard and concrete tests
 - [ ] Paybox: turn the switch on in "הגדרות עמדה" on the kitchen screen, then test an order (blocked: needs staff action on the till)
 - [ ] Invoice by email: run a 0.10 ₪ test charge with an email so the invoice can be confirmed (blocked: Z-Credit returns -80 "Transaction was not found" for the till's transaction id)
 - [ ] Accessibility widget: verify the remaining fixes on a real screen (button position, video pause, image descriptions)
