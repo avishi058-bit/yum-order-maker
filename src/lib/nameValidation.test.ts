@@ -37,4 +37,10 @@ describe("customer name rules", () => {
   it("only trims and collapses whitespace for storage", () => {
     expect(cleanCustomerName("  Daniel   Corcos  ")).toBe("Daniel Corcos");
   });
+  it.each(["בירן", "בירן גיי", "ביבי נתניהו", "עומר אדם", "היטלר", "Elon Musk", "יא חמור", "מטומטם", "כוס אמק", "דני בן זונה", "ליונל מסי", "טיילור סוויפט", "ג'ו ביידן", "ל.ב.ר.ו.ן", "fuck you"])("blocks celebrity/curse %s", (name) => {
+    expect(validateCustomerName(name, { context: "customer" }).ok).toBe(false);
+  });
+  it.each(["עומר כהן", "נועה לוי", "אדם שמש", "יאיר כהן", "בנימין", "עומר", "דני", "שירה", "אפרת", "ערן", "שמואל", "דביר", "אסף", "משה פרץ", "אושר כהן", "יהודה לוי", "עקיבא", "כלב", "נועה", "גל", "בר", "מריו"])("still allows real name %s", (name) => {
+    expect(validateCustomerName(name, { context: "customer" }).ok).toBe(true);
+  });
 });
