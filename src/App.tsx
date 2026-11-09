@@ -10,6 +10,7 @@ import CookieBanner from "@/components/CookieBanner";
 import AccessibilityWidgetGlobal from "@/components/AccessibilityWidgetGlobal";
 import PostInstallPermissionModal from "@/components/PostInstallPermissionModal";
 import GeoGate from "@/components/GeoGate";
+import FrameGuard from "@/components/FrameGuard";
 import Seo from "@/components/Seo";
 import { SEO_PAGES } from "@/seo/pages";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -80,6 +81,7 @@ const App = () => (
         <Sonner />
         <OfflineBanner />
         <BrowserRouter>
+          <FrameGuard>
           <GeoGate>
           <Suspense fallback={<Loading />}>
             <PageTransition>
@@ -189,6 +191,7 @@ const App = () => (
           <AccessibilityWidgetGlobal />
           <PostInstallPermissionModal />
           </GeoGate>
+          </FrameGuard>
         </BrowserRouter>
       </SkibidiGuardProvider>
       </FlyToCartProvider>

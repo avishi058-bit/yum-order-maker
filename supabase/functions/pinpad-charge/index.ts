@@ -12,6 +12,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { getClientIp } from "../_shared/clientIp.ts";
 import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
 
 const ZCREDIT_WS_URL =
@@ -72,6 +73,23 @@ Deno.serve(async (req) => {
       SUPABASE_URL,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Rate limit real charge requests by IP (warm-up pings returned above and
+    // are not counted). A kiosk sends one or two per customer, so 10/minute
+    // never blocks real use but stops anyone flooding the terminal.
+    const ip = getClientIp(req);
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      p_action: "pinpad_charge",
+      p_key: ip,
+      p_max_attempts: 10,
+      p_window: "1 minute",
+    });
+    if (allowed === false) return json({ error: "rate_limited" }, 429);
+    await supabase.rpc("record_rate_limit_attempt", {
+      p_action: "pinpad_charge",
+      p_key: ip,
+      p_ip_address: ip,
+    });
 
     const { data: order, error: ordErr } = await supabase
       .from("orders")
