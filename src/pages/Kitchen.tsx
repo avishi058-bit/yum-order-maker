@@ -1953,16 +1953,7 @@ const Kitchen = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden" dir="rtl">
-      {/* Push notifications activation prompt - highest priority */}
-      {!pushEnabled && (
-        <div
-          className="bg-red-600 text-white text-center py-4 px-6 font-black text-base cursor-pointer animate-pulse flex items-center justify-center gap-2"
-          onClick={handleEnableKitchenPush}
-        >
-          <Bell size={22} />
-          🔔 לחץ כאן להפעיל "עדכן אותי" - התראות לטלפון על הזמנות חדשות
-        </div>
-      )}
+      {/* Phone push ("עדכן אותי") is toggled only from the "התראות וצלצולים" menu; no banner */}
       {/* Audio activation prompt */}
       {!audioActivated && soundEnabled && (
         <div
