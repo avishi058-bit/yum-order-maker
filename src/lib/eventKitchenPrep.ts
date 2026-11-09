@@ -162,11 +162,16 @@ export function computePrep(b: EventBookingLike, s: KitchenPrepSettings): PrepRe
 
 const kg = (v: number) => (v > 0 ? `${v.toFixed(2)} ק״ג` : "-");
 
+// Booking fields come from the public booking form, so every one of them is
+// escaped before going into the staff print window (same-origin popup).
+const escHtml = (v: unknown): string =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
 export function buildPrepHtml(b: EventBookingLike, r: PrepResult): string {
   const dt = new Date(b.event_date + "T00:00:00");
   const dateStr = dt.toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  const timeStr = [b.start_time, b.end_time].filter(Boolean).join(" - ");
-  const place = b.at_venue ? "אצלנו במקום (המבורגר הבקתה)" : (b.event_address || "");
+  const timeStr = escHtml([b.start_time, b.end_time].filter(Boolean).join(" - "));
+  const place = b.at_venue ? "אצלנו במקום (המבורגר הבקתה)" : escHtml(b.event_address || "");
 
   const row = (label: string, val: string) =>
     `<tr><td class="lbl">${label}</td><td class="val">${val}</td></tr>`;
@@ -175,7 +180,7 @@ export function buildPrepHtml(b: EventBookingLike, r: PrepResult): string {
   const showPremium = r.tier === "premium";
 
   return `<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8"/>
-<title>בון הכנות - ${b.customer_name}</title>
+<title>בון הכנות - ${escHtml(b.customer_name)}</title>
 <style>
   @page { size: 80mm auto; margin: 4mm; }
   body { font-family: 'Heebo', Arial, sans-serif; color: #000; margin: 0; padding: 10px; }
@@ -194,11 +199,11 @@ export function buildPrepHtml(b: EventBookingLike, r: PrepResult): string {
 <body>
   <h1>🎉 בון הכנות אירוע</h1>
   <div class="hdr">
-    <div><b>${b.customer_name}</b></div>
+    <div><b>${escHtml(b.customer_name)}</b></div>
     <div>${dateStr}${timeStr ? " • " + timeStr : ""}</div>
-    <div>${b.event_type || ""}</div>
+    <div>${escHtml(b.event_type || "")}</div>
     <div>${place}</div>
-    <div><span class="tag">${b.package_name}</span><span class="tag">${r.guests} סועדים</span></div>
+    <div><span class="tag">${escHtml(b.package_name)}</span><span class="tag">${r.guests} סועדים</span></div>
   </div>
 
   <h2>🍔 קציצות ולחמניות</h2>
@@ -235,7 +240,7 @@ export function buildPrepHtml(b: EventBookingLike, r: PrepResult): string {
     ${row("קינוח (מנות)", String(r.desserts))}
   </table>` : ""}
 
-  ${b.kitchen_notes ? `<div class="notes"><b>הערות:</b><br/>${b.kitchen_notes}</div>` : ""}
+  ${b.kitchen_notes ? `<div class="notes"><b>הערות:</b><br/>${escHtml(b.kitchen_notes)}</div>` : ""}
 
   <div class="muted">הופק אוטומטית • ${new Date().toLocaleString("he-IL")}</div>
   <div class="noprint" style="text-align:center; margin-top:12px">
