@@ -1302,6 +1302,7 @@ export type Database = {
           kiosk_credit_enabled: boolean
           kiosk_paybox_enabled: boolean
           last_opened_at: string | null
+          patty_grams: number
           preorder_enabled: boolean
           preorder_end_time: string
           preorder_start_time: string
@@ -1320,6 +1321,7 @@ export type Database = {
           kiosk_credit_enabled?: boolean
           kiosk_paybox_enabled?: boolean
           last_opened_at?: string | null
+          patty_grams?: number
           preorder_enabled?: boolean
           preorder_end_time?: string
           preorder_start_time?: string
@@ -1338,6 +1340,7 @@ export type Database = {
           kiosk_credit_enabled?: boolean
           kiosk_paybox_enabled?: boolean
           last_opened_at?: string | null
+          patty_grams?: number
           preorder_enabled?: boolean
           preorder_end_time?: string
           preorder_start_time?: string
