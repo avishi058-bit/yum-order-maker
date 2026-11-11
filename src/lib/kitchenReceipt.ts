@@ -183,7 +183,7 @@ const isPattyTopping = (t: string): boolean => /קציצ/.test(String(t || ""));
 
 // שם התוספת בצד הלקוח הוא "+ זוג קציצות סמאש (220)" - במטבח ובבון נשאר השם הישן.
 const kitchenToppingName = (s: string): string =>
-  String(s || "").replace(/\+?\s*זוג קציצות סמאש(?:\s*\(220\))?/g, "קציצת סמאש");
+  String(s || "").replace(/\+?\s*זוג קציצות סמאש(?:\s*\(2[02]0\))?/g, "קציצת סמאש");
 
 const formatToppingsHtml = (toppings: string[]): string => {
   const tops = printableToppings(toppings);

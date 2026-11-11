@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
+import { usePattyGrams } from "@/lib/pattyGrams";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, Phone, LogIn, Smartphone, Check } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
@@ -71,6 +72,7 @@ import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 const Index = () => {
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus, resolved: statusResolved } = useRestaurantStatus();
+  usePattyGrams(); // re-render the menu when the kitchen switches 220/200 g
   const { status: businessStatus } = useBusinessHours();
   const { isLoggedIn, customer, loading: authLoading, favoriteItems } = useCustomerAuth();
   const isStation = localStorage.getItem("habakta_station") === "true";

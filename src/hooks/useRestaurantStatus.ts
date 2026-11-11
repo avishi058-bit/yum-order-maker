@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { setPattyGrams } from "@/lib/pattyGrams";
 
 export interface RestaurantStatus {
   website_open: boolean;
@@ -15,13 +16,14 @@ export interface RestaurantStatus {
   preorder_end_time: string;
   delivery_enabled: boolean;
   soldier_fund_enabled: boolean;
+  patty_grams: number; // 220 or 200, set from the kitchen screen
 }
 
-const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled, soldier_fund_enabled";
+const SELECT_COLS = "website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, high_load, preorder_enabled, preorder_start_time, preorder_end_time, delivery_enabled, soldier_fund_enabled, patty_grams";
 
 const CACHE_KEY = "habakta_restaurant_status";
 
-const DEFAULT_STATUS: RestaurantStatus = { website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, kiosk_cash_enabled: true, kiosk_credit_enabled: true, kiosk_paybox_enabled: false, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false, soldier_fund_enabled: true };
+const DEFAULT_STATUS: RestaurantStatus = { website_open: true, station_open: true, cash_enabled: true, credit_enabled: true, kiosk_cash_enabled: true, kiosk_credit_enabled: true, kiosk_paybox_enabled: false, high_load: false, preorder_enabled: false, preorder_start_time: "10:00", preorder_end_time: "22:00", delivery_enabled: false, soldier_fund_enabled: true, patty_grams: 220 };
 
 // Read the last known status synchronously so a closed restaurant never
 // flashes as "open" for the ~1.5s the network request takes.
@@ -47,6 +49,13 @@ const writeCache = (s: RestaurantStatus) => {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...s, _ts: Date.now() })); } catch { /* ignore */ }
 };
 
+// Apply the last known patty weight before the first render, so the menu
+// never flashes 220 g when the kitchen has switched to 200 g.
+{
+  const initial = readCache();
+  if (initial) setPattyGrams(initial.patty_grams);
+}
+
 export const useRestaurantStatus = () => {
   const cached = useRef(readCache());
   const [status, setStatus] = useState<RestaurantStatus>(cached.current ?? DEFAULT_STATUS);
@@ -71,6 +80,7 @@ export const useRestaurantStatus = () => {
       if (data) {
         setStatus(data as RestaurantStatus);
         writeCache(data as RestaurantStatus);
+        setPattyGrams((data as RestaurantStatus).patty_grams);
       }
       setResolved(true);
       setLoading(false);
@@ -110,7 +120,9 @@ export const useRestaurantStatus = () => {
               preorder_end_time: n.preorder_end_time ?? prev.preorder_end_time,
               delivery_enabled: n.delivery_enabled ?? prev.delivery_enabled,
               soldier_fund_enabled: n.soldier_fund_enabled ?? prev.soldier_fund_enabled,
+              patty_grams: n.patty_grams ?? prev.patty_grams,
             };
+            setPattyGrams(next.patty_grams);
             writeCache(next);
             return next;
           });
@@ -186,6 +198,13 @@ export const useRestaurantStatus = () => {
     if (wasClosed) notifyReopen();
   };
 
+  const setPattyWeight = async (grams: 200 | 220) => {
+    const { error } = await supabase.from("restaurant_status").update({ patty_grams: grams } as never).neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error) throw error;
+    setStatus((prev) => ({ ...prev, patty_grams: grams }));
+    setPattyGrams(grams);
+  };
+
   const toggleHighLoad = async (on: boolean) => {
     await supabase.from("restaurant_status").update({ high_load: on }).neq("id", "00000000-0000-0000-0000-000000000000");
     setStatus((prev) => ({ ...prev, high_load: on }));
@@ -211,5 +230,5 @@ export const useRestaurantStatus = () => {
     setStatus((prev) => ({ ...prev, soldier_fund_enabled: on }));
   };
 
-  return { status, loading, resolved, toggleSoldierFund, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll };
+  return { status, loading, resolved, toggleSoldierFund, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, closeAll, openAll, setPattyWeight };
 };

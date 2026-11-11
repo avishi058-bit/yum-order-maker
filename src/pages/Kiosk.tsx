@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
+import { usePattyGrams } from "@/lib/pattyGrams";
 import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
 import { useKioskCSSVars } from "@/hooks/useKioskCSSVars";
@@ -78,6 +79,7 @@ const Kiosk = () => {
 
   const { isAvailable } = useAvailability();
   const { status: restaurantStatus } = useRestaurantStatus();
+  usePattyGrams(); // re-render the menu when the kitchen switches 220/200 g
   const isClosed = !restaurantStatus.station_open;
 
   const [view, setView] = useState<KioskView>("welcome");

@@ -453,13 +453,19 @@ Deno.serve(async (req: Request) => {
   // Restaurant status
   const { data: statusRows, error: statusErr } = await supabase
     .from("restaurant_status")
-    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, soldier_fund_enabled, preorder_enabled, preorder_start_time, preorder_end_time")
+    .select("website_open, station_open, cash_enabled, credit_enabled, kiosk_cash_enabled, kiosk_credit_enabled, kiosk_paybox_enabled, soldier_fund_enabled, preorder_enabled, preorder_start_time, preorder_end_time, patty_grams")
     .limit(1);
   if (statusErr) {
     console.error("status fetch failed", statusErr);
     return jsonResponse({ error: "שגיאה בבדיקת סטטוס המסעדה" }, 500);
   }
   const status = statusRows?.[0];
+  // Kitchen patty-weight switch: at 200 g the stored names say 200/400/100
+  // instead of 220/440/110, matching what the customer saw on the menu.
+  const pattyName = (n: string): string =>
+    (status as { patty_grams?: number } | undefined)?.patty_grams === 200
+      ? String(n).replace(/\b(440|220|110)\b/g, (m) => ({ "440": "400", "220": "200", "110": "100" } as Record<string, string>)[m])
+      : n;
   if (!status) return jsonResponse({ error: "סטטוס מסעדה לא מוגדר" }, 500);
 
   const isStationOrKiosk = body.orderSource === "kiosk" || body.orderSource === "station";
@@ -759,7 +765,7 @@ Deno.serve(async (req: Request) => {
             b.removalNames && b.removalNames.length ? b.removalNames : b.removals ?? [],
           // Per-burger paid toppings - stored as Hebrew names so the kitchen
           // receipt prints them and the fridge trigger resolves them by name.
-          toppings: line.dealBurgerToppingNames?.[bi] ?? [],
+          toppings: (line.dealBurgerToppingNames?.[bi] ?? []).map(pattyName),
         }))
       : null;
     return {
@@ -768,7 +774,7 @@ Deno.serve(async (req: Request) => {
       item_name: line.name,
       price: line.unitPrice,
       quantity: line.quantity,
-      toppings: line.toppingNames,
+      toppings: line.toppingNames.map(pattyName),
       removals: removalNames,
       with_meal: line.withMeal,
       meal_side: line.mealSideName,

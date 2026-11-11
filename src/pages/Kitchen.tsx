@@ -356,7 +356,7 @@ function persistPrintedOrder(id: string, printed: boolean) {
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
-  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, toggleSoldierFund, closeAll, openAll } = useRestaurantStatus();
+  const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, toggleSoldierFund, closeAll, openAll, setPattyWeight } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -2279,6 +2279,27 @@ const Kitchen = () => {
                 >
                   <span className="flex items-center gap-2">🔥 מצב עומס</span>
                   <span>{restaurantStatus.high_load ? "פעיל - לקוחות רואים התראה" : "כבוי"}</span>
+                </button>
+
+                {/* 🍔 Patty weight 220/200 - customer site and kiosk update instantly */}
+                <button
+                  onClick={async () => {
+                    const next = restaurantStatus.patty_grams === 200 ? 220 : 200;
+                    try {
+                      await setPattyWeight(next);
+                      toast.success(`הקציצות באתר עודכנו ל-${next} גרם`);
+                    } catch {
+                      toast.error("שינוי משקל הקציצה נכשל");
+                    }
+                  }}
+                  className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between gap-2 border-2 ${
+                    restaurantStatus.patty_grams === 200
+                      ? "bg-amber-500/20 text-amber-300 border-amber-500/60"
+                      : "bg-muted/40 text-muted-foreground border-transparent hover:bg-muted/60"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">🍔 משקל קציצה</span>
+                  <span>{restaurantStatus.patty_grams === 200 ? "200 גרם (כפולה 400)" : "220 גרם (כפולה 440)"}</span>
                 </button>
 
                 {/* 🕒 Preorder (הזמנה מראש) */}

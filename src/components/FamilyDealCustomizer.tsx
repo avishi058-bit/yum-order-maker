@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { pattyText } from "@/lib/pattyGrams";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -304,7 +305,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
                     className="flex-1 overflow-y-auto"
                   >
                     <div className="px-5 py-4">
-                      <h3 className="text-lg font-bold text-right mb-1">קלאסי (220 גרם)</h3>
+                      <h3 className="text-lg font-bold text-right mb-1">{pattyText("קלאסי (220 גרם)")}</h3>
                       <p className="text-sm text-muted-foreground text-right mb-4">בצל, עגבנייה, חסה, חמוצים ואיולי הבית</p>
                       <div className="mb-4">
                         <input
