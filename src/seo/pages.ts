@@ -158,8 +158,8 @@ export const GROUPS_SECTIONS_EN: Section[] = [
 
 const ADDRESS_HE = {
   "@type": "PostalAddress",
-  streetAddress: "דרך ערבי נחל 21, תושיה",
-  addressLocality: "כפר מימון (תושיה)",
+  streetAddress: "דרך ערבי נחל 21",
+  addressLocality: "תושיה (כפר מימון)",
   addressRegion: "מועצה אזורית שדות נגב",
   postalCode: "8523000",
   addressCountry: "IL",

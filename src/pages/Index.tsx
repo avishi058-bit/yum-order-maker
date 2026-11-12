@@ -931,7 +931,7 @@ const Index = () => {
           <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
           <address className="not-italic text-muted-foreground text-sm space-y-1">
             <p>המבורגר הבקתה - שלזינגר אבישי-אברהם, עוסק מורשה 213877103</p>
-            <p>דרך ערבי נחל 21, תושיה, ישראל</p>
+            <p>דרך ערבי נחל 21, תושיה (כפר מימון), ישראל</p>
             <p>
               <a href="mailto:avishi058@gmail.com" className="text-primary hover:underline">avishi058@gmail.com</a>
             </p>
