@@ -1,7 +1,7 @@
 import SoldierDonation from "@/components/SoldierDonation";
 import { maxSplitCards } from "../../supabase/functions/_shared/menu-pricing";
 import { SOLDIER_PENDING_KEY } from "@/components/SoldierFundHowItWorks";
-import { useState, useEffect, useRef, forwardRef } from "react";
+import { useState, useEffect, useRef, useCallback, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removalDisplayNames, mealSideOptions, mealDrinkOptions } from "@/data/menu";
@@ -156,6 +156,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // nameShake counts invalid attempts; from the second one the tone gets firmer.
   const nameMessage = nameContext === "staff" ? STAFF_NAME_MESSAGE : nameShake >= 2 ? CUSTOMER_NAME_REPEAT_MESSAGE : CUSTOMER_NAME_MESSAGE;
   const notesInvalid = containsProfanity(form.notes);
+  // Kiosk: focus the name once when it mounts, so the on-screen keyboard opens.
+  // A stable callback - an inline ref ran on every render and pulled the focus
+  // back from the notes field after each key, sending the letters to the name.
+  const kioskNameAutoFocus = useCallback((el: HTMLInputElement | null) => {
+    if (el && isKiosk) setTimeout(() => el.focus({ preventScroll: true }), 50);
+  }, [isKiosk]);
+  // Kiosk: while the notes field is focused, add room below the form and scroll
+  // it above the on-screen keyboard so the customer sees the text and the message.
+  const [kioskNotesFocused, setKioskNotesFocused] = useState(false);
   const checkName = () => {
     setNameTouched(true);
     if (!nameValid) setNameShake((value) => value + 1);
@@ -1149,13 +1158,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     type="text"
                     required
                     autoFocus={isKiosk}
-                    ref={(el) => {
-                      if (el && isKiosk && document.activeElement !== el) {
-                        // Defer to ensure the input is mounted and visible before focusing,
-                        // so the on-screen kiosk keyboard opens automatically.
-                        setTimeout(() => el.focus({ preventScroll: true }), 50);
-                      }
-                    }}
+                    ref={kioskNameAutoFocus}
                     value={form.name}
                     aria-invalid={nameInvalid}
                     aria-describedby={nameInvalid ? "checkout-customer-name-error" : undefined}
@@ -1212,7 +1215,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     if (r.removed) setStrippedField("notes");
                     setForm({ ...form, notes: r.text });
                   }}
+                  onFocus={(e) => {
+                    if (!isKiosk) return;
+                    setKioskNotesFocused(true);
+                    const el = e.currentTarget;
+                    setTimeout(() => el.scrollIntoView({ block: "start", behavior: "smooth" }), 80);
+                  }}
                   onBlur={() => {
+                    setKioskNotesFocused(false);
                     const r = stripBlockedWords(form.notes, { kind: "notes", final: true });
                     if (r.removed) { setForm((f) => ({ ...f, notes: r.text })); setStrippedField("notes"); }
                   }}
@@ -1240,6 +1250,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   ביטול
                 </button>
               </div>
+              {isKiosk && kioskNotesFocused && <div aria-hidden style={{ height: "45vh" }} />}
             </form>
           </>
         )}
