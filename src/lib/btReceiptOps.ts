@@ -791,7 +791,6 @@ function buildChefSummaryOps(items: ReceiptOrderItem[], title: string): FastOp[]
   if (s.smashDoubleCheesePatties > 0) cheeseRows.push(["דאבל צ'יז", s.smashDoubleCheesePatties]);
   for (const [pattyLabel, n] of s.cheddarByPatty)
     if (n > 0) cheeseRows.push([`${pattyLabel} עם צ'דר`, n]);
-  if (s.blueCheese > 0) cheeseRows.push(["גבינה כחולה", s.blueCheese]);
 
   if (rows.length === 0 && cheeseRows.length === 0) return out;
   if (cheeseRows.length > 0) {
