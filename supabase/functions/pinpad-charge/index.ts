@@ -14,6 +14,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { getClientIp } from "../_shared/clientIp.ts";
 import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
+import { maxSplitCards } from "../_shared/menu-pricing.ts";
 
 const ZCREDIT_WS_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CommitFullTransaction";
@@ -124,11 +125,25 @@ Deno.serve(async (req) => {
 
     const requested = parsed.data.amount != null ? round2(parsed.data.amount) : remaining;
     if (!(requested > 0) || requested > remaining) return json({ error: "invalid_amount", remaining }, 400);
-    // Owner rule: every card pays at least ₪10, and a part may not leave less
-    // than ₪10 for the next card (paying the whole remainder is always fine).
-    const SPLIT_MIN = 10;
-    if (requested < remaining && (requested < SPLIT_MIN || remaining - requested < SPLIT_MIN)) {
-      return json({ error: "invalid_amount", remaining, min: SPLIT_MIN }, 400);
+    // Owner rule: at most one card per dish (burger, meal, side ordered on
+    // its own; every burger in a deal). A part that would need one card more
+    // than allowed is refused - the last allowed card must pay everything left.
+    if (requested < remaining) {
+      const { data: lineRows } = await supabase
+        .from("order_items")
+        .select("item_id, quantity, deal_burgers")
+        .eq("order_id", order.id);
+      const maxCards = maxSplitCards(
+        (lineRows ?? []).map((r: { item_id: string | null; quantity: number; deal_burgers: unknown }) => ({
+          itemId: String(r.item_id ?? ""),
+          quantity: Number(r.quantity) || 0,
+          dealBurgerCount: Array.isArray(r.deal_burgers) ? r.deal_burgers.length : undefined,
+        })),
+      );
+      const cardsAfterThis = (prevPayments ?? []).length + 1;
+      if (cardsAfterThis >= maxCards) {
+        return json({ error: "split_limit", remaining, maxCards }, 400);
+      }
     }
     const sum = requested;
     const isSplit = paidSoFar > 0 || sum < remaining;

@@ -207,3 +207,20 @@ export const DEAL_DRINKS_PRICING: PricedOption[] = [
 // ===== Lookup map helpers =====
 export const toLookup = <T extends { id: string }>(arr: T[]): Record<string, T> =>
   Object.fromEntries(arr.map((x) => [x.id, x]));
+
+/**
+ * Kiosk split payment: how many cards an order may be split between.
+ * One card per dish - a burger, a meal, or a side (fries, onion rings, arayes…)
+ * ordered on its own. Every burger inside a deal is a dish; fries that come
+ * inside a meal or a deal are not. Drinks never count. Always at least 1.
+ */
+export function maxSplitCards(lines: { itemId: string; quantity: number; dealBurgerCount?: number }[]): number {
+  let dishes = 0;
+  for (const l of lines) {
+    const qty = Math.max(0, Math.floor(Number(l.quantity) || 0));
+    const cat = MENU_ITEMS_PRICING.find((m) => m.id === l.itemId)?.category;
+    if (cat === "burger" || cat === "meal" || cat === "side") dishes += qty;
+    else if (cat === "deal") dishes += qty * Math.max(1, l.dealBurgerCount ?? 1);
+  }
+  return Math.max(1, dishes);
+}

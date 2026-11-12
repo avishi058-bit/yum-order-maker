@@ -1,4 +1,5 @@
 import SoldierDonation from "@/components/SoldierDonation";
+import { maxSplitCards } from "../../supabase/functions/_shared/menu-pricing";
 import { SOLDIER_PENDING_KEY } from "@/components/SoldierFundHowItWorks";
 import { useState, useEffect, useRef, forwardRef } from "react";
 import { motion } from "framer-motion";
@@ -165,7 +166,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [pinpadCanCancel, setPinpadCanCancel] = useState(false);
   // Kiosk split payment (several cards for one order). The order is created
   // once; every card pays a part; the kitchen gets it only when fully paid.
-  const [split, setSplit] = useState<null | { orderId: string; orderNumber: number; total: number; paid: number }>(null);
+  const [split, setSplit] = useState<null | { orderId: string; orderNumber: number; total: number; paid: number; cards: number }>(null);
   const [splitMode, setSplitMode] = useState<"items" | "amount">("items");
   const [splitPicked, setSplitPicked] = useState<number[]>([]);
   const [splitPaidLines, setSplitPaidLines] = useState<number[]>([]);
@@ -695,7 +696,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       // The customer is standing at the kiosk; a failed earlier attempt must not
       // block the split behind the duplicate-order guard.
       const order = await callCreateOrder("credit", "pending_payment", true);
-      setSplit({ orderId: order.orderId, orderNumber: order.orderNumber, total: Number(order.total) || total, paid: 0 });
+      setSplit({ orderId: order.orderId, orderNumber: order.orderNumber, total: Number(order.total) || total, paid: 0, cards: 0 });
       setSplitPicked([]); setSplitPaidLines([]); setSplitAmount(""); setSplitMode("items");
       supabase.functions.invoke("pinpad-charge", { body: { warmup: true } }).catch(() => {});
     } catch (e: any) {
@@ -739,7 +740,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       setSplitPicked([]);
       setSplitAmount("");
       if (pin.partial) {
-        setSplit({ ...split, paid: nextPaid });
+        setSplit({ ...split, paid: nextPaid, cards: split.cards + 1 });
         toast({ title: `שולמו ₪${paidNow} ✅`, description: `נשאר לשלם ₪${Number(pin.remaining ?? split.total - nextPaid)}` });
         return;
       }
@@ -1515,7 +1516,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
             </div>
 
-            {isKiosk && availablePaymentMethods.credit && !donationOnly && total > 0 && (
+            {isKiosk && availablePaymentMethods.credit && !donationOnly && total > 0 && maxSplitCards(items.map((it) => ({ itemId: it.menuItemId, quantity: it.quantity, dealBurgerCount: it.dealBurgers?.length }))) > 1 && (
               <button
                 type="button"
                 onClick={() => void startSplit()}
@@ -1629,10 +1630,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         const remaining = Math.round((split.total - split.paid) * 100) / 100;
         const pickedSum = Math.round(splitPicked.reduce((a, i) => a + (lines[i]?.amount || 0), 0) * 100) / 100;
         const typed = Number(splitAmount.replace(",", "."));
-        // Owner rule (also enforced server-side): at least ₪10 per card, and
-        // never leave less than ₪10 for the next card - unless paying it all.
-        const SPLIT_MIN = 10;
-        const partOk = (v: number) => v > 0 && v <= remaining && (v === remaining || (v >= SPLIT_MIN && remaining - v >= SPLIT_MIN));
+        // Owner rule (also enforced server-side): at most one card per dish.
+        // The last allowed card must pay everything that is left.
+        const maxCards = maxSplitCards(items.map((it) => ({ itemId: it.menuItemId, quantity: it.quantity, dealBurgerCount: it.dealBurgers?.length })));
+        const cardsLeft = Math.max(1, maxCards - split.cards);
+        const partOk = (v: number) => v > 0 && v <= remaining && (v === remaining || cardsLeft > 1);
         const amountOk = partOk(Math.round(typed * 100) / 100);
         const payItems = Math.min(pickedSum, remaining);
         const itemsOk = partOk(payItems);
@@ -1646,7 +1648,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 <div className="rounded-xl bg-amber-100 p-3"><div className="text-sm text-gray-500">נשאר</div><div className="text-2xl font-black text-amber-700">₪{remaining}</div></div>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-2">
+              <p className="mt-3 text-center text-lg font-bold text-gray-600">
+                {cardsLeft <= 1 ? "זה הכרטיס האחרון - משלמים את כל היתרה" : `אפשר לחלק לעוד ${cardsLeft} כרטיסים לכל היותר (כרטיס אחד לכל מנה)`}
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 <button onClick={() => setSplitMode("items")} className={`py-3 rounded-xl font-bold text-xl border-2 ${splitMode === "items" ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-300"}`}>לפי מוצרים</button>
                 <button onClick={() => setSplitMode("amount")} className={`py-3 rounded-xl font-bold text-xl border-2 ${splitMode === "amount" ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-300"}`}>לפי סכום</button>
               </div>
@@ -1674,7 +1680,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     onClick={() => void chargeSplitPart(payItems, splitPicked.map((i) => lines[i]?.label).join(", "), splitPicked)}
                     className="w-full mt-2 py-5 rounded-xl bg-primary text-white font-black text-2xl disabled:opacity-40"
                   >
-                    {itemsOk ? `לתשלום ₪${payItems} במסוף` : payItems > 0 ? `מינימום ₪${SPLIT_MIN} לכרטיס, ולא להשאיר פחות מ-₪${SPLIT_MIN}` : "בחרו מוצרים לתשלום"}
+                    {itemsOk ? `לתשלום ₪${payItems} במסוף` : payItems > 0 ? `זה הכרטיס האחרון - יש לשלם את כל היתרה (₪${remaining})` : "בחרו מוצרים לתשלום"}
                   </button>
                 </div>
               ) : (
@@ -1696,7 +1702,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     onClick={() => void chargeSplitPart(typed, "תשלום על חלק מההזמנה", [])}
                     className="w-full py-5 rounded-xl bg-primary text-white font-black text-2xl disabled:opacity-40"
                   >
-                    {amountOk ? `לתשלום ₪${Math.round(typed * 100) / 100} במסוף` : `סכום בין ₪${Math.min(SPLIT_MIN, remaining)} ל-₪${remaining}, בלי להשאיר פחות מ-₪${SPLIT_MIN}`}
+                    {amountOk ? `לתשלום ₪${Math.round(typed * 100) / 100} במסוף` : cardsLeft <= 1 ? `זה הכרטיס האחרון - יש לשלם את כל היתרה (₪${remaining})` : `הקלידו סכום עד ₪${remaining}`}
                   </button>
                 </div>
               )}
