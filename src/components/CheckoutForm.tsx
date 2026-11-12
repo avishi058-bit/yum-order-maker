@@ -163,17 +163,25 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const pinpadAttemptRef = useRef(0);
   const pinpadCancelledRef = useRef<number | null>(null);
   const [pinpadCanCancel, setPinpadCanCancel] = useState(false);
+  // Kiosk split payment (several cards for one order). The order is created
+  // once; every card pays a part; the kitchen gets it only when fully paid.
+  const [split, setSplit] = useState<null | { orderId: string; orderNumber: number; total: number; paid: number }>(null);
+  const [splitMode, setSplitMode] = useState<"items" | "amount">("items");
+  const [splitPicked, setSplitPicked] = useState<number[]>([]);
+  const [splitPaidLines, setSplitPaidLines] = useState<number[]>([]);
+  const [splitAmount, setSplitAmount] = useState("");
+  const splitLocked = !!split && split.paid > 0;
   useEffect(() => {
-    // While the terminal is charging, the kiosk idle timer must not reset
-    // the order; it reads this flag.
+    // While the terminal is charging, or a split order is partly paid, the
+    // kiosk idle timer must not reset the order; it reads this flag.
     try {
-      if (pinpadState === "waiting") document.body.dataset.kioskPaying = "1";
+      if (pinpadState === "waiting" || splitLocked) document.body.dataset.kioskPaying = "1";
       else delete document.body.dataset.kioskPaying;
     } catch { /* ignore */ }
     if (pinpadState !== "waiting") { setPinpadCanCancel(false); return; }
     const t = setTimeout(() => setPinpadCanCancel(true), 20_000);
     return () => clearTimeout(t);
-  }, [pinpadState]);
+  }, [pinpadState, splitLocked]);
   const cancelPinpadWait = () => {
     pinpadCancelledRef.current = pinpadAttemptRef.current;
     setPinpadState(null);
@@ -597,6 +605,154 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     return data as { orderId: string; orderNumber: number; total: number };
   };
 
+  // Full price of every cart line (base + paid toppings + meal/side/drink
+  // upgrades). Shared by the web invoice and the kiosk split-payment screen.
+  const priceLines = () => items.map((item) => {
+        let unitPrice = item.price;
+        const descParts: string[] = [];
+
+        if (item.dealBurgers) {
+          // Deals: base price already includes drink extras baked in.
+          // Add per-burger paid toppings on top (charged extra over the deal price).
+          const dealToppingsCost = item.dealBurgers.reduce((s, b) => {
+            return s + (b.toppings ?? []).reduce((ss, tId) => {
+              const t = findTopping(tId);
+              return ss + (t?.price || 0);
+            }, 0);
+          }, 0);
+          unitPrice += dealToppingsCost;
+          descParts.push(dealToppingsCost > 0 ? `דיל (כולל תוספות +₪${dealToppingsCost})` : "דיל");
+        } else {
+          // Toppings cost
+          const toppingsCost = item.toppings.reduce((s, tId) => {
+            const t = findTopping(tId);
+            return s + (t?.price || 0);
+          }, 0);
+          if (toppingsCost > 0) {
+            const counts = new Map<string, number>();
+            item.toppings.forEach((tId) => counts.set(tId, (counts.get(tId) || 0) + 1));
+            const toppingNames = Array.from(counts.entries())
+              .map(([tId, count]) => {
+                const name = findTopping(tId)?.name;
+                if (!name) return null;
+                return count > 1 ? `${name} × ${count}` : name;
+              })
+              .filter(Boolean);
+            descParts.push(`תוספות: ${toppingNames.join(", ")}`);
+          }
+          unitPrice += toppingsCost;
+
+          // Meal upgrade cost - only when upgrading a burger to a meal.
+          // Items already in the "meal" category include the upgrade in their base price.
+          if (item.withMeal) {
+            if (shouldChargeMealUpgrade(item)) {
+              unitPrice += MEAL_UPGRADE_PRICE;
+            }
+            descParts.push("ארוחה");
+          }
+
+          // Side upgrade cost
+          if (item.mealSideId) {
+            const sideOption = mealSideOptions.find(s => s.id === item.mealSideId);
+            if (sideOption && sideOption.price > 0) {
+              unitPrice += sideOption.price;
+              descParts.push(`תוספת צד: ${sideOption.name}`);
+            }
+          }
+
+          // Drink upgrade cost
+          if (item.mealDrinkId) {
+            const drinkOption = mealDrinkOptions.find(d => d.id === item.mealDrinkId);
+            if (drinkOption && drinkOption.price > 0) {
+              unitPrice += drinkOption.price;
+              descParts.push(`שתייה: ${drinkOption.name}`);
+            }
+          }
+        }
+
+        return {
+          name: item.name,
+          price: unitPrice,
+          quantity: item.quantity,
+          description: descParts.length > 0 ? descParts.join(" | ") : item.name,
+        };
+      });
+
+  // Lines the split screen offers for V-selection: each cart line at its full
+  // price, plus one line for whatever else the total holds (sauces, donation).
+  const splitLines = () => {
+    const lines = priceLines().map((l) => ({ label: l.quantity > 1 ? `${l.name} × ${l.quantity}` : l.name, amount: Math.round(l.price * l.quantity * 100) / 100 }));
+    const rest = Math.round((total - lines.reduce((a, l) => a + l.amount, 0)) * 100) / 100;
+    if (rest > 0) lines.push({ label: "רטבים, תרומה ותוספות", amount: rest });
+    return lines;
+  };
+
+  const startSplit = async () => {
+    if (split) return;
+    setSubmitting(true);
+    setPaymentMethod("credit");
+    try {
+      // The customer is standing at the kiosk; a failed earlier attempt must not
+      // block the split behind the duplicate-order guard.
+      const order = await callCreateOrder("credit", "pending_payment", true);
+      setSplit({ orderId: order.orderId, orderNumber: order.orderNumber, total: Number(order.total) || total, paid: 0 });
+      setSplitPicked([]); setSplitPaidLines([]); setSplitAmount(""); setSplitMode("items");
+      supabase.functions.invoke("pinpad-charge", { body: { warmup: true } }).catch(() => {});
+    } catch (e: any) {
+      toast({ title: "לא הצלחנו לפתוח חלוקת תשלום", description: e?.message || "נסה שוב", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const chargeSplitPart = async (amount: number, note: string, lineIdx: number[]) => {
+    if (!split) return;
+    const remaining = Math.round((split.total - split.paid) * 100) / 100;
+    const part = Math.min(Math.round(amount * 100) / 100, remaining);
+    if (!(part > 0)) return;
+    const attempt = ++pinpadAttemptRef.current;
+    const ignore = (paid: boolean) =>
+      pinpadCancelledRef.current === attempt && (!paid || pinpadAttemptRef.current !== attempt);
+    setPinpadState("waiting");
+    try {
+      const resolvedInvoiceEmail = invoiceSaved ? resolveInvoiceEmail(invoiceEmail) : undefined;
+      const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
+        body: {
+          orderId: split.orderId,
+          amount: part,
+          note: note.slice(0, 200) || undefined,
+          invoiceEmail: resolvedInvoiceEmail,
+          invoiceName: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
+        },
+      });
+      if (ignore(!pinErr && !!pin?.success)) return;
+      if (pinErr || !pin?.success) {
+        setPinpadState(null);
+        setPinpadError(pin?.message || "העסקה לא אושרה במסוף");
+        return;
+      }
+      setPinpadState(null);
+      setPinpadError(null);
+      const paidNow = Number(pin.paidNow) || part;
+      const nextPaid = Math.round((split.paid + paidNow) * 100) / 100;
+      setSplitPaidLines((prev) => [...prev, ...lineIdx]);
+      setSplitPicked([]);
+      setSplitAmount("");
+      if (pin.partial) {
+        setSplit({ ...split, paid: nextPaid });
+        toast({ title: `שולמו ₪${paidNow} ✅`, description: `נשאר לשלם ₪${Number(pin.remaining ?? split.total - nextPaid)}` });
+        return;
+      }
+      setSplit(null);
+      toast({ title: "התשלום הושלם! 🎉", description: "ההזמנה נשלחה למטבח" });
+      onSuccess(split.orderNumber, form.phone, "credit", split.orderId, form.name);
+    } catch {
+      if (ignore(false)) return;
+      setPinpadState(null);
+      setPinpadError("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
+    }
+  };
+
   const handleCreditPayment = async (allowDuplicate = false) => {
     setSubmitting(true);
     try {
@@ -683,76 +839,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
       // Build item descriptions for Z-Credit invoice with FULL prices including all add-ons
-      const zcreditItems = items.map((item) => {
-        let unitPrice = item.price;
-        const descParts: string[] = [];
-
-        if (item.dealBurgers) {
-          // Deals: base price already includes drink extras baked in.
-          // Add per-burger paid toppings on top (charged extra over the deal price).
-          const dealToppingsCost = item.dealBurgers.reduce((s, b) => {
-            return s + (b.toppings ?? []).reduce((ss, tId) => {
-              const t = findTopping(tId);
-              return ss + (t?.price || 0);
-            }, 0);
-          }, 0);
-          unitPrice += dealToppingsCost;
-          descParts.push(dealToppingsCost > 0 ? `דיל (כולל תוספות +₪${dealToppingsCost})` : "דיל");
-        } else {
-          // Toppings cost
-          const toppingsCost = item.toppings.reduce((s, tId) => {
-            const t = findTopping(tId);
-            return s + (t?.price || 0);
-          }, 0);
-          if (toppingsCost > 0) {
-            const counts = new Map<string, number>();
-            item.toppings.forEach((tId) => counts.set(tId, (counts.get(tId) || 0) + 1));
-            const toppingNames = Array.from(counts.entries())
-              .map(([tId, count]) => {
-                const name = findTopping(tId)?.name;
-                if (!name) return null;
-                return count > 1 ? `${name} × ${count}` : name;
-              })
-              .filter(Boolean);
-            descParts.push(`תוספות: ${toppingNames.join(", ")}`);
-          }
-          unitPrice += toppingsCost;
-
-          // Meal upgrade cost - only when upgrading a burger to a meal.
-          // Items already in the "meal" category include the upgrade in their base price.
-          if (item.withMeal) {
-            if (shouldChargeMealUpgrade(item)) {
-              unitPrice += MEAL_UPGRADE_PRICE;
-            }
-            descParts.push("ארוחה");
-          }
-
-          // Side upgrade cost
-          if (item.mealSideId) {
-            const sideOption = mealSideOptions.find(s => s.id === item.mealSideId);
-            if (sideOption && sideOption.price > 0) {
-              unitPrice += sideOption.price;
-              descParts.push(`תוספת צד: ${sideOption.name}`);
-            }
-          }
-
-          // Drink upgrade cost
-          if (item.mealDrinkId) {
-            const drinkOption = mealDrinkOptions.find(d => d.id === item.mealDrinkId);
-            if (drinkOption && drinkOption.price > 0) {
-              unitPrice += drinkOption.price;
-              descParts.push(`שתייה: ${drinkOption.name}`);
-            }
-          }
-        }
-
-        return {
-          name: item.name,
-          price: unitPrice,
-          quantity: item.quantity,
-          description: descParts.length > 0 ? descParts.join(" | ") : item.name,
-        };
-      });
+      const zcreditItems = priceLines();
 
       // If total includes extras (like sauces) not in cart items, add a reconciliation line
       const itemsSum = zcreditItems.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -1428,6 +1515,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               )}
             </div>
 
+            {isKiosk && availablePaymentMethods.credit && !donationOnly && total > 0 && (
+              <button
+                type="button"
+                onClick={() => void startSplit()}
+                disabled={submitting || !canSubmit}
+                className="w-full mt-4 py-4 rounded-xl border-2 border-dashed border-blue-400 text-blue-700 bg-white font-black text-2xl disabled:opacity-40"
+              >
+                💳💳 לחלק את התשלום בין כמה כרטיסים
+              </button>
+            )}
+
             {/* 🧾 Invoice by email - kiosk only, collected BEFORE payment.
                 Sent automatically after a successful card charge. */}
             {isKiosk && availablePaymentMethods.credit && (
@@ -1524,6 +1622,94 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           </div>
         )}
       </motion.div>
+
+      {/* Kiosk: split payment between several cards */}
+      {split && (() => {
+        const lines = splitLines();
+        const remaining = Math.round((split.total - split.paid) * 100) / 100;
+        const pickedSum = Math.round(splitPicked.reduce((a, i) => a + (lines[i]?.amount || 0), 0) * 100) / 100;
+        const typed = Number(splitAmount.replace(",", "."));
+        // Owner rule (also enforced server-side): at least ₪10 per card, and
+        // never leave less than ₪10 for the next card - unless paying it all.
+        const SPLIT_MIN = 10;
+        const partOk = (v: number) => v > 0 && v <= remaining && (v === remaining || (v >= SPLIT_MIN && remaining - v >= SPLIT_MIN));
+        const amountOk = partOk(Math.round(typed * 100) / 100);
+        const payItems = Math.min(pickedSum, remaining);
+        const itemsOk = partOk(payItems);
+        return (
+          <div className="fixed inset-0 z-[10040] flex items-center justify-center bg-black/70 p-6" dir="rtl">
+            <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl max-h-[92vh] overflow-y-auto">
+              <h3 className="text-3xl font-black text-gray-900 text-center">חלוקת תשלום</h3>
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl bg-gray-100 p-3"><div className="text-sm text-gray-500">סה״כ</div><div className="text-2xl font-black">₪{split.total}</div></div>
+                <div className="rounded-xl bg-green-100 p-3"><div className="text-sm text-gray-500">שולם</div><div className="text-2xl font-black text-green-700">₪{split.paid}</div></div>
+                <div className="rounded-xl bg-amber-100 p-3"><div className="text-sm text-gray-500">נשאר</div><div className="text-2xl font-black text-amber-700">₪{remaining}</div></div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-2">
+                <button onClick={() => setSplitMode("items")} className={`py-3 rounded-xl font-bold text-xl border-2 ${splitMode === "items" ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-300"}`}>לפי מוצרים</button>
+                <button onClick={() => setSplitMode("amount")} className={`py-3 rounded-xl font-bold text-xl border-2 ${splitMode === "amount" ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-300"}`}>לפי סכום</button>
+              </div>
+
+              {splitMode === "items" ? (
+                <div className="mt-4 space-y-2">
+                  <p className="text-lg text-gray-600">סמנו V על מה שמשלמים עכשיו:</p>
+                  {lines.map((l, i) => {
+                    const paid = splitPaidLines.includes(i);
+                    const on = splitPicked.includes(i);
+                    return (
+                      <button
+                        key={i}
+                        disabled={paid}
+                        onClick={() => setSplitPicked((prev) => (on ? prev.filter((x) => x !== i) : [...prev, i]))}
+                        className={`w-full flex items-center justify-between gap-3 p-4 rounded-xl border-2 text-xl ${paid ? "bg-gray-100 text-gray-400 border-gray-200 line-through" : on ? "border-primary bg-primary/10 text-gray-900" : "border-gray-300 text-gray-900"}`}
+                      >
+                        <span className="flex items-center gap-3"><span className={`w-8 h-8 rounded-md border-2 flex items-center justify-center font-black ${on ? "bg-primary border-primary text-white" : "border-gray-400"}`}>{on ? "✓" : ""}</span>{l.label}</span>
+                        <span className="font-black">{paid ? "שולם" : `₪${l.amount}`}</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    disabled={!itemsOk}
+                    onClick={() => void chargeSplitPart(payItems, splitPicked.map((i) => lines[i]?.label).join(", "), splitPicked)}
+                    className="w-full mt-2 py-5 rounded-xl bg-primary text-white font-black text-2xl disabled:opacity-40"
+                  >
+                    {itemsOk ? `לתשלום ₪${payItems} במסוף` : payItems > 0 ? `מינימום ₪${SPLIT_MIN} לכרטיס, ולא להשאיר פחות מ-₪${SPLIT_MIN}` : "בחרו מוצרים לתשלום"}
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  <p className="text-lg text-gray-600">כמה משלמים בכרטיס הזה?</p>
+                  <input
+                    inputMode="decimal"
+                    value={splitAmount}
+                    onChange={(e) => setSplitAmount(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 8))}
+                    placeholder={`עד ₪${remaining}`}
+                    className="w-full p-4 rounded-xl border-2 border-gray-300 text-3xl text-center font-black text-gray-900"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => setSplitAmount(String(Math.round((remaining / 2) * 100) / 100))} className="py-3 rounded-xl border-2 border-gray-300 font-bold text-xl text-gray-800">חצי (₪{Math.round((remaining / 2) * 100) / 100})</button>
+                    <button onClick={() => setSplitAmount(String(remaining))} className="py-3 rounded-xl border-2 border-gray-300 font-bold text-xl text-gray-800">כל היתרה (₪{remaining})</button>
+                  </div>
+                  <button
+                    disabled={!amountOk}
+                    onClick={() => void chargeSplitPart(typed, "תשלום על חלק מההזמנה", [])}
+                    className="w-full py-5 rounded-xl bg-primary text-white font-black text-2xl disabled:opacity-40"
+                  >
+                    {amountOk ? `לתשלום ₪${Math.round(typed * 100) / 100} במסוף` : `סכום בין ₪${Math.min(SPLIT_MIN, remaining)} ל-₪${remaining}, בלי להשאיר פחות מ-₪${SPLIT_MIN}`}
+                  </button>
+                </div>
+              )}
+
+              {split.paid === 0 ? (
+                <button onClick={() => setSplit(null)} className="w-full mt-6 py-3 rounded-xl text-gray-500 font-bold text-lg">ביטול חלוקה</button>
+              ) : (
+                <p className="mt-6 text-center text-lg font-bold text-amber-700">ההזמנה תישלח למטבח רק אחרי שכל הסכום ישולם</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Kiosk: physical terminal prompt while the card is being charged */}
       {pinpadState === "waiting" && (

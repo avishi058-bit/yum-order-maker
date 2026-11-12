@@ -27,7 +27,14 @@ const BodySchema = z.object({
   orderId: z.string().uuid(),
   invoiceEmail: z.string().trim().email().max(255).optional(),
   invoiceName: z.string().trim().max(100).optional(),
+  // Split payment: charge only this part of the order (validated against the
+  // unpaid remainder below). Omitted = charge everything that is left.
+  amount: z.number().positive().max(100000).optional(),
+  // What this payer is paying for (printed on their invoice). Text only.
+  note: z.string().trim().max(200).optional(),
 });
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 function pickInvoiceNumber(result: Record<string, unknown>): string | null {
   for (const key of ["InvoiceReceiptNumber", "DocumentNumber", "InvoiceNumber", "ReceiptNumber", "DocNumber", "ReferenceNumber"]) {
@@ -102,8 +109,30 @@ Deno.serve(async (req) => {
       return json({ error: "order_not_payable" }, 409);
     }
 
-    const sum = Number(order.total);
-    if (!(sum > 0)) return json({ error: "invalid_amount" }, 400);
+    const orderTotal = round2(Number(order.total));
+    if (!(orderTotal > 0)) return json({ error: "invalid_amount" }, 400);
+
+    // Split payments: what earlier cards already covered.
+    const { data: prevPayments, error: prevErr } = await supabase
+      .from("order_payments")
+      .select("amount")
+      .eq("order_id", order.id);
+    if (prevErr) return json({ error: "server_error" }, 500);
+    const paidSoFar = round2((prevPayments ?? []).reduce((a, r) => a + Number(r.amount), 0));
+    const remaining = round2(orderTotal - paidSoFar);
+    if (!(remaining > 0)) return json({ error: "order_not_payable" }, 409);
+
+    const requested = parsed.data.amount != null ? round2(parsed.data.amount) : remaining;
+    if (!(requested > 0) || requested > remaining) return json({ error: "invalid_amount", remaining }, 400);
+    // Owner rule: every card pays at least ₪10, and a part may not leave less
+    // than ₪10 for the next card (paying the whole remainder is always fine).
+    const SPLIT_MIN = 10;
+    if (requested < remaining && (requested < SPLIT_MIN || remaining - requested < SPLIT_MIN)) {
+      return json({ error: "invalid_amount", remaining, min: SPLIT_MIN }, 400);
+    }
+    const sum = requested;
+    const isSplit = paidSoFar > 0 || sum < remaining;
+    const isFinal = sum >= remaining;
 
     // Claim the order before touching the terminal: only one request can set
     // the marker, so two concurrent calls can never charge the same order
@@ -209,7 +238,35 @@ Deno.serve(async (req) => {
       .filter((value, index, values) => values.indexOf(value) === index);
     let transactionId = transactionIdCandidates[0] ?? null;
 
-    const { error: updErr } = await supabase
+    const { data: paymentRow, error: payErr } = await supabase
+      .from("order_payments")
+      .insert({
+        order_id: order.id,
+        amount: sum,
+        transaction_id: transactionId,
+        reference: result?.ReferenceNumber != null ? String(result.ReferenceNumber) : null,
+        note: parsed.data.note ?? null,
+      })
+      .select("id")
+      .single();
+    if (payErr) console.error("pinpad-charge: payment row failed", { orderId: order.id, message: payErr.message });
+
+    if (!isFinal) {
+      if (payErr) {
+        // The card was charged but the part could not be recorded. Keep the
+        // order locked: charging the "remainder" now could overcharge.
+        return json({
+          success: false,
+          charged: true,
+          message: "התשלום נקלט אך לא נרשם. נא לפנות לצוות",
+        });
+      }
+      // Part of the order is still unpaid: free the order for the next card.
+      // It stays pending_payment, so the kitchen does not see it yet.
+      await releaseClaim();
+    }
+
+    const { error: updErr } = !isFinal ? { error: null } : await supabase
       .from("orders")
       .update({
         status: "new",
@@ -237,7 +294,53 @@ Deno.serve(async (req) => {
     let invoiceMessage: string | null = null;
     let invoiceNumber: string | null = null;
 
-    if (!transactionId) {
+    if (isSplit && transactionId) {
+      // One invoice per card, for exactly what that card paid.
+      const partPayload = {
+        TerminalNumber: TERMINAL.trim(),
+        Password: PASSWORD.trim(),
+        TransactionId: transactionId,
+        ZCreditInvoiceReceipt: {
+          Type: 1,
+          TaxRate: TAX_RATE,
+          RecepientName: parsed.data.invoiceName || order.customer_name || "לקוח",
+          RecepientCompanyID: "",
+          Address: BUSINESS_ADDRESS,
+          City: BUSINESS_CITY,
+          ZipCode: "",
+          PhoneNum: order.customer_phone ?? "",
+          ReceipientEmail: parsed.data.invoiceEmail ?? "",
+          EmailDocumentToReceipient: Boolean(parsed.data.invoiceEmail),
+          ReturnDocumentInResponse: false,
+          Items: [{
+            ItemDescription: (parsed.data.note || "תשלום על חלק מההזמנה").slice(0, 100),
+            ItemQuantity: 1,
+            ItemPrice: sum,
+            IsTaxFree: false,
+          }],
+        },
+      };
+      const partRes = await fetch(ZCREDIT_INVOICE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(partPayload),
+      });
+      const partResult = await partRes.json().catch(() => ({}));
+      const partFailed =
+        !partRes.ok || partResult?.HasError === true ||
+        (partResult?.ReturnCode != null && Number(partResult.ReturnCode) !== 0);
+      if (partFailed) {
+        invoiceMessage = String(partResult?.ReturnMessage ?? "") || "הפקת החשבונית נכשלה";
+        console.error("pinpad-charge: split invoice failed", { orderId: order.id, code: partResult?.ReturnCode });
+      } else {
+        invoiceCreated = true;
+        invoiceEmailed = Boolean(parsed.data.invoiceEmail);
+        invoiceNumber = pickInvoiceNumber(partResult ?? {});
+        if (paymentRow?.id) {
+          await supabase.from("order_payments").update({ invoice_number: invoiceNumber }).eq("id", paymentRow.id);
+        }
+      }
+    } else if (!transactionId) {
       invoiceMessage = "המסוף אישר את החיוב אך לא החזיר מזהה עסקה להפקת חשבונית";
       console.error("pinpad-charge: missing transaction id", {
         orderId: order.id,
@@ -337,6 +440,9 @@ Deno.serve(async (req) => {
 
     return json({
       success: true,
+      partial: !isFinal,
+      paidNow: sum,
+      remaining: round2(remaining - sum),
       orderNumber: order.order_number ?? null,
       approvalNumber: result?.ApprovalNumber ?? null,
       card4: result?.Card4Digits ?? null,
