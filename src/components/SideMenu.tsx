@@ -182,7 +182,7 @@ const SideMenu = ({ onLoginClick, onUpdateFavorite }: SideMenuProps) => {
               </DialogHeader>
               <div className="space-y-4 text-sm">
                 <div className="space-y-1">
-                  <p className="font-bold text-foreground">📍 דרך ערבי נחל 21, תושיה</p>
+                  <p className="font-bold text-foreground">📍 דרך ערבי נחל 21, תושיה (כפר מימון)</p>
                   <p className="text-muted-foreground">בואו לטעום את הסמאש של מושבניקים, ישר מהבקתה.</p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
