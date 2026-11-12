@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-const IDLE_THRESHOLD = 15_000; // 15s no touch → show countdown
+const IDLE_THRESHOLD = 90_000; // 90s no touch → show countdown (15s interrupted customers mid-order)
 const COUNTDOWN_SECONDS = 30;  // 30s countdown before reset
 
 /**
