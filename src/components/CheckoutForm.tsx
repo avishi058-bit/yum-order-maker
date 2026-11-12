@@ -1,6 +1,6 @@
 import SoldierDonation from "@/components/SoldierDonation";
 import { SOLDIER_PENDING_KEY } from "@/components/SoldierFundHowItWorks";
-import { useState, useEffect, forwardRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removalDisplayNames, mealSideOptions, mealDrinkOptions } from "@/data/menu";
@@ -156,6 +156,30 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [submitting, setSubmitting] = useState(false);
   const [pinpadState, setPinpadState] = useState<"waiting" | null>(null);
   const [pinpadError, setPinpadError] = useState<string | null>(null);
+  // Terminal attempts: each kiosk charge gets an id so a customer can leave a
+  // stuck "swipe your card" screen. A late answer from a cancelled attempt is
+  // still honoured if it succeeded (the card was charged), unless a newer
+  // attempt has started meanwhile.
+  const pinpadAttemptRef = useRef(0);
+  const pinpadCancelledRef = useRef<number | null>(null);
+  const [pinpadCanCancel, setPinpadCanCancel] = useState(false);
+  useEffect(() => {
+    // While the terminal is charging, the kiosk idle timer must not reset
+    // the order; it reads this flag.
+    try {
+      if (pinpadState === "waiting") document.body.dataset.kioskPaying = "1";
+      else delete document.body.dataset.kioskPaying;
+    } catch { /* ignore */ }
+    if (pinpadState !== "waiting") { setPinpadCanCancel(false); return; }
+    const t = setTimeout(() => setPinpadCanCancel(true), 20_000);
+    return () => clearTimeout(t);
+  }, [pinpadState]);
+  const cancelPinpadWait = () => {
+    pinpadCancelledRef.current = pinpadAttemptRef.current;
+    setPinpadState(null);
+    setSubmitting(false);
+    setPinpadError("התשלום בוטל. אם הכרטיס חויב בכל זאת, ההזמנה תגיע למטבח אוטומטית");
+  };
   // Kiosk: invoice-by-email request collected BEFORE payment method selection.
   // Sent automatically only if the card payment succeeds.
   const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -599,6 +623,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       // of opening the hosted web payment page. Amount + credentials are
       // enforced server-side in the `pinpad-charge` edge function.
       if (isKiosk) {
+        const attempt = ++pinpadAttemptRef.current;
+        // A cancelled attempt is ignored unless it turns out the card WAS
+        // charged and no newer attempt is running.
+        const ignore = (paid: boolean) =>
+          pinpadCancelledRef.current === attempt && (!paid || pinpadAttemptRef.current !== attempt);
         try {
           const resolvedInvoiceEmail = invoiceSaved ? resolveInvoiceEmail(invoiceEmail) : undefined;
           const { data: pin, error: pinErr } = await supabase.functions.invoke("pinpad-charge", {
@@ -608,6 +637,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               invoiceName: (invoiceName.trim() || form.name || "").slice(0, 100) || undefined,
             },
           });
+          if (ignore(!pinErr && !!pin?.success)) return;
           if (pinErr) {
             setPinpadState(null);
             setPinpadError("שגיאה בתקשורת עם המסוף");
@@ -619,6 +649,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             return;
           }
           setPinpadState(null);
+          setPinpadError(null);
           if (!pin?.invoiceCreated) {
             toast({
               title: "התשלום עבר, אך הפקת החשבונית נכשלה",
@@ -638,6 +669,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           });
           onSuccess(order.orderNumber, form.phone, "credit", order.orderId, form.name);
         } catch (e: any) {
+          if (ignore(false)) return;
           setPinpadState(null);
           setPinpadError("(נסה שוב :) (לא מכבדים אמריקן אקספרס ודיינרס");
         }
@@ -1512,6 +1544,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             </motion.div>
             <p className="text-base text-gray-400 mt-2">ממתינים לאישור…</p>
             <p className="text-2xl font-bold text-gray-800 mt-8">מקבלים פייטר למילואימניקים 🥰</p>
+            {pinpadCanCancel && (
+              <button
+                onClick={cancelPinpadWait}
+                className="mt-8 w-full py-4 rounded-xl border-2 border-gray-300 text-gray-700 font-bold text-lg hover:bg-gray-100 transition-colors"
+              >
+                המסוף לא מגיב? ביטול וחזרה
+              </button>
+            )}
           </div>
         </div>
       )}

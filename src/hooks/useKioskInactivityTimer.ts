@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-const IDLE_THRESHOLD = 90_000; // 90s no touch → show countdown (15s interrupted customers mid-order)
+const IDLE_THRESHOLD = 30_000; // 30s no touch → ask "still here?" (owner choice; was 15s, then 90s)
 const COUNTDOWN_SECONDS = 30;  // 30s countdown before reset
 
 /**
@@ -49,6 +49,8 @@ export function useKioskInactivityTimer(
     const start = () => {
       stop();
       idleTimer.current = setTimeout(() => {
+        // Never interrupt a card payment in progress at the terminal.
+        if (document.body.dataset.kioskPaying === "1") { start(); return; }
         countdownRef.current = COUNTDOWN_SECONDS;
         setCountdown(COUNTDOWN_SECONDS);
         countdownInterval.current = setInterval(() => {
