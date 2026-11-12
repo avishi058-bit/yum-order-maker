@@ -225,6 +225,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setNameStepOpen(false);
       setStep("customize");
     } else {
+      // Fresh open - start from a clean slate. The sheet can be closed from
+      // outside (kiosk idle reset, page actions) without resetState(), so
+      // toppings/quantity from a previous burger or customer must not carry over.
+      setQuantity(1);
+      setSelectedToppings([]);
+      setSelectedDoneness(DEFAULT_DONENESS);
+      setSelectedSide("side-fries");
+      setSelectedDrink("drink-cola");
+      setOwnerName("");
+      setSideItemCounts({});
+      setGlutenRemovedNotice([]);
+      setToppingsSeen(false);
+      setNameStepOpen(false);
+      setStep("customize");
       // Fresh open - set defaults
       const defaults: Record<string, boolean> = {};
       ingredients.forEach(ing => {

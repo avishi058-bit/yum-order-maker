@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { pattyText } from "@/lib/pattyGrams";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -118,6 +118,14 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
     setBurgerDoneness([DEFAULT_DONENESS, DEFAULT_DONENESS, DEFAULT_DONENESS]);
     setSelectedDrinks(["", "", ""]);
   };
+
+  // Every open starts clean. The kiosk idle reset (and other screens) can
+  // close this sheet without going through handleClose, which used to leave
+  // the previous customer's paid toppings selected for the next one.
+  useEffect(() => {
+    if (open) resetState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleClose = () => {
     resetState();
