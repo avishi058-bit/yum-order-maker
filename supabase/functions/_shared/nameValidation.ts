@@ -57,8 +57,13 @@ export function cleanCustomerName(name: string): string {
   return name.trim().replace(/\s+/gu, " ");
 }
 
+// Final and regular Hebrew letters compare equal: the kiosk keyboard offers
+// both, and "זינ" typed with a regular nun used to slip past "זין".
+const FINAL_TO_REGULAR: Record<string, string> = { "ך": "כ", "ם": "מ", "ן": "נ", "ף": "פ", "ץ": "צ" };
+
 function normalize(name: string): string {
   return cleanCustomerName(name.toLowerCase()
+    .replace(/[ךםןףץ]/g, (c) => FINAL_TO_REGULAR[c])
     .replace(/[\u0591-\u05C7\p{Cf}]/gu, "")
     .replace(/[\p{P}\p{S}]/gu, "")
     .replace(/(\p{L})\1+/gu, "$1"));
@@ -122,8 +127,10 @@ export function validateCustomerName(
   if (celebrityGroups.some((group) => group.every((word) => tokens.includes(word)) || compact === group.join(""))) return { ok: false };
   if (tokens.some((token) => NOT_A_NAME_WORDS.has(token))) return { ok: false };
   // Names the staff blocked from the kitchen screen (already normalized).
-  for (const entry of extraBlocked) {
-    if (!entry) continue;
+  for (const raw of extraBlocked) {
+    if (!raw) continue;
+    // Entries stored before final letters were folded may still hold them.
+    const entry = raw.replace(/[ךםןףץ]/g, (c) => FINAL_TO_REGULAR[c]);
     if (entry.includes(" ") ? compact.includes(entry.replace(/\s/g, "")) : tokens.includes(entry) || compact === entry) return { ok: false };
   }
   const has = (word: string) => tokens.includes(normalize(word));
@@ -156,4 +163,33 @@ export function containsProfanity(text: string | null | undefined): boolean {
     if (profanityPhrases.some((phrase) => phrase === pair || phrase === triple)) return true;
   }
   return false;
+}
+
+
+/**
+ * Removes blocked whole words from text as it is typed. Only words already
+ * followed by a space are checked (so "אחמד" is not cut at "אח" mid-typing),
+ * unless `final` is set (on leaving the field / before paying).
+ * Names check the full name blocklist; notes check curses only.
+ */
+export function stripBlockedWords(
+  text: string,
+  { kind, final = false }: { kind: "name" | "notes"; final?: boolean },
+): { text: string; removed: boolean } {
+  const parts = text.split(/(\s+)/u);
+  const lastWordIdx = parts.length - 1 - (/\s$/u.test(text) ? 1 : 0);
+  const blocked = kind === "name" ? words : profanityWords;
+  let removed = false;
+  const kept = parts.map((part, i) => {
+    if (!part || /^\s+$/u.test(part)) return part;
+    if (!final && i === lastWordIdx && !/\s$/u.test(text)) return part;
+    const n = normalize(part);
+    if (n && (blocked.has(n) || (kind === "name" && celebrityWords.has(n)))) {
+      removed = true;
+      return "";
+    }
+    return part;
+  });
+  if (!removed) return { text, removed: false };
+  return { text: kept.join("").replace(/\s{2,}/gu, " ").replace(/^\s+/u, ""), removed: true };
 }

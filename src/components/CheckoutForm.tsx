@@ -21,7 +21,7 @@ import SaveAsFavoriteModal from "@/components/SaveAsFavoriteModal";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import { containsSixtySeven, useSkibidiGuard } from "@/components/SkibidiGuard";
-import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, CUSTOMER_NAME_REPEAT_MESSAGE, STAFF_NAME_MESSAGE, NOTES_MESSAGE, containsProfanity } from "@/lib/nameValidation";
+import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, CUSTOMER_NAME_REPEAT_MESSAGE, STAFF_NAME_MESSAGE, NOTES_MESSAGE, containsProfanity, stripBlockedWords } from "@/lib/nameValidation";
 import { nameValidationAnimation } from "@/config/uiConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -143,7 +143,16 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     notes: "",
   });
   const nameValid = validateCustomerName(form.name, { context: nameContext }).ok;
-  const nameInvalid = nameTouched && !nameValid;
+  // Kiosk: the on-screen keyboard never blurs the field and the continue button
+  // is disabled, so show the reason as soon as a real attempt at a name is typed.
+  const nameInvalid = (nameTouched || (isKiosk && cleanCustomerName(form.name).length >= 2)) && !nameValid;
+  // A blocked word was just removed from the name or the notes: say why.
+  const [strippedField, setStrippedField] = useState<null | "name" | "notes">(null);
+  useEffect(() => {
+    if (!strippedField) return;
+    const t = setTimeout(() => setStrippedField(null), 6000);
+    return () => clearTimeout(t);
+  }, [strippedField]);
   // nameShake counts invalid attempts; from the second one the tone gets firmer.
   const nameMessage = nameContext === "staff" ? STAFF_NAME_MESSAGE : nameShake >= 2 ? CUSTOMER_NAME_REPEAT_MESSAGE : CUSTOMER_NAME_MESSAGE;
   const notesInvalid = containsProfanity(form.notes);
@@ -180,7 +189,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       else delete document.body.dataset.kioskPaying;
     } catch { /* ignore */ }
     if (pinpadState !== "waiting") { setPinpadCanCancel(false); return; }
-    const t = setTimeout(() => setPinpadCanCancel(true), 20_000);
+    const t = setTimeout(() => setPinpadCanCancel(true), 0);
     return () => clearTimeout(t);
   }, [pinpadState, splitLocked]);
   const cancelPinpadWait = () => {
@@ -682,7 +691,17 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Lines the split screen offers for V-selection: each cart line at its full
   // price, plus one line for whatever else the total holds (sauces, donation).
   const splitLines = () => {
-    const lines = priceLines().map((l) => ({ label: l.quantity > 1 ? `${l.name} × ${l.quantity}` : l.name, amount: Math.round(l.price * l.quantity * 100) / 100 }));
+    // One row per dish (quantity 2 = two rows), named the way the customer
+    // ordered it: "עסקית קלאסי" for an upgraded burger, plus the diner's name.
+    const priced = priceLines();
+    const lines: { label: string; amount: number }[] = [];
+    items.forEach((it, idx) => {
+      const unit = Math.round((priced[idx]?.price ?? it.price) * 100) / 100;
+      const base = it.withMeal && !/^(ארוחת|עסקית)/.test(it.name) ? `עסקית ${it.name}` : it.name;
+      const label = it.ownerName?.trim() ? `${base} - ${it.ownerName.trim()}` : base;
+      const n = Math.max(1, Math.floor(it.quantity || 1));
+      for (let k = 0; k < n; k++) lines.push({ label: n > 1 ? `${label} (${k + 1}/${n})` : label, amount: unit });
+    });
     const rest = Math.round((total - lines.reduce((a, l) => a + l.amount, 0)) * 100) / 100;
     if (rest > 0) lines.push({ label: "רטבים, תרומה ותוספות", amount: rest });
     return lines;
@@ -1140,14 +1159,24 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     value={form.name}
                     aria-invalid={nameInvalid}
                     aria-describedby={nameInvalid ? "checkout-customer-name-error" : undefined}
-                    onBlur={checkName}
+                    onBlur={() => {
+                      if (nameContext === "customer") {
+                        const r = stripBlockedWords(form.name, { kind: "name", final: true });
+                        if (r.removed) { setForm((f) => ({ ...f, name: r.text })); setStrippedField("name"); setNameShake((v) => v + 1); }
+                      }
+                      checkName();
+                    }}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      let val = e.target.value;
+                      if (nameContext === "customer") {
+                        const r = stripBlockedWords(val, { kind: "name" });
+                        if (r.removed) { val = r.text; setStrippedField("name"); setNameTouched(true); setNameShake((v) => v + 1); }
+                      }
                       setForm({ ...form, name: val });
                     }}
                     className={`w-full ${th.inputBg} border ${nameInvalid ? "border-destructive focus:ring-destructive" : `${th.inputBorder} ${th.inputFocus}`} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2`}
                   />
-                  {nameInvalid && <p key={nameShake} id="checkout-customer-name-error" role="alert" className="animate-customer-name-shake mt-2 text-sm text-destructive">{nameMessage}</p>}
+                  {(nameInvalid || strippedField === "name") && <p key={nameShake} id="checkout-customer-name-error" role="alert" className={`animate-customer-name-shake mt-2 text-destructive ${isKiosk ? "text-lg font-bold" : "text-sm"}`}>{nameMessage}</p>}
                 </div>
               )}
               {/* Website (no logged-in user) → phone field shown here when OTP is bypassed.
@@ -1179,7 +1208,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                       setForm({ ...form, notes: "" });
                       return;
                     }
-                    setForm({ ...form, notes: val });
+                    const r = stripBlockedWords(val, { kind: "notes" });
+                    if (r.removed) setStrippedField("notes");
+                    setForm({ ...form, notes: r.text });
+                  }}
+                  onBlur={() => {
+                    const r = stripBlockedWords(form.notes, { kind: "notes", final: true });
+                    if (r.removed) { setForm((f) => ({ ...f, notes: r.text })); setStrippedField("notes"); }
                   }}
                   className={`w-full ${th.inputBg} border ${th.inputBorder} rounded-lg px-4 py-3 ${th.textMain} placeholder:${th.textMuted} focus:outline-none focus:ring-2 ${th.inputFocus} resize-none`}
                   rows={2}
@@ -1187,7 +1222,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   aria-invalid={notesInvalid}
                   aria-describedby={notesInvalid ? "checkout-notes-error" : undefined}
                 />
-                {notesInvalid && <p id="checkout-notes-error" role="alert" className="animate-customer-name-shake mt-2 text-sm text-destructive">{NOTES_MESSAGE}</p>}
+                {(notesInvalid || strippedField === "notes") && <p id="checkout-notes-error" role="alert" className={`animate-customer-name-shake mt-2 text-destructive ${isKiosk ? "text-lg font-bold" : "text-sm"}`}>{NOTES_MESSAGE}</p>}
               </div>
               <div className="flex gap-3 pt-2">
                 <Button
@@ -1253,16 +1288,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
               const end = (restaurantStatus.preorder_end_time || "22:00").slice(0, 5);
               return (
-                <div className={`rounded-2xl border p-4 transition-colors ${preorderEnabled ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/40"}`}>
-                  <label className="flex items-center gap-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={preorderEnabled}
-                      onChange={(e) => setPreorderEnabled(e.target.checked)}
-                      className="w-5 h-5 rounded border-border accent-primary cursor-pointer"
-                    />
-                    <span className="font-bold text-foreground">🕒 הזמנה מראש לשעה מאוחרת יותר</span>
-                  </label>
+                <div className={`rounded-2xl border p-4 transition-colors ${preorderEnabled ? "border-primary/50 bg-primary/5" : `${th.border} ${th.secondarySoft}`}`}>
+                  {/* A button, not a checkbox: on the kiosk it sat right above the
+                      terms checkbox and customers ticked it by mistake. */}
+                  <button
+                    type="button"
+                    aria-pressed={preorderEnabled}
+                    onClick={() => { setPreorderEnabled((v) => !v); if (preorderEnabled) setPreorderTime(""); }}
+                    className={`w-full rounded-xl font-bold transition-colors ${isKiosk ? "py-4 text-xl" : "py-3 text-base"} ${
+                      preorderEnabled ? "bg-primary text-white" : `border-2 border-primary/60 ${th.surface} ${th.textMain}`
+                    }`}
+                  >
+                    {preorderEnabled ? "🕒 הזמנה לשעה מאוחרת יותר - לביטול לחצו כאן" : "🕒 רוצים לאסוף מאוחר יותר? לחצו לבחירת שעה"}
+                  </button>
                   {preorderEnabled && (() => {
                     // Next three quarter-hour slots (at least 30 min ahead) inside the allowed window.
                     const toMin = (hm: string) => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
@@ -1273,7 +1311,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                     for (let t = first; t <= toMin(end) && slots.length < 3; t += 15) slots.push(fmt(t));
                     const custom = !!preorderTime && !slots.includes(preorderTime);
                     const chip = (active: boolean) =>
-                      `h-11 px-4 rounded-xl text-[15px] font-bold transition-colors ${active ? "border-2 border-primary bg-primary/15 text-foreground" : "border border-border bg-background text-foreground hover:border-primary/40"}`;
+                      `${isKiosk ? "h-14 px-5 text-lg" : "h-11 px-4 text-[15px]"} rounded-xl font-bold transition-colors ${active ? `border-2 border-primary bg-primary/15 ${th.textMain}` : `border ${th.border} ${th.surface} ${th.textMain} hover:border-primary/40`}`;
                     return (
                       <div className="mt-3 flex flex-col gap-2">
                         <span className={`text-sm ${th.textMuted}`}>שעת איסוף</span>
@@ -1292,7 +1330,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                               value={custom ? preorderTime : ""}
                               onChange={(e) => setPreorderTime(e.target.value)}
                               aria-label="שעת איסוף אחרת"
-                              className="bg-transparent text-foreground w-[5.5rem] focus:outline-none"
+                              className={`bg-transparent ${th.textMain} w-[5.5rem] focus:outline-none`}
                             />
                           </label>
                         </div>
@@ -1741,7 +1779,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 onClick={cancelPinpadWait}
                 className="mt-8 w-full py-4 rounded-xl border-2 border-gray-300 text-gray-700 font-bold text-lg hover:bg-gray-100 transition-colors"
               >
-                המסוף לא מגיב? ביטול וחזרה
+                ✕ ביטול סליקה (המסוף לא מגיב? אפשר לנסות שוב)
               </button>
             )}
           </div>
