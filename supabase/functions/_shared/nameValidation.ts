@@ -57,13 +57,8 @@ export function cleanCustomerName(name: string): string {
   return name.trim().replace(/\s+/gu, " ");
 }
 
-// Final and regular Hebrew letters compare equal: the kiosk keyboard offers
-// both, and "זינ" typed with a regular nun used to slip past "זין".
-const FINAL_TO_REGULAR: Record<string, string> = { "ך": "כ", "ם": "מ", "ן": "נ", "ף": "פ", "ץ": "צ" };
-
 function normalize(name: string): string {
   return cleanCustomerName(name.toLowerCase()
-    .replace(/[ךםןףץ]/g, (c) => FINAL_TO_REGULAR[c])
     .replace(/[\u0591-\u05C7\p{Cf}]/gu, "")
     .replace(/[\p{P}\p{S}]/gu, "")
     .replace(/(\p{L})\1+/gu, "$1"));
@@ -127,10 +122,8 @@ export function validateCustomerName(
   if (celebrityGroups.some((group) => group.every((word) => tokens.includes(word)) || compact === group.join(""))) return { ok: false };
   if (tokens.some((token) => NOT_A_NAME_WORDS.has(token))) return { ok: false };
   // Names the staff blocked from the kitchen screen (already normalized).
-  for (const raw of extraBlocked) {
-    if (!raw) continue;
-    // Entries stored before final letters were folded may still hold them.
-    const entry = raw.replace(/[ךםןףץ]/g, (c) => FINAL_TO_REGULAR[c]);
+  for (const entry of extraBlocked) {
+    if (!entry) continue;
     if (entry.includes(" ") ? compact.includes(entry.replace(/\s/g, "")) : tokens.includes(entry) || compact === entry) return { ok: false };
   }
   const has = (word: string) => tokens.includes(normalize(word));

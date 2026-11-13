@@ -265,11 +265,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
   // After picking a drink, smoothly scroll the user down to the
   // "add to order" button so it's clear what to do next.
-  const scrollToDrinkAddButton = () => {
-    requestAnimationFrame(() => {
-      drinkAddBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    });
-  };
+  // The drink step's add button floats at the bottom, so picking a drink no
+  // longer needs to scroll down to it.
+  const scrollToDrinkAddButton = () => {};
 
   const handleDrinkSelection = (drinkId: string) => {
     if (isAlcoholDrinkId(drinkId)) {
@@ -1646,6 +1644,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       })}
                     </div>
 
+                    {/* Floating: stays at the bottom of the list while scrolling the drinks */}
+                    <div className={`sticky z-10 bg-white border-t border-gray-100 ${isKiosk ? "-bottom-8 -mx-8 px-8 pb-8 pt-4 mt-6" : "-bottom-6 -mx-5 px-5 pb-6 pt-3 mt-4"}`}>
                     <button
                       ref={drinkAddBtnRef}
                       onClick={() => {
@@ -1659,10 +1659,11 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
                         handleFinish(true, selectedSide, selectedDrink);
                       }}
-                      className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                      className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                     >
                       הוספה להזמנה 🍔
                     </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
