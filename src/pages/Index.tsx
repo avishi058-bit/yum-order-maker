@@ -564,7 +564,7 @@ const Index = () => {
             {!isInstalled && (
               <button
                 onClick={handleInstallClick}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors text-[11px] font-bold shadow-md shadow-green-600/30"
+                className="animate-wiggle-dance flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors text-[11px] font-bold shadow-md shadow-green-600/30"
                 aria-label="הוסף למסך הבית"
               >
                 <span aria-hidden>📲</span>
