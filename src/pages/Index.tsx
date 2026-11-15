@@ -28,6 +28,7 @@ import ItemPreview from "@/components/ItemPreview";
 import OrderSuccessModal from "@/components/OrderSuccessModal";
 import Reveal from "@/components/Reveal";
 import ClosedOrderCard from "@/components/ClosedOrderCard";
+import kosherCertificate from "@/assets/kosher-certificate.webp";
 import HomeSkeleton from "@/components/HomeSkeleton";
 
 // Lazy-loaded: only needed once the user opens a modal/customizer/checkout.
@@ -79,6 +80,12 @@ const Index = () => {
   const isClosed = isStation ? !restaurantStatus.station_open : !restaurantStatus.website_open;
   // Manual closure = admin closed website while business hours say we should be open
   const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
+  // Closed hours: open the menu so the customer can build and save an order.
+  const buildOrderAhead = () => {
+    setDineIn(false);
+    setBrowseMenuOpen(true);
+    setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
   const isManualClosure = !isStation && isClosed && businessStatus.isOpen;
   const [reopenModalOpen, setReopenModalOpen] = useState(false);
   const [savedConfirmOpen, setSavedConfirmOpen] = useState(false);
@@ -557,11 +564,11 @@ const Index = () => {
             {!isInstalled && (
               <button
                 onClick={handleInstallClick}
-                className="animate-wiggle-dance flex items-center gap-1.5 px-3 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors text-xs font-bold shadow-lg shadow-green-600/40"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-green-600 hover:bg-green-700 text-white transition-colors text-[11px] font-bold shadow-md shadow-green-600/30"
                 aria-label="הוסף למסך הבית"
               >
-                <span>הוסף למסך הבית</span>
                 <span aria-hidden>📲</span>
+                <span>התקנה</span>
               </button>
             )}
             {isLoggedIn ? (
@@ -633,6 +640,8 @@ const Index = () => {
         <HeroSection
 
           onDineInChoice={isClosed ? undefined : handleDineInChoice}
+          onBuildOrderAhead={isClosed && !isStation ? buildOrderAhead : undefined}
+          showGroupsLink={!isStation}
           onDeliveryChoice={isClosed ? undefined : handleDeliveryChoice}
           showDelivery={restaurantStatus.delivery_enabled}
           dineIn={dineIn}
@@ -656,11 +665,7 @@ const Index = () => {
           nextOpenDay={businessStatus.nextOpenDay}
           nextOpenAt={businessStatus.nextOpenAt}
           todayIndex={new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" })).getDay()}
-          onBuildOrder={() => {
-            setDineIn(false);
-            setBrowseMenuOpen(true);
-            setTimeout(() => document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }), 100);
-          }}
+          onBuildOrder={buildOrderAhead}
           onNotifyMe={isStation ? undefined : () => setReopenModalOpen(true)}
         />
       ) : dineIn !== null ? (
@@ -928,7 +933,10 @@ const Index = () => {
       {!isStation && (
         <footer className="py-8 text-center border-t border-border space-y-3">
           <p className="text-foreground font-bold">הַבִּקְתָּה - המבורגר של מושבניקים 🐄</p>
-          <p className="text-muted-foreground text-sm">כשר בהשגחת הרבנות · בשר שדות נגב</p>
+          <p className="text-muted-foreground text-sm">
+            כשר בהשגחת רבנות שדות נגב ·{" "}
+            <a href={kosherCertificate} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">לצפייה בתעודת הכשרות</a>
+          </p>
           <address className="not-italic text-muted-foreground text-sm space-y-1">
             <p>המבורגר הבקתה - שלזינגר אבישי-אברהם, עוסק מורשה 213877103</p>
             <p>דרך ערבי נחל 21, תושיה (כפר מימון), ישראל</p>

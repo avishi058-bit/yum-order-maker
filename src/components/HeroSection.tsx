@@ -6,6 +6,7 @@ import logo from "@/assets/logo.webp";
 import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 import SoldierFundHowItWorks from "@/components/SoldierFundHowItWorks";
 
 const FUND_TERMS_KEY = "soldier-fund-terms-approved-v1";
@@ -13,6 +14,10 @@ const FUND_TERMS_KEY = "soldier-fund-terms-approved-v1";
 interface HeroSectionProps {
   onDineInChoice?: (dineIn: boolean) => void;
   onDeliveryChoice?: () => void;
+  /** Closed hours: main button opens the menu to build an order ahead. */
+  onBuildOrderAhead?: () => void;
+  /** Small link to the groups page under the main buttons. */
+  showGroupsLink?: boolean;
   showDelivery?: boolean;
   dineIn: boolean | null;
   /** Kitchen on/off switch for "הזמן חייל/ת". */
@@ -21,7 +26,7 @@ interface HeroSectionProps {
   onSoldierDonateOnly?: (amount: number, termsAt: string) => void;
 }
 
-const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn, soldierFundEnabled = true, onSoldierContinueOrder, onSoldierDonateOnly }: HeroSectionProps) => {
+const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, showGroupsLink = false, showDelivery, dineIn, soldierFundEnabled = true, onSoldierContinueOrder, onSoldierDonateOnly }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
@@ -166,6 +171,22 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn, s
             </div>
 
           </motion.div>
+        ) : onBuildOrderAhead ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="w-full max-w-md mx-auto flex flex-col items-center gap-2"
+          >
+            <button
+              type="button"
+              onClick={onBuildOrderAhead}
+              className="w-full h-16 rounded-[2rem] font-black text-xl bg-primary text-primary-foreground shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all"
+            >
+              הרכיבו הזמנה מראש
+            </button>
+            <p className="text-sm text-muted-foreground">סגור כרגע להזמנות - שומרים עכשיו ושולחים כשנפתחים</p>
+          </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
@@ -175,6 +196,15 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, showDelivery, dineIn, s
           >
             סגור להזמנות כרגע
           </motion.div>
+        )}
+
+        {showGroupsLink && (
+          <Link
+            to="/groups"
+            className="mt-4 inline-block text-base font-bold text-primary underline underline-offset-4 hover:brightness-110"
+          >
+            מגיעים בקבוצה? לחצו כאן
+          </Link>
         )}
 
         {/* "הזמן חייל/ת" - prominent entry buttons (hidden when switched off in the kitchen) */}

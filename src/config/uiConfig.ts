@@ -15,7 +15,10 @@ export const uiPositions = {
   },
   /** Accessibility widget floating button */
   accessibility: {
-    button: "fixed left-4 bottom-[7%] z-[60]",
+    // Slim tab glued to the left edge at mid-height, so it no longer sits on
+    // the menu photos at the bottom corner. Still draggable.
+    button: "fixed left-0 top-[55%] z-[60]",
+    shape: "w-9 h-12 rounded-r-xl rounded-l-none",
     panelSide: "right" as "right" | "left", // which side the panel slides from
   },
 

@@ -104,7 +104,7 @@ const AccessibilityWidget = () => {
   const [open, setOpen] = useState(false);
   const [buttonPos, setButtonPos] = useState<{ x: number; y: number }>(() => {
     try {
-      const saved = localStorage.getItem("a11y-button-pos-v4");
+      const saved = localStorage.getItem("a11y-button-pos-v5");
       return saved ? clampButtonPosition(JSON.parse(saved)) : { x: 0, y: 0 };
     } catch {
       return { x: 0, y: 0 };
@@ -232,7 +232,7 @@ const AccessibilityWidget = () => {
     y.set(0);
     setButtonPos({ x: 0, y: 0 });
     try {
-      localStorage.removeItem("a11y-button-pos-v4");
+      localStorage.removeItem("a11y-button-pos-v5");
     } catch {}
   };
 
@@ -287,7 +287,7 @@ const AccessibilityWidget = () => {
           y.set(next.y);
           setButtonPos(next);
           try {
-            localStorage.setItem("a11y-button-pos-v4", JSON.stringify(next));
+            localStorage.setItem("a11y-button-pos-v5", JSON.stringify(next));
           } catch {}
         }}
         onTap={() => {
@@ -305,9 +305,9 @@ const AccessibilityWidget = () => {
           setOpen(true);
         }}
         aria-label="פתח תפריט נגישות"
-        className={`${uiPositions.accessibility.button} w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing`}
+        className={`${uiPositions.accessibility.button} ${uiPositions.accessibility.shape} bg-blue-600 text-white flex items-center justify-center shadow-lg cursor-grab active:cursor-grabbing`}
       >
-        <Accessibility size={22} />
+        <Accessibility size={20} />
       </motion.button>
 
       {/* Panel */}
