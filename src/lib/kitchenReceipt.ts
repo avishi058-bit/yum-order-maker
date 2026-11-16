@@ -989,7 +989,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
       ? `<div class="paid" style="font-size:1.4em;font-weight:900;">📲 שולם ₪${order.total} בפייבוקס</div>`
       : `<div class="warn" style="font-size:1.3em;font-weight:900;">📲 פייבוקס - יש לבדוק צילום מסך של ההעברה</div>`
     : isCash
-    ? `<div class="warn">לא שולם - מזומן בעת המסירה</div>`
+    ? `<div class="warn">תשלום במזומן!</div>`
     : isCounter
     ? `<div class="warn" style="font-size:1.3em;font-weight:900;">⚠️ לתשלום בקופה ⚠️</div>`
     : creditConfirmed
@@ -1192,9 +1192,6 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
 
   <div class="customer">
     <div class="name">${escapeHtml(order.customer_name)}</div>
-    ${(order.bon_queue_number ?? order.queue_number) != null
-      ? `<div style="text-align:center;font-size:32pt;font-weight:900;line-height:1;margin:1mm 0 2mm;">${order.bon_queue_number ?? order.queue_number}</div>`
-      : ""}
     ${order.customer_phone
       ? `<div class="phone-row">
            ${phoneQrSvg ? `<div class="phone-qr">${phoneQrSvg}</div>` : ""}
@@ -1214,6 +1211,9 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   ${paymentLine}
 
   <div class="footer">סה״כ ₪${order.total}</div>
+  ${(order.bon_queue_number ?? order.queue_number) != null
+      ? `<div style="text-align:center;font-size:32pt;font-weight:900;line-height:1;margin:1mm 0 2mm;">${order.bon_queue_number ?? order.queue_number}</div>`
+      : ""}
 </body>
 </html>`;
 }

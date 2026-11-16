@@ -374,13 +374,11 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     });
   }
 
-  // Daily running number, printed right under the name, bold and centered, so
+  // Daily running number, bold and centered, so
   // the kitchen can order bons by arrival. Assigned at order creation and
   // restarts from 1 every business day - unrelated to the order number.
+  // Printed at the bottom, under the payment line (kitchen request).
   const bonNum = (order as any).bon_queue_number ?? order.queue_number ?? null;
-  if (bonNum != null) {
-    ops.push({ kind: "heb", text: String(bonNum), align: "C", bold: true, size: 40 });
-  }
   // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד - לא כאן.)
   ops.push(sep());
 
@@ -643,7 +641,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 34 }));
   } else if (order.payment_method === "cash") {
     ops.push(sep());
-    ops.push(asLine("!! לא שולם - מזומן בעת המסירה !!", { align: "C", bold: true, size: 26 }));
+    ops.push(asLine("תשלום במזומן!", { align: "C", bold: true, size: 26 }));
     ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
   } else if (order.payment_method === "soldier_fund") {
     ops.push(sep());
@@ -673,6 +671,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     }
   }
 
+  if (bonNum != null) {
+    ops.push(feed(0.4));
+    ops.push({ kind: "heb", text: String(bonNum), align: "C", bold: true, size: 40 });
+  }
 
   ops.push(feed(2));
   ops.push({ kind: "cut" });
