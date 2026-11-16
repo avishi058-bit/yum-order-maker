@@ -300,6 +300,13 @@ function asLine(
 }
 
 
+// Emoji can't be printed on the thermal printer (they come out as junk marks),
+// so they are removed from customer notes before printing.
+const EMOJI_RX = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{1F3FB}-\u{1F3FF}\u200D\uFE0E\uFE0F\u20E3]/gu;
+function stripEmoji(text: string): string {
+  return text.replace(EMOJI_RX, "").replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").trim();
+}
+
 function sep(): FastOp {
   return { kind: "sep" };
 }
@@ -345,6 +352,13 @@ function dashSep(): FastOp {
   return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
 }
 
+// Dish title line; the doneness (M / MW / WD) prints bigger, in a frame on the
+// left side, so it stands out on the bon.
+function dishLine(title: string, donShort: string | null, size: number): FastOp {
+  if (!donShort) return asLine(title, { align: "R", bold: true, size });
+  return { kind: "twoCol", right: title, left: donShort, size, bold: true, leftPx: size + 10, leftBox: true };
+}
+
 // Map doneness label like "M - מדיום" / "MW - מדיום וואל" to short "M"/"MW"/"WD".
 function shortDoneness(label: string | null): string | null {
   if (!label) return null;
@@ -386,8 +400,9 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
 
   // 2) Order type (small) + optional note
   ops.push(asLine(orderTypeLabel(order), { align: "C", bold: true, size: 34 }));
-  if (order.notes) {
-    ops.push(asLine(`הערה: ${order.notes}`, { align: "R", bold: true, size: 26 }));
+  const note = stripEmoji(order.notes ?? "");
+  if (note) {
+    ops.push(asLine(`הערה: ${note}`, { align: "R", bold: true, size: 26 }));
   }
   ops.push(feed(1));
 
@@ -448,11 +463,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     // Item name (big, bold) - qty only when >1, doneness inline at end
     // If it's a meal (upgraded or originally a meal), prefix with "ארוחת"
     const qtyStr = totalQty > 1 ? ` x${totalQty}` : "";
-    const donSuffix = donShort ? ` ${donShort}` : "";
     const displayName = it.with_meal && !it.item_name.startsWith("ארוחת")
       ? `ארוחת ${it.item_name}`
       : it.item_name;
-    ops.push(asLine(`${numPrefix}${displayName}${qtyStr}${donSuffix}`, { align: "R", bold: true, size: 34 }));
+    ops.push(dishLine(`${numPrefix}${displayName}${qtyStr}`, donShort, 34));
     ops.push(feed(LINE_GAP));
 
 
@@ -514,8 +528,8 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
         const bRem = b.removals || [];
         const { doneness: bDoneness, cleanedRemovals: bCleanRem } = extractOwnerName(bRem);
         const bDonShort = shortDoneness(bDoneness);
-        const bHeader = `${dishNo}. מנה ${i + 1}: ${[b.name, bDonShort].filter(Boolean).join(" ")}`.trim();
-        ops.push(asLine(bHeader, { align: "R", bold: true, size: 28 }));
+        const bHeader = `${dishNo}. מנה ${i + 1}: ${b.name ?? ""}`.trim();
+        ops.push(dishLine(bHeader, bDonShort, 28));
 
         ops.push(feed(LINE_GAP));
         // Deal burgers are always classic burgers; b.name is the optional

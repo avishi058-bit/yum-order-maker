@@ -714,7 +714,7 @@ export type FastOp =
   | { kind: "text"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: 1 | 2 }
   | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
   | { kind: "header"; name: string; phone?: string; namePx?: number; phonePx?: number }
-  | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean }
+  | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean; leftPx?: number; leftBox?: boolean }
   | { kind: "qr"; data: string; modulePx?: number; align?: "L" | "C" | "R" }
   | { kind: "sep" }
   | { kind: "feed"; n: number }
@@ -984,8 +984,27 @@ function _renderTwoColToMono(
   px: number,
   bold: boolean,
   width: number,
+  opts: { leftPx?: number; leftBox?: boolean } = {},
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
-  const lineH = Math.ceil(px * 1.15);
+  // Optional bigger, framed left text (used for the doneness: M / MW / WD).
+  const leftPx = opts.leftPx ?? px;
+  const BOX_PAD = 8;
+  const BOX_LINE = 4;
+  const measure = _getMeasureCtx();
+  measure.font = `900 ${leftPx}px Arial, "Heebo", sans-serif`;
+  const leftW = left ? measure.measureText(left).width : 0;
+  const boxW = opts.leftBox && left ? leftW + BOX_PAD * 2 + BOX_LINE * 2 : leftW;
+  const boxH = opts.leftBox && left ? Math.ceil(leftPx * 1.05) + BOX_LINE * 2 : 0;
+  // Shrink the right text if it would run into the left text.
+  let rightPx = px;
+  if (right) {
+    measure.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+    while (rightPx > 20 && measure.measureText(right).width + boxW + 16 > width) {
+      rightPx -= 2;
+      measure.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+    }
+  }
+  const lineH = Math.max(Math.ceil(px * 1.15), Math.ceil(leftPx * 1.15), boxH);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = lineH + 4;
@@ -995,15 +1014,24 @@ function _renderTwoColToMono(
   ctx.fillStyle = "#000";
   (ctx as unknown as { direction: string }).direction = "rtl";
   ctx.textBaseline = "middle";
-  ctx.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
   const y = lineH / 2 + 2;
   if (right) {
+    ctx.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
     ctx.textAlign = "right";
     ctx.fillText(right, width - 2, y);
   }
   if (left) {
-    ctx.textAlign = "left";
-    ctx.fillText(left, 2, y);
+    ctx.font = `${opts.leftBox || bold ? "900" : "500"} ${leftPx}px Arial, "Heebo", sans-serif`;
+    if (opts.leftBox) {
+      ctx.lineWidth = BOX_LINE;
+      ctx.strokeStyle = "#000";
+      ctx.strokeRect(2 + BOX_LINE / 2, y - boxH / 2 + BOX_LINE / 2, boxW - BOX_LINE, boxH - BOX_LINE);
+      ctx.textAlign = "left";
+      ctx.fillText(left, 2 + BOX_LINE + BOX_PAD, y + 1);
+    } else {
+      ctx.textAlign = "left";
+      ctx.fillText(left, 2, y);
+    }
   }
   return _canvasToCroppedMono(canvas, width, false);
 }
@@ -1309,7 +1337,7 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
         pushPendingMono(_renderHeaderToMono(op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width));
         break;
       case "twoCol":
-        pushPendingMono(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
+        pushPendingMono(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width, { leftPx: op.leftPx, leftBox: op.leftBox }));
         break;
       case "qr":
         pushPendingMono(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
@@ -1424,7 +1452,7 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         break;
       }
       case "twoCol": {
-        pending.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width));
+        pending.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width, { leftPx: op.leftPx, leftBox: op.leftBox }));
         break;
       }
       case "cut":
