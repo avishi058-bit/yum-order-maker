@@ -352,11 +352,11 @@ function dashSep(): FastOp {
   return { kind: "text", text: "- - - - - - - - - - - - - - - -", align: "C", size: 1 };
 }
 
-// Dish title line; the doneness (M / MW / WD) prints bigger, in a frame on the
-// left side, so it stands out on the bon.
+// Dish title line; the doneness (M / MW / WD) stays right after the name but
+// prints a bit bigger, so it stands out on the bon.
 function dishLine(title: string, donShort: string | null, size: number): FastOp {
   if (!donShort) return asLine(title, { align: "R", bold: true, size });
-  return { kind: "twoCol", right: title, left: donShort, size, bold: true, leftPx: size + 10, leftBox: true };
+  return { kind: "twoCol", right: title, left: donShort, size, bold: true, leftPx: size + 8, leftInline: true };
 }
 
 // Map doneness label like "M - מדיום" / "MW - מדיום וואל" to short "M"/"MW"/"WD".

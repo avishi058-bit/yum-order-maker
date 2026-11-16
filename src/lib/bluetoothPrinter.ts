@@ -714,7 +714,7 @@ export type FastOp =
   | { kind: "text"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: 1 | 2 }
   | { kind: "heb"; text: string; align?: "L" | "C" | "R"; bold?: boolean; size?: number }
   | { kind: "header"; name: string; phone?: string; namePx?: number; phonePx?: number }
-  | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean; leftPx?: number; leftBox?: boolean }
+  | { kind: "twoCol"; right: string; left: string; size?: number; bold?: boolean; leftPx?: number; leftBox?: boolean; leftInline?: boolean }
   | { kind: "qr"; data: string; modulePx?: number; align?: "L" | "C" | "R" }
   | { kind: "sep" }
   | { kind: "feed"; n: number }
@@ -984,9 +984,10 @@ function _renderTwoColToMono(
   px: number,
   bold: boolean,
   width: number,
-  opts: { leftPx?: number; leftBox?: boolean } = {},
+  opts: { leftPx?: number; leftBox?: boolean; leftInline?: boolean } = {},
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
-  // Optional bigger, framed left text (used for the doneness: M / MW / WD).
+  // Optional bigger left text (used for the doneness: M / MW / WD), either
+  // framed at the far left or placed inline right after the right text.
   const leftPx = opts.leftPx ?? px;
   const BOX_PAD = 8;
   const BOX_LINE = 4;
@@ -1028,6 +1029,12 @@ function _renderTwoColToMono(
       ctx.strokeRect(2 + BOX_LINE / 2, y - boxH / 2 + BOX_LINE / 2, boxW - BOX_LINE, boxH - BOX_LINE);
       ctx.textAlign = "left";
       ctx.fillText(left, 2 + BOX_LINE + BOX_PAD, y + 1);
+    } else if (opts.leftInline && right) {
+      ctx.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+      const rightW = ctx.measureText(right).width;
+      ctx.font = `${bold ? "900" : "500"} ${leftPx}px Arial, "Heebo", sans-serif`;
+      ctx.textAlign = "right";
+      ctx.fillText(left, width - 2 - rightW - Math.round(rightPx * 0.3), y);
     } else {
       ctx.textAlign = "left";
       ctx.fillText(left, 2, y);
@@ -1337,7 +1344,7 @@ function _buildOpsBytesRotated(ops: FastOp[], width: number): Uint8Array {
         pushPendingMono(_renderHeaderToMono(op.name, op.phone, op.namePx ?? 32, op.phonePx ?? 18, width));
         break;
       case "twoCol":
-        pushPendingMono(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width, { leftPx: op.leftPx, leftBox: op.leftBox }));
+        pushPendingMono(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width, { leftPx: op.leftPx, leftBox: op.leftBox, leftInline: op.leftInline }));
         break;
       case "qr":
         pushPendingMono(_renderQrToMono(op.data, op.modulePx ?? 4, op.align ?? "C", width));
@@ -1452,7 +1459,7 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
         break;
       }
       case "twoCol": {
-        pending.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width, { leftPx: op.leftPx, leftBox: op.leftBox }));
+        pending.push(_renderTwoColToMono(op.right, op.left, op.size ?? 20, !!op.bold, width, { leftPx: op.leftPx, leftBox: op.leftBox, leftInline: op.leftInline }));
         break;
       }
       case "cut":
