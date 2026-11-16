@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import KitchenStaffClock from "@/components/kitchen/KitchenStaffClock";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlockNameButton } from "@/components/kitchen/BlockNameButton";
@@ -1998,6 +1999,7 @@ const Kitchen = () => {
           🔊 לחץ כאן כדי להפעיל צלצולים להזמנות חדשות
         </div>
       )}
+      <KitchenStaffClock />
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3 flex flex-col gap-3 sticky top-0 z-10 overflow-x-hidden max-w-full">
         <div className="flex items-center gap-4 flex-wrap">

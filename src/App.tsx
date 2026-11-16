@@ -40,6 +40,8 @@ const EventsAdmin = lazy(() => import("./pages/EventsAdmin"));
 const EventsKitchen = lazy(() => import("./pages/EventsKitchen"));
 const Groups = lazy(() => import("./pages/Groups"));
 const AdminLeads = lazy(() => import("./pages/AdminLeads"));
+const Staff = lazy(() => import("./pages/Staff"));
+const AdminShifts = lazy(() => import("./pages/AdminShifts"));
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -158,6 +160,16 @@ const App = () => (
               <Route path="/inventory/:token/fridge" element={<InventoryFridge />} />
               <Route path="/events" element={<EventBooking />} />
               <Route path="/groups" element={<Groups />} />
+              <Route path="/staff" element={<Staff />} />
+              <Route path="/staff/:token" element={<Staff />} />
+              <Route
+                path="/admin/shifts"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminShifts />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/en/groups" element={<Groups lang="en" />} />
               <Route
                 path="/admin/leads"

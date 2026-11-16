@@ -50,7 +50,8 @@
       (function () {
         var isKitchen = window.location.pathname.indexOf('/kitchen') === 0;
         var isInventory = window.location.pathname.indexOf('/inventory') === 0;
-        var manifest = isKitchen ? '/kitchen.webmanifest' : (isInventory ? '/inventory.webmanifest' : '/manifest.webmanifest');
+        var isStaff = window.location.pathname.indexOf('/staff') === 0;
+        var manifest = isKitchen ? '/kitchen.webmanifest' : (isInventory ? '/inventory.webmanifest' : (isStaff ? '/staff.webmanifest' : '/manifest.webmanifest'));
         document.write('<link rel="manifest" href="' + manifest + '" />');
         if (isKitchen) {
           document.title = 'מטבח - הבקתה';

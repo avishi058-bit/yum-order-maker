@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.get-payment-status]
 verify_jwt = false
+
+[functions.staff-portal]
+verify_jwt = false
+
+[functions.staff-calendar]
+verify_jwt = false
+
+[functions.staff-notify]
+verify_jwt = false
