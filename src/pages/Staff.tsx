@@ -32,6 +32,7 @@ const Staff = () => {
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [sending, setSending] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
     typeof Notification !== "undefined" && Notification.permission === "granted" ? "on" : "idle",
   );
@@ -88,8 +89,25 @@ const Staff = () => {
     setPicked(s);
   };
 
-  const submit = async () => {
+  // House rules for a week's availability: at least one weekend shift (Thursday
+  // or Saturday night) and at least 3 shifts - as far as the week has them.
+  const ruleNotes = useMemo(() => {
+    if (!nw) return [];
+    const dow = (ymd: string) => new Date(`${ymd}T12:00:00Z`).getUTCDay();
+    const isWeekend = (ymd: string) => dow(ymd) === 4 || dow(ymd) === 6;
+    const notes: string[] = [];
+    if (nw.days.some((d) => isWeekend(d.date)) && ![...current].some(isWeekend)) {
+      notes.push("יש להגיש משמרת סופ״ש לפחות - חמישי או מוצ״ש.");
+    }
+    const min = Math.min(3, nw.days.length);
+    if (current.size < min) notes.push(`יש להגיש לפחות ${min} משמרות. סימנת ${current.size}.`);
+    return notes;
+  }, [nw, current]);
+
+  const submit = async (force = false) => {
     if (!nw) return;
+    if (!force && ruleNotes.length > 0) { setRulesOpen(true); return; }
+    setRulesOpen(false);
     setSending(true);
     try {
       await submitStaffWeek(token, nw.week_start, [...current]);
@@ -243,7 +261,7 @@ const Staff = () => {
             {!nw.published && (
               <button
                 type="button"
-                onClick={submit}
+                onClick={() => submit()}
                 disabled={sending || (!!nw.submitted_at && !changed)}
                 className={`mt-3 w-full h-12 rounded-full font-black ${C.grad} disabled:opacity-50`}
               >
@@ -289,6 +307,21 @@ const Staff = () => {
           )}
         </section>
       </div>
+
+      {rulesOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-rules-title">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]">
+            <h2 id="staff-rules-title" className="text-lg font-black">רגע לפני ההגשה</h2>
+            {ruleNotes.map((n) => <p key={n} className="font-bold">{n}</p>)}
+            <button type="button" onClick={() => setRulesOpen(false)} className={`w-full h-12 rounded-full font-black ${C.grad}`}>
+              להוסיף משמרת
+            </button>
+            <button type="button" onClick={() => submit(true)} className={`w-full h-11 rounded-full border-2 ${C.line} font-bold text-sm`}>
+              הבנתי, להגיש בכל זאת
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
