@@ -1,19 +1,28 @@
-// Employee page: opened from a personal link (/staff/<token>) and installable to
-// the phone's home screen. Shows the next shift, next week's sign-up, the
-// published schedule, this month's hours and lateness, push reminders and a
-// calendar subscription.
+// Employee personal area: opened from a personal link (/staff/<token>) and
+// installable to the phone's home screen. Next shift, this month's shifts (done
+// ones ticked, upcoming ones open), next week's availability with one submit
+// button, reminders and calendar. Light, colourful look of its own.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Bell, CalendarPlus, Check, Clock, Loader2 } from "lucide-react";
-import logo from "@/assets/logo.webp";
+import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, dateIL, dayNameIL, fetchStaffMe, hoursText, setStaffRequest, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, dateIL, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 const readStoredToken = () => {
   try { return localStorage.getItem(STAFF_TOKEN_KEY) ?? ""; } catch { return ""; }
+};
+
+// Page palette (scoped to this page).
+const C = {
+  page: "bg-[#fff7f0] text-[#3a1d12]",
+  card: "bg-white rounded-3xl p-4 shadow-[0_6px_18px_rgba(232,80,47,0.12)]",
+  muted: "text-[#9a7565]",
+  accent: "text-[#e8502f]",
+  line: "border-[#ffe3d1]",
+  grad: "bg-gradient-to-l from-[#ff8a3d] to-[#e8502f] text-white",
 };
 
 const Staff = () => {
@@ -21,7 +30,8 @@ const Staff = () => {
   const token = urlToken ?? readStoredToken();
   const [data, setData] = useState<StaffMe | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busyDate, setBusyDate] = useState<string | null>(null);
+  const [picked, setPicked] = useState<Set<string> | null>(null);
+  const [sending, setSending] = useState(false);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
     typeof Notification !== "undefined" && Notification.permission === "granted" ? "on" : "idle",
   );
@@ -50,7 +60,6 @@ const Staff = () => {
     return () => { window.clearInterval(t); window.removeEventListener("focus", onFocus); };
   }, [load]);
 
-  // Re-register the push subscription quietly when permission is already granted.
   const pushKey = data?.push_key ?? null;
   useEffect(() => {
     if (token && pushKey && pushState === "on") subscribeStaffPush(token, pushKey).catch(() => {});
@@ -60,25 +69,37 @@ const Staff = () => {
   const nextState = useMemo(() => {
     if (!next) return null;
     const start = new Date(next.starts_at).getTime();
-    if (data?.open_since) return { tone: "ok", text: `במשמרת מאז ${timeIL(data.open_since)}` };
-    if (now > start + 5 * 60_000 && next.mine) return { tone: "late", text: "את/ה מאחר/ת - לחצו על השם שלכם במסך המטבח כשמגיעים" };
+    if (data?.open_since) return { late: false, text: `במשמרת מאז ${timeIL(data.open_since)}` };
+    if (now > start + 5 * 60_000 && next.mine) return { late: true, text: "את/ה מאחר/ת - כשמגיעים לוחצים על השם במסך של המסעדה" };
     const mins = Math.round((start - now) / 60_000);
-    if (mins <= 0) return { tone: "soon", text: "המשמרת מתחילה עכשיו" };
-    if (mins <= 90) return { tone: "soon", text: `מתחילה בעוד ${mins} דקות - זמן להתארגן` };
+    if (mins <= 0) return { late: false, text: "המשמרת מתחילה עכשיו" };
+    if (mins <= 90) return { late: false, text: `עוד ${mins} דקות - זמן להתארגן` };
     return null;
   }, [next, data?.open_since, now]);
 
-  const toggleDay = async (date: string, on: boolean) => {
-    if (!data) return;
-    setBusyDate(date);
-    setData({ ...data, next_week: { ...data.next_week, days: data.next_week.days.map((d) => d.date === date ? { ...d, requested: on } : d) } });
+  const nw = data?.next_week;
+  const saved = useMemo(() => new Set((nw?.days ?? []).filter((d) => d.requested).map((d) => d.date)), [nw]);
+  const current = picked ?? saved;
+  const changed = picked !== null && (picked.size !== saved.size || [...picked].some((d) => !saved.has(d)));
+
+  const toggle = (date: string) => {
+    const s = new Set(current);
+    if (s.has(date)) s.delete(date); else s.add(date);
+    setPicked(s);
+  };
+
+  const submit = async () => {
+    if (!nw) return;
+    setSending(true);
     try {
-      await setStaffRequest(token, date, on);
-    } catch (e) {
-      toast.error((e as Error).message === "week_published" ? "הסידור לשבוע הזה כבר פורסם" : "לא נשמר, נסו שוב");
+      await submitStaffWeek(token, nw.week_start, [...current]);
+      toast.success("המשמרות הוגשו לאבישי");
+      setPicked(null);
       await load();
+    } catch (e) {
+      toast.error((e as Error).message === "week_published" ? "הסידור לשבוע הזה כבר פורסם" : "לא נשלח, נסו שוב");
     } finally {
-      setBusyDate(null);
+      setSending(false);
     }
   };
 
@@ -95,166 +116,177 @@ const Staff = () => {
 
   if (error) {
     return (
-      <main dir="rtl" className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 text-center">
-        <div className="space-y-3">
-          <img src={logo} alt="הבקתה" className="w-20 h-20 mx-auto rounded-full" />
+      <main dir="rtl" className={`min-h-screen ${C.page} flex items-center justify-center p-6 text-center`}>
+        <div className="space-y-2">
           <h1 className="text-xl font-black">הקישור לא תקין</h1>
-          <p className="text-muted-foreground">בקשו מאבישי קישור אישי חדש לדף המשמרות.</p>
+          <p className={C.muted}>בקשו מאבישי קישור אישי חדש.</p>
         </div>
       </main>
     );
   }
-  if (!data) {
+  if (!data || !nw) {
     return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={32} />
+      <main className={`min-h-screen ${C.page} flex items-center justify-center`}>
+        <Loader2 className="animate-spin text-[#e8502f]" size={32} />
       </main>
     );
   }
 
   const webcal = data.calendar_url ? data.calendar_url.replace(/^https:/, "webcal:") : null;
   const googleCal = webcal ? `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}` : null;
-  const nw = data.next_week;
+  const done = data.month.entries;
+  const ahead = data.upcoming.filter((s) => s.mine || data.me.is_owner);
+  const monthName = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", month: "long" }).format(new Date());
 
   return (
-    <main dir="rtl" className="min-h-screen bg-background text-foreground pb-16">
-      <header className="flex items-center gap-3 px-4 pt-5 pb-3 max-w-lg mx-auto">
-        <img src={logo} alt="הבקתה" className="w-12 h-12 rounded-full" />
-        <div>
-          <h1 className="text-xl font-black">שלום, {data.me.name}</h1>
-          <p className="text-sm text-muted-foreground">משמרות הבקתה</p>
-        </div>
+    <main dir="rtl" className={`min-h-screen ${C.page} pb-12`}>
+      <header className={`${C.grad} rounded-b-[30px] px-5 pt-7 pb-8`}>
+        <h1 className="text-2xl font-black">שלום, {data.me.name.split(" ")[0]} 👋</h1>
+        <p className="text-sm opacity-90">האזור האישי שלך בבקתה</p>
       </header>
 
-      <div className="px-4 max-w-lg mx-auto space-y-4">
+      <div className="px-4 -mt-4 max-w-lg mx-auto space-y-3">
         {/* Next shift */}
-        <section className={`rounded-2xl p-5 border ${nextState?.tone === "late" ? "border-destructive bg-destructive/10" : "border-primary/40 bg-card"}`}>
-          <p className="text-sm text-muted-foreground mb-1">{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
+        <section className={`${C.card} ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
+          <p className={`text-xs ${C.muted}`}>{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
           {next ? (
             <>
-              <p className="text-2xl font-black">{dayNameIL(next.date)} {dateIL(next.date)}</p>
-              <p className="text-lg font-bold text-primary">{timeIL(next.starts_at)} - {timeIL(next.ends_at)}</p>
-              {data.me.is_owner && <p className="text-sm text-muted-foreground mt-1">{next.team.length ? next.team.join(", ") : "אתה (אין עובד משובץ)"}</p>}
-              {nextState && (
-                <p className={`mt-3 font-bold ${nextState.tone === "late" ? "text-destructive" : nextState.tone === "ok" ? "text-green-500" : "text-primary"}`}>
-                  {nextState.text}
-                </p>
-              )}
+              <p className={`text-2xl font-black ${C.accent}`}>{next.label} {dateIL(next.date)}</p>
+              <p className="font-bold">מתחילים ב-{timeIL(next.starts_at)}</p>
+              {data.me.is_owner && <p className={`text-sm ${C.muted}`}>{next.team.length ? next.team.join(", ") : "אתה (אין עובד משובץ)"}</p>}
+              {nextState && <p className={`mt-2 font-bold ${nextState.late ? "text-red-600" : "text-green-700"}`}>{nextState.text}</p>}
             </>
           ) : (
-            <p className="text-lg font-bold">אין משמרת בסידור שפורסם</p>
+            <p className="text-lg font-bold">עוד אין משמרת בסידור שפורסם</p>
           )}
         </section>
 
-        {/* Next week sign-up */}
+        {/* Month totals */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { v: hoursText(data.month.minutes), l: "שעות החודש" },
+            { v: String(done.length), l: "משמרות" },
+            { v: String(data.month.late_count), l: "איחורים" },
+          ].map((s) => (
+            <div key={s.l} className="bg-white rounded-3xl py-3 shadow-[0_6px_18px_rgba(232,80,47,0.12)]">
+              <p className={`text-xl font-black ${C.accent}`}>{s.v}</p>
+              <p className={`text-[11px] ${C.muted}`}>{s.l}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* This month: done (ticked) and still ahead */}
+        <section className={C.card}>
+          <h2 className="font-black mb-1">המשמרות שלי ב{monthName}</h2>
+          {done.length === 0 && ahead.length === 0 && <p className={`text-sm ${C.muted}`}>עוד אין משמרות החודש.</p>}
+          <ul>
+            {done.map((e) => (
+              <li key={e.clock_in} className={`flex items-center justify-between py-2 border-b last:border-0 ${C.line} text-sm`}>
+                <span className="flex items-center gap-2 font-bold">
+                  <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center"><Check size={13} strokeWidth={4} /></span>
+                  {e.label} {dateIL(e.clock_in)}
+                </span>
+                <span className={C.muted}>
+                  {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
+                  {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
+                </span>
+              </li>
+            ))}
+            {ahead.map((s) => (
+              <li key={s.date} className={`flex items-center justify-between py-2 border-b last:border-0 ${C.line} text-sm`}>
+                <span className="flex items-center gap-2 font-bold">
+                  <span className={`w-5 h-5 rounded-full border-2 ${C.line}`} />
+                  {s.label} {dateIL(s.date)}
+                </span>
+                <span className={C.muted}>
+                  מתחילים ב-{timeIL(s.starts_at)}
+                  {data.me.is_owner && ` · ${s.team.length ? s.team.join(", ") : "אתה"}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {data.me.is_owner && <a href="/admin/shifts" className={`mt-2 inline-block font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
+        </section>
+
+        {/* Next week availability */}
         {!data.me.is_owner && (
-          <section className="rounded-2xl p-5 bg-card border border-border">
-            <h2 className="text-lg font-black">השבוע הבא - מתי אתם יכולים לעבוד?</h2>
-            <p className="text-sm text-muted-foreground mb-3">
-              {nw.published ? "הסידור לשבוע הבא כבר פורסם." : "סמנו את הימים, עד שישי. אבישי בונה את הסידור ומפרסם."}
+          <section className={C.card}>
+            <h2 className="font-black">שבוע הבא - מתי אפשר?</h2>
+            <p className={`text-xs mb-3 ${C.muted}`}>
+              {nw.published ? "הסידור לשבוע הבא כבר פורסם."
+                : nw.submitted_at && !changed ? `הוגש ב-${dateIL(nw.submitted_at)} ${timeIL(nw.submitted_at)}. אפשר לשנות ולהגיש שוב עד שאבישי מפרסם.`
+                : "מסמנים ימים ולוחצים על הגשה. אבישי מאשר ושולח את הסידור."}
             </p>
-            <div className="space-y-2">
-              {nw.days.length === 0 && <p className="text-muted-foreground">אין ימי פתיחה בשבוע הבא.</p>}
-              {nw.days.map((d) => (
-                <button
-                  key={d.date}
-                  type="button"
-                  disabled={nw.published || busyDate === d.date}
-                  onClick={() => toggleDay(d.date, !d.requested)}
-                  className={`w-full flex items-center justify-between rounded-xl px-4 py-3 border-2 transition-colors disabled:opacity-60 ${d.requested ? "border-primary bg-primary/15" : "border-border bg-background"}`}
-                >
-                  <span className="font-bold">{dayNameIL(d.date)} {dateIL(d.date)}</span>
-                  <span className="flex items-center gap-2 text-sm">
-                    {timeIL(d.starts_at)} - {timeIL(d.ends_at)}
-                    <span className={`w-6 h-6 rounded-md flex items-center justify-center ${d.requested ? "bg-primary text-primary-foreground" : "border border-border"}`}>
-                      {d.requested && <Check size={16} />}
-                    </span>
-                  </span>
-                </button>
+            <div className="grid grid-cols-3 gap-2">
+              {nw.days.map((d) => {
+                const on = current.has(d.date);
+                return (
+                  <button
+                    key={d.date}
+                    type="button"
+                    disabled={nw.published || sending}
+                    onClick={() => toggle(d.date)}
+                    className={`rounded-2xl py-2 border-2 text-center font-bold text-sm transition-colors disabled:opacity-60 ${on ? "bg-[#e8502f] border-[#e8502f] text-white" : `bg-white ${C.line}`}`}
+                  >
+                    {d.label}
+                    <span className={`block text-[11px] font-medium ${on ? "text-white/85" : C.muted}`}>{dateIL(d.date)} · {timeIL(d.starts_at)}</span>
+                  </button>
+                );
+              })}
+              {nw.closed.map((d) => (
+                <div key={d.date} className="rounded-2xl py-2 border-2 border-dashed border-[#e5d5c8] text-center text-sm text-[#b9a394]">
+                  סגור
+                  <span className="block text-[11px]">{dateIL(d.date)} · {d.label}</span>
+                </div>
               ))}
             </div>
+            {!nw.published && (
+              <button
+                type="button"
+                onClick={submit}
+                disabled={sending || (!!nw.submitted_at && !changed)}
+                className={`mt-3 w-full h-12 rounded-full font-black ${C.grad} disabled:opacity-50`}
+              >
+                {sending ? "שולח..." : nw.submitted_at && !changed ? "הוגש ✓" : nw.submitted_at ? "הגשה מחדש לאבישי" : "הגשת משמרות לאבישי"}
+              </button>
+            )}
           </section>
         )}
 
-        {/* Published schedule */}
-        <section className="rounded-2xl p-5 bg-card border border-border">
-          <h2 className="text-lg font-black mb-3">{data.me.is_owner ? "הסידור" : "המשמרות שלי"}</h2>
-          {data.upcoming.length === 0 ? (
-            <p className="text-muted-foreground">עוד אין משמרות בסידור שפורסם.</p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {data.upcoming.map((s) => (
-                <li key={s.date} className="py-2 flex items-center justify-between">
-                  <span className="font-bold">{dayNameIL(s.date)} {dateIL(s.date)}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {timeIL(s.starts_at)} - {timeIL(s.ends_at)}
-                    {data.me.is_owner && ` · ${s.team.length ? s.team.join(", ") : "אתה"}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {data.me.is_owner && (
-            <a href="/admin/shifts" className="mt-3 inline-block text-primary font-bold underline underline-offset-4">לבניית הסידור ←</a>
-          )}
-        </section>
-
-        {/* This month */}
-        <section className="rounded-2xl p-5 bg-card border border-border">
-          <h2 className="text-lg font-black mb-3 flex items-center gap-2"><Clock size={18} /> החודש</h2>
-          <div className="grid grid-cols-3 gap-2 text-center mb-3">
-            <div className="rounded-xl bg-background py-3"><p className="text-2xl font-black">{hoursText(data.month.minutes)}</p><p className="text-xs text-muted-foreground">שעות</p></div>
-            <div className="rounded-xl bg-background py-3"><p className="text-2xl font-black">{data.month.entries.length}</p><p className="text-xs text-muted-foreground">משמרות</p></div>
-            <div className="rounded-xl bg-background py-3"><p className={`text-2xl font-black ${data.month.late_count ? "text-destructive" : ""}`}>{data.month.late_count}</p><p className="text-xs text-muted-foreground">איחורים</p></div>
-          </div>
-          {data.month.entries.length > 0 && (
-            <ul className="text-sm divide-y divide-border">
-              {data.month.entries.map((e) => (
-                <li key={e.clock_in} className="py-2 flex items-center justify-between gap-2">
-                  <span>{dayNameIL(e.clock_in)} {dateIL(e.clock_in)}</span>
-                  <span className="text-muted-foreground">
-                    {timeIL(e.clock_in)} - {e.clock_out ? timeIL(e.clock_out) : "עכשיו"} · {hoursText(e.minutes)}
-                    {e.late_minutes > 0 && <span className="text-destructive font-bold"> · איחור {e.late_minutes} ד׳</span>}
-                    {e.auto_closed && <span> · יציאה לא נרשמה</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
         {/* Reminders and calendar */}
-        <section className="rounded-2xl p-5 bg-card border border-border space-y-3">
-          <h2 className="text-lg font-black">תזכורות ויומן</h2>
+        <section className={`${C.card} space-y-3`}>
+          <h2 className="font-black">תזכורות ויומן</h2>
           {isIos() && !isStandalonePwa() && (
-            <p className="text-sm rounded-xl bg-primary/10 p-3">
-              באייפון: לחצו על כפתור השיתוף ובחרו "הוסף למסך הבית", ופתחו את הדף מהאייקון. רק כך אפשר לקבל התראות.
+            <p className="text-sm rounded-2xl bg-[#fff1e6] p-3">
+              באייפון: לוחצים על כפתור השיתוף, בוחרים "הוסף למסך הבית" ופותחים מהאייקון. רק כך מקבלים התראות.
             </p>
           )}
-          {!pushKey && <p className="text-sm text-muted-foreground">התראות ויומן יופעלו בקרוב.</p>}
-          {pushKey && <button
-            type="button"
-            onClick={enablePush}
-            disabled={pushState !== "idle"}
-            className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-70"
-          >
-            <Bell size={18} />
-            {pushState === "on" ? "התראות פעילות" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
-          </button>}
-          <p className="text-xs text-muted-foreground">
+          {pushKey && (
+            <button
+              type="button"
+              onClick={enablePush}
+              disabled={pushState !== "idle"}
+              className="w-full h-12 rounded-full bg-[#3a1d12] text-white font-bold flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              <Bell size={18} />
+              {pushState === "on" ? "התראות פעילות" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
+            </button>
+          )}
+          <p className={`text-xs ${C.muted}`}>
             {data.me.is_owner
               ? "תקבל התראה כשעובד מאחר יותר מ-5 דקות."
-              : "תזכורת בשישי לשלוח משמרות, שעה לפני כל משמרת, ואם לא נכנסתם 5 דקות אחרי ההתחלה."}
+              : "תזכורת בשישי להגיש משמרות, שעה לפני כל משמרת, ואם לא נכנסתם 5 דקות אחרי ההתחלה."}
           </p>
-          {webcal && googleCal && <><div className="grid grid-cols-2 gap-2">
-            <a href={googleCal} target="_blank" rel="noopener noreferrer" className="h-12 rounded-xl border-2 border-border font-bold flex items-center justify-center gap-2">
-              <CalendarPlus size={18} /> יומן גוגל
-            </a>
-            <a href={webcal} className="h-12 rounded-xl border-2 border-border font-bold flex items-center justify-center gap-2">
-              <CalendarPlus size={18} /> יומן אייפון
-            </a>
-          </div>
-          <p className="text-xs text-muted-foreground">מוסיפים פעם אחת, והמשמרות מתעדכנות ביומן לבד (בגוגל זה יכול לקחת כמה שעות).</p></>}
+          {webcal && googleCal && (
+            <div className="grid grid-cols-2 gap-2">
+              <a href={googleCal} target="_blank" rel="noopener noreferrer" className={`h-11 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2 text-sm`}>
+                <CalendarPlus size={16} /> יומן גוגל
+              </a>
+              <a href={webcal} className={`h-11 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2 text-sm`}>
+                <CalendarPlus size={16} /> יומן אייפון
+              </a>
+            </div>
+          )}
         </section>
       </div>
     </main>

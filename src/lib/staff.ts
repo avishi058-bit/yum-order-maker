@@ -10,15 +10,18 @@ export const staffDb = supabase as any;
 export const STAFF_TOKEN_KEY = "habikta_staff_token";
 const TZ = "Asia/Jerusalem";
 
-export interface StaffDay { date: string; starts_at: string; ends_at: string; requested: boolean }
-export interface StaffShift { date: string; starts_at: string; ends_at: string; mine: boolean; team: string[] }
-export interface StaffEntry { clock_in: string; clock_out: string | null; minutes: number; late_minutes: number; auto_closed: boolean }
+export interface StaffDay { date: string; label: string; starts_at: string; ends_at: string; requested: boolean }
+export interface StaffShift { date: string; label: string; starts_at: string; ends_at: string; mine: boolean; team: string[] }
+export interface StaffEntry { clock_in: string; clock_out: string | null; label: string; minutes: number; late_minutes: number; auto_closed: boolean }
 export interface StaffMe {
   me: { name: string; is_owner: boolean };
   /** Null until the staff worker (push + calendar) is set up. */
   calendar_url: string | null;
   push_key: string | null;
-  next_week: { week_start: string; published: boolean; days: StaffDay[] };
+  next_week: {
+    week_start: string; published: boolean; submitted_at: string | null;
+    closed: { date: string; label: string }[]; days: StaffDay[];
+  };
   upcoming: StaffShift[];
   month: { minutes: number; late_count: number; entries: StaffEntry[] };
   open_since: string | null;
@@ -33,8 +36,9 @@ const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
   return data as T;
 };
 export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
-export const setStaffRequest = (token: string, date: string, on: boolean) =>
-  rpc<void>("staff_portal_set_request", { p_token: token, p_date: date, p_on: on });
+/** Sends the whole week's availability in one go (replaces an earlier submission). */
+export const submitStaffWeek = (token: string, weekStart: string, dates: string[]) =>
+  rpc<void>("staff_portal_submit", { p_token: token, p_week_start: weekStart, p_dates: dates });
 
 const urlBase64ToUint8Array = (base64: string): Uint8Array => {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -72,8 +76,12 @@ export const subscribeStaffPush = async (token: string, pushKey: string): Promis
 // ─── Israel-time formatting ──────────────────────────────────────────
 const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("he-IL", { timeZone: TZ, ...opts });
 export const timeIL = (iso: string) => fmt({ hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
-export const dayNameIL = (ymdOrIso: string) =>
-  fmt({ weekday: "long" }).format(new Date(ymdOrIso.length === 10 ? `${ymdOrIso}T12:00:00Z` : ymdOrIso));
+const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "מוצ״ש"];
+/** Short day name; Saturday is always "מוצ״ש" (shifts start after Shabbat ends). */
+export const dayNameIL = (ymdOrIso: string) => {
+  const ymd = ymdOrIso.length === 10 ? ymdOrIso : new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(ymdOrIso));
+  return DAY_NAMES[new Date(`${ymd}T12:00:00Z`).getUTCDay()];
+};
 export const dateIL = (ymdOrIso: string) =>
   fmt({ day: "numeric", month: "numeric" }).format(new Date(ymdOrIso.length === 10 ? `${ymdOrIso}T12:00:00Z` : ymdOrIso));
 export const todayIL = () => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());

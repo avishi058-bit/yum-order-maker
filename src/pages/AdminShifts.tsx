@@ -1,6 +1,6 @@
 // Admin: build and publish the weekly shift schedule, manage staff and their
 // personal links, and see hours and lateness per month.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
@@ -11,6 +11,12 @@ import {
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
 interface Shift { id: string; shift_date: string; starts_at: string; ends_at: string }
 interface Entry { id: string; staff_id: string; clock_in: string; clock_out: string | null; auto_closed: boolean; staff_shifts: { starts_at: string } | null }
+
+// Light, warm look for the shifts pages (overrides the site's dark tokens here only).
+const LIGHT_THEME = {
+  "--background": "24 100% 97%", "--foreground": "16 53% 15%", "--card": "0 0% 100%", "--border": "24 100% 91%",
+  "--primary": "11 80% 55%", "--primary-foreground": "0 0% 100%", "--muted-foreground": "18 21% 50%",
+} as React.CSSProperties;
 
 const SITE = typeof window !== "undefined" ? window.location.origin : "https://habikta-burger.com";
 
@@ -32,6 +38,8 @@ const AdminShifts = () => {
   const [requests, setRequests] = useState<{ staff_id: string; shift_date: string }[]>([]);
   const [assign, setAssign] = useState<{ shift_id: string; staff_id: string }[]>([]);
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
+  const [submitted, setSubmitted] = useState<string[]>([]);
+  const [closedDays, setClosedDays] = useState<{ day: string; label: string | null }[]>([]);
   const [month, setMonth] = useState(() => todayIL().slice(0, 7));
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,12 +54,16 @@ const AdminShifts = () => {
     setLoading(true);
     await staffDb.rpc("staff_ensure_week", { p_week_start: weekStart });
     const end = addDaysYmd(weekStart, 6);
-    const [m, s, r, w] = await Promise.all([
+    const [m, s, r, w, sub, cl] = await Promise.all([
       staffDb.from("staff_members").select("id, display_name, is_owner, active, sort_order").order("sort_order").order("display_name"),
       staffDb.from("staff_shifts").select("id, shift_date, starts_at, ends_at").gte("shift_date", weekStart).lte("shift_date", end).order("shift_date"),
       staffDb.from("staff_shift_requests").select("staff_id, shift_date").gte("shift_date", weekStart).lte("shift_date", end),
       staffDb.from("staff_schedule_weeks").select("published_at, notified_at").eq("week_start", weekStart).maybeSingle(),
+      staffDb.from("staff_week_submissions").select("staff_id").eq("week_start", weekStart),
+      staffDb.from("staff_special_days").select("day, label").eq("closed", true).gte("day", weekStart).lte("day", end).order("day"),
     ]);
+    setSubmitted((sub.data ?? []).map((x: { staff_id: string }) => x.staff_id));
+    setClosedDays(cl.data ?? []);
     setMembers(m.data ?? []);
     setShifts(s.data ?? []);
     setRequests(r.data ?? []);
@@ -95,10 +107,16 @@ const AdminShifts = () => {
     if (error) toast.error("לא נשמר"); else { toast.success("השעות עודכנו"); loadWeek(); }
   };
 
+  const setDayClosed = async (day: string, closed: boolean) => {
+    if (closed && !window.confirm("לסגור את היום הזה? השיבוצים שלו יימחקו.")) return;
+    const { error } = await staffDb.rpc("staff_set_day_closed", { p_day: day, p_closed: closed });
+    if (error) toast.error("לא נשמר"); else loadWeek();
+  };
+
   const publish = async () => {
     const { error } = await staffDb.from("staff_schedule_weeks")
       .upsert({ week_start: weekStart, published_at: new Date().toISOString(), notified_at: null });
-    if (error) toast.error("לא פורסם"); else { toast.success("הסידור פורסם - העובדים יקבלו התראה"); loadWeek(); }
+    if (error) toast.error("לא פורסם"); else { toast.success("הסידור פורסם - כל עובד מקבל את המשמרות שלו"); loadWeek(); }
   };
 
   const addMember = async () => {
@@ -139,7 +157,7 @@ const AdminShifts = () => {
   const weekLabel = `${dateIL(weekStart)} - ${dateIL(addDaysYmd(weekStart, 6))}`;
 
   return (
-    <main dir="rtl" className="min-h-screen bg-background text-foreground pb-20">
+    <main dir="rtl" className="min-h-screen bg-background text-foreground pb-20" style={LIGHT_THEME}>
       <div className="max-w-3xl mx-auto px-4 pt-6 space-y-6">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-black">סידור עבודה</h1>
@@ -163,14 +181,30 @@ const AdminShifts = () => {
           <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
         ) : (
           <section className="space-y-3">
+            {workers.length > 0 && (
+              <p className="text-sm">
+                הגישו משמרות:{" "}
+                {workers.map((w, i) => (
+                  <span key={w.id} className={submitted.includes(w.id) ? "text-green-600 font-bold" : "text-muted-foreground"}>
+                    {i > 0 && " · "}{w.display_name} {submitted.includes(w.id) ? "✓" : "- עוד לא"}
+                  </span>
+                ))}
+              </p>
+            )}
             {shifts.length === 0 && <p className="text-muted-foreground">אין ימי פתיחה בשבוע הזה.</p>}
             {shifts.map((s) => {
               const assigned = workers.filter((w) => assign.some((a) => a.shift_id === s.id && a.staff_id === w.id));
               return (
                 <div key={s.id} className="rounded-2xl bg-card border border-border p-4 space-y-3">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <p className="font-black text-lg">{dayNameIL(s.shift_date)} {dateIL(s.shift_date)}</p>
-                    <ShiftTimes shift={s} onSave={saveTimes} />
+                    <p className="font-black text-lg">
+                      {dayNameIL(s.shift_date)} {dateIL(s.shift_date)}
+                      <span className="text-sm font-bold text-primary"> · מתחילים ב-{timeIL(s.starts_at)}</span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <ShiftTimes shift={s} onSave={saveTimes} />
+                      <button type="button" onClick={() => setDayClosed(s.shift_date, true)} className="text-xs underline text-muted-foreground">סגירת יום</button>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {workers.map((w) => {
@@ -192,6 +226,12 @@ const AdminShifts = () => {
                 </div>
               );
             })}
+            {closedDays.map((d) => (
+              <div key={d.day} className="rounded-2xl border border-dashed border-border p-4 flex items-center justify-between text-muted-foreground">
+                <span>{dayNameIL(d.day)} {dateIL(d.day)} · סגור{d.label ? ` - ${d.label}` : ""}</span>
+                <button type="button" onClick={() => setDayClosed(d.day, false)} className="text-sm underline">פתיחת היום</button>
+              </div>
+            ))}
             {shifts.length > 0 && (
               <button type="button" onClick={publish} className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-black text-lg flex items-center justify-center gap-2">
                 <Send size={18} /> {changed ? "פרסום מחדש (העובדים יקבלו עדכון)" : "פרסום הסידור לעובדים"}

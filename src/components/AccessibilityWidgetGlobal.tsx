@@ -14,6 +14,7 @@ const INTERNAL_ROUTE_PREFIXES = [
   "/events/admin",
   "/events/kitchen",
   "/login",
+  "/staff",     // employee shifts page (personal link)
 ];
 
 const isInternalRoute = (pathname: string) =>
