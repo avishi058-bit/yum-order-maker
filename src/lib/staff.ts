@@ -1,7 +1,7 @@
 // Staff shifts: employee page API (token-gated edge function), push sign-up,
 // and Israel-time formatting shared by the staff, admin and kitchen screens.
 import { supabase } from "@/integrations/supabase/client";
-import { VAPID_PUBLIC_KEY, ensureServiceWorker, isPushSupported, iosNeedsInstall } from "./push";
+import { isPushSupported, iosNeedsInstall } from "./push";
 
 /** Untyped client for the staff_* tables (not in the generated types file). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,23 +15,26 @@ export interface StaffShift { date: string; starts_at: string; ends_at: string; 
 export interface StaffEntry { clock_in: string; clock_out: string | null; minutes: number; late_minutes: number; auto_closed: boolean }
 export interface StaffMe {
   me: { name: string; is_owner: boolean };
-  calendar_url: string;
+  /** Null until the staff worker (push + calendar) is set up. */
+  calendar_url: string | null;
+  push_key: string | null;
   next_week: { week_start: string; published: boolean; days: StaffDay[] };
   upcoming: StaffShift[];
   month: { minutes: number; late_count: number; entries: StaffEntry[] };
   open_since: string | null;
 }
 
-export const callStaffPortal = async <T = unknown>(token: string, action: string, extra: Record<string, unknown> = {}) => {
-  const { data, error } = await supabase.functions.invoke("staff-portal", { body: { token, action, ...extra } });
-  if (error) {
-    // Supabase wraps non-2xx; read the JSON error code when there is one.
-    let code = "error";
-    try { code = (await (error as { context?: Response }).context?.json())?.error ?? code; } catch { /* ignore */ }
-    throw new Error(code);
-  }
+const KNOWN_ERRORS = ["invalid_link", "week_published", "week_closed", "no_shift", "invalid_subscription"];
+
+/** Token-gated database functions behind the employee page. */
+const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
+  const { data, error } = await staffDb.rpc(fn, args);
+  if (error) throw new Error(KNOWN_ERRORS.find((c) => String(error.message).includes(c)) ?? "error");
   return data as T;
 };
+export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
+export const setStaffRequest = (token: string, date: string, on: boolean) =>
+  rpc<void>("staff_portal_set_request", { p_token: token, p_date: date, p_on: on });
 
 const urlBase64ToUint8Array = (base64: string): Uint8Array => {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -39,19 +42,27 @@ const urlBase64ToUint8Array = (base64: string): Uint8Array => {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 };
 
-export const subscribeStaffPush = async (token: string): Promise<{ ok: boolean; reason?: string }> => {
+/**
+ * Staff reminders come from the staff worker, which signs with its own VAPID
+ * key. A separate service-worker registration (scope /staff/) keeps this
+ * subscription apart from the customer and kitchen push subscriptions.
+ */
+export const subscribeStaffPush = async (token: string, pushKey: string): Promise<{ ok: boolean; reason?: string }> => {
   if (iosNeedsInstall()) return { ok: false, reason: "ios_needs_install" };
   if (!isPushSupported()) return { ok: false, reason: "unsupported" };
-  const reg = await ensureServiceWorker();
-  if (!reg) return { ok: false, reason: "sw_failed" };
-  await navigator.serviceWorker.ready;
+  let reg: ServiceWorkerRegistration;
+  try {
+    reg = (await navigator.serviceWorker.getRegistration("/staff/")) ?? (await navigator.serviceWorker.register("/sw.js", { scope: "/staff/" }));
+  } catch {
+    return { ok: false, reason: "sw_failed" };
+  }
   const perm = await Notification.requestPermission();
   if (perm !== "granted") return { ok: false, reason: "denied" };
-  const sub = (await reg.pushManager.getSubscription()) ??
-    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource }));
-  const keys = sub.toJSON().keys ?? {};
   try {
-    await callStaffPortal(token, "push_subscribe", { endpoint: sub.endpoint, p256dh: keys.p256dh ?? "", auth: keys.auth ?? "" });
+    const sub = (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(pushKey) as BufferSource }));
+    const keys = sub.toJSON().keys ?? {};
+    await rpc<void>("staff_portal_push", { p_token: token, p_endpoint: sub.endpoint, p_p256dh: keys.p256dh ?? "", p_auth: keys.auth ?? "" });
     return { ok: true };
   } catch {
     return { ok: false, reason: "save_failed" };

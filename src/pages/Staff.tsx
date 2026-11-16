@@ -9,7 +9,7 @@ import { Bell, CalendarPlus, Check, Clock, Loader2 } from "lucide-react";
 import logo from "@/assets/logo.webp";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, callStaffPortal, dateIL, dayNameIL, hoursText, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, dateIL, dayNameIL, fetchStaffMe, hoursText, setStaffRequest, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 const readStoredToken = () => {
@@ -35,7 +35,7 @@ const Staff = () => {
   const load = useCallback(async () => {
     if (!token) { setError("invalid_link"); return; }
     try {
-      setData(await callStaffPortal<StaffMe>(token, "me"));
+      setData(await fetchStaffMe(token));
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -51,9 +51,10 @@ const Staff = () => {
   }, [load]);
 
   // Re-register the push subscription quietly when permission is already granted.
+  const pushKey = data?.push_key ?? null;
   useEffect(() => {
-    if (token && pushState === "on") subscribeStaffPush(token).catch(() => {});
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (token && pushKey && pushState === "on") subscribeStaffPush(token, pushKey).catch(() => {});
+  }, [token, pushKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const next = data?.upcoming.find((s) => s.mine || data.me.is_owner) ?? null;
   const nextState = useMemo(() => {
@@ -72,7 +73,7 @@ const Staff = () => {
     setBusyDate(date);
     setData({ ...data, next_week: { ...data.next_week, days: data.next_week.days.map((d) => d.date === date ? { ...d, requested: on } : d) } });
     try {
-      await callStaffPortal(token, "set_request", { date, on });
+      await setStaffRequest(token, date, on);
     } catch (e) {
       toast.error((e as Error).message === "week_published" ? "הסידור לשבוע הזה כבר פורסם" : "לא נשמר, נסו שוב");
       await load();
@@ -82,8 +83,9 @@ const Staff = () => {
   };
 
   const enablePush = async () => {
+    if (!pushKey) return;
     setPushState("busy");
-    const r = await subscribeStaffPush(token);
+    const r = await subscribeStaffPush(token, pushKey);
     if (r.ok) { setPushState("on"); toast.success("התראות הופעלו"); return; }
     setPushState("idle");
     if (r.reason === "ios_needs_install") toast.error("באייפון צריך קודם להוסיף את הדף למסך הבית (שיתוף ← הוסף למסך הבית) ולפתוח משם");
@@ -110,8 +112,8 @@ const Staff = () => {
     );
   }
 
-  const webcal = data.calendar_url.replace(/^https:/, "webcal:");
-  const googleCal = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`;
+  const webcal = data.calendar_url ? data.calendar_url.replace(/^https:/, "webcal:") : null;
+  const googleCal = webcal ? `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}` : null;
   const nw = data.next_week;
 
   return (
@@ -229,7 +231,8 @@ const Staff = () => {
               באייפון: לחצו על כפתור השיתוף ובחרו "הוסף למסך הבית", ופתחו את הדף מהאייקון. רק כך אפשר לקבל התראות.
             </p>
           )}
-          <button
+          {!pushKey && <p className="text-sm text-muted-foreground">התראות ויומן יופעלו בקרוב.</p>}
+          {pushKey && <button
             type="button"
             onClick={enablePush}
             disabled={pushState !== "idle"}
@@ -237,13 +240,13 @@ const Staff = () => {
           >
             <Bell size={18} />
             {pushState === "on" ? "התראות פעילות" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
-          </button>
+          </button>}
           <p className="text-xs text-muted-foreground">
             {data.me.is_owner
               ? "תקבל התראה כשעובד מאחר יותר מ-5 דקות."
               : "תזכורת בשישי לשלוח משמרות, שעה לפני כל משמרת, ואם לא נכנסתם 5 דקות אחרי ההתחלה."}
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          {webcal && googleCal && <><div className="grid grid-cols-2 gap-2">
             <a href={googleCal} target="_blank" rel="noopener noreferrer" className="h-12 rounded-xl border-2 border-border font-bold flex items-center justify-center gap-2">
               <CalendarPlus size={18} /> יומן גוגל
             </a>
@@ -251,7 +254,7 @@ const Staff = () => {
               <CalendarPlus size={18} /> יומן אייפון
             </a>
           </div>
-          <p className="text-xs text-muted-foreground">מוסיפים פעם אחת, והמשמרות מתעדכנות ביומן לבד (בגוגל זה יכול לקחת כמה שעות).</p>
+          <p className="text-xs text-muted-foreground">מוסיפים פעם אחת, והמשמרות מתעדכנות ביומן לבד (בגוגל זה יכול לקחת כמה שעות).</p></>}
         </section>
       </div>
     </main>
