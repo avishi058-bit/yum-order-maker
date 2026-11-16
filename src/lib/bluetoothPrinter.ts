@@ -373,6 +373,8 @@ async function ensureConnected(): Promise<BluetoothRemoteGATTCharacteristic> {
 // and auto-shrink to 244 → 180 on the first failure. Bigger chunks mean far
 // fewer BLE packets and round-trips → dramatically faster bons.
 let _worChunkSize = 244;
+// Upper bound learned from a failed write (only ever lowered).
+let _worChunkCap = 512;
 
 async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Array) {
   // Prefer write-without-response when the printer supports it - typically 3-5x
@@ -382,6 +384,7 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
 
   if (supportsWoR && (char as { writeValueWithoutResponse?: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse) {
     const writeWoR = (char as unknown as { writeValueWithoutResponse: (b: BufferSource) => Promise<void> }).writeValueWithoutResponse.bind(char);
+    _worChunkSize = Math.min(getPrintBigChunks() ? 512 : 244, _worChunkCap);
     let i = 0;
     while (i < data.length) {
       const end = Math.min(i + _worChunkSize, data.length);
@@ -392,7 +395,8 @@ async function writeBytes(char: BluetoothRemoteGATTCharacteristic, data: Uint8Ar
       } catch (e) {
         // MTU likely too big - shrink and retry this slice.
         if (_worChunkSize > 180) {
-          _worChunkSize = 180;
+          _worChunkSize = _worChunkSize > 244 ? 244 : 180;
+          _worChunkCap = _worChunkSize;
           continue;
         }
 
@@ -465,6 +469,28 @@ export function getPrintRotate180(): boolean {
 }
 export function setPrintRotate180(on: boolean) {
   try { localStorage.setItem(ROTATE_KEY, on ? "1" : "0"); } catch {}
+}
+
+// ---------- Test toggles (off by default) ----------
+// Both were tried before only together with the printer speed commands that
+// were later found to cause gibberish, so each is a separate opt-in toggle the
+// kitchen can test and turn off again.
+// Big chunks: send 512-byte BLE packets instead of 244 (fewer round-trips).
+const BIG_CHUNKS_KEY = "bt-printer-big-chunks";
+export function getPrintBigChunks(): boolean {
+  try { return localStorage.getItem(BIG_CHUNKS_KEY) === "1"; } catch { return false; }
+}
+export function setPrintBigChunks(on: boolean) {
+  try { localStorage.setItem(BIG_CHUNKS_KEY, on ? "1" : "0"); } catch {}
+}
+// Narrow images: send each image line only from its first inked column, using
+// the left margin (GS L) instead of the ESC $ position that was tried before.
+const NARROW_KEY = "bt-printer-narrow-raster";
+export function getPrintNarrowRaster(): boolean {
+  try { return localStorage.getItem(NARROW_KEY) === "1"; } catch { return false; }
+}
+export function setPrintNarrowRaster(on: boolean) {
+  try { localStorage.setItem(NARROW_KEY, on ? "1" : "0"); } catch {}
 }
 
 // ---------- Fast print mode (printer-side speed) ----------
@@ -1141,6 +1167,37 @@ function _combineMonos(monos: Mono[], paperWidth: number): Mono {
   return { bytes: out, widthBytes, height: totalH, offsetX: 0 };
 }
 
+// Sends only the inked byte-columns of a full-width line image: the blank
+// columns on the left are skipped with the left margin (GS L), the blank
+// columns on the right are dropped. The margin is reset to 0 afterwards so
+// native text and the next lines are unaffected.
+function _emitMarginRasterInto(buf: ByteBuf, mono: Mono) {
+  const { bytes, widthBytes, height } = mono;
+  let minB = widthBytes, maxB = -1;
+  for (let y = 0; y < height; y++) {
+    const off = y * widthBytes;
+    for (let b = 0; b < widthBytes; b++) {
+      if (bytes[off + b] !== 0) {
+        if (b < minB) minB = b;
+        if (b > maxB) maxB = b;
+      }
+    }
+  }
+  if (maxB < 0 || (minB === 0 && maxB === widthBytes - 1)) {
+    _emitRasterInto(buf, mono);
+    return;
+  }
+  const cw = maxB - minB + 1;
+  const out = new Uint8Array(cw * height);
+  for (let y = 0; y < height; y++) {
+    out.set(bytes.subarray(y * widthBytes + minB, y * widthBytes + maxB + 1), y * cw);
+  }
+  const marginDots = minB * 8;
+  buf.pushArr([GS, 0x4c, marginDots & 0xff, (marginDots >> 8) & 0xff]);
+  _emitRasterInto(buf, { ...mono, bytes: out, widthBytes: cw });
+  buf.pushArr([GS, 0x4c, 0x00, 0x00]);
+}
+
 function _emitRasterInto(buf: ByteBuf, mono: Mono) {
   const { bytes, widthBytes, height } = mono;
   const ROWS = 255;
@@ -1394,10 +1451,15 @@ export function buildOpsBytes(ops: FastOp[]): Uint8Array {
   // Always combine pending monos into one full-width raster - safest across
   // printer firmwares (some don't honor ESC $ before GS v 0 and print garbage).
   let pending: Mono[] = [];
+  const narrow = getPrintNarrowRaster();
   const flush = () => {
     if (pending.length === 0) return;
     buf.pushArr(_align("L"));
-    _emitRasterInto(buf, _combineMonos(pending, width));
+    if (narrow) {
+      for (const m of pending) _emitMarginRasterInto(buf, _combineMonos([m], width));
+    } else {
+      _emitRasterInto(buf, _combineMonos(pending, width));
+    }
     pending = [];
   };
 

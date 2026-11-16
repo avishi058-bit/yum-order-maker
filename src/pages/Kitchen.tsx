@@ -40,6 +40,10 @@ import {
   setPrintRotate180,
   getPrintFastMode,
   setPrintFastMode,
+  getPrintBigChunks,
+  setPrintBigChunks,
+  getPrintNarrowRaster,
+  setPrintNarrowRaster,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 import {
@@ -1619,6 +1623,22 @@ const Kitchen = () => {
     toast.success(next ? "הדפסה מהירה הופעלה" : "הדפסה מהירה כבויה");
   };
 
+  // Test toggles for faster bon transfer - off by default, see bluetoothPrinter.ts.
+  const [bigChunks, setBigChunksState] = useState<boolean>(() => getPrintBigChunks());
+  const [narrowRaster, setNarrowRasterState] = useState<boolean>(() => getPrintNarrowRaster());
+  const handleBigChunksToggle = () => {
+    const next = !bigChunks;
+    setPrintBigChunks(next);
+    setBigChunksState(next);
+    toast.success(next ? "חבילות גדולות הופעלו - הדפס בון לבדיקה" : "חבילות גדולות כבויות");
+  };
+  const handleNarrowRasterToggle = () => {
+    const next = !narrowRaster;
+    setPrintNarrowRaster(next);
+    setNarrowRasterState(next);
+    toast.success(next ? "שליחה חלקית הופעלה - הדפס בון לבדיקה" : "שליחה חלקית כבויה");
+  };
+
   const handleRotateToggle = () => {
     const next = !rotate180;
     setPrintRotate180(next);
@@ -2493,6 +2513,28 @@ const Kitchen = () => {
                     >
                       <span>⚡ הדפסה מהירה</span>
                       <span>{fastPrint ? "✓ פעיל" : "כבוי"}</span>
+                    </button>
+                    <button
+                      onClick={handleBigChunksToggle}
+                      className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                        bigChunks
+                          ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <span>🧪 חבילות גדולות</span>
+                      <span>{bigChunks ? "✓ פעיל" : "כבוי"}</span>
+                    </button>
+                    <button
+                      onClick={handleNarrowRasterToggle}
+                      className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                        narrowRaster
+                          ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <span>🧪 שליחה חלקית</span>
+                      <span>{narrowRaster ? "✓ פעיל" : "כבוי"}</span>
                     </button>
                   </>
                 )}
