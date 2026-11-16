@@ -39,6 +39,7 @@ const AdminShifts = () => {
   const [assign, setAssign] = useState<{ shift_id: string; staff_id: string }[]>([]);
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
+  const [appeals, setAppeals] = useState<{ id: string; staff_id: string; claimed_in: string; staff_time_entries: { clock_in: string } | null }[]>([]);
   const [closedDays, setClosedDays] = useState<{ day: string; label: string | null }[]>([]);
   const [month, setMonth] = useState(() => todayIL().slice(0, 7));
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -86,7 +87,20 @@ const AdminShifts = () => {
     setEntries((data ?? []).filter((e: Entry) => todayFromIso(e.clock_in).startsWith(month)));
   }, [month]);
 
+  const loadAppeals = useCallback(async () => {
+    const { data } = await staffDb.from("staff_entry_appeals")
+      .select("id, staff_id, claimed_in, staff_time_entries(clock_in)").eq("status", "pending").order("created_at");
+    setAppeals(data ?? []);
+  }, []);
+  const decideAppeal = async (id: string, approve: boolean) => {
+    const { error } = await staffDb.rpc("staff_decide_appeal", { p_appeal_id: id, p_approve: approve });
+    if (error) { toast.error("לא נשמר"); return; }
+    toast.success(approve ? "אושר - שעת הכניסה עודכנה" : "הערעור נדחה");
+    loadAppeals(); loadMonth();
+  };
+
   useEffect(() => { document.title = "סידור עבודה - הבקתה"; }, []);
+  useEffect(() => { loadAppeals(); }, [loadAppeals]);
   useEffect(() => { loadWeek(); }, [loadWeek]);
   useEffect(() => { loadMonth(); }, [loadMonth]);
 
@@ -163,6 +177,28 @@ const AdminShifts = () => {
           <h1 className="text-2xl font-black">סידור עבודה</h1>
           <Link to="/kitchen" className="text-sm text-primary underline">למסך המטבח</Link>
         </header>
+
+        {appeals.length > 0 && (
+          <section className="rounded-2xl bg-card border-2 border-primary p-4 space-y-3">
+            <h2 className="text-lg font-black">ערעורים על שעת כניסה</h2>
+            {appeals.map((a) => {
+              const who = members.find((m) => m.id === a.staff_id)?.display_name ?? "";
+              const rec = a.staff_time_entries?.clock_in;
+              return (
+                <div key={a.id} className="flex items-center justify-between gap-2 flex-wrap border-t border-border pt-3">
+                  <p className="text-sm">
+                    <b>{who}</b>{rec ? ` · ${dayNameIL(rec)} ${dateIL(rec)}` : ""}
+                    <br />נרשם {rec ? timeIL(rec) : "-"} · מבקש/ת לתקן ל-<b>{timeIL(a.claimed_in)}</b>
+                  </p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => decideAppeal(a.id, true)} className="px-4 py-2 rounded-full bg-green-600 text-white font-bold text-sm">אישור</button>
+                    <button type="button" onClick={() => decideAppeal(a.id, false)} className="px-4 py-2 rounded-full border border-border font-bold text-sm">דחייה</button>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
 
         {/* Week picker */}
         <div className="flex items-center justify-between rounded-2xl bg-card border border-border p-3">

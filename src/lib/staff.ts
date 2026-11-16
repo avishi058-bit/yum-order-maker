@@ -12,7 +12,8 @@ const TZ = "Asia/Jerusalem";
 
 export interface StaffDay { date: string; label: string; starts_at: string; ends_at: string; requested: boolean }
 export interface StaffShift { date: string; label: string; starts_at: string; ends_at: string; mine: boolean; team: string[] }
-export interface StaffEntry { clock_in: string; clock_out: string | null; label: string; minutes: number; late_minutes: number; auto_closed: boolean }
+export interface StaffAppeal { status: "pending" | "approved" | "rejected"; claimed_in: string }
+export interface StaffEntry { id: string; appeal: StaffAppeal | null; clock_in: string; clock_out: string | null; label: string; minutes: number; late_minutes: number; auto_closed: boolean }
 export interface StaffMe {
   me: { name: string; is_owner: boolean };
   /** Null until the staff worker (push + calendar) is set up. */
@@ -27,7 +28,7 @@ export interface StaffMe {
   open_since: string | null;
 }
 
-const KNOWN_ERRORS = ["invalid_link", "week_published", "week_closed", "no_shift", "invalid_subscription"];
+const KNOWN_ERRORS = ["invalid_link", "week_published", "week_closed", "no_shift", "invalid_subscription", "invalid_time", "appeal_pending"];
 
 /** Token-gated database functions behind the employee page. */
 const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
@@ -36,6 +37,10 @@ const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
   return data as T;
 };
 export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
+/** Asks the admin to correct a shift's arrival time ("HH:MM", Israel time). */
+export const appealStaffEntry = (token: string, entryId: string, time: string) =>
+  rpc<void>("staff_portal_appeal", { p_token: token, p_entry_id: entryId, p_time: time });
+
 /** Sends the whole week's availability in one go (replaces an earlier submission). */
 export const submitStaffWeek = (token: string, weekStart: string, dates: string[]) =>
   rpc<void>("staff_portal_submit", { p_token: token, p_week_start: weekStart, p_dates: dates });

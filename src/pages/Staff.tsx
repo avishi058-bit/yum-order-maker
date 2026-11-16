@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, dateIL, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, appealStaffEntry, dateIL, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -45,6 +45,7 @@ const Staff = () => {
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [sending, setSending] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
     typeof Notification !== "undefined" && Notification.permission === "granted" ? "on" : "idle",
   );
@@ -133,6 +134,22 @@ const Staff = () => {
     }
   };
 
+  const sendAppeal = async () => {
+    if (!appeal) return;
+    setSending(true);
+    try {
+      await appealStaffEntry(token, appeal.id, appeal.time);
+      toast.success("הערעור נשלח לאבישי");
+      setAppeal(null);
+      await load();
+    } catch (e) {
+      const code = (e as Error).message;
+      toast.error(code === "invalid_time" ? "השעה צריכה להיות לפני שעת הכניסה שנרשמה" : code === "appeal_pending" ? "כבר יש ערעור שממתין לאישור" : "לא נשלח, נסו שוב");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const enablePush = async () => {
     if (!pushKey) return;
     setPushState("busy");
@@ -210,15 +227,27 @@ const Staff = () => {
           {done.length === 0 && ahead.length === 0 && <p className={`text-sm ${C.muted}`}>עוד אין משמרות החודש.</p>}
           <ul>
             {done.map((e) => (
-              <li key={e.clock_in} className={`flex items-center justify-between py-2 border-b last:border-0 ${C.line} text-sm`}>
-                <span className="flex items-center gap-2 font-bold">
-                  <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center"><Check size={13} strokeWidth={4} /></span>
-                  {e.label} {dateIL(e.clock_in)}
-                </span>
-                <span className={C.muted}>
-                  {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
-                  {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
-                </span>
+              <li key={e.clock_in} className={`py-2 border-b last:border-0 ${C.line} text-sm`}>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 font-bold">
+                    <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center"><Check size={13} strokeWidth={4} /></span>
+                    {e.label} {dateIL(e.clock_in)}
+                  </span>
+                  <span className={C.muted}>
+                    {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
+                    {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
+                  </span>
+                </div>
+                <div className={`flex justify-end text-[11px] ${C.muted}`}>
+                  {e.appeal?.status === "pending" ? (
+                    <span>ערעור ל-{timeIL(e.appeal.claimed_in)} ממתין לאישור</span>
+                  ) : (
+                    <button type="button" onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: "19:00" })} className="underline">
+                      {e.appeal?.status === "approved" ? "הערעור אושר · " : e.appeal?.status === "rejected" ? "הערעור לא אושר · " : ""}
+                      נכנסתי מאוחר בטעות? ערעור
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
             {ahead.map((s) => (
@@ -325,6 +354,31 @@ const Staff = () => {
           )}
         </section>
       </div>
+
+      {appeal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-appeal-title">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]">
+            <h2 id="staff-appeal-title" className="text-lg font-black">ערעור על שעת כניסה</h2>
+            <p className="text-sm">
+              ב-{dateIL(appeal.clockIn)} נרשמה כניסה ב-{timeIL(appeal.clockIn)}. באיזו שעה הגעת באמת?
+            </p>
+            <input
+              type="time"
+              value={appeal.time}
+              onChange={(ev) => setAppeal({ ...appeal, time: ev.target.value })}
+              aria-label="שעת ההגעה האמיתית"
+              className={`w-full h-12 rounded-2xl border-2 ${C.line} px-3 text-lg font-bold text-center bg-white`}
+            />
+            <p className={`text-xs ${C.muted}`}>השעה תתעדכן רק אחרי אישור של אבישי.</p>
+            <button type="button" onClick={sendAppeal} disabled={sending || !appeal.time} className={`w-full h-12 rounded-full font-black ${C.grad} disabled:opacity-50`}>
+              {sending ? "שולח..." : "שליחת הערעור לאבישי"}
+            </button>
+            <button type="button" onClick={() => setAppeal(null)} className={`w-full h-11 rounded-full border-2 ${C.line} font-bold text-sm`}>
+              ביטול
+            </button>
+          </div>
+        </div>
+      )}
 
       {rulesOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-rules-title">
