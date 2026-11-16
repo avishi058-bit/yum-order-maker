@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, addStaffMeal, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -45,6 +45,7 @@ const Staff = () => {
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [sending, setSending] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [stockCat, setStockCat] = useState<string>("שתייה");
   const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
     typeof Notification !== "undefined" && Notification.permission === "granted" ? "on" : "idle",
@@ -147,6 +148,15 @@ const Staff = () => {
       toast.error(code === "invalid_time" ? "השעה צריכה להיות לפני שעת הכניסה שנרשמה" : code === "appeal_pending" ? "כבר יש ערעור שממתין לאישור" : "לא נשלח, נסו שוב");
     } finally {
       setSending(false);
+    }
+  };
+
+  const markStock = async (id: string, current: "out" | "low" | null, level: "out" | "low") => {
+    try {
+      await setStaffStock(token, id, current === level ? null : level);
+      await load();
+    } catch {
+      toast.error("לא נשמר, נסו שוב");
     }
   };
 
@@ -365,6 +375,43 @@ const Staff = () => {
                 ))}
               </ul>
             )}
+          </section>
+        )}
+
+        {/* Stock shortages */}
+        {data.stock && (
+          <section className={C.card}>
+            <h2 className="font-black">חוסרים במלאי</h2>
+            <p className={`text-xs mb-3 ${C.muted}`}>נגמר משהו או נשאר קצת? מסמנים כאן ואבישי מקבל עדכון. לחיצה נוספת מבטלת.</p>
+            <div className="flex gap-1.5 overflow-x-auto pb-2">
+              {STOCK_CATEGORIES.map((c) => {
+                const n = data.stock.filter((i) => i.category === c && i.level).length;
+                return (
+                  <button key={c} type="button" onClick={() => setStockCat(c)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold border-2 ${stockCat === c ? "bg-[#3a1d12] border-[#3a1d12] text-white" : `bg-white ${C.line}`}`}>
+                    {c}{n > 0 ? ` (${n})` : ""}
+                  </button>
+                );
+              })}
+            </div>
+            <ul>
+              {data.stock.filter((i) => i.category === stockCat).length === 0 && <li className={`text-sm ${C.muted}`}>עוד אין מוצרים בקטגוריה הזו.</li>}
+              {data.stock.filter((i) => i.category === stockCat).map((i) => (
+                <li key={i.id} className={`flex items-center justify-between gap-2 py-1.5 border-b last:border-0 ${C.line} text-sm`}>
+                  <span className="font-bold">{i.name}</span>
+                  <span className="flex gap-1.5 shrink-0">
+                    <button type="button" onClick={() => markStock(i.id, i.level, "low")}
+                      className={`rounded-full px-3 py-1 text-xs font-bold border-2 ${i.level === "low" ? "bg-[#f4b400] border-[#f4b400] text-[#3a1d12]" : `bg-white ${C.line}`}`}>
+                      נשאר קצת
+                    </button>
+                    <button type="button" onClick={() => markStock(i.id, i.level, "out")}
+                      className={`rounded-full px-3 py-1 text-xs font-bold border-2 ${i.level === "out" ? "bg-red-600 border-red-600 text-white" : `bg-white ${C.line}`}`}>
+                      נגמר
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

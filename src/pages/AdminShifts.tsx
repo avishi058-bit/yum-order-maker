@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
-  addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
+  STOCK_CATEGORIES, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
 } from "@/lib/staff";
 
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
@@ -39,6 +39,9 @@ const AdminShifts = () => {
   const [assign, setAssign] = useState<{ shift_id: string; staff_id: string }[]>([]);
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
+  const [stock, setStock] = useState<{ id: string; name: string; category: string; active: boolean }[]>([]);
+  const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: string; staff_id: string | null; created_at: string }[]>([]);
+  const [newStock, setNewStock] = useState({ name: "", category: "טייק אווי" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
   const [appeals, setAppeals] = useState<{ id: string; staff_id: string; claimed_in: string; staff_time_entries: { clock_in: string } | null }[]>([]);
   const [closedDays, setClosedDays] = useState<{ day: string; label: string | null }[]>([]);
@@ -97,6 +100,30 @@ const AdminShifts = () => {
       .select("id, staff_id, claimed_in, staff_time_entries(clock_in)").eq("status", "pending").order("created_at");
     setAppeals(data ?? []);
   }, []);
+  const loadStock = useCallback(async () => {
+    const [it, rp] = await Promise.all([
+      staffDb.from("staff_stock_items").select("id, name, category, active").eq("active", true).order("category").order("sort_order").order("name"),
+      staffDb.from("staff_stock_reports").select("id, item_id, level, staff_id, created_at").is("resolved_at", null).order("created_at"),
+    ]);
+    setStock(it.data ?? []);
+    setStockOpen(rp.data ?? []);
+  }, []);
+  const resolveStock = async (id: string) => {
+    await staffDb.from("staff_stock_reports").update({ resolved_at: new Date().toISOString() }).eq("id", id);
+    loadStock();
+  };
+  const addStockItem = async () => {
+    const name = newStock.name.trim();
+    if (!name) return;
+    const { error } = await staffDb.from("staff_stock_items").insert({ name, category: newStock.category, sort_order: 500 });
+    if (error) toast.error("לא נשמר (אולי המוצר כבר קיים)"); else { setNewStock({ ...newStock, name: "" }); loadStock(); }
+  };
+  const removeStockItem = async (id: string, name: string) => {
+    if (!window.confirm(`להסיר את "${name}" מהרשימה?`)) return;
+    await staffDb.from("staff_stock_items").update({ active: false }).eq("id", id);
+    loadStock();
+  };
+
   const decideAppeal = async (id: string, approve: boolean) => {
     const { error } = await staffDb.rpc("staff_decide_appeal", { p_appeal_id: id, p_approve: approve });
     if (error) { toast.error("לא נשמר"); return; }
@@ -106,6 +133,7 @@ const AdminShifts = () => {
 
   useEffect(() => { document.title = "סידור עבודה - הבקתה"; }, []);
   useEffect(() => { loadAppeals(); }, [loadAppeals]);
+  useEffect(() => { loadStock(); }, [loadStock]);
   useEffect(() => { loadWeek(); }, [loadWeek]);
   useEffect(() => { loadMonth(); }, [loadMonth]);
 
@@ -324,6 +352,50 @@ const AdminShifts = () => {
               </div>
             );
           })}
+        </section>
+
+        {/* Stock shortages */}
+        <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <h2 className="text-lg font-black">חוסרים במלאי</h2>
+          {stockOpen.length === 0 ? (
+            <p className="text-sm text-muted-foreground">אין דיווחים פתוחים.</p>
+          ) : stockOpen.map((r) => {
+            const item = stock.find((i) => i.id === r.item_id);
+            const who = members.find((m) => m.id === r.staff_id)?.display_name;
+            return (
+              <div key={r.id} className="flex items-center justify-between gap-2 border-t border-border pt-2">
+                <p className="text-sm">
+                  <b className={r.level === "out" ? "text-destructive" : "text-primary"}>{r.level === "out" ? "נגמר" : "נשאר קצת"}</b> · <b>{item?.name ?? "מוצר"}</b>
+                  <span className="text-muted-foreground"> · {item?.category} · {who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
+                </p>
+                <button type="button" onClick={() => resolveStock(r.id)} className="px-3 py-1.5 rounded-full bg-green-600 text-white font-bold text-sm shrink-0">טופל</button>
+              </div>
+            );
+          })}
+          <details className="border-t border-border pt-2">
+            <summary className="font-bold cursor-pointer">רשימת המוצרים ({stock.length})</summary>
+            {STOCK_CATEGORIES.map((c) => (
+              <div key={c} className="pt-2">
+                <p className="text-sm font-black">{c}</p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {stock.filter((i) => i.category === c).map((i) => (
+                    <button key={i.id} type="button" onClick={() => removeStockItem(i.id, i.name)} title="הסרה מהרשימה"
+                      className="text-xs rounded-full border border-border px-2 py-1">{i.name} ✕</button>
+                  ))}
+                  {stock.filter((i) => i.category === c).length === 0 && <span className="text-xs text-muted-foreground">אין מוצרים</span>}
+                </div>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-3 flex-wrap">
+              <select value={newStock.category} onChange={(e) => setNewStock({ ...newStock, category: e.target.value })}
+                className="bg-background border border-border rounded-lg px-2 py-2" aria-label="קטגוריה">
+                {STOCK_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              </select>
+              <input value={newStock.name} onChange={(e) => setNewStock({ ...newStock, name: e.target.value })} placeholder="שם מוצר חדש"
+                className="flex-1 min-w-32 bg-background border border-border rounded-lg px-3 py-2" />
+              <button type="button" onClick={addStockItem} className="px-4 rounded-lg bg-primary text-primary-foreground font-bold">הוספה</button>
+            </div>
+          </details>
         </section>
 
         {/* Staff and links */}

@@ -26,6 +26,7 @@ export interface StaffMe {
   upcoming: StaffShift[];
   month: { minutes: number; late_count: number; entries: StaffEntry[] };
   open_since: string | null;
+  stock: { id: string; name: string; category: string; level: "out" | "low" | null }[];
   meals: {
     items: { id: string; name: string; price: number }[];
     month_total: number;
@@ -42,6 +43,11 @@ const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
   return data as T;
 };
 export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
+export const STOCK_CATEGORIES = ["טייק אווי", "ירקות", "שתייה", "קפואים", "לחמניות"] as const;
+/** Marks a product as ran out / running low, or clears the report (null). */
+export const setStaffStock = (token: string, itemId: string, level: "out" | "low" | null) =>
+  rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level });
+
 /** Staff meals: report an item taken, or take back a recent report. */
 export const addStaffMeal = (token: string, itemId: string) => rpc<void>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });
 export const removeStaffMeal = (token: string, logId: string) => rpc<void>("staff_portal_meal_remove", { p_token: token, p_log_id: logId });
