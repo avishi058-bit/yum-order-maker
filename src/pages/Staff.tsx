@@ -162,15 +162,19 @@ const Staff = () => {
 
   const addMeal = async (item: { id: string; name: string; price: number }) => {
     try {
-      await addStaffMeal(token, item.id);
-      toast.success(`נרשם: ${item.name} - ${item.price} ₪`);
+      const logId = await addStaffMeal(token, item.id);
+      // Taking a report back is possible only for a few seconds, from this toast.
+      toast.success(`נרשם: ${item.name} - ${item.price} ₪`, {
+        duration: 8000,
+        action: logId ? { label: "ביטול", onClick: () => removeMeal(logId) } : undefined,
+      });
       await load();
     } catch {
       toast.error("לא נרשם, נסו שוב");
     }
   };
   const removeMeal = async (id: string) => {
-    try { await removeStaffMeal(token, id); await load(); } catch { toast.error("אי אפשר לבטל את הדיווח הזה"); }
+    try { await removeStaffMeal(token, id); toast.success("הדיווח בוטל"); await load(); } catch { toast.error("כבר אי אפשר לבטל את הדיווח הזה"); }
   };
 
   const enablePush = async () => {
@@ -251,26 +255,34 @@ const Staff = () => {
           <ul>
             {done.map((e) => (
               <li key={e.clock_in} className={`py-2 border-b last:border-0 ${C.line} text-sm`}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2 font-bold">
                     <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center"><Check size={13} strokeWidth={4} /></span>
                     {e.label} {dateIL(e.clock_in)}
                   </span>
-                  <span className={C.muted}>
-                    {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
-                    {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
+                  <span className={`flex items-center gap-1 ${C.muted}`}>
+                    <span>
+                      {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
+                      {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
+                    </span>
+                    {e.appeal?.status !== "pending" && (
+                      <button
+                        type="button"
+                        aria-label="אפשרויות למשמרת - ערעור על שעת הכניסה"
+                        onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: "19:00" })}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-lg font-black leading-none"
+                      >
+                        ⋯
+                      </button>
+                    )}
                   </span>
                 </div>
-                <div className={`flex justify-end text-[11px] ${C.muted}`}>
-                  {e.appeal?.status === "pending" ? (
-                    <span>ערעור ל-{timeIL(e.appeal.claimed_in)} ממתין לאישור</span>
-                  ) : (
-                    <button type="button" onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: "19:00" })} className="underline">
-                      {e.appeal?.status === "approved" ? "הערעור אושר · " : e.appeal?.status === "rejected" ? "הערעור לא אושר · " : ""}
-                      נכנסתי מאוחר בטעות? ערעור
-                    </button>
-                  )}
-                </div>
+                {e.appeal && (
+                  <p className={`text-[11px] text-left ${e.appeal.status === "approved" ? "text-green-700" : e.appeal.status === "rejected" ? "text-red-600" : C.muted}`}>
+                    {e.appeal.status === "pending" ? `ערעור ל-${timeIL(e.appeal.claimed_in)} ממתין לאישור`
+                      : e.appeal.status === "approved" ? "הערעור התקבל - השעה עודכנה" : "הערעור נדחה"}
+                  </p>
+                )}
               </li>
             ))}
             {ahead.map((s) => (
@@ -352,7 +364,7 @@ const Staff = () => {
               <h2 className="font-black">ארוחות ושתייה שלקחתי</h2>
               <span className={`text-sm font-black ${C.accent}`}>החודש: {data.meals.month_total} ₪</span>
             </div>
-            <p className={`text-xs mb-3 ${C.muted}`}>לוחצים על מה שלקחתם, וזה נרשם במחיר עובד.</p>
+            <p className={`text-xs mb-3 ${C.muted}`}>לוחצים על מה שלקחתם, וזה נרשם במחיר עובד. ביטול אפשרי רק בשניות הראשונות.</p>
             <div className="grid grid-cols-3 gap-2">
               {data.meals.items.map((i) => (
                 <button key={i.id} type="button" onClick={() => addMeal(i)}
@@ -367,10 +379,7 @@ const Staff = () => {
                 {data.meals.logs.map((l) => (
                   <li key={l.id} className={`flex items-center justify-between py-1.5 border-b last:border-0 ${C.line} text-sm`}>
                     <span>{l.name} <span className={C.muted}>· {dateIL(l.at)}</span></span>
-                    <span className="flex items-center gap-2">
-                      <b>{l.price} ₪</b>
-                      {l.can_remove && <button type="button" onClick={() => removeMeal(l.id)} className={`text-[11px] underline ${C.muted}`}>ביטול</button>}
-                    </span>
+                    <b>{l.price} ₪</b>
                   </li>
                 ))}
               </ul>
@@ -451,9 +460,9 @@ const Staff = () => {
       {appeal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-appeal-title">
           <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]">
-            <h2 id="staff-appeal-title" className="text-lg font-black">ערעור על שעת כניסה</h2>
+            <h2 id="staff-appeal-title" className="text-lg font-black">נכנסת מאוחר בטעות?</h2>
             <p className="text-sm">
-              ב-{dateIL(appeal.clockIn)} נרשמה כניסה ב-{timeIL(appeal.clockIn)}. באיזו שעה הגעת באמת?
+              ב-{dateIL(appeal.clockIn)} נרשמה כניסה ב-{timeIL(appeal.clockIn)}. אפשר להגיש ערעור: באיזו שעה הגעת באמת?
             </p>
             <input
               type="time"

@@ -49,7 +49,7 @@ export const setStaffStock = (token: string, itemId: string, level: "out" | "low
   rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level });
 
 /** Staff meals: report an item taken, or take back a recent report. */
-export const addStaffMeal = (token: string, itemId: string) => rpc<void>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });
+export const addStaffMeal = (token: string, itemId: string) => rpc<string | null>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });
 export const removeStaffMeal = (token: string, logId: string) => rpc<void>("staff_portal_meal_remove", { p_token: token, p_log_id: logId });
 
 /** Asks the admin to correct a shift's arrival time ("HH:MM", Israel time). */
