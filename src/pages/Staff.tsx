@@ -11,6 +11,18 @@ import {
   STAFF_TOKEN_KEY, dateIL, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
+/** One-tap "add this shift" link for Google Calendar (with a reminder an hour before). */
+const googleEventUrl = (startsAt: string, endsAt: string) => {
+  const t = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const q = new URLSearchParams({
+    action: "TEMPLATE",
+    text: "משמרת בבקתה",
+    dates: `${t(startsAt)}/${t(endsAt)}`,
+    location: "הבקתה, דרך ערבי נחל 21, תושיה",
+  });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+};
+
 const readStoredToken = () => {
   try { return localStorage.getItem(STAFF_TOKEN_KEY) ?? ""; } catch { return ""; }
 };
@@ -151,7 +163,6 @@ const Staff = () => {
   }
 
   const webcal = data.calendar_url ? data.calendar_url.replace(/^https:/, "webcal:") : null;
-  const googleCal = webcal ? `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}` : null;
   const done = data.month.entries;
   const ahead = data.upcoming.filter((s) => s.mine || data.me.is_owner);
   const monthName = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", month: "long" }).format(new Date());
@@ -216,9 +227,20 @@ const Staff = () => {
                   <span className={`w-5 h-5 rounded-full border-2 ${C.line}`} />
                   {s.label} {dateIL(s.date)}
                 </span>
-                <span className={C.muted}>
-                  מתחילים ב-{timeIL(s.starts_at)}
-                  {data.me.is_owner && ` · ${s.team.length ? s.team.join(", ") : "אתה"}`}
+                <span className={`flex items-center gap-2 ${C.muted}`}>
+                  <span>
+                    מתחילים ב-{timeIL(s.starts_at)}
+                    {data.me.is_owner && ` · ${s.team.length ? s.team.join(", ") : "אתה"}`}
+                  </span>
+                  {/* Only published shifts reach this list, so the button appears after publishing. */}
+                  <a
+                    href={googleEventUrl(s.starts_at, s.ends_at)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`shrink-0 rounded-full border-2 ${C.line} px-2 py-1 text-[11px] font-bold ${C.accent} flex items-center gap-1`}
+                  >
+                    <CalendarPlus size={12} /> ליומן
+                  </a>
                 </span>
               </li>
             ))}
@@ -295,15 +317,11 @@ const Staff = () => {
               ? "תקבל התראה כשעובד מאחר יותר מ-5 דקות."
               : "תזכורת בשישי להגיש משמרות, שעה לפני כל משמרת, ואם לא נכנסתם 5 דקות אחרי ההתחלה."}
           </p>
-          {webcal && googleCal && (
-            <div className="grid grid-cols-2 gap-2">
-              <a href={googleCal} target="_blank" rel="noopener noreferrer" className={`h-11 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2 text-sm`}>
-                <CalendarPlus size={16} /> יומן גוגל
-              </a>
-              <a href={webcal} className={`h-11 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2 text-sm`}>
-                <CalendarPlus size={16} /> יומן אייפון
-              </a>
-            </div>
+          <p className={`text-xs ${C.muted}`}>יומן גוגל: אחרי שהסידור מתפרסם, לוחצים "ליומן" ליד כל משמרת ושומרים.</p>
+          {webcal && isIos() && (
+            <a href={webcal} className={`h-11 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2 text-sm`}>
+              <CalendarPlus size={16} /> יומן אייפון - מתעדכן לבד
+            </a>
           )}
         </section>
       </div>
