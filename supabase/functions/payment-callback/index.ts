@@ -9,6 +9,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { fetchSessionStatus, amountMatches } from "../_shared/zcreditSession.ts";
+import { findDocumentNumber } from "../_shared/zcreditDocs.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,6 +128,9 @@ Deno.serve(async (req) => {
     }
 
     let newStatus = isSuccess ? "new" : "payment_failed";
+    // Number of the invoice Z-Credit issued automatically with the charge
+    // (CreateInvoice), kept so the kitchen can print it later.
+    let documentNumber = isSuccess ? findDocumentNumber(data) : null;
 
     // Amount check - only enforce when Z-Credit actually sent an amount.
     if (isSuccess && paidAmount > 0 && Math.abs(paidAmount - Number(order.total)) > 0.01) {
@@ -141,9 +145,10 @@ Deno.serve(async (req) => {
     if (isSuccess && !(paidAmount > 0)) {
       const verified = order.payment_session_id
         ? await fetchSessionStatus(order.payment_session_id)
-        : { outcome: "unknown" as const, amount: null };
+        : { outcome: "unknown" as const, amount: null, documentNumber: null };
       if (verified.outcome === "paid" && amountMatches(verified.amount, order.total)) {
         newStatus = "new";
+        documentNumber = documentNumber ?? verified.documentNumber ?? null;
       } else if (verified.outcome === "failed") {
         newStatus = "payment_failed";
       } else {
@@ -162,6 +167,9 @@ Deno.serve(async (req) => {
         status: newStatus,
         payment_method: "credit",
         paid_at: newStatus === "new" ? new Date().toISOString() : null,
+        ...(newStatus === "new" && documentNumber
+          ? { invoice_number: documentNumber, invoice_issued_at: new Date().toISOString() }
+          : {}),
       })
       .eq("id", orderId)
       .eq("status", "pending_payment");

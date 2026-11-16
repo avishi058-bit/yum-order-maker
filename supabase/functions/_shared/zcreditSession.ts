@@ -1,5 +1,8 @@
 // Ask Z-Credit (GetSessionStatus) what happened on a hosted payment page.
-// Returns the outcome plus the charged amount when Z-Credit reports one.
+// Returns the outcome plus the charged amount when Z-Credit reports one, and
+// the number of the invoice Z-Credit issued automatically (CreateInvoice).
+
+import { findDocumentNumber, keyNames } from "./zcreditDocs.ts";
 
 const STATUS_URL =
   "https://pci.zcredit.co.il/webcheckout/api/WebCheckout/GetSessionStatus";
@@ -14,7 +17,7 @@ const num = (v: unknown): number | null => {
 
 export async function fetchSessionStatus(
   sessionId: string,
-): Promise<{ outcome: SessionOutcome; amount: number | null }> {
+): Promise<{ outcome: SessionOutcome; amount: number | null; documentNumber?: string | null }> {
   const key = Deno.env.get("ZCREDIT_KEY");
   if (!key) return { outcome: "unknown", amount: null };
   try {
@@ -46,10 +49,16 @@ export async function fetchSessionStatus(
       txAmount ??
       num(data.Total ?? data.Amount ?? data.TotalAmount ?? data.TransactionSum ?? data.Sum);
 
-    if (okTx.length) return { outcome: "paid", amount };
+    const paid = (): { outcome: SessionOutcome; amount: number | null; documentNumber: string | null } => {
+      const documentNumber = findDocumentNumber(result);
+      // Field names only (no values), so a missing number can be diagnosed.
+      if (!documentNumber) console.warn("GetSessionStatus: invoice number not found", { keys: keyNames(result) });
+      return { outcome: "paid", amount, documentNumber };
+    };
+    if (okTx.length) return paid();
     const statusText = String(data.SessionStatus ?? data.Status ?? data.PaymentStatus ?? "").toLowerCase();
     if (["paid", "success", "successful", "completed", "closed"].includes(statusText)) {
-      return { outcome: "paid", amount };
+      return paid();
     }
     if (["failed", "declined", "error", "cancelled", "canceled", "expired"].includes(statusText)) {
       return { outcome: "failed", amount: null };

@@ -15,6 +15,7 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { getClientIp } from "../_shared/clientIp.ts";
 import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
 import { maxSplitCards } from "../_shared/menu-pricing.ts";
+import { findDocumentNumber, keyNames } from "../_shared/zcreditDocs.ts";
 
 const ZCREDIT_WS_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CommitFullTransaction";
@@ -38,11 +39,10 @@ const BodySchema = z.object({
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 function pickInvoiceNumber(result: Record<string, unknown>): string | null {
-  for (const key of ["InvoiceReceiptNumber", "DocumentNumber", "InvoiceNumber", "ReceiptNumber", "DocNumber", "ReferenceNumber"]) {
-    const value = result[key];
-    if (value != null && String(value).trim() !== "" && String(value) !== "0") return String(value);
-  }
-  return null;
+  const found = findDocumentNumber(result);
+  // Field names only (no values), so a missing number can be diagnosed.
+  if (!found) console.warn("pinpad-charge: invoice number not found", { keys: keyNames(result) });
+  return found;
 }
 
 Deno.serve(async (req) => {

@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { buildInvoiceItems, claimInvoice, releaseInvoice } from "../_shared/invoice.ts";
+import { findDocumentNumber, keyNames } from "../_shared/zcreditDocs.ts";
 
 const INVOICE_URL =
   "https://pci.zcredit.co.il/ZCreditWS/api/Transaction/CreateInvoiceReceipt";
@@ -19,11 +20,9 @@ const BUSINESS_ADDRESS = "דרך ערבי נחל 21";
 const BUSINESS_CITY = "תושיה";
 
 function pickNumber(result: Record<string, unknown>): string | null {
-  for (const k of ["InvoiceReceiptNumber", "DocumentNumber", "InvoiceNumber", "ReceiptNumber", "DocNumber", "ReferenceNumber"]) {
-    const v = result?.[k];
-    if (v != null && String(v).trim() !== "" && String(v) !== "0") return String(v);
-  }
-  return null;
+  const found = findDocumentNumber(result);
+  if (!found) console.warn("send-invoice-email: invoice number not found", { keys: keyNames(result) });
+  return found;
 }
 
 const BodySchema = z.object({

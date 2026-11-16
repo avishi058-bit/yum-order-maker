@@ -58,13 +58,18 @@ Deno.serve(async (req) => {
       paymentMethod === "credit";
 
     if (!alreadyPaid && order.payment_session_id) {
-      const { outcome, amount } = await fetchSessionStatus(order.payment_session_id);
+      const { outcome, amount, documentNumber } = await fetchSessionStatus(order.payment_session_id);
       // Only a pending order can become paid, and only for the exact total -
       // never resurrect a cancelled/refunded/failed order.
       if (outcome === "paid" && status === "pending_payment" && amountMatches(amount, order.total)) {
         const { data: updated } = await supabase
           .from("orders")
-          .update({ status: "new", payment_method: "credit", paid_at: new Date().toISOString() })
+          .update({
+            status: "new",
+            payment_method: "credit",
+            paid_at: new Date().toISOString(),
+            ...(documentNumber ? { invoice_number: documentNumber, invoice_issued_at: new Date().toISOString() } : {}),
+          })
           .eq("id", orderId)
           .eq("status", "pending_payment")
           .select("status, payment_method")
