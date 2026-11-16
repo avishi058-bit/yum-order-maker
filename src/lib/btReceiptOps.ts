@@ -374,11 +374,13 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     });
   }
 
-  // Daily running number, bold and centered, so
+  // Daily running number, printed right under the name, bold and centered, so
   // the kitchen can order bons by arrival. Assigned at order creation and
   // restarts from 1 every business day - unrelated to the order number.
-  // Printed at the bottom, under the payment line (kitchen request).
   const bonNum = (order as any).bon_queue_number ?? order.queue_number ?? null;
+  if (bonNum != null) {
+    ops.push({ kind: "heb", text: String(bonNum), align: "C", bold: true, size: 40 });
+  }
   // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד - לא כאן.)
   ops.push(sep());
 
@@ -669,11 +671,6 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       ops.push(asLine("!! טרם התקבל אישור מהמסוף !!", { align: "C", bold: true, size: 28 }));
       ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
     }
-  }
-
-  if (bonNum != null) {
-    ops.push(feed(0.4));
-    ops.push({ kind: "heb", text: String(bonNum), align: "C", bold: true, size: 40 });
   }
 
   ops.push(feed(2));
