@@ -46,6 +46,7 @@ const Staff = () => {
   const [sending, setSending] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [stockCat, setStockCat] = useState<string>("שתייה");
+  const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock">("home");
   const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
     typeof Notification !== "undefined" && Notification.permission === "granted" ? "on" : "idle",
@@ -151,15 +152,6 @@ const Staff = () => {
     }
   };
 
-  const markStock = async (id: string, current: "out" | "low" | null, level: "out" | "low") => {
-    try {
-      await setStaffStock(token, id, current === level ? null : level);
-      await load();
-    } catch {
-      toast.error("לא נשמר, נסו שוב");
-    }
-  };
-
   const addMeal = async (item: { id: string; name: string; price: number }) => {
     try {
       const logId = await addStaffMeal(token, item.id);
@@ -211,273 +203,273 @@ const Staff = () => {
   const ahead = data.upcoming.filter((s) => s.mine || data.me.is_owner);
   const monthName = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", month: "long" }).format(new Date());
 
+  const stockNext = { none: "low", low: "out", out: null } as const;
+  const tile = "rounded-3xl bg-white shadow-[0_4px_14px_rgba(232,80,47,0.10)] active:scale-[0.97] transition-transform";
+  const tabs = [
+    { id: "home", icon: "🏠", label: "בית" },
+    { id: "shifts", icon: "📅", label: "משמרות" },
+    ...(data.me.is_owner ? [] : [{ id: "meals", icon: "🍔", label: "ארוחות" }]),
+    { id: "stock", icon: "📦", label: "מלאי" },
+  ] as { id: typeof tab; icon: string; label: string }[];
+  const stockOpenCount = data.stock?.filter((i) => i.level).length ?? 0;
+
   return (
-    <main dir="rtl" className={`min-h-screen ${C.page} pb-12`}>
-      <header className={`${C.grad} rounded-b-[30px] px-5 pt-7 pb-8`}>
+    <main dir="rtl" className={`min-h-screen ${C.page} pb-28`}>
+      <header className={`${C.grad} rounded-b-[30px] px-5 pt-6 pb-7`}>
         <h1 className="text-2xl font-black">שלום, {data.me.name.split(" ")[0]} 👋</h1>
-        <p className="text-sm opacity-90">האזור האישי שלך בבקתה</p>
       </header>
 
-      <div className="px-4 -mt-4 max-w-lg mx-auto space-y-3">
-        {/* Next shift */}
-        <section className={`${C.card} ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
-          <p className={`text-xs ${C.muted}`}>{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
-          {next ? (
-            <>
-              <p className={`text-2xl font-black ${C.accent}`}>{next.label} {dateIL(next.date)}</p>
-              <p className="font-bold">מתחילים ב-{timeIL(next.starts_at)}</p>
-              {data.me.is_owner && <p className={`text-sm ${C.muted}`}>{next.team.length ? next.team.join(", ") : "אתה (אין עובד משובץ)"}</p>}
-              {nextState && <p className={`mt-2 font-bold ${nextState.late ? "text-red-600" : "text-green-700"}`}>{nextState.text}</p>}
-            </>
-          ) : (
-            <p className="text-lg font-bold">עוד אין משמרת בסידור שפורסם</p>
-          )}
-        </section>
+      <div className="px-4 -mt-3 max-w-lg mx-auto space-y-4">
+        {tab === "home" && (
+          <>
+            <section className={`${C.card} !p-5 ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
+              <p className={`text-sm ${C.muted}`}>{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
+              {next ? (
+                <>
+                  <p className={`text-3xl font-black ${C.accent}`}>{next.label} {dateIL(next.date)}</p>
+                  <p className="text-lg font-bold">מתחילים ב-{timeIL(next.starts_at)}</p>
+                  {data.me.is_owner && <p className={C.muted}>{next.team.length ? next.team.join(", ") : "אתה (אין עובד משובץ)"}</p>}
+                  {nextState && <p className={`mt-2 font-bold ${nextState.late ? "text-red-600" : "text-green-700"}`}>{nextState.text}</p>}
+                </>
+              ) : (
+                <p className="text-xl font-black">עוד אין משמרת בסידור</p>
+              )}
+            </section>
 
-        {/* Month totals */}
-        <div className="grid grid-cols-3 gap-2 text-center">
-          {[
-            { v: hoursText(data.month.minutes), l: "שעות החודש" },
-            { v: String(done.length), l: "משמרות" },
-            { v: String(data.month.late_count), l: "איחורים" },
-          ].map((s) => (
-            <div key={s.l} className="bg-white rounded-3xl py-3 shadow-[0_6px_18px_rgba(232,80,47,0.12)]">
-              <p className={`text-xl font-black ${C.accent}`}>{s.v}</p>
-              <p className={`text-[11px] ${C.muted}`}>{s.l}</p>
-            </div>
-          ))}
-        </div>
+            {!data.me.is_owner && !nw.published && !nw.submitted_at && (
+              <button type="button" onClick={() => setTab("shifts")} className={`w-full h-16 rounded-3xl text-lg font-black ${C.grad} shadow-lg`}>
+                להגיש משמרות לשבוע הבא ←
+              </button>
+            )}
 
-        {/* This month: done (ticked) and still ahead */}
-        <section className={C.card}>
-          <h2 className="font-black mb-1">המשמרות שלי ב{monthName}</h2>
-          {done.length === 0 && ahead.length === 0 && <p className={`text-sm ${C.muted}`}>עוד אין משמרות החודש.</p>}
-          <ul>
-            {done.map((e) => (
-              <li key={e.clock_in} className={`py-2 border-b last:border-0 ${C.line} text-sm`}>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2 font-bold">
-                    <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center"><Check size={13} strokeWidth={4} /></span>
-                    {e.label} {dateIL(e.clock_in)}
-                  </span>
-                  <span className={`flex items-center gap-1 ${C.muted}`}>
-                    <span>
-                      {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
-                      {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
-                    </span>
-                    {e.appeal?.status !== "pending" && (
-                      <button
-                        type="button"
-                        aria-label="אפשרויות למשמרת - ערעור על שעת הכניסה"
-                        onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: "19:00" })}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-lg font-black leading-none"
-                      >
-                        ⋯
-                      </button>
-                    )}
-                  </span>
-                </div>
-                {e.appeal && (
-                  <p className={`text-[11px] text-left ${e.appeal.status === "approved" ? "text-green-700" : e.appeal.status === "rejected" ? "text-red-600" : C.muted}`}>
-                    {e.appeal.status === "pending" ? `ערעור ל-${timeIL(e.appeal.claimed_in)} ממתין לאישור`
-                      : e.appeal.status === "approved" ? "הערעור התקבל - השעה עודכנה" : "הערעור נדחה"}
-                  </p>
-                )}
-              </li>
-            ))}
-            {ahead.map((s) => (
-              <li key={s.date} className={`flex items-center justify-between py-2 border-b last:border-0 ${C.line} text-sm`}>
-                <span className="flex items-center gap-2 font-bold">
-                  <span className={`w-5 h-5 rounded-full border-2 ${C.line}`} />
-                  {s.label} {dateIL(s.date)}
-                </span>
-                <span className={`flex items-center gap-2 ${C.muted}`}>
-                  <span>
-                    מתחילים ב-{timeIL(s.starts_at)}
-                    {data.me.is_owner && ` · ${s.team.length ? s.team.join(", ") : "אתה"}`}
-                  </span>
-                  {/* Only published shifts reach this list, so the button appears after publishing. */}
-                  <a
-                    href={googleEventUrl(s.starts_at, s.ends_at)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`shrink-0 rounded-full border-2 ${C.line} px-2 py-1 text-[11px] font-bold ${C.accent} flex items-center gap-1`}
-                  >
-                    <CalendarPlus size={12} /> ליומן
-                  </a>
-                </span>
-              </li>
-            ))}
-          </ul>
-          {data.me.is_owner && <a href="/admin/shifts" className={`mt-2 inline-block font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
-        </section>
-
-        {/* Next week availability */}
-        {!data.me.is_owner && (
-          <section className={C.card}>
-            <h2 className="font-black">שבוע הבא - מתי אפשר?</h2>
-            <p className={`text-xs mb-3 ${C.muted}`}>
-              {nw.published ? "הסידור לשבוע הבא כבר פורסם."
-                : nw.submitted_at && !changed ? `הוגש ב-${dateIL(nw.submitted_at)} ${timeIL(nw.submitted_at)}. אפשר לשנות ולהגיש שוב עד שאבישי מפרסם.`
-                : "מסמנים ימים ולוחצים על הגשה. אבישי מאשר ושולח את הסידור."}
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {nw.days.map((d) => {
-                const on = current.has(d.date);
-                return (
-                  <button
-                    key={d.date}
-                    type="button"
-                    disabled={nw.published || sending}
-                    onClick={() => toggle(d.date)}
-                    className={`rounded-2xl py-2 border-2 text-center font-bold text-sm transition-colors disabled:opacity-60 ${on ? "bg-[#e8502f] border-[#e8502f] text-white" : `bg-white ${C.line}`}`}
-                  >
-                    {d.label}
-                    <span className={`block text-[11px] font-medium ${on ? "text-white/85" : C.muted}`}>{dateIL(d.date)} · {timeIL(d.starts_at)}</span>
-                  </button>
-                );
-              })}
-              {nw.closed.map((d) => (
-                <div key={d.date} className="rounded-2xl py-2 border-2 border-dashed border-[#e5d5c8] text-center text-sm text-[#b9a394]">
-                  סגור
-                  <span className="block text-[11px]">{dateIL(d.date)} · {d.label}</span>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              {[
+                { v: hoursText(data.month.minutes), l: "שעות החודש" },
+                { v: String(done.length), l: "משמרות" },
+                { v: String(data.month.late_count), l: "איחורים" },
+              ].map((x) => (
+                <div key={x.l} className={`${tile} py-4`}>
+                  <p className={`text-2xl font-black ${C.accent}`}>{x.v}</p>
+                  <p className={`text-xs ${C.muted}`}>{x.l}</p>
                 </div>
               ))}
             </div>
-            {!nw.published && (
-              <button
-                type="button"
-                onClick={() => submit()}
-                disabled={sending || (!!nw.submitted_at && !changed)}
-                className={`mt-3 w-full h-12 rounded-full font-black ${C.grad} disabled:opacity-50`}
-              >
-                {sending ? "שולח..." : nw.submitted_at && !changed ? "הוגש ✓" : nw.submitted_at ? "הגשה מחדש לאבישי" : "הגשת משמרות לאבישי"}
-              </button>
-            )}
-          </section>
+
+            <section className={`${C.card} space-y-3`}>
+              <h2 className="text-lg font-black">תזכורות</h2>
+              {isIos() && !isStandalonePwa() && (
+                <p className="text-sm rounded-2xl bg-[#fff1e6] p-3">
+                  באייפון: כפתור השיתוף ← "הוסף למסך הבית", ואז פותחים מהאייקון. רק כך מקבלים התראות.
+                </p>
+              )}
+              {pushKey && (
+                <button type="button" onClick={enablePush} disabled={pushState !== "idle"}
+                  className="w-full h-14 rounded-full bg-[#3a1d12] text-white text-base font-bold flex items-center justify-center gap-2 disabled:opacity-70">
+                  <Bell size={20} />
+                  {pushState === "on" ? "התראות פעילות ✓" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
+                </button>
+              )}
+              {webcal && isIos() && (
+                <a href={webcal} className={`h-12 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2`}>
+                  <CalendarPlus size={18} /> יומן אייפון - מתעדכן לבד
+                </a>
+              )}
+              {data.me.is_owner && <a href="/admin/shifts" className={`block text-center font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
+            </section>
+          </>
         )}
 
-        {/* Staff meals and drinks */}
-        {!data.me.is_owner && data.meals && (
-          <section className={C.card}>
-            <div className="flex items-baseline justify-between">
-              <h2 className="font-black">ארוחות ושתייה שלקחתי</h2>
-              <span className={`text-sm font-black ${C.accent}`}>החודש: {data.meals.month_total} ₪</span>
-            </div>
-            <p className={`text-xs mb-3 ${C.muted}`}>לוחצים על מה שלקחתם, וזה נרשם במחיר עובד. ביטול אפשרי רק בשניות הראשונות.</p>
-            <div className="grid grid-cols-3 gap-2">
+        {tab === "shifts" && (
+          <>
+            {!data.me.is_owner && (
+              <section className={`${C.card} !p-5`}>
+                <h2 className="text-xl font-black">שבוע הבא - מתי אפשר?</h2>
+                <p className={`text-sm mb-4 ${C.muted}`}>
+                  {nw.published ? "הסידור לשבוע הבא כבר פורסם."
+                    : nw.submitted_at && !changed ? `הוגש ב-${dateIL(nw.submitted_at)}. אפשר לשנות ולהגיש שוב.`
+                    : "נוגעים בימים שאפשר, ואז מגישים."}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {nw.days.map((d) => {
+                    const on = current.has(d.date);
+                    return (
+                      <button key={d.date} type="button" disabled={nw.published || sending} onClick={() => toggle(d.date)}
+                        className={`h-20 rounded-3xl border-2 text-center transition-all active:scale-[0.97] disabled:opacity-60 ${on ? "bg-[#e8502f] border-[#e8502f] text-white shadow-lg" : `bg-white ${C.line}`}`}>
+                        <span className="block text-lg font-black">{on ? "✓ " : ""}{d.label}</span>
+                        <span className={`block text-sm ${on ? "text-white/90" : C.muted}`}>{dateIL(d.date)} · {timeIL(d.starts_at)}</span>
+                      </button>
+                    );
+                  })}
+                  {nw.closed.map((d) => (
+                    <div key={d.date} className="h-20 rounded-3xl border-2 border-dashed border-[#e5d5c8] flex flex-col items-center justify-center text-[#b9a394]">
+                      <span className="font-bold">סגור</span>
+                      <span className="text-xs">{dateIL(d.date)} · {d.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {!nw.published && (
+                  <button type="button" onClick={() => submit()} disabled={sending || (!!nw.submitted_at && !changed)}
+                    className={`mt-4 w-full h-14 rounded-full text-lg font-black ${C.grad} disabled:opacity-50`}>
+                    {sending ? "שולח..." : nw.submitted_at && !changed ? "הוגש ✓" : nw.submitted_at ? "הגשה מחדש" : "הגשה לאבישי"}
+                  </button>
+                )}
+              </section>
+            )}
+
+            <section className={`${C.card} !p-5`}>
+              <h2 className="text-xl font-black mb-2">המשמרות שלי ב{monthName}</h2>
+              {done.length === 0 && ahead.length === 0 && <p className={C.muted}>עוד אין משמרות החודש.</p>}
+              <ul>
+                {ahead.map((s) => (
+                  <li key={s.date} className={`flex items-center justify-between gap-2 py-3 border-b last:border-0 ${C.line}`}>
+                    <span>
+                      <span className="block font-black">{s.label} {dateIL(s.date)}</span>
+                      <span className={`block text-sm ${C.muted}`}>
+                        מתחילים ב-{timeIL(s.starts_at)}{data.me.is_owner && ` · ${s.team.length ? s.team.join(", ") : "אתה"}`}
+                      </span>
+                    </span>
+                    {/* Only published shifts reach this list, so the button appears after publishing. */}
+                    <a href={googleEventUrl(s.starts_at, s.ends_at)} target="_blank" rel="noopener noreferrer"
+                      className={`shrink-0 rounded-full border-2 ${C.line} px-3 py-2 text-sm font-bold ${C.accent} flex items-center gap-1`}>
+                      <CalendarPlus size={16} /> ליומן
+                    </a>
+                  </li>
+                ))}
+                {[...done].reverse().map((e) => (
+                  <li key={e.clock_in} className={`py-3 border-b last:border-0 ${C.line}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0"><Check size={16} strokeWidth={4} /></span>
+                        <span>
+                          <span className="block font-black">{e.label} {dateIL(e.clock_in)}</span>
+                          <span className={`block text-sm ${C.muted}`}>
+                            כניסה {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
+                            {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
+                          </span>
+                        </span>
+                      </span>
+                      {e.appeal?.status !== "pending" && (
+                        <button type="button" aria-label="ערעור על שעת הכניסה"
+                          onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: "19:00" })}
+                          className={`w-10 h-10 rounded-full border-2 ${C.line} flex items-center justify-center text-xl font-black leading-none shrink-0`}>
+                          ⋯
+                        </button>
+                      )}
+                    </div>
+                    {e.appeal && (
+                      <p className={`text-sm pr-9 ${e.appeal.status === "approved" ? "text-green-700" : e.appeal.status === "rejected" ? "text-red-600" : C.muted}`}>
+                        {e.appeal.status === "pending" ? `ערעור ל-${timeIL(e.appeal.claimed_in)} ממתין לאישור`
+                          : e.appeal.status === "approved" ? "הערעור התקבל - השעה עודכנה" : "הערעור נדחה"}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
+
+        {tab === "meals" && data.meals && (
+          <>
+            <section className={`${C.card} !p-5 text-center`}>
+              <p className={`text-sm ${C.muted}`}>לקחתי החודש</p>
+              <p className={`text-4xl font-black ${C.accent}`}>{data.meals.month_total} ₪</p>
+            </section>
+            <p className={`text-sm text-center ${C.muted}`}>נוגעים במה שלקחתם וזה נרשם. ביטול רק בשניות הראשונות.</p>
+            <div className="grid grid-cols-2 gap-3">
               {data.meals.items.map((i) => (
-                <button key={i.id} type="button" onClick={() => addMeal(i)}
-                  className={`rounded-2xl py-2 px-1 border-2 ${C.line} bg-white text-center text-sm font-bold active:bg-[#fff1e6]`}>
-                  {i.name}
-                  <span className={`block text-[11px] font-medium ${C.muted}`}>{i.price} ₪</span>
+                <button key={i.id} type="button" onClick={() => addMeal(i)} className={`${tile} h-20 px-2 text-center`}>
+                  <span className="block text-lg font-black">{i.name}</span>
+                  <span className={`block text-sm font-bold ${C.accent}`}>{i.price} ₪</span>
                 </button>
               ))}
             </div>
             {data.meals.logs.length > 0 && (
-              <ul className="mt-3">
-                {data.meals.logs.map((l) => (
-                  <li key={l.id} className={`flex items-center justify-between py-1.5 border-b last:border-0 ${C.line} text-sm`}>
-                    <span>{l.name} <span className={C.muted}>· {dateIL(l.at)}</span></span>
-                    <b>{l.price} ₪</b>
-                  </li>
-                ))}
-              </ul>
+              <section className={C.card}>
+                <h2 className="font-black mb-1">מה נרשם החודש</h2>
+                <ul>
+                  {data.meals.logs.map((l) => (
+                    <li key={l.id} className={`flex items-center justify-between py-2 border-b last:border-0 ${C.line}`}>
+                      <span>{l.name} <span className={`text-sm ${C.muted}`}>· {dateIL(l.at)}</span></span>
+                      <b>{l.price} ₪</b>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
-          </section>
+          </>
         )}
 
-        {/* Stock shortages */}
-        {data.stock && (
-          <section className={C.card}>
-            <h2 className="font-black">חוסרים במלאי</h2>
-            <p className={`text-xs mb-3 ${C.muted}`}>נגמר משהו או נשאר קצת? מסמנים כאן ואבישי מקבל עדכון. לחיצה נוספת מבטלת.</p>
-            <div className="flex gap-1.5 overflow-x-auto pb-2">
+        {tab === "stock" && data.stock && (
+          <>
+            <section className={`${C.card} !p-5`}>
+              <h2 className="text-xl font-black">מה חסר?</h2>
+              <p className={`text-sm ${C.muted}`}>נוגעים במוצר: פעם אחת - נשאר קצת, פעם שנייה - נגמר, פעם שלישית - ביטול.</p>
+            </section>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
               {STOCK_CATEGORIES.map((c) => {
                 const n = data.stock.filter((i) => i.category === c && i.level).length;
                 return (
                   <button key={c} type="button" onClick={() => setStockCat(c)}
-                    className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold border-2 ${stockCat === c ? "bg-[#3a1d12] border-[#3a1d12] text-white" : `bg-white ${C.line}`}`}>
-                    {c}{n > 0 ? ` (${n})` : ""}
+                    className={`shrink-0 rounded-full px-5 h-12 text-base font-black border-2 ${stockCat === c ? "bg-[#3a1d12] border-[#3a1d12] text-white" : `bg-white ${C.line}`}`}>
+                    {c}{n > 0 ? ` · ${n}` : ""}
                   </button>
                 );
               })}
             </div>
-            <ul>
-              {data.stock.filter((i) => i.category === stockCat).length === 0 && <li className={`text-sm ${C.muted}`}>עוד אין מוצרים בקטגוריה הזו.</li>}
+            {data.stock.filter((i) => i.category === stockCat).length === 0 && <p className={`text-center ${C.muted}`}>עוד אין מוצרים בקטגוריה הזו.</p>}
+            <div className="grid grid-cols-2 gap-3">
               {data.stock.filter((i) => i.category === stockCat).map((i) => (
-                <li key={i.id} className={`flex items-center justify-between gap-2 py-1.5 border-b last:border-0 ${C.line} text-sm`}>
-                  <span className="font-bold">{i.name}</span>
-                  <span className="flex gap-1.5 shrink-0">
-                    <button type="button" onClick={() => markStock(i.id, i.level, "low")}
-                      className={`rounded-full px-3 py-1 text-xs font-bold border-2 ${i.level === "low" ? "bg-[#f4b400] border-[#f4b400] text-[#3a1d12]" : `bg-white ${C.line}`}`}>
-                      נשאר קצת
-                    </button>
-                    <button type="button" onClick={() => markStock(i.id, i.level, "out")}
-                      className={`rounded-full px-3 py-1 text-xs font-bold border-2 ${i.level === "out" ? "bg-red-600 border-red-600 text-white" : `bg-white ${C.line}`}`}>
-                      נגמר
-                    </button>
+                <button key={i.id} type="button"
+                  onClick={async () => {
+                    try { await setStaffStock(token, i.id, stockNext[i.level ?? "none"]); await load(); } catch { toast.error("לא נשמר, נסו שוב"); }
+                  }}
+                  className={`h-20 px-2 rounded-3xl text-center border-2 transition-all active:scale-[0.97] ${
+                    i.level === "out" ? "bg-red-600 border-red-600 text-white shadow-lg"
+                      : i.level === "low" ? "bg-[#ffd24d] border-[#ffd24d] text-[#3a1d12] shadow-lg"
+                      : `bg-white ${C.line}`}`}>
+                  <span className="block text-base font-black leading-tight">{i.name}</span>
+                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>
+                    {i.level === "out" ? "נגמר" : i.level === "low" ? "נשאר קצת" : "יש במלאי"}
                   </span>
-                </li>
+                </button>
               ))}
-            </ul>
-          </section>
+            </div>
+          </>
         )}
-
-        {/* Reminders and calendar */}
-        <section className={`${C.card} space-y-3`}>
-          <h2 className="font-black">תזכורות ויומן</h2>
-          {isIos() && !isStandalonePwa() && (
-            <p className="text-sm rounded-2xl bg-[#fff1e6] p-3">
-              באייפון: לוחצים על כפתור השיתוף, בוחרים "הוסף למסך הבית" ופותחים מהאייקון. רק כך מקבלים התראות.
-            </p>
-          )}
-          {pushKey && (
-            <button
-              type="button"
-              onClick={enablePush}
-              disabled={pushState !== "idle"}
-              className="w-full h-12 rounded-full bg-[#3a1d12] text-white font-bold flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              <Bell size={18} />
-              {pushState === "on" ? "התראות פעילות" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
-            </button>
-          )}
-          <p className={`text-xs ${C.muted}`}>
-            {data.me.is_owner
-              ? "תקבל התראה כשעובד מאחר יותר מ-5 דקות."
-              : "תזכורת בשישי להגיש משמרות, שעה לפני כל משמרת, ואם לא נכנסתם 5 דקות אחרי ההתחלה."}
-          </p>
-          <p className={`text-xs ${C.muted}`}>יומן גוגל: אחרי שהסידור מתפרסם, לוחצים "ליומן" ליד כל משמרת ושומרים.</p>
-          {webcal && isIos() && (
-            <a href={webcal} className={`h-11 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2 text-sm`}>
-              <CalendarPlus size={16} /> יומן אייפון - מתעדכן לבד
-            </a>
-          )}
-        </section>
       </div>
+
+      {/* Bottom navigation */}
+      <nav aria-label="ניווט" className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#ffe3d1] pb-[env(safe-area-inset-bottom)]">
+        <div className="max-w-lg mx-auto flex">
+          {tabs.map((t) => (
+            <button key={t.id} type="button" onClick={() => { setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
+              className={`relative flex-1 py-2.5 flex flex-col items-center gap-0.5 ${tab === t.id ? C.accent : C.muted}`}>
+              <span className="text-2xl leading-none" aria-hidden>{t.icon}</span>
+              <span className={`text-xs ${tab === t.id ? "font-black" : "font-bold"}`}>{t.label}</span>
+              {t.id === "stock" && stockOpenCount > 0 && (
+                <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{stockOpenCount}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
 
       {appeal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-appeal-title">
           <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]">
-            <h2 id="staff-appeal-title" className="text-lg font-black">נכנסת מאוחר בטעות?</h2>
-            <p className="text-sm">
-              ב-{dateIL(appeal.clockIn)} נרשמה כניסה ב-{timeIL(appeal.clockIn)}. אפשר להגיש ערעור: באיזו שעה הגעת באמת?
+            <h2 id="staff-appeal-title" className="text-xl font-black">נכנסת מאוחר בטעות?</h2>
+            <p>
+              ב-{dateIL(appeal.clockIn)} נרשמה כניסה ב-{timeIL(appeal.clockIn)}. באיזו שעה הגעת באמת?
             </p>
-            <input
-              type="time"
-              value={appeal.time}
-              onChange={(ev) => setAppeal({ ...appeal, time: ev.target.value })}
+            <input type="time" value={appeal.time} onChange={(ev) => setAppeal({ ...appeal, time: ev.target.value })}
               aria-label="שעת ההגעה האמיתית"
-              className={`w-full h-12 rounded-2xl border-2 ${C.line} px-3 text-lg font-bold text-center bg-white`}
-            />
-            <p className={`text-xs ${C.muted}`}>השעה תתעדכן רק אחרי אישור של אבישי.</p>
-            <button type="button" onClick={sendAppeal} disabled={sending || !appeal.time} className={`w-full h-12 rounded-full font-black ${C.grad} disabled:opacity-50`}>
-              {sending ? "שולח..." : "שליחת הערעור לאבישי"}
+              className={`w-full h-14 rounded-2xl border-2 ${C.line} px-3 text-2xl font-black text-center bg-white`} />
+            <p className={`text-sm ${C.muted}`}>השעה תתעדכן רק אחרי אישור של אבישי.</p>
+            <button type="button" onClick={sendAppeal} disabled={sending || !appeal.time} className={`w-full h-14 rounded-full text-lg font-black ${C.grad} disabled:opacity-50`}>
+              {sending ? "שולח..." : "שליחת ערעור לאבישי"}
             </button>
-            <button type="button" onClick={() => setAppeal(null)} className={`w-full h-11 rounded-full border-2 ${C.line} font-bold text-sm`}>
-              ביטול
-            </button>
+            <button type="button" onClick={() => setAppeal(null)} className={`w-full h-12 rounded-full border-2 ${C.line} font-bold`}>ביטול</button>
           </div>
         </div>
       )}
@@ -485,14 +477,10 @@ const Staff = () => {
       {rulesOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-rules-title">
           <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]">
-            <h2 id="staff-rules-title" className="text-lg font-black">רגע לפני ההגשה</h2>
+            <h2 id="staff-rules-title" className="text-xl font-black">רגע לפני ההגשה</h2>
             {ruleNotes.map((n) => <p key={n} className="font-bold">{n}</p>)}
-            <button type="button" onClick={() => setRulesOpen(false)} className={`w-full h-12 rounded-full font-black ${C.grad}`}>
-              להוסיף משמרת
-            </button>
-            <button type="button" onClick={() => submit(true)} className={`w-full h-11 rounded-full border-2 ${C.line} font-bold text-sm`}>
-              הבנתי, להגיש בכל זאת
-            </button>
+            <button type="button" onClick={() => setRulesOpen(false)} className={`w-full h-14 rounded-full text-lg font-black ${C.grad}`}>להוסיף משמרת</button>
+            <button type="button" onClick={() => submit(true)} className={`w-full h-12 rounded-full border-2 ${C.line} font-bold`}>הבנתי, להגיש בכל זאת</button>
           </div>
         </div>
       )}
