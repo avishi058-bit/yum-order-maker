@@ -11,7 +11,7 @@ import {
   STAFF_TOKEN_KEY, dateIL, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
-/** One-tap "add this shift" link for Google Calendar (with a reminder an hour before). */
+/** One-tap "add this shift" link for Google Calendar. */
 const googleEventUrl = (startsAt: string, endsAt: string) => {
   const t = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const q = new URLSearchParams({
