@@ -214,12 +214,27 @@ const Staff = () => {
   const stockOpenCount = data.stock?.filter((i) => i.level).length ?? 0;
 
   return (
-    <main dir="rtl" className={`min-h-screen ${C.page} pb-28`}>
-      <header className={`${C.grad} rounded-b-[30px] px-5 pt-6 pb-7`}>
+    <main dir="rtl" className={`min-h-screen ${C.page} pb-24`}>
+      <header className={`${C.grad} px-5 pt-6 pb-4`}>
         <h1 className="text-2xl font-black">שלום, {data.me.name.split(" ")[0]} 👋</h1>
       </header>
+      {/* Tabs sit at the top: the bottom corner is covered by the hosting badge. */}
+      <nav aria-label="ניווט" className="sticky top-0 z-40 bg-white shadow-[0_4px_14px_rgba(232,80,47,0.12)] rounded-b-3xl">
+        <div className="max-w-lg mx-auto flex">
+          {tabs.map((t) => (
+            <button key={t.id} type="button" onClick={() => { setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
+              className={`relative flex-1 pt-2.5 pb-2 flex flex-col items-center gap-0.5 border-b-4 ${tab === t.id ? `${C.accent} border-[#e8502f]` : `${C.muted} border-transparent`}`}>
+              <span className="text-2xl leading-none" aria-hidden>{t.icon}</span>
+              <span className={`text-sm ${tab === t.id ? "font-black" : "font-bold"}`}>{t.label}</span>
+              {t.id === "stock" && stockOpenCount > 0 && (
+                <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{stockOpenCount}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      <div className="px-4 -mt-3 max-w-lg mx-auto space-y-4">
+      <div className="px-4 pt-4 max-w-lg mx-auto space-y-4">
         {tab === "home" && (
           <>
             <section className={`${C.card} !p-5 ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
@@ -439,21 +454,6 @@ const Staff = () => {
         )}
       </div>
 
-      {/* Bottom navigation */}
-      <nav aria-label="ניווט" className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#ffe3d1] pb-[env(safe-area-inset-bottom)]">
-        <div className="max-w-lg mx-auto flex">
-          {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => { setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
-              className={`relative flex-1 py-2.5 flex flex-col items-center gap-0.5 ${tab === t.id ? C.accent : C.muted}`}>
-              <span className="text-2xl leading-none" aria-hidden>{t.icon}</span>
-              <span className={`text-xs ${tab === t.id ? "font-black" : "font-bold"}`}>{t.label}</span>
-              {t.id === "stock" && stockOpenCount > 0 && (
-                <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{stockOpenCount}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </nav>
 
       {appeal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-appeal-title">
