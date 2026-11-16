@@ -493,6 +493,29 @@ export function setPrintNarrowRaster(on: boolean) {
   try { localStorage.setItem(NARROW_KEY, on ? "1" : "0"); } catch {}
 }
 
+// Lighter font: image lines are drawn at weight 700/400 instead of 900/500.
+// Less black for the thermal head to heat, so long bons can print faster.
+const LIGHT_FONT_KEY = "bt-printer-light-font";
+export function getPrintLightFont(): boolean {
+  try { return localStorage.getItem(LIGHT_FONT_KEY) === "1"; } catch { return false; }
+}
+export function setPrintLightFont(on: boolean) {
+  try { localStorage.setItem(LIGHT_FONT_KEY, on ? "1" : "0"); } catch {}
+}
+function _fw(bold: boolean): string {
+  const light = getPrintLightFont();
+  return bold ? (light ? "700" : "900") : (light ? "400" : "500");
+}
+// Compact spacing: smaller gap between the lines inside a dish on the kitchen
+// bon (read by buildKitchenBonOps).
+const COMPACT_KEY = "bt-printer-compact-gaps";
+export function getPrintCompactGaps(): boolean {
+  try { return localStorage.getItem(COMPACT_KEY) === "1"; } catch { return false; }
+}
+export function setPrintCompactGaps(on: boolean) {
+  try { localStorage.setItem(COMPACT_KEY, on ? "1" : "0"); } catch {}
+}
+
 // ---------- Fast print mode (printer-side speed) ----------
 // Thermal printers default to a conservative heating profile: long heating
 // time + long cooling interval + medium motor speed. On a long bon that is
@@ -793,7 +816,7 @@ function _renderHebToMono(
 ): { bytes: Uint8Array; widthBytes: number; height: number; offsetX: number } {
   const { width, px, bold, align } = opts;
   const measure = _getMeasureCtx();
-  measure.font = `${bold ? "900" : "500"} ${px}px Arial, "Heebo", sans-serif`;
+  measure.font = `${_fw(bold)} ${px}px Arial, "Heebo", sans-serif`;
   const lines = _wrapText(measure, text, width - 4);
 
   const lineH = Math.ceil(px * 1.15);
@@ -979,11 +1002,11 @@ function _renderHeaderToMono(
   const y = lineH / 2 + 3;
   const gap = 20;
 
-  ctx.font = `900 ${namePx}px Arial, "Heebo", sans-serif`;
+  ctx.font = `${_fw(true)} ${namePx}px Arial, "Heebo", sans-serif`;
   const nameW = name ? ctx.measureText(name).width : 0;
   let phoneW = 0;
   if (phone) {
-    ctx.font = `900 ${phonePx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `${_fw(true)} ${phonePx}px Arial, "Heebo", sans-serif`;
     phoneW = ctx.measureText(phone).width;
   }
   const totalW = nameW + (phone ? gap + phoneW : 0);
@@ -993,11 +1016,11 @@ function _renderHeaderToMono(
 
   ctx.textAlign = "right";
   if (name) {
-    ctx.font = `900 ${namePx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `${_fw(true)} ${namePx}px Arial, "Heebo", sans-serif`;
     ctx.fillText(name, startRight, y);
   }
   if (phone) {
-    ctx.font = `900 ${phonePx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `${_fw(true)} ${phonePx}px Arial, "Heebo", sans-serif`;
     ctx.fillText(phone, startRight - nameW - gap, y);
   }
   return _canvasToCroppedMono(canvas, width, false);
@@ -1018,17 +1041,17 @@ function _renderTwoColToMono(
   const BOX_PAD = 8;
   const BOX_LINE = 4;
   const measure = _getMeasureCtx();
-  measure.font = `900 ${leftPx}px Arial, "Heebo", sans-serif`;
+  measure.font = `${_fw(true)} ${leftPx}px Arial, "Heebo", sans-serif`;
   const leftW = left ? measure.measureText(left).width : 0;
   const boxW = opts.leftBox && left ? leftW + BOX_PAD * 2 + BOX_LINE * 2 : leftW;
   const boxH = opts.leftBox && left ? Math.ceil(leftPx * 1.05) + BOX_LINE * 2 : 0;
   // Shrink the right text if it would run into the left text.
   let rightPx = px;
   if (right) {
-    measure.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+    measure.font = `${_fw(bold)} ${rightPx}px Arial, "Heebo", sans-serif`;
     while (rightPx > 20 && measure.measureText(right).width + boxW + 16 > width) {
       rightPx -= 2;
-      measure.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+      measure.font = `${_fw(bold)} ${rightPx}px Arial, "Heebo", sans-serif`;
     }
   }
   const lineH = Math.max(Math.ceil(px * 1.15), Math.ceil(leftPx * 1.15), boxH);
@@ -1043,12 +1066,12 @@ function _renderTwoColToMono(
   ctx.textBaseline = "middle";
   const y = lineH / 2 + 2;
   if (right) {
-    ctx.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `${_fw(bold)} ${rightPx}px Arial, "Heebo", sans-serif`;
     ctx.textAlign = "right";
     ctx.fillText(right, width - 2, y);
   }
   if (left) {
-    ctx.font = `${opts.leftBox || bold ? "900" : "500"} ${leftPx}px Arial, "Heebo", sans-serif`;
+    ctx.font = `${_fw(!!opts.leftBox || bold)} ${leftPx}px Arial, "Heebo", sans-serif`;
     if (opts.leftBox) {
       ctx.lineWidth = BOX_LINE;
       ctx.strokeStyle = "#000";
@@ -1056,9 +1079,9 @@ function _renderTwoColToMono(
       ctx.textAlign = "left";
       ctx.fillText(left, 2 + BOX_LINE + BOX_PAD, y + 1);
     } else if (opts.leftInline && right) {
-      ctx.font = `${bold ? "900" : "500"} ${rightPx}px Arial, "Heebo", sans-serif`;
+      ctx.font = `${_fw(bold)} ${rightPx}px Arial, "Heebo", sans-serif`;
       const rightW = ctx.measureText(right).width;
-      ctx.font = `${bold ? "900" : "500"} ${leftPx}px Arial, "Heebo", sans-serif`;
+      ctx.font = `${_fw(bold)} ${leftPx}px Arial, "Heebo", sans-serif`;
       ctx.textAlign = "right";
       ctx.fillText(left, width - 2 - rightW - Math.round(rightPx * 0.3), y);
     } else {

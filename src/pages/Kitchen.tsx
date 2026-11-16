@@ -42,6 +42,10 @@ import {
   setPrintBigChunks,
   getPrintNarrowRaster,
   setPrintNarrowRaster,
+  getPrintLightFont,
+  setPrintLightFont,
+  getPrintCompactGaps,
+  setPrintCompactGaps,
   type EncodingProfile,
 } from "@/lib/bluetoothPrinter";
 import {
@@ -1629,6 +1633,21 @@ const Kitchen = () => {
     toast.success(next ? "שליחה חלקית הופעלה - הדפס בון לבדיקה" : "שליחה חלקית כבויה");
   };
 
+  const [lightFont, setLightFontState] = useState<boolean>(() => getPrintLightFont());
+  const [compactGaps, setCompactGapsState] = useState<boolean>(() => getPrintCompactGaps());
+  const handleLightFontToggle = () => {
+    const next = !lightFont;
+    setPrintLightFont(next);
+    setLightFontState(next);
+    toast.success(next ? "כתב פחות עבה הופעל" : "כתב רגיל");
+  };
+  const handleCompactGapsToggle = () => {
+    const next = !compactGaps;
+    setPrintCompactGaps(next);
+    setCompactGapsState(next);
+    toast.success(next ? "רווחים קטנים הופעלו" : "רווחים רגילים");
+  };
+
   const handleRotateToggle = () => {
     const next = !rotate180;
     setPrintRotate180(next);
@@ -2514,6 +2533,28 @@ const Kitchen = () => {
                     >
                       <span>🧪 שליחה חלקית</span>
                       <span>{narrowRaster ? "✓ פעיל" : "כבוי"}</span>
+                    </button>
+                    <button
+                      onClick={handleLightFontToggle}
+                      className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                        lightFont
+                          ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <span>כתב פחות עבה</span>
+                      <span>{lightFont ? "✓ פעיל" : "כבוי"}</span>
+                    </button>
+                    <button
+                      onClick={handleCompactGapsToggle}
+                      className={`w-full px-3 py-2 rounded-lg text-sm font-bold flex items-center justify-between ${
+                        compactGaps
+                          ? "bg-green-500/20 text-green-300 hover:bg-green-500/30"
+                          : "bg-muted text-foreground hover:bg-muted/70"
+                      }`}
+                    >
+                      <span>רווחים קטנים</span>
+                      <span>{compactGaps ? "✓ פעיל" : "כבוי"}</span>
                     </button>
                   </>
                 )}

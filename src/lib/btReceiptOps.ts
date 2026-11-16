@@ -9,7 +9,7 @@
 // This is ~10-30x faster than rendering the full HTML receipt with html2canvas
 // and avoids the dense black areas that bog down thermal printers.
 
-import type { FastOp } from "./bluetoothPrinter";
+import { getPrintCompactGaps, type FastOp } from "./bluetoothPrinter";
 import { getUnavailableIngredientIds } from "@/lib/ingredientAvailability";
 import {
   computeChefSummary,
@@ -417,7 +417,10 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   }));
 
   const isMultiItem = groups.length > 1 || (groups.length === 1 && groups[0].qty > 1);
-  const LINE_GAP = 2.0; // breathing room between lines within an item
+  // Breathing room between lines within an item (smaller with the
+  // "רווחים קטנים" toggle in the printer menu).
+  // "סיכום הזמנה" keeps its own fixed spacing (2.0) either way.
+  const LINE_GAP = getPrintCompactGaps() ? 1.0 : 2.0;
 
   // Pre-compute drinks summary so we can avoid duplicating standalone drinks
   // both as a "dish" and in the bottom summary (takeaway only).
@@ -635,16 +638,16 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
     if (hasAny) {
       ops.push(sep());
       ops.push(asLine("סיכום הזמנה", { align: "C", bold: true, size: 30 }));
-      ops.push(feed(LINE_GAP));
+      ops.push(feed(2.0));
       for (const [label, n] of sidesEntries) {
         const line = n > 1 ? `${label} x${n}` : label;
         ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
-        ops.push(feed(LINE_GAP));
+        ops.push(feed(2.0));
       }
       for (const [label, n] of drinksSummaryEntries) {
         const line = n > 1 ? `${label} x${n}` : label;
         ops.push(asLine(line, { align: "R", bold: true, size: 26 }));
-        ops.push(feed(LINE_GAP));
+        ops.push(feed(2.0));
       }
     }
   }
