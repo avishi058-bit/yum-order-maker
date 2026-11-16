@@ -393,7 +393,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   // restarts from 1 every business day - unrelated to the order number.
   const bonNum = (order as any).bon_queue_number ?? order.queue_number ?? null;
   if (bonNum != null) {
-    ops.push(feed(0.4)); // small gap between the name and the number
+    ops.push(feed(1.0)); // gap between the name and the number
     ops.push({ kind: "heb", text: String(bonNum), align: "C", bold: true, size: 40 });
   }
   // (QR טלפון מודפס כבון נפרד דרך כפתור נפרד - לא כאן.)
