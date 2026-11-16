@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, appealStaffEntry, dateIL, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, addStaffMeal, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -148,6 +148,19 @@ const Staff = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  const addMeal = async (item: { id: string; name: string; price: number }) => {
+    try {
+      await addStaffMeal(token, item.id);
+      toast.success(`נרשם: ${item.name} - ${item.price} ₪`);
+      await load();
+    } catch {
+      toast.error("לא נרשם, נסו שוב");
+    }
+  };
+  const removeMeal = async (id: string) => {
+    try { await removeStaffMeal(token, id); await load(); } catch { toast.error("אי אפשר לבטל את הדיווח הזה"); }
   };
 
   const enablePush = async () => {
@@ -318,6 +331,39 @@ const Staff = () => {
               >
                 {sending ? "שולח..." : nw.submitted_at && !changed ? "הוגש ✓" : nw.submitted_at ? "הגשה מחדש לאבישי" : "הגשת משמרות לאבישי"}
               </button>
+            )}
+          </section>
+        )}
+
+        {/* Staff meals and drinks */}
+        {!data.me.is_owner && data.meals && (
+          <section className={C.card}>
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-black">ארוחות ושתייה שלקחתי</h2>
+              <span className={`text-sm font-black ${C.accent}`}>החודש: {data.meals.month_total} ₪</span>
+            </div>
+            <p className={`text-xs mb-3 ${C.muted}`}>לוחצים על מה שלקחתם, וזה נרשם במחיר עובד.</p>
+            <div className="grid grid-cols-3 gap-2">
+              {data.meals.items.map((i) => (
+                <button key={i.id} type="button" onClick={() => addMeal(i)}
+                  className={`rounded-2xl py-2 px-1 border-2 ${C.line} bg-white text-center text-sm font-bold active:bg-[#fff1e6]`}>
+                  {i.name}
+                  <span className={`block text-[11px] font-medium ${C.muted}`}>{i.price} ₪</span>
+                </button>
+              ))}
+            </div>
+            {data.meals.logs.length > 0 && (
+              <ul className="mt-3">
+                {data.meals.logs.map((l) => (
+                  <li key={l.id} className={`flex items-center justify-between py-1.5 border-b last:border-0 ${C.line} text-sm`}>
+                    <span>{l.name} <span className={C.muted}>· {dateIL(l.at)}</span></span>
+                    <span className="flex items-center gap-2">
+                      <b>{l.price} ₪</b>
+                      {l.can_remove && <button type="button" onClick={() => removeMeal(l.id)} className={`text-[11px] underline ${C.muted}`}>ביטול</button>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
         )}

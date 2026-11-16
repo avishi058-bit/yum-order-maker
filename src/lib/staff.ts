@@ -26,9 +26,14 @@ export interface StaffMe {
   upcoming: StaffShift[];
   month: { minutes: number; late_count: number; entries: StaffEntry[] };
   open_since: string | null;
+  meals: {
+    items: { id: string; name: string; price: number }[];
+    month_total: number;
+    logs: { id: string; name: string; price: number; at: string; can_remove: boolean }[];
+  };
 }
 
-const KNOWN_ERRORS = ["invalid_link", "week_published", "week_closed", "no_shift", "invalid_subscription", "invalid_time", "appeal_pending"];
+const KNOWN_ERRORS = ["invalid_link", "week_published", "week_closed", "no_shift", "invalid_subscription", "invalid_time", "appeal_pending", "too_many"];
 
 /** Token-gated database functions behind the employee page. */
 const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
@@ -37,6 +42,10 @@ const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
   return data as T;
 };
 export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
+/** Staff meals: report an item taken, or take back a recent report. */
+export const addStaffMeal = (token: string, itemId: string) => rpc<void>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });
+export const removeStaffMeal = (token: string, logId: string) => rpc<void>("staff_portal_meal_remove", { p_token: token, p_log_id: logId });
+
 /** Asks the admin to correct a shift's arrival time ("HH:MM", Israel time). */
 export const appealStaffEntry = (token: string, entryId: string, time: string) =>
   rpc<void>("staff_portal_appeal", { p_token: token, p_entry_id: entryId, p_time: time });

@@ -39,6 +39,7 @@ const AdminShifts = () => {
   const [assign, setAssign] = useState<{ shift_id: string; staff_id: string }[]>([]);
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
+  const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
   const [appeals, setAppeals] = useState<{ id: string; staff_id: string; claimed_in: string; staff_time_entries: { clock_in: string } | null }[]>([]);
   const [closedDays, setClosedDays] = useState<{ day: string; label: string | null }[]>([]);
   const [month, setMonth] = useState(() => todayIL().slice(0, 7));
@@ -85,6 +86,10 @@ const AdminShifts = () => {
       .lt("clock_in", new Date(to.getTime() - 2 * 3600_000).toISOString())
       .order("clock_in", { ascending: false });
     setEntries((data ?? []).filter((e: Entry) => todayFromIso(e.clock_in).startsWith(month)));
+    const ml = await staffDb.from("staff_meal_logs").select("staff_id, item_name, price, created_at")
+      .gte("created_at", new Date(from.getTime() - 3 * 3600_000).toISOString())
+      .lt("created_at", new Date(to.getTime() - 2 * 3600_000).toISOString()).order("created_at", { ascending: false });
+    setMeals((ml.data ?? []).filter((x: { created_at: string }) => todayFromIso(x.created_at).startsWith(month)));
   }, [month]);
 
   const loadAppeals = useCallback(async () => {
@@ -285,6 +290,8 @@ const AdminShifts = () => {
           </div>
           {members.filter((m) => m.active).map((m) => {
             const p = byPerson.get(m.id);
+            const myMeals = meals.filter((x) => x.staff_id === m.id);
+            const mealsTotal = myMeals.reduce((n, x) => n + Number(x.price), 0);
             return (
               <div key={m.id} className="border-t border-border pt-2">
                 <button type="button" onClick={() => setOpenPerson(openPerson === m.id ? null : m.id)} className="w-full flex items-center justify-between py-1">
@@ -292,8 +299,14 @@ const AdminShifts = () => {
                   <span className="text-sm">
                     {hoursText(p?.minutes ?? 0)} ש׳ · {p?.list.length ?? 0} משמרות
                     {p?.late ? <span className="text-destructive font-bold"> · {p.late} איחורים</span> : null}
+                    {mealsTotal > 0 && <span className="text-primary font-bold"> · ארוחות {mealsTotal} ₪</span>}
                   </span>
                 </button>
+                {openPerson === m.id && myMeals.length > 0 && (
+                  <p className="text-sm text-muted-foreground pb-2">
+                    ארוחות ושתייה: {myMeals.map((x) => `${x.item_name} ${Number(x.price)} ₪ (${dateIL(x.created_at)})`).join(" · ")}
+                  </p>
+                )}
                 {openPerson === m.id && p && (
                   <ul className="text-sm text-muted-foreground space-y-1 pb-2">
                     {p.list.map((e) => (
