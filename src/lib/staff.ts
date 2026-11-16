@@ -118,3 +118,25 @@ export const hoursText = (minutes: number) => {
   const m = minutes % 60;
   return `${h}:${String(m).padStart(2, "0")}`;
 };
+
+/**
+ * Worked shifts for the dashboard's labour numbers: the old kitchen clock
+ * (work_shifts) plus the name-strip clock (staff_time_entries, owner excluded),
+ * without counting a shift twice when it exists in both.
+ */
+export const fetchLaborShifts = async (fromIso: string, toIso?: string) => {
+  let oldQ = staffDb.from("work_shifts").select("clock_in, clock_out").gte("clock_in", fromIso);
+  let newQ = staffDb.from("staff_time_entries").select("clock_in, clock_out, staff_members(is_owner)").gte("clock_in", fromIso);
+  if (toIso) { oldQ = oldQ.lt("clock_in", toIso); newQ = newQ.lt("clock_in", toIso); }
+  const [o, n] = await Promise.all([oldQ, newQ]);
+  const out: { clock_in: string; clock_out: string | null }[] = [];
+  const seen = new Set<number>();
+  const rows = [...(o.data ?? []), ...(n.data ?? []).filter((r: { staff_members?: { is_owner?: boolean } }) => !r.staff_members?.is_owner)];
+  for (const r of rows) {
+    const key = new Date(r.clock_in).getTime();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ clock_in: r.clock_in, clock_out: r.clock_out });
+  }
+  return out;
+};

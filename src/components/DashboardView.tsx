@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { fetchLaborShifts } from "@/lib/staff";
 import { setDailySummaryForDevice } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -284,8 +285,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
   const [wageInput, setWageInput] = useState("");
   const [shifts, setShifts] = useState<{ clock_in: string; clock_out: string | null }[]>([]);
   useEffect(() => {
-    (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", fetchStart.toISOString()).lt("clock_in", fetchEnd.toISOString())
-      .then(({ data }: any) => setShifts(data || []));
+    fetchLaborShifts(fetchStart.toISOString(), fetchEnd.toISOString()).then(setShifts).catch(() => setShifts([]));
   }, [fetchStart, fetchEnd]);
   const [supplies, setSupplies] = useState<SupplyPurchase[]>([]);
   const loadSupplies = () => (supabase as any).from("supply_purchases").select("*").order("purchased_at", { ascending: false }).then(({ data }: any) => setSupplies(data || []));
@@ -644,7 +644,7 @@ const DashboardView = ({ todayOnly = false }: { todayOnly?: boolean }) => {
         if (cancelled) return;
       }
       setTrendItems(collected);
-      const { data: sh } = await (supabase as any).from("work_shifts").select("clock_in, clock_out").gte("clock_in", start.toISOString());
+      const sh = await fetchLaborShifts(start.toISOString()).catch(() => []);
       if (!cancelled) {
         setTrendShifts(sh || []);
         setTrendLoaded(true);
