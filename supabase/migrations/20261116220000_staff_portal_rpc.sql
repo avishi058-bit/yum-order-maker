@@ -2,7 +2,8 @@
 -- function needed). Push reminders and the calendar feed are served by a small
 -- external worker (workers/staff), configured in internal_config:
 --   staff_worker_url     - base URL of the worker
---   staff_worker_secret  - shared secret the worker checks on /notify
+--   staff_worker_secret  - secret the worker echoes back to staff_push_expired
+--   staff_vapid_private  - VAPID private key, sent with each /notify call
 --   staff_push_key       - the worker's VAPID public key (for subscribing)
 
 create or replace function public.staff_member_by_token(p_token text)
@@ -187,8 +188,9 @@ begin
   if jsonb_array_length(v_payload) = 0 then return; end if;
   perform net.http_post(
     url := v_url || '/notify',
-    headers := jsonb_build_object('Content-Type', 'application/json', 'x-staff-secret', v_secret),
-    body := jsonb_build_object('messages', v_payload));
+    headers := jsonb_build_object('Content-Type', 'application/json'),
+    body := jsonb_build_object('messages', v_payload, 'secret', v_secret,
+                               'vapid_private', public.staff_config('staff_vapid_private')));
 end $$;
 
 -- The worker reports subscriptions the push service no longer accepts.

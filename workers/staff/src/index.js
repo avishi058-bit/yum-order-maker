@@ -1,5 +1,5 @@
 // Staff shifts worker (Cloudflare Workers, no dependencies).
-//   POST /notify   - from the database (staff_send_messages), header x-staff-secret.
+//   POST /notify   - from the database (staff_send_messages) with the VAPID private key.
 //                    Sends each message as Web Push (RFC 8291 aes128gcm + VAPID).
 //   GET  /calendar?t=<token> - iCal feed of the person's published shifts.
 //   GET  /health   - "ok"
@@ -25,24 +25,33 @@ const hkdf = async (salt, ikm, info, length) => {
   return new Uint8Array(await crypto.subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt, info }, key, length * 8));
 };
 
-// VAPID signing key from the base64url private scalar + the public key.
-let signingKey;
-const getSigningKey = async (env) => {
-  if (signingKey) return signingKey;
+// VAPID signing key from the base64url private scalar + the public key. The
+// private scalar arrives with each /notify call (env.VAPID_PRIVATE_KEY is only a
+// fallback); it must match VAPID_PUBLIC_KEY or the call is refused.
+const signingKeys = new Map();
+const getSigningKey = async (env, d = env.VAPID_PRIVATE_KEY) => {
+  if (!d) throw new Error("no_key");
+  if (signingKeys.has(d)) return signingKeys.get(d);
   const pub = b64uToBytes(env.VAPID_PUBLIC_KEY);
-  signingKey = await crypto.subtle.importKey("jwk", {
-    kty: "EC", crv: "P-256", d: env.VAPID_PRIVATE_KEY,
+  const key = await crypto.subtle.importKey("jwk", {
+    kty: "EC", crv: "P-256", d,
     x: bytesToB64u(pub.slice(1, 33)), y: bytesToB64u(pub.slice(33, 65)), ext: true,
   }, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
-  return signingKey;
+  // Prove the private key belongs to our public key: sign, then verify.
+  const probe = enc.encode("habikta-staff");
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, probe);
+  const verifyKey = await crypto.subtle.importKey("raw", pub, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+  if (!(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, verifyKey, sig, probe))) throw new Error("key_mismatch");
+  signingKeys.set(d, key);
+  return key;
 };
 
-const vapidHeader = async (env, endpoint) => {
+const vapidHeader = async (env, endpoint, d) => {
   const header = bytesToB64u(enc.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
   const claims = bytesToB64u(enc.encode(JSON.stringify({
     aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: env.VAPID_SUBJECT,
   })));
-  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, await getSigningKey(env), enc.encode(`${header}.${claims}`));
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, await getSigningKey(env, d), enc.encode(`${header}.${claims}`));
   return `vapid t=${header}.${claims}.${bytesToB64u(sig)}, k=${env.VAPID_PUBLIC_KEY}`;
 };
 
@@ -64,11 +73,11 @@ const encrypt = async (sub, payload) => {
   return concat(salt, rs, new Uint8Array([asPublic.length]), asPublic, cipher);
 };
 
-const sendPush = async (env, sub, payload) => {
+const sendPush = async (env, sub, payload, d) => {
   const res = await fetch(sub.endpoint, {
     method: "POST",
     headers: {
-      Authorization: await vapidHeader(env, sub.endpoint),
+      Authorization: await vapidHeader(env, sub.endpoint, d),
       "Content-Encoding": "aes128gcm",
       "Content-Type": "application/octet-stream",
       TTL: "86400",
@@ -87,18 +96,18 @@ const rpc = (env, fn, args) =>
   });
 
 const handleNotify = async (req, env) => {
-  if (!env.STAFF_SECRET || req.headers.get("x-staff-secret") !== env.STAFF_SECRET) return new Response("forbidden", { status: 403 });
-  const { messages = [] } = await req.json().catch(() => ({}));
+  const { messages = [], vapid_private: d, secret } = await req.json().catch(() => ({}));
+  try { await getSigningKey(env, d); } catch { return new Response("forbidden", { status: 403 }); }
   const expired = [];
   let sent = 0;
   await Promise.all(messages.flatMap((m) => (m.subs || []).map(async (s) => {
     try {
-      const status = await sendPush(env, s, JSON.stringify({ title: m.title, body: m.body, tag: m.tag, url: m.url || "/staff" }));
+      const status = await sendPush(env, s, JSON.stringify({ title: m.title, body: m.body, tag: m.tag, url: m.url || "/staff" }), d);
       if (status === 404 || status === 410) expired.push(s.endpoint);
       else if (status < 300) sent++;
     } catch { /* one bad subscription must not stop the rest */ }
   })));
-  if (expired.length) await rpc(env, "staff_push_expired", { p_secret: env.STAFF_SECRET, p_endpoints: expired });
+  if (expired.length && secret) await rpc(env, "staff_push_expired", { p_secret: secret, p_endpoints: expired });
   return Response.json({ ok: true, sent, expired: expired.length });
 };
 

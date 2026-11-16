@@ -1,6 +1,8 @@
 # Staff shifts worker: Web Push reminders + calendar feed for the employee page.
-# Deployed on Cloudflare Workers (free). Secrets are set in the Cloudflare
-# dashboard, never in this file: STAFF_SECRET, VAPID_PRIVATE_KEY.
+# Deployed on Cloudflare Workers (free) from GitHub. No Cloudflare secrets: the
+# database sends the VAPID private key and the cleanup secret with each /notify
+# call (from its service-only internal_config), and the worker refuses any key
+# that does not match VAPID_PUBLIC_KEY below.
 name = "habikta-staff"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
@@ -9,5 +11,5 @@ compatibility_date = "2026-11-01"
 SUPABASE_URL = "https://kdkcygokopwvutwvrgnp.supabase.co"
 # Public anon key (same one the website ships to every browser).
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtka2N5Z29rb3B3dnV0d3ZyZ25wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTA2NzYsImV4cCI6MjA5MTc2NjY3Nn0.Cm6lMGNzDRmVFP6rBDmmLXItRuc3DMKG9VUNcmkEHxQ"
-VAPID_PUBLIC_KEY = "BPUpi0nsYHann7MmJvMrmG23ZubuafOcgf3SDhqG8ZPl4Ui7EeN-KfvZ4dAH1XPL6KDj5MIm33tbwB2QaDogVAw"
+VAPID_PUBLIC_KEY = "BHR6NU3HFQfRUBH7-zszku0KsyrM-MF5smrT4AGagPgY12AQEb5A-Sfg-Cqq1awexbzWceiErcXESPmD9Stucw4"
 VAPID_SUBJECT = "mailto:shifts@habikta-burger.com"
