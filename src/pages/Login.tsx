@@ -28,7 +28,9 @@ const Login = () => {
     }
 
     toast.success("התחברת בהצלחה!");
-    window.location.href = "/kitchen";
+    // Return to the staff-only page that sent us here (same site only), else the kitchen.
+    const next = new URLSearchParams(window.location.search).get("next") ?? "";
+    window.location.href = /^\/(admin|events|kitchen|station-setup)[\w\-/]*$/.test(next) ? next : "/kitchen";
   };
 
   return (

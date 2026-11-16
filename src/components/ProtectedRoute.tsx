@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace />;
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.some((role) => roles.includes(role))) {
