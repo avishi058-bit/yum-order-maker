@@ -43,7 +43,8 @@ const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
   return data as T;
 };
 export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
-export const STOCK_CATEGORIES = ["סופר", "טייק אווי", "רטבים", "לחמניות", "קפואים", "המבורגר", "שתייה"] as const;
+/** Categories employees see. */
+export const STOCK_CATEGORIES = ["סופר", "ירקות", "טייק אווי", "רטבים", "לחמניות", "קפואים", "קציצה", "שתייה"] as const;
 export type StockLevel = "out" | "low" | "count";
 export interface StockItem { id: string; name: string; category: string; level: StockLevel | null; quantity: number | null }
 /** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2"). */

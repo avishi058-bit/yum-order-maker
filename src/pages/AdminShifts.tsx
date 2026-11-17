@@ -39,7 +39,8 @@ const AdminShifts = () => {
   const [assign, setAssign] = useState<{ shift_id: string; staff_id: string }[]>([]);
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
-  const [stock, setStock] = useState<{ id: string; name: string; category: string; active: boolean }[]>([]);
+  // shop_category: where the owner buys it, when it differs from the staff category.
+  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; active: boolean }[]>([]);
   const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: StockLevel; quantity: number | null; staff_id: string | null; created_at: string }[]>([]);
   const [newStock, setNewStock] = useState({ name: "", category: "טייק אווי" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
@@ -102,7 +103,7 @@ const AdminShifts = () => {
   }, []);
   const loadStock = useCallback(async () => {
     const [it, rp] = await Promise.all([
-      staffDb.from("staff_stock_items").select("id, name, category, active").eq("active", true).order("category").order("sort_order").order("name"),
+      staffDb.from("staff_stock_items").select("id, name, category, shop_category, active").eq("active", true).order("category").order("sort_order").order("name"),
       staffDb.from("staff_stock_reports").select("id, item_id, level, quantity, staff_id, created_at").is("resolved_at", null).order("created_at"),
     ]);
     setStock(it.data ?? []);
@@ -359,7 +360,10 @@ const AdminShifts = () => {
           <h2 className="text-lg font-black">מה לקנות</h2>
           {stockOpen.length === 0 && <p className="text-sm text-muted-foreground">אין חוסרים. כשעובד מדווח, המוצר יופיע כאן.</p>}
           {STOCK_CATEGORIES.map((c) => {
-            const rows = stockOpen.filter((r) => stock.find((i) => i.id === r.item_id)?.category === c);
+            const rows = stockOpen.filter((r) => {
+              const it = stock.find((i) => i.id === r.item_id);
+              return (it?.shop_category ?? it?.category) === c;
+            });
             if (rows.length === 0) return null;
             return (
               <div key={c}>
