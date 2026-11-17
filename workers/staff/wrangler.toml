@@ -13,3 +13,7 @@ SUPABASE_URL = "https://kdkcygokopwvutwvrgnp.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtka2N5Z29rb3B3dnV0d3ZyZ25wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxOTA2NzYsImV4cCI6MjA5MTc2NjY3Nn0.Cm6lMGNzDRmVFP6rBDmmLXItRuc3DMKG9VUNcmkEHxQ"
 VAPID_PUBLIC_KEY = "BHR6NU3HFQfRUBH7-zszku0KsyrM-MF5smrT4AGagPgY12AQEb5A-Sfg-Cqq1awexbzWceiErcXESPmD9Stucw4"
 VAPID_SUBJECT = "mailto:shifts@habikta-burger.com"
+
+# Workers AI (free daily allowance) reads the owner's shopping receipts.
+[ai]
+binding = "AI"

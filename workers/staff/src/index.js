@@ -144,9 +144,67 @@ const handleCalendar = async (url, env) => {
   });
 };
 
+// ─── Receipt reading (owner only) ─────────────────────────────────────
+// The owner's shopping list sends a receipt photo and the products still
+// missing; a vision model says which of them the receipt shows, and how many.
+const ALLOWED_ORIGINS = ["https://habikta-burger.com", "https://www.habikta-burger.com", "https://habikta-burger.lovable.app"];
+const cors = (req) => {
+  const origin = req.headers.get("Origin") ?? "";
+  const ok = ALLOWED_ORIGINS.includes(origin) || /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(origin) || origin.startsWith("http://localhost");
+  return ok ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "authorization, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS", Vary: "Origin" } : {};
+};
+const json = (req, body, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(req) } });
+
+/** Only the owner can read suppliers (admin-only RLS), so a row back means admin. */
+const isAdmin = async (env, auth) => {
+  if (!auth?.startsWith("Bearer ")) return false;
+  const r = await fetch(`${env.SUPABASE_URL}/rest/v1/staff_suppliers?select=id&limit=1`, {
+    headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: auth },
+  });
+  if (!r.ok) return false;
+  const rows = await r.json().catch(() => []);
+  return Array.isArray(rows) && rows.length > 0;
+};
+
+const handleReceipt = async (req, env) => {
+  if (!env.AI) return json(req, { error: "no_ai" }, 503);
+  if (!(await isAdmin(env, req.headers.get("Authorization")))) return json(req, { error: "forbidden" }, 403);
+  const body = await req.json().catch(() => null);
+  const image = typeof body?.image === "string" ? body.image : "";
+  const items = Array.isArray(body?.items) ? body.items.slice(0, 80) : [];
+  if (!image.startsWith("data:image/") || image.length > 6_000_000 || items.length === 0) return json(req, { error: "bad_request" }, 400);
+  const list = items.map((i, n) => `${n + 1}. ${String(i.name).slice(0, 60)} (נספר ב${String(i.unit ?? "יחידות").slice(0, 20)}${i.pack_size ? `, ${i.pack_name ?? "ארגז"} = ${Number(i.pack_size)}` : ""})`).join("\n");
+  const prompt = `This is a photo of a shopping receipt from an Israeli store, in Hebrew.
+Here is a numbered list of products the restaurant was missing:
+${list}
+For each product in the list that appears on the receipt, say how many were bought, in the unit written next to it (convert cases/packs to that unit when needed).
+Answer with JSON only, no other text: [{"n": <list number>, "quantity": <number>, "line": "<the receipt line you matched>"}]. If nothing matches, answer [].`;
+  let text = "";
+  try {
+    const out = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: image } }] }],
+      max_tokens: 800,
+      temperature: 0,
+    });
+    text = typeof out?.response === "string" ? out.response : JSON.stringify(out?.response ?? "");
+  } catch (e) {
+    return json(req, { error: "ai_failed", detail: String(e).slice(0, 200) }, 502);
+  }
+  const m = text.match(/\[[\s\S]*\]/);
+  let found = [];
+  try { found = m ? JSON.parse(m[0]) : []; } catch { found = []; }
+  const result = found
+    .filter((f) => Number.isInteger(f?.n) && f.n >= 1 && f.n <= items.length && Number(f.quantity) > 0)
+    .map((f) => ({ id: items[f.n - 1].id, quantity: Math.min(9999, Number(f.quantity)), line: String(f.line ?? "").slice(0, 80) }));
+  return json(req, { found: result });
+};
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    if (url.pathname === "/receipt" && req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
+    if (url.pathname === "/receipt" && req.method === "POST") return handleReceipt(req, env);
     if (url.pathname === "/notify" && req.method === "POST") return handleNotify(req, env);
     if (url.pathname === "/calendar" && req.method === "GET") return handleCalendar(url, env);
     if (url.pathname === "/health") return new Response("ok");
