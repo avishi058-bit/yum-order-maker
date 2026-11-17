@@ -57,14 +57,15 @@ export interface StockItem {
 }
 export type StockPack = { name: string; size: number } | null;
 /** Plural of a pack name: ארגז → ארגזים, תבנית → תבניות. */
-export const packPlural = (name: string) => (name === "ארגז" ? "ארגזים" : name === "תבנית" ? "תבניות" : name);
+export const packPlural = (name: string) => (name === "ארגז" ? "ארגזים" : name === "תבנית" ? "תבניות" : name === "חבילה" ? "חבילות" : name);
+const FEMININE_PACKS = new Set(["תבנית", "חבילה"]);
 /** "נשארו 2 ארגזים ו-5 יחידות", "נשאר ארגז אחד". */
 const packText = (q: number, pack: { name: string; size: number }, unit: string) => {
   const packs = Math.floor(q / pack.size);
   const rem = q - packs * pack.size;
-  const head = packs === 1 ? `${pack.name} ${pack.name === "תבנית" ? "אחת" : "אחד"}` : `${packs} ${packPlural(pack.name)}`;
+  const head = packs === 1 ? `${pack.name} ${FEMININE_PACKS.has(pack.name) ? "אחת" : "אחד"}` : `${packs} ${packPlural(pack.name)}`;
   const remText = Number.isInteger(rem) ? String(rem) : `${rem >= 1 ? Math.floor(rem) : ""}½`;
-  const verb = packs === 1 && rem === 0 ? (pack.name === "תבנית" ? "נשארה" : "נשאר") : "נשארו";
+  const verb = packs === 1 && rem === 0 ? (FEMININE_PACKS.has(pack.name) ? "נשארה" : "נשאר") : "נשארו";
   return `${verb} ${head}${rem > 0 ? ` ו-${remText} ${unit || "יחידות"}` : ""}`;
 };
 const SINGULAR: Record<string, string> = { "חבילות": "חבילה", "פחיות": "פחית", "יחידות": "יחידה", "גלילים": "גליל", "דליים": "דלי" };

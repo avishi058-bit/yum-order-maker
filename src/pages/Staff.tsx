@@ -280,7 +280,9 @@ const Staff = () => {
     ...(data.me.is_owner ? [] : [{ id: "meals", icon: "🍔", label: "ארוחות" }]),
     { id: "stock", icon: "📦", label: "מלאי" },
     { id: "tasks", icon: "✅", label: "משימות" },
-  ] as { id: typeof tab; icon: string; label: string }[];
+    // The owner's decisions (schedule, approvals, orders, shopping) live on the management page.
+    ...(data.me.is_owner ? [{ id: "manage", icon: "⚙️", label: "ניהול" }] : []),
+  ] as { id: typeof tab | "manage"; icon: string; label: string }[];
   const stockOpenCount = data.stock?.filter((i) => i.level).length ?? 0;
   const openTasks = tasks?.tasks.filter((t) => !t.done && t.source !== "idle").length ?? 0;
 
@@ -294,7 +296,7 @@ const Staff = () => {
       <nav aria-label="ניווט" className="sticky top-0 z-40 bg-white/95 backdrop-blur px-3 pt-2 pb-2">
         <div className="max-w-lg mx-auto flex gap-0.5 rounded-[18px] bg-[#f7f3f0] p-1">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => { setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
+            <button key={t.id} type="button" onClick={() => { if (t.id === "manage") { window.location.href = "/admin/shifts"; return; } setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
               className={`relative flex-1 py-2 rounded-[14px] text-[13px] whitespace-nowrap transition-colors ${tab === t.id ? `bg-white ${C.accent} font-black shadow-sm` : `${C.muted} font-semibold`}`}>
               {t.label}
               {((t.id === "tasks" && openTasks > 0) || (t.id === "stock" && stockOpenCount > 0)) && (
@@ -642,7 +644,7 @@ const Staff = () => {
                 return (
                   <li key={i.id} className={`py-3 border-b last:border-0 ${C.line}`}>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-black">{i.name}<span className={`block text-xs font-bold ${C.muted}`}>{i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""}</span></span>
+                      <span className="font-black">{i.name}<span className={`block text-xs font-bold ${i.unit === "חבילות" ? C.accent : C.muted}`}>{i.unit === "חבילות" ? "סופרים בחבילות" : i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""}</span></span>
                       {!pack && (
                         <span className="flex items-center gap-2">
                           <button type="button" aria-label={`פחות ${i.name}`} onClick={() => set(v - Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>−</button>

@@ -219,7 +219,7 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
                 const pack = itemPack(i);
                 return (
                   <li key={i.id} className="flex items-center justify-between gap-2 py-3">
-                    <span className="font-bold">{i.name} <span className="text-xs text-muted-foreground">({i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""})</span>
+                    <span className="font-bold">{i.name} <span className={`text-xs ${i.unit === "חבילות" ? "text-amber-300 font-black" : "text-muted-foreground"}`}>({i.unit === "חבילות" ? "סופרים בחבילות" : i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""})</span>
                       {pack && v >= pack.size && <span className="block text-xs text-amber-300">{stockText("count", v, i.unit, pack)}</span>}
                     </span>
                     <span className="flex flex-col gap-1.5">
