@@ -121,3 +121,26 @@ revoke all on function public.staff_owner_order_reminders() from public, anon, a
 
 select cron.unschedule('staff-tasks-tick') where exists (select 1 from cron.job where jobname = 'staff-tasks-tick');
 select cron.schedule('staff-tasks-tick', '* * * * *', $cron$ select public.staff_give_idle_task(); select public.staff_clockout_reminders(); select public.staff_closing_nudge(); select public.staff_supplier_reminders(); select public.staff_owner_order_reminders(); $cron$);
+
+-- "אחר" needs to say what was thrown away.
+drop function if exists public.staff_portal_waste_add(text, uuid, int, text);
+create or replace function public.staff_portal_waste_add(p_token text, p_item_id uuid, p_qty int, p_reason text, p_what text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare me public.staff_members; w public.staff_waste_items; v_log uuid; v_name text;
+begin
+  me := public.staff_member_by_token(p_token);
+  if me.id is null then raise exception 'invalid_link'; end if;
+  select * into w from public.staff_waste_items where id = p_item_id and active;
+  if w.id is null or p_qty not between 1 and 50 or length(coalesce(p_reason, '')) not between 1 and 80 then raise exception 'not_found'; end if;
+  v_name := case when w.name = 'אחר' then nullif(trim(left(coalesce(p_what, ''), 60)), '') else w.name end;
+  if v_name is null then raise exception 'not_found'; end if;
+  if (select count(*) from public.staff_waste_logs where staff_id = me.id and created_at > now() - interval '1 hour') >= 30 then raise exception 'too_many'; end if;
+  insert into public.staff_waste_logs(item_id, item_name, quantity, reason, staff_id) values (w.id, v_name, p_qty, p_reason, me.id) returning id into v_log;
+  if w.inventory_item_id is not null and w.amount > 0 then
+    update public.inventory_items set quantity = quantity - w.amount * p_qty where id = w.inventory_item_id;
+    insert into public.inventory_movements(inventory_item_id, delta, reason, note)
+    values (w.inventory_item_id, -w.amount * p_qty, 'waste', 'פחת: ' || p_reason || ' · ' || v_log::text);
+  end if;
+end $$;
+revoke all on function public.staff_portal_waste_add(text, uuid, int, text, text) from public;
+grant execute on function public.staff_portal_waste_add(text, uuid, int, text, text) to anon, authenticated;

@@ -105,8 +105,8 @@ export interface WasteList {
   today: { id: string; name: string; quantity: number; reason: string; at: string; can_remove: boolean }[];
 }
 export const fetchWaste = (token: string) => rpc<WasteList>("staff_portal_waste_list", { p_token: token });
-export const addWaste = (token: string, itemId: string, qty: number, reason: string) =>
-  rpc<void>("staff_portal_waste_add", { p_token: token, p_item_id: itemId, p_qty: qty, p_reason: reason });
+export const addWaste = (token: string, itemId: string, qty: number, reason: string, what?: string) =>
+  rpc<void>("staff_portal_waste_add", { p_token: token, p_item_id: itemId, p_qty: qty, p_reason: reason, p_what: what ?? null });
 export const removeWaste = (token: string, logId: string) => rpc<void>("staff_portal_waste_remove", { p_token: token, p_log_id: logId });
 
 /** Staff meals: report an item taken, or take back a recent report. */

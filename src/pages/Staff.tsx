@@ -9,7 +9,7 @@ import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import StaffWaste from "@/components/staff/StaffWaste";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -267,8 +267,9 @@ const Staff = () => {
   const todayShift = data.upcoming.find((s) => s.date === today);
   const firstName = data.me.name.split(" ")[0];
   const todayText = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", weekday: "long", day: "numeric", month: "numeric" }).format(new Date());
-  const week = Array.from({ length: 7 }, (_, i) => addDaysYmd(today, i));
-  const myDates = new Set(ahead.map((s) => s.date));
+  // This week Sunday to Saturday night, without Friday (closed).
+  const week = Array.from({ length: 7 }, (_, i) => addDaysYmd(weekStartYmd(today), i)).filter((d) => new Date(`${d}T12:00:00Z`).getUTCDay() !== 5);
+  const myDates = new Set([...ahead.map((s) => s.date), ...done.map((e) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(new Date(e.clock_in).getTime() - 4 * 3600_000)))]);
   const closedDates = new Set(nw.closed.map((d) => d.date));
   const tabs = [
     { id: "home", icon: "🏠", label: "בית" },
@@ -329,7 +330,7 @@ const Staff = () => {
                 <p className="text-sm font-semibold text-[#b0705a]">{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
                 {next ? (
                   <>
-                    <h2 className="text-3xl font-black mt-1">{next.date === today ? "היום" : `${next.label} ${dateIL(next.date)}`} {timeIL(next.starts_at)}</h2>
+                    <h2 className="text-3xl font-black mt-1">{next.date === today ? "היום" : next.label} {timeIL(next.starts_at)}</h2>
                     <p className={`text-[15px] mt-0.5 ${nextState?.late ? "text-red-600 font-bold" : "text-[#7a5e50]"}`}>
                       {nextState?.text ?? ""}{nextState && next.team.length > (next.mine ? 1 : 0) ? " · " : ""}
                       {next.team.filter((n) => n !== data.me.name).length > 0 && `עם ${next.team.filter((n) => n !== data.me.name).join(", ")}`}
@@ -339,16 +340,16 @@ const Staff = () => {
                   <h2 className="text-2xl font-black mt-1">עוד אין משמרת בסידור</h2>
                 )}
                 <div className="flex justify-between mt-4" aria-label="השבוע שלי">
-                  {week.map((d, i) => {
+                  {week.map((d) => {
                     const mine = myDates.has(d);
                     const closed = closedDates.has(d);
                     return (
                       <span key={d} className={`w-10 text-center text-[11px] font-semibold ${C.muted}`}>
                         <span className={`mx-auto mb-1 w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-black ${
-                          mine ? "bg-[#e8502f] text-white" : closed ? "border-[1.5px] border-dashed border-[#e2d4cb] text-[#c4b5ab]" : "bg-[#f7f3f0] text-[#2b1a12]"}`}>
+                          mine ? `bg-[#e8502f] text-white ${d < today ? "opacity-50" : ""}` : closed ? "border-[1.5px] border-dashed border-[#e2d4cb] text-[#c4b5ab]" : "bg-[#f7f3f0] text-[#2b1a12]"}`}>
                           {["א", "ב", "ג", "ד", "ה", "ו", "מ"][new Date(`${d}T12:00:00Z`).getUTCDay()]}
                         </span>
-                        {i === 0 ? "היום" : closed ? "סגור" : ""}
+                        {d === today ? "היום" : closed ? "סגור" : ""}
                       </span>
                     );
                   })}
@@ -725,15 +726,6 @@ const Staff = () => {
             <input type="time" value={appeal.time} max={timeIL(appeal.clockIn)} onChange={(ev) => setAppeal({ ...appeal, time: ev.target.value })}
               aria-label="שעת ההגעה האמיתית"
               className={`w-full h-14 rounded-2xl border-2 ${C.line} px-3 text-2xl font-black text-center bg-white`} />
-            <div className="grid grid-cols-4 gap-2">
-              {[{ l: "−1 שעה", d: -60 }, { l: "−10 דק׳", d: -10 }, { l: "−1 דק׳", d: -1 }, { l: "+1 דק׳", d: 1 }].map((b) => (
-                <button key={b.l} type="button" onClick={() => {
-                  const [h, m] = (appeal.time || timeIL(appeal.clockIn)).split(":").map(Number);
-                  const t = (((h * 60 + m + b.d) % 1440) + 1440) % 1440;
-                  setAppeal({ ...appeal, time: `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}` });
-                }} className={`h-11 rounded-full border-2 ${C.line} text-sm font-black`}>{b.l}</button>
-              ))}
-            </div>
             <p className={`text-sm ${C.muted}`}>השעה תתעדכן רק אחרי אישור של אבישי.</p>
             <button type="button" onClick={sendAppeal} disabled={sending || !appeal.time} className={`w-full h-14 rounded-full text-lg font-black ${C.grad} disabled:opacity-50`}>
               {sending ? "שולח..." : "שליחת ערעור לאבישי"}
