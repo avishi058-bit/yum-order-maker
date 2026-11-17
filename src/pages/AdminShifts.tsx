@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
-  STOCK_CATEGORIES, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
+  SHOP_CATEGORIES, STOCK_CATEGORIES, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
 } from "@/lib/staff";
 
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
@@ -42,7 +42,7 @@ const AdminShifts = () => {
   // shop_category: where the owner buys it, when it differs from the staff category.
   const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; active: boolean }[]>([]);
   const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: StockLevel; quantity: number | null; staff_id: string | null; created_at: string }[]>([]);
-  const [newStock, setNewStock] = useState({ name: "", category: "טייק אווי" });
+  const [newStock, setNewStock] = useState({ name: "", category: "ירקות", shop: "סופר" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
   const [appeals, setAppeals] = useState<{ id: string; staff_id: string; claimed_in: string; staff_time_entries: { clock_in: string } | null }[]>([]);
   const [closedDays, setClosedDays] = useState<{ day: string; label: string | null }[]>([]);
@@ -116,7 +116,9 @@ const AdminShifts = () => {
   const addStockItem = async () => {
     const name = newStock.name.trim();
     if (!name) return;
-    const { error } = await staffDb.from("staff_stock_items").insert({ name, category: newStock.category, sort_order: 500 });
+    const { error } = await staffDb.from("staff_stock_items").insert({
+      name, category: newStock.category, shop_category: newStock.shop === newStock.category ? null : newStock.shop, sort_order: 500,
+    });
     if (error) toast.error("לא נשמר (אולי המוצר כבר קיים)"); else { setNewStock({ ...newStock, name: "" }); loadStock(); }
   };
   const removeStockItem = async (id: string, name: string) => {
@@ -359,7 +361,7 @@ const AdminShifts = () => {
         <section className="rounded-2xl bg-card border border-border p-4 space-y-4">
           <h2 className="text-lg font-black">מה לקנות</h2>
           {stockOpen.length === 0 && <p className="text-sm text-muted-foreground">אין חוסרים. כשעובד מדווח, המוצר יופיע כאן.</p>}
-          {STOCK_CATEGORIES.map((c) => {
+          {SHOP_CATEGORIES.map((c) => {
             const rows = stockOpen.filter((r) => {
               const it = stock.find((i) => i.id === r.item_id);
               return (it?.shop_category ?? it?.category) === c;
@@ -406,8 +408,12 @@ const AdminShifts = () => {
             ))}
             <div className="flex gap-2 pt-3 flex-wrap">
               <select value={newStock.category} onChange={(e) => setNewStock({ ...newStock, category: e.target.value })}
-                className="bg-background border border-border rounded-lg px-2 py-2" aria-label="קטגוריה">
-                {STOCK_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                className="bg-background border border-border rounded-lg px-2 py-2" aria-label="אצל העובדים">
+                {STOCK_CATEGORIES.map((c) => <option key={c} value={c}>עובדים: {c}</option>)}
+              </select>
+              <select value={newStock.shop} onChange={(e) => setNewStock({ ...newStock, shop: e.target.value })}
+                className="bg-background border border-border rounded-lg px-2 py-2" aria-label="ברשימת הקניות שלי">
+                {SHOP_CATEGORIES.map((c) => <option key={c} value={c}>אצלי: {c}</option>)}
               </select>
               <input value={newStock.name} onChange={(e) => setNewStock({ ...newStock, name: e.target.value })} placeholder="שם מוצר חדש"
                 className="flex-1 min-w-32 bg-background border border-border rounded-lg px-3 py-2" />

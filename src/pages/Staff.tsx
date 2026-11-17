@@ -45,7 +45,7 @@ const Staff = () => {
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [sending, setSending] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [stockCat, setStockCat] = useState<string>("סופר");
+  const [stockCat, setStockCat] = useState<string>("ירקות");
   const [stockEdit, setStockEdit] = useState<{ item: StockItem; qty: number } | null>(null);
   const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock">("home");
   const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
