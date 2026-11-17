@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -47,7 +47,9 @@ const Staff = () => {
   const [rulesOpen, setRulesOpen] = useState(false);
   const [stockCat, setStockCat] = useState<string>("ירקות");
   const [stockEdit, setStockEdit] = useState<{ item: StockItem; qty: number } | null>(null);
-  const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock">("home");
+  const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock" | "tasks">("home");
+  const [tasks, setTasks] = useState<{ on_shift: boolean; tasks: ShiftTask[] } | null>(null);
+  const [counting, setCounting] = useState<{ task: ShiftTask; values: Record<string, number> } | null>(null);
   const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
     typeof Notification !== "undefined" && Notification.permission === "granted" ? "on" : "idle",
@@ -69,10 +71,15 @@ const Staff = () => {
     }
   }, [token]);
 
-  useEffect(() => { load(); }, [load]);
+  const loadTasks = useCallback(async () => {
+    if (!token) return;
+    try { setTasks(await fetchStaffTasks(token)); } catch { /* shown as empty */ }
+  }, [token]);
+
+  useEffect(() => { load(); loadTasks(); }, [load, loadTasks]);
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 30_000);
-    const onFocus = () => load();
+    const onFocus = () => { load(); loadTasks(); };
     window.addEventListener("focus", onFocus);
     return () => { window.clearInterval(t); window.removeEventListener("focus", onFocus); };
   }, [load]);
@@ -165,6 +172,29 @@ const Staff = () => {
     }
   };
 
+  const tickTask = async (t: ShiftTask, done: boolean) => {
+    if (t.kind === "count" || t.kind === "supplier_count") {
+      if (done) setCounting({ task: t, values: Object.fromEntries((t.items ?? []).map((i) => [i.id, 0])) });
+      return;
+    }
+    setTasks((cur) => cur && { ...cur, tasks: cur.tasks.map((x) => (x.id === t.id ? { ...x, done } : x)) });
+    try { await setStaffTask(token, t.id, done); } catch { toast.error("לא נשמר, נסו שוב"); }
+    loadTasks();
+  };
+  const saveCount = async () => {
+    if (!counting) return;
+    setSending(true);
+    try {
+      await setStaffTask(token, counting.task.id, true, Object.entries(counting.values).map(([item_id, quantity]) => ({ item_id, quantity })));
+      setCounting(null);
+      await Promise.all([loadTasks(), load()]);
+    } catch {
+      toast.error("לא נשמר, נסו שוב");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const addMeal = async (item: { id: string; name: string; price: number }) => {
     try {
       const logId = await addStaffMeal(token, item.id);
@@ -222,8 +252,10 @@ const Staff = () => {
     { id: "shifts", icon: "📅", label: "משמרות" },
     ...(data.me.is_owner ? [] : [{ id: "meals", icon: "🍔", label: "ארוחות" }]),
     { id: "stock", icon: "📦", label: "מלאי" },
+    { id: "tasks", icon: "✅", label: "משימות" },
   ] as { id: typeof tab; icon: string; label: string }[];
   const stockOpenCount = data.stock?.filter((i) => i.level).length ?? 0;
+  const openTasks = tasks?.tasks.filter((t) => !t.done && t.source !== "idle").length ?? 0;
 
   return (
     <main dir="rtl" className={`min-h-screen ${C.page} pb-24`}>
@@ -238,6 +270,9 @@ const Staff = () => {
               className={`relative flex-1 pt-2.5 pb-2 flex flex-col items-center gap-0.5 border-b-4 ${tab === t.id ? `${C.accent} border-[#e8502f]` : `${C.muted} border-transparent`}`}>
               <span className="text-2xl leading-none" aria-hidden>{t.icon}</span>
               <span className={`text-sm ${tab === t.id ? "font-black" : "font-bold"}`}>{t.label}</span>
+              {t.id === "tasks" && openTasks > 0 && (
+                <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{openTasks}</span>
+              )}
               {t.id === "stock" && stockOpenCount > 0 && (
                 <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{stockOpenCount}</span>
               )}
@@ -427,6 +462,38 @@ const Staff = () => {
           </>
         )}
 
+        {tab === "tasks" && (
+          <section className={`${C.card} !p-5`}>
+            <h2 className="text-xl font-black mb-1">המשימות של הערב</h2>
+            {!tasks?.on_shift ? (
+              <p className={C.muted}>המשימות מופיעות כאן כשאת/ה במשמרת.</p>
+            ) : tasks.tasks.length === 0 ? (
+              <p className={C.muted}>אין משימות כרגע.</p>
+            ) : (
+              <ul>
+                {tasks.tasks.map((t) => {
+                  const isCount = t.kind === "count" || t.kind === "supplier_count";
+                  return (
+                    <li key={t.id} className={`border-b last:border-0 ${C.line}`}>
+                      <label className="flex items-center gap-3 py-3 cursor-pointer">
+                        <input type="checkbox" checked={t.done} disabled={isCount && t.done} onChange={(e) => tickTask(t, e.target.checked)}
+                          className="w-7 h-7 accent-green-600 shrink-0" />
+                        <span className={`flex-1 text-base ${t.done ? `line-through ${C.muted}` : "font-bold"}`}>
+                          {t.title}
+                          {t.source === "carry" && <span className="text-xs text-amber-600 font-bold"> · מאתמול</span>}
+                          {t.at_opening && <span className={`text-xs ${C.muted}`}> · בפתיחה</span>}
+                          {isCount && !t.done && <span className={`block text-xs font-normal ${C.muted}`}>{(t.items ?? []).map((i) => i.name).join(", ")}</span>}
+                        </span>
+                        {isCount && !t.done && <span className="shrink-0 rounded-full bg-green-600 text-white text-sm font-black px-3 py-1.5">לספור</span>}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        )}
+
         {tab === "stock" && data.stock && (
           <>
             <section className={`${C.card} !p-5`}>
@@ -463,6 +530,38 @@ const Staff = () => {
       </div>
 
 
+      {counting && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-count-title" onClick={() => !sending && setCounting(null)}>
+          <div className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]" onClick={(e) => e.stopPropagation()}>
+            <h2 id="staff-count-title" className="text-xl font-black text-center">{counting.task.title}</h2>
+            <ul>
+              {(counting.task.items ?? []).map((i) => {
+                const v = counting.values[i.id] ?? 0;
+                const pack = itemPack(i);
+                const set = (n: number) => setCounting({ ...counting, values: { ...counting.values, [i.id]: Math.max(0, Math.min(9999, n)) } });
+                return (
+                  <li key={i.id} className={`py-3 border-b last:border-0 ${C.line}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-black">{i.name}<span className={`block text-xs font-bold ${C.muted}`}>{i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""}</span></span>
+                      <span className="flex items-center gap-2">
+                        <button type="button" aria-label={`פחות ${i.name}`} onClick={() => set(v - Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>−</button>
+                        <span className="w-12 text-center text-2xl font-black">{halfText(v)}</span>
+                        <button type="button" aria-label={`יותר ${i.name}`} onClick={() => set(v + Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>+</button>
+                      </span>
+                    </div>
+                    {pack && v >= pack.size && <p className={`text-xs font-bold ${C.accent}`}>{stockText("count", v, i.unit, pack)}</p>}
+                  </li>
+                );
+              })}
+            </ul>
+            <button type="button" onClick={saveCount} disabled={sending} className="w-full h-14 rounded-full text-lg font-black bg-green-600 text-white disabled:opacity-50">
+              {sending ? "שומר…" : "שמירת הספירה"}
+            </button>
+            <button type="button" onClick={() => setCounting(null)} disabled={sending} className={`w-full h-12 rounded-full border-2 ${C.line} font-bold`}>ביטול</button>
+          </div>
+        </div>
+      )}
+
       {stockEdit && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-stock-title" onClick={() => setStockEdit(null)}>
           <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]" onClick={(e) => e.stopPropagation()}>
@@ -493,7 +592,7 @@ const Staff = () => {
                     return (
                       <>
                         {stepper(`${packPlural(pack.name)} (${pack.size})`, String(packs), () => setQty(stockEdit.qty - pack.size), () => setQty(stockEdit.qty + pack.size))}
-                        {stepper("יחידות", String(units), () => setQty(stockEdit.qty - 1), () => setQty(stockEdit.qty + 1))}
+                        {stepper(stockEdit.item.unit, halfText(units), () => setQty(stockEdit.qty - Number(stockEdit.item.step)), () => setQty(stockEdit.qty + Number(stockEdit.item.step)))}
                       </>
                     );
                   }

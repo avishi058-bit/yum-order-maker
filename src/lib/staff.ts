@@ -59,11 +59,13 @@ export type StockPack = { name: string; size: number } | null;
 /** Plural of a pack name: ארגז → ארגזים, תבנית → תבניות. */
 export const packPlural = (name: string) => (name === "ארגז" ? "ארגזים" : name === "תבנית" ? "תבניות" : name);
 /** "נשארו 2 ארגזים ו-5 יחידות", "נשאר ארגז אחד". */
-const packText = (q: number, pack: { name: string; size: number }) => {
+const packText = (q: number, pack: { name: string; size: number }, unit: string) => {
   const packs = Math.floor(q / pack.size);
   const rem = q - packs * pack.size;
   const head = packs === 1 ? `${pack.name} ${pack.name === "תבנית" ? "אחת" : "אחד"}` : `${packs} ${packPlural(pack.name)}`;
-  return `נשארו ${head}${rem > 0 ? ` ו-${rem} יחידות` : ""}`;
+  const remText = Number.isInteger(rem) ? String(rem) : `${rem >= 1 ? Math.floor(rem) : ""}½`;
+  const verb = packs === 1 && rem === 0 ? (pack.name === "תבנית" ? "נשארה" : "נשאר") : "נשארו";
+  return `${verb} ${head}${rem > 0 ? ` ו-${remText} ${unit || "יחידות"}` : ""}`;
 };
 const SINGULAR: Record<string, string> = { "חבילות": "חבילה", "פחיות": "פחית", "יחידות": "יחידה" };
 /** "נשארה חצי חבילה", "נשארה חבילה אחת", "נשארו 1½ חבילות", "נשארו 3" (plain units). */
@@ -77,12 +79,25 @@ const countText = (q: number, unit: string) => {
 /** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2 חבילות"). */
 export const stockText = (level: StockLevel | null, qty: number | null, unit = "", pack: StockPack = null) =>
   level === "out" ? "נגמר" : level === "low" ? "נשאר קצת"
-    : level === "count" ? (pack && Number(qty) >= pack.size ? packText(Number(qty), pack) : countText(Number(qty), unit)) : "יש מספיק";
+    : level === "count" ? (pack && Number(qty) >= pack.size ? packText(Number(qty), pack, unit) : countText(Number(qty), unit)) : "יש מספיק";
 export const itemPack = (i: { pack_name: string | null; pack_size: number | null }): StockPack =>
   i.pack_name && i.pack_size ? { name: i.pack_name, size: i.pack_size } : null;
 /** Reports how much is left of a product (amount, "a little", "ran out"), or clears the report (null). */
 export const setStaffStock = (token: string, itemId: string, level: StockLevel | null, qty?: number) =>
   rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level, p_qty: qty ?? null });
+
+/** A product to count in a count task (base unit, with its pack when it has one). */
+export interface CountItem { id: string; name: string; unit: string; step: number; pack_name: string | null; pack_size: number | null }
+/** One of tonight's tasks; count tasks carry the products to count. */
+export interface ShiftTask { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items: CountItem[] | null }
+/** Tonight's tasks on the employee's phone (empty when they are not on tonight's shift). */
+export const fetchStaffTasks = (token: string) =>
+  rpc<{ on_shift: boolean; shift_date?: string; tasks: ShiftTask[] }>("staff_portal_tasks", { p_token: token });
+/** Ticks a task, or records a count task with its counts ({ item_id, quantity }). */
+export const setStaffTask = (token: string, runId: string, done: boolean, counts?: { item_id: string; quantity: number }[]) =>
+  rpc<void>("staff_portal_task_set", { p_token: token, p_run_id: runId, p_done: done, p_counts: counts ?? null });
+/** "3½", "½", "2". */
+export const halfText = (q: number) => (Number.isInteger(q) ? String(q) : `${q >= 1 ? Math.floor(q) : ""}½`);
 
 /** Staff meals: report an item taken, or take back a recent report. */
 export const addStaffMeal = (token: string, itemId: string) => rpc<string | null>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });

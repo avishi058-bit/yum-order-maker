@@ -9,13 +9,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { staffDb } from "@/lib/staff";
+import { halfText, itemPack, staffDb, stockText, type CountItem } from "@/lib/staff";
 
 interface Person { id: string; name: string; open_since: string | null; pending_early?: boolean }
-interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean }
-interface CountItem { id: string; name: string; unit: string; step: number }
-
-const half = (q: number) => (Number.isInteger(q) ? String(q) : `${q >= 1 ? Math.floor(q) : ""}½`);
+interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items?: CountItem[] | null }
+const isCount = (t: Task) => t.kind === "count" || t.kind === "supplier_count";
 
 const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) => {
   const [people, setPeople] = useState<Person[]>([]);
@@ -23,7 +21,7 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const [countItems, setCountItems] = useState<CountItem[]>([]);
   const [confirm, setConfirm] = useState<Person | null>(null);
   const [listOpen, setListOpen] = useState(false);
-  const [counting, setCounting] = useState<{ runId: string; values: Record<string, number> } | null>(null);
+  const [counting, setCounting] = useState<{ runId: string; title: string; items: CountItem[]; values: Record<string, number>; leaving?: Person } | null>(null);
   const [saving, setSaving] = useState(false);
   const [closingNudge, setClosingNudge] = useState(false);
   const [closingSeen, setClosingSeen] = useState(false);
@@ -51,8 +49,8 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const showClosing = someoneIn && closingNudge && !closingSeen && !kitchenBusy && open.length > 0;
 
   const setDone = async (t: Task, done: boolean) => {
-    if (done && t.kind === "count") {
-      setCounting({ runId: t.id, values: Object.fromEntries(countItems.map((i) => [i.id, 0])) });
+    if (isCount(t)) {
+      if (done) startCount(t);
       return;
     }
     setTasks((all) => all.map((x) => (x.id === t.id ? { ...x, done } : x)));
@@ -60,16 +58,22 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
     if (error) { toast.error("לא נשמר"); load(); }
   };
 
+  const startCount = (t: Task, leaving?: Person) => {
+    const items = t.items ?? countItems;
+    setCounting({ runId: t.id, title: t.title, items, values: Object.fromEntries(items.map((i) => [i.id, 0])), leaving });
+  };
+
   const saveCount = async () => {
     if (!counting) return;
     setSaving(true);
     const counts = Object.entries(counting.values).map(([item_id, quantity]) => ({ item_id, quantity }));
-    const r1 = await staffDb.rpc("kitchen_stock_count", { p_counts: counts });
-    const r2 = await staffDb.rpc("kitchen_task_set", { p_run_id: counting.runId, p_done: true });
+    const { error } = await staffDb.rpc("kitchen_task_count", { p_run_id: counting.runId, p_counts: counts });
     setSaving(false);
-    if (r1.error || r2.error) { toast.error("לא נשמר"); return; }
+    if (error) { toast.error("לא נשמר"); return; }
+    const leaving = counting.leaving;
     setCounting(null);
-    toast.success("הספירה נשמרה");
+    toast.success(leaving ? "הספירה נשמרה - אפשר לצאת" : "הספירה נשמרה");
+    if (leaving) setConfirm(leaving);
     load();
   };
 
@@ -81,6 +85,12 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
     setSaving(false);
     setConfirm(null);
     if (error) { toast.error("הפעולה נכשלה"); return; }
+    if (data?.state === "need_count") {
+      const t = tasks.find((x) => x.id === data.run_id);
+      toast.error("לפני היציאה צריך לספור לספק");
+      if (t) startCount(t, p); else load();
+      return;
+    }
     if (data?.state === "pending") {
       toast.info(`${p.name} - עוד מוקדם לכניסה. נשלחה בקשה לאבישי, הכניסה תירשם כשהוא יאשר.`, { duration: 8000 });
       load();
@@ -101,7 +111,7 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
           {t.source === "carry" && <span className="text-xs text-amber-400 font-bold"> · מאתמול</span>}
           {t.source === "idle" && <span className="text-xs text-sky-400 font-bold"> · זמן שקט</span>}
           {t.at_opening && <span className="text-xs text-muted-foreground"> · בפתיחה</span>}
-          {t.kind === "count" && !t.done && <span className="text-xs text-muted-foreground"> · {countItems.map((i) => i.name).join(", ")}</span>}
+          {isCount(t) && !t.done && <span className="text-xs text-muted-foreground"> · {(t.items ?? countItems).map((i) => i.name).join(", ")}</span>}
         </span>
       </label>
     </li>
@@ -194,18 +204,22 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
 
       {counting && createPortal(
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={() => !saving && setCounting(null)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="count-title" className="w-full max-w-md rounded-2xl bg-card border border-border p-5 mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 id="count-title" className="text-xl font-black mb-3">ספירת מלאי קצרה</h2>
+          <div role="dialog" aria-modal="true" aria-labelledby="count-title" className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-card border border-border p-5 mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 id="count-title" className="text-xl font-black mb-3">{counting.title}</h2>
+            {counting.leaving && <p className="text-amber-300 font-bold mb-2">לפני היציאה של {counting.leaving.name} - סופרים ושומרים.</p>}
             <ul className="divide-y divide-border">
-              {countItems.map((i) => {
+              {counting.items.map((i) => {
                 const v = counting.values[i.id] ?? 0;
-                const set = (n: number) => setCounting({ ...counting, values: { ...counting.values, [i.id]: Math.max(0, Math.min(999, n)) } });
+                const set = (n: number) => setCounting({ ...counting, values: { ...counting.values, [i.id]: Math.max(0, Math.min(9999, n)) } });
+                const pack = i.pack_name !== undefined ? itemPack(i) : null;
                 return (
                   <li key={i.id} className="flex items-center justify-between gap-2 py-3">
-                    <span className="font-bold">{i.name} <span className="text-xs text-muted-foreground">({i.unit})</span></span>
+                    <span className="font-bold">{i.name} <span className="text-xs text-muted-foreground">({i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""})</span>
+                      {pack && v >= pack.size && <span className="block text-xs text-amber-300">{stockText("count", v, i.unit, pack)}</span>}
+                    </span>
                     <span className="flex items-center gap-2">
                       <button type="button" aria-label="פחות" onClick={() => set(v - Number(i.step))} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">−</button>
-                      <span className="w-12 text-center text-2xl font-black">{half(v)}</span>
+                      <span className="w-12 text-center text-2xl font-black">{halfText(v)}</span>
                       <button type="button" aria-label="יותר" onClick={() => set(v + Number(i.step))} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">+</button>
                     </span>
                   </li>

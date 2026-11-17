@@ -2,6 +2,7 @@
 // personal links, and see hours and lateness per month.
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import SupplierOrders from "@/components/admin/SupplierOrders";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
@@ -544,6 +545,8 @@ const AdminShifts = () => {
         </section>
 
         {/* Shopping checklist from staff stock reports, one list per category */}
+        <SupplierOrders />
+
         <section className="rounded-2xl bg-card border border-border p-4 space-y-4">
           <h2 className="text-lg font-black">מה לקנות</h2>
           {stockOpen.length === 0 && <p className="text-sm text-muted-foreground">אין חוסרים. כשעובד מדווח, המוצר יופיע כאן.</p>}

@@ -31,7 +31,7 @@ begin
   if p_item.pack_size is not null and p_qty >= p_item.pack_size then
     v_packs := floor(p_qty / p_item.pack_size); v_rem := p_qty - v_packs * p_item.pack_size;
     return 'נשארו ' || case when v_packs = 1 then p_item.pack_name || ' אחד' else v_packs || ' ' || p_item.pack_name || (case p_item.pack_name when 'ארגז' then 'ים' when 'תבנית' then 'ות' else '' end) end
-      || case when v_rem > 0 then ' ו-' || trim(trailing '.' from trim(trailing '0' from v_rem::text)) || ' יחידות' else '' end;
+      || case when v_rem > 0 then ' ו-' || case when v_rem = trunc(v_rem) then trunc(v_rem)::text when v_rem < 1 then '½' else trunc(v_rem)::text || '½' end || ' ' || p_item.unit else '' end;
   end if;
   v_one := case p_item.unit when 'חבילות' then 'חבילה' when 'פחיות' then 'פחית' else 'יחידה' end;
   v_n := case when p_qty = trunc(p_qty) then trunc(p_qty)::text else trunc(p_qty)::text || '½' end;
