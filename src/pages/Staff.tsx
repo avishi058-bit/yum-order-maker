@@ -11,7 +11,7 @@ import StaffWaste from "@/components/staff/StaffWaste";
 import OwnerSchedule, { fetchOwnerWeek, type OwnerWeek } from "@/components/staff/OwnerSchedule";
 import OwnerTasks from "@/components/staff/OwnerTasks";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, groupTasks, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, dayNameIL, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, groupTasks, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -90,6 +90,31 @@ const Staff = () => {
 
   // Owner: this week and next (who works each day, in colour).
   const [ownerWeeks, setOwnerWeeks] = useState<OwnerWeek[]>([]);
+  // Owner: yesterday in one card. Everyone off shift: an open "need help" call.
+  const [brief, setBrief] = useState<{ date: string; orders: number; revenue: number; tasks_total: number; tasks_done: number;
+    missing: string[]; waste: { name: string; quantity: number; reason: string }[]; shopping: number; workers: { name: string; minutes: number }[] } | null>(null);
+  const [help, setHelp] = useState<{ id: string; my_answer: boolean | null; answers: { name: string; coming: boolean }[] } | null>(null);
+  const loadExtras = useCallback(async () => {
+    if (!token) return;
+    const h = await staffDb.rpc("staff_portal_help", { p_token: token });
+    if (!h.error) setHelp(h.data ?? null);
+  }, [token]);
+  useEffect(() => {
+    loadExtras();
+    const t = window.setInterval(loadExtras, 30_000);
+    return () => window.clearInterval(t);
+  }, [loadExtras]);
+  useEffect(() => {
+    if (!token || !data?.me.is_owner) return;
+    staffDb.rpc("staff_owner_brief", { p_token: token }).then(({ data: b }: { data: typeof brief }) => setBrief(b ?? null));
+  }, [token, data?.me.is_owner]);
+  const answerHelp = async (coming: boolean) => {
+    if (!help) return;
+    const { error } = await staffDb.rpc("staff_portal_help_answer", { p_token: token, p_event_id: help.id, p_coming: coming });
+    if (error) { toast.error("לא נשלח, נסו שוב"); return; }
+    toast.success(coming ? "תודה! הודענו שאת/ה בדרך" : "הודענו שלא תוכל/י להגיע");
+    loadExtras();
+  };
   const loadOwnerWeeks = useCallback(async () => {
     if (!token) return;
     const ws = weekStartYmd(todayIL());
@@ -330,6 +355,22 @@ const Staff = () => {
       </nav>
 
       <div className="px-4 pt-4 max-w-lg mx-auto space-y-4">
+        {tab === "home" && help && (
+          <section className="rounded-[28px] p-5 bg-red-600 text-white">
+            <p className="text-xl font-black">צריך עזרה בבקתה - יש עומס</p>
+            {help.my_answer === null ? (
+              <div className="flex gap-2 mt-3">
+                <button type="button" onClick={() => answerHelp(true)} className="flex-1 h-12 rounded-full bg-white text-red-700 font-black">אני מגיע/ה</button>
+                <button type="button" onClick={() => answerHelp(false)} className="flex-1 h-12 rounded-full bg-red-800 font-bold">לא יכול/ה</button>
+              </div>
+            ) : (
+              <p className="mt-1">{help.my_answer ? "סימנת שאת/ה מגיע/ה - תודה!" : "סימנת שלא תוכל/י להגיע."}{" "}
+                <button type="button" onClick={() => answerHelp(!help.my_answer)} className="underline">שינוי</button></p>
+            )}
+            {help.answers.length > 0 && <p className="text-sm mt-2 opacity-90">{help.answers.map((a) => `${a.name}: ${a.coming ? "מגיע/ה" : "לא"}`).join(" · ")}</p>}
+          </section>
+        )}
+
         {tab === "home" && (
           <>
             {onShift ? (
@@ -440,6 +481,21 @@ const Staff = () => {
             </div>
 
             {/* Owner: who has submitted for next week. Employee: my next shifts. */}
+            {data.me.is_owner && brief && (brief.orders > 0 || brief.tasks_total > 0) && (
+              <section className={C.card}>
+                <p className="text-sm font-semibold text-[#b0705a]">{brief.date === addDaysYmd(today, -1) ? "אתמול" : `ביום ${dayNameIL(brief.date)}`} · מה היה</p>
+                <div className="grid grid-cols-3 gap-2 mt-2 text-center">
+                  <div><p className="text-2xl font-black">{brief.orders}</p><p className={`text-xs ${C.muted}`}>הזמנות</p></div>
+                  <div><p className="text-2xl font-black">{brief.revenue.toLocaleString("he-IL")}</p><p className={`text-xs ${C.muted}`}>₪</p></div>
+                  <div><p className="text-2xl font-black">{brief.tasks_total ? `${brief.tasks_done}/${brief.tasks_total}` : "-"}</p><p className={`text-xs ${C.muted}`}>משימות</p></div>
+                </div>
+                {brief.workers.length > 0 && <p className="text-sm mt-3">עבדו: {brief.workers.map((w) => `${w.name} (${hoursText(w.minutes)})`).join(", ")}</p>}
+                {brief.missing.length > 0 && <p className="text-sm mt-1 text-red-600">לא בוצע: {brief.missing.join(", ")}</p>}
+                {brief.waste.length > 0 && <p className="text-sm mt-1">פחת: {brief.waste.map((w) => `${w.quantity > 1 ? `${w.quantity} ` : ""}${w.name}`).join(", ")}</p>}
+                {brief.shopping > 0 && <p className={`text-sm mt-1 ${C.muted}`}>ברשימת הקניות: {brief.shopping} מוצרים</p>}
+              </section>
+            )}
+
             {data.me.is_owner && ownerWeeks[1] ? (
               <section className={C.card}>
                 <p className="text-sm font-semibold text-[#b0705a]">הגשות לשבוע הבא</p>

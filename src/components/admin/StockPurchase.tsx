@@ -12,8 +12,8 @@ export interface PurchaseRow {
   item: { id: string; name: string; unit: string; pack_name: string | null; pack_size: number | null };
 }
 
-const savePurchase = (reportId: string, qty: number, source: "manual" | "receipt") =>
-  staffDb.rpc("staff_stock_purchase", { p_report_id: reportId, p_qty: qty, p_source: source });
+const savePurchase = (reportId: string, qty: number, source: "manual" | "receipt", price: number | null = null) =>
+  staffDb.rpc("staff_stock_purchase", { p_report_id: reportId, p_qty: qty, p_source: source, p_price: price });
 
 /** Amount with a pack stepper (cases) when the product has one, and a unit stepper. */
 const Amount = ({ row, value, onChange }: { row: PurchaseRow; value: number; onChange: (n: number) => void }) => {
@@ -55,7 +55,7 @@ const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
 export const FinishShopping = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: () => void }) => {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [found, setFound] = useState<{ row: PurchaseRow; qty: number; line: string; on: boolean }[] | null>(null);
+  const [found, setFound] = useState<{ row: PurchaseRow; qty: number; price: number | null; line: string; on: boolean }[] | null>(null);
 
   const read = async (file: File) => {
     setBusy(true);
@@ -69,9 +69,9 @@ export const FinishShopping = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: 
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "error");
-      const list = (body.found ?? []).flatMap((f: { id: string; quantity: number; line: string }) => {
+      const list = (body.found ?? []).flatMap((f: { id: string; quantity: number; price: number | null; line: string }) => {
         const row = rows.find((r) => r.item.id === f.id);
-        return row ? [{ row, qty: f.quantity, line: f.line, on: true }] : [];
+        return row ? [{ row, qty: f.quantity, price: f.price ?? null, line: f.line, on: true }] : [];
       });
       if (list.length === 0) toast.info("לא מצאתי בקבלה מוצרים מהרשימה. אפשר לצלם שוב, או לסיים בלי קבלה.");
       else setFound(list);
@@ -84,11 +84,11 @@ export const FinishShopping = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: 
   };
 
   // Every ticked product is closed; amounts come from the receipt where it shows them.
-  const finish = async (list: { row: PurchaseRow; qty: number; on: boolean }[]) => {
+  const finish = async (list: { row: PurchaseRow; qty: number; price?: number | null; on: boolean }[]) => {
     setBusy(true);
     const results = await Promise.all(rows.map((r) => {
       const f = list.find((x) => x.row.reportId === r.reportId && x.on);
-      return savePurchase(r.reportId, f ? f.qty : 0, f ? "receipt" : "manual");
+      return savePurchase(r.reportId, f ? f.qty : 0, f ? "receipt" : "manual", f?.price ?? null);
     }));
     setBusy(false);
     if (results.some((r) => r.error)) toast.error("חלק לא נשמרו"); else toast.success("הקנייה נרשמה");
@@ -118,7 +118,7 @@ export const FinishShopping = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: 
                 <li key={f.row.reportId} className="py-3 flex items-center gap-3">
                   <input type="checkbox" checked={f.on} aria-label={`לרשום ${f.row.item.name}`} className="w-6 h-6 accent-green-600 shrink-0"
                     onChange={(e) => setFound(found.map((x, j) => (j === i ? { ...x, on: e.target.checked } : x)))} />
-                  <span className="flex-1"><b>{f.row.item.name}</b>{f.line && <span className="block text-xs text-muted-foreground">{f.line}</span>}</span>
+                  <span className="flex-1"><b>{f.row.item.name}</b>{f.line && <span className="block text-xs text-muted-foreground">{f.line}{f.price ? ` · ${f.price} ₪` : ""}</span>}</span>
                   <Amount row={f.row} value={f.qty} onChange={(n) => setFound(found.map((x, j) => (j === i ? { ...x, qty: n } : x)))} />
                 </li>
               ))}

@@ -24,9 +24,12 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const [counting, setCounting] = useState<{ runId: string; title: string; items: CountItem[]; values: Record<string, number>; leaving?: Person } | null>(null);
   const [saving, setSaving] = useState(false);
   const [closingNudge, setClosingNudge] = useState(false);
+  // Busy alert: many open orders -> "need help?"; then who answered.
+  const [busy, setBusy] = useState<{ id: string; open_orders: number; help_asked: boolean; answers: { name: string; coming: boolean }[] } | null>(null);
 
   const load = useCallback(async () => {
-    const [p, t] = await Promise.all([staffDb.rpc("kitchen_staff_today"), staffDb.rpc("kitchen_tasks_today")]);
+    const [p, t, b] = await Promise.all([staffDb.rpc("kitchen_staff_today"), staffDb.rpc("kitchen_tasks_today"), staffDb.rpc("kitchen_busy_status")]);
+    if (!b.error) setBusy(b.data ?? null);
     if (!p.error && p.data) setPeople((p.data.people ?? []) as Person[]);
     if (!t.error && t.data) {
       setTasks((t.data.tasks ?? []) as Task[]);
@@ -136,6 +139,30 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
           ✓ משימות{open.length ? ` (${open.length})` : ""}
         </button>
       )}
+
+      {busy && !confirm && !counting && createPortal(
+        <div className="fixed top-20 inset-x-4 z-40 mx-auto max-w-md rounded-2xl bg-red-600 text-white shadow-2xl p-4" role="alert">
+          {!busy.help_asked ? (
+            <>
+              <p className="font-black text-lg">עומס! {busy.open_orders} הזמנות פתוחות. צריך עזרה?</p>
+              <div className="flex gap-2 mt-3">
+                <button type="button" onClick={async () => { await staffDb.rpc("kitchen_busy_answer", { p_event_id: busy.id, p_need_help: true }); load(); }}
+                  className="flex-1 rounded-xl bg-white text-red-700 font-black py-2.5">כן, לקרוא לעזרה</button>
+                <button type="button" onClick={async () => { await staffDb.rpc("kitchen_busy_answer", { p_event_id: busy.id, p_need_help: false }); setBusy(null); }}
+                  className="rounded-xl bg-red-800 font-bold px-4 py-2.5">מסתדרים</button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-black">נשלחה בקשת עזרה</p>
+                <p className="text-sm">{busy.answers.length ? busy.answers.map((a) => `${a.name}: ${a.coming ? "מגיע/ה ✓" : "לא יכול/ה"}`).join(" · ") : "מחכים לתשובה…"}</p>
+              </div>
+              <button type="button" onClick={async () => { await staffDb.rpc("kitchen_busy_answer", { p_event_id: busy.id, p_need_help: false }); setBusy(null); }}
+                className="rounded-xl bg-red-800 font-bold px-3 py-1.5 text-sm">סגירה</button>
+            </div>
+          )}
+        </div>, document.body)}
 
       {/* Quiet-time task: only while no order is waiting or being made. */}
       {/* After 22:00 with no new orders for 15 minutes: start closing. */}

@@ -180,7 +180,8 @@ const handleReceipt = async (req, env) => {
 Here is a numbered list of products the restaurant was missing:
 ${list}
 For each product in the list that appears on the receipt, say how many were bought, in the unit written next to it (convert cases/packs to that unit when needed).
-Answer with JSON only, no other text: [{"n": <list number>, "quantity": <number>, "line": "<the receipt line you matched>"}]. If nothing matches, answer [].`;
+Also give the total price paid for that receipt line in shekels (the line total, not the unit price), or null if you cannot read it.
+Answer with JSON only, no other text: [{"n": <list number>, "quantity": <number>, "price": <number or null>, "line": "<the receipt line you matched>"}]. If nothing matches, answer [].`;
   let text = "";
   try {
     const out = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
@@ -197,7 +198,9 @@ Answer with JSON only, no other text: [{"n": <list number>, "quantity": <number>
   try { found = m ? JSON.parse(m[0]) : []; } catch { found = []; }
   const result = found
     .filter((f) => Number.isInteger(f?.n) && f.n >= 1 && f.n <= items.length && Number(f.quantity) > 0)
-    .map((f) => ({ id: items[f.n - 1].id, quantity: Math.min(9999, Number(f.quantity)), line: String(f.line ?? "").slice(0, 80) }));
+    .map((f) => ({ id: items[f.n - 1].id, quantity: Math.min(9999, Number(f.quantity)),
+      price: Number(f.price) > 0 && Number(f.price) < 100000 ? Math.round(Number(f.price) * 100) / 100 : null,
+      line: String(f.line ?? "").slice(0, 80) }));
   return json(req, { found: result });
 };
 
