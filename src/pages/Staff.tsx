@@ -59,6 +59,8 @@ const Staff = () => {
   const [stockCat, setStockCat] = useState<string>("ירקות");
   const [stockMode, setStockMode] = useState<"missing" | "waste">("missing");
   const [stockEdit, setStockEdit] = useState<{ item: StockItem; qty: number } | null>(null);
+  const [calAdded, setCalAdded] = useState(() => { try { return localStorage.getItem("habikta_staff_cal") === "1"; } catch { return false; } });
+  const markCalAdded = () => { setCalAdded(true); try { localStorage.setItem("habikta_staff_cal", "1"); } catch { /* ignore */ } };
   const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock" | "tasks">("home");
   const [tasks, setTasks] = useState<{ on_shift: boolean; tasks: ShiftTask[] } | null>(null);
   const [counting, setCounting] = useState<{ task: ShiftTask; values: Record<string, number> } | null>(null);
@@ -380,7 +382,8 @@ const Staff = () => {
               )}
             </div>
 
-            {(pushState !== "on" || (isIos() && (!isStandalonePwa() || webcal)) || data.me.is_owner) && <section className={`${C.card} space-y-3`}>
+            {/* One-time setup: shown until notifications are on and (on iPhone) the calendar was added. */}
+            {(pushState !== "on" || (isIos() && (!isStandalonePwa() || (webcal && !calAdded)))) && <section className={`${C.card} space-y-3`}>
               {isIos() && !isStandalonePwa() && (
                 <p className="text-sm rounded-2xl bg-[#fff1e6] p-3">
                   באייפון: כפתור השיתוף ← "הוסף למסך הבית", ואז פותחים מהאייקון. רק כך מקבלים התראות.
@@ -394,12 +397,12 @@ const Staff = () => {
                 </button>
               )}
               {webcal && isIos() && (
-                <a href={webcal} className={`h-12 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2`}>
+                <a href={webcal} onClick={markCalAdded} className={`h-12 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2`}>
                   <CalendarPlus size={18} /> יומן אייפון - מתעדכן לבד
                 </a>
               )}
-              {data.me.is_owner && <a href="/admin/shifts" className={`block text-center font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
             </section>}
+            {data.me.is_owner && <a href="/admin/shifts" className={`block text-center font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
           </>
         )}
 
