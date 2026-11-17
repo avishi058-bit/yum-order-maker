@@ -15,6 +15,27 @@ interface Person { id: string; name: string; open_since: string | null; pending_
 interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items?: CountItem[] | null; section?: string | null }
 const isCount = (t: Task) => t.kind === "count" || t.kind === "supplier_count";
 
+/** Three rising soft tones - unlike the new-order sound. */
+const taskChime = () => {
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new Ctx();
+    [[784, 0], [988, 0.22], [1319, 0.44]].forEach(([f, at]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + at);
+      g.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.7);
+      o.connect(g).connect(ctx.destination);
+      o.start(ctx.currentTime + at);
+      o.stop(ctx.currentTime + at + 0.75);
+    });
+    window.setTimeout(() => ctx.close(), 1600);
+  } catch { /* no audio */ }
+};
+
 const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) => {
   const [people, setPeople] = useState<Person[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -50,6 +71,32 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   // After 22:00 on a quiet night: the closing tasks one by one, in order.
   const nextClosing = open.find((t) => t.section === "קידום סגירה" || t.section === "סדר סגירה");
   const showClosing = someoneIn && closingNudge && !kitchenBusy && !!nextClosing;
+  // Put off ("עוד 10 דק׳") per task, kept on this screen.
+  const [snoozed, setSnoozed] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem("habikta_task_snooze") ?? "{}"); } catch { return {}; }
+  });
+  const [tick, setTick] = useState(Date.now());
+  const snooze = (id: string, minutes: number) => {
+    const next = { ...snoozed, [id]: Date.now() + minutes * 60_000 };
+    setSnoozed(next);
+    try { localStorage.setItem("habikta_task_snooze", JSON.stringify(next)); } catch { /* ignore */ }
+  };
+  const awake = (t?: Task) => !!t && (snoozed[t.id] ?? 0) <= tick;
+  const popClosing = showClosing && awake(nextClosing);
+  const popTask = !listOpen && !confirm && !counting && someoneIn && !kitchenBusy
+    ? (popClosing ? nextClosing : (!showClosing && awake(idleTask) ? idleTask : undefined)) : undefined;
+  const skipTask = async (t: Task) => {
+    if (!window.confirm(`לבטל את "${t.title}" להיום?`)) return;
+    const { error } = await staffDb.rpc("kitchen_task_skip", { p_run_id: t.id });
+    if (error) { toast.error("לא נשמר"); return; }
+    load();
+  };
+  // A different sound from new orders, every 20 seconds while a task is waiting.
+  useEffect(() => {
+    const t = window.setInterval(() => setTick(Date.now()), 20_000);
+    return () => window.clearInterval(t);
+  }, []);
+  useEffect(() => { if (popTask) taskChime(); }, [popTask?.id, tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setDone = async (t: Task, done: boolean) => {
     if (isCount(t)) {
@@ -164,27 +211,23 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
           )}
         </div>, document.body)}
 
-      {/* Quiet-time task: only while no order is waiting or being made. */}
-      {/* After 22:00 with no new orders for 15 minutes: start closing. */}
-      {showClosing && !listOpen && !confirm && !counting && createPortal(
-        <div className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl bg-amber-500 text-black shadow-2xl p-4 flex items-center gap-3" role="status">
-          <span className="text-2xl" aria-hidden>🌙</span>
-          <span className="flex-1">
-            <span className="block text-xs font-bold">קידום סגירה</span>
-            <span className="block font-black">{nextClosing!.title}</span>
-            <button type="button" onClick={() => setListOpen(true)} className="text-xs underline">כל המשימות</button>
-          </span>
-          <button type="button" onClick={() => setDone(nextClosing!, true)} className="rounded-xl bg-black text-amber-300 font-black px-4 py-2">בוצע ✓</button>
-        </div>, document.body)}
-
-      {someoneIn && idleTask && !showClosing && !kitchenBusy && !listOpen && !confirm && !counting && createPortal(
-        <div className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl bg-sky-600 text-white shadow-2xl p-4 flex items-center gap-3" role="status">
-          <span className="text-2xl" aria-hidden>🧹</span>
-          <span className="flex-1">
-            <span className="block text-xs opacity-90">רגע שקט? משימה:</span>
-            <span className="block font-black">{idleTask.title}</span>
-          </span>
-          <button type="button" onClick={() => setDone(idleTask, true)} className="rounded-xl bg-white text-sky-700 font-black px-4 py-2">בוצע ✓</button>
+      {/* Quiet-time task, or after 22:00 the next closing task: rings until done, put off or cancelled. */}
+      {popTask && createPortal(
+        <div className={`fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl shadow-2xl p-4 ${popClosing ? "bg-amber-500 text-black" : "bg-sky-600 text-white"}`} role="status">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl" aria-hidden>{popClosing ? "🌙" : "🧹"}</span>
+            <span className="flex-1">
+              <span className="block text-xs font-bold opacity-90">{popClosing ? "קידום סגירה" : "רגע שקט? משימה:"}</span>
+              <span className="block font-black text-lg">{popTask.title}</span>
+            </span>
+            <button type="button" onClick={() => setDone(popTask, true)}
+              className={`rounded-xl font-black px-4 py-2.5 ${popClosing ? "bg-black text-amber-300" : "bg-white text-sky-700"}`}>בוצע ✓</button>
+          </div>
+          <div className="flex gap-2 mt-3 text-sm font-bold">
+            <button type="button" onClick={() => snooze(popTask.id, 10)} className={`flex-1 rounded-lg py-2 ${popClosing ? "bg-black/15" : "bg-white/20"}`}>⏰ עוד 10 דק׳</button>
+            <button type="button" onClick={() => setListOpen(true)} className={`rounded-lg px-3 py-2 ${popClosing ? "bg-black/15" : "bg-white/20"}`}>כל המשימות</button>
+            <button type="button" onClick={() => skipTask(popTask)} className={`rounded-lg px-3 py-2 ${popClosing ? "bg-black/15" : "bg-white/20"}`}>ביטול</button>
+          </div>
         </div>, document.body)}
 
       {listOpen && createPortal(
