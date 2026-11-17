@@ -9,7 +9,7 @@ import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import StaffWaste from "@/components/staff/StaffWaste";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, groupTasks, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -537,8 +537,11 @@ const Staff = () => {
             ) : (
               <>
                 <Progress done={tasksDone} total={taskList.length} />
-                <ul className="mt-2">
-                  {[...taskList.filter((t) => !t.done), ...taskList.filter((t) => t.done)].map((t) => {
+                {groupTasks(taskList).map((g) => (
+                <div key={g.section ?? "_"} className="mt-3">
+                {g.section && <h3 className={`text-sm font-black mt-4 ${C.muted}`}>{g.section}</h3>}
+                <ul>
+                  {(g.section ? g.tasks : [...g.tasks.filter((t) => !t.done), ...g.tasks.filter((t) => t.done)]).map((t) => {
                     const isCount = t.kind === "count" || t.kind === "supplier_count";
                     const required = t.title.includes(REQUIRED);
                     return (
@@ -562,6 +565,8 @@ const Staff = () => {
                     );
                   })}
                 </ul>
+                </div>
+                ))}
               </>
             )}
           </section>

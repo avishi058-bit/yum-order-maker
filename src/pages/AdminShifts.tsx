@@ -188,7 +188,9 @@ const AdminShifts = () => {
     const title = newTask.title.trim();
     if (!title) return;
     const { error } = await staffDb.from("staff_tasks").insert({
-      title, kind: newTask.kind, weekday: newTask.kind === "weekly" ? newTask.weekday : null, sort_order: 100,
+      title, kind: newTask.kind, weekday: newTask.kind === "weekly" ? newTask.weekday : null,
+      // New closing tasks go to the end of the closing order.
+      ...(newTask.kind === "closing" ? { section: "סדר סגירה", sort_order: 300 } : { sort_order: 100 }),
     });
     if (error) toast.error("לא נשמר"); else { setNewTask({ ...newTask, title: "" }); loadTasks(); }
   };

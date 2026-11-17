@@ -92,7 +92,17 @@ export const setStaffStock = (token: string, itemId: string, level: StockLevel |
 /** A product to count in a count task (base unit, with its pack when it has one). */
 export interface CountItem { id: string; name: string; unit: string; step: number; pack_name: string | null; pack_size: number | null }
 /** One of tonight's tasks; count tasks carry the products to count. */
-export interface ShiftTask { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items: CountItem[] | null }
+export interface ShiftTask { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items: CountItem[] | null; section?: string | null }
+/** Tasks grouped by checklist section, in order (tasks without a section first). */
+export const groupTasks = <T extends { section?: string | null }>(list: T[]) => {
+  const groups: { section: string | null; tasks: T[] }[] = [];
+  for (const t of list) {
+    const key = t.section ?? null;
+    const g = groups.find((x) => x.section === key);
+    if (g) g.tasks.push(t); else groups.push({ section: key, tasks: [t] });
+  }
+  return groups;
+};
 /** Tonight's tasks on the employee's phone (empty when they are not on tonight's shift). */
 export const fetchStaffTasks = (token: string) =>
   rpc<{ on_shift: boolean; shift_date?: string; tasks: ShiftTask[] }>("staff_portal_tasks", { p_token: token });

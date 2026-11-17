@@ -9,10 +9,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { halfText, itemPack, packPlural, staffDb, stockText, type CountItem } from "@/lib/staff";
+import { groupTasks, halfText, itemPack, packPlural, staffDb, stockText, type CountItem } from "@/lib/staff";
 
 interface Person { id: string; name: string; open_since: string | null; pending_early?: boolean }
-interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items?: CountItem[] | null }
+interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items?: CountItem[] | null; section?: string | null }
 const isCount = (t: Task) => t.kind === "count" || t.kind === "supplier_count";
 
 const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) => {
@@ -164,7 +164,12 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setListOpen(false)}>
           <div role="dialog" aria-modal="true" aria-labelledby="tasks-title" className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-card border border-border p-5 mx-4" onClick={(e) => e.stopPropagation()}>
             <h2 id="tasks-title" className="text-xl font-black mb-1">המשימות של היום</h2>
-            <ul className="divide-y divide-border">{tasks.map(taskRow)}</ul>
+            {groupTasks(tasks).map((g) => (
+              <div key={g.section ?? "_"}>
+                {g.section && <h3 className="mt-4 text-sm font-black text-muted-foreground">{g.section}</h3>}
+                <ul className="divide-y divide-border">{g.tasks.map(taskRow)}</ul>
+              </div>
+            ))}
             <button type="button" onClick={() => setListOpen(false)} className="mt-3 w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground">סגור</button>
           </div>
         </div>, document.body)}
