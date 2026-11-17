@@ -9,6 +9,7 @@ import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import StaffWaste from "@/components/staff/StaffWaste";
 import OwnerSchedule, { fetchOwnerWeek, type OwnerWeek } from "@/components/staff/OwnerSchedule";
+import OwnerTasks from "@/components/staff/OwnerTasks";
 import {
   STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, groupTasks, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
@@ -60,6 +61,7 @@ const Staff = () => {
   const [stockCat, setStockCat] = useState<string>("ירקות");
   const [stockMode, setStockMode] = useState<"missing" | "waste">("missing");
   const [stockEdit, setStockEdit] = useState<{ item: StockItem; qty: number } | null>(null);
+  const [editTasks, setEditTasks] = useState(false);
   const [calAdded, setCalAdded] = useState(() => { try { return localStorage.getItem("habikta_staff_cal") === "1"; } catch { return false; } });
   const markCalAdded = () => { setCalAdded(true); try { localStorage.setItem("habikta_staff_cal", "1"); } catch { /* ignore */ } };
   const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock" | "tasks">("home");
@@ -587,11 +589,17 @@ const Staff = () => {
           </>
         )}
 
-        {tab === "tasks" && (
+        {tab === "tasks" && editTasks && data.me.is_owner && <OwnerTasks token={token} onClose={() => { setEditTasks(false); loadTasks(); }} />}
+        {tab === "tasks" && !(editTasks && data.me.is_owner) && (
           <section className="px-1">
             <div className="flex items-baseline justify-between mb-2">
               <h2 className="text-2xl font-black">הערב</h2>
-              {tasks?.on_shift && taskList.length > 0 && <span className={`text-[15px] font-bold ${C.accent}`}>{tasksDone} מתוך {taskList.length}</span>}
+              <span className="flex items-center gap-3">
+                {tasks?.on_shift && taskList.length > 0 && <span className={`text-[15px] font-bold ${C.accent}`}>{tasksDone} מתוך {taskList.length}</span>}
+                {data.me.is_owner && (
+                  <button type="button" onClick={() => setEditTasks(true)} className="rounded-full border-2 border-[#ffe0cc] text-[#e8502f] font-black text-sm px-3 h-9">עריכה</button>
+                )}
+              </span>
             </div>
             {!tasks?.on_shift ? (
               <p className={C.muted}>המשימות מופיעות כאן כשאת/ה במשמרת.</p>
