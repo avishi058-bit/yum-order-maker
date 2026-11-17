@@ -53,11 +53,19 @@ export interface StockItem {
   id: string; name: string; category: string; unit: string; step: number; low_only: boolean;
   level: StockLevel | null; quantity: number | null;
 }
-const qtyText = (q: number) => (Number.isInteger(q) ? String(q) : q === 0.5 ? "חצי" : String(q));
+const SINGULAR: Record<string, string> = { "חבילות": "חבילה", "פחיות": "פחית", "יחידות": "יחידה" };
+/** "נשארה חצי חבילה", "נשארה חבילה אחת", "נשארו 1½ חבילות", "נשארו 3" (plain units). */
+const countText = (q: number, unit: string) => {
+  const one = SINGULAR[unit] ?? unit;
+  if (q === 0.5) return `נשארה חצי ${one}`;
+  if (q === 1) return unit && unit !== "יחידות" ? `נשארה ${one} אחת` : "נשארה 1";
+  const n = Number.isInteger(q) ? String(q) : `${Math.floor(q)}½`;
+  return `נשארו ${n}${unit && unit !== "יחידות" ? ` ${unit}` : ""}`;
+};
 /** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2 חבילות"). */
 export const stockText = (level: StockLevel | null, qty: number | null, unit = "") =>
   level === "out" ? "נגמר" : level === "low" ? "נשאר קצת"
-    : level === "count" ? `נשארו ${qtyText(Number(qty))}${unit && unit !== "יחידות" ? ` ${unit}` : ""}` : "יש מספיק";
+    : level === "count" ? countText(Number(qty), unit) : "יש מספיק";
 /** Reports how much is left of a product (amount, "a little", "ran out"), or clears the report (null). */
 export const setStaffStock = (token: string, itemId: string, level: StockLevel | null, qty?: number) =>
   rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level, p_qty: qty ?? null });

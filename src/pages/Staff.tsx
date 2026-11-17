@@ -476,7 +476,7 @@ const Staff = () => {
                 <div className="flex items-center justify-center gap-5">
                   <button type="button" aria-label="פחות" onClick={() => setStockEdit({ ...stockEdit, qty: Math.max(0, stockEdit.qty - Number(stockEdit.item.step)) })}
                     className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
-                  <span className="text-5xl font-black w-24 text-center" aria-live="polite">{stockEdit.qty === 0.5 ? "½" : String(stockEdit.qty).replace(".5", "½")}</span>
+                  <span className="text-5xl font-black w-24 text-center" aria-live="polite">{Number.isInteger(stockEdit.qty) ? stockEdit.qty : `${stockEdit.qty >= 1 ? Math.floor(stockEdit.qty) : ""}½`}</span>
                   <button type="button" aria-label="יותר" onClick={() => setStockEdit({ ...stockEdit, qty: Math.min(999, stockEdit.qty + Number(stockEdit.item.step)) })}
                     className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>+</button>
                 </div>
