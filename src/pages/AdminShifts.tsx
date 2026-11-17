@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import SupplierOrders from "@/components/admin/SupplierOrders";
-import { BoughtDialog, ReceiptButton, type PurchaseRow } from "@/components/admin/StockPurchase";
+import { FinishShopping, type PurchaseRow } from "@/components/admin/StockPurchase";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
@@ -115,15 +115,21 @@ const AdminShifts = () => {
     setStock(it.data ?? []);
     setStockOpen(rp.data ?? []);
   }, []);
-  const [buying, setBuying] = useState<PurchaseRow | null>(null);
+  // Products ticked in the store (kept on this device until the shopping is finished).
+  const [cart, setCart] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("habikta_shop_cart") ?? "[]")); } catch { return new Set(); }
+  });
+  const toggleCart = (id: string) => {
+    const next = new Set(cart);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setCart(next);
+    try { localStorage.setItem("habikta_shop_cart", JSON.stringify([...next])); } catch { /* ignore */ }
+  };
+  const clearCart = () => { setCart(new Set()); try { localStorage.removeItem("habikta_shop_cart"); } catch { /* ignore */ } loadStock(); };
   const purchaseRows: PurchaseRow[] = stockOpen.flatMap((r) => {
     const it = stock.find((i) => i.id === r.item_id);
     return it ? [{ reportId: r.id, item: { id: it.id, name: it.name, unit: it.unit, pack_name: it.pack_name, pack_size: it.pack_size } }] : [];
   });
-  const resolveStock = async (id: string) => {
-    await staffDb.from("staff_stock_reports").update({ resolved_at: new Date().toISOString() }).eq("id", id);
-    loadStock();
-  };
   const addStockItem = async () => {
     const name = newStock.name.trim();
     if (!name) return;
@@ -556,8 +562,6 @@ const AdminShifts = () => {
         <section className="rounded-2xl bg-card border border-border p-4 space-y-4">
           <h2 className="text-lg font-black">מה לקנות</h2>
           {stockOpen.length === 0 && <p className="text-sm text-muted-foreground">אין חוסרים. כשעובד מדווח, המוצר יופיע כאן.</p>}
-          {stockOpen.length > 0 && <ReceiptButton rows={purchaseRows} onDone={loadStock} />}
-          {buying && <BoughtDialog row={buying} onClose={(saved) => { setBuying(null); if (saved) loadStock(); }} />}
           {SHOP_CATEGORIES.map((c) => {
             const rows = stockOpen.filter((r) => {
               const it = stock.find((i) => i.id === r.item_id);
@@ -574,7 +578,7 @@ const AdminShifts = () => {
                     return (
                       <li key={r.id}>
                         <label className="flex items-center gap-3 px-3 py-3 cursor-pointer">
-                          <input type="checkbox" checked={false} onChange={() => { const row = purchaseRows.find((p) => p.reportId === r.id); if (row) setBuying(row); else resolveStock(r.id); }} className="w-6 h-6 accent-green-600 shrink-0" aria-label={`נקנה: ${item?.name ?? ""}`} />
+                          <input type="checkbox" checked={cart.has(r.id)} onChange={() => toggleCart(r.id)} className="w-6 h-6 accent-green-600 shrink-0" aria-label={`נקנה: ${item?.name ?? ""}`} />
                           <span className="flex-1">
                             <b>{item?.name ?? "מוצר"}</b>{" "}
                             <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity, item?.unit, item ? itemPack(item) : null)}</span>
@@ -588,7 +592,10 @@ const AdminShifts = () => {
               </div>
             );
           })}
-          {stockOpen.length > 0 && <p className="text-xs text-muted-foreground">מסמנים V על מה שנקנה, והוא יורד מהרשימה.</p>}
+          {stockOpen.length > 0 && <p className="text-xs text-muted-foreground">מסמנים V על מה שנכנס לסל. בסוף מצלמים את הקבלה, והכמויות נרשמות לבד.</p>}
+          {purchaseRows.some((p) => cart.has(p.reportId)) && (
+            <FinishShopping rows={purchaseRows.filter((p) => cart.has(p.reportId))} onDone={clearCart} />
+          )}
           <details className="border-t border-border pt-2">
             <summary className="font-bold cursor-pointer">רשימת המוצרים ({stock.length})</summary>
             {STOCK_CATEGORIES.map((c) => (

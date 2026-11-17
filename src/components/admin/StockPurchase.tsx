@@ -1,5 +1,5 @@
-// Owner shopping: "how much did you bring?" when ticking a missing product,
-// and reading a receipt photo to fill in the amounts for every product on it.
+// Owner shopping: products ticked in the store go into a cart; at the end a
+// receipt photo fills in how much of each was bought (or finish without one).
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,33 +36,6 @@ const Amount = ({ row, value, onChange }: { row: PurchaseRow; value: number; onC
   );
 };
 
-/** Asked when one product is ticked: how much was bought. */
-export const BoughtDialog = ({ row, onClose }: { row: PurchaseRow; onClose: (saved: boolean) => void }) => {
-  const pack = itemPack(row.item);
-  const [qty, setQty] = useState(pack ? pack.size : 1);
-  const [busy, setBusy] = useState(false);
-  const save = async (n: number) => {
-    setBusy(true);
-    const { error } = await savePurchase(row.reportId, n, "manual");
-    setBusy(false);
-    if (error) { toast.error("לא נשמר"); return; }
-    onClose(true);
-  };
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" onClick={() => !busy && onClose(false)}>
-      <div role="dialog" aria-modal="true" aria-labelledby="bought-title" className="w-full max-w-sm rounded-2xl bg-card border border-border p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
-        <h2 id="bought-title" className="text-xl font-black text-center">כמה הבאת? {row.item.name}</h2>
-        <div className="flex justify-center"><Amount row={row} value={qty} onChange={setQty} /></div>
-        <button type="button" onClick={() => save(qty)} disabled={busy || qty <= 0} className="w-full rounded-full bg-green-600 py-3 font-black text-white disabled:opacity-50">
-          {busy ? "שומר…" : "שמירה"}
-        </button>
-        <button type="button" onClick={() => save(0)} disabled={busy} className="w-full rounded-full border border-border py-2.5 font-bold">נקנה, בלי לרשום כמות</button>
-        <button type="button" onClick={() => onClose(false)} disabled={busy} className="w-full text-sm text-muted-foreground underline">ביטול</button>
-      </div>
-    </div>
-  );
-};
-
 /** Shrinks a photo to a JPEG data URL (receipts stay readable at 1600px). */
 const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
   const img = new Image();
@@ -78,8 +51,8 @@ const toDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
   img.src = URL.createObjectURL(file);
 });
 
-/** "Photograph the receipt": finds which missing products it shows and how many. */
-export const ReceiptButton = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: () => void }) => {
+/** End of shopping: photograph the receipt to find how much of each ticked product was bought. */
+export const FinishShopping = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: () => void }) => {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [found, setFound] = useState<{ row: PurchaseRow; qty: number; line: string; on: boolean }[] | null>(null);
@@ -100,20 +73,23 @@ export const ReceiptButton = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: (
         const row = rows.find((r) => r.item.id === f.id);
         return row ? [{ row, qty: f.quantity, line: f.line, on: true }] : [];
       });
-      if (list.length === 0) toast.info("לא מצאתי בקבלה מוצרים מהרשימה. אפשר לסמן ידנית.");
+      if (list.length === 0) toast.info("לא מצאתי בקבלה מוצרים מהרשימה. אפשר לצלם שוב, או לסיים בלי קבלה.");
       else setFound(list);
     } catch {
-      toast.error("לא הצלחתי לקרוא את הקבלה. נסו צילום חד יותר, או סמנו ידנית.");
+      toast.error("לא הצלחתי לקרוא את הקבלה. נסו צילום חד יותר, או סיימו בלי קבלה.");
     } finally {
       setBusy(false);
       if (input.current) input.current.value = "";
     }
   };
 
-  const saveAll = async () => {
-    if (!found) return;
+  // Every ticked product is closed; amounts come from the receipt where it shows them.
+  const finish = async (list: { row: PurchaseRow; qty: number; on: boolean }[]) => {
     setBusy(true);
-    const results = await Promise.all(found.filter((f) => f.on).map((f) => savePurchase(f.row.reportId, f.qty, "receipt")));
+    const results = await Promise.all(rows.map((r) => {
+      const f = list.find((x) => x.row.reportId === r.reportId && x.on);
+      return savePurchase(r.reportId, f ? f.qty : 0, f ? "receipt" : "manual");
+    }));
     setBusy(false);
     if (results.some((r) => r.error)) toast.error("חלק לא נשמרו"); else toast.success("הקנייה נרשמה");
     setFound(null);
@@ -124,15 +100,19 @@ export const ReceiptButton = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: (
     <>
       <input ref={input} type="file" accept="image/*" capture="environment" className="hidden" aria-hidden
         onChange={(e) => { const f = e.target.files?.[0]; if (f) read(f); }} />
-      <button type="button" onClick={() => input.current?.click()} disabled={busy || rows.length === 0}
-        className="w-full rounded-full border-2 border-primary text-primary py-2.5 font-black disabled:opacity-50">
-        {busy && !found ? "קורא את הקבלה…" : "📷 צילום קבלה - לסמן הכל לבד"}
-      </button>
+      <div className="rounded-xl border-2 border-green-600 p-3 space-y-2">
+        <p className="font-black">בסל: {rows.length} מוצרים</p>
+        <button type="button" onClick={() => input.current?.click()} disabled={busy}
+          className="w-full rounded-full bg-green-600 text-white py-3 font-black disabled:opacity-50">
+          {busy && !found ? "קורא את הקבלה…" : "📷 סיימתי - צילום קבלה"}
+        </button>
+        <button type="button" onClick={() => finish([])} disabled={busy} className="w-full text-sm text-muted-foreground underline">סיום בלי קבלה</button>
+      </div>
       {found && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" onClick={() => !busy && setFound(null)}>
           <div role="dialog" aria-modal="true" aria-labelledby="receipt-title" className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-card border border-border p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
             <h2 id="receipt-title" className="text-xl font-black">מה מצאתי בקבלה</h2>
-            <p className="text-sm text-muted-foreground">כדאי לעבור על הכמויות - הקריאה לא תמיד מדויקת.</p>
+            <p className="text-sm text-muted-foreground">כדאי לעבור על הכמויות - הקריאה לא תמיד מדויקת. מוצרים מהסל שלא נמצאו בקבלה ייסגרו בלי כמות.</p>
             <ul className="divide-y divide-border">
               {found.map((f, i) => (
                 <li key={f.row.reportId} className="py-3 flex items-center gap-3">
@@ -143,7 +123,7 @@ export const ReceiptButton = ({ rows, onDone }: { rows: PurchaseRow[]; onDone: (
                 </li>
               ))}
             </ul>
-            <button type="button" onClick={saveAll} disabled={busy} className="w-full rounded-full bg-green-600 py-3 font-black text-white disabled:opacity-50">
+            <button type="button" onClick={() => finish(found)} disabled={busy} className="w-full rounded-full bg-green-600 py-3 font-black text-white disabled:opacity-50">
               {busy ? "שומר…" : "שמירה"}
             </button>
             <button type="button" onClick={() => setFound(null)} disabled={busy} className="w-full text-sm text-muted-foreground underline">ביטול</button>
