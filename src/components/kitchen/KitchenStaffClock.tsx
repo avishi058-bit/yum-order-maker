@@ -24,7 +24,6 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const [counting, setCounting] = useState<{ runId: string; title: string; items: CountItem[]; values: Record<string, number>; leaving?: Person } | null>(null);
   const [saving, setSaving] = useState(false);
   const [closingNudge, setClosingNudge] = useState(false);
-  const [closingSeen, setClosingSeen] = useState(false);
 
   const load = useCallback(async () => {
     const [p, t] = await Promise.all([staffDb.rpc("kitchen_staff_today"), staffDb.rpc("kitchen_tasks_today")]);
@@ -45,8 +44,9 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const someoneIn = people.some((p) => p.open_since);
   const open = tasks.filter((t) => !t.done);
   const idleTask = open.find((t) => t.source === "idle");
-  const pattyTask = open.find((t) => t.kind === "patties");
-  const showClosing = someoneIn && closingNudge && !closingSeen && !kitchenBusy && open.length > 0;
+  // After 22:00 on a quiet night: the closing tasks one by one, in order.
+  const nextClosing = open.find((t) => t.section === "קידום סגירה" || t.section === "סדר סגירה");
+  const showClosing = someoneIn && closingNudge && !kitchenBusy && !!nextClosing;
 
   const setDone = async (t: Task, done: boolean) => {
     if (isCount(t)) {
@@ -143,10 +143,11 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
         <div className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl bg-amber-500 text-black shadow-2xl p-4 flex items-center gap-3" role="status">
           <span className="text-2xl" aria-hidden>🌙</span>
           <span className="flex-1">
-            <span className="block font-black">מתחילים לקדם סגירה</span>
-            <span className="block text-sm">למלא פחיות במקרר{pattyTask ? ` · ${pattyTask.title}` : ""}</span>
+            <span className="block text-xs font-bold">קידום סגירה</span>
+            <span className="block font-black">{nextClosing!.title}</span>
+            <button type="button" onClick={() => setListOpen(true)} className="text-xs underline">כל המשימות</button>
           </span>
-          <button type="button" onClick={() => { setClosingSeen(true); setListOpen(true); }} className="rounded-xl bg-black text-amber-300 font-black px-4 py-2">למשימות</button>
+          <button type="button" onClick={() => setDone(nextClosing!, true)} className="rounded-xl bg-black text-amber-300 font-black px-4 py-2">בוצע ✓</button>
         </div>, document.body)}
 
       {someoneIn && idleTask && !showClosing && !kitchenBusy && !listOpen && !confirm && !counting && createPortal(

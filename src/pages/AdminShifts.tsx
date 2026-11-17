@@ -191,7 +191,7 @@ const AdminShifts = () => {
       title, kind: newTask.kind, weekday: newTask.kind === "weekly" ? newTask.weekday : null,
       // New closing tasks go to the end of the closing order.
       ...(newTask.kind === "closing" ? { section: "סדר סגירה", sort_order: 300 }
-        : newTask.kind === "rotating" ? { section: "משימות השבוע", sort_order: 90, per_week: newTask.perWeek }
+        : newTask.kind === "rotating" ? { section: "משימות יומיות", sort_order: 90, per_week: newTask.perWeek }
         : { sort_order: 100 }),
     });
     if (error) toast.error("לא נשמר"); else { setNewTask({ ...newTask, title: "" }); loadTasks(); }
@@ -516,7 +516,7 @@ const AdminShifts = () => {
             <summary className="font-bold cursor-pointer">רשימת המשימות ({taskDefs.length})</summary>
             {[
               { kind: "closing", label: "צ׳קליסט סגירה - כל משמרת" },
-              { kind: "rotating", label: "משימות השבוע - מתחלקות בין המשמרות של העובדים" },
+              { kind: "rotating", label: "משימות יומיות - מתחלקות בין המשמרות של העובדים" },
               { kind: "weekly", label: "ביום קבוע בשבוע" },
               { kind: "idle", label: "כשאין עבודה (אחרי 10 דקות בלי הזמנות)" },
               { kind: "count", label: "ספירת מלאי" },
@@ -546,7 +546,7 @@ const AdminShifts = () => {
               <select value={newTask.kind} onChange={(e) => setNewTask({ ...newTask, kind: e.target.value })} aria-label="סוג משימה"
                 className="bg-background border border-border rounded-lg px-2 py-2">
                 <option value="closing">כל משמרת</option>
-                <option value="rotating">משימות השבוע</option>
+                <option value="rotating">משימות יומיות</option>
                 <option value="weekly">ביום קבוע</option>
                 <option value="idle">כשאין עבודה</option>
               </select>
