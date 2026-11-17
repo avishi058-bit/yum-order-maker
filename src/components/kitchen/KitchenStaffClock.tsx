@@ -95,7 +95,7 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
     setQuietUntil(until);
     try { localStorage.setItem("habikta_tasks_quiet_until", String(until)); } catch { /* ignore */ }
   };
-  const calm = !kitchenBusy && tick - lastBusyAt >= 15 * 60_000 && tick >= quietUntil;
+  const calm = !kitchenBusy && tick - lastBusyAt >= 10 * 60_000 && tick >= quietUntil;
   const popClosing = showClosing && calm;
   const popTask = !listOpen && !confirm && !counting && someoneIn && calm
     ? (popClosing ? nextClosing : (!showClosing ? idleTask : undefined)) : undefined;
