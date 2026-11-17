@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
-  SHOP_CATEGORIES, STOCK_CATEGORIES, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
+  SHOP_CATEGORIES, STOCK_CATEGORIES, itemPack, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
 } from "@/lib/staff";
 
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
@@ -40,10 +40,11 @@ const AdminShifts = () => {
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
   // shop_category: where the owner buys it, when it differs from the staff category.
-  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; unit: string; active: boolean }[]>([]);
+  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; unit: string; pack_name: string | null; pack_size: number | null; active: boolean }[]>([]);
   const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: StockLevel; quantity: number | null; staff_id: string | null; created_at: string }[]>([]);
   const [newStock, setNewStock] = useState({ name: "", category: "ירקות", shop: "סופר" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
+  const [early, setEarly] = useState<{ id: string; staff_id: string; requested_at: string; staff_shifts: { starts_at: string } | null }[]>([]);
   const [appeals, setAppeals] = useState<{ id: string; staff_id: string; claimed_in: string; staff_time_entries: { clock_in: string } | null }[]>([]);
   const [closedDays, setClosedDays] = useState<{ day: string; label: string | null }[]>([]);
   const [month, setMonth] = useState(() => todayIL().slice(0, 7));
@@ -100,10 +101,13 @@ const AdminShifts = () => {
     const { data } = await staffDb.from("staff_entry_appeals")
       .select("id, staff_id, claimed_in, staff_time_entries(clock_in)").eq("status", "pending").order("created_at");
     setAppeals(data ?? []);
+    const er = await staffDb.from("staff_early_requests")
+      .select("id, staff_id, requested_at, staff_shifts(starts_at)").eq("status", "pending").order("requested_at");
+    setEarly(er.data ?? []);
   }, []);
   const loadStock = useCallback(async () => {
     const [it, rp] = await Promise.all([
-      staffDb.from("staff_stock_items").select("id, name, category, shop_category, unit, active").eq("active", true).order("category").order("sort_order").order("name"),
+      staffDb.from("staff_stock_items").select("id, name, category, shop_category, unit, pack_name, pack_size, active").eq("active", true).order("category").order("sort_order").order("name"),
       staffDb.from("staff_stock_reports").select("id, item_id, level, quantity, staff_id, created_at").is("resolved_at", null).order("created_at"),
     ]);
     setStock(it.data ?? []);
@@ -135,7 +139,18 @@ const AdminShifts = () => {
   };
 
   useEffect(() => { document.title = "סידור עבודה - הבקתה"; }, []);
-  useEffect(() => { loadAppeals(); }, [loadAppeals]);
+  useEffect(() => {
+    loadAppeals();
+    // Early clock-in requests wait for an answer: keep the list fresh.
+    const t = window.setInterval(loadAppeals, 30_000);
+    return () => window.clearInterval(t);
+  }, [loadAppeals]);
+  const decideEarly = async (id: string, approve: boolean) => {
+    const { error } = await staffDb.rpc("staff_decide_early", { p_request_id: id, p_approve: approve });
+    if (error) { toast.error("לא נשמר"); return; }
+    toast.success(approve ? "אושר - הכניסה נרשמה" : "הבקשה נדחתה");
+    loadAppeals(); loadMonth();
+  };
   useEffect(() => { loadStock(); }, [loadStock]);
 
   // ── Shift tasks ────────────────────────────────────────────────
@@ -248,6 +263,27 @@ const AdminShifts = () => {
           <h1 className="text-2xl font-black">סידור עבודה</h1>
           <Link to="/kitchen" className="text-sm text-primary underline">למסך המטבח</Link>
         </header>
+
+        {early.length > 0 && (
+          <section className="rounded-2xl bg-card border-2 border-primary p-4 space-y-3">
+            <h2 className="text-lg font-black">בקשות להיכנס מוקדם</h2>
+            {early.map((r) => {
+              const who = members.find((m) => m.id === r.staff_id)?.display_name ?? "";
+              return (
+                <div key={r.id} className="flex items-center justify-between gap-2 flex-wrap border-t border-border pt-3">
+                  <p className="text-sm">
+                    <b>{who}</b> לחץ/ה כניסה ב-<b>{timeIL(r.requested_at)}</b>
+                    {r.staff_shifts?.starts_at && <><br />המשמרת מתחילה ב-{timeIL(r.staff_shifts.starts_at)}</>}
+                  </p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => decideEarly(r.id, true)} className="px-4 py-2 rounded-full bg-green-600 text-white font-bold text-sm">אישור</button>
+                    <button type="button" onClick={() => decideEarly(r.id, false)} className="px-4 py-2 rounded-full border border-border font-bold text-sm">דחייה</button>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
 
         {appeals.length > 0 && (
           <section className="rounded-2xl bg-card border-2 border-primary p-4 space-y-3">
@@ -530,7 +566,7 @@ const AdminShifts = () => {
                           <input type="checkbox" onChange={() => resolveStock(r.id)} className="w-6 h-6 accent-green-600 shrink-0" aria-label={`נקנה: ${item?.name ?? ""}`} />
                           <span className="flex-1">
                             <b>{item?.name ?? "מוצר"}</b>{" "}
-                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity, item?.unit)}</span>
+                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity, item?.unit, item ? itemPack(item) : null)}</span>
                             <span className="block text-xs text-muted-foreground">{who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
                           </span>
                         </label>

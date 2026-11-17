@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, stockText, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -159,7 +159,6 @@ const Staff = () => {
     setStockEdit(null);
     try {
       await setStaffStock(token, it.id, level, qty);
-      toast.success(level ? `${it.name}: ${stockText(level === "count" && qty === 0 ? "out" : level, qty ?? null, it.unit)}` : `${it.name}: יש מספיק`);
       await load();
     } catch {
       toast.error("לא נשמר, נסו שוב");
@@ -371,7 +370,7 @@ const Staff = () => {
                         <span>
                           <span className="block font-black">{e.label} {dateIL(e.clock_in)}</span>
                           <span className={`block text-sm ${C.muted}`}>
-                            כניסה {timeIL(e.clock_in)} · {e.clock_out ? `${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
+                            כניסה {timeIL(e.clock_in)} · {e.clock_out ? `יציאה ${timeIL(e.clock_out)} · ${hoursText(e.minutes)} שעות` : "במשמרת עכשיו"}
                             {e.late_minutes > 0 && <span className="text-red-600 font-bold"> · איחור {e.late_minutes} ד׳</span>}
                           </span>
                         </span>
@@ -455,7 +454,7 @@ const Staff = () => {
                       : i.level === "count" ? "bg-[#ff8a3d] border-[#ff8a3d] text-white shadow-lg"
                       : `bg-white ${C.line}`}`}>
                   <span className="block text-base font-black leading-tight">{i.name}</span>
-                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>{stockText(i.level, i.quantity, i.unit)}</span>
+                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>{stockText(i.level, i.quantity, i.unit, itemPack(i))}</span>
                 </button>
               ))}
             </div>
@@ -473,15 +472,37 @@ const Staff = () => {
             ) : (
               <>
                 <p className={`text-center ${C.muted}`}>כמה {stockEdit.item.unit} נשארו?</p>
-                <div className="flex items-center justify-center gap-5">
-                  <button type="button" aria-label="פחות" onClick={() => setStockEdit({ ...stockEdit, qty: Math.max(0, stockEdit.qty - Number(stockEdit.item.step)) })}
-                    className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
-                  <span className="text-5xl font-black w-24 text-center" aria-live="polite">{Number.isInteger(stockEdit.qty) ? stockEdit.qty : `${stockEdit.qty >= 1 ? Math.floor(stockEdit.qty) : ""}½`}</span>
-                  <button type="button" aria-label="יותר" onClick={() => setStockEdit({ ...stockEdit, qty: Math.min(999, stockEdit.qty + Number(stockEdit.item.step)) })}
-                    className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>+</button>
-                </div>
-                <button type="button" onClick={() => saveStock("count", stockEdit.qty)} className={`w-full h-14 rounded-full text-lg font-black ${C.grad}`}>
-                  {stockEdit.qty === 0 ? "שמירה: נגמר" : `שמירה: ${stockText("count", stockEdit.qty, stockEdit.item.unit)}`}
+                {(() => {
+                  const pack = itemPack(stockEdit.item);
+                  const setQty = (q: number) => setStockEdit({ ...stockEdit, qty: Math.max(0, Math.min(9999, q)) });
+                  const stepper = (label: string | null, value: string, minus: () => void, plus: () => void) => (
+                    <div className="flex items-center justify-center gap-5">
+                      <button type="button" aria-label={`פחות${label ? ` ${label}` : ""}`} onClick={minus}
+                        className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
+                      <span className="w-24 text-center" aria-live="polite">
+                        <span className="block text-5xl font-black">{value}</span>
+                        {label && <span className={`block text-sm font-bold ${C.muted}`}>{label}</span>}
+                      </span>
+                      <button type="button" aria-label={`יותר${label ? ` ${label}` : ""}`} onClick={plus}
+                        className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>+</button>
+                    </div>
+                  );
+                  if (pack) {
+                    const packs = Math.floor(stockEdit.qty / pack.size);
+                    const units = stockEdit.qty - packs * pack.size;
+                    return (
+                      <>
+                        {stepper(`${packPlural(pack.name)} (${pack.size})`, String(packs), () => setQty(stockEdit.qty - pack.size), () => setQty(stockEdit.qty + pack.size))}
+                        {stepper("יחידות", String(units), () => setQty(stockEdit.qty - 1), () => setQty(stockEdit.qty + 1))}
+                      </>
+                    );
+                  }
+                  const step = Number(stockEdit.item.step);
+                  const q = stockEdit.qty;
+                  return stepper(null, Number.isInteger(q) ? String(q) : `${q >= 1 ? Math.floor(q) : ""}½`, () => setQty(q - step), () => setQty(q + step));
+                })()}
+                <button type="button" onClick={() => saveStock("count", stockEdit.qty)} className="w-full h-14 rounded-full text-lg font-black bg-green-600 text-white">
+                  {stockEdit.qty === 0 ? "שמירה: נגמר" : `שמירה: ${stockText("count", stockEdit.qty, stockEdit.item.unit, itemPack(stockEdit.item))}`}
                 </button>
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => saveStock("low")} className="h-14 rounded-full bg-[#ffd24d] text-[#3a1d12] text-lg font-black">נשאר קצת</button>

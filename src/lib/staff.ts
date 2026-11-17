@@ -51,8 +51,20 @@ export type StockLevel = "out" | "low" | "count";
 /** unit: what is counted (יחידות / חבילות / פחיות); step: smallest amount (0.5 = half a pack); low_only: only "נשאר קצת". */
 export interface StockItem {
   id: string; name: string; category: string; unit: string; step: number; low_only: boolean;
+  /** Counted also in packs: eggs by tray (12), cans by case (24). */
+  pack_name: string | null; pack_size: number | null;
   level: StockLevel | null; quantity: number | null;
 }
+export type StockPack = { name: string; size: number } | null;
+/** Plural of a pack name: ארגז → ארגזים, תבנית → תבניות. */
+export const packPlural = (name: string) => (name === "ארגז" ? "ארגזים" : name === "תבנית" ? "תבניות" : name);
+/** "נשארו 2 ארגזים ו-5 יחידות", "נשאר ארגז אחד". */
+const packText = (q: number, pack: { name: string; size: number }) => {
+  const packs = Math.floor(q / pack.size);
+  const rem = q - packs * pack.size;
+  const head = packs === 1 ? `${pack.name} ${pack.name === "תבנית" ? "אחת" : "אחד"}` : `${packs} ${packPlural(pack.name)}`;
+  return `נשארו ${head}${rem > 0 ? ` ו-${rem} יחידות` : ""}`;
+};
 const SINGULAR: Record<string, string> = { "חבילות": "חבילה", "פחיות": "פחית", "יחידות": "יחידה" };
 /** "נשארה חצי חבילה", "נשארה חבילה אחת", "נשארו 1½ חבילות", "נשארו 3" (plain units). */
 const countText = (q: number, unit: string) => {
@@ -63,9 +75,11 @@ const countText = (q: number, unit: string) => {
   return `נשארו ${n}${unit && unit !== "יחידות" ? ` ${unit}` : ""}`;
 };
 /** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2 חבילות"). */
-export const stockText = (level: StockLevel | null, qty: number | null, unit = "") =>
+export const stockText = (level: StockLevel | null, qty: number | null, unit = "", pack: StockPack = null) =>
   level === "out" ? "נגמר" : level === "low" ? "נשאר קצת"
-    : level === "count" ? countText(Number(qty), unit) : "יש מספיק";
+    : level === "count" ? (pack && Number(qty) >= pack.size ? packText(Number(qty), pack) : countText(Number(qty), unit)) : "יש מספיק";
+export const itemPack = (i: { pack_name: string | null; pack_size: number | null }): StockPack =>
+  i.pack_name && i.pack_size ? { name: i.pack_name, size: i.pack_size } : null;
 /** Reports how much is left of a product (amount, "a little", "ran out"), or clears the report (null). */
 export const setStaffStock = (token: string, itemId: string, level: StockLevel | null, qty?: number) =>
   rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level, p_qty: qty ?? null });

@@ -3,13 +3,15 @@
 // Also tonight's task list: the closing checklist, this weekday's cleaning,
 // a short stock count, and quiet-time tasks (shown only while no order is open).
 // Clocking out with tasks left lists them; leaving anyway moves them to the
-// next shift. No dates or worked hours are shown here.
+// next shift. No dates or worked hours are shown here. Clocking in more than
+// 10 minutes early waits for the owner's approval; after 22:00 on a quiet
+// night a banner says to start closing.
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { staffDb } from "@/lib/staff";
 
-interface Person { id: string; name: string; open_since: string | null }
+interface Person { id: string; name: string; open_since: string | null; pending_early?: boolean }
 interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean }
 interface CountItem { id: string; name: string; unit: string; step: number }
 
@@ -23,6 +25,8 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const [listOpen, setListOpen] = useState(false);
   const [counting, setCounting] = useState<{ runId: string; values: Record<string, number> } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [closingNudge, setClosingNudge] = useState(false);
+  const [closingSeen, setClosingSeen] = useState(false);
 
   const load = useCallback(async () => {
     const [p, t] = await Promise.all([staffDb.rpc("kitchen_staff_today"), staffDb.rpc("kitchen_tasks_today")]);
@@ -30,6 +34,7 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
     if (!t.error && t.data) {
       setTasks((t.data.tasks ?? []) as Task[]);
       setCountItems((t.data.count_items ?? []) as CountItem[]);
+      setClosingNudge(!!t.data.closing_nudge);
     }
   }, []);
 
@@ -42,6 +47,8 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
   const someoneIn = people.some((p) => p.open_since);
   const open = tasks.filter((t) => !t.done);
   const idleTask = open.find((t) => t.source === "idle");
+  const pattyTask = open.find((t) => t.kind === "patties");
+  const showClosing = someoneIn && closingNudge && !closingSeen && !kitchenBusy && open.length > 0;
 
   const setDone = async (t: Task, done: boolean) => {
     if (done && t.kind === "count") {
@@ -74,6 +81,11 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
     setSaving(false);
     setConfirm(null);
     if (error) { toast.error("הפעולה נכשלה"); return; }
+    if (data?.state === "pending") {
+      toast.info(`${p.name} - עוד מוקדם לכניסה. נשלחה בקשה לאבישי, הכניסה תירשם כשהוא יאשר.`, { duration: 8000 });
+      load();
+      return;
+    }
     toast.success(data?.state === "in" ? `${p.name} - נכנס/ה למשמרת` : `${p.name} - יצא/ה מהמשמרת`);
     load();
   };
@@ -103,10 +115,10 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
         <button
           key={p.id}
           type="button"
-          onClick={() => setConfirm(p)}
-          className={`px-3 py-2 rounded-lg text-xs font-bold ${p.open_since ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}
+          onClick={() => (p.pending_early && !p.open_since ? toast.info("ממתין לאישור של אבישי") : setConfirm(p))}
+          className={`px-3 py-2 rounded-lg text-xs font-bold ${p.open_since ? "bg-red-500/20 text-red-300" : p.pending_early ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}`}
         >
-          {p.open_since ? `יציאה · ${p.name}` : `כניסה · ${p.name}`}
+          {p.open_since ? `יציאה · ${p.name}` : p.pending_early ? `ממתין לאישור · ${p.name}` : `כניסה · ${p.name}`}
         </button>
       ))}
       {someoneIn && tasks.length > 0 && (
@@ -117,7 +129,18 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
       )}
 
       {/* Quiet-time task: only while no order is waiting or being made. */}
-      {someoneIn && idleTask && !kitchenBusy && !listOpen && !confirm && !counting && createPortal(
+      {/* After 22:00 with no new orders for 15 minutes: start closing. */}
+      {showClosing && !listOpen && !confirm && !counting && createPortal(
+        <div className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl bg-amber-500 text-black shadow-2xl p-4 flex items-center gap-3" role="status">
+          <span className="text-2xl" aria-hidden>🌙</span>
+          <span className="flex-1">
+            <span className="block font-black">מתחילים לקדם סגירה</span>
+            <span className="block text-sm">למלא פחיות במקרר{pattyTask ? ` · ${pattyTask.title}` : ""}</span>
+          </span>
+          <button type="button" onClick={() => { setClosingSeen(true); setListOpen(true); }} className="rounded-xl bg-black text-amber-300 font-black px-4 py-2">למשימות</button>
+        </div>, document.body)}
+
+      {someoneIn && idleTask && !showClosing && !kitchenBusy && !listOpen && !confirm && !counting && createPortal(
         <div className="fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl bg-sky-600 text-white shadow-2xl p-4 flex items-center gap-3" role="status">
           <span className="text-2xl" aria-hidden>🧹</span>
           <span className="flex-1">
