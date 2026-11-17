@@ -548,9 +548,9 @@ const Staff = () => {
                     const isCount = t.kind === "count" || t.kind === "supplier_count";
                     const required = t.title.includes(REQUIRED);
                     return (
-                      <li key={t.id} className={`border-b last:border-0 ${C.line}`}>
+                      <li key={t.id} className={`border-b last:border-0 ${C.line} flex items-center gap-2`}>
                         <button type="button" onClick={() => tickTask(t, !t.done)} disabled={isCount && t.done} aria-pressed={t.done}
-                          className="w-full flex items-center gap-3.5 py-4 text-right">
+                          className="flex-1 flex items-center gap-3.5 py-4 text-right">
                           <span className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 ${
                             t.done ? "bg-green-600 scale-100" : "border-[2.5px] border-[#e2d4cb]"}`} aria-hidden>
                             {t.done && <Check size={18} strokeWidth={4} className="text-white animate-in zoom-in-50 duration-300" />}
@@ -564,6 +564,17 @@ const Staff = () => {
                           {required && !t.done && <span className="shrink-0 rounded-full bg-[#fdecea] text-[#c0392b] text-xs font-bold px-2.5 py-1">חובה</span>}
                           {isCount && !t.done && !required && <span className={`shrink-0 rounded-full bg-[#fff0e6] ${C.accent} text-xs font-bold px-2.5 py-1`}>לספור</span>}
                         </button>
+                        {/* "stock" / "stock:<category>": straight to that part of the stock tab. */}
+                        {t.action?.startsWith("stock") && !t.done && (
+                          <button type="button" onClick={() => {
+                            setTab("stock"); setStockMode("missing");
+                            const cat = t.action!.split(":")[1];
+                            if (cat) setStockCat(cat);
+                            window.scrollTo(0, 0);
+                          }} className={`shrink-0 rounded-full bg-[#fff0e6] ${C.accent} text-sm font-black px-3 py-2`}>
+                            {t.action.includes(":") ? "לספירה" : "למלאי"}
+                          </button>
+                        )}
                       </li>
                     );
                   })}

@@ -168,14 +168,14 @@ const AdminShifts = () => {
   useEffect(() => { loadStock(); }, [loadStock]);
 
   // ── Shift tasks ────────────────────────────────────────────────
-  const [taskDefs, setTaskDefs] = useState<{ id: string; title: string; kind: string; weekday: number | null; at_opening: boolean }[]>([]);
+  const [taskDefs, setTaskDefs] = useState<{ id: string; title: string; kind: string; weekday: number | null; at_opening: boolean; per_week?: number | null; section?: string | null }[]>([]);
   const [taskRuns, setTaskRuns] = useState<{ id: string; title: string; source: string; done_at: string | null; done_by: string | null; created_at: string }[]>([]);
   const [counts, setCounts] = useState<{ item_id: string; quantity: number; created_at: string }[]>([]);
-  const [newTask, setNewTask] = useState({ title: "", kind: "closing", weekday: 0 });
+  const [newTask, setNewTask] = useState({ title: "", kind: "closing", weekday: 0, perWeek: 1 });
   const loadTasks = useCallback(async () => {
     const today = todayIL();
     const [d, r, c] = await Promise.all([
-      staffDb.from("staff_tasks").select("id, title, kind, weekday, at_opening").eq("active", true).order("kind").order("weekday").order("sort_order"),
+      staffDb.from("staff_tasks").select("id, title, kind, weekday, at_opening, per_week, section").eq("active", true).order("kind").order("weekday").order("sort_order"),
       staffDb.from("staff_task_runs").select("id, title, source, done_at, done_by, created_at").gte("shift_date", addDaysYmd(today, -1)).order("created_at"),
       staffDb.from("staff_stock_counts").select("item_id, quantity, created_at").order("created_at", { ascending: false }).limit(40),
     ]);
@@ -190,7 +190,9 @@ const AdminShifts = () => {
     const { error } = await staffDb.from("staff_tasks").insert({
       title, kind: newTask.kind, weekday: newTask.kind === "weekly" ? newTask.weekday : null,
       // New closing tasks go to the end of the closing order.
-      ...(newTask.kind === "closing" ? { section: "סדר סגירה", sort_order: 300 } : { sort_order: 100 }),
+      ...(newTask.kind === "closing" ? { section: "סדר סגירה", sort_order: 300 }
+        : newTask.kind === "rotating" ? { section: "משימות השבוע", sort_order: 90, per_week: newTask.perWeek }
+        : { sort_order: 100 }),
     });
     if (error) toast.error("לא נשמר"); else { setNewTask({ ...newTask, title: "" }); loadTasks(); }
   };
@@ -514,7 +516,8 @@ const AdminShifts = () => {
             <summary className="font-bold cursor-pointer">רשימת המשימות ({taskDefs.length})</summary>
             {[
               { kind: "closing", label: "צ׳קליסט סגירה - כל משמרת" },
-              { kind: "weekly", label: "פעם בשבוע" },
+              { kind: "rotating", label: "משימות השבוע - מתחלקות בין המשמרות של העובדים" },
+              { kind: "weekly", label: "ביום קבוע בשבוע" },
               { kind: "idle", label: "כשאין עבודה (אחרי 10 דקות בלי הזמנות)" },
               { kind: "count", label: "ספירת מלאי" },
             ].map((g) => (
@@ -524,7 +527,7 @@ const AdminShifts = () => {
                 <ul className="text-sm">
                   {taskDefs.filter((t) => t.kind === g.kind).map((t) => (
                     <li key={t.id} className="flex items-center justify-between gap-2 py-1">
-                      <span>{t.title}{t.at_opening ? " · בפתיחה" : ""}</span>
+                      <span>{t.title}{t.at_opening ? " · בפתיחה" : ""}{t.per_week ? ` · ${t.per_week === 1 ? "פעם" : `${t.per_week} פעמים`} בשבוע` : ""}{t.kind === "closing" && t.section ? ` · ${t.section}` : ""}</span>
                       <span className="flex items-center gap-2 shrink-0">
                         {t.kind === "weekly" && (
                           <select value={t.weekday ?? 0} onChange={(e) => setTaskDay(t.id, Number(e.target.value))} aria-label="יום בשבוע"
@@ -543,13 +546,20 @@ const AdminShifts = () => {
               <select value={newTask.kind} onChange={(e) => setNewTask({ ...newTask, kind: e.target.value })} aria-label="סוג משימה"
                 className="bg-background border border-border rounded-lg px-2 py-2">
                 <option value="closing">כל משמרת</option>
-                <option value="weekly">פעם בשבוע</option>
+                <option value="rotating">משימות השבוע</option>
+                <option value="weekly">ביום קבוע</option>
                 <option value="idle">כשאין עבודה</option>
               </select>
               {newTask.kind === "weekly" && (
                 <select value={newTask.weekday} onChange={(e) => setNewTask({ ...newTask, weekday: Number(e.target.value) })} aria-label="יום"
                   className="bg-background border border-border rounded-lg px-2 py-2">
                   {["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "מוצ״ש"].map((d, i) => <option key={i} value={i}>{d}</option>)}
+                </select>
+              )}
+              {newTask.kind === "rotating" && (
+                <select value={newTask.perWeek} onChange={(e) => setNewTask({ ...newTask, perWeek: Number(e.target.value) })} aria-label="כמה פעמים בשבוע"
+                  className="bg-background border border-border rounded-lg px-2 py-2">
+                  {[1, 2, 3].map((n) => <option key={n} value={n}>{n === 1 ? "פעם בשבוע" : `${n} פעמים בשבוע`}</option>)}
                 </select>
               )}
               <input value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} placeholder="משימה חדשה"

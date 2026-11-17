@@ -92,7 +92,7 @@ export const setStaffStock = (token: string, itemId: string, level: StockLevel |
 /** A product to count in a count task (base unit, with its pack when it has one). */
 export interface CountItem { id: string; name: string; unit: string; step: number; pack_name: string | null; pack_size: number | null }
 /** One of tonight's tasks; count tasks carry the products to count. */
-export interface ShiftTask { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items: CountItem[] | null; section?: string | null }
+export interface ShiftTask { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items: CountItem[] | null; section?: string | null; action?: string | null }
 /** Tasks grouped by checklist section, in order (tasks without a section first). */
 export const groupTasks = <T extends { section?: string | null }>(list: T[]) => {
   const groups: { section: string | null; tasks: T[] }[] = [];
