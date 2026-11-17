@@ -17,7 +17,7 @@ const googleEventUrl = (startsAt: string, endsAt: string) => {
   const t = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const q = new URLSearchParams({
     action: "TEMPLATE",
-    text: "משמרת בבקתה",
+    text: "משמרת הבקתה",
     dates: `${t(startsAt)}/${t(endsAt)}`,
     location: "הבקתה, דרך ערבי נחל 21, תושיה",
   });

@@ -122,17 +122,18 @@ const handleCalendar = async (url, env) => {
   const shifts = await res.json();
   const lines = [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//HaBikta//Shifts//HE", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
-    "X-WR-CALNAME:משמרות הבקתה", "X-WR-TIMEZONE:Asia/Jerusalem", "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H",
+    // Green calendar (iPhone takes the calendar colour; COLOR is the per-event standard).
+    "X-WR-CALNAME:משמרות הבקתה", "X-APPLE-CALENDAR-COLOR:#16A34A", "COLOR:green", "X-WR-TIMEZONE:Asia/Jerusalem", "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H",
   ];
   for (const s of shifts) {
-    const who = s.team.length ? s.team.join(", ") : s.owner || "";
     lines.push(
       "BEGIN:VEVENT",
       `UID:shift-${s.id}-${token.slice(0, 8)}@habikta-burger.com`,
       `DTSTAMP:${icsTime(new Date().toISOString())}`,
       `DTSTART:${icsTime(s.starts_at)}`,
       `DTEND:${icsTime(s.ends_at)}`,
-      `SUMMARY:${esc(`משמרת בבקתה${who ? ` - ${who}` : ""}`)}`,
+      `SUMMARY:${esc("משמרת הבקתה")}`,
+      "COLOR:green",
       `LOCATION:${esc("הבקתה, דרך ערבי נחל 21, תושיה")}`,
       "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${esc("משמרת בעוד שעה - זמן להתארגן")}`, "TRIGGER:-PT60M", "END:VALARM",
       "END:VEVENT",
