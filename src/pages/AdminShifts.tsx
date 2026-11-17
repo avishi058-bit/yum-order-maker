@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
-  STOCK_CATEGORIES, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
+  STOCK_CATEGORIES, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
 } from "@/lib/staff";
 
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
@@ -40,7 +40,7 @@ const AdminShifts = () => {
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
   const [stock, setStock] = useState<{ id: string; name: string; category: string; active: boolean }[]>([]);
-  const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: string; staff_id: string | null; created_at: string }[]>([]);
+  const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: StockLevel; quantity: number | null; staff_id: string | null; created_at: string }[]>([]);
   const [newStock, setNewStock] = useState({ name: "", category: "טייק אווי" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
   const [appeals, setAppeals] = useState<{ id: string; staff_id: string; claimed_in: string; staff_time_entries: { clock_in: string } | null }[]>([]);
@@ -103,7 +103,7 @@ const AdminShifts = () => {
   const loadStock = useCallback(async () => {
     const [it, rp] = await Promise.all([
       staffDb.from("staff_stock_items").select("id, name, category, active").eq("active", true).order("category").order("sort_order").order("name"),
-      staffDb.from("staff_stock_reports").select("id, item_id, level, staff_id, created_at").is("resolved_at", null).order("created_at"),
+      staffDb.from("staff_stock_reports").select("id, item_id, level, quantity, staff_id, created_at").is("resolved_at", null).order("created_at"),
     ]);
     setStock(it.data ?? []);
     setStockOpen(rp.data ?? []);
@@ -354,24 +354,38 @@ const AdminShifts = () => {
           })}
         </section>
 
-        {/* Stock shortages */}
-        <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
-          <h2 className="text-lg font-black">חוסרים במלאי</h2>
-          {stockOpen.length === 0 ? (
-            <p className="text-sm text-muted-foreground">אין דיווחים פתוחים.</p>
-          ) : stockOpen.map((r) => {
-            const item = stock.find((i) => i.id === r.item_id);
-            const who = members.find((m) => m.id === r.staff_id)?.display_name;
+        {/* Shopping checklist from staff stock reports, one list per category */}
+        <section className="rounded-2xl bg-card border border-border p-4 space-y-4">
+          <h2 className="text-lg font-black">מה לקנות</h2>
+          {stockOpen.length === 0 && <p className="text-sm text-muted-foreground">אין חוסרים. כשעובד מדווח, המוצר יופיע כאן.</p>}
+          {STOCK_CATEGORIES.map((c) => {
+            const rows = stockOpen.filter((r) => stock.find((i) => i.id === r.item_id)?.category === c);
+            if (rows.length === 0) return null;
             return (
-              <div key={r.id} className="flex items-center justify-between gap-2 border-t border-border pt-2">
-                <p className="text-sm">
-                  <b className={r.level === "out" ? "text-destructive" : "text-primary"}>{r.level === "out" ? "נגמר" : "נשאר קצת"}</b> · <b>{item?.name ?? "מוצר"}</b>
-                  <span className="text-muted-foreground"> · {item?.category} · {who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
-                </p>
-                <button type="button" onClick={() => resolveStock(r.id)} className="px-3 py-1.5 rounded-full bg-green-600 text-white font-bold text-sm shrink-0">טופל</button>
+              <div key={c}>
+                <p className="font-black mb-1">{c} <span className="text-sm text-muted-foreground font-bold">({rows.length})</span></p>
+                <ul className="divide-y divide-border rounded-xl border border-border">
+                  {rows.map((r) => {
+                    const item = stock.find((i) => i.id === r.item_id);
+                    const who = members.find((m) => m.id === r.staff_id)?.display_name;
+                    return (
+                      <li key={r.id}>
+                        <label className="flex items-center gap-3 px-3 py-3 cursor-pointer">
+                          <input type="checkbox" onChange={() => resolveStock(r.id)} className="w-6 h-6 accent-green-600 shrink-0" aria-label={`נקנה: ${item?.name ?? ""}`} />
+                          <span className="flex-1">
+                            <b>{item?.name ?? "מוצר"}</b>{" "}
+                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity)}</span>
+                            <span className="block text-xs text-muted-foreground">{who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             );
           })}
+          {stockOpen.length > 0 && <p className="text-xs text-muted-foreground">מסמנים V על מה שנקנה, והוא יורד מהרשימה.</p>}
           <details className="border-t border-border pt-2">
             <summary className="font-bold cursor-pointer">רשימת המוצרים ({stock.length})</summary>
             {STOCK_CATEGORIES.map((c) => (

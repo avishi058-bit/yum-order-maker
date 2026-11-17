@@ -26,7 +26,7 @@ export interface StaffMe {
   upcoming: StaffShift[];
   month: { minutes: number; late_count: number; entries: StaffEntry[] };
   open_since: string | null;
-  stock: { id: string; name: string; category: string; level: "out" | "low" | null }[];
+  stock: StockItem[];
   meals: {
     items: { id: string; name: string; price: number }[];
     month_total: number;
@@ -43,10 +43,15 @@ const rpc = async <T,>(fn: string, args: Record<string, unknown>) => {
   return data as T;
 };
 export const fetchStaffMe = (token: string) => rpc<StaffMe>("staff_portal_me", { p_token: token });
-export const STOCK_CATEGORIES = ["טייק אווי", "ירקות", "שתייה", "קפואים", "לחמניות"] as const;
-/** Marks a product as ran out / running low, or clears the report (null). */
-export const setStaffStock = (token: string, itemId: string, level: "out" | "low" | null) =>
-  rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level });
+export const STOCK_CATEGORIES = ["סופר", "טייק אווי", "רטבים", "לחמניות", "קפואים", "המבורגר", "שתייה"] as const;
+export type StockLevel = "out" | "low" | "count";
+export interface StockItem { id: string; name: string; category: string; level: StockLevel | null; quantity: number | null }
+/** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2"). */
+export const stockText = (level: StockLevel | null, qty: number | null) =>
+  level === "out" ? "נגמר" : level === "low" ? "נשאר קצת" : level === "count" ? `נשארו ${qty}` : "יש מספיק";
+/** Reports how much is left of a product (units, "a little", "ran out"), or clears the report (null). */
+export const setStaffStock = (token: string, itemId: string, level: StockLevel | null, qty?: number) =>
+  rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level, p_qty: qty ?? null });
 
 /** Staff meals: report an item taken, or take back a recent report. */
 export const addStaffMeal = (token: string, itemId: string) => rpc<string | null>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });

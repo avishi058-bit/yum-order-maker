@@ -1998,7 +1998,6 @@ const Kitchen = () => {
           🔊 לחץ כאן כדי להפעיל צלצולים להזמנות חדשות
         </div>
       )}
-      <KitchenStaffClock />
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3 flex flex-col gap-3 sticky top-0 z-10 overflow-x-hidden max-w-full">
         <div className="flex items-center gap-4 flex-wrap">
@@ -2415,6 +2414,8 @@ const Kitchen = () => {
 
 
 
+
+          <KitchenStaffClock />
 
           {/* ⚡ Quick connect to printer (Bluetooth) */}
           <button

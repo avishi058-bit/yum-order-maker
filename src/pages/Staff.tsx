@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, stockText, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -45,7 +45,8 @@ const Staff = () => {
   const [picked, setPicked] = useState<Set<string> | null>(null);
   const [sending, setSending] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [stockCat, setStockCat] = useState<string>("שתייה");
+  const [stockCat, setStockCat] = useState<string>("סופר");
+  const [stockEdit, setStockEdit] = useState<{ item: StockItem; qty: number } | null>(null);
   const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock">("home");
   const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
@@ -152,6 +153,19 @@ const Staff = () => {
     }
   };
 
+  const saveStock = async (level: StockLevel | null, qty?: number) => {
+    if (!stockEdit) return;
+    const it = stockEdit.item;
+    setStockEdit(null);
+    try {
+      await setStaffStock(token, it.id, level, qty);
+      toast.success(level ? `${it.name}: ${stockText(level === "count" && qty === 0 ? "out" : level, qty ?? null)}` : `${it.name}: יש מספיק`);
+      await load();
+    } catch {
+      toast.error("לא נשמר, נסו שוב");
+    }
+  };
+
   const addMeal = async (item: { id: string; name: string; price: number }) => {
     try {
       const logId = await addStaffMeal(token, item.id);
@@ -203,7 +217,6 @@ const Staff = () => {
   const ahead = data.upcoming.filter((s) => s.mine || data.me.is_owner);
   const monthName = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", month: "long" }).format(new Date());
 
-  const stockNext = { none: "low", low: "out", out: null } as const;
   const tile = "rounded-3xl bg-white shadow-[0_4px_14px_rgba(232,80,47,0.10)] active:scale-[0.97] transition-transform";
   const tabs = [
     { id: "home", icon: "🏠", label: "בית" },
@@ -419,7 +432,7 @@ const Staff = () => {
           <>
             <section className={`${C.card} !p-5`}>
               <h2 className="text-xl font-black">מה חסר?</h2>
-              <p className={`text-sm ${C.muted}`}>נוגעים במוצר: פעם אחת - נשאר קצת, פעם שנייה - נגמר, פעם שלישית - ביטול.</p>
+              <p className={`text-sm ${C.muted}`}>נוגעים במוצר ומסמנים כמה נשאר, "נשאר קצת" או "נגמר".</p>
             </section>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
               {STOCK_CATEGORIES.map((c) => {
@@ -435,18 +448,14 @@ const Staff = () => {
             {data.stock.filter((i) => i.category === stockCat).length === 0 && <p className={`text-center ${C.muted}`}>עוד אין מוצרים בקטגוריה הזו.</p>}
             <div className="grid grid-cols-2 gap-3">
               {data.stock.filter((i) => i.category === stockCat).map((i) => (
-                <button key={i.id} type="button"
-                  onClick={async () => {
-                    try { await setStaffStock(token, i.id, stockNext[i.level ?? "none"]); await load(); } catch { toast.error("לא נשמר, נסו שוב"); }
-                  }}
+                <button key={i.id} type="button" onClick={() => setStockEdit({ item: i, qty: i.quantity ?? 1 })}
                   className={`h-20 px-2 rounded-3xl text-center border-2 transition-all active:scale-[0.97] ${
                     i.level === "out" ? "bg-red-600 border-red-600 text-white shadow-lg"
                       : i.level === "low" ? "bg-[#ffd24d] border-[#ffd24d] text-[#3a1d12] shadow-lg"
+                      : i.level === "count" ? "bg-[#ff8a3d] border-[#ff8a3d] text-white shadow-lg"
                       : `bg-white ${C.line}`}`}>
                   <span className="block text-base font-black leading-tight">{i.name}</span>
-                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>
-                    {i.level === "out" ? "נגמר" : i.level === "low" ? "נשאר קצת" : "יש במלאי"}
-                  </span>
+                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>{stockText(i.level, i.quantity)}</span>
                 </button>
               ))}
             </div>
@@ -454,6 +463,32 @@ const Staff = () => {
         )}
       </div>
 
+
+      {stockEdit && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-stock-title" onClick={() => setStockEdit(null)}>
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]" onClick={(e) => e.stopPropagation()}>
+            <h2 id="staff-stock-title" className="text-2xl font-black text-center">{stockEdit.item.name}</h2>
+            <p className={`text-center ${C.muted}`}>כמה נשאר?</p>
+            <div className="flex items-center justify-center gap-5">
+              <button type="button" aria-label="פחות" onClick={() => setStockEdit({ ...stockEdit, qty: Math.max(0, stockEdit.qty - 1) })}
+                className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
+              <span className="text-5xl font-black w-20 text-center" aria-live="polite">{stockEdit.qty}</span>
+              <button type="button" aria-label="יותר" onClick={() => setStockEdit({ ...stockEdit, qty: Math.min(999, stockEdit.qty + 1) })}
+                className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>+</button>
+            </div>
+            <button type="button" onClick={() => saveStock("count", stockEdit.qty)} className={`w-full h-14 rounded-full text-lg font-black ${C.grad}`}>
+              {stockEdit.qty === 0 ? "שמירה: נגמר" : `שמירה: נשארו ${stockEdit.qty}`}
+            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => saveStock("low")} className="h-14 rounded-full bg-[#ffd24d] text-[#3a1d12] text-lg font-black">נשאר קצת</button>
+              <button type="button" onClick={() => saveStock("out")} className="h-14 rounded-full bg-red-600 text-white text-lg font-black">נגמר</button>
+            </div>
+            {stockEdit.item.level && (
+              <button type="button" onClick={() => saveStock(null)} className={`w-full h-12 rounded-full border-2 ${C.line} font-bold`}>יש מספיק - ביטול הדיווח</button>
+            )}
+          </div>
+        </div>
+      )}
 
       {appeal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-appeal-title">
