@@ -8,7 +8,7 @@ import { FinishShopping, type PurchaseRow } from "@/components/admin/StockPurcha
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
-  SHOP_CATEGORIES, STOCK_CATEGORIES, itemPack, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
+  SHOP_CATEGORIES, STOCK_CATEGORIES, halfText, itemPack, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
 } from "@/lib/staff";
 
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
@@ -595,7 +595,10 @@ const AdminShifts = () => {
                           <input type="checkbox" checked={cart.has(r.id)} onChange={() => toggleCart(r.id)} className="w-6 h-6 accent-green-600 shrink-0" aria-label={`נקנה: ${item?.name ?? ""}`} />
                           <span className="flex-1">
                             <b>{item?.name ?? "מוצר"}</b>{" "}
-                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity, item?.unit, item ? itemPack(item) : null)}</span>
+                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>
+                              {r.level === "count" ? `(יש כרגע ${halfText(Number(r.quantity))}${item?.unit && item.unit !== "יחידות" ? ` ${item.unit}` : ""})`
+                                : `· ${stockText(r.level, r.quantity, item?.unit, item ? itemPack(item) : null)}`}
+                            </span>
                             <span className="block text-xs text-muted-foreground">{who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
                           </span>
                         </label>

@@ -557,7 +557,6 @@ const Staff = () => {
                           </span>
                           <span className={`flex-1 text-[17px] transition-colors ${t.done ? "text-[#c4b5ab]" : "font-semibold"}`}>
                             {t.title.replace(REQUIRED, "")}
-                            {!t.done && t.source === "carry" && <span className="text-xs text-amber-600 font-bold"> · מאתמול</span>}
                             {!t.done && t.at_opening && <span className={`text-xs ${C.muted}`}> · בפתיחה</span>}
                             {isCount && !t.done && <span className={`block text-xs font-normal ${C.muted}`}>{(t.items ?? []).map((i) => i.name).join(", ")}</span>}
                           </span>

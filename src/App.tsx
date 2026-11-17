@@ -34,6 +34,7 @@ const AdminConsents = lazy(() => import("./pages/AdminConsents"));
 const StationSetup = lazy(() => import("./pages/StationSetup"));
 const Kiosk = lazy(() => import("./pages/Kiosk"));
 const Inventory = lazy(() => import("./pages/Inventory"));
+const InventoryHome = lazy(() => import("./pages/InventoryHome"));
 const InventoryFridge = lazy(() => import("./pages/InventoryFridge"));
 const EventBooking = lazy(() => import("./pages/EventBooking"));
 const EventsAdmin = lazy(() => import("./pages/EventsAdmin"));
@@ -156,6 +157,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/inventory" element={<InventoryHome />} />
               <Route path="/inventory/:token" element={<Inventory />} />
               <Route path="/inventory/:token/fridge" element={<InventoryFridge />} />
               <Route path="/events" element={<EventBooking />} />

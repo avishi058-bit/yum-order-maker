@@ -1,4 +1,5 @@
 import InventoryInvoiceScanner from "@/components/InventoryInvoiceScanner";
+import { INVENTORY_TOKEN_KEY } from "./InventoryHome";
 import StockAudit from "@/components/StockAudit";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -154,6 +155,8 @@ export default function Inventory() {
       setItems(data.items ?? []);
       setRecentMovements(data.movements ?? []);
       setAuthState("ok");
+      // Remembered so the installed app can open without the link in its install file.
+      try { if (token) localStorage.setItem(INVENTORY_TOKEN_KEY, token); } catch { /* ignore */ }
     } catch (e) {
       if (String(e).includes("invalid_token")) setAuthState("bad");
       else toast.error(`שגיאה: ${String(e)}`);

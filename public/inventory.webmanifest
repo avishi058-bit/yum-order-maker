@@ -2,7 +2,7 @@
   "name": "ניהול מלאי - הבקתה",
   "short_name": "מלאי",
   "description": "מערכת ניהול מלאי - הבקתה",
-  "start_url": "/inventory/6a89129aafc41f3d3c92b2792356c9989ee87a422b284f32",
+  "start_url": "/inventory",
   "scope": "/inventory/",
   "id": "/inventory/",
   "display": "standalone",

@@ -194,23 +194,14 @@ export const hoursText = (minutes: number) => {
 };
 
 /**
- * Worked shifts for the dashboard's labour numbers: the old kitchen clock
- * (work_shifts) plus the name-strip clock (staff_time_entries, owner excluded),
- * without counting a shift twice when it exists in both.
+ * Worked shifts for the dashboard's labour numbers: the staff clock (one clock
+ * for everyone; the old kitchen clock's shifts were moved into it), owner excluded.
  */
 export const fetchLaborShifts = async (fromIso: string, toIso?: string) => {
-  let oldQ = staffDb.from("work_shifts").select("clock_in, clock_out").gte("clock_in", fromIso);
-  let newQ = staffDb.from("staff_time_entries").select("clock_in, clock_out, staff_members(is_owner)").gte("clock_in", fromIso);
-  if (toIso) { oldQ = oldQ.lt("clock_in", toIso); newQ = newQ.lt("clock_in", toIso); }
-  const [o, n] = await Promise.all([oldQ, newQ]);
-  const out: { clock_in: string; clock_out: string | null }[] = [];
-  const seen = new Set<number>();
-  const rows = [...(o.data ?? []), ...(n.data ?? []).filter((r: { staff_members?: { is_owner?: boolean } }) => !r.staff_members?.is_owner)];
-  for (const r of rows) {
-    const key = new Date(r.clock_in).getTime();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ clock_in: r.clock_in, clock_out: r.clock_out });
-  }
-  return out;
+  let q = staffDb.from("staff_time_entries").select("clock_in, clock_out, staff_members(is_owner)").gte("clock_in", fromIso);
+  if (toIso) q = q.lt("clock_in", toIso);
+  const { data } = await q;
+  return ((data ?? []) as { clock_in: string; clock_out: string | null; staff_members?: { is_owner?: boolean } }[])
+    .filter((r) => !r.staff_members?.is_owner)
+    .map((r) => ({ clock_in: r.clock_in, clock_out: r.clock_out }));
 };

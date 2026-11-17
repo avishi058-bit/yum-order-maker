@@ -108,7 +108,6 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
         <input type="checkbox" checked={t.done} onChange={(e) => setDone(t, e.target.checked)} className="w-7 h-7 accent-emerald-500 shrink-0" />
         <span className={`text-base ${t.done ? "line-through text-muted-foreground" : "font-bold"}`}>
           {t.title}
-          {t.source === "carry" && <span className="text-xs text-amber-400 font-bold"> · מאתמול</span>}
           {t.source === "idle" && <span className="text-xs text-sky-400 font-bold"> · זמן שקט</span>}
           {t.at_opening && <span className="text-xs text-muted-foreground"> · בפתיחה</span>}
           {isCount(t) && !t.done && <span className="text-xs text-muted-foreground"> · {(t.items ?? countItems).map((i) => i.name).join(", ")}</span>}
