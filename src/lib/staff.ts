@@ -67,12 +67,15 @@ const packText = (q: number, pack: { name: string; size: number }, unit: string)
   const verb = packs === 1 && rem === 0 ? (pack.name === "תבנית" ? "נשארה" : "נשאר") : "נשארו";
   return `${verb} ${head}${rem > 0 ? ` ו-${remText} ${unit || "יחידות"}` : ""}`;
 };
-const SINGULAR: Record<string, string> = { "חבילות": "חבילה", "פחיות": "פחית", "יחידות": "יחידה" };
+const SINGULAR: Record<string, string> = { "חבילות": "חבילה", "פחיות": "פחית", "יחידות": "יחידה", "גלילים": "גליל", "דליים": "דלי" };
+/** Masculine units ("נשאר גליל אחד"). */
+const MASCULINE = new Set(["גלילים", "דליים"]);
 /** "נשארה חצי חבילה", "נשארה חבילה אחת", "נשארו 1½ חבילות", "נשארו 3" (plain units). */
 const countText = (q: number, unit: string) => {
   const one = SINGULAR[unit] ?? unit;
-  if (q === 0.5) return `נשארה חצי ${one}`;
-  if (q === 1) return unit && unit !== "יחידות" ? `נשארה ${one} אחת` : "נשארה 1";
+  const m = MASCULINE.has(unit);
+  if (q === 0.5) return `${m ? "נשאר" : "נשארה"} חצי ${one}`;
+  if (q === 1) return unit && unit !== "יחידות" ? (m ? `נשאר ${one} אחד` : `נשארה ${one} אחת`) : "נשארה 1";
   const n = Number.isInteger(q) ? String(q) : `${Math.floor(q)}½`;
   return `נשארו ${n}${unit && unit !== "יחידות" ? ` ${unit}` : ""}`;
 };

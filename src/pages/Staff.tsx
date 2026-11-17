@@ -673,12 +673,17 @@ const Staff = () => {
                 {(() => {
                   const pack = itemPack(stockEdit.item);
                   const setQty = (q: number) => setStockEdit({ ...stockEdit, qty: Math.max(0, Math.min(9999, q)) });
-                  const stepper = (label: string | null, value: string, minus: () => void, plus: () => void) => (
+                  // The number itself can be typed with the keyboard too.
+                  const stepper = (label: string | null, value: string, minus: () => void, plus: () => void, typed?: (n: number) => void) => (
                     <div className="flex items-center justify-center gap-5">
                       <button type="button" aria-label={`פחות${label ? ` ${label}` : ""}`} onClick={minus}
                         className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
                       <span className="w-24 text-center" aria-live="polite">
-                        <span className="block text-5xl font-black">{value}</span>
+                        {typed && !value.includes("½") ? (
+                          <input type="number" inputMode="numeric" min={0} value={value} aria-label={label ?? "כמות"}
+                            onChange={(e) => typed(Math.max(0, Math.floor(Number(e.target.value) || 0)))} onFocus={(e) => e.target.select()}
+                            className={`w-24 text-center text-5xl font-black bg-transparent border-b-2 ${C.line} focus:outline-none focus:border-[#e8502f]`} />
+                        ) : <span className="block text-5xl font-black">{value}</span>}
                         {label && <span className={`block text-sm font-bold ${C.muted}`}>{label}</span>}
                       </span>
                       <button type="button" aria-label={`יותר${label ? ` ${label}` : ""}`} onClick={plus}
@@ -690,14 +695,14 @@ const Staff = () => {
                     const units = stockEdit.qty - packs * pack.size;
                     return (
                       <>
-                        {stepper(`${packPlural(pack.name)} (${pack.size})`, String(packs), () => setQty(stockEdit.qty - pack.size), () => setQty(stockEdit.qty + pack.size))}
-                        {stepper(stockEdit.item.unit, halfText(units), () => setQty(stockEdit.qty - Number(stockEdit.item.step)), () => setQty(stockEdit.qty + Number(stockEdit.item.step)))}
+                        {stepper(`${packPlural(pack.name)} (${pack.size})`, String(packs), () => setQty(stockEdit.qty - pack.size), () => setQty(stockEdit.qty + pack.size), (n) => setQty(n * pack.size + units))}
+                        {stepper(stockEdit.item.unit, halfText(units), () => setQty(stockEdit.qty - Number(stockEdit.item.step)), () => setQty(stockEdit.qty + Number(stockEdit.item.step)), (n) => setQty(packs * pack.size + n))}
                       </>
                     );
                   }
                   const step = Number(stockEdit.item.step);
                   const q = stockEdit.qty;
-                  return stepper(null, Number.isInteger(q) ? String(q) : `${q >= 1 ? Math.floor(q) : ""}½`, () => setQty(q - step), () => setQty(q + step));
+                  return stepper(null, Number.isInteger(q) ? String(q) : `${q >= 1 ? Math.floor(q) : ""}½`, () => setQty(q - step), () => setQty(q + step), setQty);
                 })()}
                 <button type="button" onClick={() => saveStock("count", stockEdit.qty)} className="w-full h-14 rounded-full text-lg font-black bg-green-600 text-white">
                   {stockEdit.qty === 0 ? "שמירה: נגמר" : `שמירה: ${stockText("count", stockEdit.qty, stockEdit.item.unit, itemPack(stockEdit.item))}`}
