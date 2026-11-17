@@ -67,6 +67,7 @@ import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
+import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || item.id === "family-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
@@ -84,6 +85,8 @@ const Kiosk = () => {
 
   const [view, setView] = useState<KioskView>("welcome");
   const [cart, setCart] = useState<CartItem[]>([]);
+  // Someone ordering at the kiosk: the kitchen holds quiet-time tasks.
+  useTrackCustomerActivity(cart.length > 0);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
   const [successPaymentMethod, setSuccessPaymentMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
   const [cartOpen, setCartOpen] = useState(false);

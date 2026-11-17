@@ -36,7 +36,17 @@ const taskChime = () => {
   } catch { /* no audio */ }
 };
 
-const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) => {
+const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?: boolean; customers?: number }) => {
+  // Customers building an order on the site or the kiosk count as busy too.
+  const kitchenBusy = ordersOpen || customers > 0;
+  useEffect(() => {
+    if (customers <= 0) return;
+    // Tell the server, so quiet-time tasks are not handed out meanwhile.
+    const ping = () => staffDb.rpc("kitchen_customers_active").then(() => undefined, () => undefined);
+    ping();
+    const t = window.setInterval(ping, 30_000);
+    return () => window.clearInterval(t);
+  }, [customers > 0]); // eslint-disable-line react-hooks/exhaustive-deps
   const [people, setPeople] = useState<Person[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [countItems, setCountItems] = useState<CountItem[]>([]);
