@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import StaffWaste from "@/components/staff/StaffWaste";
+import OwnerSchedule, { fetchOwnerWeek, type OwnerWeek } from "@/components/staff/OwnerSchedule";
 import {
   STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, groupTasks, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
@@ -84,6 +85,16 @@ const Staff = () => {
       setError((e as Error).message);
     }
   }, [token]);
+
+  // Owner: this week and next (who works each day, in colour).
+  const [ownerWeeks, setOwnerWeeks] = useState<OwnerWeek[]>([]);
+  const loadOwnerWeeks = useCallback(async () => {
+    if (!token) return;
+    const ws = weekStartYmd(todayIL());
+    const all = await Promise.all([fetchOwnerWeek(token, ws), fetchOwnerWeek(token, addDaysYmd(ws, 7))]);
+    setOwnerWeeks(all.filter(Boolean) as OwnerWeek[]);
+  }, [token]);
+  useEffect(() => { if (data?.me.is_owner) loadOwnerWeeks(); }, [data?.me.is_owner, loadOwnerWeeks, tab]);
 
   const loadTasks = useCallback(async () => {
     if (!token) return;
@@ -330,7 +341,41 @@ const Staff = () => {
                 )}
                 <button type="button" onClick={() => { setTab("tasks"); window.scrollTo(0, 0); }} className={`mt-4 w-full h-14 rounded-full text-lg font-black ${C.grad}`}>למשימות</button>
               </section>
-            ) : (
+            ) : data.me.is_owner && ownerWeeks.length > 0 ? (() => {
+              const ow = ownerWeeks[0];
+              const people = [...ow.members, { ...ow.owner, name: "אני" }];
+              const allDays = ownerWeeks.flatMap((w) => w.days);
+              const myNext = allDays.find((d) => d.date >= today && d.assigned.filter((id) => id !== ow.owner.id).length === 0);
+              const todayDay = allDays.find((d) => d.date === today);
+              const who = (d: { assigned: string[] }) => {
+                const ids = d.assigned.filter((id) => id !== ow.owner.id);
+                return ids.length ? ids.map((id) => people.find((p) => p.id === id)).filter(Boolean) as typeof people : [people[people.length - 1]];
+              };
+              return (
+                <section className={C.hero}>
+                  <p className="text-sm font-semibold text-[#b0705a]">היום הבא שאתה עובד</p>
+                  <h2 className="text-3xl font-black mt-1">{myNext ? `${myNext.date === today ? "היום" : myNext.label} ${timeIL(myNext.starts_at)}` : "אין בשבועיים הקרובים"}</h2>
+                  {todayDay && <p className="text-[15px] text-[#7a5e50] mt-0.5">היום עובד/ת: {who(todayDay).map((p) => p.name.split(" ")[0]).join(", ")}</p>}
+                  <div className="flex justify-between mt-4" aria-label="מי עובד השבוע">
+                    {week.map((d) => {
+                      const day = ow.days.find((x) => x.date === d);
+                      const closed = !day;
+                      const ppl = day ? who(day) : [];
+                      return (
+                        <span key={d} className={`w-12 text-center text-[11px] font-bold ${C.muted}`}>
+                          <span className={`mx-auto mb-1 w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-black ${closed ? "border-[1.5px] border-dashed border-[#e2d4cb] text-[#c4b5ab]" : "text-white"} ${d < today ? "opacity-50" : ""}`}
+                            style={closed ? undefined : { background: ppl.length > 1 ? `linear-gradient(135deg, ${ppl[0].color} 50%, ${ppl[1].color} 50%)` : ppl[0]?.color }}>
+                            {["א", "ב", "ג", "ד", "ה", "ו", "מ"][new Date(`${d}T12:00:00Z`).getUTCDay()]}
+                          </span>
+                          <span className="block truncate" style={closed ? undefined : { color: ppl[0]?.color }}>{closed ? "סגור" : ppl.map((p) => p.name.split(" ")[0]).join("+")}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <button type="button" onClick={() => { setTab("shifts"); window.scrollTo(0, 0); }} className={`mt-4 w-full h-12 rounded-full font-black border-2 border-[#ffe0cc] text-[#e8502f] bg-white`}>לבניית הסידור</button>
+                </section>
+              );
+            })() : (
               <section className={`${C.hero} ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
                 <p className="text-sm font-semibold text-[#b0705a]">{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
                 {next ? (
@@ -409,7 +454,8 @@ const Staff = () => {
           </>
         )}
 
-        {tab === "shifts" && (
+        {tab === "shifts" && data.me.is_owner && <OwnerSchedule token={token} calendarUrl={data.calendar_url} />}
+        {tab === "shifts" && !data.me.is_owner && (
           <>
             {!data.me.is_owner && (
               <section className={`${C.card} !p-5`}>

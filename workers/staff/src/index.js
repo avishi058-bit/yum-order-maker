@@ -132,7 +132,7 @@ const handleCalendar = async (url, env) => {
       `DTSTAMP:${icsTime(new Date().toISOString())}`,
       `DTSTART:${icsTime(s.starts_at)}`,
       `DTEND:${icsTime(s.ends_at)}`,
-      `SUMMARY:${esc("משמרת הבקתה")}`,
+      `SUMMARY:${esc(s.title || "משמרת הבקתה")}`,
       "COLOR:green",
       `LOCATION:${esc("הבקתה, דרך ערבי נחל 21, תושיה")}`,
       "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${esc("משמרת בעוד שעה - זמן להתארגן")}`, "TRIGGER:-PT60M", "END:VALARM",
