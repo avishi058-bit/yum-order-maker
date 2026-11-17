@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
 import {
-  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
+  STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
 
 /** One-tap "add this shift" link for Google Calendar. */
@@ -28,14 +28,24 @@ const readStoredToken = () => {
 };
 
 // Page palette (scoped to this page).
+// Light and calm: white page, one warm card for "what now", orange only for
+// the main button of each screen, green for done, red for ran out.
 const C = {
-  page: "bg-[#fff7f0] text-[#3a1d12]",
-  card: "bg-white rounded-3xl p-4 shadow-[0_6px_18px_rgba(232,80,47,0.12)]",
-  muted: "text-[#9a7565]",
+  page: "bg-white text-[#2b1a12]",
+  card: "bg-white rounded-[28px] p-4 border border-[#f0e6df]",
+  hero: "rounded-[28px] p-5 bg-[#fff7f0] border border-[#ffe0cc]",
+  muted: "text-[#9a8478]",
   accent: "text-[#e8502f]",
-  line: "border-[#ffe3d1]",
-  grad: "bg-gradient-to-l from-[#ff8a3d] to-[#e8502f] text-white",
+  line: "border-[#f3ece7]",
+  grad: "bg-[#e8502f] text-white",
 };
+/** Progress bar (fills from the right). */
+const Progress = ({ done, total }: { done: number; total: number }) => (
+  <div className="h-3 rounded-full bg-[#ffe3d1] overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>
+    <div className="h-full rounded-full bg-gradient-to-l from-[#e8502f] to-[#ff8a3d] transition-[width] duration-500" style={{ width: `${total ? Math.round((done / total) * 100) : 0}%` }} />
+  </div>
+);
+const REQUIRED = " (חובה לפני יציאה)";
 
 const Staff = () => {
   const { token: urlToken } = useParams();
@@ -246,7 +256,18 @@ const Staff = () => {
   const ahead = data.upcoming.filter((s) => s.mine || data.me.is_owner);
   const monthName = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", month: "long" }).format(new Date());
 
-  const tile = "rounded-3xl bg-white shadow-[0_4px_14px_rgba(232,80,47,0.10)] active:scale-[0.97] transition-transform";
+  const tile = "rounded-3xl bg-[#f7f3f0] active:scale-[0.97] transition-transform";
+  const taskList = (tasks?.tasks ?? []).filter((t) => t.source !== "idle" || !t.done);
+  const tasksDone = taskList.filter((t) => t.done).length;
+  const nextTask = taskList.find((t) => !t.done);
+  const onShift = !!data.open_since && !!tasks?.on_shift;
+  const today = todayIL();
+  const todayShift = data.upcoming.find((s) => s.date === today);
+  const firstName = data.me.name.split(" ")[0];
+  const todayText = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", weekday: "long", day: "numeric", month: "numeric" }).format(new Date());
+  const week = Array.from({ length: 7 }, (_, i) => addDaysYmd(today, i));
+  const myDates = new Set(ahead.map((s) => s.date));
+  const closedDates = new Set(nw.closed.map((d) => d.date));
   const tabs = [
     { id: "home", icon: "🏠", label: "בית" },
     { id: "shifts", icon: "📅", label: "משמרות" },
@@ -259,22 +280,21 @@ const Staff = () => {
 
   return (
     <main dir="rtl" className={`min-h-screen ${C.page} pb-24`}>
-      <header className={`${C.grad} px-5 pt-6 pb-4`}>
-        <h1 className="text-2xl font-black">שלום, {data.me.name.split(" ")[0]} 👋</h1>
+      <header className="max-w-lg mx-auto px-5 pt-6 pb-1 flex items-baseline justify-between">
+        <h1 className="text-2xl font-black">היי {firstName}</h1>
+        <span className={`text-sm ${C.muted}`}>{todayText}</span>
       </header>
       {/* Tabs sit at the top: the bottom corner is covered by the hosting badge. */}
-      <nav aria-label="ניווט" className="sticky top-0 z-40 bg-white shadow-[0_4px_14px_rgba(232,80,47,0.12)] rounded-b-3xl">
-        <div className="max-w-lg mx-auto flex">
+      <nav aria-label="ניווט" className="sticky top-0 z-40 bg-white/95 backdrop-blur px-3 pt-2 pb-2">
+        <div className="max-w-lg mx-auto flex gap-0.5 rounded-[18px] bg-[#f7f3f0] p-1">
           {tabs.map((t) => (
             <button key={t.id} type="button" onClick={() => { setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
-              className={`relative flex-1 pt-2.5 pb-2 flex flex-col items-center gap-0.5 border-b-4 ${tab === t.id ? `${C.accent} border-[#e8502f]` : `${C.muted} border-transparent`}`}>
-              <span className="text-2xl leading-none" aria-hidden>{t.icon}</span>
-              <span className={`text-sm ${tab === t.id ? "font-black" : "font-bold"}`}>{t.label}</span>
-              {t.id === "tasks" && openTasks > 0 && (
-                <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{openTasks}</span>
-              )}
-              {t.id === "stock" && stockOpenCount > 0 && (
-                <span className="absolute top-1 right-1/2 -mr-7 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">{stockOpenCount}</span>
+              className={`relative flex-1 py-2 rounded-[14px] text-[13px] whitespace-nowrap transition-colors ${tab === t.id ? `bg-white ${C.accent} font-black shadow-sm` : `${C.muted} font-semibold`}`}>
+              {t.label}
+              {((t.id === "tasks" && openTasks > 0) || (t.id === "stock" && stockOpenCount > 0)) && (
+                <span className="absolute -top-1 left-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
+                  {t.id === "tasks" ? openTasks : stockOpenCount}
+                </span>
               )}
             </button>
           ))}
@@ -284,41 +304,80 @@ const Staff = () => {
       <div className="px-4 pt-4 max-w-lg mx-auto space-y-4">
         {tab === "home" && (
           <>
-            <section className={`${C.card} !p-5 ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
-              <p className={`text-sm ${C.muted}`}>{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
-              {next ? (
-                <>
-                  <p className={`text-3xl font-black ${C.accent}`}>{next.label} {dateIL(next.date)}</p>
-                  <p className="text-lg font-bold">מתחילים ב-{timeIL(next.starts_at)}</p>
-                  {data.me.is_owner && <p className={C.muted}>{next.team.length ? next.team.join(", ") : "אתה (אין עובד משובץ)"}</p>}
-                  {nextState && <p className={`mt-2 font-bold ${nextState.late ? "text-red-600" : "text-green-700"}`}>{nextState.text}</p>}
-                </>
-              ) : (
-                <p className="text-xl font-black">עוד אין משמרת בסידור</p>
-              )}
-            </section>
-
-            {!data.me.is_owner && !nw.published && !nw.submitted_at && (
-              <button type="button" onClick={() => setTab("shifts")} className={`w-full h-16 rounded-3xl text-lg font-black ${C.grad} shadow-lg`}>
-                להגיש משמרות לשבוע הבא ←
-              </button>
+            {onShift ? (
+              <section className={C.hero}>
+                <p className="text-sm font-semibold text-[#b0705a]">במשמרת מאז {timeIL(data.open_since!)}</p>
+                <h2 className="text-3xl font-black mt-1">
+                  {taskList.length === 0 ? "אין משימות כרגע" : nextTask ? `נשארו ${taskList.length - tasksDone} משימות` : "כל המשימות בוצעו ✓"}
+                </h2>
+                {nextTask && <p className="text-[15px] text-[#7a5e50] mt-0.5">הבאה: {nextTask.title.replace(REQUIRED, "")}</p>}
+                {taskList.length > 0 && (
+                  <div className="mt-4 space-y-1.5">
+                    <Progress done={tasksDone} total={taskList.length} />
+                    <div className={`flex justify-between text-[13px] font-semibold ${C.muted}`}>
+                      <span>{tasksDone} מתוך {taskList.length}</span>
+                      {todayShift && <span>עד {timeIL(todayShift.ends_at)}</span>}
+                    </div>
+                  </div>
+                )}
+                <button type="button" onClick={() => { setTab("tasks"); window.scrollTo(0, 0); }} className={`mt-4 w-full h-14 rounded-full text-lg font-black ${C.grad}`}>למשימות</button>
+              </section>
+            ) : (
+              <section className={`${C.hero} ${nextState?.late ? "ring-2 ring-red-500" : ""}`}>
+                <p className="text-sm font-semibold text-[#b0705a]">{data.me.is_owner ? "המשמרת הבאה" : "המשמרת הבאה שלך"}</p>
+                {next ? (
+                  <>
+                    <h2 className="text-3xl font-black mt-1">{next.date === today ? "היום" : `${next.label} ${dateIL(next.date)}`} {timeIL(next.starts_at)}</h2>
+                    <p className={`text-[15px] mt-0.5 ${nextState?.late ? "text-red-600 font-bold" : "text-[#7a5e50]"}`}>
+                      {nextState?.text ?? ""}{nextState && next.team.length > (next.mine ? 1 : 0) ? " · " : ""}
+                      {next.team.filter((n) => n !== data.me.name).length > 0 && `עם ${next.team.filter((n) => n !== data.me.name).join(", ")}`}
+                    </p>
+                  </>
+                ) : (
+                  <h2 className="text-2xl font-black mt-1">עוד אין משמרת בסידור</h2>
+                )}
+                <div className="flex justify-between mt-4" aria-label="השבוע שלי">
+                  {week.map((d, i) => {
+                    const mine = myDates.has(d);
+                    const closed = closedDates.has(d);
+                    return (
+                      <span key={d} className={`w-10 text-center text-[11px] font-semibold ${C.muted}`}>
+                        <span className={`mx-auto mb-1 w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-black ${
+                          mine ? "bg-[#e8502f] text-white" : closed ? "border-[1.5px] border-dashed border-[#e2d4cb] text-[#c4b5ab]" : "bg-[#f7f3f0] text-[#2b1a12]"}`}>
+                          {["א", "ב", "ג", "ד", "ה", "ו", "מ"][new Date(`${d}T12:00:00Z`).getUTCDay()]}
+                        </span>
+                        {i === 0 ? "היום" : closed ? "סגור" : ""}
+                      </span>
+                    );
+                  })}
+                </div>
+              </section>
             )}
 
-            <div className="grid grid-cols-3 gap-3 text-center">
-              {[
-                { v: hoursText(data.month.minutes), l: "שעות החודש" },
-                { v: String(done.length), l: "משמרות" },
-                { v: String(data.month.late_count), l: "איחורים" },
-              ].map((x) => (
-                <div key={x.l} className={`${tile} py-4`}>
-                  <p className={`text-2xl font-black ${C.accent}`}>{x.v}</p>
-                  <p className={`text-xs ${C.muted}`}>{x.l}</p>
-                </div>
-              ))}
+            {!data.me.is_owner && !nw.published && !nw.submitted_at && (
+              <section className={C.card}>
+                <p className="text-sm font-semibold text-[#b0705a]">הגשת משמרות לשבוע הבא</p>
+                <h2 className="text-xl font-black mt-1">עוד לא הגשת</h2>
+                <button type="button" onClick={() => { setTab("shifts"); window.scrollTo(0, 0); }} className={`mt-4 w-full h-14 rounded-full text-lg font-black ${C.grad}`}>להגשה</button>
+              </section>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              {onShift && next ? (
+                <div className={`${tile} p-4`}><p className={`text-sm ${C.muted}`}>המשמרת הבאה</p><p className="text-lg font-black">{next.label} {timeIL(next.starts_at)}</p></div>
+              ) : (
+                <div className={`${tile} p-4`}><p className={`text-sm ${C.muted}`}>שעות החודש</p><p className="text-lg font-black">{hoursText(data.month.minutes)}</p></div>
+              )}
+              {!data.me.is_owner && data.meals ? (
+                <button type="button" onClick={() => { setTab("meals"); window.scrollTo(0, 0); }} className={`${tile} p-4 text-right`}>
+                  <p className={`text-sm ${C.muted}`}>ארוחות החודש</p><p className="text-lg font-black">{data.meals.month_total} ₪</p>
+                </button>
+              ) : (
+                <div className={`${tile} p-4`}><p className={`text-sm ${C.muted}`}>משמרות החודש</p><p className="text-lg font-black">{done.length}</p></div>
+              )}
             </div>
 
-            <section className={`${C.card} space-y-3`}>
-              <h2 className="text-lg font-black">תזכורות</h2>
+            {(pushState !== "on" || (isIos() && (!isStandalonePwa() || webcal)) || data.me.is_owner) && <section className={`${C.card} space-y-3`}>
               {isIos() && !isStandalonePwa() && (
                 <p className="text-sm rounded-2xl bg-[#fff1e6] p-3">
                   באייפון: כפתור השיתוף ← "הוסף למסך הבית", ואז פותחים מהאייקון. רק כך מקבלים התראות.
@@ -326,7 +385,7 @@ const Staff = () => {
               )}
               {pushKey && (
                 <button type="button" onClick={enablePush} disabled={pushState !== "idle"}
-                  className="w-full h-14 rounded-full bg-[#3a1d12] text-white text-base font-bold flex items-center justify-center gap-2 disabled:opacity-70">
+                  className="w-full h-14 rounded-full bg-[#2b1a12] text-white text-base font-bold flex items-center justify-center gap-2 disabled:opacity-70">
                   <Bell size={20} />
                   {pushState === "on" ? "התראות פעילות ✓" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
                 </button>
@@ -337,7 +396,7 @@ const Staff = () => {
                 </a>
               )}
               {data.me.is_owner && <a href="/admin/shifts" className={`block text-center font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
-            </section>
+            </section>}
           </>
         )}
 
@@ -463,33 +522,44 @@ const Staff = () => {
         )}
 
         {tab === "tasks" && (
-          <section className={`${C.card} !p-5`}>
-            <h2 className="text-xl font-black mb-1">המשימות של הערב</h2>
+          <section className="px-1">
+            <div className="flex items-baseline justify-between mb-2">
+              <h2 className="text-2xl font-black">הערב</h2>
+              {tasks?.on_shift && taskList.length > 0 && <span className={`text-[15px] font-bold ${C.accent}`}>{tasksDone} מתוך {taskList.length}</span>}
+            </div>
             {!tasks?.on_shift ? (
               <p className={C.muted}>המשימות מופיעות כאן כשאת/ה במשמרת.</p>
-            ) : tasks.tasks.length === 0 ? (
+            ) : taskList.length === 0 ? (
               <p className={C.muted}>אין משימות כרגע.</p>
             ) : (
-              <ul>
-                {tasks.tasks.map((t) => {
-                  const isCount = t.kind === "count" || t.kind === "supplier_count";
-                  return (
-                    <li key={t.id} className={`border-b last:border-0 ${C.line}`}>
-                      <label className="flex items-center gap-3 py-3 cursor-pointer">
-                        <input type="checkbox" checked={t.done} disabled={isCount && t.done} onChange={(e) => tickTask(t, e.target.checked)}
-                          className="w-7 h-7 accent-green-600 shrink-0" />
-                        <span className={`flex-1 text-base ${t.done ? `line-through ${C.muted}` : "font-bold"}`}>
-                          {t.title}
-                          {t.source === "carry" && <span className="text-xs text-amber-600 font-bold"> · מאתמול</span>}
-                          {t.at_opening && <span className={`text-xs ${C.muted}`}> · בפתיחה</span>}
-                          {isCount && !t.done && <span className={`block text-xs font-normal ${C.muted}`}>{(t.items ?? []).map((i) => i.name).join(", ")}</span>}
-                        </span>
-                        {isCount && !t.done && <span className="shrink-0 rounded-full bg-green-600 text-white text-sm font-black px-3 py-1.5">לספור</span>}
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
+              <>
+                <Progress done={tasksDone} total={taskList.length} />
+                <ul className="mt-2">
+                  {[...taskList.filter((t) => !t.done), ...taskList.filter((t) => t.done)].map((t) => {
+                    const isCount = t.kind === "count" || t.kind === "supplier_count";
+                    const required = t.title.includes(REQUIRED);
+                    return (
+                      <li key={t.id} className={`border-b last:border-0 ${C.line}`}>
+                        <button type="button" onClick={() => tickTask(t, !t.done)} disabled={isCount && t.done} aria-pressed={t.done}
+                          className="w-full flex items-center gap-3.5 py-4 text-right">
+                          <span className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 ${
+                            t.done ? "bg-green-600 scale-100" : "border-[2.5px] border-[#e2d4cb]"}`} aria-hidden>
+                            {t.done && <Check size={18} strokeWidth={4} className="text-white animate-in zoom-in-50 duration-300" />}
+                          </span>
+                          <span className={`flex-1 text-[17px] transition-colors ${t.done ? "text-[#c4b5ab]" : "font-semibold"}`}>
+                            {t.title.replace(REQUIRED, "")}
+                            {!t.done && t.source === "carry" && <span className="text-xs text-amber-600 font-bold"> · מאתמול</span>}
+                            {!t.done && t.at_opening && <span className={`text-xs ${C.muted}`}> · בפתיחה</span>}
+                            {isCount && !t.done && <span className={`block text-xs font-normal ${C.muted}`}>{(t.items ?? []).map((i) => i.name).join(", ")}</span>}
+                          </span>
+                          {required && !t.done && <span className="shrink-0 rounded-full bg-[#fdecea] text-[#c0392b] text-xs font-bold px-2.5 py-1">חובה</span>}
+                          {isCount && !t.done && !required && <span className={`shrink-0 rounded-full bg-[#fff0e6] ${C.accent} text-xs font-bold px-2.5 py-1`}>לספור</span>}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
             )}
           </section>
         )}
