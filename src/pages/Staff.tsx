@@ -271,7 +271,8 @@ const Staff = () => {
   const todayText = new Intl.DateTimeFormat("he-IL", { timeZone: "Asia/Jerusalem", weekday: "long", day: "numeric", month: "numeric" }).format(new Date());
   // This week Sunday to Saturday night, without Friday (closed).
   const week = Array.from({ length: 7 }, (_, i) => addDaysYmd(weekStartYmd(today), i)).filter((d) => new Date(`${d}T12:00:00Z`).getUTCDay() !== 5);
-  const myDates = new Set([...ahead.map((s) => s.date), ...done.map((e) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(new Date(e.clock_in).getTime() - 4 * 3600_000)))]);
+  // Owner: his days are the ones nobody else is on.
+  const myDates = new Set([...ahead.filter((s) => s.mine || (data.me.is_owner && s.team.length === 0)).map((s) => s.date), ...done.map((e) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(new Date(e.clock_in).getTime() - 4 * 3600_000)))]);
   const closedDates = new Set(nw.closed.map((d) => d.date));
   const tabs = [
     { id: "home", icon: "🏠", label: "בית" },
