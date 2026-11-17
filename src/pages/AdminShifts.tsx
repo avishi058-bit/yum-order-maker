@@ -137,6 +137,41 @@ const AdminShifts = () => {
   useEffect(() => { document.title = "סידור עבודה - הבקתה"; }, []);
   useEffect(() => { loadAppeals(); }, [loadAppeals]);
   useEffect(() => { loadStock(); }, [loadStock]);
+
+  // ── Shift tasks ────────────────────────────────────────────────
+  const [taskDefs, setTaskDefs] = useState<{ id: string; title: string; kind: string; weekday: number | null; at_opening: boolean }[]>([]);
+  const [taskRuns, setTaskRuns] = useState<{ id: string; title: string; source: string; done_at: string | null; done_by: string | null; created_at: string }[]>([]);
+  const [counts, setCounts] = useState<{ item_id: string; quantity: number; created_at: string }[]>([]);
+  const [newTask, setNewTask] = useState({ title: "", kind: "closing", weekday: 0 });
+  const loadTasks = useCallback(async () => {
+    const today = todayIL();
+    const [d, r, c] = await Promise.all([
+      staffDb.from("staff_tasks").select("id, title, kind, weekday, at_opening").eq("active", true).order("kind").order("weekday").order("sort_order"),
+      staffDb.from("staff_task_runs").select("id, title, source, done_at, done_by, created_at").gte("shift_date", addDaysYmd(today, -1)).order("created_at"),
+      staffDb.from("staff_stock_counts").select("item_id, quantity, created_at").order("created_at", { ascending: false }).limit(40),
+    ]);
+    setTaskDefs(d.data ?? []);
+    setTaskRuns(r.data ?? []);
+    setCounts(c.data ?? []);
+  }, []);
+  useEffect(() => { loadTasks(); }, [loadTasks]);
+  const addTask = async () => {
+    const title = newTask.title.trim();
+    if (!title) return;
+    const { error } = await staffDb.from("staff_tasks").insert({
+      title, kind: newTask.kind, weekday: newTask.kind === "weekly" ? newTask.weekday : null, sort_order: 100,
+    });
+    if (error) toast.error("לא נשמר"); else { setNewTask({ ...newTask, title: "" }); loadTasks(); }
+  };
+  const removeTask = async (id: string, title: string) => {
+    if (!window.confirm(`להסיר את "${title}"?`)) return;
+    await staffDb.from("staff_tasks").update({ active: false }).eq("id", id);
+    loadTasks();
+  };
+  const setTaskDay = async (id: string, weekday: number) => {
+    await staffDb.from("staff_tasks").update({ weekday }).eq("id", id);
+    loadTasks();
+  };
   useEffect(() => { loadWeek(); }, [loadWeek]);
   useEffect(() => { loadMonth(); }, [loadMonth]);
 
@@ -355,6 +390,121 @@ const AdminShifts = () => {
               </div>
             );
           })}
+        </section>
+
+        {/* Monthly summary for payroll */}
+        <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <h2 className="text-lg font-black">סיכום חודש לשכר</h2>
+          {(() => {
+            const rows = members.filter((m) => m.active && !m.is_owner).map((m) => {
+              const p = byPerson.get(m.id);
+              const mealSum = meals.filter((x) => x.staff_id === m.id).reduce((n, x) => n + Number(x.price), 0);
+              return { name: m.display_name, minutes: p?.minutes ?? 0, shifts: p?.list.length ?? 0, late: p?.late ?? 0, meals: mealSum };
+            });
+            const text = [`סיכום ${month.split("-").reverse().join("/")} - הבקתה`, ...rows.map((r) =>
+              `${r.name}: ${hoursText(r.minutes)} שעות · ${r.shifts} משמרות · ${r.late} איחורים · ארוחות לקיזוז ${r.meals} ₪`)].join("\n");
+            return (
+              <>
+                <table className="w-full text-sm">
+                  <thead><tr className="text-muted-foreground text-right"><th className="font-bold">עובד</th><th className="font-bold">שעות</th><th className="font-bold">משמרות</th><th className="font-bold">איחורים</th><th className="font-bold">ארוחות לקיזוז</th></tr></thead>
+                  <tbody>
+                    {rows.map((r) => (
+                      <tr key={r.name} className="border-t border-border">
+                        <td className="py-2 font-bold">{r.name}</td><td>{hoursText(r.minutes)}</td><td>{r.shifts}</td>
+                        <td className={r.late ? "text-destructive font-bold" : ""}>{r.late}</td><td>{r.meals} ₪</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => { navigator.clipboard.writeText(text); toast.success("הסיכום הועתק"); }}
+                    className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-bold text-sm">העתקה</button>
+                  <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-lg bg-green-600 text-white font-bold text-sm">שליחה בוואטסאפ</a>
+                </div>
+                <p className="text-xs text-muted-foreground">לפי החודש שנבחר ב"שעות ואיחורים".</p>
+              </>
+            );
+          })()}
+        </section>
+
+        {/* Shift tasks */}
+        <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <h2 className="text-lg font-black">משימות</h2>
+          {(() => {
+            const today = todayIL();
+            const todays = taskRuns.filter((r) => todayFromIso(r.created_at) >= addDaysYmd(today, -1));
+            return todays.length === 0 ? <p className="text-sm text-muted-foreground">אין משימות פתוחות למשמרת הנוכחית.</p> : (
+              <ul className="text-sm space-y-1">
+                {todays.map((r) => (
+                  <li key={r.id} className="flex justify-between gap-2">
+                    <span>{r.done_at ? "✅" : "⬜"} {r.title}
+                      {r.source === "idle" && <span className="text-sky-600 font-bold"> · זמן שקט ({timeIL(r.created_at)})</span>}
+                      {r.source === "carry" && <span className="text-amber-600 font-bold"> · מאתמול</span>}
+                    </span>
+                    <span className="text-muted-foreground shrink-0">{r.done_at ? `${members.find((m) => m.id === r.done_by)?.display_name ?? ""} ${timeIL(r.done_at)}` : ""}</span>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
+          {counts.length > 0 && (
+            <details className="border-t border-border pt-2">
+              <summary className="font-bold cursor-pointer">ספירות מלאי אחרונות</summary>
+              <ul className="text-sm pt-1">
+                {counts.slice(0, 12).map((c, i) => (
+                  <li key={i}>{stock.find((s) => s.id === c.item_id)?.name ?? "מוצר"}: <b>{Number(c.quantity)}</b> {stock.find((s) => s.id === c.item_id)?.unit ?? ""} · {dateIL(c.created_at)} {timeIL(c.created_at)}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+          <details className="border-t border-border pt-2">
+            <summary className="font-bold cursor-pointer">רשימת המשימות ({taskDefs.length})</summary>
+            {[
+              { kind: "closing", label: "צ׳קליסט סגירה - כל משמרת" },
+              { kind: "weekly", label: "פעם בשבוע" },
+              { kind: "idle", label: "כשאין עבודה (אחרי 10 דקות בלי הזמנות)" },
+              { kind: "count", label: "ספירת מלאי" },
+            ].map((g) => (
+              <div key={g.kind} className="pt-2">
+                <p className="text-sm font-black">{g.label}</p>
+                {taskDefs.filter((t) => t.kind === g.kind).length === 0 && <p className="text-xs text-muted-foreground">אין משימות</p>}
+                <ul className="text-sm">
+                  {taskDefs.filter((t) => t.kind === g.kind).map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-2 py-1">
+                      <span>{t.title}{t.at_opening ? " · בפתיחה" : ""}</span>
+                      <span className="flex items-center gap-2 shrink-0">
+                        {t.kind === "weekly" && (
+                          <select value={t.weekday ?? 0} onChange={(e) => setTaskDay(t.id, Number(e.target.value))} aria-label="יום בשבוע"
+                            className="bg-background border border-border rounded px-1 py-0.5 text-xs">
+                            {["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "מוצ״ש"].map((d, i) => <option key={i} value={i}>{d}</option>)}
+                          </select>
+                        )}
+                        <button type="button" onClick={() => removeTask(t.id, t.title)} className="text-xs underline text-muted-foreground">הסרה</button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-3 flex-wrap">
+              <select value={newTask.kind} onChange={(e) => setNewTask({ ...newTask, kind: e.target.value })} aria-label="סוג משימה"
+                className="bg-background border border-border rounded-lg px-2 py-2">
+                <option value="closing">כל משמרת</option>
+                <option value="weekly">פעם בשבוע</option>
+                <option value="idle">כשאין עבודה</option>
+              </select>
+              {newTask.kind === "weekly" && (
+                <select value={newTask.weekday} onChange={(e) => setNewTask({ ...newTask, weekday: Number(e.target.value) })} aria-label="יום"
+                  className="bg-background border border-border rounded-lg px-2 py-2">
+                  {["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "מוצ״ש"].map((d, i) => <option key={i} value={i}>{d}</option>)}
+                </select>
+              )}
+              <input value={newTask.title} onChange={(e) => setNewTask({ ...newTask, title: e.target.value })} placeholder="משימה חדשה"
+                className="flex-1 min-w-32 bg-background border border-border rounded-lg px-3 py-2" />
+              <button type="button" onClick={addTask} className="px-4 rounded-lg bg-primary text-primary-foreground font-bold">הוספה</button>
+            </div>
+          </details>
         </section>
 
         {/* Shopping checklist from staff stock reports, one list per category */}

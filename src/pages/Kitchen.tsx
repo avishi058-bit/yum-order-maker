@@ -2415,7 +2415,7 @@ const Kitchen = () => {
 
 
 
-          <KitchenStaffClock />
+          <KitchenStaffClock busy={orders.some((o) => o.status === "new" || o.status === "preparing")} />
 
           {/* ⚡ Quick connect to printer (Bluetooth) */}
           <button
