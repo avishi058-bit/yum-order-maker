@@ -412,7 +412,7 @@ const Staff = () => {
                       </span>
                       {e.appeal?.status !== "pending" && (
                         <button type="button" aria-label="ערעור על שעת הכניסה"
-                          onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: "19:00" })}
+                          onClick={() => setAppeal({ id: e.id, clockIn: e.clock_in, time: timeIL(e.clock_in) })}
                           className={`w-10 h-10 rounded-full border-2 ${C.line} flex items-center justify-center text-xl font-black leading-none shrink-0`}>
                           ⋯
                         </button>
@@ -641,9 +641,19 @@ const Staff = () => {
             <p>
               ב-{dateIL(appeal.clockIn)} נרשמה כניסה ב-{timeIL(appeal.clockIn)}. באיזו שעה הגעת באמת?
             </p>
-            <input type="time" value={appeal.time} onChange={(ev) => setAppeal({ ...appeal, time: ev.target.value })}
+            {/* Starts at the recorded time; the employee moves it back to when they really came. */}
+            <input type="time" value={appeal.time} max={timeIL(appeal.clockIn)} onChange={(ev) => setAppeal({ ...appeal, time: ev.target.value })}
               aria-label="שעת ההגעה האמיתית"
               className={`w-full h-14 rounded-2xl border-2 ${C.line} px-3 text-2xl font-black text-center bg-white`} />
+            <div className="grid grid-cols-4 gap-2">
+              {[{ l: "−1 שעה", d: -60 }, { l: "−10 דק׳", d: -10 }, { l: "−1 דק׳", d: -1 }, { l: "+1 דק׳", d: 1 }].map((b) => (
+                <button key={b.l} type="button" onClick={() => {
+                  const [h, m] = (appeal.time || timeIL(appeal.clockIn)).split(":").map(Number);
+                  const t = (((h * 60 + m + b.d) % 1440) + 1440) % 1440;
+                  setAppeal({ ...appeal, time: `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}` });
+                }} className={`h-11 rounded-full border-2 ${C.line} text-sm font-black`}>{b.l}</button>
+              ))}
+            </div>
             <p className={`text-sm ${C.muted}`}>השעה תתעדכן רק אחרי אישור של אבישי.</p>
             <button type="button" onClick={sendAppeal} disabled={sending || !appeal.time} className={`w-full h-14 rounded-full text-lg font-black ${C.grad} disabled:opacity-50`}>
               {sending ? "שולח..." : "שליחת ערעור לאבישי"}
