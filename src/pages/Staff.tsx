@@ -65,7 +65,7 @@ const Staff = () => {
   const [calAdded, setCalAdded] = useState(() => { try { return localStorage.getItem("habikta_staff_cal") === "1"; } catch { return false; } });
   const markCalAdded = () => { setCalAdded(true); try { localStorage.setItem("habikta_staff_cal", "1"); } catch { /* ignore */ } };
   const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock" | "tasks">("home");
-  const [tasks, setTasks] = useState<{ on_shift: boolean; tasks: ShiftTask[] } | null>(null);
+  const [tasks, setTasks] = useState<{ on_shift: boolean; tasks: ShiftTask[]; closing_nudge?: boolean } | null>(null);
   const [counting, setCounting] = useState<{ task: ShiftTask; values: Record<string, number> } | null>(null);
   const [appeal, setAppeal] = useState<{ id: string; clockIn: string; time: string } | null>(null);
   const [pushState, setPushState] = useState<"idle" | "busy" | "on">(
@@ -127,6 +127,11 @@ const Staff = () => {
     if (!token) return;
     try { setTasks(await fetchStaffTasks(token)); } catch { /* shown as empty */ }
   }, [token]);
+  // Tonight's tasks every 30 seconds, so quiet-time tasks pop up here like on the kitchen screen.
+  useEffect(() => {
+    const t = window.setInterval(loadTasks, 30_000);
+    return () => window.clearInterval(t);
+  }, [loadTasks]);
 
   useEffect(() => { load(); loadTasks(); }, [load, loadTasks]);
   useEffect(() => {
@@ -355,6 +360,27 @@ const Staff = () => {
       </nav>
 
       <div className="px-4 pt-4 max-w-lg mx-auto space-y-4">
+        {/* Quiet-time task, or the next closing task after 22:00 - same as the kitchen screen. */}
+        {(() => {
+          if (!tasks?.on_shift || !data.open_since) return null;
+          const open = tasks.tasks.filter((t) => !t.done);
+          const idle = open.find((t) => t.source === "idle");
+          const closing = tasks.closing_nudge ? open.find((t) => t.section === "קידום סגירה" || t.section === "סדר סגירה") : undefined;
+          const t = closing ?? idle;
+          if (!t) return null;
+          return (
+            <section className={`rounded-[28px] p-4 flex items-center gap-3 ${closing ? "bg-amber-500 text-black" : "bg-sky-600 text-white"}`} role="status">
+              <span className="text-2xl" aria-hidden>{closing ? "🌙" : "🧹"}</span>
+              <span className="flex-1">
+                <span className="block text-xs font-bold opacity-90">{closing ? "קידום סגירה" : "רגע שקט? משימה:"}</span>
+                <span className="block text-lg font-black">{t.title.replace(REQUIRED, "")}</span>
+              </span>
+              <button type="button" onClick={() => tickTask(t, true)}
+                className={`rounded-xl font-black px-4 py-2.5 ${closing ? "bg-black text-amber-300" : "bg-white text-sky-700"}`}>בוצע ✓</button>
+            </section>
+          );
+        })()}
+
         {tab === "home" && help && (
           <section className="rounded-[28px] p-5 bg-red-600 text-white">
             <p className="text-xl font-black">צריך עזרה בבקתה - יש עומס</p>
