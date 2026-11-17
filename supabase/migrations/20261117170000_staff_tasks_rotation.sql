@@ -191,13 +191,15 @@ returns jsonb language sql stable security definer set search_path = public as $
   from public.staff_task_runs r where r.shift_date = p_date
 $$;
 
--- Quiet-time tasks: the idle list, then week tasks marked for quiet time
--- (deck, squeezers) when not done in the last 2 days - never twice a shift.
+-- Quiet-time tasks come first from the week's queue (the most overdue week
+-- task, if at least half its interval has passed), then the idle list. Doing a
+-- week task in quiet time resets its clock, so it is not scheduled again soon.
 create or replace function public.staff_give_idle_task()
 returns void language plpgsql security definer set search_path = public as $$
 declare
   v_shift public.staff_shifts := public.staff_current_shift();
   v_task public.staff_tasks;
+  v_id uuid;
   v_name text;
 begin
   if v_shift.id is null or now() not between v_shift.starts_at + interval '10 minutes' and v_shift.ends_at then return; end if;
@@ -208,13 +210,21 @@ begin
   if exists (select 1 from public.orders o where o.status not in ('pending_payment', 'payment_failed', 'cancelled') and o.created_at > now() - interval '10 minutes') then return; end if;
   if exists (select 1 from public.staff_task_runs r where r.shift_date = v_shift.shift_date and r.source = 'idle'
              and (r.done_at is null or r.created_at > now() - interval '20 minutes')) then return; end if;
-  select t.* into v_task from public.staff_tasks t
-   where t.active and (t.kind = 'idle' or (t.kind = 'rotating' and t.idle_ok
-         and not exists (select 1 from public.staff_task_runs r where r.task_id = t.id and r.done_at > now() - interval '2 days')))
-     and not exists (select 1 from public.staff_task_runs r where r.shift_date = v_shift.shift_date and (r.task_id = t.id or r.title = t.title))
-   order by (t.kind = 'rotating'), (select max(r.done_at) from public.staff_task_runs r where r.task_id = t.id) nulls first, t.sort_order
-   limit 1;
-  if v_task.id is null then return; end if;
+  select c.id into v_id from (
+    select t.*, case when t.kind = 'rotating' then
+             (v_shift.shift_date - coalesce((select max(r.shift_date) from public.staff_task_runs r
+               where r.task_id = t.id and r.done_at is not null), v_shift.shift_date - 30))::numeric / (7.0 / t.per_week)
+           end as score
+    from public.staff_tasks t
+    where t.active and t.kind in ('rotating', 'idle')
+      and not exists (select 1 from public.staff_task_runs r where r.shift_date = v_shift.shift_date and (r.task_id = t.id or r.title = t.title))
+  ) c
+  where c.kind = 'idle' or c.score >= 0.5
+  order by (c.kind = 'idle'), c.score desc nulls last,
+           (select max(r.done_at) from public.staff_task_runs r where r.task_id = c.id) nulls first, c.sort_order
+  limit 1;
+  if v_id is null then return; end if;
+  select * into v_task from public.staff_tasks where id = v_id;
   insert into public.staff_task_runs(shift_date, task_id, title, kind, source, at_opening)
   values (v_shift.shift_date, v_task.id, v_task.title, 'idle', 'idle', false)
   on conflict (shift_date, task_id) where task_id is not null do nothing;
