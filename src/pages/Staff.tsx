@@ -159,7 +159,7 @@ const Staff = () => {
     setStockEdit(null);
     try {
       await setStaffStock(token, it.id, level, qty);
-      toast.success(level ? `${it.name}: ${stockText(level === "count" && qty === 0 ? "out" : level, qty ?? null)}` : `${it.name}: יש מספיק`);
+      toast.success(level ? `${it.name}: ${stockText(level === "count" && qty === 0 ? "out" : level, qty ?? null, it.unit)}` : `${it.name}: יש מספיק`);
       await load();
     } catch {
       toast.error("לא נשמר, נסו שוב");
@@ -448,14 +448,14 @@ const Staff = () => {
             {data.stock.filter((i) => i.category === stockCat).length === 0 && <p className={`text-center ${C.muted}`}>עוד אין מוצרים בקטגוריה הזו.</p>}
             <div className="grid grid-cols-2 gap-3">
               {data.stock.filter((i) => i.category === stockCat).map((i) => (
-                <button key={i.id} type="button" onClick={() => setStockEdit({ item: i, qty: i.quantity ?? 1 })}
+                <button key={i.id} type="button" onClick={() => setStockEdit({ item: i, qty: i.quantity != null ? Number(i.quantity) : Number(i.step) })}
                   className={`h-20 px-2 rounded-3xl text-center border-2 transition-all active:scale-[0.97] ${
                     i.level === "out" ? "bg-red-600 border-red-600 text-white shadow-lg"
                       : i.level === "low" ? "bg-[#ffd24d] border-[#ffd24d] text-[#3a1d12] shadow-lg"
                       : i.level === "count" ? "bg-[#ff8a3d] border-[#ff8a3d] text-white shadow-lg"
                       : `bg-white ${C.line}`}`}>
                   <span className="block text-base font-black leading-tight">{i.name}</span>
-                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>{stockText(i.level, i.quantity)}</span>
+                  <span className={`block text-sm font-bold ${i.level ? "" : C.muted}`}>{stockText(i.level, i.quantity, i.unit)}</span>
                 </button>
               ))}
             </div>
@@ -468,21 +468,27 @@ const Staff = () => {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="staff-stock-title" onClick={() => setStockEdit(null)}>
           <div className="w-full max-w-sm bg-white rounded-3xl p-5 space-y-3 text-[#3a1d12]" onClick={(e) => e.stopPropagation()}>
             <h2 id="staff-stock-title" className="text-2xl font-black text-center">{stockEdit.item.name}</h2>
-            <p className={`text-center ${C.muted}`}>כמה נשאר?</p>
-            <div className="flex items-center justify-center gap-5">
-              <button type="button" aria-label="פחות" onClick={() => setStockEdit({ ...stockEdit, qty: Math.max(0, stockEdit.qty - 1) })}
-                className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
-              <span className="text-5xl font-black w-20 text-center" aria-live="polite">{stockEdit.qty}</span>
-              <button type="button" aria-label="יותר" onClick={() => setStockEdit({ ...stockEdit, qty: Math.min(999, stockEdit.qty + 1) })}
-                className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>+</button>
-            </div>
-            <button type="button" onClick={() => saveStock("count", stockEdit.qty)} className={`w-full h-14 rounded-full text-lg font-black ${C.grad}`}>
-              {stockEdit.qty === 0 ? "שמירה: נגמר" : `שמירה: נשארו ${stockEdit.qty}`}
-            </button>
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => saveStock("low")} className="h-14 rounded-full bg-[#ffd24d] text-[#3a1d12] text-lg font-black">נשאר קצת</button>
-              <button type="button" onClick={() => saveStock("out")} className="h-14 rounded-full bg-red-600 text-white text-lg font-black">נגמר</button>
-            </div>
+            {stockEdit.item.low_only ? (
+              <button type="button" onClick={() => saveStock("low")} className="w-full h-16 rounded-full bg-[#ffd24d] text-[#3a1d12] text-xl font-black">נשאר קצת</button>
+            ) : (
+              <>
+                <p className={`text-center ${C.muted}`}>כמה {stockEdit.item.unit} נשארו?</p>
+                <div className="flex items-center justify-center gap-5">
+                  <button type="button" aria-label="פחות" onClick={() => setStockEdit({ ...stockEdit, qty: Math.max(0, stockEdit.qty - Number(stockEdit.item.step)) })}
+                    className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>−</button>
+                  <span className="text-5xl font-black w-24 text-center" aria-live="polite">{stockEdit.qty === 0.5 ? "½" : String(stockEdit.qty).replace(".5", "½")}</span>
+                  <button type="button" aria-label="יותר" onClick={() => setStockEdit({ ...stockEdit, qty: Math.min(999, stockEdit.qty + Number(stockEdit.item.step)) })}
+                    className={`w-14 h-14 rounded-full border-2 ${C.line} text-3xl font-black`}>+</button>
+                </div>
+                <button type="button" onClick={() => saveStock("count", stockEdit.qty)} className={`w-full h-14 rounded-full text-lg font-black ${C.grad}`}>
+                  {stockEdit.qty === 0 ? "שמירה: נגמר" : `שמירה: ${stockText("count", stockEdit.qty, stockEdit.item.unit)}`}
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => saveStock("low")} className="h-14 rounded-full bg-[#ffd24d] text-[#3a1d12] text-lg font-black">נשאר קצת</button>
+                  <button type="button" onClick={() => saveStock("out")} className="h-14 rounded-full bg-red-600 text-white text-lg font-black">נגמר</button>
+                </div>
+              </>
+            )}
             {stockEdit.item.level && (
               <button type="button" onClick={() => saveStock(null)} className={`w-full h-12 rounded-full border-2 ${C.line} font-bold`}>יש מספיק - ביטול הדיווח</button>
             )}

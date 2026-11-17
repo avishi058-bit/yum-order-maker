@@ -40,7 +40,7 @@ const AdminShifts = () => {
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
   // shop_category: where the owner buys it, when it differs from the staff category.
-  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; active: boolean }[]>([]);
+  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; unit: string; active: boolean }[]>([]);
   const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: StockLevel; quantity: number | null; staff_id: string | null; created_at: string }[]>([]);
   const [newStock, setNewStock] = useState({ name: "", category: "ירקות", shop: "סופר" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
@@ -103,7 +103,7 @@ const AdminShifts = () => {
   }, []);
   const loadStock = useCallback(async () => {
     const [it, rp] = await Promise.all([
-      staffDb.from("staff_stock_items").select("id, name, category, shop_category, active").eq("active", true).order("category").order("sort_order").order("name"),
+      staffDb.from("staff_stock_items").select("id, name, category, shop_category, unit, active").eq("active", true).order("category").order("sort_order").order("name"),
       staffDb.from("staff_stock_reports").select("id, item_id, level, quantity, staff_id, created_at").is("resolved_at", null).order("created_at"),
     ]);
     setStock(it.data ?? []);
@@ -380,7 +380,7 @@ const AdminShifts = () => {
                           <input type="checkbox" onChange={() => resolveStock(r.id)} className="w-6 h-6 accent-green-600 shrink-0" aria-label={`נקנה: ${item?.name ?? ""}`} />
                           <span className="flex-1">
                             <b>{item?.name ?? "מוצר"}</b>{" "}
-                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity)}</span>
+                            <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>· {stockText(r.level, r.quantity, item?.unit)}</span>
                             <span className="block text-xs text-muted-foreground">{who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
                           </span>
                         </label>

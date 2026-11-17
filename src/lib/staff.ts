@@ -48,11 +48,17 @@ export const STOCK_CATEGORIES = ["ירקות", "מקרר", "רטבים", "טיי
 /** The owner's shopping lists (where things are bought); staff_stock_items.shop_category. */
 export const SHOP_CATEGORIES = ["סופר", "רטבים", "טייק אווי", "לחמניות", "קפואים", "קציצה", "שתייה"] as const;
 export type StockLevel = "out" | "low" | "count";
-export interface StockItem { id: string; name: string; category: string; level: StockLevel | null; quantity: number | null }
-/** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2"). */
-export const stockText = (level: StockLevel | null, qty: number | null) =>
-  level === "out" ? "נגמר" : level === "low" ? "נשאר קצת" : level === "count" ? `נשארו ${qty}` : "יש מספיק";
-/** Reports how much is left of a product (units, "a little", "ran out"), or clears the report (null). */
+/** unit: what is counted (יחידות / חבילות / פחיות); step: smallest amount (0.5 = half a pack); low_only: only "נשאר קצת". */
+export interface StockItem {
+  id: string; name: string; category: string; unit: string; step: number; low_only: boolean;
+  level: StockLevel | null; quantity: number | null;
+}
+const qtyText = (q: number) => (Number.isInteger(q) ? String(q) : q === 0.5 ? "חצי" : String(q));
+/** Reported state of a product as short text ("נגמר", "נשאר קצת", "נשארו 2 חבילות"). */
+export const stockText = (level: StockLevel | null, qty: number | null, unit = "") =>
+  level === "out" ? "נגמר" : level === "low" ? "נשאר קצת"
+    : level === "count" ? `נשארו ${qtyText(Number(qty))}${unit && unit !== "יחידות" ? ` ${unit}` : ""}` : "יש מספיק";
+/** Reports how much is left of a product (amount, "a little", "ran out"), or clears the report (null). */
 export const setStaffStock = (token: string, itemId: string, level: StockLevel | null, qty?: number) =>
   rpc<void>("staff_portal_stock_set", { p_token: token, p_item_id: itemId, p_level: level, p_qty: qty ?? null });
 
