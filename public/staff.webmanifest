@@ -1,7 +1,7 @@
 {
-  "name": "משמרות - הבקתה",
-  "short_name": "משמרות",
-  "description": "סידור עבודה ומשמרות - הבקתה",
+  "name": "הבקתה - עובדים",
+  "short_name": "הבקתה עובדים",
+  "description": "האפליקציה של עובדי הבקתה - משמרות, משימות, מלאי וארוחות",
   "scope": "/staff",
   "id": "/staff",
   "display": "standalone",

@@ -61,6 +61,10 @@
           document.title = 'ניהול מלאי - הבקתה';
           window.__HABAKTA_INVENTORY_INSTALL__ = true;
         }
+        if (isStaff) {
+          document.title = 'הבקתה - עובדים';
+          window.__HABAKTA_STAFF_INSTALL__ = true;
+        }
       })();
     </script>
     <meta name="theme-color" content="#ffffff" />
@@ -85,6 +89,9 @@
         } else if (window.__HABAKTA_INVENTORY_INSTALL__) {
           if (appleTitle) appleTitle.setAttribute('content', 'מלאי');
           if (appName) appName.setAttribute('content', 'ניהול מלאי - הבקתה');
+        } else if (window.__HABAKTA_STAFF_INSTALL__) {
+          if (appleTitle) appleTitle.setAttribute('content', 'הבקתה עובדים');
+          if (appName) appName.setAttribute('content', 'הבקתה - עובדים');
         }
       })();
     </script>

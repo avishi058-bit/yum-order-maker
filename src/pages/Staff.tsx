@@ -58,7 +58,7 @@ const Staff = () => {
 
   useEffect(() => {
     if (urlToken) { try { localStorage.setItem(STAFF_TOKEN_KEY, urlToken); } catch { /* ignore */ } }
-    document.title = "משמרות - הבקתה";
+    document.title = "הבקתה - עובדים";
   }, [urlToken]);
 
   const load = useCallback(async () => {
