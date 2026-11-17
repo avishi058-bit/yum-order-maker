@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Bell, CalendarPlus, Check, Loader2 } from "lucide-react";
 import { isIos, isStandalonePwa } from "@/lib/push";
+import StaffWaste from "@/components/staff/StaffWaste";
 import {
   STAFF_TOKEN_KEY, STOCK_CATEGORIES, addDaysYmd, todayIL, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
@@ -56,6 +57,7 @@ const Staff = () => {
   const [sending, setSending] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [stockCat, setStockCat] = useState<string>("ירקות");
+  const [stockMode, setStockMode] = useState<"missing" | "waste">("missing");
   const [stockEdit, setStockEdit] = useState<{ item: StockItem; qty: number } | null>(null);
   const [tab, setTab] = useState<"home" | "shifts" | "meals" | "stock" | "tasks">("home");
   const [tasks, setTasks] = useState<{ on_shift: boolean; tasks: ShiftTask[] } | null>(null);
@@ -565,11 +567,19 @@ const Staff = () => {
         )}
 
         {tab === "stock" && data.stock && (
+          <div className="flex rounded-[18px] bg-[#f7f3f0] p-1" role="tablist">
+            {([["missing", "מה חסר"], ["waste", "נזרק משהו"]] as const).map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={stockMode === id} onClick={() => setStockMode(id)}
+                className={`flex-1 py-2.5 rounded-[14px] text-[15px] ${stockMode === id ? `bg-white ${C.accent} font-black shadow-sm` : `${C.muted} font-semibold`}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        {tab === "stock" && stockMode === "waste" && <StaffWaste token={token} />}
+        {tab === "stock" && stockMode === "missing" && data.stock && (
           <>
-            <section className={`${C.card} !p-5`}>
-              <h2 className="text-xl font-black">מה חסר?</h2>
-              <p className={`text-sm ${C.muted}`}>נוגעים במוצר ומסמנים כמה נשאר, "נשאר קצת" או "נגמר".</p>
-            </section>
+            <p className={`text-sm ${C.muted}`}>נוגעים במוצר ומסמנים כמה נשאר, "נשאר קצת" או "נגמר".</p>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
               {STOCK_CATEGORIES.map((c) => {
                 const n = data.stock.filter((i) => i.category === c && i.level).length;

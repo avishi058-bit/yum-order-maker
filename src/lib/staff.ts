@@ -99,6 +99,16 @@ export const setStaffTask = (token: string, runId: string, done: boolean, counts
 /** "3½", "½", "2". */
 export const halfText = (q: number) => (Number.isInteger(q) ? String(q) : `${q >= 1 ? Math.floor(q) : ""}½`);
 
+/** Waste ("a patty fell"): what can be reported, and what I reported today. */
+export interface WasteList {
+  items: { id: string; name: string }[];
+  today: { id: string; name: string; quantity: number; reason: string; at: string; can_remove: boolean }[];
+}
+export const fetchWaste = (token: string) => rpc<WasteList>("staff_portal_waste_list", { p_token: token });
+export const addWaste = (token: string, itemId: string, qty: number, reason: string) =>
+  rpc<void>("staff_portal_waste_add", { p_token: token, p_item_id: itemId, p_qty: qty, p_reason: reason });
+export const removeWaste = (token: string, logId: string) => rpc<void>("staff_portal_waste_remove", { p_token: token, p_log_id: logId });
+
 /** Staff meals: report an item taken, or take back a recent report. */
 export const addStaffMeal = (token: string, itemId: string) => rpc<string | null>("staff_portal_meal_add", { p_token: token, p_item_id: itemId });
 export const removeStaffMeal = (token: string, logId: string) => rpc<void>("staff_portal_meal_remove", { p_token: token, p_log_id: logId });
