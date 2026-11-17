@@ -26,7 +26,7 @@ const taskChime = () => {
       o.type = "sine";
       o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, ctx.currentTime + at);
-      g.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + at + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.7);
       o.connect(g).connect(ctx.destination);
       o.start(ctx.currentTime + at);
@@ -81,32 +81,38 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
   // After 22:00 on a quiet night: the closing tasks one by one, in order.
   const nextClosing = open.find((t) => t.section === "קידום סגירה" || t.section === "סדר סגירה");
   const showClosing = someoneIn && closingNudge && !kitchenBusy && !!nextClosing;
-  // Put off ("עוד 10 דק׳") per task, kept on this screen.
-  const [snoozed, setSnoozed] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem("habikta_task_snooze") ?? "{}"); } catch { return {}; }
-  });
+  // Gentle: a small card, only after 15 quiet minutes since the last order,
+  // one soft sound when a new task appears (never repeated), and "אחר כך"
+  // quiets all tasks for 30 minutes.
   const [tick, setTick] = useState(Date.now());
-  const snooze = (id: string, minutes: number) => {
-    const next = { ...snoozed, [id]: Date.now() + minutes * 60_000 };
-    setSnoozed(next);
-    try { localStorage.setItem("habikta_task_snooze", JSON.stringify(next)); } catch { /* ignore */ }
+  const [quietUntil, setQuietUntil] = useState<number>(() => {
+    try { return Number(localStorage.getItem("habikta_tasks_quiet_until") ?? 0); } catch { return 0; }
+  });
+  const [lastBusyAt, setLastBusyAt] = useState<number>(Date.now());
+  useEffect(() => { if (kitchenBusy) setLastBusyAt(Date.now()); }, [kitchenBusy, tick]);
+  const later = () => {
+    const until = Date.now() + 30 * 60_000;
+    setQuietUntil(until);
+    try { localStorage.setItem("habikta_tasks_quiet_until", String(until)); } catch { /* ignore */ }
   };
-  const awake = (t?: Task) => !!t && (snoozed[t.id] ?? 0) <= tick;
-  const popClosing = showClosing && awake(nextClosing);
-  const popTask = !listOpen && !confirm && !counting && someoneIn && !kitchenBusy
-    ? (popClosing ? nextClosing : (!showClosing && awake(idleTask) ? idleTask : undefined)) : undefined;
+  const calm = !kitchenBusy && tick - lastBusyAt >= 15 * 60_000 && tick >= quietUntil;
+  const popClosing = showClosing && calm;
+  const popTask = !listOpen && !confirm && !counting && someoneIn && calm
+    ? (popClosing ? nextClosing : (!showClosing ? idleTask : undefined)) : undefined;
   const skipTask = async (t: Task) => {
     if (!window.confirm(`לבטל את "${t.title}" להיום?`)) return;
     const { error } = await staffDb.rpc("kitchen_task_skip", { p_run_id: t.id });
     if (error) { toast.error("לא נשמר"); return; }
     load();
   };
-  // A different sound from new orders, every 20 seconds while a task is waiting.
   useEffect(() => {
     const t = window.setInterval(() => setTick(Date.now()), 20_000);
     return () => window.clearInterval(t);
   }, []);
-  useEffect(() => { if (popTask) taskChime(); }, [popTask?.id, tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [chimed, setChimed] = useState<string | null>(null);
+  useEffect(() => {
+    if (popTask && popTask.id !== chimed) { taskChime(); setChimed(popTask.id); }
+  }, [popTask?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setDone = async (t: Task, done: boolean) => {
     if (isCount(t)) {
@@ -223,21 +229,14 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
 
       {/* Quiet-time task, or after 22:00 the next closing task: rings until done, put off or cancelled. */}
       {popTask && createPortal(
-        <div className={`fixed bottom-4 inset-x-4 z-40 mx-auto max-w-md rounded-2xl shadow-2xl p-4 ${popClosing ? "bg-amber-500 text-black" : "bg-sky-600 text-white"}`} role="status">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl" aria-hidden>{popClosing ? "🌙" : "🧹"}</span>
-            <span className="flex-1">
-              <span className="block text-xs font-bold opacity-90">{popClosing ? "קידום סגירה" : "רגע שקט? משימה:"}</span>
-              <span className="block font-black text-lg">{popTask.title}</span>
-            </span>
-            <button type="button" onClick={() => setDone(popTask, true)}
-              className={`rounded-xl font-black px-4 py-2.5 ${popClosing ? "bg-black text-amber-300" : "bg-white text-sky-700"}`}>בוצע ✓</button>
+        <div className="fixed bottom-4 left-4 z-40 w-[min(22rem,calc(100vw-2rem))] rounded-2xl bg-card/95 border border-border shadow-lg p-3" role="status">
+          <p className="text-xs text-muted-foreground">{popClosing ? "🌙 כשנוח לך - סגירה" : "💡 כשנוח לך"}</p>
+          <p className="font-bold text-base leading-snug mt-0.5">{popTask.title}</p>
+          <div className="flex gap-2 mt-2.5">
+            <button type="button" onClick={() => setDone(popTask, true)} className="flex-1 rounded-lg bg-emerald-600 text-white font-bold py-2 text-sm">בוצע ✓</button>
+            <button type="button" onClick={later} className="flex-1 rounded-lg bg-muted text-foreground font-bold py-2 text-sm">אחר כך</button>
           </div>
-          <div className="flex gap-2 mt-3 text-sm font-bold">
-            <button type="button" onClick={() => snooze(popTask.id, 10)} className={`flex-1 rounded-lg py-2 ${popClosing ? "bg-black/15" : "bg-white/20"}`}>⏰ עוד 10 דק׳</button>
-            <button type="button" onClick={() => setListOpen(true)} className={`rounded-lg px-3 py-2 ${popClosing ? "bg-black/15" : "bg-white/20"}`}>כל המשימות</button>
-            <button type="button" onClick={() => skipTask(popTask)} className={`rounded-lg px-3 py-2 ${popClosing ? "bg-black/15" : "bg-white/20"}`}>ביטול</button>
-          </div>
+          <button type="button" onClick={() => skipTask(popTask)} className="mt-1.5 text-xs text-muted-foreground underline">לא היום</button>
         </div>, document.body)}
 
       {listOpen && createPortal(
