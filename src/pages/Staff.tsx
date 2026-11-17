@@ -308,7 +308,7 @@ const Staff = () => {
         <div className="max-w-lg mx-auto flex gap-0.5 rounded-[18px] bg-[#f7f3f0] p-1">
           {tabs.map((t) => (
             <button key={t.id} type="button" onClick={() => { if (t.id === "manage") { window.location.href = "/admin/shifts"; return; } setTab(t.id); window.scrollTo(0, 0); }} aria-current={tab === t.id ? "page" : undefined}
-              className={`relative flex-1 py-2 rounded-[14px] text-[13px] whitespace-nowrap transition-colors ${tab === t.id ? `bg-white ${C.accent} font-black shadow-sm` : `${C.muted} font-semibold`}`}>
+              className={`relative flex-1 min-w-0 px-0.5 py-2 rounded-[14px] ${tabs.length > 5 ? "text-[12px]" : "text-[13px]"} whitespace-nowrap transition-colors ${tab === t.id ? `bg-white ${C.accent} font-black shadow-sm` : `${C.muted} font-semibold`}`}>
               {t.label}
               {((t.id === "tasks" && openTasks > 0) || (t.id === "stock" && stockOpenCount > 0)) && (
                 <span className="absolute -top-1 left-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
@@ -450,7 +450,6 @@ const Staff = () => {
                 </a>
               )}
             </section>}
-            {data.me.is_owner && <a href="/admin/shifts" className={`block text-center font-bold underline ${C.accent}`}>לבניית הסידור ←</a>}
           </>
         )}
 
