@@ -301,7 +301,14 @@ const Staff = () => {
     <main dir="rtl" className={`min-h-screen ${C.page} pb-24`}>
       <header className="max-w-lg mx-auto px-5 pt-6 pb-1 flex items-baseline justify-between">
         <h1 className="text-2xl font-black">היי {firstName}</h1>
-        <span className={`text-sm ${C.muted}`}>{todayText}</span>
+        <span className="flex items-center gap-2">
+          {/* Notifications: a small bell until they are on (iPhone: from the home-screen icon). */}
+          {pushKey && pushState !== "on" && (!isIos() || isStandalonePwa()) && (
+            <button type="button" onClick={enablePush} disabled={pushState === "busy"} aria-label="הפעלת התראות"
+              className="w-9 h-9 rounded-full bg-[#fff0e6] text-[#e8502f] flex items-center justify-center"><Bell size={18} /></button>
+          )}
+          <span className={`text-sm ${C.muted}`}>{todayText}</span>
+        </span>
       </header>
       {/* Tabs sit at the top: the bottom corner is covered by the hosting badge. */}
       <nav aria-label="ניווט" className="sticky top-0 z-40 bg-white/95 backdrop-blur px-3 pt-2 pb-2">
@@ -430,26 +437,31 @@ const Staff = () => {
               )}
             </div>
 
-            {/* One-time setup: shown until notifications are on and (on iPhone) the calendar was added. */}
-            {(pushState !== "on" || (isIos() && (!isStandalonePwa() || (webcal && !calAdded)))) && <section className={`${C.card} space-y-3`}>
-              {isIos() && !isStandalonePwa() && (
-                <p className="text-sm rounded-2xl bg-[#fff1e6] p-3">
-                  באייפון: כפתור השיתוף ← "הוסף למסך הבית", ואז פותחים מהאייקון. רק כך מקבלים התראות.
-                </p>
-              )}
-              {pushKey && (
-                <button type="button" onClick={enablePush} disabled={pushState !== "idle"}
-                  className="w-full h-14 rounded-full bg-[#2b1a12] text-white text-base font-bold flex items-center justify-center gap-2 disabled:opacity-70">
-                  <Bell size={20} />
-                  {pushState === "on" ? "התראות פעילות ✓" : pushState === "busy" ? "מפעיל..." : "הפעלת התראות"}
-                </button>
-              )}
-              {webcal && isIos() && (
-                <a href={webcal} onClick={markCalAdded} className={`h-12 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2`}>
-                  <CalendarPlus size={18} /> יומן אייפון - מתעדכן לבד
-                </a>
-              )}
-            </section>}
+            {/* Owner: who has submitted for next week. Employee: my next shifts. */}
+            {data.me.is_owner && ownerWeeks[1] ? (
+              <section className={C.card}>
+                <p className="text-sm font-semibold text-[#b0705a]">הגשות לשבוע הבא</p>
+                <ul className="mt-2 space-y-1.5">
+                  {ownerWeeks[1].members.map((m) => (
+                    <li key={m.id} className="flex items-center gap-2 text-[15px]">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ background: m.color }} aria-hidden />
+                      <b>{m.name.split(" ")[0]}</b>
+                      {m.submitted_at ? <span className="text-green-700 font-bold">· הגיש {m.requests} משמרות</span>
+                        : <span className={C.muted}>· עוד לא הגיש</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : !data.me.is_owner && ahead.length > (next ? 1 : 0) ? (
+              <section className={C.card}>
+                <p className="text-sm font-semibold text-[#b0705a]">המשמרות הבאות שלך</p>
+                <ul className="mt-2 space-y-1.5">
+                  {ahead.slice(next ? 1 : 0, 4).map((s) => (
+                    <li key={s.date} className="flex justify-between text-[15px]"><b>{s.label}</b><span className={C.muted}>{timeIL(s.starts_at)}</span></li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </>
         )}
 
@@ -631,6 +643,14 @@ const Staff = () => {
               </>
             )}
           </section>
+        )}
+
+        {tab === "shifts" && !data.me.is_owner && webcal && (
+          <a href={isIos() ? webcal : `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`} onClick={markCalAdded}
+            target={isIos() ? undefined : "_blank"} rel="noopener noreferrer"
+            className={`h-12 rounded-full border-2 ${C.line} font-bold flex items-center justify-center gap-2`}>
+            <CalendarPlus size={18} /> {calAdded ? "היומן מחובר ✓" : "חיבור המשמרות ליומן - מתעדכן לבד"}
+          </a>
         )}
 
         {tab === "stock" && data.stock && (
