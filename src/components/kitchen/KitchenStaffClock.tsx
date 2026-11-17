@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { halfText, itemPack, staffDb, stockText, type CountItem } from "@/lib/staff";
+import { halfText, itemPack, packPlural, staffDb, stockText, type CountItem } from "@/lib/staff";
 
 interface Person { id: string; name: string; open_since: string | null; pending_early?: boolean }
 interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items?: CountItem[] | null }
@@ -211,16 +211,25 @@ const KitchenStaffClock = ({ busy: kitchenBusy = false }: { busy?: boolean }) =>
               {counting.items.map((i) => {
                 const v = counting.values[i.id] ?? 0;
                 const set = (n: number) => setCounting({ ...counting, values: { ...counting.values, [i.id]: Math.max(0, Math.min(9999, n)) } });
-                const pack = i.pack_name !== undefined ? itemPack(i) : null;
+                const pack = itemPack(i);
                 return (
                   <li key={i.id} className="flex items-center justify-between gap-2 py-3">
                     <span className="font-bold">{i.name} <span className="text-xs text-muted-foreground">({i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""})</span>
                       {pack && v >= pack.size && <span className="block text-xs text-amber-300">{stockText("count", v, i.unit, pack)}</span>}
                     </span>
-                    <span className="flex items-center gap-2">
-                      <button type="button" aria-label="פחות" onClick={() => set(v - Number(i.step))} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">−</button>
-                      <span className="w-12 text-center text-2xl font-black">{halfText(v)}</span>
-                      <button type="button" aria-label="יותר" onClick={() => set(v + Number(i.step))} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">+</button>
+                    <span className="flex flex-col gap-1.5">
+                      {pack && (
+                        <span className="flex items-center gap-2">
+                          <button type="button" aria-label={`פחות ${pack.name}`} onClick={() => set(v - pack.size)} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">−</button>
+                          <span className="w-12 text-center"><span className="block text-2xl font-black leading-none">{Math.floor(v / pack.size)}</span><span className="text-[11px] text-muted-foreground">{packPlural(pack.name)}</span></span>
+                          <button type="button" aria-label={`יותר ${pack.name}`} onClick={() => set(v + pack.size)} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">+</button>
+                        </span>
+                      )}
+                      <span className="flex items-center gap-2">
+                        <button type="button" aria-label="פחות" onClick={() => set(v - Number(i.step))} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">−</button>
+                        <span className="w-12 text-center"><span className="block text-2xl font-black leading-none">{halfText(pack ? v - Math.floor(v / pack.size) * pack.size : v)}</span>{pack && <span className="text-[11px] text-muted-foreground">{i.unit}</span>}</span>
+                        <button type="button" aria-label="יותר" onClick={() => set(v + Number(i.step))} className="w-11 h-11 rounded-full bg-muted text-2xl font-black">+</button>
+                      </span>
                     </span>
                   </li>
                 );

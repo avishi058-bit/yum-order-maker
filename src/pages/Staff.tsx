@@ -543,13 +543,31 @@ const Staff = () => {
                   <li key={i.id} className={`py-3 border-b last:border-0 ${C.line}`}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-black">{i.name}<span className={`block text-xs font-bold ${C.muted}`}>{i.unit}{pack ? ` · ${pack.name} = ${pack.size}` : ""}</span></span>
-                      <span className="flex items-center gap-2">
-                        <button type="button" aria-label={`פחות ${i.name}`} onClick={() => set(v - Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>−</button>
-                        <span className="w-12 text-center text-2xl font-black">{halfText(v)}</span>
-                        <button type="button" aria-label={`יותר ${i.name}`} onClick={() => set(v + Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>+</button>
-                      </span>
+                      {!pack && (
+                        <span className="flex items-center gap-2">
+                          <button type="button" aria-label={`פחות ${i.name}`} onClick={() => set(v - Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>−</button>
+                          <span className="w-12 text-center text-2xl font-black">{halfText(v)}</span>
+                          <button type="button" aria-label={`יותר ${i.name}`} onClick={() => set(v + Number(i.step))} className={`w-11 h-11 rounded-full border-2 ${C.line} text-2xl font-black`}>+</button>
+                        </span>
+                      )}
                     </div>
-                    {pack && v >= pack.size && <p className={`text-xs font-bold ${C.accent}`}>{stockText("count", v, i.unit, pack)}</p>}
+                    {pack && (() => {
+                      const packs = Math.floor(v / pack.size);
+                      const rest = v - packs * pack.size;
+                      const mini = (label: string, value: string, d: number) => (
+                        <span className="flex items-center gap-1.5">
+                          <button type="button" aria-label={`פחות ${label} ${i.name}`} onClick={() => set(v - d)} className={`w-10 h-10 rounded-full border-2 ${C.line} text-xl font-black`}>−</button>
+                          <span className="w-10 text-center"><span className="block text-xl font-black leading-none">{value}</span><span className={`text-[11px] font-bold ${C.muted}`}>{label}</span></span>
+                          <button type="button" aria-label={`יותר ${label} ${i.name}`} onClick={() => set(v + d)} className={`w-10 h-10 rounded-full border-2 ${C.line} text-xl font-black`}>+</button>
+                        </span>
+                      );
+                      return (
+                        <div className="flex items-center justify-around mt-2">
+                          {mini(packPlural(pack.name), String(packs), pack.size)}
+                          {mini(i.unit, halfText(rest), Number(i.step))}
+                        </div>
+                      );
+                    })()}
                   </li>
                 );
               })}
