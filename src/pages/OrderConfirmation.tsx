@@ -17,6 +17,14 @@ const OrderConfirmation = () => {
   const [state, setState] = useState<"checking" | "paid" | "failed">("checking");
   const [orderNumber, setOrderNumber] = useState<number | null>(null);
 
+  // Back from paying a payment request: its own thank-you page.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("habikta_payreq") ?? "{}");
+      if (saved.orderId && saved.orderId === orderId && saved.token) navigate(`/pay/${saved.token}?done=1`, { replace: true });
+    } catch { /* not a payment request */ }
+  }, [orderId, navigate]);
+
   useEffect(() => {
     if (!orderId) return;
     let stopped = false;

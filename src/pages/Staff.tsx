@@ -10,6 +10,7 @@ import { isIos, isStandalonePwa } from "@/lib/push";
 import StaffWaste from "@/components/staff/StaffWaste";
 import OwnerSchedule, { fetchOwnerWeek, type OwnerWeek } from "@/components/staff/OwnerSchedule";
 import OwnerTasks from "@/components/staff/OwnerTasks";
+import PaymentRequests from "@/components/staff/PaymentRequests";
 import {
   STAFF_TOKEN_KEY, STOCK_CATEGORIES, dayNameIL, addDaysYmd, todayIL, weekStartYmd, addStaffMeal, setStaffStock, stockText, itemPack, packPlural, fetchStaffTasks, setStaffTask, halfText, groupTasks, type ShiftTask, type StockItem, type StockLevel, appealStaffEntry, dateIL, removeStaffMeal, fetchStaffMe, hoursText, submitStaffWeek, subscribeStaffPush, timeIL, type StaffMe,
 } from "@/lib/staff";
@@ -507,6 +508,8 @@ const Staff = () => {
             </div>
 
             {/* Owner: who has submitted for next week. Employee: my next shifts. */}
+            {data.me.is_owner && <PaymentRequests token={token} />}
+
             {data.me.is_owner && brief && (brief.orders > 0 || brief.tasks_total > 0) && (
               <section className={C.card}>
                 <p className="text-sm font-semibold text-[#b0705a]">{brief.date === addDaysYmd(today, -1) ? "אתמול" : `ביום ${dayNameIL(brief.date)}`} · מה היה</p>
