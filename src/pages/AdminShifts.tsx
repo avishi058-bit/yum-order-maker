@@ -8,7 +8,7 @@ import { FinishShopping, type PurchaseRow } from "@/components/admin/StockPurcha
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Copy, Link2, Loader2, Plus, Send } from "lucide-react";
 import {
-  SHOP_CATEGORIES, STOCK_CATEGORIES, halfText, itemPack, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
+  SHOP_CATEGORIES, STOCK_CATEGORIES, halfText, itemPack, packPlural, stockText, type StockLevel, addDaysYmd, dateIL, dayNameIL, hoursText, staffDb, timeIL, todayIL, weekStartYmd,
 } from "@/lib/staff";
 
 interface Member { id: string; display_name: string; is_owner: boolean; active: boolean; sort_order: number }
@@ -43,7 +43,7 @@ const AdminShifts = () => {
   const [week, setWeek] = useState<{ published_at: string | null; notified_at: string | null } | null>(null);
   const [submitted, setSubmitted] = useState<string[]>([]);
   // shop_category: where the owner buys it, when it differs from the staff category.
-  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; unit: string; pack_name: string | null; pack_size: number | null; active: boolean }[]>([]);
+  const [stock, setStock] = useState<{ id: string; name: string; category: string; shop_category: string | null; unit: string; pack_name: string | null; pack_size: number | null; active: boolean; supplier: string | null; alert_below: number | null }[]>([]);
   const [stockOpen, setStockOpen] = useState<{ id: string; item_id: string; level: StockLevel; quantity: number | null; staff_id: string | null; created_at: string }[]>([]);
   const [newStock, setNewStock] = useState({ name: "", category: "ירקות", shop: "סופר" });
   const [meals, setMeals] = useState<{ staff_id: string; item_name: string; price: number; created_at: string }[]>([]);
@@ -56,6 +56,17 @@ const AdminShifts = () => {
   const [newName, setNewName] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
   const [openPerson, setOpenPerson] = useState<string | null>(null);
+
+  // Three pages: the team (schedule, hours, tasks), the supermarket list, supplier orders.
+  const [page, setPage] = useState<"team" | "shop" | "suppliers">(() => {
+    const h = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    return h === "shop" || h === "suppliers" ? h : "team";
+  });
+  const goPage = (p: typeof page) => {
+    setPage(p);
+    try { window.history.replaceState(null, "", p === "team" ? window.location.pathname : `#${p}`); } catch { /* ignore */ }
+    window.scrollTo(0, 0);
+  };
 
   const workers = members.filter((m) => m.active && !m.is_owner);
   const owner = members.find((m) => m.is_owner && m.active);
@@ -110,7 +121,7 @@ const AdminShifts = () => {
   }, []);
   const loadStock = useCallback(async () => {
     const [it, rp] = await Promise.all([
-      staffDb.from("staff_stock_items").select("id, name, category, shop_category, unit, pack_name, pack_size, active").eq("active", true).order("category").order("sort_order").order("name"),
+      staffDb.from("staff_stock_items").select("id, name, category, shop_category, unit, pack_name, pack_size, active, supplier, alert_below").eq("active", true).order("category").order("sort_order").order("name"),
       staffDb.from("staff_stock_reports").select("id, item_id, level, quantity, staff_id, created_at").is("resolved_at", null).order("created_at"),
     ]);
     setStock(it.data ?? []);
@@ -131,6 +142,18 @@ const AdminShifts = () => {
     const it = stock.find((i) => i.id === r.item_id);
     return it ? [{ reportId: r.id, item: { id: it.id, name: it.name, unit: it.unit, pack_name: it.pack_name, pack_size: it.pack_size } }] : [];
   });
+  // Supermarket list: supplier products are ordered in the suppliers page. A
+  // counted product goes to "what to buy" only at or under its alert amount;
+  // otherwise it is shown under "what there is" and the owner decides.
+  const shopReports = stockOpen.filter((r) => { const it = stock.find((i) => i.id === r.item_id); return it && !it.supplier; });
+  const needsBuying = (r: (typeof stockOpen)[number]) => {
+    if (r.level !== "count") return true;
+    const it = stock.find((i) => i.id === r.item_id);
+    return it?.alert_below != null && Number(r.quantity) <= Number(it.alert_below);
+  };
+  const toBuy = shopReports.filter(needsBuying);
+  const haveEnough = shopReports.filter((r) => !needsBuying(r));
+
   const addStockItem = async () => {
     const name = newStock.name.trim();
     if (!name) return;
@@ -281,6 +304,15 @@ const AdminShifts = () => {
           <h1 className="text-2xl font-black">סידור עבודה</h1>
           <Link to="/kitchen" className="text-sm text-primary underline">למסך המטבח</Link>
         </header>
+
+        <nav className="flex rounded-2xl bg-card border border-border p-1 sticky top-2 z-10" aria-label="עמודים">
+          {([["team", "סידור ועובדים"], ["shop", `סופר${toBuy.length ? ` (${toBuy.length})` : ""}`], ["suppliers", "ספקים"]] as const).map(([id, label]) => (
+            <button key={id} type="button" onClick={() => goPage(id)} aria-current={page === id ? "page" : undefined}
+              className={`flex-1 py-2.5 rounded-xl font-bold ${page === id ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{label}</button>
+          ))}
+        </nav>
+
+        {page === "team" && <>
 
         {early.length > 0 && (
           <section className="rounded-2xl bg-card border-2 border-primary p-4 space-y-3">
@@ -569,15 +601,17 @@ const AdminShifts = () => {
           </details>
         </section>
 
-        {/* Shopping checklist from staff stock reports, one list per category */}
-        <SupplierOrders />
         <WasteReport names={Object.fromEntries(members.map((m) => [m.id, m.display_name]))} />
+        </>}
 
+        {page === "suppliers" && <SupplierOrders />}
+
+        {page === "shop" && <>
         <section className="rounded-2xl bg-card border border-border p-4 space-y-4">
           <h2 className="text-lg font-black">מה לקנות</h2>
-          {stockOpen.length === 0 && <p className="text-sm text-muted-foreground">אין חוסרים. כשעובד מדווח, המוצר יופיע כאן.</p>}
+          {toBuy.length === 0 && <p className="text-sm text-muted-foreground">אין מה לקנות כרגע. כשמשהו נגמר או יורד מתחת לכמות שהוגדרה, הוא יופיע כאן.</p>}
           {SHOP_CATEGORIES.map((c) => {
-            const rows = stockOpen.filter((r) => {
+            const rows = toBuy.filter((r) => {
               const it = stock.find((i) => i.id === r.item_id);
               return (it?.shop_category ?? it?.category) === c;
             });
@@ -596,7 +630,7 @@ const AdminShifts = () => {
                           <span className="flex-1">
                             <b>{item?.name ?? "מוצר"}</b>{" "}
                             <span className={`font-bold ${r.level === "out" ? "text-destructive" : "text-primary"}`}>
-                              {r.level === "count" ? `(יש כרגע ${halfText(Number(r.quantity))}${item?.unit && item.unit !== "יחידות" ? ` ${item.unit}` : ""})`
+                              {r.level === "count" ? `(${haveText(Number(r.quantity), item)})`
                                 : `· ${stockText(r.level, r.quantity, item?.unit, item ? itemPack(item) : null)}`}
                             </span>
                             <span className="block text-xs text-muted-foreground">{who ?? ""} · {dateIL(r.created_at)} {timeIL(r.created_at)}</span>
@@ -609,7 +643,7 @@ const AdminShifts = () => {
               </div>
             );
           })}
-          {stockOpen.length > 0 && <p className="text-xs text-muted-foreground">מסמנים V על מה שנכנס לסל. בסוף מצלמים את הקבלה, והכמויות נרשמות לבד.</p>}
+          {toBuy.length > 0 && <p className="text-xs text-muted-foreground">מסמנים V על מה שנכנס לסל. בסוף מצלמים את הקבלה, והכמויות נרשמות לבד.</p>}
           {purchaseRows.some((p) => cart.has(p.reportId)) && (
             <FinishShopping rows={purchaseRows.filter((p) => cart.has(p.reportId))} onDone={clearCart} />
           )}
@@ -643,7 +677,27 @@ const AdminShifts = () => {
           </details>
         </section>
 
+        {haveEnough.length > 0 && (
+          <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
+            <h2 className="text-lg font-black">מה יש כרגע</h2>
+            <p className="text-xs text-muted-foreground">לא ברשימת הקניות - רק שתדע. ההחלטה שלך.</p>
+            <ul className="divide-y divide-border">
+              {haveEnough.map((r) => {
+                const item = stock.find((i) => i.id === r.item_id);
+                return (
+                  <li key={r.id} className="py-2 flex items-baseline justify-between gap-2">
+                    <span><b>{item?.name ?? "מוצר"}</b> · {haveText(Number(r.quantity), item)}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{dateIL(r.created_at)} {timeIL(r.created_at)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+        </>}
+
         {/* Staff and links */}
+        {page === "team" && (
         <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
           <h2 className="text-lg font-black">עובדים וקישורים אישיים</h2>
           {members.map((m) => (
@@ -682,9 +736,22 @@ const AdminShifts = () => {
             <button type="button" onClick={addMember} className="px-4 rounded-lg bg-primary text-primary-foreground font-bold flex items-center gap-1"><Plus size={16} /> הוספה</button>
           </div>
         </section>
+        )}
       </div>
     </main>
   );
+};
+
+/** "יש כרגע 3 תבניות", "יש כרגע 4" - packs when the product has them. */
+const haveText = (q: number, item?: { unit: string; pack_name: string | null; pack_size: number | null }) => {
+  const pack = item ? itemPack(item) : null;
+  const unit = item?.unit && item.unit !== "יחידות" ? ` ${item.unit}` : "";
+  if (!pack) return `יש כרגע ${halfText(q)}${unit}`;
+  const packs = Math.floor(q / pack.size);
+  const rem = q - packs * pack.size;
+  const head = packs === 0 ? "" : packs === 1 ? `${pack.name} אחת` : `${packs} ${packPlural(pack.name)}`;
+  if (!rem) return `יש כרגע ${head || "0"}`;
+  return `יש כרגע ${head ? `${head} ו-` : ""}${halfText(rem)} ${item?.unit ?? "יחידות"}`;
 };
 
 const todayFromIso = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(new Date(iso));
