@@ -15,27 +15,6 @@ interface Person { id: string; name: string; open_since: string | null; pending_
 interface Task { id: string; title: string; kind: string; source: string; at_opening: boolean; done: boolean; items?: CountItem[] | null; section?: string | null }
 const isCount = (t: Task) => t.kind === "count" || t.kind === "supplier_count";
 
-/** Three rising soft tones - unlike the new-order sound. */
-const taskChime = () => {
-  try {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    [[784, 0], [988, 0.22], [1319, 0.44]].forEach(([f, at]) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine";
-      o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime + at);
-      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + at + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + 0.7);
-      o.connect(g).connect(ctx.destination);
-      o.start(ctx.currentTime + at);
-      o.stop(ctx.currentTime + at + 0.75);
-    });
-    window.setTimeout(() => ctx.close(), 1600);
-  } catch { /* no audio */ }
-};
-
 const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?: boolean; customers?: number }) => {
   // Customers building an order on the site or the kiosk count as busy too.
   const kitchenBusy = ordersOpen || customers > 0;
@@ -83,9 +62,8 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
   const closingAll = tasks.filter(isClosing);
   const closingOpen = closingAll.filter((t) => !t.done);
   const showClosing = someoneIn && closingNudge && !kitchenBusy && closingOpen.length > 0;
-  // Gentle: a small card, only after 15 quiet minutes since the last order,
-  // one soft sound when a new task appears (never repeated), and "אחר כך"
-  // quiets all tasks for 30 minutes.
+  // Gentle: a small silent card, only after 15 quiet minutes since the last
+  // order (a break after the rush), and "אחר כך" quiets all tasks for 30 minutes.
   const [tick, setTick] = useState(Date.now());
   const [quietUntil, setQuietUntil] = useState<number>(() => {
     try { return Number(localStorage.getItem("habikta_tasks_quiet_until") ?? 0); } catch { return 0; }
@@ -97,9 +75,15 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
     setQuietUntil(until);
     try { localStorage.setItem("habikta_tasks_quiet_until", String(until)); } catch { /* ignore */ }
   };
-  const calm = !kitchenBusy && tick - lastBusyAt >= 10 * 60_000 && tick >= quietUntil;
-  const popClosing = showClosing && calm && !listOpen && !confirm && !counting;
-  const popTask = !listOpen && !confirm && !counting && someoneIn && calm && !showClosing ? idleTask : undefined;
+  const calm = !kitchenBusy && tick - lastBusyAt >= 15 * 60_000 && tick >= quietUntil;
+  const free = !listOpen && !confirm && !counting && someoneIn && calm;
+  const popClosing = showClosing && free;
+  // After a rush and a 15-minute break: one reminder that today's daily tasks are waiting.
+  const dailyOpen = open.filter((t) => !isClosing(t) && t.source !== "idle");
+  const [afterRush, setAfterRush] = useState(false);
+  useEffect(() => { if (kitchenBusy) setAfterRush(true); }, [kitchenBusy]);
+  const popDaily = free && !showClosing && afterRush && dailyOpen.length > 0;
+  const popTask = free && !showClosing && !popDaily ? idleTask : undefined;
   const skipTask = async (t: Task) => {
     if (!window.confirm(`לבטל את "${t.title}" להיום?`)) return;
     const { error } = await staffDb.rpc("kitchen_task_skip", { p_run_id: t.id });
@@ -110,11 +94,6 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
     const t = window.setInterval(() => setTick(Date.now()), 20_000);
     return () => window.clearInterval(t);
   }, []);
-  const [chimed, setChimed] = useState<string | null>(null);
-  const chimeKey = popClosing ? "closing" : popTask?.id;
-  useEffect(() => {
-    if (chimeKey && chimeKey !== chimed) { taskChime(); setChimed(chimeKey); }
-  }, [chimeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setDone = async (t: Task, done: boolean) => {
     if (isCount(t)) {
@@ -238,6 +217,16 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
           </div>
           <ul className="divide-y divide-border overflow-y-auto mt-1">{closingOpen.map(taskRow)}</ul>
           <button type="button" onClick={later} className="mt-2 rounded-lg bg-muted text-foreground font-bold py-2 text-sm">אחר כך</button>
+        </div>, document.body)}
+
+      {/* After a rush and a break: a quiet reminder of today's daily tasks. */}
+      {popDaily && createPortal(
+        <div className="fixed bottom-4 left-4 z-40 w-[min(22rem,calc(100vw-2rem))] rounded-2xl bg-card/95 border border-border shadow-lg p-3" role="status">
+          <p className="font-bold text-base leading-snug">📋 תזכורת: יש {dailyOpen.length === 1 ? "משימה יומית אחת" : `${dailyOpen.length} משימות יומיות`} להיום</p>
+          <div className="flex gap-2 mt-2.5">
+            <button type="button" onClick={() => { setAfterRush(false); setListOpen(true); }} className="flex-1 rounded-lg bg-emerald-600 text-white font-bold py-2 text-sm">לרשימה</button>
+            <button type="button" onClick={() => { setAfterRush(false); later(); }} className="flex-1 rounded-lg bg-muted text-foreground font-bold py-2 text-sm">אחר כך</button>
+          </div>
         </div>, document.body)}
 
       {/* Quiet-time task: done, put off or cancelled. */}
