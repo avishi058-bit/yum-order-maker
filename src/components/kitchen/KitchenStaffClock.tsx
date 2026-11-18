@@ -84,6 +84,23 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
   useEffect(() => { if (kitchenBusy) setAfterRush(true); }, [kitchenBusy]);
   const popDaily = free && !showClosing && afterRush && dailyOpen.length > 0;
   const popTask = free && !showClosing && !popDaily ? idleTask : undefined;
+  // Tell the server what reminder is on screen and when the tablet is touched:
+  // a reminder left untouched for 20 quiet minutes is reported to the owner.
+  const shownTitle = popClosing ? "רשימת הסגירה" : popDaily ? "תזכורת למשימות היומיות" : popTask?.title ?? null;
+  useEffect(() => {
+    staffDb.rpc("kitchen_reminder_shown", { p_title: shownTitle }).then(() => undefined, () => undefined);
+  }, [shownTitle]);
+  useEffect(() => {
+    let last = 0;
+    const touch = () => {
+      if (Date.now() - last < 60_000) return;
+      last = Date.now();
+      staffDb.rpc("kitchen_touch").then(() => undefined, () => undefined);
+    };
+    window.addEventListener("pointerdown", touch, { passive: true });
+    window.addEventListener("keydown", touch);
+    return () => { window.removeEventListener("pointerdown", touch); window.removeEventListener("keydown", touch); };
+  }, []);
   const skipTask = async (t: Task) => {
     if (!window.confirm(`לבטל את "${t.title}" להיום?`)) return;
     const { error } = await staffDb.rpc("kitchen_task_skip", { p_run_id: t.id });
