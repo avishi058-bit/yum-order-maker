@@ -78,9 +78,11 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
   const someoneIn = people.some((p) => p.open_since);
   const open = tasks.filter((t) => !t.done);
   const idleTask = open.find((t) => t.source === "idle");
-  // After 22:00 on a quiet night: the closing tasks one by one, in order.
-  const nextClosing = open.find((t) => t.section === "קידום סגירה" || t.section === "סדר סגירה");
-  const showClosing = someoneIn && closingNudge && !kitchenBusy && !!nextClosing;
+  // After 22:00 on a quiet night: one simple closing checklist, in order.
+  const isClosing = (t: Task) => t.section === "קידום סגירה" || t.section === "סדר סגירה";
+  const closingAll = tasks.filter(isClosing);
+  const closingOpen = closingAll.filter((t) => !t.done);
+  const showClosing = someoneIn && closingNudge && !kitchenBusy && closingOpen.length > 0;
   // Gentle: a small card, only after 15 quiet minutes since the last order,
   // one soft sound when a new task appears (never repeated), and "אחר כך"
   // quiets all tasks for 30 minutes.
@@ -96,9 +98,8 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
     try { localStorage.setItem("habikta_tasks_quiet_until", String(until)); } catch { /* ignore */ }
   };
   const calm = !kitchenBusy && tick - lastBusyAt >= 10 * 60_000 && tick >= quietUntil;
-  const popClosing = showClosing && calm;
-  const popTask = !listOpen && !confirm && !counting && someoneIn && calm
-    ? (popClosing ? nextClosing : (!showClosing ? idleTask : undefined)) : undefined;
+  const popClosing = showClosing && calm && !listOpen && !confirm && !counting;
+  const popTask = !listOpen && !confirm && !counting && someoneIn && calm && !showClosing ? idleTask : undefined;
   const skipTask = async (t: Task) => {
     if (!window.confirm(`לבטל את "${t.title}" להיום?`)) return;
     const { error } = await staffDb.rpc("kitchen_task_skip", { p_run_id: t.id });
@@ -110,9 +111,10 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
     return () => window.clearInterval(t);
   }, []);
   const [chimed, setChimed] = useState<string | null>(null);
+  const chimeKey = popClosing ? "closing" : popTask?.id;
   useEffect(() => {
-    if (popTask && popTask.id !== chimed) { taskChime(); setChimed(popTask.id); }
-  }, [popTask?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (chimeKey && chimeKey !== chimed) { taskChime(); setChimed(chimeKey); }
+  }, [chimeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setDone = async (t: Task, done: boolean) => {
     if (isCount(t)) {
@@ -227,10 +229,21 @@ const KitchenStaffClock = ({ busy: ordersOpen = false, customers = 0 }: { busy?:
           )}
         </div>, document.body)}
 
-      {/* Quiet-time task, or after 22:00 the next closing task: rings until done, put off or cancelled. */}
+      {/* After 22:00 on a quiet night: the closing checklist, ticked one by one. */}
+      {popClosing && createPortal(
+        <div className="fixed bottom-4 left-4 z-40 w-[min(24rem,calc(100vw-2rem))] max-h-[70vh] flex flex-col rounded-2xl bg-card/95 border border-border shadow-lg p-3" role="status">
+          <div className="flex items-baseline justify-between">
+            <p className="font-black">🌙 סגירה</p>
+            <p className="text-xs text-muted-foreground">{closingAll.length - closingOpen.length}/{closingAll.length}</p>
+          </div>
+          <ul className="divide-y divide-border overflow-y-auto mt-1">{closingOpen.map(taskRow)}</ul>
+          <button type="button" onClick={later} className="mt-2 rounded-lg bg-muted text-foreground font-bold py-2 text-sm">אחר כך</button>
+        </div>, document.body)}
+
+      {/* Quiet-time task: done, put off or cancelled. */}
       {popTask && createPortal(
         <div className="fixed bottom-4 left-4 z-40 w-[min(22rem,calc(100vw-2rem))] rounded-2xl bg-card/95 border border-border shadow-lg p-3" role="status">
-          <p className="text-xs text-muted-foreground">{popClosing ? "🌙 כשנוח לך - סגירה" : "💡 כשנוח לך"}</p>
+          <p className="text-xs text-muted-foreground">💡 כשנוח לך</p>
           <p className="font-bold text-base leading-snug mt-0.5">{popTask.title}</p>
           <div className="flex gap-2 mt-2.5">
             <button type="button" onClick={() => setDone(popTask, true)} className="flex-1 rounded-lg bg-emerald-600 text-white font-bold py-2 text-sm">בוצע ✓</button>
