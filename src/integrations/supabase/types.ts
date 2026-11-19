@@ -1056,6 +1056,7 @@ export type Database = {
           paid_at: string | null
           payment_method: string | null
           payment_reference: string | null
+          payment_request: boolean
           payment_session_id: string | null
           payment_transaction_id: string | null
           queue_number: number | null
@@ -1091,6 +1092,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           payment_reference?: string | null
+          payment_request?: boolean
           payment_session_id?: string | null
           payment_transaction_id?: string | null
           queue_number?: number | null
@@ -1126,6 +1128,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           payment_reference?: string | null
+          payment_request?: boolean
           payment_session_id?: string | null
           payment_transaction_id?: string | null
           queue_number?: number | null
@@ -1143,6 +1146,47 @@ export type Database = {
             columns: ["delivery_request_id"]
             isOneToOne: false
             referencedRelation: "delivery_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_email: string | null
+          description: string | null
+          id: string
+          notified_at: string | null
+          order_id: string
+          token: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_email?: string | null
+          description?: string | null
+          id?: string
+          notified_at?: string | null
+          order_id: string
+          token: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_email?: string | null
+          description?: string | null
+          id?: string
+          notified_at?: string | null
+          order_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1583,6 +1627,970 @@ export type Database = {
           },
         ]
       }
+      staff_busy_events: {
+        Row: {
+          created_at: string
+          dismissed_at: string | null
+          help_asked_at: string | null
+          id: string
+          open_orders: number
+        }
+        Insert: {
+          created_at?: string
+          dismissed_at?: string | null
+          help_asked_at?: string | null
+          id?: string
+          open_orders: number
+        }
+        Update: {
+          created_at?: string
+          dismissed_at?: string | null
+          help_asked_at?: string | null
+          id?: string
+          open_orders?: number
+        }
+        Relationships: []
+      }
+      staff_early_requests: {
+        Row: {
+          decided_at: string | null
+          id: string
+          requested_at: string
+          shift_id: string | null
+          staff_id: string
+          status: string
+        }
+        Insert: {
+          decided_at?: string | null
+          id?: string
+          requested_at?: string
+          shift_id?: string | null
+          staff_id: string
+          status?: string
+        }
+        Update: {
+          decided_at?: string | null
+          id?: string
+          requested_at?: string
+          shift_id?: string | null
+          staff_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_early_requests_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "staff_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_early_requests_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_entry_appeals: {
+        Row: {
+          claimed_in: string
+          created_at: string
+          decided_at: string | null
+          entry_id: string
+          id: string
+          staff_id: string
+          status: string
+        }
+        Insert: {
+          claimed_in: string
+          created_at?: string
+          decided_at?: string | null
+          entry_id: string
+          id?: string
+          staff_id: string
+          status?: string
+        }
+        Update: {
+          claimed_in?: string
+          created_at?: string
+          decided_at?: string | null
+          entry_id?: string
+          id?: string
+          staff_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_entry_appeals_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "staff_time_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_entry_appeals_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_help_answers: {
+        Row: {
+          answered_at: string
+          coming: boolean
+          event_id: string
+          staff_id: string
+        }
+        Insert: {
+          answered_at?: string
+          coming: boolean
+          event_id: string
+          staff_id: string
+        }
+        Update: {
+          answered_at?: string
+          coming?: boolean
+          event_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_help_answers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "staff_busy_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_help_answers_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_kitchen_signal: {
+        Row: {
+          id: number
+          last_customer_at: string | null
+          last_touch_at: string | null
+          reminder_shown_at: string | null
+          reminder_title: string | null
+        }
+        Insert: {
+          id?: number
+          last_customer_at?: string | null
+          last_touch_at?: string | null
+          reminder_shown_at?: string | null
+          reminder_title?: string | null
+        }
+        Update: {
+          id?: number
+          last_customer_at?: string | null
+          last_touch_at?: string | null
+          reminder_shown_at?: string | null
+          reminder_title?: string | null
+        }
+        Relationships: []
+      }
+      staff_meal_items: {
+        Row: {
+          active: boolean
+          id: string
+          name: string
+          price: number
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          name: string
+          price: number
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      staff_meal_logs: {
+        Row: {
+          created_at: string
+          id: string
+          item_name: string
+          price: number
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_name: string
+          price: number
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          price?: number
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_meal_logs_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_members: {
+        Row: {
+          active: boolean
+          color: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_owner: boolean
+          sort_order: number
+          token_hash: string | null
+        }
+        Insert: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_owner?: boolean
+          sort_order?: number
+          token_hash?: string | null
+        }
+        Update: {
+          active?: boolean
+          color?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_owner?: boolean
+          sort_order?: number
+          token_hash?: string | null
+        }
+        Relationships: []
+      }
+      staff_notification_log: {
+        Row: {
+          key: string
+          kind: string
+          sent_at: string
+          staff_id: string
+        }
+        Insert: {
+          key: string
+          kind: string
+          sent_at?: string
+          staff_id: string
+        }
+        Update: {
+          key?: string
+          kind?: string
+          sent_at?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_notification_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          staff_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          staff_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_push_subscriptions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_schedule_weeks: {
+        Row: {
+          notified_at: string | null
+          published_at: string | null
+          week_start: string
+        }
+        Insert: {
+          notified_at?: string | null
+          published_at?: string | null
+          week_start: string
+        }
+        Update: {
+          notified_at?: string | null
+          published_at?: string | null
+          week_start?: string
+        }
+        Relationships: []
+      }
+      staff_shift_assignments: {
+        Row: {
+          created_at: string
+          shift_id: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          shift_id: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          shift_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shift_assignments_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "staff_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_shift_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_shift_requests: {
+        Row: {
+          created_at: string
+          shift_date: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          shift_date: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          shift_date?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_shift_requests_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_shifts: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          shift_date: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          shift_date: string
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          shift_date?: string
+          starts_at?: string
+        }
+        Relationships: []
+      }
+      staff_special_days: {
+        Row: {
+          closed: boolean
+          day: string
+          label: string | null
+          opens_at: string | null
+          shabbat_ends: string | null
+        }
+        Insert: {
+          closed?: boolean
+          day: string
+          label?: string | null
+          opens_at?: string | null
+          shabbat_ends?: string | null
+        }
+        Update: {
+          closed?: boolean
+          day?: string
+          label?: string | null
+          opens_at?: string | null
+          shabbat_ends?: string | null
+        }
+        Relationships: []
+      }
+      staff_stock_counts: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          quantity: number
+          staff_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          quantity: number
+          staff_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          quantity?: number
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_stock_counts_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "staff_stock_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_stock_counts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_stock_items: {
+        Row: {
+          active: boolean
+          alert_below: number | null
+          category: string
+          id: string
+          inventory_factor: number | null
+          inventory_item_id: string | null
+          low_only: boolean
+          name: string
+          order_below: number | null
+          order_optional: boolean
+          order_rule: string | null
+          order_target: number | null
+          pack_name: string | null
+          pack_size: number | null
+          shop_category: string | null
+          sort_order: number
+          step: number
+          supplier: string | null
+          unit: string
+        }
+        Insert: {
+          active?: boolean
+          alert_below?: number | null
+          category: string
+          id?: string
+          inventory_factor?: number | null
+          inventory_item_id?: string | null
+          low_only?: boolean
+          name: string
+          order_below?: number | null
+          order_optional?: boolean
+          order_rule?: string | null
+          order_target?: number | null
+          pack_name?: string | null
+          pack_size?: number | null
+          shop_category?: string | null
+          sort_order?: number
+          step?: number
+          supplier?: string | null
+          unit?: string
+        }
+        Update: {
+          active?: boolean
+          alert_below?: number | null
+          category?: string
+          id?: string
+          inventory_factor?: number | null
+          inventory_item_id?: string | null
+          low_only?: boolean
+          name?: string
+          order_below?: number | null
+          order_optional?: boolean
+          order_rule?: string | null
+          order_target?: number | null
+          pack_name?: string | null
+          pack_size?: number | null
+          shop_category?: string | null
+          sort_order?: number
+          step?: number
+          supplier?: string | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_stock_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_stock_items_supplier_fkey"
+            columns: ["supplier"]
+            isOneToOne: false
+            referencedRelation: "staff_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_stock_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          price: number | null
+          quantity: number
+          report_id: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          price?: number | null
+          quantity: number
+          report_id?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          price?: number | null
+          quantity?: number
+          report_id?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_stock_purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "staff_stock_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_stock_purchases_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "staff_stock_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_stock_reports: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          level: string
+          quantity: number | null
+          resolved_at: string | null
+          staff_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          level: string
+          quantity?: number | null
+          resolved_at?: string | null
+          staff_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          level?: string
+          quantity?: number | null
+          resolved_at?: string | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_stock_reports_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "staff_stock_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_stock_reports_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_suppliers: {
+        Row: {
+          count_required: boolean
+          count_weekday: number | null
+          count_when_needed: boolean
+          delivery_weekday: number | null
+          id: string
+          name: string
+          phone: string | null
+          sort_order: number
+        }
+        Insert: {
+          count_required?: boolean
+          count_weekday?: number | null
+          count_when_needed?: boolean
+          delivery_weekday?: number | null
+          id: string
+          name: string
+          phone?: string | null
+          sort_order?: number
+        }
+        Update: {
+          count_required?: boolean
+          count_weekday?: number | null
+          count_when_needed?: boolean
+          delivery_weekday?: number | null
+          id?: string
+          name?: string
+          phone?: string | null
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      staff_task_runs: {
+        Row: {
+          action: string | null
+          at_opening: boolean
+          carried: boolean
+          created_at: string
+          done_at: string | null
+          done_by: string | null
+          id: string
+          kind: string
+          section: string | null
+          shift_date: string
+          skipped_at: string | null
+          sort_order: number | null
+          source: string
+          supplier: string | null
+          task_id: string | null
+          title: string
+        }
+        Insert: {
+          action?: string | null
+          at_opening?: boolean
+          carried?: boolean
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          kind: string
+          section?: string | null
+          shift_date: string
+          skipped_at?: string | null
+          sort_order?: number | null
+          source: string
+          supplier?: string | null
+          task_id?: string | null
+          title: string
+        }
+        Update: {
+          action?: string | null
+          at_opening?: boolean
+          carried?: boolean
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          kind?: string
+          section?: string | null
+          shift_date?: string
+          skipped_at?: string | null
+          sort_order?: number | null
+          source?: string
+          supplier?: string | null
+          task_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_task_runs_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_task_runs_supplier_fkey"
+            columns: ["supplier"]
+            isOneToOne: false
+            referencedRelation: "staff_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_task_runs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "staff_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_tasks: {
+        Row: {
+          action: string | null
+          active: boolean
+          at_opening: boolean
+          id: string
+          idle_ok: boolean
+          kind: string
+          per_week: number | null
+          rule: string | null
+          section: string | null
+          sort_order: number
+          title: string
+          weekday: number | null
+        }
+        Insert: {
+          action?: string | null
+          active?: boolean
+          at_opening?: boolean
+          id?: string
+          idle_ok?: boolean
+          kind: string
+          per_week?: number | null
+          rule?: string | null
+          section?: string | null
+          sort_order?: number
+          title: string
+          weekday?: number | null
+        }
+        Update: {
+          action?: string | null
+          active?: boolean
+          at_opening?: boolean
+          id?: string
+          idle_ok?: boolean
+          kind?: string
+          per_week?: number | null
+          rule?: string | null
+          section?: string | null
+          sort_order?: number
+          title?: string
+          weekday?: number | null
+        }
+        Relationships: []
+      }
+      staff_time_entries: {
+        Row: {
+          auto_closed: boolean
+          clock_in: string
+          clock_out: string | null
+          id: string
+          shift_id: string | null
+          staff_id: string
+        }
+        Insert: {
+          auto_closed?: boolean
+          clock_in?: string
+          clock_out?: string | null
+          id?: string
+          shift_id?: string | null
+          staff_id: string
+        }
+        Update: {
+          auto_closed?: boolean
+          clock_in?: string
+          clock_out?: string | null
+          id?: string
+          shift_id?: string | null
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_time_entries_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "staff_shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_time_entries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_waste_items: {
+        Row: {
+          active: boolean
+          amount: number
+          id: string
+          inventory_item_id: string | null
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          amount?: number
+          id?: string
+          inventory_item_id?: string | null
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          id?: string
+          inventory_item_id?: string | null
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_waste_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_waste_logs: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          item_name: string
+          quantity: number
+          reason: string
+          staff_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_name: string
+          quantity: number
+          reason: string
+          staff_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_name?: string
+          quantity?: number
+          reason?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_waste_logs_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "staff_waste_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_waste_logs_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_week_submissions: {
+        Row: {
+          staff_id: string
+          submitted_at: string
+          week_start: string
+        }
+        Insert: {
+          staff_id: string
+          submitted_at?: string
+          week_start: string
+        }
+        Update: {
+          staff_id?: string
+          submitted_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_week_submissions_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_counts: {
         Row: {
           counted_at: string
@@ -1797,12 +2805,38 @@ export type Database = {
       is_approved_courier: { Args: { _uid: string }; Returns: boolean }
       is_attack_mode_active: { Args: never; Returns: boolean }
       is_ip_blocked: { Args: { p_ip: string }; Returns: boolean }
+      kitchen_busy_answer: {
+        Args: { p_event_id: string; p_need_help: boolean }
+        Returns: undefined
+      }
+      kitchen_busy_status: { Args: never; Returns: Json }
+      kitchen_customers_active: { Args: never; Returns: undefined }
+      kitchen_reminder_shown: { Args: { p_title: string }; Returns: undefined }
+      kitchen_staff_today: { Args: never; Returns: Json }
+      kitchen_staff_toggle: { Args: { p_staff_id: string }; Returns: Json }
+      kitchen_stock_count: { Args: { p_counts: Json }; Returns: undefined }
+      kitchen_task_count: {
+        Args: { p_counts: Json; p_run_id: string }
+        Returns: undefined
+      }
+      kitchen_task_set: {
+        Args: { p_done: boolean; p_run_id: string }
+        Returns: undefined
+      }
+      kitchen_task_skip: { Args: { p_run_id: string }; Returns: undefined }
+      kitchen_tasks_today: { Args: never; Returns: Json }
+      kitchen_touch: { Args: never; Returns: undefined }
       mark_order_paid: { Args: { p_order_id: string }; Returns: number }
       next_daily_queue_number: { Args: never; Returns: number }
       notify_orders_almost_ready: { Args: never; Returns: undefined }
       pay_order_from_soldier_fund: {
         Args: { p_order_id: string }
         Returns: number
+      }
+      payreq_get: { Args: { p_token: string }; Returns: Json }
+      payreq_start: {
+        Args: { p_email: string; p_name: string; p_token: string }
+        Returns: Json
       }
       pull_fridge_for_menu_id: {
         Args: { p_menu_id: string; p_order_id: string; p_qty: number }
@@ -1824,6 +2858,276 @@ export type Database = {
       }
       soldier_fund_balance: { Args: never; Returns: number }
       soldier_fund_public_stats: { Args: never; Returns: Json }
+      staff_busy_check: { Args: never; Returns: undefined }
+      staff_calendar_feed: { Args: { p_token: string }; Returns: Json }
+      staff_caller_is_admin: { Args: never; Returns: boolean }
+      staff_caller_is_kitchen: { Args: never; Returns: boolean }
+      staff_clockout_reminders: { Args: never; Returns: undefined }
+      staff_closing_nudge: { Args: never; Returns: undefined }
+      staff_config: { Args: { p_key: string }; Returns: string }
+      staff_current_shift: {
+        Args: never
+        Returns: {
+          created_at: string
+          ends_at: string
+          id: string
+          shift_date: string
+          starts_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "staff_shifts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      staff_day_brief: { Args: { p_date: string }; Returns: Json }
+      staff_day_label: { Args: { p_day: string }; Returns: string }
+      staff_day_sold: {
+        Args: { p_date: string; p_pattern: string }
+        Returns: number
+      }
+      staff_decide_appeal: {
+        Args: { p_appeal_id: string; p_approve: boolean }
+        Returns: undefined
+      }
+      staff_decide_early: {
+        Args: { p_approve: boolean; p_request_id: string }
+        Returns: undefined
+      }
+      staff_encouragements: { Args: never; Returns: undefined }
+      staff_ensure_week: { Args: { p_week_start: string }; Returns: undefined }
+      staff_ensure_week_impl: {
+        Args: { p_week_start: string }
+        Returns: undefined
+      }
+      staff_give_idle_task: { Args: never; Returns: undefined }
+      staff_is_employee_day: { Args: { p_date: string }; Returns: boolean }
+      staff_issue_link: { Args: { p_staff_id: string }; Returns: string }
+      staff_meals_json: { Args: { p_staff_id: string }; Returns: Json }
+      staff_member_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          active: boolean
+          color: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_owner: boolean
+          sort_order: number
+          token_hash: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "staff_members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      staff_month_minutes: { Args: { p_staff_id: string }; Returns: number }
+      staff_morning_brief: { Args: never; Returns: undefined }
+      staff_notify_once: {
+        Args: {
+          p_body: string
+          p_key: string
+          p_kind: string
+          p_staff: string[]
+          p_title: string
+          p_url?: string
+        }
+        Returns: undefined
+      }
+      staff_notify_tick: { Args: never; Returns: undefined }
+      staff_owner_assign: {
+        Args: {
+          p_on: boolean
+          p_shift_id: string
+          p_staff_id: string
+          p_token: string
+        }
+        Returns: undefined
+      }
+      staff_owner_brief: { Args: { p_token: string }; Returns: Json }
+      staff_owner_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          active: boolean
+          color: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_owner: boolean
+          sort_order: number
+          token_hash: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "staff_members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      staff_owner_order_reminders: { Args: never; Returns: undefined }
+      staff_owner_payreq_create: {
+        Args: { p_amount: number; p_description?: string; p_token: string }
+        Returns: Json
+      }
+      staff_owner_payreqs: { Args: { p_token: string }; Returns: Json }
+      staff_owner_publish: {
+        Args: { p_token: string; p_week_start: string }
+        Returns: undefined
+      }
+      staff_owner_task_move: {
+        Args: { p_id: string; p_token: string; p_up: boolean }
+        Returns: undefined
+      }
+      staff_owner_task_remove: {
+        Args: { p_id: string; p_token: string }
+        Returns: undefined
+      }
+      staff_owner_task_save: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_per_week?: number
+          p_section?: string
+          p_title: string
+          p_token: string
+          p_weekday?: number
+        }
+        Returns: string
+      }
+      staff_owner_tasks: { Args: { p_token: string }; Returns: Json }
+      staff_owner_week: {
+        Args: { p_token: string; p_week_start: string }
+        Returns: Json
+      }
+      staff_patty_text: { Args: { p_date: string }; Returns: string }
+      staff_portal_appeal: {
+        Args: { p_entry_id: string; p_time: string; p_token: string }
+        Returns: undefined
+      }
+      staff_portal_help: { Args: { p_token: string }; Returns: Json }
+      staff_portal_help_answer: {
+        Args: { p_coming: boolean; p_event_id: string; p_token: string }
+        Returns: undefined
+      }
+      staff_portal_me: { Args: { p_token: string }; Returns: Json }
+      staff_portal_meal_add: {
+        Args: { p_item_id: string; p_token: string }
+        Returns: string
+      }
+      staff_portal_meal_remove: {
+        Args: { p_log_id: string; p_token: string }
+        Returns: undefined
+      }
+      staff_portal_on_shift: {
+        Args: {
+          me: Database["public"]["Tables"]["staff_members"]["Row"]
+          v_shift: Database["public"]["Tables"]["staff_shifts"]["Row"]
+        }
+        Returns: boolean
+      }
+      staff_portal_push: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_token: string
+        }
+        Returns: undefined
+      }
+      staff_portal_stock_set: {
+        Args: {
+          p_item_id: string
+          p_level: string
+          p_qty?: number
+          p_token: string
+        }
+        Returns: undefined
+      }
+      staff_portal_submit: {
+        Args: { p_dates: string[]; p_token: string; p_week_start: string }
+        Returns: undefined
+      }
+      staff_portal_task_set: {
+        Args: {
+          p_counts?: Json
+          p_done: boolean
+          p_run_id: string
+          p_token: string
+        }
+        Returns: undefined
+      }
+      staff_portal_tasks: { Args: { p_token: string }; Returns: Json }
+      staff_portal_waste_add: {
+        Args: {
+          p_item_id: string
+          p_qty: number
+          p_reason: string
+          p_token: string
+          p_what?: string
+        }
+        Returns: undefined
+      }
+      staff_portal_waste_list: { Args: { p_token: string }; Returns: Json }
+      staff_portal_waste_remove: {
+        Args: { p_log_id: string; p_token: string }
+        Returns: undefined
+      }
+      staff_push_expired: {
+        Args: { p_endpoints: string[]; p_secret: string }
+        Returns: undefined
+      }
+      staff_really_quiet: { Args: never; Returns: boolean }
+      staff_record_count: {
+        Args: { p_counts: Json; p_run_id: string; p_staff: string }
+        Returns: undefined
+      }
+      staff_send_messages: { Args: { p_msgs: Json }; Returns: undefined }
+      staff_set_day_closed: {
+        Args: { p_closed: boolean; p_day: string }
+        Returns: undefined
+      }
+      staff_shift_summaries: { Args: never; Returns: undefined }
+      staff_stock_amount_text: {
+        Args: {
+          p_item: Database["public"]["Tables"]["staff_stock_items"]["Row"]
+          p_qty: number
+        }
+        Returns: string
+      }
+      staff_stock_json: { Args: never; Returns: Json }
+      staff_stock_purchase: {
+        Args: {
+          p_price?: number
+          p_qty: number
+          p_report_id: string
+          p_source?: string
+        }
+        Returns: undefined
+      }
+      staff_stock_to_inventory: {
+        Args: {
+          p_item: Database["public"]["Tables"]["staff_stock_items"]["Row"]
+          p_qty: number
+        }
+        Returns: undefined
+      }
+      staff_submission_reminders: { Args: never; Returns: undefined }
+      staff_supplier_needs_count: {
+        Args: { p_supplier: string }
+        Returns: boolean
+      }
+      staff_supplier_reminders: { Args: never; Returns: undefined }
+      staff_tasks_ensure: { Args: { p_date: string }; Returns: undefined }
+      staff_tasks_json: { Args: { p_date: string }; Returns: Json }
+      staff_thaw_text: {
+        Args: { p_date: string; p_what: string }
+        Returns: string
+      }
+      staff_untouched_alert: { Args: never; Returns: undefined }
+      staff_weekday_name: { Args: { p_dow: number }; Returns: string }
       unmark_order_paid: { Args: { p_order_id: string }; Returns: boolean }
     }
     Enums: {
