@@ -35,7 +35,11 @@ function seoPrerender(): Plugin {
       for (const { page, body } of pages) {
         const out = path.join(dist, page.path.replace(/^\//, ""), "index.html");
         fs.mkdirSync(path.dirname(out), { recursive: true });
-        fs.writeFileSync(out, prerenderPage(tpl, page, body));
+        const html = prerenderPage(tpl, page, body);
+        fs.writeFileSync(out, html);
+        // Also "<route>.html": static hosts that add a trailing slash to
+        // folders (Cloudflare Pages) serve this at the exact canonical path.
+        fs.writeFileSync(path.join(dist, `${page.path.replace(/^\//, "")}.html`), html);
       }
     },
   };
