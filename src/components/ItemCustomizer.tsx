@@ -1600,7 +1600,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       {mergeOffer && (
                         <div className={`rounded-2xl bg-green-50 border-2 border-green-600 text-center ${isKiosk ? "p-4 mb-4" : "p-3 mb-3"}`}>
                           <p className={`font-bold ${isKiosk ? "text-[22px]" : "text-base"}`}>
-                            צ׳יפס + שתייה? בארוחה עסקית זה רק <b>+₪{mergeOffer.asMeal}</b> במקום ₪{mergeOffer.separate}
+                            צ׳יפס + שתייה? בארוחה עסקית זה רק <b>₪{mergeOffer.asMeal} תוספת</b> במקום ₪{mergeOffer.separate}
                           </p>
                           <button
                             type="button"
