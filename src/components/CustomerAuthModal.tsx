@@ -72,12 +72,12 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
           <div className="w-14 h-14 rounded-2xl bg-[#f59e0b] mx-auto mb-4 flex items-center justify-center text-3xl" aria-hidden>🍔</div>
           <SheetTitle id="signin-title">מה המספר שלך?</SheetTitle>
           <SheetSub>נשלח קוד קצר ב-SMS, פעם אחת בלבד.<br />מאז נזכור אותך בכל הזמנה.</SheetSub>
-          <label className="flex items-center mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5">
+          <label className="flex items-center mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5 transition-colors focus-within:border-[#f59e0b] focus-within:shadow-[0_0_0_4px_rgba(245,158,11,0.15)]">
             <span className="text-[14px] text-[#a8a29e] w-14">נייד</span>
             <input type="tel" inputMode="tel" autoComplete="tel" autoFocus value={phone}
               onChange={(e) => setPhone(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
               placeholder="050-000-0000" dir="ltr"
-              className="flex-1 bg-transparent text-[18px] text-right tracking-wide outline-none placeholder:text-[#c2bcb5]" />
+              className="flex-1 bg-transparent text-[18px] text-right tracking-wide outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none placeholder:text-[#c2bcb5]" />
           </label>
           <SheetButton onClick={send} disabled={loading || phone.replace(/\D/g, "").length < 10}>
             {loading ? "שולחים..." : "שליחת קוד"}
@@ -104,12 +104,12 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
         <>
           <SheetTitle id="signin-title">נעים להכיר! איך קוראים לך?</SheetTitle>
           <SheetSub>השם יופיע על ההזמנות שלך.</SheetSub>
-          <label className="flex items-center mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5">
+          <label className="flex items-center mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5 transition-colors focus-within:border-[#f59e0b] focus-within:shadow-[0_0_0_4px_rgba(245,158,11,0.15)]">
             <span className="text-[14px] text-[#a8a29e] w-14">שם</span>
             <input type="text" autoComplete="name" autoFocus value={name}
               onChange={(e) => setName(e.target.value.slice(0, 40))} onKeyDown={(e) => e.key === "Enter" && name.trim() && done(name.trim())}
               placeholder="שם מלא"
-              className="flex-1 bg-transparent text-[18px] outline-none placeholder:text-[#c2bcb5]" />
+              className="flex-1 bg-transparent text-[18px] outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none placeholder:text-[#c2bcb5]" />
           </label>
           <SheetButton onClick={() => done(name.trim())} disabled={!name.trim()}>המשך</SheetButton>
         </>
