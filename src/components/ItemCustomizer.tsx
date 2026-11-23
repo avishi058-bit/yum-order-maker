@@ -1525,8 +1525,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                     onScroll={markScroll}
                   >
-                    <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-2" : "text-lg mb-1"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
-                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[20px] mb-6" : "text-sm mb-4"}`}>מחיר מלא, אפשר גם לדלג</p>
+                    <h3 className={`font-black text-center leading-tight ${isKiosk ? "text-[44px] mb-3" : "text-[26px] mb-2"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
+                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[22px] mb-6" : "text-base mb-4"}`}>מחיר מלא, אפשר גם לדלג</p>
 
                     {extraSideItems.length > 0 && (
                       <>
@@ -1550,13 +1550,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       </>
                     )}
 
-                    <button
-                      onClick={() => handleFinish(false)}
-                      className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 mt-6 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
-                    >
-                      {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "לא תודה"}
-                    </button>
-                    <div className="h-4" />
+                    {/* Floating: always visible at the bottom while scrolling the list */}
+                    <div className={`sticky z-10 bg-white border-t border-gray-100 ${isKiosk ? "-bottom-8 -mx-8 px-8 pb-8 pt-4 mt-6" : "-bottom-6 -mx-5 px-5 pb-6 pt-3 mt-4"}`}>
+                      <button
+                        onClick={() => handleFinish(false)}
+                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                      >
+                        {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "לא תודה"}
+                      </button>
+                    </div>
                   </motion.div>
                 )}
 
