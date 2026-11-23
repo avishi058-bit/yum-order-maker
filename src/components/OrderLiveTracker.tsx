@@ -409,6 +409,11 @@ const OrderLiveTracker = ({ orderNumber, phone, onClose }: OrderLiveTrackerProps
                           </p>
                         </div>
                       </div>
+                      {order.estimated_ready_at && timeLeft > 0 && (
+                        <p className="mt-3 text-base font-bold text-foreground">
+                          מוכן בערך ב-{new Date(order.estimated_ready_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" })}
+                        </p>
+                      )}
                     </motion.div>
                   );
                 })()}
