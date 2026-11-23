@@ -11,7 +11,7 @@
 
 const WAZE = "https://waze.com/ul?ll=31.43473,34.54170&navigate=yes";
 const OTP_TTL = 600;
-const LIMITS = { phoneCooldown: 60, phonePerDay: 5, ipPerHour: 8, globalPerDay: 300 };
+const LIMITS = { phoneCooldown: 60, phonePerDay: 5, ipPerHour: 20, globalPerDay: 300 };
 
 const isMobile = (p) => /^05\d{8}$/.test(p);
 export const normalizePhone = (raw) => {
@@ -74,15 +74,20 @@ export const handleOtpSend = async (req, env, json) => {
   if (await kv.get(`cd:${phone}`)) return json(req, { ok: true, cooldown: true });
   const ip = req.headers.get("CF-Connecting-IP") || "?";
   const day = israelDay();
-  if (!(await bump(kv, `n:ip:${ip}:${new Date().toISOString().slice(0, 13)}`, LIMITS.ipPerHour, 3700))
-    || !(await bump(kv, `n:p:${phone}:${day}`, LIMITS.phonePerDay, 90000))
-    || !(await bump(kv, `n:g:${day}`, LIMITS.globalPerDay, 90000))) {
-    // Over a limit: let the customer continue without the check rather than block the order.
+  const keys = { ip: `n2:ip:${ip}:${new Date().toISOString().slice(0, 13)}`, phone: `n2:p:${phone}:${day}`, all: `n2:g:${day}` };
+  // Over a limit: let the customer continue without the check rather than block the order.
+  // The IP limit counts every try (customers on the restaurant WiFi share one IP,
+  // hence 20); the phone and daily limits count only codes that really went out.
+  if (!(await bump(kv, keys.ip, LIMITS.ipPerHour, 3700))) return json(req, { ok: false, skip: true });
+  const count = async (k) => Number((await kv.get(k)) ?? 0);
+  if ((await count(keys.phone)) >= LIMITS.phonePerDay || (await count(keys.all)) >= LIMITS.globalPerDay) {
     return json(req, { ok: false, skip: true });
   }
   const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
   const sent = await sendSms(env, phone, otpText(code));
   if (!sent.ok) return json(req, { ok: false, skip: true, status: sent.status });
+  await bump(kv, keys.phone, Infinity, 90000);
+  await bump(kv, keys.all, Infinity, 90000);
   await kv.put(`otp:${phone}`, JSON.stringify({ h: await sha(`${phone}:${code}`), tries: 0 }), { expirationTtl: OTP_TTL });
   await kv.put(`cd:${phone}`, "1", { expirationTtl: LIMITS.phoneCooldown });
   return json(req, { ok: true });
