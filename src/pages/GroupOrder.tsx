@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import { useGroupPresence, type GroupPresence } from "@/hooks/useGroupPresence";
+import { isPhoneVerified, sendPhoneCode, verifyPhoneCode } from "@/lib/sms";
+import { validateIsraeliPhone } from "@/lib/utils";
+import { SignInSheet, SheetTitle, SheetSub, CodeBoxes, ResendLine, SheetFine } from "@/components/auth/SignInSheet";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.webp";
 import {
@@ -74,6 +77,10 @@ const savedName = (): string => {
   try { return JSON.parse(localStorage.getItem("habakta_customer") || "null")?.name ?? ""; } catch { return ""; }
 };
 
+const savedPhone = (): string => {
+  try { return JSON.parse(localStorage.getItem("habakta_customer") || "null")?.phone ?? ""; } catch { return ""; }
+};
+
 // The home page's לשבת / לקחת switch.
 const DineSwitch = ({ value, onChange }: { value: boolean | null; onChange: (v: boolean) => void }) => (
   <div className="relative flex w-full select-none rounded-2xl bg-muted p-1.5 shadow-2xl">
@@ -114,24 +121,53 @@ const useConfirmTap = () => {
 const CreateGroup = () => {
   const navigate = useNavigate();
   const [name, setName] = useState(savedName);
+  const [phone, setPhone] = useState(savedPhone);
+  // Organizer only: one SMS code (skipped if this phone was verified on this device).
+  const [codeSentAt, setCodeSentAt] = useState<number | null>(null);
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
   const [dineIn, setDineIn] = useState<boolean | null>(null);
   const { status: shop, resolved } = useRestaurantStatus();
   const closed = resolved && !shop.website_open;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const submit = async () => {
-    if (name.trim().length < 2) return setError("מה השם שלך?");
-    if (dineIn === null) return setError("לשבת או לקחת?");
-    setBusy(true);
-    setError("");
+  const open = async () => {
     try {
-      const code = await createGroup(name.trim(), dineIn);
-      navigate(`/group/${code}`, { replace: true });
-    } catch {
+      const groupCode = await createGroup(name.trim(), dineIn!, phone);
+      navigate(`/group/${groupCode}`, { replace: true });
+    } catch (e) {
+      if ((e as Error).message === "phone_not_verified") { await sendCode(); return; }
       setError("לא הצלחנו לפתוח קבוצה, נסו שוב");
       setBusy(false);
     }
+  };
+
+  const sendCode = async () => {
+    setBusy(true);
+    setCodeError("");
+    const r = await sendPhoneCode(phone);
+    if (r.result === "sent") { setCode(""); setCodeSentAt(Date.now()); return; }
+    setBusy(false);
+    setCodeSentAt(null);
+    setError(r.result === "error" ? (r.error || "מספר הטלפון לא תקין") : "לא הצלחנו לשלוח קוד כרגע, נסו שוב בעוד דקה");
+  };
+
+  const checkCode = async (v: string) => {
+    const r = await verifyPhoneCode(phone, v);
+    if (!r.ok) { setCodeError(r.error || "קוד שגוי"); setCode(""); return; }
+    setCodeSentAt(null);
+    await open();
+  };
+
+  const submit = async () => {
+    if (name.trim().length < 2) return setError("מה השם שלך?");
+    if (!validateIsraeliPhone(phone).valid) return setError("מה מספר הטלפון שלך?");
+    if (dineIn === null) return setError("לשבת או לקחת?");
+    setBusy(true);
+    setError("");
+    if (isPhoneVerified(phone)) await open();
+    else await sendCode();
   };
 
   return (
@@ -154,7 +190,24 @@ const CreateGroup = () => {
         <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} maxLength={40} autoComplete="given-name" />
       </label>
 
+      <label className="block space-y-2">
+        <span className="font-bold">הטלפון שלך</span>
+        <input className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" />
+        <span className="block text-sm text-muted-foreground">נשלח לך SMS כשההזמנה של כל הקבוצה מוכנה</span>
+      </label>
+
       <DineSwitch value={dineIn} onChange={setDineIn} />
+
+      {codeSentAt && (
+        <SignInSheet labelledBy="group-code-title" onClose={() => { setCodeSentAt(null); setBusy(false); }}>
+          <SheetTitle id="group-code-title">קוד אימות</SheetTitle>
+          <SheetSub>שלחנו קוד ב-SMS ל-{phone}</SheetSub>
+          <CodeBoxes value={code} onChange={(v) => { setCode(v); setCodeError(""); }} onComplete={(v) => void checkCode(v)} />
+          {codeError && <p className="mt-3 text-center text-sm font-bold text-red-600">{codeError}</p>}
+          <ResendLine sentAt={codeSentAt} onResend={() => void sendCode()} />
+          <SheetFine>הטלפון ישמש רק כדי לשלוח לך SMS כשההזמנה מוכנה. <a href="/privacy" className="underline">מדיניות הפרטיות</a></SheetFine>
+        </SignInSheet>
+      )}
 
       {error && <p className="text-center font-bold text-destructive">{error}</p>}
       {closed && <ClosedNote />}

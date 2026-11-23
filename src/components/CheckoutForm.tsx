@@ -184,7 +184,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [smsReady, setSmsReady] = useState(false);
   const [smsPhone, setSmsPhone] = useState("");
   // Returning customers too: every phone is checked once per device (then remembered until logout).
-  const smsCheckPhone = !isKiosk && smsOn && localStorage.getItem("habakta_station") !== "true";
+  // Group orders: only the organizer verifies a phone and gets the ready SMS (when opening the group).
+  const smsCheckPhone = !isKiosk && smsOn && !group && localStorage.getItem("habakta_station") !== "true";
   // Payment method chosen before the code was asked for; continued after it is verified.
   const [smsPendingMethod, setSmsPendingMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
   // A ref, not state: the retry below runs in the same tick and must see it.
@@ -197,7 +198,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     setSmsPendingMethod(null);
     if (m) { setStep("payment"); handlePaymentSelect(m); } else continueToPayment();
   };
-  const showSmsOptIn = smsOn && !donationOnly && (isKiosk || dineIn === true) && localStorage.getItem("habakta_station") !== "true";
+  const showSmsOptIn = smsOn && !donationOnly && !group && (isKiosk || dineIn === true) && localStorage.getItem("habakta_station") !== "true";
   const smsNeedsPhone = isKiosk || !validateIsraeliPhone(form.phone).valid;
   const smsTargetPhone = smsNeedsPhone ? smsPhone : form.phone;
   const [submitting, setSubmitting] = useState(false);

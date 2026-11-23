@@ -47,9 +47,10 @@ const saveKeys = (code: string, k: Keys) => {
 };
 export const rememberMyName = (code: string, name: string) => saveKeys(code, { ...groupKeys(code), myName: name });
 
-export const createGroup = async (name: string, dineIn: boolean) => {
-  const { data, error } = await rpc("group_create", { p_name: name, p_dine_in: dineIn });
-  if (error || !data?.code) throw new Error(error?.message || "create_failed");
+/** The organizer's phone must be verified by SMS code first (it gets the "ready" SMS). */
+export const createGroup = async (name: string, dineIn: boolean, phone: string) => {
+  const { data, error } = await rpc("group_create", { p_name: name, p_dine_in: dineIn, p_phone: phone });
+  if (error || !data?.code) throw new Error(error?.message?.includes("phone_not_verified") ? "phone_not_verified" : "create_failed");
   saveKeys(data.code, { secret: data.secret, tokens: {}, myName: name });
   return data.code as string;
 };
