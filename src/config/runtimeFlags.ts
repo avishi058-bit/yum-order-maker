@@ -33,4 +33,11 @@ export const RUNTIME_FLAGS = {
    * immediately and the customer pays physically at the counter.
    */
   ENABLE_PAY_AT_COUNTER: true,
+
+  /**
+   * Customer SMS (src/lib/sms.ts): phone code on website checkout and the
+   * "SMS me when ready" button for dine-in and kiosk orders. While false, only
+   * a device opened once with ?smstest=1 sees them (owner testing).
+   */
+  CUSTOMER_SMS: false,
 } as const;

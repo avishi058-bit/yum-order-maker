@@ -25,6 +25,8 @@ import { validateCustomerName, cleanCustomerName, CUSTOMER_NAME_MESSAGE, CUSTOME
 import { nameValidationAnimation } from "@/config/uiConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import SmsReadyOptIn from "@/components/SmsReadyOptIn";
+import { smsEnabled, isPhoneVerified, sendPhoneCode, verifyPhoneCode, optInReadySms } from "@/lib/sms";
 
 export interface CheckoutSauce {
   id: string;
@@ -172,6 +174,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   };
   const [step, setStep] = useState<"phone" | "otp" | "details" | "payment">(computeInitialStep);
   const [otpCode, setOtpCode] = useState("");
+  // Customer SMS (phone code + "SMS me when ready"), see src/lib/sms.ts.
+  const [smsOn] = useState(smsEnabled);
+  const [smsReady, setSmsReady] = useState(false);
+  const [smsPhone, setSmsPhone] = useState("");
+  const smsCheckPhone = !isKiosk && !isLoggedIn && smsOn && localStorage.getItem("habakta_station") !== "true";
+  const showSmsOptIn = smsOn && !donationOnly && (isKiosk || dineIn === true) && localStorage.getItem("habakta_station") !== "true";
+  const smsNeedsPhone = isKiosk || !validateIsraeliPhone(form.phone).valid;
+  const smsTargetPhone = smsNeedsPhone ? smsPhone : form.phone;
   const [submitting, setSubmitting] = useState(false);
   const [pinpadState, setPinpadState] = useState<"waiting" | null>(null);
   const [pinpadError, setPinpadError] = useState<string | null>(null);
@@ -260,112 +270,76 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       setStep(target);
       return;
     }
-    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && step === "otp") {
+    if (!isKiosk && RUNTIME_FLAGS.WEBSITE_SKIP_OTP && step === "otp" && !smsCheckPhone) {
       setStep(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, customer, isKiosk]);
 
-  const handleSendOtp = async () => {
+  // Sends the SMS code. Returns false when SMS is unavailable right now, so the
+  // caller lets the customer continue without the check.
+  const handleSendOtp = async (): Promise<boolean> => {
     const phoneCheck = validateIsraeliPhone(form.phone);
     if (!phoneCheck.valid) {
       toast({ title: phoneCheck.error, variant: "destructive" });
-      return;
+      return true;
     }
-    if (!otpTurnstileToken) {
-      toast({ title: "יש לאמת את תיבת \"אני לא רובוט\" לפני שליחת הקוד", variant: "destructive" });
-      return;
-    }
-
     setSendingOtp(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-otp?action=send`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({ phone: form.phone, turnstileToken: otpTurnstileToken }),
-        }
-      );
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "שגיאה בשליחת הקוד");
+      const r = await sendPhoneCode(form.phone);
+      if (r.result === "skip") return false;
+      if (r.result === "error") {
+        toast({ title: r.error, variant: "destructive" });
+        return true;
       }
-
-      toast({ title: "הקוד נשלח לוואטסאפ! 📱" });
+      if (r.cooldown && step === "otp") {
+        toast({ title: "הקוד נשלח לפני רגע, אפשר לבקש חדש בעוד דקה" });
+        return true;
+      }
+      setOtpCode("");
       setStep("otp");
-    } catch (error: any) {
-      console.error("OTP error:", error);
-      toast({ title: error.message || "שגיאה בשליחת הקוד", variant: "destructive" });
+      return true;
     } finally {
       setSendingOtp(false);
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otpCode.length !== 6) {
+  const handleVerifyOtp = async (code = otpCode) => {
+    if (code.length !== 6) {
       toast({ title: "אנא הכנס קוד בן 6 ספרות", variant: "destructive" });
       return;
     }
-    // If server previously asked for CAPTCHA (attack mode), require it here.
-    if (verifyCaptchaRequired && !verifyTurnstileToken) {
-      toast({ title: "יש להשלים את אימות \"אני לא רובוט\"", variant: "destructive" });
-      return;
-    }
-
+    if (verifying) return;
     setVerifying(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-otp?action=verify`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({
-            phone: form.phone,
-            code: otpCode,
-            ...(verifyTurnstileToken ? { turnstileToken: verifyTurnstileToken } : {}),
-          }),
-        }
-      );
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 428 && result?.requiresCaptcha) {
-          setVerifyCaptchaRequired(true);
-          setVerifyTurnstileToken(null);
-          toast({
-            title: "נדרש אימות אבטחה נוסף",
-            description: "אנא סמן \"אני לא רובוט\" ונסה שוב",
-            variant: "destructive",
-          });
-          return;
-        }
-        throw new Error(result.error || "קוד שגוי");
+      const r = await verifyPhoneCode(form.phone, code);
+      if (!r.ok) {
+        toast({ title: r.error, variant: "destructive" });
+        return;
       }
-
-      // The name is returned only after a successful verification.
-      if (result.customerName) {
-        setCustomerName(result.customerName);
-        setForm(prev => ({ ...prev, name: result.customerName }));
-      }
-      toast({ title: "אומת בהצלחה! ✅" });
-      setStep("details");
-    } catch (error: any) {
-      console.error("Verify error:", error);
-      toast({ title: error.message || "קוד שגוי", variant: "destructive" });
-      // Force a fresh CAPTCHA token per attempt when captcha is required.
-      if (verifyCaptchaRequired) setVerifyTurnstileToken(null);
+      toast({ title: "המספר אומת ✅" });
+      continueToPayment();
     } finally {
       setVerifying(false);
     }
   };
+
+  // Android Chrome reads the code straight from the SMS (the "@habikta-burger.com #code" line).
+  useEffect(() => {
+    if (step !== "otp" || !("OTPCredential" in window)) return;
+    const ac = new AbortController();
+    (navigator.credentials as unknown as { get: (o: object) => Promise<{ code?: string } | null> })
+      .get({ otp: { transport: ["sms"] }, signal: ac.signal })
+      .then((cred) => {
+        if (cred?.code) {
+          setOtpCode(cred.code);
+          handleVerifyOtp(cred.code);
+        }
+      })
+      .catch(() => {});
+    return () => ac.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const handleDetailsSubmit = (e?: React.FormEvent | React.MouseEvent) => {
     if (e && "preventDefault" in e) e.preventDefault();
@@ -379,6 +353,15 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         return;
       }
     }
+    // Website: check the phone with an SMS code once per device (if SMS works now).
+    if (smsCheckPhone && !isPhoneVerified(form.phone)) {
+      handleSendOtp().then((handled) => { if (!handled) continueToPayment(); });
+      return;
+    }
+    continueToPayment();
+  };
+
+  const continueToPayment = () => {
     // Logged-in customer with no saved favorite → offer to save before payment.
     const eligibleForFavorite = items.filter(
       (it) => (it as CartItem & { menuItemId?: string }).menuItemId && it.name !== "רטבים",
@@ -432,6 +415,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // the money now and shows the confirmation screenshot to the cashier.
     if (method === "paybox" && !payboxAck) {
       setPayboxConfirmOpen(true);
+      return;
+    }
+
+    if (showSmsOptIn && smsReady && !validateIsraeliPhone(smsTargetPhone).valid) {
+      toast({ title: "כדי לקבל SMS כשמוכן, צריך מספר נייד תקין", variant: "destructive" });
       return;
     }
 
@@ -590,6 +578,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    if (showSmsOptIn && smsReady && validateIsraeliPhone(smsTargetPhone).valid) void optInReadySms(data.orderId, smsTargetPhone);
     clearPendingMarketingConsent();
     // Device-only order history (never on shared kiosk/station screens).
     if (!isKioskPath && !isStation && !donationOnly) {
@@ -1053,7 +1042,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             {customerName && (
               <p className="text-primary font-bold text-lg">כיף שחזרת, {customerName} :)</p>
             )}
-            <p className={`${th.textMuted} text-sm`}>שלחנו קוד בן 6 ספרות לוואטסאפ למספר {form.phone}</p>
+            <p className={`${th.textMuted} text-sm`}>שלחנו קוד בן 6 ספרות ב-SMS למספר <span dir="ltr">{form.phone}</span></p>
             <div>
               <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>קוד אימות</label>
               <input
@@ -1061,8 +1050,13 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 maxLength={6}
                 inputMode="numeric"
                 autoComplete="one-time-code"
+                autoFocus
                 value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setOtpCode(v);
+                  if (v.length === 6) handleVerifyOtp(v);
+                }}
                 className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
                 dir="ltr"
                 placeholder="______"
@@ -1087,14 +1081,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={verifying || (verifyCaptchaRequired && !verifyTurnstileToken)}
-                onClick={handleVerifyOtp}
+                onClick={() => handleVerifyOtp()}
                 className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
               >
                 {verifying ? "מאמת..." : "אמת קוד ✅"}
               </motion.button>
               <button
                 type="button"
-                onClick={() => { setStep("phone"); setOtpCode(""); }}
+                onClick={() => { setStep("details"); setOtpCode(""); }}
                 className={`px-6 py-3 rounded-full border ${th.border} ${th.textMuted} hover:${th.textMain} transition-colors`}
               >
                 חזור
@@ -1102,7 +1096,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             </div>
             <button
               type="button"
-              onClick={handleSendOtp}
+              onClick={() => handleSendOtp().then((handled) => { if (!handled) continueToPayment(); })}
               disabled={sendingOtp}
               className={`text-sm ${th.textMuted} hover:text-primary transition-colors underline`}
             >
@@ -1265,6 +1259,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               termsAcceptedAt={soldierTermsAt}
               onTermsAccept={(a) => setSoldierTermsAt(a ? new Date().toISOString() : null)}
             />}
+            {showSmsOptIn && (
+              <SmsReadyOptIn on={smsReady} onToggle={setSmsReady} askPhone={smsNeedsPhone}
+                phone={smsPhone} onPhone={setSmsPhone} kiosk={isKiosk} th={th} />
+            )}
             <p className="text-muted-foreground text-sm mb-2">סה״כ לתשלום: <span className="text-primary font-bold text-lg">₪{total}</span></p>
 
             {/* 🛵 Delivery notice - website only, when this is a delivery order */}
