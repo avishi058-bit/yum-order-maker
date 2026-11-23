@@ -1,4 +1,5 @@
 import { useEffect, useState, ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const CACHE_KEY = "geo-gate-v1";
@@ -7,19 +8,45 @@ const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 type Status = "checking" | "allowed" | "blocked";
 
 /**
+ * Groups landing pages are public to everyone, including Google Ads review
+ * crawlers: the ad's final URL must render the real page, never the
+ * Israel-only lock screen. Exact SPA paths and the static groups files,
+ * with or without a trailing slash.
+ */
+const GEO_BYPASS_EXACT = ["/groups", "/en/groups", "/groups-tour.html", "/groups-tour-en.html"];
+const GEO_BYPASS_PREFIXES = ["/groups-page/"];
+
+export function isGeoBypassPath(pathname: string): boolean {
+  const clean = pathname.replace(/\/+$/, "") || "/";
+  if (GEO_BYPASS_EXACT.includes(clean)) return true;
+  return GEO_BYPASS_PREFIXES.some(
+    (prefix) => clean === prefix.slice(0, -1) || clean.startsWith(prefix),
+  );
+}
+
+/**
  * Geo-restricts the site to visitors from Israel.
  *
  * Bypass rules (so we never lock staff out):
  * - Authenticated Supabase users (kitchen/admin/courier).
  * - Localhost / preview / editor sandbox.
  * - Anything running inside an iframe (Lovable preview editor).
+ * - Groups landing pages (isGeoBypassPath), so ad-review crawlers see the page.
  * - Lookup failure - fails open so a third-party outage doesn't block customers.
  */
 const GeoGate = ({ children }: { children: ReactNode }) => {
-  const [status, setStatus] = useState<Status>("checking");
+  const { pathname } = useLocation();
+  const bypass = isGeoBypassPath(pathname);
+  const [status, setStatus] = useState<Status>(bypass ? "allowed" : "checking");
   const [country, setCountry] = useState<string | null>(null);
 
   useEffect(() => {
+    if (bypass) {
+      setStatus("allowed");
+      return;
+    }
+    // Leaving a bypassed page back into the gated site: re-check before showing.
+    setStatus("checking");
     let cancelled = false;
 
     const run = async () => {
@@ -81,7 +108,9 @@ const GeoGate = ({ children }: { children: ReactNode }) => {
 
     run();
     return () => { cancelled = true; };
-  }, []);
+  }, [bypass]);
+
+  if (bypass) return <>{children}</>;
 
   if (status === "checking" && window.location.pathname.startsWith("/kiosk")) return <>{children}</>;
   if (status === "checking") return null;
