@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, ChevronDown, Flame } from "lucide-react";
+import { Clock, ChevronDown } from "lucide-react";
 import { useBusinessHours, DAY_NAMES_HE, formatCountdown } from "@/hooks/useBusinessHours";
 import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
 import {
@@ -24,10 +24,8 @@ const BusinessStatusBar = () => {
   return (
     <div dir="rtl" className="sticky top-0 z-40 w-full">
       {restaurantStatus.high_load && (
-        <div className="w-full bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 text-white px-3 py-2 text-center text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md animate-pulse">
-          <Flame size={16} className="shrink-0" />
-          <span>עומס במטבח כרגע - זמני המתנה ארוכים מהרגיל, סבלנות ותודה 🙏</span>
-          <Flame size={16} className="shrink-0" />
+        <div className="w-full bg-amber-50 text-amber-900 border-b border-amber-200 px-3 py-2 text-center text-xs sm:text-sm font-semibold">
+          המטבח בעומס - ההזמנות יוצאות בקצב, אבל ייתכן שתחכו קצת יותר מהרגיל 😉
         </div>
       )}
       <div className="w-full border-b border-border bg-card/95 backdrop-blur-md">

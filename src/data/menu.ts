@@ -94,8 +94,8 @@ const MENU_UI: Record<string, MenuItemUIOverlay> = {
   "fuze-tea": { description: "תה קרח פיוז טי" },
   "terminal-test": { description: "מוצר זמני לבדיקת סליקה - 10 אגורות" },
 
-  "family-deal": { description: "5 מנות קלאסיות (220), צ׳יפס ענק" },
-  "friends-deal": { description: "3 מנות קלאסיות (220), +צ׳יפס ענק, +3 פחיות שתייה" },
+  "family-deal": { description: "5 מנות קלאסיות (220 גרם), צ׳יפס ענק" },
+  "friends-deal": { description: "3 מנות קלאסיות (220 גרם), +צ׳יפס ענק, +3 פחיות שתייה" },
 };
 
 export const menuItems: MenuItem[] = MENU_ITEMS_PRICING.map((m) => ({

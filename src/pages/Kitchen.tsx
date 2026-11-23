@@ -2002,6 +2002,21 @@ const Kitchen = () => {
       <div className="bg-card border-b border-border px-4 py-3 flex flex-col gap-3 sticky top-0 z-10 overflow-x-hidden max-w-full">
         <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-2xl font-black text-foreground">🍔 מטבח הבקתה</h1>
+          {/* Busy mode: one tap to switch. Red while customers see the busy note, green when calm.
+              It also switches on by itself from 10 burgers in prep and off again at 7. */}
+          <button
+            type="button"
+            onClick={() => toggleHighLoad(!restaurantStatus.high_load)}
+            aria-pressed={restaurantStatus.high_load}
+            className={`px-4 py-2 rounded-full font-black text-base flex items-center gap-2 border-2 transition-colors ${
+              restaurantStatus.high_load
+                ? "bg-red-600 text-white border-red-700"
+                : "bg-green-600 text-white border-green-700"
+            }`}
+            title="לחיצה מחליפה בין עמוס לרגוע"
+          >
+            {restaurantStatus.high_load ? "🔥 עמוס" : "🟢 רגוע"}
+          </button>
           {activeCustomers > 0 && (
             <div
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-sm font-bold animate-pulse"
@@ -3297,27 +3312,27 @@ const Kitchen = () => {
                           {etaCountdown(order.estimated_ready_at) || "-"}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => adjustEta(order, -5)}
-                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          className="min-w-[64px] h-12 px-3 rounded-xl bg-muted text-foreground hover:bg-secondary active:scale-95 transition flex items-center justify-center gap-1 text-xl font-black"
                           title="קצר ב-5 דקות"
                         >
-                          <Minus size={12} /> 5
+                          <Minus size={20} strokeWidth={3} /> 5
                         </button>
                         <button
                           onClick={() => adjustEta(order, 5)}
-                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          className="min-w-[64px] h-12 px-3 rounded-xl bg-muted text-foreground hover:bg-secondary active:scale-95 transition flex items-center justify-center gap-1 text-xl font-black"
                           title="הוסף 5 דקות"
                         >
-                          <Plus size={12} /> 5
+                          <Plus size={20} strokeWidth={3} /> 5
                         </button>
                         <button
                           onClick={() => adjustEta(order, 10)}
-                          className="px-2 py-1 rounded-md bg-muted text-foreground hover:bg-secondary transition-colors flex items-center gap-1 text-xs font-bold"
+                          className="min-w-[64px] h-12 px-3 rounded-xl bg-muted text-foreground hover:bg-secondary active:scale-95 transition flex items-center justify-center gap-1 text-xl font-black"
                           title="הוסף 10 דקות"
                         >
-                          <Plus size={12} /> 10
+                          <Plus size={20} strokeWidth={3} /> 10
                         </button>
                       </div>
                     </div>
