@@ -58,6 +58,7 @@ import drinkFlavoredWaterGrapeImg from "@/assets/drink-flavored-water-grape.webp
 import drinkGrapesImg from "@/assets/drink-grapes.webp";
 import drinkOrangesImg from "@/assets/drink-apples.webp";
 import fuzeTeaAsset from "@/assets/menu/fuze-tea.webp";
+import friendsMixTrioImg from "@/assets/friends-mix-trio.webp";
 
 const mealSideImages: Record<string, string> = {
   "side-fries": friesRegularImg,
@@ -828,6 +829,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const extraSideImage: Record<string, string> = {
     fries: mealSideImages["side-fries"], "sweet-potato-fries": mealSideImages["side-sweet-potato"],
     "onion-rings": mealSideImages["side-onion-rings"], "tempura-onion": mealSideImages["side-tempura"],
+    "friends-mix": friendsMixTrioImg,
   };
   const extraDrinkImage = (id: string) => {
     const avail = drinkToAvailabilityId[id] || id;
