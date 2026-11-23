@@ -39,9 +39,10 @@ export const sendSms = async (env, phone, msg) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      key: env.SMS4FREE_KEY, user: env.SMS4FREE_USER, pass: env.SMS4FREE_PASS,
+      // Trimmed: a space pasted with the key or password makes SMS4Free answer -1.
+      key: String(env.SMS4FREE_KEY).trim(), user: String(env.SMS4FREE_USER).replace(/\D/g, ""), pass: String(env.SMS4FREE_PASS).trim(),
       // Until a package is bought, SMS4Free only sends from the registered number.
-      sender: env.SMS_SENDER || env.SMS4FREE_USER,
+      sender: env.SMS_SENDER || String(env.SMS4FREE_USER).replace(/\D/g, ""),
       recipient: phone, msg,
     }),
   }).catch(() => null);
