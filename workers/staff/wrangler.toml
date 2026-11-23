@@ -19,9 +19,9 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 VAPID_PUBLIC_KEY = "BHR6NU3HFQfRUBH7-zszku0KsyrM-MF5smrT4AGagPgY12AQEb5A-Sfg-Cqq1awexbzWceiErcXESPmD9Stucw4"
 VAPID_SUBJECT = "mailto:shifts@habikta-burger.com"
 
-# SMS sender name shown to customers (English letters, up to 11). Empty until an
-# SMS4Free package is bought: until then messages come from the owner's number.
-SMS_SENDER = ""
+# SMS sender name shown to customers (English letters, up to 11; needs a bought
+# SMS4Free package - empty means the owner's registered number).
+SMS_SENDER = "HaBikta"
 
 # Customer SMS: one-time codes and send limits (see src/sms.js).
 [[kv_namespaces]]
