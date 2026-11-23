@@ -116,11 +116,11 @@ const KioskCartDrawer = ({
       if (b.id === "friends-mix") return 1;
       return 0;
     });
-    // Before all of them, quietly: what the customer hesitated over in this
-    // order (opened and closed, or took out of the cart) - any category.
+    // Before all of them, quietly: sides and drinks the customer hesitated over
+    // in this order (opened and closed, or took out of the cart). Not burgers.
     const hesitated = hesitatedItemIds()
       .map((id) => menuItems.find((m) => m.id === id))
-      .filter((m): m is MenuItem => !!m && !inCartMenuIds.has(m.id) && m.category !== "deal")
+      .filter((m): m is MenuItem => !!m && !inCartMenuIds.has(m.id) && (m.category === "side" || m.category === "drink"))
       .filter((m) => {
         const subs = drinkSubOptions[m.id];
         if (subs && subs.length > 0) return subs.some((s) => isAvailable(drinkToAvailabilityId[s.id] || s.id));

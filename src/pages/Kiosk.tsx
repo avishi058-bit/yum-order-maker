@@ -530,8 +530,7 @@ const Kiosk = () => {
         }}
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {
-          // Items that need choices (burgers, meals, deals, arayes) open their usual flow.
-          if (item.id === "arayes-special" || item.id === "arayes-special-4" || !["side", "drink"].includes(item.category)) {
+          if (item.id === "arayes-special" || item.id === "arayes-special-4") {
             setCartOpen(false);
             openItemFlow(item);
             return;
