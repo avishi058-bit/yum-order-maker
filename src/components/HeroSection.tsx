@@ -206,6 +206,14 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
             מגיעים בקבוצה? לחצו כאן
           </Link>
         )}
+        {showGroupsLink && (
+          <Link
+            to="/group"
+            className="mt-2 block text-sm font-bold text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            מזמינים עם חברים וכל אחד משלם על עצמו? הזמנה קבוצתית
+          </Link>
+        )}
 
         {/* "הזמן חייל/ת" - prominent entry buttons (hidden when switched off in the kitchen) */}
         {soldierFundEnabled && <motion.div

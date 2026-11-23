@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import SmsReadyOptIn from "@/components/SmsReadyOptIn";
 import { SignInSheet, SheetTitle, SheetSub, SheetFine, CodeBoxes, ResendLine } from "@/components/auth/SignInSheet";
+import { getActiveGroup, attachToGroup } from "@/lib/groupSession";
 import { smsEnabled, isPhoneVerified, sendPhoneCode, verifyPhoneCode, optInReadySms } from "@/lib/sms";
 
 export interface CheckoutSauce {
@@ -83,6 +84,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
   const { customer, isLoggedIn, linkFromOrder, favoriteItems, signInVerified } = useCustomerAuth();
+  // Ordering into a group (src/pages/GroupOrder.tsx): card only, and the order
+  // joins the group before the payment page opens.
+  const [group] = useState(() => (donationOnly ? null : getActiveGroup()));
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && /^\/kiosk\/?$/.test(window.location.pathname);
   const { isStaff } = useAuth();
@@ -141,7 +145,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   };
 
   const [form, setForm] = useState({
-    name: isLoggedIn && customer ? customer.name : "",
+    name: group?.name || (isLoggedIn && customer ? customer.name : ""),
     phone: isLoggedIn && customer ? customer.phone : "",
     notes: "",
   });
@@ -630,6 +634,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    if (group && paymentMethod === "credit") {
+      try {
+        await attachToGroup(group.code, data.orderId, cleanCustomerName(form.name));
+      } catch (e) {
+        throw new Error((e as Error).message === "group_closed" ? "המארגן כבר סגר את הקבוצה, אי אפשר להוסיף מנות" : "לא הצלחנו לצרף את ההזמנה לקבוצה, נסו שוב");
+      }
+      try { sessionStorage.setItem("habikta_group_return", JSON.stringify({ orderId: data.orderId, code: group.code })); } catch { /* ignore */ }
+    }
     if (showSmsOptIn && smsReady && validateIsraeliPhone(smsTargetPhone).valid) void optInReadySms(data.orderId, smsTargetPhone);
     clearPendingMarketingConsent();
     // Device-only order history (never on shared kiosk/station screens).
@@ -998,10 +1010,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
   const availablePaymentMethods = {
-    cash: !donationOnly && (isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled),
+    cash: !donationOnly && !group && (isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled),
     credit: isKiosk ? restaurantStatus.kiosk_credit_enabled : restaurantStatus.credit_enabled,
     // Paybox - kiosk only, controlled by its own kitchen toggle.
-    paybox: !donationOnly && isKiosk && restaurantStatus.kiosk_paybox_enabled,
+    paybox: !donationOnly && !group && isKiosk && restaurantStatus.kiosk_paybox_enabled,
   };
 
   // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.
@@ -1435,6 +1447,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </div>
             )}
 
+            {group && (
+              <p className="rounded-xl bg-primary/10 p-3 text-center text-sm font-bold text-foreground">
+                הזמנה קבוצתית של {group.organizer}: משלמים באשראי על המנה שלך. ההזמנה יוצאת למטבח כשכולם שילמו.
+              </p>
+            )}
             <div className={isKiosk ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-3"}>
               {/* קיוסק: אשראי מימין, מזומן משמאל (RTL). אתר: סדר קודם. */}
               {availablePaymentMethods.credit && (

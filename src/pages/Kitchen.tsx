@@ -16,6 +16,7 @@ import DayOpenChecklist, { shouldShowDayOpenChecklist, markDayOpenChecklistDone 
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { mergeGroupOrders } from "@/lib/groupOrders";
 import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName, sortByQueue, type RoundOrder } from "@/lib/kitchenReceipt";
 import {
   isWebBluetoothSupported,
@@ -476,6 +477,9 @@ const Kitchen = () => {
     }
   }, [showRoundSummary, showRoundChefSummary, previewOrder]);
   const fetchOrdersRef = useRef<(() => Promise<void>) | null>(null);
+  // Group orders show as one card; these are the real order ids behind each card.
+  const groupIdsRef = useRef<Map<string, string[]>>(new Map());
+  const idsOf = (id: string) => groupIdsRef.current.get(id) ?? [id];
 
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
@@ -787,7 +791,9 @@ const Kitchen = () => {
       .order("created_at", { ascending: false })
       .limit(300);
     if (!error && data) {
-      const fetched = data as Order[];
+      // Held group orders stay hidden; released groups merge into one card.
+      const { orders: fetched, ids: groupIds } = mergeGroupOrders(data as any[]) as { orders: Order[]; ids: Map<string, string[]> };
+      groupIdsRef.current = groupIds;
 
       // Detect newly-arrived orders since last fetch and toast for them
       const prevSeen = seenOrdersRef.current;
@@ -1216,7 +1222,8 @@ const Kitchen = () => {
     .filter((g) => g.items.length > 0);
 
   const completeAllReady = async () => {
-    const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number != null).map((o) => o.id);
+    const paidReadyCards = orders.filter((o) => o.status === "ready" && o.queue_number != null).map((o) => o.id);
+    const paidReadyIds = paidReadyCards.flatMap(idsOf);
     const unpaidReadyCount = orders.filter((o) => o.status === "ready" && o.queue_number == null).length;
     if (paidReadyIds.length === 0) {
       toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו - סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
@@ -1224,7 +1231,7 @@ const Kitchen = () => {
     }
     const prevOrders = orders;
     setOrders((curr) =>
-      curr.map((o) => (paidReadyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
+      curr.map((o) => (paidReadyCards.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
     );
     const { error } = await supabase
       .from("orders")
@@ -1235,7 +1242,7 @@ const Kitchen = () => {
       setOrders(prevOrders);
       return;
     }
-    toast.success(`${paidReadyIds.length} הזמנות ששולמו הושלמו${unpaidReadyCount > 0 ? ` (${unpaidReadyCount} נותרו ללא תשלום)` : ""}`);
+    toast.success(`${paidReadyCards.length} הזמנות ששולמו הושלמו${unpaidReadyCount > 0 ? ` (${unpaidReadyCount} נותרו ללא תשלום)` : ""}`);
   };
 
   // Mark an order as paid → it gets the next position in today's queue and
@@ -1244,6 +1251,8 @@ const Kitchen = () => {
     if (paidPendingIds.has(order.id) || order.queue_number != null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
+    // The rest of a group card's orders get their queue position too.
+    if (!error) for (const other of idsOf(order.id).slice(1)) await supabase.rpc("mark_order_paid", { p_order_id: other });
     setPaidPendingIds((s) => {
       const n = new Set(s);
       n.delete(order.id);
@@ -1313,6 +1322,7 @@ const Kitchen = () => {
     if (paidPendingIds.has(order.id) || order.queue_number == null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { data, error } = await supabase.rpc("unmark_order_paid", { p_order_id: order.id });
+    if (!error) for (const other of idsOf(order.id).slice(1)) await supabase.rpc("unmark_order_paid", { p_order_id: other });
     setPaidPendingIds((s) => {
       const n = new Set(s);
       n.delete(order.id);
@@ -1375,7 +1385,7 @@ const Kitchen = () => {
     const { data, error } = await supabase
       .from("orders")
       .update(updateData)
-      .eq("id", orderId)
+      .in("id", idsOf(orderId))
       .select();
 
     setPendingStatusIds((s) => {
@@ -1694,7 +1704,7 @@ const Kitchen = () => {
     const { error } = await supabase
       .from("orders")
       .update({ estimated_ready_at: newEta.toISOString() })
-      .eq("id", order.id);
+      .in("id", idsOf(order.id));
     if (error) {
       toast.error("שגיאה בעדכון זמן הכנה");
       return;

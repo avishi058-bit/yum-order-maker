@@ -36,6 +36,7 @@ const Kiosk = lazy(() => import("./pages/Kiosk"));
 const Inventory = lazy(() => import("./pages/Inventory"));
 const InventoryHome = lazy(() => import("./pages/InventoryHome"));
 const Pay = lazy(() => import("./pages/Pay"));
+const GroupOrder = lazy(() => import("./pages/GroupOrder"));
 const InventoryFridge = lazy(() => import("./pages/InventoryFridge"));
 const EventBooking = lazy(() => import("./pages/EventBooking"));
 const EventsAdmin = lazy(() => import("./pages/EventsAdmin"));
@@ -97,6 +98,8 @@ const App = () => (
               <Route path="/kitchen/install" element={<KitchenInstall />} />
               <Route path="/track" element={<OrderTracking />} />
               <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+              <Route path="/group" element={<GroupOrder />} />
+              <Route path="/group/:code" element={<GroupOrder />} />
               <Route path="/kiosk" element={<Kiosk />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/about" element={<About />} />

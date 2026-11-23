@@ -23,6 +23,14 @@ const OrderConfirmation = () => {
       const saved = JSON.parse(sessionStorage.getItem("habikta_payreq") ?? "{}");
       if (saved.orderId && saved.orderId === orderId && saved.token) navigate(`/pay/${saved.token}?done=1`, { replace: true });
     } catch { /* not a payment request */ }
+    // Back from paying a group order: the group page shows who paid.
+    try {
+      const g = JSON.parse(sessionStorage.getItem("habikta_group_return") ?? "{}");
+      if (g.orderId && g.orderId === orderId && g.code) {
+        sessionStorage.removeItem("habikta_group_return");
+        navigate(`/group/${g.code}?paid=${orderId}`, { replace: true });
+      }
+    } catch { /* not a group order */ }
   }, [orderId, navigate]);
 
   useEffect(() => {
