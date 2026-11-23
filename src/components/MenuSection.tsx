@@ -3,6 +3,7 @@ import { ShoppingBag, Star, Plus } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -56,10 +57,13 @@ const MenuCard = ({ item, onAdd, isKiosk = false, fontScale = 1, nameOverride, d
     <div
       ref={cardRef}
       onClick={handleAdd}
-      className={`group relative overflow-hidden transition-colors border-b flex items-center ${browseOnly ? "cursor-default" : "cursor-pointer"} ${
+      className={`group relative overflow-hidden transition-colors flex items-center ${browseOnly ? "cursor-default" : "cursor-pointer"} ${
         isKiosk
-          ? "bg-white text-gray-900 active:bg-gray-100 border-gray-200 py-6 px-5 gap-6"
-          : "bg-card text-foreground active:bg-secondary/50 border-border py-4 px-2 gap-4"
+          ? "border-b bg-white text-gray-900 active:bg-gray-100 border-gray-200 py-6 px-5 gap-6"
+          : RUNTIME_FLAGS.COMPACT_HOME
+            // Compact home: each item is its own rounded card.
+            ? "bg-card text-foreground active:bg-secondary/50 border border-border rounded-xl py-3 px-3 gap-3"
+            : "border-b bg-card text-foreground active:bg-secondary/50 border-border py-4 px-2 gap-4"
       }`}
       dir="rtl"
       style={{
@@ -484,7 +488,7 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
                 ))}
               </div>
             ) : (
-              <div className="divide-y divide-border">
+              <div className={RUNTIME_FLAGS.COMPACT_HOME ? "space-y-3" : "divide-y divide-border"}>
                 {items.map((item) => (
                   <MenuCard
                     key={`${cat.key}-${item.id}`}
