@@ -109,6 +109,12 @@
   border-radius: 4px;
 }
 
+/* Sign-in fields: the whole rounded field lights up instead (focus-within),
+   so the inner input doesn't draw a second ring. */
+.signin-field input:focus-visible {
+  outline: none !important;
+}
+
 /* Real high-contrast mode per IS 5568 - yellow-on-black palette with
    distinct button/link colors so the page keeps visual hierarchy instead
    of collapsing into a single flat color block. */
