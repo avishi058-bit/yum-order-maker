@@ -12,6 +12,7 @@ import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.webp";
 import drinkFantaImg from "@/assets/drink-fanta.webp";
 import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.webp";
 import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.webp";
+import drinkFantaWildberryImg from "@/assets/drink-fanta-wildberry.webp";
 import drinkFantaWildberryAsset from "@/assets/drink-fanta-wildberry.png.asset.json";
 import drinkBluImg from "@/assets/drink-blu.webp";
 import drinkBluWatermelonImg from "@/assets/drink-blu-watermelon.webp";
@@ -37,6 +38,7 @@ const drinkOptionImages: Record<string, string> = {
   "can-fanta": drinkFantaImg,
   "can-fanta-grape": drinkFantaGrapeImg,
   "can-fanta-exotic": drinkFantaExoticImg,
+  "can-fanta-wildberry": drinkFantaWildberryImg,
   "can-fanta-wildberry": drinkFantaWildberryAsset.url,
   "can-sprite": drinkSpriteImg,
   "can-sprite-zero": drinkSpriteZeroImg,

@@ -10,6 +10,7 @@
 // and avoids the dense black areas that bog down thermal printers.
 
 import { getPrintCompactGaps, type FastOp } from "./bluetoothPrinter";
+import { GOOGLE_REVIEW_URL, REVIEW_QR_TITLE, REVIEW_QR_SUBTITLE } from "@/config/review";
 import { getUnavailableIngredientIds } from "@/lib/ingredientAvailability";
 import {
   computeChefSummary,
@@ -688,6 +689,15 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
       ops.push(asLine("!! טרם התקבל אישור מהמסוף !!", { align: "C", bold: true, size: 28 }));
       ops.push(asLine(`לתשלום ${order.total}₪`, { align: "C", bold: true, size: 32 }));
     }
+  }
+
+  // 7) Takeaway: a QR to leave a Google review at home.
+  if (isTakeaway) {
+    ops.push(sep());
+    ops.push(asLine(REVIEW_QR_TITLE, { align: "C", bold: true, size: 30 }));
+    ops.push(asLine(REVIEW_QR_SUBTITLE, { align: "C", bold: false, size: 24 }));
+    ops.push(feed(1));
+    ops.push({ kind: "qr", data: GOOGLE_REVIEW_URL, modulePx: 5, align: "C" });
   }
 
   ops.push(feed(2));

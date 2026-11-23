@@ -36,6 +36,7 @@ import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.webp";
 import drinkFantaImg from "@/assets/drink-fanta.webp";
 import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.webp";
 import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.webp";
+import drinkFantaWildberryImg from "@/assets/drink-fanta-wildberry.webp";
 import drinkSodaImg from "@/assets/drink-soda.webp";
 import drinkWaterImg from "@/assets/drink-water.webp";
 import drinkBluImg from "@/assets/drink-blu.webp";
@@ -75,6 +76,7 @@ const mealDrinkImages: Record<string, string> = {
   "drink-fanta": drinkFantaImg,
   "drink-fanta-grape": drinkFantaGrapeImg,
   "drink-fanta-exotic": drinkFantaExoticImg,
+  "drink-fanta-wildberry": drinkFantaWildberryImg,
   "drink-soda": drinkSodaImg,
   "drink-water": drinkWaterImg,
   "drink-blu": drinkBluImg,
@@ -1572,8 +1574,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                     onScroll={markScroll}
                   >
-                    <h3 className={`font-black text-center leading-tight ${isKiosk ? "text-[44px] mb-3" : "text-[26px] mb-2"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
-                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[22px] mb-6" : "text-base mb-4"}`}><b className="text-gray-900">בנפרד</b>, לא כחלק מארוחה עסקית · אפשר גם לדלג</p>
+                    <h3 className={`font-black text-center leading-tight ${isKiosk ? "text-[44px] mb-3" : "text-[26px] mb-2"}`}>רוצה להוסיף בנפרד<br />צ׳יפס או שתייה?</h3>
+                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[22px] mb-6" : "text-base mb-4"}`}>לא כחלק מארוחה עסקית · אפשר גם לדלג</p>
 
                     {extraSideItems.length > 0 && (
                       <>
@@ -1617,7 +1619,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         onClick={() => handleFinish(false)}
                         className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
                       >
-                        {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "לא תודה"}
+                        {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "דלג"}
                       </button>
                     </div>
                   </motion.div>

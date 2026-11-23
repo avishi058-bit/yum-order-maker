@@ -1,6 +1,7 @@
 // Kitchen receipt builder + chef-summary calculator.
 // 80mm thermal printers (printable area ~72mm). Black & white only.
 import QRCode from "qrcode";
+import { GOOGLE_REVIEW_URL, REVIEW_QR_TITLE, REVIEW_QR_SUBTITLE } from "@/config/review";
 import { menuItems } from "@/data/menu";
 import { getUnavailableIngredientIds } from "@/lib/ingredientAvailability";
 
@@ -803,6 +804,18 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
     }
   }
 
+  // Takeaway: a QR to leave a Google review at home.
+  const isTakeawayOrder = order.dine_in === false ||
+    (order.dine_in == null && order.order_source !== "kiosk" && order.order_source !== "station");
+  let reviewQrSvg = "";
+  if (isTakeawayOrder) {
+    try {
+      reviewQrSvg = await QRCode.toString(GOOGLE_REVIEW_URL, { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } });
+    } catch (e) {
+      console.warn("[receipt] review QR failed", e);
+    }
+  }
+
   // Running dish number (mains only - never fries/drinks).
   let dishNo = 0;
 
@@ -1213,6 +1226,11 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
   ${paymentLine}
 
   <div class="footer">סה״כ ₪${order.total}</div>
+  ${reviewQrSvg ? `<div style="text-align:center;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;">
+    <div style="font-size:12pt;font-weight:900;">${REVIEW_QR_TITLE}</div>
+    <div style="font-size:9pt;margin-bottom:1mm;">${REVIEW_QR_SUBTITLE}</div>
+    <div style="width:30mm;height:30mm;margin:0 auto;">${reviewQrSvg.replace("<svg", '<svg style="width:100%;height:100%"')}</div>
+  </div>` : ""}
 </body>
 </html>`;
 }

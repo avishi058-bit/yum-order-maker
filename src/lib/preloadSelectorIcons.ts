@@ -16,6 +16,7 @@ import drinkSpriteZeroImg from "@/assets/drink-sprite-zero.webp";
 import drinkFantaImg from "@/assets/drink-fanta.webp";
 import drinkFantaGrapeImg from "@/assets/drink-fanta-grape.webp";
 import drinkFantaExoticImg from "@/assets/drink-fanta-exotic.webp";
+import drinkFantaWildberryImg from "@/assets/drink-fanta-wildberry.webp";
 import drinkSodaImg from "@/assets/drink-soda.webp";
 import drinkWaterImg from "@/assets/drink-water.webp";
 import drinkBluImg from "@/assets/drink-blu.webp";
@@ -48,6 +49,7 @@ const SELECTOR_ICONS: string[] = [
   drinkFantaImg,
   drinkFantaGrapeImg,
   drinkFantaExoticImg,
+  drinkFantaWildberryImg,
   drinkSodaImg,
   drinkWaterImg,
   drinkBluImg,
