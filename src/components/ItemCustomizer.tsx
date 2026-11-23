@@ -890,7 +890,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     const separate = priceOfKey(sideKey) + priceOfKey(drinkKey);
     const asMeal = mealUpgrade.price + (side?.price ?? 0) + drink.price;
     if (asMeal >= separate) return null;
-    return { sideKey, drinkKey, sideId: extraToMealSide[sideKey], drinkId: drink.id, separate, asMeal, saving: separate - asMeal };
+    const sideName = menuItems.find((m) => m.id === sideKey)?.name ?? "תוספת";
+    const drinkName = extraDrinkRows.find((r) => r.key === drinkKey)?.name ?? "שתייה";
+    return { sideKey, drinkKey, sideId: extraToMealSide[sideKey], drinkId: drink.id, separate, asMeal, saving: separate - asMeal, sideName, drinkName };
   })();
   const mergeToMeal = () => {
     if (!mergeOffer) return;
@@ -1604,7 +1606,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       {mergeOffer && (
                         <div className={`rounded-2xl bg-green-50 border-2 border-green-600 text-center ${isKiosk ? "p-4 mb-4" : "p-3 mb-3"}`}>
                           <p className={`font-bold ${isKiosk ? "text-[22px]" : "text-base"}`}>
-                            צ׳יפס + שתייה? בארוחה עסקית זה רק <b>₪{mergeOffer.asMeal} תוספת</b> במקום ₪{mergeOffer.separate}
+                            {mergeOffer.sideName} + {mergeOffer.drinkName}? בארוחה עסקית זה רק <b>₪{mergeOffer.asMeal} תוספת</b> במקום ₪{mergeOffer.separate}
                           </p>
                           <button
                             type="button"
