@@ -11,7 +11,7 @@
 
 const WAZE = "https://waze.com/ul?ll=31.43473,34.54170&navigate=yes";
 const OTP_TTL = 600;
-const LIMITS = { phoneCooldown: 60, phonePerDay: 5, ipPerHour: 20, globalPerDay: 300 };
+const LIMITS = { phoneCooldown: 60, phonePerDay: 5, ipTriesPerHour: 20, ipSendsPerHour: 6, globalPerDay: 150 };
 
 const isMobile = (p) => /^05\d{8}$/.test(p);
 export const normalizePhone = (raw) => {
@@ -58,11 +58,26 @@ const sha = async (s) => {
 };
 const israelDay = () => new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10);
 
-/** Increments a KV counter; returns false when it is already at the limit. */
+// Limits live in two places: the Cache API of this Cloudflare location (seen at
+// once by the next request - KV can keep answering "not there" for up to a
+// minute, which let repeated taps send several codes) and KV (seen everywhere
+// a little later). A limit counts as reached if either says so.
+const cacheUrl = (key) => `https://sms-limits.habikta.internal/${encodeURIComponent(key)}`;
+const readCount = async (kv, key) => {
+  const hit = await caches.default.match(cacheUrl(key));
+  const local = hit ? Number(await hit.text()) : 0;
+  const shared = Number((await kv.get(key)) ?? 0);
+  return Math.max(local, shared);
+};
+const writeCount = async (kv, key, n, ttl) => {
+  await caches.default.put(cacheUrl(key), new Response(String(n), { headers: { "Cache-Control": `max-age=${ttl}` } }));
+  await kv.put(key, String(n), { expirationTtl: Math.max(60, ttl) });
+};
+/** Adds one; returns false (and adds nothing) when the limit is already reached. */
 const bump = async (kv, key, limit, ttl) => {
-  const n = Number((await kv.get(key)) ?? 0);
+  const n = await readCount(kv, key);
   if (n >= limit) return false;
-  await kv.put(key, String(n + 1), { expirationTtl: ttl });
+  await writeCount(kv, key, n + 1, ttl);
   return true;
 };
 
@@ -72,25 +87,29 @@ export const handleOtpSend = async (req, env, json) => {
   if (!isMobile(phone)) return json(req, { error: "מספר טלפון לא תקין" }, 400);
   const kv = env.SMS_KV;
   // A code went out less than a minute ago: it is still valid, use it.
-  if (await kv.get(`cd:${phone}`)) return json(req, { ok: true, cooldown: true });
+  if ((await readCount(kv, `cd:${phone}`)) > 0) return json(req, { ok: true, cooldown: true });
   const ip = req.headers.get("CF-Connecting-IP") || "?";
   const day = israelDay();
-  const keys = { ip: `n2:ip:${ip}:${new Date().toISOString().slice(0, 13)}`, phone: `n2:p:${phone}:${day}`, all: `n2:g:${day}` };
-  // Over a limit: let the customer continue without the check rather than block the order.
-  // The IP limit counts every try (customers on the restaurant WiFi share one IP,
-  // hence 20); the phone and daily limits count only codes that really went out.
-  if (!(await bump(kv, keys.ip, LIMITS.ipPerHour, 3700))) return json(req, { ok: false, skip: true });
-  const count = async (k) => Number((await kv.get(k)) ?? 0);
-  if ((await count(keys.phone)) >= LIMITS.phonePerDay || (await count(keys.all)) >= LIMITS.globalPerDay) {
+  const hour = new Date().toISOString().slice(0, 13);
+  const keys = { tries: `n3:ipt:${ip}:${hour}`, sends: `n3:ips:${ip}:${hour}`, phone: `n3:p:${phone}:${day}`, all: `n3:g:${day}` };
+  // Over a limit: the customer continues without the check rather than being blocked.
+  // Customers on the restaurant WiFi share one IP, so tries per IP are generous;
+  // codes actually sent per IP, per phone and per day are tight.
+  if (!(await bump(kv, keys.tries, LIMITS.ipTriesPerHour, 3700))) return json(req, { ok: false, skip: true });
+  if ((await readCount(kv, keys.sends)) >= LIMITS.ipSendsPerHour
+    || (await readCount(kv, keys.phone)) >= LIMITS.phonePerDay
+    || (await readCount(kv, keys.all)) >= LIMITS.globalPerDay) {
     return json(req, { ok: false, skip: true });
   }
+  // Claim the cooldown before sending, so a second tap a moment later sends nothing.
+  await writeCount(kv, `cd:${phone}`, 1, LIMITS.phoneCooldown);
   const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
+  await kv.put(`otp:${phone}`, JSON.stringify({ h: await sha(`${phone}:${code}`), tries: 0 }), { expirationTtl: OTP_TTL });
   const sent = await sendSms(env, phone, otpText(code));
   if (!sent.ok) return json(req, { ok: false, skip: true, status: sent.status });
+  await bump(kv, keys.sends, Infinity, 3700);
   await bump(kv, keys.phone, Infinity, 90000);
   await bump(kv, keys.all, Infinity, 90000);
-  await kv.put(`otp:${phone}`, JSON.stringify({ h: await sha(`${phone}:${code}`), tries: 0 }), { expirationTtl: OTP_TTL });
-  await kv.put(`cd:${phone}`, "1", { expirationTtl: LIMITS.phoneCooldown });
   return json(req, { ok: true });
 };
 

@@ -2,6 +2,7 @@ import SoldierDonation from "@/components/SoldierDonation";
 import { maxSplitCards } from "../../supabase/functions/_shared/menu-pricing";
 import { SOLDIER_PENDING_KEY } from "@/components/SoldierFundHowItWorks";
 import { useState, useEffect, useRef, useCallback, forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removalDisplayNames, mealSideOptions, mealDrinkOptions } from "@/data/menu";
@@ -184,6 +185,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [smsPendingMethod, setSmsPendingMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
   // A ref, not state: the retry below runs in the same tick and must see it.
   const smsSkipped = useRef(false);
+  const lastCodeSent = useRef<{ phone: string; at: number } | null>(null);
   // SMS can't be sent right now: carry on without the check (never block an order).
   const continueWithoutSms = () => {
     smsSkipped.current = true;
@@ -275,7 +277,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     if (isLoggedIn && customer) {
       setForm(prev => ({ ...prev, name: customer.name, phone: customer.phone }));
       setCustomerName(customer.name);
-      if (step === "phone" || step === "otp") setStep(target);
+      // Not while the SMS code is on screen: that is our own phone check.
+      if (step === "phone") setStep(target);
       return;
     }
     if (isKiosk && RUNTIME_FLAGS.KIOSK_SKIP_PHONE && (step === "phone" || step === "otp")) {
@@ -296,9 +299,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       toast({ title: phoneCheck.error, variant: "destructive" });
       return true;
     }
+    if (sendingOtp) return true;
+    // A code went to this number less than a minute ago: show the code box again, send nothing.
+    const last = lastCodeSent.current;
+    if (last && last.phone === form.phone && Date.now() - last.at < 60_000) {
+      setStep("otp");
+      if (step === "otp") toast({ title: "הקוד נשלח לפני רגע, אפשר לבקש חדש בעוד דקה" });
+      return true;
+    }
     setSendingOtp(true);
     try {
       const r = await sendPhoneCode(form.phone);
+      if (r.result === "sent") lastCodeSent.current = { phone: form.phone, at: Date.now() };
       if (r.result === "skip") return false;
       if (r.result === "error") {
         toast({ title: r.error, variant: "destructive" });
@@ -439,6 +451,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
     // Returning customers skip the details screen, so the phone check happens here.
     if (smsCheckPhone && !smsSkipped.current && validateIsraeliPhone(form.phone).valid && !isPhoneVerified(form.phone)) {
+      if (sendingOtp) return;
       setSmsPendingMethod(method);
       handleSendOtp().then((handled) => {
         if (!handled) {
@@ -1069,12 +1082,18 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         )}
 
         {/* Step 2: OTP */}
-        {step === "otp" && (
-          <div className="space-y-4">
-            {customerName && (
-              <p className="text-primary font-bold text-lg">כיף שחזרת, {customerName} :)</p>
-            )}
-            <p className={`${th.textMuted} text-sm`}>שלחנו קוד בן 6 ספרות ב-SMS למספר <span dir="ltr">{form.phone}</span></p>
+        {/* Portal: the checkout sheet is animated (transformed), which would trap a fixed overlay inside it. */}
+        {step === "otp" && createPortal(
+          <div dir="rtl" className="fixed inset-0 z-[10050] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="otp-title">
+          <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 space-y-4 shadow-2xl">
+            <div className="text-center space-y-1">
+              <p aria-hidden className="text-5xl">📱</p>
+              <h3 id="otp-title" className={`text-2xl font-black ${th.textMain}`}>שלחנו לך קוד ב-SMS</h3>
+              <p className={`${th.textMuted} text-sm`}>
+                {customerName ? `${customerName}, ` : ""}הקלידו את 6 הספרות שנשלחו למספר <span dir="ltr" className="font-bold">{form.phone}</span>
+              </p>
+              <p className={`${th.textMuted} text-xs`}>אימות חד-פעמי: בפעם הבאה מהמכשיר הזה לא נבקש שוב</p>
+            </div>
             <div>
               <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>קוד אימות</label>
               <input
@@ -1132,9 +1151,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               disabled={sendingOtp}
               className={`text-sm ${th.textMuted} hover:text-primary transition-colors underline`}
             >
-              {sendingOtp ? "שולח..." : "שלח קוד חדש"}
+              {sendingOtp ? "שולח..." : "לא הגיע? שלח קוד חדש"}
             </button>
           </div>
+          </div>,
+          document.body,
         )}
 
         {/* Step 3: Details + Order Summary */}
