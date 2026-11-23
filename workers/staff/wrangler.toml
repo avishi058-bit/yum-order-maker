@@ -5,6 +5,11 @@
 # that does not match VAPID_PUBLIC_KEY below.
 name = "habikta-staff"
 main = "src/index.js"
+# Our own address as well: workers.dev is blocked on some networks (it failed
+# from the owner's own browser), so the website calls api.habikta-burger.com.
+routes = [{ pattern = "api.habikta-burger.com", custom_domain = true }]
+# The database still calls the workers.dev address.
+workers_dev = true
 compatibility_date = "2026-11-01"
 
 [vars]
