@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { halfText, itemPack, packPlural, staffDb } from "@/lib/staff";
 
-const RECEIPT_URL = "https://habikta-staff.avishi058.workers.dev/receipt";
+const RECEIPT_URL = "https://api.habikta-burger.com/receipt";
 
 export interface PurchaseRow {
   reportId: string;

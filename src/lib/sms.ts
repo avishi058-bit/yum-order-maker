@@ -5,7 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 
-const WORKER = "https://habikta-staff.avishi058.workers.dev";
+const WORKER = "https://api.habikta-burger.com";
 const TEST_KEY = "habikta_sms_test";
 const VERIFIED_KEY = "habikta_verified_phones";
 const VERIFIED_DAYS = 90;
