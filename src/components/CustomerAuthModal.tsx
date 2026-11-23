@@ -5,6 +5,7 @@ import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { toast } from "@/hooks/use-toast";
 import { validateIsraeliPhone } from "@/lib/utils";
 import { modalAnimations } from "@/config/uiConfig";
+import { sendPhoneCode, verifyPhoneCode, isPhoneVerified } from "@/lib/sms";
 
 interface CustomerAuthModalProps {
   open: boolean;
@@ -13,7 +14,11 @@ interface CustomerAuthModalProps {
 }
 
 const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps) => {
-  const { register } = useCustomerAuth();
+  const { register, signInVerified } = useCustomerAuth();
+  // Sign-in asks for an SMS code (once; it stays signed in until logout). A
+  // returning customer gets his name back from his last order.
+  const [codeStep, setCodeStep] = useState(false);
+  const [code, setCode] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -26,11 +31,28 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
     setTermsAccepted(false);
     setMarketingConsent(false);
     setLoading(false);
+    setCodeStep(false);
+    setCode("");
   };
 
   const handleClose = () => {
     reset();
     onClose();
+  };
+
+  const finish = async (finalName: string, verified: boolean) => {
+    if (verified) {
+      signInVerified(phone, finalName);
+      try {
+        if (marketingConsent) localStorage.setItem("habakta_marketing_pending", JSON.stringify({ phone, consent: true }));
+      } catch { /* optional */ }
+    } else {
+      // SMS not available right now: device-only sign-in, as before.
+      await register(phone, finalName, termsAccepted, marketingConsent);
+    }
+    toast({ title: `ברוך הבא, ${finalName.split(" ")[0]}! 🎉` });
+    handleClose();
+    onSuccess?.();
   };
 
   const handleSubmit = async () => {
@@ -39,24 +61,48 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
       toast({ title: phoneCheck.error, variant: "destructive" });
       return;
     }
-    if (!name.trim()) {
-      toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
-      return;
-    }
     if (!termsAccepted) {
       toast({ title: "יש לאשר את תנאי השימוש", variant: "destructive" });
       return;
     }
-
+    if (isPhoneVerified(phone) && name.trim()) {
+      await finish(name.trim(), true);
+      return;
+    }
     setLoading(true);
     try {
-      // Saved on this device only.
-      await register(phone, name.trim(), termsAccepted, marketingConsent);
-      toast({ title: `ברוך הבא, ${name.trim().split(" ")[0]}! 🎉` });
-      handleClose();
-      onSuccess?.();
-    } catch (err: any) {
-      toast({ title: err.message || "שגיאה בהתחברות", variant: "destructive" });
+      const r = await sendPhoneCode(phone);
+      if (r.result === "error") {
+        toast({ title: r.error, variant: "destructive" });
+      } else if (r.result === "sent") {
+        setCodeStep(true);
+      } else if (name.trim()) {
+        await finish(name.trim(), false);
+      } else {
+        toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (value = code) => {
+    if (value.length !== 6 || loading) return;
+    setLoading(true);
+    try {
+      const r = await verifyPhoneCode(phone, value);
+      if (!r.ok) {
+        toast({ title: r.error, variant: "destructive" });
+        return;
+      }
+      const finalName = name.trim() || (r.name ?? "").trim();
+      if (!finalName) {
+        // New customer who left the name empty: ask for it, the phone is already checked.
+        setCodeStep(false);
+        toast({ title: "המספר אומת ✅ נשאר רק להכניס שם", variant: "default" });
+        return;
+      }
+      await finish(finalName, true);
     } finally {
       setLoading(false);
     }
@@ -85,13 +131,51 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
               </button>
             </div>
 
+            {codeStep ? (
+              <div className="p-5 space-y-4 text-center">
+                <p aria-hidden className="text-5xl">📱</p>
+                <p className="text-lg font-black text-foreground">שלחנו לך קוד ב-SMS</p>
+                <p className="text-sm text-muted-foreground">הקלד/י את 6 הספרות שנשלחו למספר <span dir="ltr" className="font-bold">{phone}</span></p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setCode(v);
+                    if (v.length === 6) handleVerify(v);
+                  }}
+                  dir="ltr"
+                  placeholder="______"
+                  aria-label="קוד אימות"
+                  className="w-full py-3 rounded-xl border border-border bg-background text-foreground text-center text-2xl tracking-[0.5em] font-bold"
+                />
+                <button
+                  onClick={() => handleVerify()}
+                  disabled={loading || code.length !== 6}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading && <Loader2 size={18} className="animate-spin" />}
+                  {loading ? "מאמת..." : "אימות וכניסה"}
+                </button>
+                <button onClick={() => { setCodeStep(false); setCode(""); }} className="text-sm text-muted-foreground underline">
+                  חזרה / שינוי מספר
+                </button>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  בהזנת הקוד את/ה מאשר/ת שנשמור את השם והטלפון שלך כדי לזכור אותך ולשלוח לך SMS כשההזמנה מוכנה. אפשר להתנתק בכל רגע ולבקש מחיקה.
+                </p>
+              </div>
+            ) : (
             <div className="p-5 space-y-4">
               <div className="space-y-2">
                 <p className="text-sm text-foreground font-medium">
                   כדי שנוכל לעדכן אותך מתי ההמבורגר מוכן 🍔
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  הכנס/י טלפון ושם - הפרטים נשמרים במכשיר הזה בלבד ומשמשים למילוי אוטומטי בהזמנה הבאה :)
+                  נשלח לך קוד ב-SMS לאימות חד-פעמי, ומאז תישאר/י מחובר/ת והפרטים יתמלאו לבד בכל הזמנה :)
                 </p>
               </div>
 
@@ -112,7 +196,7 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
                 <UserPlus size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="שם מלא"
+                  placeholder="שם מלא (הזמנת אצלנו בעבר? נמלא לבד)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-background text-foreground text-right"
@@ -149,13 +233,14 @@ const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps)
 
               <button
                 onClick={handleSubmit}
-                disabled={loading || !termsAccepted || !name.trim() || !phone.trim()}
+                disabled={loading || !termsAccepted || !phone.trim()}
                 className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <UserPlus size={18} />}
                 {loading ? "מתחבר..." : "כניסה"}
               </button>
             </div>
+            )}
           </motion.div>
         </div>
       )}

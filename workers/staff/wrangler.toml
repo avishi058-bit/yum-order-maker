@@ -23,10 +23,6 @@ VAPID_SUBJECT = "mailto:shifts@habikta-burger.com"
 # SMS4Free package - empty means the owner's registered number).
 SMS_SENDER = "HaBikta"
 
-# Customer SMS: one-time codes and send limits (see src/sms.js).
-[[kv_namespaces]]
-binding = "SMS_KV"
-id = "416d00188a474ba99af08b3c30382402"
 
 # Workers AI (free daily allowance) reads the owner's shopping receipts.
 [ai]

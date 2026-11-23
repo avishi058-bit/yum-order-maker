@@ -1,17 +1,14 @@
 // SMS for customers, sent through SMS4Free (an Israeli SMS provider).
-// - /otp/send, /otp/verify: phone check on the website checkout. Codes live in
-//   KV for 10 minutes, hashed. Limits per phone, per IP and per day keep the
-//   bill small even if someone abuses the form.
+// - /sms/otp: phone-check codes. The database (otp_request / otp_verify) makes
+//   the code, keeps it hashed and applies the limits; the worker only sends it.
 // - /sms/ready: the database calls this when the kitchen marks an order ready,
 //   after claiming it (once per order). The call carries the staff VAPID private
 //   key, checked against the public key like /notify, so only the database can
-//   make the worker send.
+//   make the worker send (both endpoints).
 // The provider's key, user and password are Cloudflare secrets the owner
 // enters himself: SMS4FREE_KEY, SMS4FREE_USER, SMS4FREE_PASS.
 
 const WAZE = "https://waze.com/ul?ll=31.43473,34.54170&navigate=yes";
-const OTP_TTL = 600;
-const LIMITS = { phoneCooldown: 60, phonePerDay: 5, ipTriesPerHour: 20, ipSendsPerHour: 6, globalPerDay: 150 };
 
 const isMobile = (p) => /^05\d{8}$/.test(p);
 export const normalizePhone = (raw) => {
@@ -52,90 +49,23 @@ export const sendSms = async (env, phone, msg) => {
   return { ok: status > 0, status };
 };
 
-const sha = async (s) => {
-  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-};
-const israelDay = () => new Date(Date.now() + 2 * 3600e3).toISOString().slice(0, 10);
-
-// Limits live in two places: the Cache API of this Cloudflare location (seen at
-// once by the next request - KV can keep answering "not there" for up to a
-// minute, which let repeated taps send several codes) and KV (seen everywhere
-// a little later). A limit counts as reached if either says so.
-const cacheUrl = (key) => `https://sms-limits.habikta.internal/${encodeURIComponent(key)}`;
-const readCount = async (kv, key) => {
-  const hit = await caches.default.match(cacheUrl(key));
-  const local = hit ? Number(await hit.text()) : 0;
-  const shared = Number((await kv.get(key)) ?? 0);
-  return Math.max(local, shared);
-};
-const writeCount = async (kv, key, n, ttl) => {
-  await caches.default.put(cacheUrl(key), new Response(String(n), { headers: { "Cache-Control": `max-age=${ttl}` } }));
-  await kv.put(key, String(n), { expirationTtl: Math.max(60, ttl) });
-};
-/** Adds one; returns false (and adds nothing) when the limit is already reached. */
-const bump = async (kv, key, limit, ttl) => {
-  const n = await readCount(kv, key);
-  if (n >= limit) return false;
-  await writeCount(kv, key, n + 1, ttl);
-  return true;
-};
-
-export const handleOtpSend = async (req, env, json) => {
-  const body = await req.json().catch(() => ({}));
-  const phone = normalizePhone(body?.phone);
-  if (!isMobile(phone)) return json(req, { error: "מספר טלפון לא תקין" }, 400);
-  const kv = env.SMS_KV;
-  // A code went out less than a minute ago: it is still valid, use it.
-  if ((await readCount(kv, `cd:${phone}`)) > 0) return json(req, { ok: true, cooldown: true });
-  const ip = req.headers.get("CF-Connecting-IP") || "?";
-  const day = israelDay();
-  const hour = new Date().toISOString().slice(0, 13);
-  const keys = { tries: `n3:ipt:${ip}:${hour}`, sends: `n3:ips:${ip}:${hour}`, phone: `n3:p:${phone}:${day}`, all: `n3:g:${day}` };
-  // Over a limit: the customer continues without the check rather than being blocked.
-  // Customers on the restaurant WiFi share one IP, so tries per IP are generous;
-  // codes actually sent per IP, per phone and per day are tight.
-  if (!(await bump(kv, keys.tries, LIMITS.ipTriesPerHour, 3700))) return json(req, { ok: false, skip: true });
-  if ((await readCount(kv, keys.sends)) >= LIMITS.ipSendsPerHour
-    || (await readCount(kv, keys.phone)) >= LIMITS.phonePerDay
-    || (await readCount(kv, keys.all)) >= LIMITS.globalPerDay) {
-    return json(req, { ok: false, skip: true });
-  }
-  // Claim the cooldown before sending, so a second tap a moment later sends nothing.
-  await writeCount(kv, `cd:${phone}`, 1, LIMITS.phoneCooldown);
-  const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
-  await kv.put(`otp:${phone}`, JSON.stringify({ h: await sha(`${phone}:${code}`), tries: 0 }), { expirationTtl: OTP_TTL });
-  const sent = await sendSms(env, phone, otpText(code));
-  if (!sent.ok) return json(req, { ok: false, skip: true, status: sent.status });
-  await bump(kv, keys.sends, Infinity, 3700);
-  await bump(kv, keys.phone, Infinity, 90000);
-  await bump(kv, keys.all, Infinity, 90000);
-  return json(req, { ok: true });
-};
-
-export const handleOtpVerify = async (req, env, json) => {
-  const body = await req.json().catch(() => ({}));
-  const phone = normalizePhone(body?.phone);
-  const code = String(body?.code ?? "").replace(/\D/g, "");
-  if (!isMobile(phone) || code.length !== 6) return json(req, { error: "קוד שגוי" }, 400);
-  const kv = env.SMS_KV;
-  const rec = JSON.parse((await kv.get(`otp:${phone}`)) ?? "null");
-  if (!rec) return json(req, { error: "הקוד פג, שלחו קוד חדש" }, 410);
-  if (rec.h === (await sha(`${phone}:${code}`))) {
-    await kv.delete(`otp:${phone}`);
-    return json(req, { ok: true });
-  }
-  rec.tries += 1;
-  if (rec.tries >= 5) await kv.delete(`otp:${phone}`);
-  else await kv.put(`otp:${phone}`, JSON.stringify(rec), { expirationTtl: OTP_TTL });
-  return json(req, { error: rec.tries >= 5 ? "יותר מדי ניסיונות, שלחו קוד חדש" : "קוד שגוי" }, 400);
-};
-
 export const handleReady = async (req, env, checkKey) => {
   const body = await req.json().catch(() => ({}));
   try { await checkKey(env, body?.vapid_private); } catch { return new Response("forbidden", { status: 403 }); }
   const phone = normalizePhone(body?.phone);
   if (!isMobile(phone)) return new Response("bad", { status: 400 });
   const out = await sendSms(env, phone, readyText(body?.kind, firstName(body?.name)));
+  return Response.json({ ok: out.ok, status: out.status });
+};
+
+// /sms/otp: the database (otp_request) asks for a phone-check code to be sent.
+// Same VAPID check as /sms/ready, so only the database can use it.
+export const handleOtpSms = async (req, env, checkKey) => {
+  const body = await req.json().catch(() => ({}));
+  try { await checkKey(env, body?.vapid_private); } catch { return new Response("forbidden", { status: 403 }); }
+  const phone = normalizePhone(body?.phone);
+  const code = String(body?.code ?? "");
+  if (!isMobile(phone) || !/^\d{6}$/.test(code)) return new Response("bad", { status: 400 });
+  const out = await sendSms(env, phone, otpText(code));
   return Response.json({ ok: out.ok, status: out.status });
 };

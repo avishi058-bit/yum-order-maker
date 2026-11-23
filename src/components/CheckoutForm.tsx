@@ -82,7 +82,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const { trigger: triggerSkibidi } = useSkibidiGuard();
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
-  const { customer, isLoggedIn, linkFromOrder, favoriteItems } = useCustomerAuth();
+  const { customer, isLoggedIn, linkFromOrder, favoriteItems, signInVerified } = useCustomerAuth();
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && /^\/kiosk\/?$/.test(window.location.pathname);
   const { isStaff } = useAuth();
@@ -179,7 +179,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [smsOn] = useState(smsEnabled);
   const [smsReady, setSmsReady] = useState(false);
   const [smsPhone, setSmsPhone] = useState("");
-  // Returning customers too: every phone is checked once per device (then remembered 90 days).
+  // Returning customers too: every phone is checked once per device (then remembered until logout).
   const smsCheckPhone = !isKiosk && smsOn && localStorage.getItem("habakta_station") !== "true";
   // Payment method chosen before the code was asked for; continued after it is verified.
   const [smsPendingMethod, setSmsPendingMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
@@ -307,21 +307,24 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       if (step === "otp") toast({ title: "הקוד נשלח לפני רגע, אפשר לבקש חדש בעוד דקה" });
       return true;
     }
+    // Open the code box right away (showing "sending") so nothing seems to vanish.
+    const wasOtp = step === "otp";
+    const back = step;
     setSendingOtp(true);
+    if (!wasOtp) { setOtpCode(""); setStep("otp"); }
     try {
       const r = await sendPhoneCode(form.phone);
       if (r.result === "sent") lastCodeSent.current = { phone: form.phone, at: Date.now() };
-      if (r.result === "skip") return false;
+      if (r.result === "skip") {
+        if (!wasOtp) setStep(back);
+        return false;
+      }
       if (r.result === "error") {
+        if (!wasOtp) setStep(back);
         toast({ title: r.error, variant: "destructive" });
         return true;
       }
-      if (r.cooldown && step === "otp") {
-        toast({ title: "הקוד נשלח לפני רגע, אפשר לבקש חדש בעוד דקה" });
-        return true;
-      }
-      setOtpCode("");
-      setStep("otp");
+      if (r.cooldown && wasOtp) toast({ title: "הקוד נשלח לפני רגע, אפשר לבקש חדש בעוד דקה" });
       return true;
     } finally {
       setSendingOtp(false);
@@ -341,6 +344,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         toast({ title: r.error, variant: "destructive" });
         return;
       }
+      // Signed in from now on (until logout); a returning customer gets his name back.
+      const name = form.name.trim() || (r.name ?? "").trim();
+      if (!form.name.trim() && r.name) setForm((prev) => ({ ...prev, name: r.name ?? prev.name }));
+      if (!isLoggedIn && name) signInVerified(form.phone, name);
       toast({ title: "המספר אומת ✅" });
       if (smsPendingMethod) {
         const m = smsPendingMethod;
@@ -1088,11 +1095,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
           <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 space-y-4 shadow-2xl">
             <div className="text-center space-y-1">
               <p aria-hidden className="text-5xl">📱</p>
-              <h3 id="otp-title" className={`text-2xl font-black ${th.textMain}`}>שלחנו לך קוד ב-SMS</h3>
+              <h3 id="otp-title" className={`text-2xl font-black ${th.textMain}`}>{sendingOtp ? "שולחים לך קוד ב-SMS..." : "שלחנו לך קוד ב-SMS"}</h3>
               <p className={`${th.textMuted} text-sm`}>
                 {customerName ? `${customerName}, ` : ""}הקלידו את 6 הספרות שנשלחו למספר <span dir="ltr" className="font-bold">{form.phone}</span>
               </p>
-              <p className={`${th.textMuted} text-xs`}>אימות חד-פעמי: בפעם הבאה מהמכשיר הזה לא נבקש שוב</p>
+              <p className={`${th.textMuted} text-xs`}>אימות חד-פעמי: נשאיר אותך מחובר/ת ולא נבקש שוב</p>
             </div>
             <div>
               <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>קוד אימות</label>
@@ -1153,6 +1160,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             >
               {sendingOtp ? "שולח..." : "לא הגיע? שלח קוד חדש"}
             </button>
+            <p className={`${th.textMuted} text-[11px] leading-snug`}>
+              בהזנת הקוד את/ה מאשר/ת שנשמור את השם והטלפון שלך כדי לזכור אותך בהזמנות הבאות ולשלוח לך SMS כשההזמנה מוכנה.
+              אפשר להתנתק בכל רגע, ולבקש מאיתנו למחוק את הפרטים. פרטים ב<a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">מדיניות הפרטיות</a>.
+            </p>
           </div>
           </div>,
           document.body,

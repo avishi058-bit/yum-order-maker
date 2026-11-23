@@ -3,8 +3,8 @@
 //                    Sends each message as Web Push (RFC 8291 aes128gcm + VAPID).
 //   GET  /calendar?t=<token> - iCal feed of the person's published shifts.
 //   GET  /health   - "ok"
-//   POST /otp/send, /otp/verify, /sms/ready - customer SMS (see sms.js).
-import { handleOtpSend, handleOtpVerify, handleReady } from "./sms.js";
+//   POST /sms/otp, /sms/ready - customer SMS, called by the database (see sms.js).
+import { handleOtpSms, handleReady } from "./sms.js";
 
 const enc = new TextEncoder();
 const b64uToBytes = (s) => {
@@ -209,9 +209,8 @@ Answer with JSON only, no other text: [{"n": <list number>, "quantity": <number>
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    if ((url.pathname === "/receipt" || url.pathname.startsWith("/otp/")) && req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
-    if (url.pathname === "/otp/send" && req.method === "POST") return handleOtpSend(req, env, json);
-    if (url.pathname === "/otp/verify" && req.method === "POST") return handleOtpVerify(req, env, json);
+    if (url.pathname === "/receipt" && req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
+    if (url.pathname === "/sms/otp" && req.method === "POST") return handleOtpSms(req, env, getSigningKey);
     if (url.pathname === "/sms/ready" && req.method === "POST") return handleReady(req, env, getSigningKey);
     if (url.pathname === "/receipt" && req.method === "POST") return handleReceipt(req, env);
     if (url.pathname === "/notify" && req.method === "POST") return handleNotify(req, env);

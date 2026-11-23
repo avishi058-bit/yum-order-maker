@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { forgetVerifiedPhones } from "@/lib/sms";
 import type { CartItem } from "@/components/CartDrawer";
 
 const DEVICE_TOKEN_KEY = "habakta_device_token";
@@ -77,6 +78,8 @@ interface CustomerAuthContextType {
   setFavoriteItems: (items: CartItem[] | null) => Promise<void>;
   register: (phone: string, name: string, termsAccepted: boolean, marketingConsent: boolean) => Promise<void>;
   login: (phone: string) => Promise<void>;
+  /** After the phone was checked by SMS code: keep this customer signed in on this device. */
+  signInVerified: (phone: string, name: string) => void;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   linkFromOrder: (phone: string, name: string) => Promise<void>;
@@ -137,7 +140,13 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     throw new Error("not_supported");
   }, []);
 
+  const signInVerified = useCallback((phone: string, name: string) => {
+    saveLocal(phone, name);
+  }, [saveLocal]);
+
   const clearAll = useCallback(() => {
+    // Signing out also forgets the SMS check: signing back in asks for a code.
+    forgetVerifiedPhones();
     localStorage.removeItem(CUSTOMER_KEY);
     localStorage.removeItem(FAVORITE_KEY);
     setCustomer(null);
@@ -173,7 +182,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     <CustomerAuthContext.Provider value={{
       customer, loading, isLoggedIn: !!customer,
       favoriteItems, setFavoriteItems,
-      register, login, logout, logoutAll, linkFromOrder, updateName,
+      register, login, signInVerified, logout, logoutAll, linkFromOrder, updateName,
     }}>
       {children}
     </CustomerAuthContext.Provider>

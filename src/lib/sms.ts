@@ -1,14 +1,14 @@
-// Customer SMS through the staff worker (Cloudflare) and SMS4Free.
-// Phone check codes: /otp/send and /otp/verify. "Ready" SMS opt-in for dine-in
-// and kiosk orders: the order_sms_optin RPC (the database sends the SMS itself
-// when the kitchen marks the order ready).
+// Customer SMS (SMS4Free, sent by the staff worker on the database's behalf).
+// Phone check: otp_request / otp_request_status / otp_verify RPCs. The database
+// makes the code, applies the limits and has the worker send it. A phone checked
+// on this device stays checked until the customer logs out.
+// "Ready" SMS opt-in for dine-in and kiosk orders: the order_sms_optin RPC (the
+// database sends the SMS when the kitchen marks the order ready).
 import { supabase } from "@/integrations/supabase/client";
 import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 
-const WORKER = "https://api.habikta-burger.com";
 const TEST_KEY = "habikta_sms_test";
 const VERIFIED_KEY = "habikta_verified_phones";
-const VERIFIED_DAYS = 90;
 
 /** On for everyone once the flag is on; before that only on a device opened once with ?smstest=1. */
 export const smsEnabled = (): boolean => {
@@ -25,12 +25,15 @@ export const smsEnabled = (): boolean => {
 
 const cleanPhone = (p: string) => p.replace(/\D/g, "").replace(/^972/, "0");
 
-/** Phones verified on this device recently don't need a code again. */
+// The RPCs are not in the generated types (types.ts is never edited by hand).
+const rpc = <T,>(fn: string, args: object) =>
+  (supabase as unknown as { rpc: (f: string, a: object) => Promise<{ data: T | null; error: unknown }> }).rpc(fn, args);
+
+/** Phones checked on this device (until logout). */
 export const isPhoneVerified = (phone: string): boolean => {
   try {
     const map = JSON.parse(localStorage.getItem(VERIFIED_KEY) ?? "{}") as Record<string, number>;
-    const at = map[cleanPhone(phone)];
-    return !!at && Date.now() - at < VERIFIED_DAYS * 864e5;
+    return !!map[cleanPhone(phone)];
   } catch {
     return false;
   }
@@ -42,35 +45,48 @@ const rememberVerified = (phone: string) => {
     localStorage.setItem(VERIFIED_KEY, JSON.stringify(map));
   } catch { /* storage blocked: the customer just gets a code next time */ }
 };
-
-const post = async (path: string, body: unknown) => {
-  const res = await fetch(`${WORKER}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  return { ok: res.ok, data: data as { ok?: boolean; skip?: boolean; cooldown?: boolean; error?: string } };
+/** Logout: the next order on this device asks for a code again. */
+export const forgetVerifiedPhones = () => {
+  try { localStorage.removeItem(VERIFIED_KEY); } catch { /* nothing to forget */ }
 };
 
-/** "sent": code on its way. "skip": SMS not available now, continue without it. "error": show the message. */
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * "sent": code on its way (or one went out less than a minute ago - still valid).
+ * "skip": SMS not available now (limit or provider down): continue without the check.
+ * "error": show the message (bad number).
+ */
 export const sendPhoneCode = async (phone: string): Promise<{ result: "sent" | "skip" | "error"; cooldown?: boolean; error?: string }> => {
   try {
-    const { ok, data } = await post("/otp/send", { phone: cleanPhone(phone) });
-    if (ok && data.ok) return { result: "sent", cooldown: !!data.cooldown };
-    if (ok && data.skip) return { result: "skip" };
-    return { result: "error", error: data.error || "שגיאה בשליחת הקוד" };
+    const { data, error } = await rpc<{ ok?: boolean; skip?: boolean; cooldown?: boolean; req?: number; error?: string }>(
+      "otp_request", { p_phone: cleanPhone(phone) });
+    if (error || !data) return { result: "skip" };
+    if (data.error) return { result: "error", error: data.error };
+    if (!data.ok) return { result: "skip" };
+    if (data.cooldown) return { result: "sent", cooldown: true };
+    // Wait (up to ~8 seconds) to learn whether the SMS really went out.
+    for (let i = 0; i < 12 && data.req; i++) {
+      await sleep(i === 0 ? 900 : 600);
+      const st = await rpc<string>("otp_request_status", { p_req: data.req });
+      if (st.data === "sent") return { result: "sent" };
+      if (st.data === "failed") return { result: "skip" };
+    }
+    return { result: "sent" };
   } catch {
     return { result: "skip" };
   }
 };
 
-export const verifyPhoneCode = async (phone: string, code: string): Promise<{ ok: boolean; error?: string }> => {
+/** On success also returns the name from this phone's last order (to fill in the details). */
+export const verifyPhoneCode = async (phone: string, code: string): Promise<{ ok: boolean; name?: string | null; error?: string }> => {
   try {
-    const { ok, data } = await post("/otp/verify", { phone: cleanPhone(phone), code });
-    if (ok && data.ok) {
+    const { data, error } = await rpc<{ ok?: boolean; name?: string | null; error?: string }>(
+      "otp_verify", { p_phone: cleanPhone(phone), p_code: code });
+    if (error || !data) return { ok: false, error: "אין חיבור, נסו שוב" };
+    if (data.ok) {
       rememberVerified(phone);
-      return { ok: true };
+      return { ok: true, name: data.name ?? null };
     }
     return { ok: false, error: data.error || "קוד שגוי" };
   } catch {
@@ -81,11 +97,6 @@ export const verifyPhoneCode = async (phone: string, code: string): Promise<{ ok
 /** Ask for a "ready" SMS for this order. Never throws: the order is already placed. */
 export const optInReadySms = async (orderId: string, phone: string) => {
   try {
-    // Not in the generated types (types.ts is never edited by hand).
-    const db = supabase as unknown as { rpc: (fn: string, args: object) => Promise<unknown> };
-    await db.rpc("order_sms_optin", {
-      p_order: orderId,
-      p_phone: cleanPhone(phone),
-    });
+    await rpc("order_sms_optin", { p_order: orderId, p_phone: cleanPhone(phone) });
   } catch { /* the order matters more than the SMS */ }
 };
