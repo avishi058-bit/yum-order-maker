@@ -753,7 +753,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
    *  the item is added to the cart. */
   const nameStepEnabled = isBurger && dineIn === false;
 
-  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string, skipNameStep = false) => {
+  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string, skipNameStep = false, countsOverride?: Record<string, number>) => {
     if (nameStepEnabled && !skipNameStep) {
       setPendingFinish({ withMeal, sideId, drinkId });
       setNameStepOpen(true);
@@ -767,7 +767,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       ...computeRemovals(),
       ...(includeDoneness ? [selectedDoneness] : []),
     ];
-    const sideItems = Object.entries(sideItemCounts)
+    const sideItems = Object.entries(countsOverride ?? sideItemCounts)
       .filter(([, q]) => q > 0)
       .map(([key, qty]) => {
         const [itemId, subId] = key.split("::");
@@ -843,7 +843,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     (drinkSubOptions[baseId] || []).forEach((sub) => {
       const availId = drinkToAvailabilityId[sub.id] || sub.id;
       if (isAvailable && !isAvailable(availId)) return;
-      extraDrinkRows.push({ key: `${baseId}::${sub.id}`, name: sub.name, price: base.price, image: extraDrinkImage(sub.id) });
+      const label = baseId === "flavored-water" ? `מים בטעם ${sub.name}` : sub.name;
+      extraDrinkRows.push({ key: `${baseId}::${sub.id}`, name: label, price: base.price, image: extraDrinkImage(sub.id) });
     });
   });
   ["water", "soda", "fuze-tea"].forEach((id) => {
@@ -860,6 +861,39 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     const m = menuItems.find((mi) => mi.id === itemId);
     return sum + (m ? m.price * qty : 0);
   }, 0);
+
+  // Picked both a side and a drink separately? Offer to make it a meal instead.
+  const extraToMealSide: Record<string, string> = {
+    fries: "side-fries", "sweet-potato-fries": "side-sweet-potato", "onion-rings": "side-onion-rings", "tempura-onion": "side-tempura",
+  };
+  const mealDrinkFor = (key: string) => {
+    const [baseId, subId] = key.split("::");
+    const id = subId || baseId;
+    const avail = drinkToAvailabilityId[id] || ({ water: "drink-water", soda: "drink-soda", "fuze-tea": "drink-fuze-tea" } as Record<string, string>)[id] || id;
+    return mealDrinkOptions.find((d) => d.id === avail || d.id === avail.replace(/^drink-(watermelon|mojito)$/, "drink-blu-$1"));
+  };
+  const priceOfKey = (key: string) => menuItems.find((m) => m.id === key.split("::")[0])?.price ?? 0;
+  const mergeOffer = (() => {
+    if (!isBurger || quantity !== 1) return null;
+    const picked = Object.entries(sideItemCounts).filter(([, q]) => q > 0).map(([k]) => k);
+    const sideKey = picked.find((k) => extraToMealSide[k] && !isSideUnavailable(extraToMealSide[k]));
+    const drinkKey = picked.find((k) => !extraToMealSide[k] && mealDrinkFor(k) && !isDrinkUnavailable(mealDrinkFor(k)!.id));
+    if (!sideKey || !drinkKey) return null;
+    const side = mealSideOptions.find((o) => o.id === extraToMealSide[sideKey]);
+    const drink = mealDrinkFor(drinkKey)!;
+    const separate = priceOfKey(sideKey) + priceOfKey(drinkKey);
+    const asMeal = mealUpgrade.price + (side?.price ?? 0) + drink.price;
+    if (asMeal >= separate) return null;
+    return { sideKey, drinkKey, sideId: extraToMealSide[sideKey], drinkId: drink.id, separate, asMeal, saving: separate - asMeal };
+  })();
+  const mergeToMeal = () => {
+    if (!mergeOffer) return;
+    const next = { ...sideItemCounts };
+    next[mergeOffer.sideKey] = Math.max(0, (next[mergeOffer.sideKey] || 0) - 1);
+    next[mergeOffer.drinkKey] = Math.max(0, (next[mergeOffer.drinkKey] || 0) - 1);
+    setSideItemCounts(next);
+    handleFinish(true, mergeOffer.sideId, mergeOffer.drinkId, false, next);
+  };
 
   const StepperRow = ({ rowKey, name, price, image }: { rowKey: string; name: string; price: number; image?: string }) => {
     const count = sideItemCounts[rowKey] || 0;
@@ -1535,7 +1569,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     onScroll={markScroll}
                   >
                     <h3 className={`font-black text-center leading-tight ${isKiosk ? "text-[44px] mb-3" : "text-[26px] mb-2"}`}>רוצה להוסיף צ׳יפס או שתייה?</h3>
-                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[22px] mb-6" : "text-base mb-4"}`}>מחיר מלא, אפשר גם לדלג</p>
+                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[22px] mb-6" : "text-base mb-4"}`}><b className="text-gray-900">בנפרד</b>, לא כחלק מארוחה עסקית · אפשר גם לדלג</p>
 
                     {extraSideItems.length > 0 && (
                       <>
@@ -1561,6 +1595,20 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
                     {/* Floating: always visible at the bottom while scrolling the list */}
                     <div className={`sticky z-10 bg-white border-t border-gray-100 ${isKiosk ? "-bottom-8 -mx-8 px-8 pb-8 pt-4 mt-6" : "-bottom-6 -mx-5 px-5 pb-6 pt-3 mt-4"}`}>
+                      {mergeOffer && (
+                        <div className={`rounded-2xl bg-green-50 border-2 border-green-600 text-center ${isKiosk ? "p-4 mb-4" : "p-3 mb-3"}`}>
+                          <p className={`font-bold ${isKiosk ? "text-[22px]" : "text-base"}`}>
+                            צ׳יפס + שתייה? בארוחה עסקית זה רק <b>+₪{mergeOffer.asMeal}</b> במקום ₪{mergeOffer.separate}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={mergeToMeal}
+                            className={`w-full mt-2 bg-green-600 text-white font-black rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-4 text-[24px]" : "py-3 text-lg"}`}
+                          >
+                            לאחד לעסקית ולחסוך ₪{mergeOffer.saving} 🍟🥤
+                          </button>
+                        </div>
+                      )}
                       <button
                         onClick={() => handleFinish(false)}
                         className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
