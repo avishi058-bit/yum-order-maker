@@ -556,9 +556,9 @@ const Index = () => {
 
       {activeGroup && (
         <div className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-primary px-4 py-2 text-sm font-bold text-primary-foreground" dir="rtl">
-          <span className="min-w-0 truncate">הזמנה קבוצתית של {activeGroup.organizer} · מזמין/ה בתור {activeGroup.name}</span>
+          <span className="min-w-0 truncate">👥 בקבוצה של {activeGroup.organizer} · מזמין/ה בתור {activeGroup.name}</span>
           <span className="flex shrink-0 gap-3">
-            <a href={`/group/${activeGroup.code}`} className="underline underline-offset-2">לקבוצה</a>
+            <a href={`/group/${activeGroup.code}`} className="rounded-full bg-primary-foreground/20 px-3 py-0.5">לקבוצה</a>
             <button type="button" className="opacity-80" onClick={() => { setActiveGroup(null); setDineIn(null); }}>יציאה</button>
           </span>
         </div>
