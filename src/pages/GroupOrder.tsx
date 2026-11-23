@@ -7,7 +7,10 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, CheckCircle2, Clock, Copy, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useRestaurantStatus } from "@/hooks/useRestaurantStatus";
+import { useGroupPresence, type GroupPresence } from "@/hooks/useGroupPresence";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.webp";
 import {
@@ -42,6 +45,28 @@ const Shell = ({ title, subtitle, children }: { title: string; subtitle?: string
     </header>
     <div className="mx-auto w-full max-w-md space-y-5 px-4 pb-12">{children}</div>
   </main>
+);
+
+// WhatsApp-style "typing" dots.
+const TypingDots = () => (
+  <span className="inline-flex items-end gap-0.5 align-middle" aria-hidden>
+    {[0, 1, 2].map((i) => (
+      <motion.span
+        key={i}
+        className="h-1.5 w-1.5 rounded-full bg-current"
+        animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
+        transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+      />
+    ))}
+  </span>
+);
+const activityText = (p: GroupPresence) => (p.state === "paying" ? "בתשלום" : "בונה הזמנה");
+
+// Group orders go straight to the kitchen, so only while the site takes orders.
+const ClosedNote = () => (
+  <div className="rounded-2xl border-2 border-destructive/40 bg-destructive/10 p-4 text-center font-bold text-destructive">
+    המטבח סגור כרגע. הזמנה קבוצתית אפשר לעשות רק כשאנחנו פתוחים.
+  </div>
 );
 
 // The name of a customer signed in on this device, if any.
@@ -90,6 +115,8 @@ const CreateGroup = () => {
   const navigate = useNavigate();
   const [name, setName] = useState(savedName);
   const [dineIn, setDineIn] = useState<boolean | null>(null);
+  const { status: shop, resolved } = useRestaurantStatus();
+  const closed = resolved && !shop.website_open;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -130,7 +157,8 @@ const CreateGroup = () => {
       <DineSwitch value={dineIn} onChange={setDineIn} />
 
       {error && <p className="text-center font-bold text-destructive">{error}</p>}
-      <button className={primaryBtn} onClick={submit} disabled={busy}>
+      {closed && <ClosedNote />}
+      <button className={primaryBtn} onClick={submit} disabled={busy || closed}>
         {busy ? "פותחים..." : "פותחים קבוצה"}
       </button>
     </Shell>
@@ -149,11 +177,33 @@ const GroupView = ({ code }: { code: string }) => {
   const [copied, setCopied] = useState(false);
   const { armed, tap } = useConfirmTap();
   const manager = canManage(code);
+  const { status: shop, resolved } = useRestaurantStatus();
+  const closed = resolved && !shop.website_open;
+  const presence = useGroupPresence(code);
   const link = `${window.location.origin}/group/${code}`;
 
+  // What changed since the last look: joined, paid, removed. Shown to everyone.
+  const seen = useRef<Map<string, { name: string; state: string; count: number }> | null>(null);
+  const announce = useCallback((g: GroupInfo) => {
+    const prev = seen.current;
+    const next = new Map(g.members.map((m) => [m.order_id, { name: m.name, state: m.state, count: (m.items ?? []).reduce((s, it) => s + it.qty, 0) }]));
+    seen.current = next;
+    if (!prev) return;
+    for (const [id, m] of next) {
+      const before = prev.get(id);
+      if (!before) toast(`${m.name} בפנים עם ${m.count === 1 ? "מנה אחת" : `${m.count} מנות`}`);
+      if (before?.state === "unpaid" && m.state === "paid") toast.success(`התשלום של ${m.name} התקבל ✓`);
+    }
+    for (const [id, m] of prev) if (!next.has(id)) toast(`המנה של ${m.name} הורדה`);
+  }, []);
+
   const load = useCallback(async () => {
-    try { setGroup(await fetchGroup(code)); } catch { /* keep the last view; next poll retries */ }
-  }, [code]);
+    try {
+      const g = await fetchGroup(code);
+      setGroup(g);
+      if (g) announce(g);
+    } catch { /* keep the last view; next poll retries */ }
+  }, [code, announce]);
 
   useEffect(() => {
     void load();
@@ -185,7 +235,7 @@ const GroupView = ({ code }: { code: string }) => {
   };
 
   const shareWhatsApp = () => {
-    const text = `מזמינים ביחד מהבקתה 🍔 כל אחד בוחר ומשלם על עצמו:\n${link}`;
+    const text = `עושים הזמנה קבוצתית מהמבורגר הבקתה 🍔\nפתחתי הזמנה משותפת - כל אחד מזמין דרך הקישור, משלם על עצמו, וזה מצטרף להזמנה הקבוצתית.\nכשכולם משלמים, ההזמנה יוצאת למטבח ביחד.\n${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
   };
   const copy = async () => {
@@ -223,6 +273,11 @@ const GroupView = ({ code }: { code: string }) => {
   const sum = members.reduce((s, m) => s + Number(m.total), 0);
   const open = group.status === "open";
   const iOrdered = members.some((m) => isMine(code, m.order_id));
+  const memberNames = new Set(members.map((m) => m.name));
+  const liveOf = (name: string) => presence.find((p) => p.name === name);
+  // On the menu right now but nothing in the group yet: shown like "typing...".
+  const ghosts = open ? presence.filter((p) => !memberNames.has(p.name)) : [];
+  const stillBuilding = open ? presence.map((p) => p.name) : [];
 
   return (
     <Shell title={`הקבוצה של ${group.organizer}`} subtitle={group.dine_in ? "יושבים בבקתה" : "לוקחים מהבקתה"}>
@@ -250,14 +305,27 @@ const GroupView = ({ code }: { code: string }) => {
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
             {group.status === "locked"
-              ? `הקבוצה סגורה. ההזמנה יוצאת למטבח ברגע ש${unpaid.length === 1 ? `${unpaid[0].name} משלם/ת` : "כולם משלמים"}.`
-              : `ההזמנה יוצאת למטבח כש${manager ? "סוגרים" : `${group.organizer} סוגר/ת`} את הקבוצה וכולם שילמו.`}
+              ? `${group.organizer} שלח/ה את ההזמנה. היא יוצאת למטבח ברגע ש${unpaid.length === 1 ? `${unpaid[0].name} משלם/ת` : "כולם משלמים"}.`
+              : `ההזמנה יוצאת למטבח כש${manager ? "שולחים אותה" : `${group.organizer} שולח/ת אותה`} וכולם שילמו.`}
           </p>
         </div>
       ) : null}
 
+      {/* The organizer's job, said plainly */}
+      {manager && open && (
+        <div className="rounded-2xl border-2 border-primary/50 bg-primary/10 p-4">
+          <p className="text-lg font-black">👑 את/ה המארגן/ת של הקבוצה</p>
+          <p className="mt-1 leading-relaxed">
+            כל אחד מזמין ומשלם בעצמו. כשכולם סיימו להזמין, לוחצים למטה על <b>"לשלוח את ההזמנה למטבח"</b>.
+            עד שלוחצים - ההזמנה לא יוצאת.
+          </p>
+        </div>
+      )}
+
+      {open && closed && <ClosedNote />}
+
       {/* Order + invite */}
-      {open && (
+      {open && !closed && (
         <div className="space-y-3">
           {askName ? (
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -291,7 +359,16 @@ const GroupView = ({ code }: { code: string }) => {
       {/* Who is in */}
       <section className="space-y-3">
         <h2 className="text-2xl font-black">מי בפנים</h2>
-        {members.length === 0 ? (
+        {ghosts.map((p) => (
+          <div key={`live-${p.name}`} className="flex items-center gap-3 rounded-2xl border border-dashed border-primary/50 bg-card/60 p-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-lg font-black text-primary">
+              {p.name.trim().charAt(0)}
+            </span>
+            <p className="text-lg font-black">{p.name}</p>
+            <p className="mr-auto flex items-center gap-1.5 text-sm font-bold text-primary">{activityText(p)} <TypingDots /></p>
+          </div>
+        ))}
+        {members.length === 0 && ghosts.length === 0 ? (
           <p className="rounded-2xl border-2 border-dashed border-border p-6 text-center text-muted-foreground">
             עוד אף אחד לא הזמין. שלחו את הקישור והתחילו לבחור.
           </p>
@@ -308,9 +385,15 @@ const GroupView = ({ code }: { code: string }) => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-lg font-black">{m.name}{mine && <span className="text-sm font-bold text-muted-foreground"> · את/ה</span>}</p>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {(m.items ?? []).map((it) => (it.qty > 1 ? `${it.name} ×${it.qty}` : it.name)).join(", ")}
-                    </p>
+                    {open && liveOf(m.name) ? (
+                      <p className="flex items-center gap-1.5 text-sm font-bold text-primary">
+                        {liveOf(m.name)!.state === "paying" ? "בתשלום" : "מוסיף/ה עוד מנה"} <TypingDots />
+                      </p>
+                    ) : (
+                      <p className="truncate text-sm text-muted-foreground">
+                        {(m.items ?? []).map((it) => (it.qty > 1 ? `${it.name} ×${it.qty}` : it.name)).join(", ")}
+                      </p>
+                    )}
                   </div>
                   <div className="shrink-0 text-left">
                     <p className="font-black">{shekel(m.total)}</p>
@@ -323,7 +406,7 @@ const GroupView = ({ code }: { code: string }) => {
                   <div className="mt-3 flex gap-2">
                     <button
                       onClick={() => pay(m.order_id)}
-                      disabled={!!busy}
+                      disabled={!!busy || closed}
                       className="h-12 flex-1 rounded-[2rem] bg-primary font-black text-primary-foreground transition-all active:scale-[0.98] disabled:opacity-50"
                     >
                       {busy === `pay-${m.order_id}` ? "פותח תשלום..." : mine ? "לשלם" : `לשלם על ${m.name}`}
@@ -347,17 +430,28 @@ const GroupView = ({ code }: { code: string }) => {
 
       {error && <p className="text-center font-bold text-destructive">{error}</p>}
 
-      {/* Organizer: everyone's in */}
-      {manager && open && members.length > 0 && (
+      {/* Organizer: everyone's in - send it */}
+      {manager && open && members.length > 0 && !closed && (
         <div className="space-y-2 pt-2">
+          {stillBuilding.length > 0 && (
+            <p className="flex items-center justify-center gap-1.5 text-center text-sm font-bold text-primary">
+              {stillBuilding.join(", ")} {stillBuilding.length === 1 ? "עוד בונה הזמנה" : "עוד בונים הזמנה"} <TypingDots />
+            </p>
+          )}
           <button
-            onClick={() => tap("lock", () => void run("lock", () => lockGroup(code), "לא הצלחנו לסגור את הקבוצה"))}
+            onClick={() => tap("lock", () => void run("lock", () => lockGroup(code), "לא הצלחנו לשלוח את ההזמנה"))}
             disabled={!!busy}
-            className={`${bigBtn} border-2 ${armed === "lock" ? "border-primary bg-primary text-primary-foreground" : "border-primary/60 bg-secondary/80 text-foreground"}`}
+            className={`${bigBtn} ${armed === "lock" ? "bg-primary text-primary-foreground" : "bg-green text-white"} shadow-2xl`}
           >
-            {busy === "lock" ? "סוגרים..." : armed === "lock" ? "בטוח? לחיצה נוספת סוגרת" : "כולם הזמינו - לסגור את הקבוצה"}
+            {busy === "lock"
+              ? "שולחים..."
+              : armed === "lock"
+                ? stillBuilding.length > 0 ? "לשלוח בלי לחכות להם?" : "בטוח? לחיצה נוספת שולחת"
+                : "כולם הזמינו - לשלוח את ההזמנה למטבח"}
           </button>
-          <p className="text-center text-sm text-muted-foreground">אחרי הסגירה אי אפשר להוסיף מנות</p>
+          <p className="text-center text-sm text-muted-foreground">
+            אחרי השליחה אי אפשר להוסיף מנות. מי שעוד לא שילם - ההזמנה תצא ברגע שישלם.
+          </p>
         </div>
       )}
     </Shell>

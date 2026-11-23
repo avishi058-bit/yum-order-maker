@@ -586,7 +586,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         soldierFundTermsAcceptedAt: soldierDonation > 0 ? soldierTermsAt : null,
         // Preorder pickup time (optional). ISO datetime built from today + HH:MM.
         scheduledFor: (() => {
-          if (!preorderEnabled || !preorderTime) return null;
+          if (group || !preorderEnabled || !preorderTime) return null;
           const [h, m] = preorderTime.split(":").map(Number);
           if (Number.isNaN(h) || Number.isNaN(m)) return null;
           const d = new Date();
@@ -1313,7 +1313,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
             {/* 🕒 Preorder - schedule pickup for later within the allowed window */}
-            {restaurantStatus.preorder_enabled && (() => {
+            {/* Not for group orders: the group goes to the kitchen as soon as everyone paid. */}
+            {restaurantStatus.preorder_enabled && !group && (() => {
               const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
               const end = (restaurantStatus.preorder_end_time || "22:00").slice(0, 5);
               return (

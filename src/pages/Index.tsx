@@ -69,6 +69,7 @@ import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "sonner";
 import { getActiveGroup, setActiveGroup, type ActiveGroup } from "@/lib/groupSession";
+import { useTrackGroupPresence } from "@/hooks/useGroupPresence";
 
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 
@@ -258,6 +259,8 @@ const Index = () => {
       sauceSelectorOpen ||
       !!previewItem);
   useTrackCustomerActivity(isBuildingOrder);
+  // Group page shows "X בונה הזמנה..." / "X בתשלום..." to everyone in the group.
+  useTrackGroupPresence(activeGroup?.code ?? null, activeGroup?.name ?? "", checkoutOpen ? "paying" : "building");
 
   const openItemFlow = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
