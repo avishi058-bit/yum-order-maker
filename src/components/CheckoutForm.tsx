@@ -178,7 +178,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [smsOn] = useState(smsEnabled);
   const [smsReady, setSmsReady] = useState(false);
   const [smsPhone, setSmsPhone] = useState("");
-  const smsCheckPhone = !isKiosk && !isLoggedIn && smsOn && localStorage.getItem("habakta_station") !== "true";
+  // Returning customers too: every phone is checked once per device (then remembered 90 days).
+  const smsCheckPhone = !isKiosk && smsOn && localStorage.getItem("habakta_station") !== "true";
+  // Payment method chosen before the code was asked for; continued after it is verified.
+  const [smsPendingMethod, setSmsPendingMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
+  // A ref, not state: the retry below runs in the same tick and must see it.
+  const smsSkipped = useRef(false);
+  // SMS can't be sent right now: carry on without the check (never block an order).
+  const continueWithoutSms = () => {
+    smsSkipped.current = true;
+    const m = smsPendingMethod;
+    setSmsPendingMethod(null);
+    if (m) { setStep("payment"); handlePaymentSelect(m); } else continueToPayment();
+  };
   const showSmsOptIn = smsOn && !donationOnly && (isKiosk || dineIn === true) && localStorage.getItem("habakta_station") !== "true";
   const smsNeedsPhone = isKiosk || !validateIsraeliPhone(form.phone).valid;
   const smsTargetPhone = smsNeedsPhone ? smsPhone : form.phone;
@@ -318,7 +330,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         return;
       }
       toast({ title: "המספר אומת ✅" });
-      continueToPayment();
+      if (smsPendingMethod) {
+        const m = smsPendingMethod;
+        setSmsPendingMethod(null);
+        setStep("payment");
+        handlePaymentSelect(m);
+      } else {
+        continueToPayment();
+      }
     } finally {
       setVerifying(false);
     }
@@ -354,8 +373,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
       }
     }
     // Website: check the phone with an SMS code once per device (if SMS works now).
-    if (smsCheckPhone && !isPhoneVerified(form.phone)) {
-      handleSendOtp().then((handled) => { if (!handled) continueToPayment(); });
+    if (smsCheckPhone && !smsSkipped.current && !isPhoneVerified(form.phone)) {
+      handleSendOtp().then((handled) => { if (!handled) continueWithoutSms(); });
       return;
     }
     continueToPayment();
@@ -415,6 +434,19 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // the money now and shows the confirmation screenshot to the cashier.
     if (method === "paybox" && !payboxAck) {
       setPayboxConfirmOpen(true);
+      return;
+    }
+
+    // Returning customers skip the details screen, so the phone check happens here.
+    if (smsCheckPhone && !smsSkipped.current && validateIsraeliPhone(form.phone).valid && !isPhoneVerified(form.phone)) {
+      setSmsPendingMethod(method);
+      handleSendOtp().then((handled) => {
+        if (!handled) {
+          smsSkipped.current = true;
+          setSmsPendingMethod(null);
+          handlePaymentSelect(method);
+        }
+      });
       return;
     }
 
@@ -1088,7 +1120,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </motion.button>
               <button
                 type="button"
-                onClick={() => { setStep("details"); setOtpCode(""); }}
+                onClick={() => { setStep(smsPendingMethod ? "payment" : "details"); setSmsPendingMethod(null); setOtpCode(""); }}
                 className={`px-6 py-3 rounded-full border ${th.border} ${th.textMuted} hover:${th.textMain} transition-colors`}
               >
                 חזור
@@ -1096,7 +1128,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
             </div>
             <button
               type="button"
-              onClick={() => handleSendOtp().then((handled) => { if (!handled) continueToPayment(); })}
+              onClick={() => handleSendOtp().then((handled) => { if (!handled) continueWithoutSms(); })}
               disabled={sendingOtp}
               className={`text-sm ${th.textMuted} hover:text-primary transition-colors underline`}
             >
