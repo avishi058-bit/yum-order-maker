@@ -2,7 +2,6 @@ import SoldierDonation from "@/components/SoldierDonation";
 import { maxSplitCards } from "../../supabase/functions/_shared/menu-pricing";
 import { SOLDIER_PENDING_KEY } from "@/components/SoldierFundHowItWorks";
 import { useState, useEffect, useRef, useCallback, forwardRef } from "react";
-import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { CartItem } from "@/components/CartDrawer";
 import { toppings, removalDisplayNames, mealSideOptions, mealDrinkOptions } from "@/data/menu";
@@ -27,6 +26,7 @@ import { nameValidationAnimation } from "@/config/uiConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import SmsReadyOptIn from "@/components/SmsReadyOptIn";
+import { SignInSheet, SheetTitle, SheetSub, SheetFine, CodeBoxes, ResendLine } from "@/components/auth/SignInSheet";
 import { smsEnabled, isPhoneVerified, sendPhoneCode, verifyPhoneCode, optInReadySms } from "@/lib/sms";
 
 export interface CheckoutSauce {
@@ -1089,84 +1089,28 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         )}
 
         {/* Step 2: OTP */}
-        {/* Portal: the checkout sheet is animated (transformed), which would trap a fixed overlay inside it. */}
-        {step === "otp" && createPortal(
-          <div dir="rtl" className="fixed inset-0 z-[10050] flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="otp-title">
-          <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-6 space-y-4 shadow-2xl">
-            <div className="text-center space-y-1">
-              <p aria-hidden className="text-5xl">📱</p>
-              <h3 id="otp-title" className={`text-2xl font-black ${th.textMain}`}>{sendingOtp ? "שולחים לך קוד ב-SMS..." : "שלחנו לך קוד ב-SMS"}</h3>
-              <p className={`${th.textMuted} text-sm`}>
-                {customerName ? `${customerName}, ` : ""}הקלידו את 6 הספרות שנשלחו למספר <span dir="ltr" className="font-bold">{form.phone}</span>
-              </p>
-              <p className={`${th.textMuted} text-xs`}>אימות חד-פעמי: נשאיר אותך מחובר/ת ולא נבקש שוב</p>
-            </div>
-            <div>
-              <label className={`block text-sm font-medium mb-1 ${th.textMain}`}>קוד אימות</label>
-              <input
-                type="text"
-                maxLength={6}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                autoFocus
-                value={otpCode}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setOtpCode(v);
-                  if (v.length === 6) handleVerifyOtp(v);
-                }}
-                className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground text-center text-2xl tracking-[0.5em] font-bold focus:outline-none focus:ring-2 focus:ring-primary/50"
-                dir="ltr"
-                placeholder="______"
-              />
-            </div>
-            {verifyCaptchaRequired && (
-              <div className={`rounded-lg ${th.secondarySoft} border ${th.border} p-3`}>
-                <p className="text-xs text-muted-foreground mb-2 text-center">
-                  זוהתה פעילות חריגה במערכת. אנא השלם אימות אבטחה.
-                </p>
-                <TurnstileWidget
-                  onVerify={setVerifyTurnstileToken}
-                  onExpire={() => setVerifyTurnstileToken(null)}
-                  onError={() => setVerifyTurnstileToken(null)}
-                  action="verify-otp"
-                />
-              </div>
-            )}
-            <div className="flex gap-3 pt-2">
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={verifying || (verifyCaptchaRequired && !verifyTurnstileToken)}
-                onClick={() => handleVerifyOtp()}
-                className="flex-1 bg-primary text-primary-foreground font-bold py-3 rounded-full disabled:opacity-50"
-              >
-                {verifying ? "מאמת..." : "אמת קוד ✅"}
-              </motion.button>
-              <button
-                type="button"
-                onClick={() => { setStep(smsPendingMethod ? "payment" : "details"); setSmsPendingMethod(null); setOtpCode(""); }}
-                className={`px-6 py-3 rounded-full border ${th.border} ${th.textMuted} hover:${th.textMain} transition-colors`}
-              >
-                חזור
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleSendOtp().then((handled) => { if (!handled) continueWithoutSms(); })}
-              disabled={sendingOtp}
-              className={`text-sm ${th.textMuted} hover:text-primary transition-colors underline`}
-            >
-              {sendingOtp ? "שולח..." : "לא הגיע? שלח קוד חדש"}
+        {step === "otp" && (
+          <SignInSheet labelledBy="otp-title" onClose={() => { setStep(smsPendingMethod ? "payment" : "details"); setSmsPendingMethod(null); setOtpCode(""); }}>
+            <SheetTitle id="otp-title">{sendingOtp && !lastCodeSent.current ? "שולחים לך קוד..." : "הזן את הקוד"}</SheetTitle>
+            <SheetSub>
+              {customerName ? `${customerName.split(" ")[0]}, ` : ""}שלחנו 6 ספרות ב-SMS ל-<b dir="ltr" className="text-[#1c1917]">{form.phone}</b>
+              <br />פעם אחת בלבד: מאז נשאיר אותך מחובר/ת.
+            </SheetSub>
+            <CodeBoxes value={otpCode} onChange={setOtpCode} onComplete={(v) => handleVerifyOtp(v)} disabled={verifying} />
+            {verifying && <p className="text-[14px] text-[#a8a29e] text-center mt-4">מאמתים...</p>}
+            <button type="button" className="block mx-auto text-[15px] font-semibold text-[#b45309] mt-5"
+              onClick={() => { setStep(smsPendingMethod ? "payment" : "details"); setSmsPendingMethod(null); setOtpCode(""); }}>
+              שינוי מספר
             </button>
-            <p className={`${th.textMuted} text-[11px] leading-snug`}>
-              בהזנת הקוד את/ה מאשר/ת שנשמור את השם והטלפון שלך כדי לזכור אותך בהזמנות הבאות ולשלוח לך SMS כשההזמנה מוכנה.
-              אפשר להתנתק בכל רגע, ולבקש מאיתנו למחוק את הפרטים. פרטים ב<a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">מדיניות הפרטיות</a>.
-            </p>
-          </div>
-          </div>,
-          document.body,
+            {lastCodeSent.current && (
+              <ResendLine sentAt={lastCodeSent.current.at} busy={sendingOtp}
+                onResend={() => handleSendOtp().then((handled) => { if (!handled) continueWithoutSms(); })} />
+            )}
+            <SheetFine>
+              בהזנת הקוד את/ה מאשר/ת שנשמור את השם והטלפון שלך כדי לזכור אותך ולשלוח לך SMS כשההזמנה מוכנה.
+              אפשר להתנתק בכל רגע ולבקש מחיקה. <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#78716c]">מדיניות הפרטיות</a>
+            </SheetFine>
+          </SignInSheet>
         )}
 
         {/* Step 3: Details + Order Summary */}

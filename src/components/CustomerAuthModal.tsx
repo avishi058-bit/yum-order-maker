@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Phone, UserPlus, Loader2 } from "lucide-react";
+// Header sign-in: phone -> SMS code -> (name, only when we don't know it) -> welcome.
+// Once signed in the customer stays signed in on this device until logout.
+import { useEffect, useState } from "react";
 import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
 import { toast } from "@/hooks/use-toast";
 import { validateIsraeliPhone } from "@/lib/utils";
-import { modalAnimations } from "@/config/uiConfig";
-import { sendPhoneCode, verifyPhoneCode, isPhoneVerified } from "@/lib/sms";
+import { sendPhoneCode, verifyPhoneCode } from "@/lib/sms";
+import { SignInSheet, SheetTitle, SheetSub, SheetButton, SheetFine, CodeBoxes, ResendLine } from "@/components/auth/SignInSheet";
 
 interface CustomerAuthModalProps {
   open: boolean;
@@ -13,238 +13,124 @@ interface CustomerAuthModalProps {
   onSuccess?: () => void;
 }
 
+type Step = "phone" | "code" | "name" | "done";
+
 const CustomerAuthModal = ({ open, onClose, onSuccess }: CustomerAuthModalProps) => {
   const { register, signInVerified } = useCustomerAuth();
-  // Sign-in asks for an SMS code (once; it stays signed in until logout). A
-  // returning customer gets his name back from his last order.
-  const [codeStep, setCodeStep] = useState(false);
-  const [code, setCode] = useState("");
+  const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [marketingConsent, setMarketingConsent] = useState(false);
+  const [code, setCode] = useState("");
+  const [sentAt, setSentAt] = useState(0);
+  const [verified, setVerified] = useState(false);
+  const [returning, setReturning] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const reset = () => {
-    setPhone("");
-    setName("");
-    setTermsAccepted(false);
-    setMarketingConsent(false);
-    setLoading(false);
-    setCodeStep(false);
-    setCode("");
+  useEffect(() => {
+    if (open) { setStep("phone"); setPhone(""); setName(""); setCode(""); setVerified(false); setReturning(false); setLoading(false); }
+  }, [open]);
+
+  if (!open) return null;
+
+  const close = () => { onClose(); };
+  const done = (finalName: string) => {
+    if (verified) signInVerified(phone, finalName);
+    else void register(phone, finalName, true, false);
+    setName(finalName);
+    setStep("done");
   };
 
-  const handleClose = () => {
-    reset();
-    onClose();
-  };
-
-  const finish = async (finalName: string, verified: boolean) => {
-    if (verified) {
-      signInVerified(phone, finalName);
-      try {
-        if (marketingConsent) localStorage.setItem("habakta_marketing_pending", JSON.stringify({ phone, consent: true }));
-      } catch { /* optional */ }
-    } else {
-      // SMS not available right now: device-only sign-in, as before.
-      await register(phone, finalName, termsAccepted, marketingConsent);
-    }
-    toast({ title: `ברוך הבא, ${finalName.split(" ")[0]}! 🎉` });
-    handleClose();
-    onSuccess?.();
-  };
-
-  const handleSubmit = async () => {
-    const phoneCheck = validateIsraeliPhone(phone);
-    if (!phoneCheck.valid) {
-      toast({ title: phoneCheck.error, variant: "destructive" });
-      return;
-    }
-    if (!termsAccepted) {
-      toast({ title: "יש לאשר את תנאי השימוש", variant: "destructive" });
-      return;
-    }
-    if (isPhoneVerified(phone) && name.trim()) {
-      await finish(name.trim(), true);
-      return;
-    }
+  const send = async () => {
+    const check = validateIsraeliPhone(phone);
+    if (!check.valid) { toast({ title: check.error, variant: "destructive" }); return; }
     setLoading(true);
     try {
       const r = await sendPhoneCode(phone);
-      if (r.result === "error") {
-        toast({ title: r.error, variant: "destructive" });
-      } else if (r.result === "sent") {
-        setCodeStep(true);
-      } else if (name.trim()) {
-        await finish(name.trim(), false);
-      } else {
-        toast({ title: "אנא הכנס שם מלא", variant: "destructive" });
-      }
-    } finally {
-      setLoading(false);
-    }
+      if (r.result === "error") toast({ title: r.error, variant: "destructive" });
+      else if (r.result === "sent") { if (!r.cooldown || !sentAt) setSentAt(Date.now()); setCode(""); setStep("code"); }
+      else setStep("name"); // SMS unavailable right now: sign in on this device without the check
+    } finally { setLoading(false); }
   };
 
-  const handleVerify = async (value = code) => {
-    if (value.length !== 6 || loading) return;
+  const verify = async (value: string) => {
+    if (loading) return;
     setLoading(true);
     try {
       const r = await verifyPhoneCode(phone, value);
-      if (!r.ok) {
-        toast({ title: r.error, variant: "destructive" });
-        return;
-      }
-      const finalName = name.trim() || (r.name ?? "").trim();
-      if (!finalName) {
-        // New customer who left the name empty: ask for it, the phone is already checked.
-        setCodeStep(false);
-        toast({ title: "המספר אומת ✅ נשאר רק להכניס שם", variant: "default" });
-        return;
-      }
-      await finish(finalName, true);
-    } finally {
-      setLoading(false);
-    }
+      if (!r.ok) { toast({ title: r.error, variant: "destructive" }); setCode(""); return; }
+      setVerified(true);
+      const known = (r.name ?? "").trim();
+      if (known) { signInVerified(phone, known); setName(known); setReturning(true); setStep("done"); }
+      else setStep("name");
+    } finally { setLoading(false); }
   };
 
-  const anim = modalAnimations.default;
-
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" dir="rtl">
-          <motion.div
-            {...anim.overlay}
-            className="absolute inset-0 bg-black"
-            onClick={handleClose}
-          />
-          <motion.div
-            {...anim.content}
-            transition={anim.content.transition}
-            className="relative bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h2 className="text-lg font-bold text-foreground">חיבור חד-פעמי לאפליקציה</h2>
-              <button onClick={handleClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <X size={16} />
-              </button>
-            </div>
-
-            {codeStep ? (
-              <div className="p-5 space-y-4 text-center">
-                <p aria-hidden className="text-5xl">📱</p>
-                <p className="text-lg font-black text-foreground">שלחנו לך קוד ב-SMS</p>
-                <p className="text-sm text-muted-foreground">הקלד/י את 6 הספרות שנשלחו למספר <span dir="ltr" className="font-bold">{phone}</span></p>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  autoFocus
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                    setCode(v);
-                    if (v.length === 6) handleVerify(v);
-                  }}
-                  dir="ltr"
-                  placeholder="______"
-                  aria-label="קוד אימות"
-                  className="w-full py-3 rounded-xl border border-border bg-background text-foreground text-center text-2xl tracking-[0.5em] font-bold"
-                />
-                <button
-                  onClick={() => handleVerify()}
-                  disabled={loading || code.length !== 6}
-                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading && <Loader2 size={18} className="animate-spin" />}
-                  {loading ? "מאמת..." : "אימות וכניסה"}
-                </button>
-                <button onClick={() => { setCodeStep(false); setCode(""); }} className="text-sm text-muted-foreground underline">
-                  חזרה / שינוי מספר
-                </button>
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  בהזנת הקוד את/ה מאשר/ת שנשמור את השם והטלפון שלך כדי לזכור אותך ולשלוח לך SMS כשההזמנה מוכנה. אפשר להתנתק בכל רגע ולבקש מחיקה.
-                </p>
-              </div>
-            ) : (
-            <div className="p-5 space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-foreground font-medium">
-                  כדי שנוכל לעדכן אותך מתי ההמבורגר מוכן 🍔
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  נשלח לך קוד ב-SMS לאימות חד-פעמי, ומאז תישאר/י מחובר/ת והפרטים יתמלאו לבד בכל הזמנה :)
-                </p>
-              </div>
-
-              <div className="relative">
-                <Phone size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  placeholder="0501234567"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-background text-foreground text-right"
-                  autoFocus
-                />
-              </div>
-
-              <div className="relative">
-                <UserPlus size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="שם מלא (הזמנת אצלנו בעבר? נמלא לבד)"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl border border-border bg-background text-foreground text-right"
-                />
-              </div>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-border accent-primary"
-                />
-                <span className="text-sm text-foreground">
-                  אני מאשר/ת את{" "}
-                  <a href="/terms" target="_blank" className="text-primary hover:underline">תנאי השימוש</a>
-                  {" "}ו
-                  <a href="/privacy" target="_blank" className="text-primary hover:underline">מדיניות הפרטיות</a>
-                  {" "}<span className="text-destructive">*</span>
-                </span>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={marketingConsent}
-                  onChange={(e) => setMarketingConsent(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-border accent-primary"
-                />
-                <span className="text-sm text-muted-foreground">
-                  אני מאשר/ת קבלת עדכונים, מבצעים והנחות ב-WhatsApp (אופציונלי)
-                </span>
-              </label>
-
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !termsAccepted || !phone.trim()}
-                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 size={18} className="animate-spin" /> : <UserPlus size={18} />}
-                {loading ? "מתחבר..." : "כניסה"}
-              </button>
-            </div>
-            )}
-          </motion.div>
-        </div>
+    <SignInSheet labelledBy="signin-title" onClose={step === "done" ? undefined : close}>
+      {step === "phone" && (
+        <>
+          <div className="w-14 h-14 rounded-2xl bg-[#f59e0b] mx-auto mb-4 flex items-center justify-center text-3xl" aria-hidden>🍔</div>
+          <SheetTitle id="signin-title">מה המספר שלך?</SheetTitle>
+          <SheetSub>נשלח קוד קצר ב-SMS, פעם אחת בלבד.<br />מאז נזכור אותך בכל הזמנה.</SheetSub>
+          <label className="flex items-center mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5">
+            <span className="text-[14px] text-[#a8a29e] w-14">נייד</span>
+            <input type="tel" inputMode="tel" autoComplete="tel" autoFocus value={phone}
+              onChange={(e) => setPhone(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="050-000-0000" dir="ltr"
+              className="flex-1 bg-transparent text-[18px] text-right tracking-wide outline-none placeholder:text-[#c2bcb5]" />
+          </label>
+          <SheetButton onClick={send} disabled={loading || phone.replace(/\D/g, "").length < 10}>
+            {loading ? "שולחים..." : "שליחת קוד"}
+          </SheetButton>
+          <SheetFine>
+            בהמשך את/ה מאשר/ת את <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-[#78716c]">תנאי השימוש</a> ו<a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#78716c]">מדיניות הפרטיות</a>
+          </SheetFine>
+        </>
       )}
-    </AnimatePresence>
+
+      {step === "code" && (
+        <>
+          <SheetTitle id="signin-title">הזן את הקוד</SheetTitle>
+          <SheetSub>שלחנו 6 ספרות ל-<b dir="ltr" className="text-[#1c1917]">{phone}</b></SheetSub>
+          <CodeBoxes value={code} onChange={setCode} onComplete={verify} disabled={loading} />
+          {loading && <p className="text-[14px] text-[#a8a29e] text-center mt-4">מאמתים...</p>}
+          <button type="button" onClick={() => setStep("phone")} className="block mx-auto text-[15px] font-semibold text-[#b45309] mt-5">שינוי מספר</button>
+          <ResendLine sentAt={sentAt} onResend={() => { setSentAt(Date.now()); void send(); }} busy={loading} />
+          <SheetFine>בהזנת הקוד את/ה מאשר/ת שנשמור את השם והטלפון שלך כדי לזכור אותך ולשלוח לך SMS כשההזמנה מוכנה. אפשר להתנתק בכל רגע ולבקש מחיקה.</SheetFine>
+        </>
+      )}
+
+      {step === "name" && (
+        <>
+          <SheetTitle id="signin-title">נעים להכיר! איך קוראים לך?</SheetTitle>
+          <SheetSub>השם יופיע על ההזמנות שלך.</SheetSub>
+          <label className="flex items-center mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5">
+            <span className="text-[14px] text-[#a8a29e] w-14">שם</span>
+            <input type="text" autoComplete="name" autoFocus value={name}
+              onChange={(e) => setName(e.target.value.slice(0, 40))} onKeyDown={(e) => e.key === "Enter" && name.trim() && done(name.trim())}
+              placeholder="שם מלא"
+              className="flex-1 bg-transparent text-[18px] outline-none placeholder:text-[#c2bcb5]" />
+          </label>
+          <SheetButton onClick={() => done(name.trim())} disabled={!name.trim()}>המשך</SheetButton>
+        </>
+      )}
+
+      {step === "done" && (
+        <>
+          <div className="w-16 h-16 rounded-full bg-[#16a34a] text-white text-4xl mx-auto mb-4 flex items-center justify-center" aria-hidden>✓</div>
+          <SheetTitle id="signin-title">{returning ? "ברוך שובך" : "ברוך הבא"}, {name.split(" ")[0]}</SheetTitle>
+          <SheetSub>נשארת מחובר/ת במכשיר הזה.</SheetSub>
+          <div className="flex items-center gap-3 mt-6 bg-white border border-[#e7e2dc] rounded-2xl px-4 py-3.5">
+            <div className="w-10 h-10 rounded-full bg-[#fde7c4] text-[#b45309] font-black flex items-center justify-center">{name.trim()[0]}</div>
+            <div>
+              <div className="font-bold text-[16px]">{name}</div>
+              <div className="text-[13px] text-[#a8a29e]" dir="ltr">{phone}</div>
+            </div>
+          </div>
+          <SheetButton onClick={() => { close(); onSuccess?.(); }}>המשך להזמנה</SheetButton>
+        </>
+      )}
+    </SignInSheet>
   );
 };
 
