@@ -864,45 +864,54 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const StepperRow = ({ rowKey, name, price, image }: { rowKey: string; name: string; price: number; image?: string }) => {
     const count = sideItemCounts[rowKey] || 0;
     const setCount = (n: number) => setSideItemCounts((s) => ({ ...s, [rowKey]: Math.max(0, n) }));
+    // The product (picture, name, price) reads first; the add control sits at
+    // the end of the row. Tapping anywhere on an unselected row adds one.
+    const btn = isKiosk ? "w-14 h-14" : "w-11 h-11";
     return (
-      <div className={`w-full flex items-center justify-between border-b border-gray-100 last:border-b-0 ${isKiosk ? "py-5" : "py-3"}`}>
-        <div className="flex items-center gap-3">
-          {count > 0 ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCount(count - 1)}
-                className={`rounded-full bg-secondary flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
-                aria-label="הסר"
-              >
-                <Minus size={isKiosk ? 18 : 14} />
-              </button>
-              <span className={`font-black w-6 text-center ${isKiosk ? "text-[22px]" : "text-base"}`}>{count}</span>
-              <button
-                onClick={() => setCount(count + 1)}
-                className={`rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-10 h-10" : "w-8 h-8"}`}
-                aria-label="הוסף"
-              >
-                <Plus size={isKiosk ? 18 : 14} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setCount(1)}
-              className={`rounded-full bg-primary text-primary-foreground font-bold flex items-center gap-1 active:scale-95 transition ${isKiosk ? "px-4 py-2 text-[18px]" : "px-3 py-1.5 text-sm"}`}
-            >
-              <Plus size={isKiosk ? 18 : 14} />
-              הוסף
-            </button>
-          )}
-          <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>₪{price}</span>
-        </div>
-        <span className="flex items-center gap-3">
-          <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"}`}>{name}</span>
-          {image && (
-            <img src={image} alt="" width={80} height={80} loading="lazy"
-              className={`${isKiosk ? "w-20 h-20" : "w-16 h-16"} object-contain flex-shrink-0`} />
-          )}
+      <div
+        role={count === 0 ? "button" : undefined}
+        tabIndex={count === 0 ? 0 : undefined}
+        onClick={count === 0 ? () => setCount(1) : undefined}
+        onKeyDown={count === 0 ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCount(1); } } : undefined}
+        className={`w-full flex items-center gap-3 rounded-2xl border-2 mb-2 transition-colors ${count > 0 ? "border-primary bg-primary/5" : "border-gray-100 cursor-pointer active:bg-gray-50"} ${isKiosk ? "p-4" : "p-2.5"}`}
+      >
+        {image && (
+          <img src={image} alt="" width={80} height={80} loading="lazy"
+            className={`${isKiosk ? "w-20 h-20" : "w-14 h-14"} object-contain flex-shrink-0`} />
+        )}
+        <span className="flex-1 min-w-0 text-right">
+          <span className={`block font-bold leading-tight ${isKiosk ? "text-[26px]" : "text-lg"}`}>{name}</span>
+          <span className={`block font-black text-primary ${isKiosk ? "text-[26px]" : "text-lg"}`}>₪{price}</span>
         </span>
+        {count > 0 ? (
+          <span className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setCount(count + 1); }}
+              className={`rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-95 transition ${btn}`}
+              aria-label={`עוד ${name}`}
+            >
+              <Plus size={isKiosk ? 26 : 20} />
+            </button>
+            <span className={`font-black w-7 text-center ${isKiosk ? "text-[26px]" : "text-xl"}`}>{count}</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setCount(count - 1); }}
+              className={`rounded-full bg-gray-200 text-gray-700 flex items-center justify-center active:scale-95 transition ${btn}`}
+              aria-label={`פחות ${name}`}
+            >
+              <Minus size={isKiosk ? 26 : 20} />
+            </button>
+          </span>
+        ) : (
+          <span
+            aria-hidden
+            className={`flex-shrink-0 rounded-full bg-primary text-primary-foreground font-black flex items-center gap-1.5 shadow-md shadow-primary/20 ${isKiosk ? "px-6 py-3.5 text-[22px]" : "px-4 py-2.5 text-base"}`}
+          >
+            <Plus size={isKiosk ? 24 : 18} strokeWidth={3} />
+            הוספה
+          </span>
+        )}
       </div>
     );
   };
@@ -1531,7 +1540,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     {extraSideItems.length > 0 && (
                       <>
                         <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🍟 צ׳יפס ותוספות</h4>
-                        <div className="space-y-0 mb-6">
+                        <div className="mb-6">
                           {extraSideItems.map((m) => (
                             <StepperRow key={m.id} rowKey={m.id} name={m.name} price={m.price} image={extraSideImage[m.id]} />
                           ))}
@@ -1542,7 +1551,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     {extraDrinkRows.length > 0 && (
                       <>
                         <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🥤 שתייה</h4>
-                        <div className="space-y-0">
+                        <div>
                           {extraDrinkRows.map((d) => (
                             <StepperRow key={d.key} rowKey={d.key} name={d.name} price={d.price} image={d.image} />
                           ))}
