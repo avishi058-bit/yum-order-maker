@@ -25,10 +25,11 @@ export const firstName = (name) => {
 };
 
 export const readyText = (kind, name) => {
+  // Name first, then "ready" - that is what shows on the lock screen.
   const hi = name ? `${name}, ` : "";
-  if (kind === "delivery") return `${hi}ההזמנה שלך מוכנה ועכשיו יוצאת אליך! המבורגר הבקתה`;
-  if (kind === "pickup") return `${hi}איזה כיף! ההזמנה שלך מוכנה ומחכה לך בבקתה\nלניווט בוויז: ${WAZE}`;
-  return `${hi}איזה כיף! ההזמנה שלך מוכנה ומחכה לך בדלפק. בתאבון! המבורגר הבקתה`;
+  if (kind === "delivery") return `${hi}ההזמנה שלך מוכנה ויוצאת אליך! בתאבון! המבורגר הבקתה`;
+  if (kind === "pickup") return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בבקתה\nלניווט בוויז: ${WAZE}`;
+  return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בדלפק. בתאבון! המבורגר הבקתה`;
 };
 export const otpText = (code) =>
   `קוד האימות שלך בהמבורגר הבקתה: ${code}\nאין למסור את הקוד לאף אחד\n\n@habikta-burger.com #${code}`;
