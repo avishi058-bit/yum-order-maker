@@ -28,7 +28,7 @@ export const readyText = (kind, name) => {
   // Name first, then "ready" - that is what shows on the lock screen.
   const hi = name ? `${name}, ` : "";
   if (kind === "delivery") return `${hi}ההזמנה שלך מוכנה ויוצאת אליך! בתאבון! המבורגר הבקתה`;
-  if (kind === "pickup") return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בבקתה\nלניווט בוויז: ${WAZE}`;
+  if (kind === "pickup") return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בבקתה. בתאבון!\nלניווט בוויז: ${WAZE}`;
   return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בדלפק. בתאבון! המבורגר הבקתה`;
 };
 export const otpText = (code) =>
