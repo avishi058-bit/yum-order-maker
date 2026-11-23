@@ -11,6 +11,10 @@ Preview: https://group-order.habikta-burger.pages.dev/group
 - Organizer presses "כולם הזמינו - לשלוח את ההזמנה למטבח" (= `group_lock`). The kitchen gets nothing until locked AND every order is paid; then all orders are released together with one bon number and one kitchen push.
 - Kitchen (`src/pages/Kitchen.tsx` + `src/lib/groupOrders.ts`): held orders hidden; released group shows as ONE card (owner name on each dish); status / ETA / paid changes apply to all order ids behind the card.
 - Closed hours: cannot open a group, order or pay.
+- Stuck group (`supabase/migrations/20261124120000_group_stuck.sql`, cron `group-stuck-tick` every minute):
+  - 15 min after the first payment, if not sent: ONE SMS to the organizer (worker `/sms/group-stuck`, text in `workers/staff/src/sms.js`) with a manage link `/group/CODE#m=TOKEN`. The token (hash in `order_groups.manage_hash`) counts as the organizer secret on any device.
+  - Organizer box "מי עוד לא שילם (N)" (`src/components/group/UnpaidManager.tsx`): pay for someone, take someone out, or "לשלוח למטבח בלי מי שלא שילם" (`group_send_without_unpaid` cancels the unpaid orders and releases).
+  - 30 min after the first payment: kitchen card "הזמנה קבוצתית נתקעה - נא ליצור קשר" with name, phone, tel: QR (`src/components/kitchen/StuckGroupCard.tsx`, `src/hooks/useStuckGroups.ts`); rings like a new order until "הבנתי"; disappears when the group is sent.
 
 ## Files
 - DB (already applied to production, inert for normal orders):
@@ -20,7 +24,7 @@ Preview: https://group-order.habikta-burger.pages.dev/group
 
 ## Still open
 1. Real test in opening hours with two phones: open group, two people order and pay, live "building" dots, organizer sends, kitchen shows one card + one bon, organizer gets one SMS on ready.
-2. Owner decision: auto-close a group that the organizer never sends (paid orders wait forever today).
+2. Stuck-group flow (decided by the owner 24.11): code written on the branch, NOT yet pushed; migration `20261124120000_group_stuck.sql` NOT yet applied - both wait for the owner's OK. The SMS only works after merge to main (the worker deploys from main) and links to habikta-burger.com. Test: a test group in opening hours, one person pays, wait 15 and 30 minutes.
 3. Note to owner: paying for someone else passes that person's phone to the payment page (Z-Credit requires it); not shown on screen.
 4. After approval: merge `group-order` into `main` (`git pull --rebase` first - Lovable bot commits land in main), wait for Cloudflare Pages, verify live.
 

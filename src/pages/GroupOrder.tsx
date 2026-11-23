@@ -18,8 +18,9 @@ import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.webp";
 import {
   canManage, createGroup, fetchGroup, groupKeys, isMine, lockGroup, payGroupOrder,
-  rememberMyName, removeFromGroup, setActiveGroup, type GroupInfo,
+  rememberMyName, removeFromGroup, sendWithoutUnpaid, setActiveGroup, takeManageToken, type GroupInfo,
 } from "@/lib/groupSession";
+import UnpaidManager from "@/components/group/UnpaidManager";
 
 const RETURN_KEY = "habikta_group_return";
 const POLL_MS = 4000;
@@ -222,6 +223,8 @@ const CreateGroup = () => {
 const GroupView = ({ code }: { code: string }) => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  // Arrived from the organizer's "stuck group" SMS link: this device becomes the organizer's.
+  const [fromSms] = useState(() => takeManageToken(code));
   const [group, setGroup] = useState<GroupInfo | null | undefined>(undefined);
   const [myName, setMyName] = useState(() => groupKeys(code).myName ?? savedName());
   const [askName, setAskName] = useState(false);
@@ -299,7 +302,8 @@ const GroupView = ({ code }: { code: string }) => {
     setBusy(key);
     setError("");
     try { await fn(); await load(); } catch (e) {
-      setError((e as Error).message === "group_empty" ? "עוד אף אחד לא הזמין" : failMsg);
+      const msg = (e as Error).message;
+      setError(msg === "group_empty" ? "עוד אף אחד לא הזמין" : msg === "nobody_paid" ? "עוד אף אחד לא שילם" : failMsg);
     } finally { setBusy(null); }
   };
 
@@ -363,6 +367,19 @@ const GroupView = ({ code }: { code: string }) => {
           </p>
         </div>
       ) : null}
+
+      {/* Organizer: who has not paid, and what to do about it */}
+      {manager && (open || group.status === "locked") && unpaid.length > 0 && !closed && (
+        <UnpaidManager
+          unpaid={unpaid}
+          paidCount={paidCount}
+          busy={busy}
+          initiallyOpen={fromSms}
+          onPay={pay}
+          onRemove={(id) => void run(`rm-${id}`, () => removeFromGroup(code, id), "לא הצלחנו להוציא מההזמנה")}
+          onSendWithout={() => void run("send-without", () => sendWithoutUnpaid(code), "לא הצלחנו לשלוח את ההזמנה")}
+        />
+      )}
 
       {/* The organizer's job, said plainly */}
       {manager && open && (

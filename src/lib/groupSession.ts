@@ -76,6 +76,26 @@ export const lockGroup = async (code: string) => {
   return !!data?.sent;
 };
 
+/** Organizer: send now, without everyone who has not paid (their orders are cancelled). */
+export const sendWithoutUnpaid = async (code: string) => {
+  const { data, error } = await rpc("group_send_without_unpaid", { p_code: code, p_secret: groupKeys(code).secret ?? "" });
+  if (error) throw new Error(error.message.includes("nobody_paid") ? "nobody_paid" : "send_failed");
+  return !!data?.sent;
+};
+
+/**
+ * The organizer's SMS link ends with "#m=<token>" (stuck group, see
+ * group_stuck_tick). Keep it as the organizer key on this device and clear it
+ * from the address bar. Returns true when a token was taken.
+ */
+export const takeManageToken = (code: string): boolean => {
+  const m = /(?:^#|&)m=([a-f0-9]{36})(?:&|$)/.exec(window.location.hash);
+  if (!m) return false;
+  saveKeys(code, { ...groupKeys(code), secret: m[1] });
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  return true;
+};
+
 /** Organizer, or the person who ordered it, removes an unpaid dish. */
 export const removeFromGroup = async (code: string, orderId: string) => {
   const k = groupKeys(code);

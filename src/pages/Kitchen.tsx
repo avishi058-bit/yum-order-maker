@@ -17,6 +17,8 @@ import MissingIngredientsDialog, { IngredientOption } from "@/components/Missing
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { mergeGroupOrders } from "@/lib/groupOrders";
+import { useStuckGroups } from "@/hooks/useStuckGroups";
+import StuckGroupCard from "@/components/kitchen/StuckGroupCard";
 import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName, sortByQueue, type RoundOrder } from "@/lib/kitchenReceipt";
 import {
   isWebBluetoothSupported,
@@ -366,6 +368,8 @@ const Kitchen = () => {
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, toggleSoldierFund, closeAll, openAll, setPattyWeight } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
+  // Stuck group orders: shown as cards among the orders and ring until acknowledged.
+  const { stuckGroups, acknowledge: acknowledgeStuckGroup } = useStuckGroups(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
@@ -686,7 +690,7 @@ const Kitchen = () => {
 
   // Repeating alert for new orders - cadence depends on escalation level
   useEffect(() => {
-    const hasNewOrders = orders.some((o) => o.status === "new");
+    const hasNewOrders = orders.some((o) => o.status === "new") || stuckGroups.length > 0;
 
     if (hasNewOrders && soundEnabled) {
       const cadence = maxEscalation === 2 ? AGGRESSIVE_RING_MS : NORMAL_RING_MS;
@@ -707,7 +711,7 @@ const Kitchen = () => {
         alertIntervalRef.current = null;
       }
     };
-  }, [orders, soundEnabled, selectedRingtone, maxEscalation]);
+  }, [orders, soundEnabled, selectedRingtone, maxEscalation, stuckGroups.length]);
 
   const fetchAvailability = useCallback(async () => {
     const { data } = await supabase
@@ -2919,7 +2923,10 @@ const Kitchen = () => {
         <div className="p-4">
           {viewMode === "active" && <DeliveryRequestsPanel />}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayOrders.length === 0 && (
+          {viewMode === "active" && stuckGroups.map((g) => (
+            <StuckGroupCard key={`stuck-${g.id}`} group={g} onAcknowledge={() => void acknowledgeStuckGroup(g.id)} />
+          ))}
+          {displayOrders.length === 0 && !(viewMode === "active" && stuckGroups.length > 0) && (
             <div className="col-span-full text-center py-20 text-muted-foreground">
               <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : viewMode === "ready" ? "✅" : "📋"}</p>
               <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : viewMode === "ready" ? "אין הזמנות מוכנות" : "אין היסטוריה עדיין"}</p>
