@@ -824,15 +824,26 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     .filter((m): m is MenuItem => !!m)
     .filter((m) => !isAvailable || isAvailable(m.id));
 
+  /** Small pictures for the standalone extras, the same ones the meal steps use. */
+  const extraSideImage: Record<string, string> = {
+    fries: mealSideImages["side-fries"], "sweet-potato-fries": mealSideImages["side-sweet-potato"],
+    "onion-rings": mealSideImages["side-onion-rings"], "tempura-onion": mealSideImages["side-tempura"],
+  };
+  const extraDrinkImage = (id: string) => {
+    const avail = drinkToAvailabilityId[id] || id;
+    return mealDrinkImages[avail] || mealDrinkImages[avail.replace(/^drink-(watermelon|mojito)$/, "drink-blu-$1")]
+      || ({ water: mealDrinkImages["drink-water"], soda: mealDrinkImages["drink-soda"], "fuze-tea": mealDrinkImages["drink-fuze-tea"] } as Record<string, string | undefined>)[id];
+  };
+
   /** Standalone drinks (full price). Alcohol is intentionally excluded from this quick upsell. */
-  const extraDrinkRows: Array<{ key: string; name: string; price: number }> = [];
+  const extraDrinkRows: Array<{ key: string; name: string; price: number; image?: string }> = [];
   ["can", "bottle", "flavored-water"].forEach((baseId) => {
     const base = menuItems.find((m) => m.id === baseId);
     if (!base) return;
     (drinkSubOptions[baseId] || []).forEach((sub) => {
       const availId = drinkToAvailabilityId[sub.id] || sub.id;
       if (isAvailable && !isAvailable(availId)) return;
-      extraDrinkRows.push({ key: `${baseId}::${sub.id}`, name: sub.name, price: base.price });
+      extraDrinkRows.push({ key: `${baseId}::${sub.id}`, name: sub.name, price: base.price, image: extraDrinkImage(sub.id) });
     });
   });
   ["water", "soda", "fuze-tea"].forEach((id) => {
@@ -840,7 +851,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     if (!m) return;
     const availId = drinkToAvailabilityId[id] || id;
     if (isAvailable && !isAvailable(availId)) return;
-    extraDrinkRows.push({ key: id, name: m.name, price: m.price });
+    extraDrinkRows.push({ key: id, name: m.name, price: m.price, image: extraDrinkImage(id) });
   });
 
   const extrasTotal = Object.entries(sideItemCounts).reduce((sum, [key, qty]) => {
@@ -850,7 +861,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     return sum + (m ? m.price * qty : 0);
   }, 0);
 
-  const StepperRow = ({ rowKey, name, price }: { rowKey: string; name: string; price: number }) => {
+  const StepperRow = ({ rowKey, name, price, image }: { rowKey: string; name: string; price: number; image?: string }) => {
     const count = sideItemCounts[rowKey] || 0;
     const setCount = (n: number) => setSideItemCounts((s) => ({ ...s, [rowKey]: Math.max(0, n) }));
     return (
@@ -885,7 +896,13 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
           )}
           <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>₪{price}</span>
         </div>
-        <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"}`}>{name}</span>
+        <span className="flex items-center gap-3">
+          <span className={`font-bold ${isKiosk ? "text-[26px]" : "text-lg"}`}>{name}</span>
+          {image && (
+            <img src={image} alt="" width={80} height={80} loading="lazy"
+              className={`${isKiosk ? "w-20 h-20" : "w-16 h-16"} object-contain flex-shrink-0`} />
+          )}
+        </span>
       </div>
     );
   };
@@ -1516,7 +1533,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🍟 צ׳יפס ותוספות</h4>
                         <div className="space-y-0 mb-6">
                           {extraSideItems.map((m) => (
-                            <StepperRow key={m.id} rowKey={m.id} name={m.name} price={m.price} />
+                            <StepperRow key={m.id} rowKey={m.id} name={m.name} price={m.price} image={extraSideImage[m.id]} />
                           ))}
                         </div>
                       </>
@@ -1527,7 +1544,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                         <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🥤 שתייה</h4>
                         <div className="space-y-0">
                           {extraDrinkRows.map((d) => (
-                            <StepperRow key={d.key} rowKey={d.key} name={d.name} price={d.price} />
+                            <StepperRow key={d.key} rowKey={d.key} name={d.name} price={d.price} image={d.image} />
                           ))}
                         </div>
                       </>
