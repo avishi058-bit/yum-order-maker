@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.webp";
+import { RUNTIME_FLAGS } from "@/config/runtimeFlags";
 import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Phone } from "lucide-react";
@@ -27,6 +28,8 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, showGroupsLink = false, showDelivery, dineIn, soldierFundEnabled = true, onSoldierContinueOrder, onSoldierDonateOnly }: HeroSectionProps) => {
+  // Compact home (runtime flag): short hero so the menu starts right below it.
+  const compact = RUNTIME_FLAGS.COMPACT_HOME;
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
@@ -42,7 +45,7 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
     return () => window.clearTimeout(t);
   }, [dineIn]);
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+    <section className={`relative flex items-center justify-center overflow-hidden ${compact ? "pt-16 pb-6" : "min-h-[80vh]"}`}>
       {/* Kosher badge */}
       <button
         type="button"
@@ -86,7 +89,7 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
       <div className="relative z-10 text-center px-4">
         <motion.div
           {...heroAnimations.logo}
-          className="w-36 h-36 mx-auto mb-6"
+          className={compact ? "w-24 h-24 mx-auto mb-3" : "w-36 h-36 mx-auto mb-6"}
         >
           <img
             src={logo}
@@ -96,19 +99,19 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
         </motion.div>
         <motion.h1
           {...heroAnimations.title}
-          className="text-5xl md:text-7xl font-black mb-2 tracking-tight"
+          className={compact ? "text-4xl md:text-6xl font-black mb-1 tracking-tight" : "text-5xl md:text-7xl font-black mb-2 tracking-tight"}
         >
           הַבִּקְתָּה
         </motion.h1>
         <motion.p
           {...heroAnimations.subtitle}
-          className="text-xl md:text-2xl text-primary font-bold mb-2"
+          className={compact ? "text-lg md:text-xl text-primary font-bold mb-1" : "text-xl md:text-2xl text-primary font-bold mb-2"}
         >
           המבורגר של מושבניקים
         </motion.p>
         <motion.p
           {...heroAnimations.description}
-          className="text-lg text-muted-foreground mb-8 max-w-md mx-auto"
+          className={compact ? "text-sm text-muted-foreground mb-5 max-w-md mx-auto" : "text-lg text-muted-foreground mb-8 max-w-md mx-auto"}
         >
           כשר בהשגחת הרבנות המקומית-שדות נגב
         </motion.p>
@@ -118,14 +121,24 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
             {...heroAnimations.cta}
             className="flex flex-col items-center gap-4"
           >
-            <motion.p
+            {!compact && <motion.p
               className="text-lg md:text-xl font-bold text-foreground"
               animate={dance ? { rotate: [0, -3, 3, -3, 3, 0], scale: [1, 1.03, 1.03, 1.03, 1.03, 1] } : { rotate: 0, scale: 1 }}
               transition={dance ? { duration: 1.4, repeat: Infinity, repeatDelay: 1.2, ease: "easeInOut" } : { duration: 0.2 }}
             >
               בחר כדי להתחיל בהזמנה👇🏽
-            </motion.p>
+            </motion.p>}
             <div className="w-full max-w-md flex flex-col gap-3">
+              {compact ? (
+                <div className="flex w-full gap-3 select-none">
+                  {([[true, "לשבת"], [false, "לקחת"]] as const).map(([v, label]) => (
+                    <button key={label} type="button" onClick={() => onDineInChoice(v)} aria-pressed={dineIn === v}
+                      className={`flex-1 py-4 rounded-2xl font-black text-xl transition-colors shadow-lg ${dineIn === v ? "bg-primary text-primary-foreground" : "bg-card/90 backdrop-blur-sm text-foreground border border-border"}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
               <div className="relative flex w-full p-1.5 bg-muted rounded-2xl shadow-2xl select-none">
                 <button
                   onClick={() => onDineInChoice(true)}
@@ -158,6 +171,7 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
                   לקחת
                 </button>
               </div>
+              )}
 
               {showDelivery && onDeliveryChoice && (
                 <button
@@ -212,12 +226,12 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-6 w-full max-w-md mx-auto flex flex-col items-center gap-2"
+          className={`${compact ? "mt-4" : "mt-6"} w-full max-w-md mx-auto flex flex-col items-center gap-2`}
         >
           <button
             type="button"
             onClick={() => setFundOpen(true)}
-            className="w-full h-16 rounded-[2rem] font-black text-2xl bg-primary text-primary-foreground shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            className={`w-full rounded-[2rem] font-black bg-primary text-primary-foreground shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${compact ? "h-12 text-lg" : "h-16 text-2xl"}`}
           >
             <span className="text-3xl">🫡</span>
             <span>הזמן חייל/ת</span>

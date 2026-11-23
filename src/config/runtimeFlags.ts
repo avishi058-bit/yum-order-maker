@@ -40,4 +40,12 @@ export const RUNTIME_FLAGS = {
    * a device opened once with ?smstest=1 sees them (owner testing).
    */
   CUSTOMER_SMS: true,
+
+  /**
+   * Compact home page: short hero (smaller logo and title), "לשבת / לקחת" as
+   * two side-by-side buttons (chosen one in orange), so the menu starts right
+   * under it. The header rows above stay as they are. false = the previous
+   * full-screen hero.
+   */
+  COMPACT_HOME: true,
 } as const;
