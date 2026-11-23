@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
+import { noteHesitation, clearHesitation } from "@/lib/hesitation";
 import { usePattyGrams } from "@/lib/pattyGrams";
 import { useSearchParams } from "react-router-dom";
 import { useKioskInactivityTimer } from "@/hooks/useKioskInactivityTimer";
@@ -103,6 +104,7 @@ const Kiosk = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const previewAddedRef = useRef(false);
   const [soldierFundOpen, setSoldierFundOpen] = useState(false);
   const [donationOnlyCheckout, setDonationOnlyCheckout] = useState(false);
   const [pendingDonation, setPendingDonation] = useState<{ amount: number; termsAt: string | null } | null>(() => {
@@ -135,6 +137,7 @@ const Kiosk = () => {
       setSuccessPaymentMethod("credit");
       setView("welcome");
       setCart([]);
+      clearHesitation();
       setCheckoutOpen(false);
       import("canvas-confetti").then(({ default: confetti }) => {
         confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
@@ -308,7 +311,12 @@ const Kiosk = () => {
   }, [flyFromCenter]);
 
   const updateQuantity = useCallback((id: string, delta: number) => {
-    setCart((prev) => prev.map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c)).filter((c) => c.quantity > 0));
+    setCart((prev) => {
+      // Taking something out of the cart counts as hesitating over it.
+      const it = prev.find((c) => c.id === id);
+      if (it && delta < 0) noteHesitation(it.menuItemId, it.quantity + delta <= 0 ? 2 : 1);
+      return prev.map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c)).filter((c) => c.quantity > 0);
+    });
   }, []);
 
   const totalItems = cart.reduce((sum, c) => sum + c.quantity, 0);
@@ -348,6 +356,7 @@ const Kiosk = () => {
 
   const resetOrder = useCallback(() => {
     setCart([]);
+    clearHesitation();
     setView("welcome");
     setDineIn(null);
     setDineInSelectorOpen(false);
@@ -467,11 +476,13 @@ const Kiosk = () => {
           chunks are prefetched during Welcome (see prefetchCustomerFlow), so
           in practice they are already resident when opened. */}
       <Suspense fallback={null}>
-        <ItemCustomizer item={customizerItem} onClose={() => { setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} dineIn={dineIn} initialState={customizerInitial} />
+        <ItemCustomizer item={customizerItem} onClose={() => { if (!editingCartId) noteHesitation(customizerItem?.id); setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} dineIn={dineIn} initialState={customizerInitial} />
         <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
         <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
         <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} isKiosk />
-        <ItemPreview item={previewItem} onClose={() => setPreviewItem(null)} onAdd={handlePreviewAdd} cartButtonRef={cartButtonRef} />
+        <ItemPreview item={previewItem}
+          onClose={() => { if (previewItem && !previewAddedRef.current) noteHesitation(previewItem.id); previewAddedRef.current = false; setPreviewItem(null); }}
+          onAdd={(item) => { previewAddedRef.current = true; handlePreviewAdd(item); }} cartButtonRef={cartButtonRef} />
         <ArayesCustomizer
         item={arayesItem}
         isKiosk
@@ -519,7 +530,8 @@ const Kiosk = () => {
         }}
         onBackToMenu={() => setCartOpen(false)}
         onQuickAdd={(item) => {
-          if (item.id === "arayes-special" || item.id === "arayes-special-4") {
+          // Items that need choices (burgers, meals, deals, arayes) open their usual flow.
+          if (item.id === "arayes-special" || item.id === "arayes-special-4" || !["side", "drink"].includes(item.category)) {
             setCartOpen(false);
             openItemFlow(item);
             return;

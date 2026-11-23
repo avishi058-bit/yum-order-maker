@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { hesitatedItemIds } from "@/lib/hesitation";
 import { X, Minus, Plus, ShoppingBag, ArrowRight, Sparkles, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import {
@@ -108,13 +109,25 @@ const KioskCartDrawer = ({
       return isAvailable(drinkToAvailabilityId[m.id] || m.id);
     });
     // Pin arayes-special first, then friends-mix
-    return list.sort((a, b) => {
+    const usual = list.sort((a, b) => {
       if (a.id === "arayes-special") return -1;
       if (b.id === "arayes-special") return 1;
       if (a.id === "friends-mix") return -1;
       if (b.id === "friends-mix") return 1;
       return 0;
     });
+    // Before all of them, quietly: what the customer hesitated over in this
+    // order (opened and closed, or took out of the cart) - any category.
+    const hesitated = hesitatedItemIds()
+      .map((id) => menuItems.find((m) => m.id === id))
+      .filter((m): m is MenuItem => !!m && !inCartMenuIds.has(m.id) && m.category !== "deal")
+      .filter((m) => {
+        const subs = drinkSubOptions[m.id];
+        if (subs && subs.length > 0) return subs.some((s) => isAvailable(drinkToAvailabilityId[s.id] || s.id));
+        return isAvailable(drinkToAvailabilityId[m.id] || m.id);
+      });
+    const seen = new Set(hesitated.map((m) => m.id));
+    return [...hesitated, ...usual.filter((m) => !seen.has(m.id))];
   }, [items, isAvailable]);
 
   const handleRecommendationAdd = (item: MenuItem) => {

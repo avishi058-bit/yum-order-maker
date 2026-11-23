@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from "react";
+import { noteHesitation, clearHesitation } from "@/lib/hesitation";
 import { usePattyGrams } from "@/lib/pattyGrams";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, Phone, LogIn, Smartphone, Check } from "lucide-react";
@@ -125,6 +126,7 @@ const Index = () => {
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState<{ id: string; name: string; quantity: number }[]>([]);
   const [previewItem, setPreviewItem] = useState<MenuItem | null>(null);
+  const previewAddedRef = useRef(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
@@ -426,11 +428,14 @@ const Index = () => {
   );
 
   const updateQuantity = useCallback((id: string, delta: number) => {
-    setCart((prev) =>
-      prev
+    setCart((prev) => {
+      // Taking something out of the cart counts as hesitating over it.
+      const it = prev.find((c) => c.id === id);
+      if (it && delta < 0) noteHesitation(it.menuItemId, it.quantity + delta <= 0 ? 2 : 1);
+      return prev
         .map((c) => (c.id === id ? { ...c, quantity: c.quantity + delta } : c))
-        .filter((c) => c.quantity > 0)
-    );
+        .filter((c) => c.quantity > 0);
+    });
   }, []);
 
   const totalItems = cart.reduce((sum, c) => sum + c.quantity, 0);
@@ -702,6 +707,9 @@ const Index = () => {
               if (customizerResolverRef.current) {
                 customizerResolverRef.current(null);
                 customizerResolverRef.current = null;
+              } else if (!editingCartId) {
+                // Opened and closed without adding: hesitated.
+                noteHesitation(customizerItem?.id);
               }
               setCustomizerItem(null);
               setEditingCartId(null);
@@ -792,7 +800,8 @@ const Index = () => {
               }
             }}
             onQuickAdd={(item) => {
-              if (item.id === "arayes-special" || item.id === "arayes-special-4") {
+              // Items that need choices (burgers, meals, deals, arayes) open their usual flow.
+              if (item.id === "arayes-special" || item.id === "arayes-special-4" || !["side", "drink"].includes(item.category)) {
                 setCartOpen(false);
                 openItemFlow(item);
                 return;
@@ -865,8 +874,12 @@ const Index = () => {
       </Suspense>
       <ItemPreview
         item={previewItem}
-        onClose={() => setPreviewItem(null)}
-        onAdd={(item) => addToCartDirect(item)}
+        onClose={() => {
+          if (previewItem && !previewAddedRef.current) noteHesitation(previewItem.id);
+          previewAddedRef.current = false;
+          setPreviewItem(null);
+        }}
+        onAdd={(item) => { previewAddedRef.current = true; addToCartDirect(item); }}
         cartButtonRef={cartButtonRef}
       />
 
@@ -900,6 +913,7 @@ const Index = () => {
                 setCheckoutOpen(false);
                 setCheckoutSkipDetails(false);
                 setCart([]);
+                clearHesitation();
                 setDeliveryInfo(null);
                 // Order was placed - discard any saved cart so the
                 // "continue previous order" modal doesn't pop up later.
