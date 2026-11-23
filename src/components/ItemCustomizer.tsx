@@ -872,7 +872,9 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     const [baseId, subId] = key.split("::");
     const id = subId || baseId;
     const avail = drinkToAvailabilityId[id] || ({ water: "drink-water", soda: "drink-soda", "fuze-tea": "drink-fuze-tea" } as Record<string, string>)[id] || id;
-    return mealDrinkOptions.find((d) => d.id === avail || d.id === avail.replace(/^drink-(watermelon|mojito)$/, "drink-blu-$1"));
+    // Availability ids differ from meal ids in a few places (the orange bottle is "drink-apples").
+    const mealId = ({ "drink-apples": "drink-oranges", "drink-watermelon": "drink-blu-watermelon", "drink-mojito": "drink-blu-mojito" } as Record<string, string>)[avail] || avail;
+    return mealDrinkOptions.find((d) => d.id === mealId);
   };
   const priceOfKey = (key: string) => menuItems.find((m) => m.id === key.split("::")[0])?.price ?? 0;
   const mergeOffer = (() => {
