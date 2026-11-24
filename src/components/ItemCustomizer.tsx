@@ -1804,12 +1804,15 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       />
                     </label>
                   ) : (
+                    // In the fixed footer (not in the scrolling list), so a scroll
+                    // gesture never lands on it; full-width pill with its own gap
+                    // above the "המשך" bar.
                     <button
                       type="button"
                       onClick={() => { setNameStepOpen(true); setTimeout(() => ownerInputRef.current?.focus(), 50); }}
-                      className={`font-bold text-primary underline-offset-4 hover:underline ${isKiosk ? "text-[22px] py-2" : "text-sm py-1"}`}
+                      className={`w-full rounded-xl border-2 border-dashed border-primary/60 bg-primary/10 font-bold text-primary active:scale-[0.99] transition-transform ${isKiosk ? "text-[22px] py-3 mb-1" : "text-base py-2.5"}`}
                     >
-                      + רוצה להוסיף שם? <span className="font-normal text-gray-500">(רלוונטי בהזמנה מרובה)</span>
+                      + רוצה להוסיף שם על המנה?
                     </button>
                   )}
                 </div>
