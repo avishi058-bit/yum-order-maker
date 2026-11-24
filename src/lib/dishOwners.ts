@@ -1,9 +1,8 @@
-// "Whose burger is this?" - an optional name field inside the burger sheet
-// (take-away only, see ItemCustomizer). It never takes a step of its own:
-// - 1st and 2nd burger: a small "רוצה להוסיף שם?" button, closed.
-// - from the 3rd burger: the field is already open.
-// - if the customer passed the open field empty and no burger has a name yet,
-//   it goes back to the closed button for the rest of the order.
+// "Whose burger is this?" (take-away only, see ItemCustomizer):
+// - 1st and 2nd burger: a small optional "רוצה להוסיף שם?" button inside the sheet.
+// - from the 3rd burger ("open"): the "של מי המנה?" popup at the end, as before.
+// - if the customer skipped the popup and no burger has a name yet, it goes
+//   back to the small button for the rest of the order.
 import { menuItems } from "@/data/menu";
 import type { CartItem } from "@/components/CartDrawer";
 
