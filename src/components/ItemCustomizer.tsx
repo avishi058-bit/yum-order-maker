@@ -752,9 +752,10 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     }
   };
 
-  /** Take-away burgers get an optional "name on the dish" step right before
-   *  the item is added to the cart. */
-  const nameStepEnabled = isBurger && dineIn === false;
+  /** "Whose dish?" is no longer asked per dish - customers typed their name
+   *  twice. It is asked once at checkout, only for take-away with 2+ burgers
+   *  (src/components/checkout/DishOwners.tsx). Editing a dish keeps its name. */
+  const nameStepEnabled = false;
 
   const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string, skipNameStep = false, countsOverride?: Record<string, number>) => {
     if (nameStepEnabled && !skipNameStep) {

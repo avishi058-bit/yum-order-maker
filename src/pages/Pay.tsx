@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Loader2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { zcreditSafeText } from "@/lib/zcreditText";
 
 export const PAYREQ_KEY = "habikta_payreq";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,7 +76,7 @@ const Pay = () => {
         body: JSON.stringify({
           total: Number(data.total),
           items: [{ name: req?.description ? `תשלום - ${req.description}` : "תשלום להמבורגר הבקתה", price: Number(data.total), quantity: 1 }],
-          customerName: data.name,
+          customerName: zcreditSafeText(data.name),
           customerPhone: "",
           orderId: data.order_id,
         }),
