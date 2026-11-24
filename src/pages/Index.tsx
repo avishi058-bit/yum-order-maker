@@ -70,6 +70,7 @@ import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "sonner";
 
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
+import { dishNameMode } from "@/lib/dishOwners";
 
 const Index = () => {
   const { isAvailable } = useAvailability();
@@ -92,6 +93,9 @@ const Index = () => {
   const [savedConfirmOpen, setSavedConfirmOpen] = useState(false);
   const [showKioskWelcome, setShowKioskWelcome] = useState(isStation);
   const [cart, setCart] = useState<CartItem[]>([]);
+  // Name on the dish: open from the 3rd burger until skipped (lib/dishOwners).
+  const [dishNameSkipped, setDishNameSkipped] = useState(false);
+  useEffect(() => { if (cart.length === 0) setDishNameSkipped(false); }, [cart.length]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutSkipDetails, setCheckoutSkipDetails] = useState(false);
@@ -719,6 +723,8 @@ const Index = () => {
             isAvailable={isAvailable}
             dineIn={isClosed ? false : dineIn}
             initialState={customizerInitial}
+            nameMode={dishNameMode(cart, dishNameSkipped)}
+            onNameSkipped={() => setDishNameSkipped(true)}
           />
         )}
 

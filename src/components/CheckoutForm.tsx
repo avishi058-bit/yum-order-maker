@@ -29,8 +29,6 @@ import SmsReadyOptIn from "@/components/SmsReadyOptIn";
 import { SignInSheet, SheetTitle, SheetSub, SheetFine, CodeBoxes, ResendLine } from "@/components/auth/SignInSheet";
 import { smsEnabled, isPhoneVerified, sendPhoneCode, verifyPhoneCode, optInReadySms } from "@/lib/sms";
 import { zcreditSafeText } from "@/lib/zcreditText";
-import { isNameableDish, needsDishOwners } from "@/lib/dishOwners";
-import DishOwners from "@/components/checkout/DishOwners";
 
 export interface CheckoutSauce {
   id: string;
@@ -134,14 +132,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Without this step, create-order rejects the request because customerName
   // would be an empty string and Zod validation fails - exactly the bug that
   // caused "שגיאה" when tapping payment in the kiosk.
-  // Take-away with 2+ burgers: "whose burger?" is asked here (not per dish), so
-  // even a signed-in customer sees the details step.
-  const needOwners = needsDishOwners(items, dineIn);
-  const [owners, setOwners] = useState<Record<string, string>>(() =>
-    Object.fromEntries(items.filter((it) => it.ownerName?.trim()).map((it) => [it.id, it.ownerName!.trim()])),
-  );
-  const ownerOf = (it: CartItem) => (owners[it.id] ?? it.ownerName ?? "").trim();
-  const effectiveSkipDetails = skipDetails || (isLoggedIn && !needOwners);
+  const effectiveSkipDetails = skipDetails || isLoggedIn;
   const computeInitialStep = (): "phone" | "otp" | "details" | "payment" => {
     const detailsOrPayment: "details" | "payment" = effectiveSkipDetails ? "payment" : "details";
     if (isLoggedIn && customer) return detailsOrPayment;
@@ -512,7 +503,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     // sentinel-prefixed entry inside removalNames (which the receipt builder
     // already iterates over). The receipt extracts and removes it before
     // rendering. Stored as text only - no DB schema change required.
-    const ownerName = ownerOf(item);
+    const ownerName = (item as CartItem & { ownerName?: string }).ownerName?.trim();
     const isFavorite = !!(item as CartItem & { isFavorite?: boolean }).isFavorite;
     const removalNamesWithMeta = [
       ...(isFavorite ? ["__FAVORITE__"] : []),
@@ -758,7 +749,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     items.forEach((it, idx) => {
       const unit = Math.round((priced[idx]?.price ?? it.price) * 100) / 100;
       const base = it.withMeal && !/^(ארוחת|עסקית)/.test(it.name) ? `עסקית ${it.name}` : it.name;
-      const label = ownerOf(it) ? `${base} - ${ownerOf(it)}` : base;
+      const label = it.ownerName?.trim() ? `${base} - ${it.ownerName.trim()}` : base;
       const n = Math.max(1, Math.floor(it.quantity || 1));
       for (let k = 0; k < n; k++) lines.push({ label: n > 1 ? `${label} (${k + 1}/${n})` : label, amount: unit });
     });
@@ -1193,16 +1184,6 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
                   />
                   {(nameInvalid || strippedField === "name") && <p key={nameShake} id="checkout-customer-name-error" role="alert" className={`animate-customer-name-shake mt-2 text-destructive ${isKiosk ? "text-lg font-bold" : "text-sm"}`}>{nameMessage}</p>}
                 </div>
-              )}
-              {needOwners && (
-                <DishOwners
-                  rows={items.filter(isNameableDish).map((it) => ({ id: it.id, label: it.name, qty: Math.max(1, Math.floor(it.quantity || 1)) }))}
-                  myName={cleanCustomerName(form.name)}
-                  owners={owners}
-                  onChange={(id, name) => setOwners((prev) => ({ ...prev, [id]: name }))}
-                  th={th}
-                  large={isKiosk}
-                />
               )}
               {/* Website (no logged-in user) → phone field shown here when OTP is bypassed.
                   Kiosk → phone is never collected. */}

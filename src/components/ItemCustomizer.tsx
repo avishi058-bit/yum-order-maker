@@ -137,8 +137,13 @@ interface ItemCustomizerProps {
   onClose: () => void;
   onConfirm: (item: MenuItem, quantity: number, selectedToppings: string[], selectedRemovals: string[], withMeal: boolean, mealSideId?: string, mealDrinkId?: string, ownerName?: string, sideItems?: Array<{ itemId: string; qty: number; label?: string }>) => void;
   isAvailable?: (id: string) => boolean;
-  /** Take-away (false) shows the optional "name on the dish" step at the end. */
+  /** Take-away (false) shows the optional "name on the dish" field. */
   dineIn?: boolean | null;
+  /** "button": a small optional "add a name" button (1st/2nd burger, or after
+   *  the customer skipped). "open": the name field is already open (3rd burger on). */
+  nameMode?: "button" | "open";
+  /** Called when the field was open and the dish was added without a name. */
+  onNameSkipped?: () => void;
   /** When set, the customizer opens with these values prefilled - used for
    *  editing an item already in the cart. */
   initialState?: ItemCustomizerInitialState;
@@ -165,7 +170,7 @@ const readKioskHeroHeight = () => {
 const DRAG_CLOSE_THRESHOLD = 120; // px the user must drag down to close
 const DRAG_MAX_TRACK = 400;       // cap on drag distance (resistance)
 
-const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initialState }: ItemCustomizerProps) => {
+const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initialState, nameMode = "button", onNameSkipped }: ItemCustomizerProps) => {
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
   const [quantity, setQuantity] = useState(1);
@@ -179,7 +184,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   // Asked as the LAST step, and only for take-away orders.
   const [ownerName, setOwnerName] = useState("");
   const [nameStepOpen, setNameStepOpen] = useState(false);
-  const [pendingFinish, setPendingFinish] = useState<{ withMeal: boolean; sideId?: string; drinkId?: string } | null>(null);
   const ownerInputRef = useRef<HTMLInputElement>(null);
 
   const { trigger: triggerSkibidi } = useSkibidiGuard();
@@ -225,7 +229,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setSelectedSide(initialState.mealSideId || "side-fries");
       setSelectedDrink(initialState.mealDrinkId || "drink-cola");
       setOwnerName(initialState.ownerName || "");
-      setNameStepOpen(false);
+      setNameStepOpen(!!initialState.ownerName?.trim() || nameMode === "open");
       setStep("customize");
     } else {
       // Fresh open - start from a clean slate. The sheet can be closed from
@@ -240,7 +244,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
       setSideItemCounts({});
       setGlutenRemovedNotice([]);
       setToppingsSeen(false);
-      setNameStepOpen(false);
+      setNameStepOpen(nameMode === "open");
       setStep("customize");
       // Fresh open - set defaults
       const defaults: Record<string, boolean> = {};
@@ -752,18 +756,14 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     }
   };
 
-  /** "Whose dish?" is no longer asked per dish - customers typed their name
-   *  twice. It is asked once at checkout, only for take-away with 2+ burgers
-   *  (src/components/checkout/DishOwners.tsx). Editing a dish keeps its name. */
-  const nameStepEnabled = false;
+  /** Take-away burgers: an optional name on the dish, inside the sheet (no
+   *  separate step). Closed button for the 1st/2nd burger, open from the 3rd
+   *  until the customer skips it (see dishNameMode in lib/dishOwners). */
+  const nameFieldEnabled = isBurger && dineIn === false;
 
-  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string, skipNameStep = false, countsOverride?: Record<string, number>) => {
-    if (nameStepEnabled && !skipNameStep) {
-      setPendingFinish({ withMeal, sideId, drinkId });
-      setNameStepOpen(true);
-      return;
-    }
-    const trimmedOwner = ownerName.trim();
+  const handleFinish = (withMeal: boolean, sideId?: string, drinkId?: string, _unused = false, countsOverride?: Record<string, number>) => {
+    const trimmedOwner = nameFieldEnabled ? ownerName.trim() : "";
+    if (nameFieldEnabled && nameMode === "open" && !trimmedOwner && !initialState) onNameSkipped?.();
     const donenessCategoryOn = !isAvailable || isAvailable("doneness-category");
     const donenessOptionOn = !isAvailable || isAvailable(selectedDoneness);
     const includeDoneness = isBurger && !isSmash && !isVegan && donenessCategoryOn && donenessOptionOn;
@@ -803,7 +803,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
     setSelectedSide("side-fries");
     setSelectedDrink("drink-cola");
     setNameStepOpen(false);
-    setPendingFinish(null);
     setOwnerName("");
     setToppingsSeen(false);
     setSideItemCounts({});
@@ -1756,6 +1755,54 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
 
 
 
+              {/* Optional name on the dish - part of the sheet, never its own step */}
+              {step === "customize" && nameFieldEnabled && (
+                <div className={`border-t border-gray-200 bg-white ${isKiosk ? "px-8 pt-4" : "px-5 pt-3"}`} dir="rtl">
+                  {nameStepOpen ? (
+                    <label className="block">
+                      <span className={`block font-bold text-gray-700 ${isKiosk ? "text-[22px] mb-2" : "text-sm mb-1"}`}>
+                        שם על המנה <span className="font-normal text-gray-500">(אפשר לדלג)</span>
+                      </span>
+                      <input
+                        ref={ownerInputRef}
+                        type="text"
+                        value={ownerName}
+                        onChange={(e) => {
+                          const raw = e.target.value.slice(0, 30);
+                          if (containsSixtySeven(raw)) {
+                            triggerSkibidi();
+                            setOwnerName("");
+                            return;
+                          }
+                          setOwnerName(raw);
+                        }}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                        placeholder="שם (למשל: יוסי)"
+                        maxLength={30}
+                        inputMode="text"
+                        enterKeyHint="done"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="words"
+                        spellCheck={false}
+                        name="dish-owner-name"
+                        dir="rtl"
+                        style={{ fontSize: isKiosk ? "24px" : "16px" }}
+                        className={`w-full bg-white border-2 border-gray-200 rounded-xl text-right focus:outline-none focus:border-primary transition-colors ${isKiosk ? "px-5 py-4" : "px-4 py-2.5"}`}
+                      />
+                    </label>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setNameStepOpen(true); setTimeout(() => ownerInputRef.current?.focus(), 50); }}
+                      className={`font-bold text-primary underline-offset-4 hover:underline ${isKiosk ? "text-[22px] py-2" : "text-sm py-1"}`}
+                    >
+                      + רוצה להוסיף שם? <span className="font-normal text-gray-500">(רלוונטי בהזמנה מרובה)</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Bottom bar - only on customize step */}
               {step === "customize" && (
                 <div className={`border-t border-gray-200 flex items-center gap-3 bg-white pwa-safe-bottom ${isKiosk ? "px-8 py-6" : "px-5 py-4"}`}>
@@ -1845,83 +1892,6 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
         </>
       )}
       </AnimatePresence>
-
-      {/* Final step (take-away only): optional name on the dish. */}
-      <AnimatePresence>
-        {nameStepOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4"
-            dir="rtl"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.18 }}
-              className={`bg-white text-black w-full rounded-3xl shadow-2xl ${isKiosk ? "max-w-2xl p-10" : "max-w-md p-6"}`}
-            >
-              <h3 className={`font-black text-center ${isKiosk ? "text-[36px] mb-2" : "text-xl mb-1"}`}>
-                של מי המנה? :)
-              </h3>
-              <p className={`text-gray-500 text-center ${isKiosk ? "text-[22px] mb-6" : "text-sm mb-4"}`}>
-                נכתוב את השם על המנה כדי למנוע בלבולים (אפשר לדלג)
-              </p>
-              <input
-                ref={ownerInputRef}
-                autoFocus
-                type="text"
-                value={ownerName}
-                onChange={(e) => {
-                  const raw = e.target.value.slice(0, 30);
-                  if (containsSixtySeven(raw)) {
-                    triggerSkibidi();
-                    setOwnerName("");
-                    return;
-                  }
-                  setOwnerName(raw);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleFinish(pendingFinish?.withMeal ?? false, pendingFinish?.sideId, pendingFinish?.drinkId, true);
-                }}
-                placeholder="שם (למשל: יוסי)"
-                maxLength={30}
-                inputMode="text"
-                enterKeyHint="done"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="words"
-                spellCheck={false}
-                name="dish-owner-name"
-                dir="rtl"
-                style={{ fontSize: isKiosk ? "26px" : "16px" }}
-                className={`w-full bg-white border-2 border-gray-200 rounded-xl text-right focus:outline-none focus:border-primary transition-colors ${isKiosk ? "px-5 py-5" : "px-4 py-3"}`}
-              />
-              <div className={`${isKiosk ? "space-y-4 mt-8" : "space-y-3 mt-5"}`}>
-                <button
-                  onClick={() => handleFinish(pendingFinish?.withMeal ?? false, pendingFinish?.sideId, pendingFinish?.drinkId, true)}
-                  className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-6 text-[30px]" : "py-4 text-lg"}`}
-                >
-                  הוספה להזמנה 🍔
-                </button>
-                <button
-                  onClick={() => {
-                    setOwnerName("");
-                    handleFinish(pendingFinish?.withMeal ?? false, pendingFinish?.sideId, pendingFinish?.drinkId, true);
-                  }}
-                  className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[24px]" : "py-3 text-base"}`}
-                >
-                  דלג
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-
 
       {/* Alcohol-consent gate for beer chosen as a meal-deal drink.
           Rendered as a sibling of <AnimatePresence> - NOT as its child -

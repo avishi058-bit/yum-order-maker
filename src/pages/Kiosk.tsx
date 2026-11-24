@@ -69,6 +69,7 @@ import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
+import { dishNameMode } from "@/lib/dishOwners";
 
 const needsCustomization = (item: MenuItem) =>
   item.category === "burger" || item.category === "meal" || item.id === "friends-deal" || item.id === "family-deal" || (item.category === "drink" && !!drinkSubOptions[item.id]);
@@ -86,6 +87,9 @@ const Kiosk = () => {
 
   const [view, setView] = useState<KioskView>("welcome");
   const [cart, setCart] = useState<CartItem[]>([]);
+  // Name on the dish: open from the 3rd burger until skipped (lib/dishOwners).
+  const [dishNameSkipped, setDishNameSkipped] = useState(false);
+  useEffect(() => { if (cart.length === 0) setDishNameSkipped(false); }, [cart.length]);
   // Someone ordering at the kiosk: the kitchen holds quiet-time tasks.
   useTrackCustomerActivity(cart.length > 0);
   const [orderSuccess, setOrderSuccess] = useState<number | null>(null);
@@ -476,7 +480,7 @@ const Kiosk = () => {
           chunks are prefetched during Welcome (see prefetchCustomerFlow), so
           in practice they are already resident when opened. */}
       <Suspense fallback={null}>
-        <ItemCustomizer item={customizerItem} onClose={() => { if (!editingCartId) noteHesitation(customizerItem?.id); setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} dineIn={dineIn} initialState={customizerInitial} />
+        <ItemCustomizer item={customizerItem} onClose={() => { if (!editingCartId) noteHesitation(customizerItem?.id); setCustomizerItem(null); setEditingCartId(null); setCustomizerInitial(undefined); }} onConfirm={handleCustomizerConfirm} isAvailable={isAvailable} dineIn={dineIn} initialState={customizerInitial} nameMode={dishNameMode(cart, dishNameSkipped)} onNameSkipped={() => setDishNameSkipped(true)} />
         <DealCustomizer open={dealOpen} onClose={() => setDealOpen(false)} onConfirm={handleDealConfirm} isAvailable={isAvailable} />
         <FamilyDealCustomizer open={familyDealOpen} onClose={() => setFamilyDealOpen(false)} onConfirm={handleFamilyDealConfirm} isAvailable={isAvailable} />
         <DrinkSelector item={drinkItem} onClose={() => setDrinkItem(null)} onConfirm={handleDrinkConfirm} isAvailable={isAvailable} isKiosk />
