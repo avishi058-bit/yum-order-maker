@@ -1024,15 +1024,36 @@ const Index = () => {
                 <Check size={32} className="text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-2xl font-black mb-2">ההזמנה נשמרה אצלכם ✅</h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-muted-foreground mb-5 leading-relaxed">
                 אפשר לצאת מהאתר. כשהמטבח יפתח להזמנות, חזרו והשלימו את השליחה בעצמכם - ההזמנה לא תישלח אוטומטית.
               </p>
-              <button
-                onClick={() => setSavedConfirmOpen(false)}
-                className="w-full rounded-2xl py-3.5 font-black text-white bg-primary hover:bg-primary/90 transition-colors"
-              >
-                הבנתי
-              </button>
+              {/* Offer the "we're open" SMS right when the order is saved (ReopenNotifyModal). */}
+              {isStation ? (
+                <button
+                  onClick={() => setSavedConfirmOpen(false)}
+                  className="w-full rounded-2xl py-3.5 font-black text-white bg-primary hover:bg-primary/90 transition-colors"
+                >
+                  הבנתי
+                </button>
+              ) : (
+              <>
+              <p className="font-black text-lg mb-3">לעדכן אותך ב-SMS כשנפתח?</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => { setSavedConfirmOpen(false); setReopenModalOpen(true); }}
+                  className="w-full rounded-2xl py-3.5 font-black text-white bg-primary hover:bg-primary/90 transition-colors"
+                >
+                  עדכנו אותי
+                </button>
+                <button
+                  onClick={() => setSavedConfirmOpen(false)}
+                  className="w-full rounded-2xl py-3 font-bold bg-secondary text-muted-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  לא תודה
+                </button>
+              </div>
+              </>
+              )}
             </motion.div>
           </div>
         )}
