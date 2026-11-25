@@ -1,182 +1,137 @@
-import { useEffect, useState } from "react";
+// "עדכנו אותי כשנפתח": one SMS when we open (reopen_sms_* in the database).
+// A signed-in customer is registered right away. Anyone else signs in with
+// the SMS code first (CustomerAuthModal) - the same code also signs them in.
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, X, Check, Loader2, Download, Smartphone } from "lucide-react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
-import {
-  isPushSupported,
-  iosNeedsInstall,
-  isStandalonePwa,
-  subscribeReopenToPush,
-} from "@/lib/push";
+import { Check, Loader2, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCustomerAuth } from "@/contexts/CustomerAuthContext";
+import CustomerAuthModal from "@/components/CustomerAuthModal";
 
 interface ReopenNotifyModalProps {
   open: boolean;
   onClose: () => void;
+  /** Next opening, as shown on the closed card (day index 0-6, "HH:MM"). */
+  nextOpenDay?: number | null;
+  nextOpenAt?: string | null;
 }
 
-const STORAGE_KEY = "habakta_reopen_notify_registered";
+const DAY_NAMES_HE = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
-const ReopenNotifyModal = ({ open, onClose }: ReopenNotifyModalProps) => {
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
-  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
-  const [needsInstall, setNeedsInstall] = useState(false);
-  const [unsupported, setUnsupported] = useState(false);
+// The database function is newer than the generated types.
+const rpc = (fn: string, args: Record<string, unknown>) =>
+  (supabase as unknown as { rpc: (f: string, a: Record<string, unknown>) => Promise<{ data: { ok?: boolean; error?: string } | null; error: unknown }> }).rpc(fn, args);
+
+const expectedText = (day: number | null | undefined, at: string | null | undefined): string | null => {
+  if (!at || day === null || day === undefined) return null;
+  const today = new Date().getDay();
+  if (day === today) return `אנחנו צפויים להיפתח היום בסביבות ${at}`;
+  if (day === (today + 1) % 7) return `אנחנו צפויים להיפתח מחר בסביבות ${at}`;
+  return `אנחנו צפויים להיפתח ביום ${DAY_NAMES_HE[day]} בסביבות ${at}`;
+};
+
+type View = "working" | "done" | "error" | "signin";
+
+const ReopenNotifyModal = ({ open, onClose, nextOpenDay, nextOpenAt }: ReopenNotifyModalProps) => {
+  const { customer, isLoggedIn } = useCustomerAuth();
+  const [view, setView] = useState<View>("working");
+  const waitingForSignIn = useRef(false);
+
+  const register = useCallback(async (phone: string, name: string) => {
+    setView("working");
+    try {
+      const { data, error } = await rpc("reopen_sms_request", { p_phone: phone, p_name: name });
+      if (!error && data?.ok) { setView("done"); return; }
+      // Signed in on this device without the SMS code: ask for it now.
+      if (data?.error === "phone_not_verified" && !waitingForSignIn.current) {
+        waitingForSignIn.current = true;
+        setView("signin");
+        return;
+      }
+      setView("error");
+    } catch {
+      setView("error");
+    }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === "1") {
-        setAlreadyRegistered(true);
-      }
-    } catch {}
-    const installedOnHomeScreen = isStandalonePwa();
-    setNeedsInstall(!installedOnHomeScreen);
-    setUnsupported(installedOnHomeScreen && !isPushSupported());
+    waitingForSignIn.current = false;
+    if (isLoggedIn && customer?.phone) void register(customer.phone, customer.name);
+    else { waitingForSignIn.current = true; setView("signin"); }
+    // Only when the window opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const handleEnable = async () => {
-    setSubmitting(true);
-    const res = await subscribeReopenToPush();
-    setSubmitting(false);
+  // The sign-in sheet calls onClose and then onSuccess on its last button;
+  // closing waits a tick so a success can cancel it and register instead.
+  const closeTimer = useRef<number>();
+  const customerRef = useRef(customer);
+  customerRef.current = customer;
 
-    if (res.ok) {
-      try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
-      setDone(true);
-      return;
-    }
-    if (res.reason === "ios_needs_install") {
-      setNeedsInstall(true);
-      return;
-    }
-    if (res.reason === "denied") {
-      toast.error("צריך לאשר התראות בהגדרות הדפדפן");
-      return;
-    }
-    if (res.reason === "unsupported") {
-      setUnsupported(true);
-      return;
-    }
-    toast.error("שגיאה בהפעלת ההתראות, נסו שוב");
-  };
+  if (!open) return null;
 
-  const handleClose = () => {
-    setDone(false);
-    onClose();
-  };
+  if (view === "signin") {
+    return (
+      <CustomerAuthModal
+        open
+        onClose={() => { closeTimer.current = window.setTimeout(onClose, 0); }}
+        onSuccess={() => {
+          window.clearTimeout(closeTimer.current);
+          const c = customerRef.current;
+          if (c?.phone) void register(c.phone, c.name);
+          else setView("error");
+        }}
+      />
+    );
+  }
+
+  const expected = expectedText(nextOpenDay, nextOpenAt);
 
   return (
     <AnimatePresence>
-      {open && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={onClose}
+        dir="rtl"
+      >
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={handleClose}
-          dir="rtl"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-card rounded-2xl p-6 max-w-md w-full border border-border relative text-center"
+          onClick={(e) => e.stopPropagation()}
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-card rounded-2xl p-6 max-w-md w-full border border-border relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={handleClose}
-              className="absolute top-3 left-3 p-2 rounded-full hover:bg-secondary transition-colors"
-              aria-label="סגור"
-            >
-              <X size={18} />
-            </button>
+          <button onClick={onClose} aria-label="סגירה" className="absolute top-3 left-3 p-2 rounded-full hover:bg-secondary transition-colors">
+            <X size={18} />
+          </button>
 
-            {done || alreadyRegistered ? (
-              <div className="text-center py-4">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <Check size={32} className="text-green-600" />
-                </div>
-                <h3 className="text-xl font-black mb-2">
-                  {alreadyRegistered && !done ? "כבר רשומים 🎉" : "הכל מוכן! 🎉"}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  נשלח לכם התראה למכשיר ברגע שנפתח שוב להזמנות
-                </p>
-                <button
-                  onClick={handleClose}
-                  className="mt-6 w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl"
-                >
-                  סגור
-                </button>
-              </div>
-            ) : needsInstall ? (
-              <>
-                <div className="flex items-center gap-3 mb-4 pl-8">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-none">
-                    <Smartphone size={22} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black">קודם מתקינים את האפליקציה</h3>
-                    <p className="text-xs text-muted-foreground">
-                      כדי לקבל התראה כשנפתח שוב, קודם צריך להתקין את הבקתה במסך הבית
-                    </p>
-                  </div>
-                </div>
-                <ol className="text-sm text-muted-foreground space-y-2 mb-5 mr-4 list-decimal">
-                  <li>לחצו על הכפתור למטה כדי לפתוח את דף ההתקנה</li>
-                  <li>הוסיפו את האפליקציה למסך הבית</li>
-                  <li>פתחו את הבקתה מהאייקון החדש במסך הבית</li>
-                  <li>לחצו שוב על "עדכנו אותי כשנפתח" ואשרו התראות</li>
-                </ol>
-                <Link
-                  to="/install"
-                  onClick={handleClose}
-                  className="w-full bg-primary text-primary-foreground font-black py-3 rounded-xl flex items-center justify-center gap-2"
-                >
-                  <Download size={18} />
-                  להורדת האפליקציה
-                </Link>
-              </>
-            ) : unsupported ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">
-                  הדפדפן הזה לא תומך בהתראות. נסו לפתוח את האתר בדפדפן אחר (Chrome / Safari עדכני).
-                </p>
-                <button
-                  onClick={handleClose}
-                  className="mt-6 w-full bg-secondary text-foreground font-bold py-3 rounded-xl"
-                >
-                  סגור
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-3 mb-4 pl-8">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-none">
-                    <Bell size={22} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black">עדכנו אותי כשנפתח שוב</h3>
-                    <p className="text-xs text-muted-foreground">
-                      נשלח התראה ישירות למכשיר ברגע שנפתח להזמנות - פעם אחת בלבד
-                    </p>
-                  </div>
-                </div>
+          {view === "working" && <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />}
 
-                <button
-                  onClick={handleEnable}
-                  disabled={submitting}
-                  className="mt-2 w-full bg-primary text-primary-foreground font-black py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {submitting ? <Loader2 size={18} className="animate-spin" /> : <Bell size={18} />}
-                  הפעילו התראות
-                </button>
-              </>
-            )}
-          </motion.div>
+          {view === "done" && (
+            <>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Check className="text-green-500" size={32} />
+              </div>
+              <h3 className="text-xl font-black">נעדכן אותך ב-SMS כשנפתח</h3>
+              {expected && <p className="mt-2 text-muted-foreground">{expected}</p>}
+              <button onClick={onClose} className="mt-6 w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl">
+                מעולה
+              </button>
+            </>
+          )}
+
+          {view === "error" && (
+            <>
+              <h3 className="text-lg font-black">לא הצלחנו לרשום אותך כרגע</h3>
+              <p className="mt-2 text-muted-foreground">נסו שוב בעוד כמה דקות.</p>
+              <button onClick={onClose} className="mt-6 w-full bg-secondary font-bold py-3 rounded-xl">סגירה</button>
+            </>
+          )}
         </motion.div>
-      )}
+      </motion.div>
     </AnimatePresence>
   );
 };

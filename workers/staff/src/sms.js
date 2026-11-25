@@ -28,6 +28,11 @@ export const readyText = (kind, name) => {
   if (kind === "pickup") return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בבקתה. בתאבון!\nלניווט בוויז: ${WAZE}`;
   return `${hi}ההזמנה שלך מוכנה! היא מחכה לך בדלפק. בתאבון! המבורגר הבקתה`;
 };
+// "עדכנו אותי כשנפתח": one SMS when the site opens (reopen_sms_send_all).
+export const reopenText = (name) => {
+  const hi = name ? `${name}, ` : "";
+  return `${hi}מעדכנים שפתחנו! אתה יכול להיכנס עכשיו ולהזמין 🙂\nhttps://habikta-burger.com\nהמבורגר הבקתה`;
+};
 export const otpText = (code) =>
   `קוד האימות שלך בהמבורגר הבקתה: ${code}\nאין למסור את הקוד לאף אחד\n\n@habikta-burger.com #${code}`;
 
@@ -55,6 +60,17 @@ export const handleReady = async (req, env, checkKey) => {
   const phone = normalizePhone(body?.phone);
   if (!isMobile(phone)) return new Response("bad", { status: 400 });
   const out = await sendSms(env, phone, readyText(body?.kind, firstName(body?.name)));
+  return Response.json({ ok: out.ok, status: out.status });
+};
+
+// /sms/reopen: the database sends each waiting "notify me" customer one SMS.
+// Same VAPID check, so only the database can use it.
+export const handleReopenSms = async (req, env, checkKey) => {
+  const body = await req.json().catch(() => ({}));
+  try { await checkKey(env, body?.vapid_private); } catch { return new Response("forbidden", { status: 403 }); }
+  const phone = normalizePhone(body?.phone);
+  if (!isMobile(phone)) return new Response("bad", { status: 400 });
+  const out = await sendSms(env, phone, reopenText(firstName(body?.name)));
   return Response.json({ ok: out.ok, status: out.status });
 };
 

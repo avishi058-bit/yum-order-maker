@@ -3,8 +3,8 @@
 //                    Sends each message as Web Push (RFC 8291 aes128gcm + VAPID).
 //   GET  /calendar?t=<token> - iCal feed of the person's published shifts.
 //   GET  /health   - "ok"
-//   POST /sms/otp, /sms/ready - customer SMS, called by the database (see sms.js).
-import { handleOtpSms, handleReady } from "./sms.js";
+//   POST /sms/otp, /sms/ready, /sms/reopen - customer SMS, called by the database (see sms.js).
+import { handleOtpSms, handleReady, handleReopenSms } from "./sms.js";
 
 const enc = new TextEncoder();
 const b64uToBytes = (s) => {
@@ -212,6 +212,7 @@ export default {
     if (url.pathname === "/receipt" && req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
     if (url.pathname === "/sms/otp" && req.method === "POST") return handleOtpSms(req, env, getSigningKey);
     if (url.pathname === "/sms/ready" && req.method === "POST") return handleReady(req, env, getSigningKey);
+    if (url.pathname === "/sms/reopen" && req.method === "POST") return handleReopenSms(req, env, getSigningKey);
     if (url.pathname === "/receipt" && req.method === "POST") return handleReceipt(req, env);
     if (url.pathname === "/notify" && req.method === "POST") return handleNotify(req, env);
     if (url.pathname === "/calendar" && req.method === "GET") return handleCalendar(url, env);

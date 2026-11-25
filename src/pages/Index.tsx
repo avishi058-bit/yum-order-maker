@@ -1002,7 +1002,7 @@ const Index = () => {
         )}
 
         {reopenModalOpen && (
-          <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} />
+          <ReopenNotifyModal open={reopenModalOpen} onClose={() => setReopenModalOpen(false)} nextOpenDay={businessStatus.nextOpenDay} nextOpenAt={businessStatus.nextOpenAt} />
         )}
 
         {savedConfirmOpen && (
