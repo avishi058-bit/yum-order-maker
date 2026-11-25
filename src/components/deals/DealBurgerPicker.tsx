@@ -29,11 +29,14 @@ type Props = {
   onToggleIngredient: (id: string) => void;
   selectedToppings: string[];
   onToggleTopping: (id: string) => void;
+  /** "popup": the name is asked in a popup on "המשך" (see useDealNamePrompt),
+   *  so no button here; "button": after two skips, the optional button. */
+  nameMode: "popup" | "button";
 };
 
 const DealBurgerPicker = ({
   isKiosk, guard, isAvailable, name, onName, doneness, onDoneness,
-  ingredientState, onToggleIngredient, selectedToppings, onToggleTopping,
+  ingredientState, onToggleIngredient, selectedToppings, onToggleTopping, nameMode,
 }: Props) => {
   const [nameOpen, setNameOpen] = useState(!!name);
   const available = (id: string) => !isAvailable || isAvailable(id);
@@ -55,7 +58,7 @@ const DealBurgerPicker = ({
         <p className={`text-black font-bold leading-relaxed text-right ${isKiosk ? "text-[20px]" : "text-base"}`}>
           בצל, עגבנייה, חסה, חמוצים ואיולי הבית
         </p>
-        {nameOpen ? (
+        {nameMode === "popup" && !name ? null : nameOpen || name ? (
           <label className="block mt-3">
             <span className={`block font-bold text-gray-700 ${isKiosk ? "text-[22px] mb-2" : "text-sm mb-1"}`}>
               שם על המנה <span className="font-normal text-gray-500">(אפשר לדלג)</span>
@@ -136,24 +139,18 @@ const DealBurgerPicker = ({
       <div className={isKiosk ? "px-8 py-6" : "px-5 py-4"}>
         <h3 className={h3}>תוספות בתשלום</h3>
         <p className={sub}>בתשלום נוסף על מחיר הדיל</p>
-        {dealToppings.map((t) => {
-          const out = !available(t.id);
+        {/* Out-of-stock toppings are not shown at all. */}
+        {dealToppings.filter((t) => available(t.id)).map((t) => {
           const active = selectedToppings.includes(t.id);
           return (
-            <button
-              key={t.id}
-              disabled={out}
-              onClick={guard(() => { if (!out) onToggleTopping(t.id); })}
-              aria-pressed={active}
-              className={`${row} ${out ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
+            <button key={t.id} onClick={guard(() => onToggleTopping(t.id))} aria-pressed={active} className={row}>
               <div className="flex items-center gap-3">
-                <div className={circle(active && !out)}>
-                  {active && !out && <Check size={isKiosk ? 20 : 16} className="text-primary-foreground" strokeWidth={4} />}
+                <div className={circle(active)}>
+                  {active && <Check size={isKiosk ? 20 : 16} className="text-primary-foreground" strokeWidth={4} />}
                 </div>
-                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>{out ? "(אזל)" : `+ ₪${t.price}`}</span>
+                <span className={`text-gray-500 font-medium ${isKiosk ? "text-[20px]" : "text-sm"}`}>+ ₪{t.price}</span>
               </div>
-              <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"} ${out ? "line-through text-gray-400" : ""}`}>
+              <span className={`font-bold flex items-center gap-1.5 ${isKiosk ? "text-[30px]" : "text-lg"}`}>
                 {t.name}
                 {t.image && ingredientImages[t.image] && (
                   <img src={ingredientImages[t.image]} alt={t.name} className={`inline-block object-contain ${t.image === "extra-patty" ? (isKiosk ? "w-[60px] h-[60px]" : "w-12 h-12") : (isKiosk ? "w-9 h-9" : "w-7 h-7")}`} />

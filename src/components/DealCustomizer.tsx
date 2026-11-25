@@ -6,6 +6,8 @@ import { useLocation } from "react-router-dom";
 import { dealDrinkOptions, drinkToAvailabilityId, DEFAULT_DONENESS } from "@/data/menu";
 import DealSheet from "@/components/deals/DealSheet";
 import { useTapGuard } from "@/hooks/useTapGuard";
+import { useDealNamePrompt } from "@/hooks/useDealNamePrompt";
+import DealNamePopup from "@/components/deals/DealNamePopup";
 import DealBurgerPicker from "@/components/deals/DealBurgerPicker";
 import DealDrinkPicker, { type DealDrinkOption } from "@/components/deals/DealDrinkPicker";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
@@ -46,6 +48,7 @@ const drinkStepIndex = (step: Step): number =>
 
 const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomizerProps) => {
   const alcoholConsent = useAlcoholConsent();
+  const namePrompt = useDealNamePrompt();
 
   const isDrinkUnavailable = (drinkId: string) => {
     const availId = drinkToAvailabilityId[drinkId];
@@ -97,6 +100,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
   };
 
   const resetState = () => {
+    namePrompt.reset();
     setStep("burger-1");
     setBurgerNames(["", "", ""]);
     setBurgerIngredients([
@@ -188,7 +192,9 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
         onScroll={markScroll}
         footer={{
           label: step === "drink-3" ? "הוספה להזמנה 🍔" : "המשך",
-          onClick: handleNext,
+          onClick: isBurgerStep
+            ? () => namePrompt.ask(!!burgerNames[currentBurgerIndex]?.trim(), handleNext)
+            : handleNext,
           disabled: drinkMissing,
           note: drinkMissing ? "יש לבחור שתייה" : undefined,
         }}
@@ -206,6 +212,7 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
             onToggleIngredient={toggleIngredient}
             selectedToppings={burgerToppings[currentBurgerIndex]}
             onToggleTopping={toggleBurgerTopping}
+            nameMode={namePrompt.mode}
           />
         )}
         {isDrinkStep && (
@@ -221,6 +228,18 @@ const DealCustomizer = ({ open, onClose, onConfirm, isAvailable }: DealCustomize
           />
         )}
       </DealSheet>
+
+      <DealNamePopup
+        open={namePrompt.open}
+        isKiosk={isKiosk}
+        value={currentBurgerIndex >= 0 ? burgerNames[currentBurgerIndex] || "" : ""}
+        onChange={(v) => setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? v : n)))}
+        onDone={() => namePrompt.finish(!burgerNames[currentBurgerIndex]?.trim())}
+        onSkip={() => {
+          setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? "" : n)));
+          namePrompt.finish(true);
+        }}
+      />
 
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}

@@ -9,6 +9,8 @@ import DealSheet from "@/components/deals/DealSheet";
 import DealBurgerPicker from "@/components/deals/DealBurgerPicker";
 import DealDrinkPicker from "@/components/deals/DealDrinkPicker";
 import { useTapGuard } from "@/hooks/useTapGuard";
+import { useDealNamePrompt } from "@/hooks/useDealNamePrompt";
+import DealNamePopup from "@/components/deals/DealNamePopup";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
@@ -58,6 +60,7 @@ const familyDrinkOptions = [
 
 const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyDealCustomizerProps) => {
   const alcoholConsent = useAlcoholConsent();
+  const namePrompt = useDealNamePrompt();
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
 
@@ -115,6 +118,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   };
 
   const resetState = () => {
+    namePrompt.reset();
     setStep("burger-1");
     setBurgerNames(Array.from({ length: 5 }, () => ""));
     setBurgerIngredients(Array.from({ length: 5 }, () => defaultRegularIngredientState()));
@@ -258,7 +262,9 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
         onScroll={markScroll}
         footer={{
           label: isLastStep ? "הוספה להזמנה 🍔" : "המשך",
-          onClick: handleNext,
+          onClick: isBurgerStep
+            ? () => namePrompt.ask(!!burgerNames[currentBurgerIndex]?.trim(), handleNext)
+            : handleNext,
           disabled: isNextDisabled,
           note: isDrinkStep && selectedDrinks[currentDrinkIndex] === "" ? "יש לבחור שתייה" : undefined,
         }}
@@ -276,6 +282,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
             onToggleIngredient={toggleIngredient}
             selectedToppings={burgerToppings[currentBurgerIndex]}
             onToggleTopping={toggleBurgerTopping}
+            nameMode={namePrompt.mode}
           />
         )}
 
@@ -326,6 +333,18 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
           />
         )}
       </DealSheet>
+
+      <DealNamePopup
+        open={namePrompt.open}
+        isKiosk={isKiosk}
+        value={currentBurgerIndex >= 0 ? burgerNames[currentBurgerIndex] || "" : ""}
+        onChange={(v) => setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? v : n)))}
+        onDone={() => namePrompt.finish(!burgerNames[currentBurgerIndex]?.trim())}
+        onSkip={() => {
+          setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? "" : n)));
+          namePrompt.finish(true);
+        }}
+      />
 
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}
