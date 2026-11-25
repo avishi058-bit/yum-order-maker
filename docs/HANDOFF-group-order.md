@@ -24,7 +24,7 @@ Preview: https://group-order.habikta-burger.pages.dev/group
 
 ## Still open
 1. Real test in opening hours with two phones: open group, two people order and pay, live "building" dots, organizer sends, kitchen shows one card + one bon, organizer gets one SMS on ready.
-2. Stuck-group flow (decided by the owner 24.11): code written on the branch, NOT yet pushed; migration `20261124120000_group_stuck.sql` NOT yet applied - both wait for the owner's OK. The SMS only works after merge to main (the worker deploys from main) and links to habikta-burger.com. Test: a test group in opening hours, one person pays, wait 15 and 30 minutes.
+2. Stuck-group flow (decided by the owner 24.11): migration `20261124120000_group_stuck.sql` APPLIED to production (cron `group-stuck-tick`). Code merged into branch `release` with the live code. The SMS only works after merge to main (the worker deploys from main) and links to habikta-burger.com. Test: a test group in opening hours, one person pays, wait 15 and 30 minutes.
 3. Note to owner: paying for someone else passes that person's phone to the payment page (Z-Credit requires it); not shown on screen.
 4. After approval: merge `group-order` into `main` (`git pull --rebase` first - Lovable bot commits land in main), wait for Cloudflare Pages, verify live.
 
