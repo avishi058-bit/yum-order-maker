@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import SmsReadyOptIn from "@/components/SmsReadyOptIn";
 import { SignInSheet, SheetTitle, SheetSub, SheetFine, CodeBoxes, ResendLine } from "@/components/auth/SignInSheet";
+import { getActiveGroup, attachToGroup } from "@/lib/groupSession";
 import { smsEnabled, isPhoneVerified, sendPhoneCode, verifyPhoneCode, optInReadySms } from "@/lib/sms";
 import { zcreditSafeText } from "@/lib/zcreditText";
 
@@ -84,6 +85,9 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   // Lock background scroll while the checkout modal is mounted (iOS-safe).
   useBodyScrollLock(true);
   const { customer, isLoggedIn, linkFromOrder, favoriteItems, signInVerified } = useCustomerAuth();
+  // Ordering into a group (src/pages/GroupOrder.tsx): card only, and the order
+  // joins the group before the payment page opens.
+  const [group] = useState(() => (donationOnly ? null : getActiveGroup()));
   // Kiosk context → larger touch-friendly checkbox + modal
   const isKiosk = typeof window !== "undefined" && /^\/kiosk\/?$/.test(window.location.pathname);
   const { isStaff } = useAuth();
@@ -142,7 +146,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   };
 
   const [form, setForm] = useState({
-    name: isLoggedIn && customer ? customer.name : "",
+    name: group?.name || (isLoggedIn && customer ? customer.name : ""),
     phone: isLoggedIn && customer ? customer.phone : "",
     notes: "",
   });
@@ -181,7 +185,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
   const [smsReady, setSmsReady] = useState(false);
   const [smsPhone, setSmsPhone] = useState("");
   // Returning customers too: every phone is checked once per device (then remembered until logout).
-  const smsCheckPhone = !isKiosk && smsOn && localStorage.getItem("habakta_station") !== "true";
+  // Group orders: only the organizer verifies a phone and gets the ready SMS (when opening the group).
+  const smsCheckPhone = !isKiosk && smsOn && !group && localStorage.getItem("habakta_station") !== "true";
   // Payment method chosen before the code was asked for; continued after it is verified.
   const [smsPendingMethod, setSmsPendingMethod] = useState<"cash" | "credit" | "counter" | "paybox" | null>(null);
   // A ref, not state: the retry below runs in the same tick and must see it.
@@ -194,7 +199,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     setSmsPendingMethod(null);
     if (m) { setStep("payment"); handlePaymentSelect(m); } else continueToPayment();
   };
-  const showSmsOptIn = smsOn && !donationOnly && (isKiosk || dineIn === true) && localStorage.getItem("habakta_station") !== "true";
+  const showSmsOptIn = smsOn && !donationOnly && !group && (isKiosk || dineIn === true) && localStorage.getItem("habakta_station") !== "true";
   const smsNeedsPhone = isKiosk || !validateIsraeliPhone(form.phone).valid;
   const smsTargetPhone = smsNeedsPhone ? smsPhone : form.phone;
   const [submitting, setSubmitting] = useState(false);
@@ -583,7 +588,7 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
         soldierFundTermsAcceptedAt: soldierDonation > 0 ? soldierTermsAt : null,
         // Preorder pickup time (optional). ISO datetime built from today + HH:MM.
         scheduledFor: (() => {
-          if (!preorderEnabled || !preorderTime) return null;
+          if (group || !preorderEnabled || !preorderTime) return null;
           const [h, m] = preorderTime.split(":").map(Number);
           if (Number.isNaN(h) || Number.isNaN(m)) return null;
           const d = new Date();
@@ -631,6 +636,14 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
     }
     if (data?.error) throw new Error(data.error);
     if (!data?.orderId) throw new Error("שגיאה ביצירת ההזמנה");
+    if (group && paymentMethod === "credit") {
+      try {
+        await attachToGroup(group.code, data.orderId, cleanCustomerName(form.name));
+      } catch (e) {
+        throw new Error((e as Error).message === "group_closed" ? "המארגן כבר סגר את הקבוצה, אי אפשר להוסיף מנות" : "לא הצלחנו לצרף את ההזמנה לקבוצה, נסו שוב");
+      }
+      try { sessionStorage.setItem("habikta_group_return", JSON.stringify({ orderId: data.orderId, code: group.code })); } catch { /* ignore */ }
+    }
     if (showSmsOptIn && smsReady && validateIsraeliPhone(smsTargetPhone).valid) void optInReadySms(data.orderId, smsTargetPhone);
     clearPendingMarketingConsent();
     // Device-only order history (never on shared kiosk/station screens).
@@ -999,10 +1012,10 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
   const availablePaymentMethods = {
-    cash: !donationOnly && (isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled),
+    cash: !donationOnly && !group && (isKiosk ? restaurantStatus.kiosk_cash_enabled : restaurantStatus.cash_enabled),
     credit: isKiosk ? restaurantStatus.kiosk_credit_enabled : restaurantStatus.credit_enabled,
     // Paybox - kiosk only, controlled by its own kitchen toggle.
-    paybox: !donationOnly && isKiosk && restaurantStatus.kiosk_paybox_enabled,
+    paybox: !donationOnly && !group && isKiosk && restaurantStatus.kiosk_paybox_enabled,
   };
 
   // Payment buttons require terms + Turnstile only when the soft-launch flag enforces it.
@@ -1302,7 +1315,8 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
 
 
             {/* 🕒 Preorder - schedule pickup for later within the allowed window */}
-            {restaurantStatus.preorder_enabled && (() => {
+            {/* Not for group orders: the group goes to the kitchen as soon as everyone paid. */}
+            {restaurantStatus.preorder_enabled && !group && (() => {
               const start = (restaurantStatus.preorder_start_time || "10:00").slice(0, 5);
               const end = (restaurantStatus.preorder_end_time || "22:00").slice(0, 5);
               return (
@@ -1436,6 +1450,11 @@ const CheckoutForm = forwardRef<HTMLDivElement, CheckoutFormProps>(({ items, tot
               </div>
             )}
 
+            {group && (
+              <p className="rounded-xl bg-primary/10 p-3 text-center text-sm font-bold text-foreground">
+                הזמנה קבוצתית של {group.organizer}: משלמים באשראי על המנה שלך. ההזמנה יוצאת למטבח כשכולם שילמו.
+              </p>
+            )}
             <div className={isKiosk ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-3"}>
               {/* קיוסק: אשראי מימין, מזומן משמאל (RTL). אתר: סדר קודם. */}
               {availablePaymentMethods.credit && (

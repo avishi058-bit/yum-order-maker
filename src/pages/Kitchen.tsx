@@ -16,6 +16,9 @@ import DayOpenChecklist, { shouldShowDayOpenChecklist, markDayOpenChecklistDone 
 import MissingIngredientsDialog, { IngredientOption } from "@/components/MissingIngredientsDialog";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { mergeGroupOrders } from "@/lib/groupOrders";
+import { useStuckGroups } from "@/hooks/useStuckGroups";
+import StuckGroupCard from "@/components/kitchen/StuckGroupCard";
 import { printReceipt, buildReceiptHtml, buildRoundSummaryHtml, printRoundSummary, buildRoundChefSummaryHtml, printRoundChefSummary, extractOwnerName, applyVeggieShortcut, isBurgerItemName, sortByQueue, type RoundOrder } from "@/lib/kitchenReceipt";
 import {
   isWebBluetoothSupported,
@@ -365,6 +368,8 @@ const Kitchen = () => {
   const { status: restaurantStatus, toggleWebsite, toggleStation, toggleCash, toggleCredit, toggleKioskCash, toggleKioskCredit, toggleKioskPaybox, toggleHighLoad, togglePreorder, setPreorderWindow, toggleDelivery, toggleSoldierFund, closeAll, openAll, setPattyWeight } = useRestaurantStatus();
   const [orders, setOrders] = useState<Order[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("active");
+  // Stuck group orders: shown as cards among the orders and ring until acknowledged.
+  const { stuckGroups, acknowledge: acknowledgeStuckGroup } = useStuckGroups(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [btConnected, setBtConnected] = useState<boolean>(() => isPrinterConnected());
@@ -476,6 +481,9 @@ const Kitchen = () => {
     }
   }, [showRoundSummary, showRoundChefSummary, previewOrder]);
   const fetchOrdersRef = useRef<(() => Promise<void>) | null>(null);
+  // Group orders show as one card; these are the real order ids behind each card.
+  const groupIdsRef = useRef<Map<string, string[]>>(new Map());
+  const idsOf = (id: string) => groupIdsRef.current.get(id) ?? [id];
 
   // Build the preview HTML asynchronously (QR generation needs a Promise).
   useEffect(() => {
@@ -682,7 +690,7 @@ const Kitchen = () => {
 
   // Repeating alert for new orders - cadence depends on escalation level
   useEffect(() => {
-    const hasNewOrders = orders.some((o) => o.status === "new");
+    const hasNewOrders = orders.some((o) => o.status === "new") || stuckGroups.length > 0;
 
     if (hasNewOrders && soundEnabled) {
       const cadence = maxEscalation === 2 ? AGGRESSIVE_RING_MS : NORMAL_RING_MS;
@@ -703,7 +711,7 @@ const Kitchen = () => {
         alertIntervalRef.current = null;
       }
     };
-  }, [orders, soundEnabled, selectedRingtone, maxEscalation]);
+  }, [orders, soundEnabled, selectedRingtone, maxEscalation, stuckGroups.length]);
 
   const fetchAvailability = useCallback(async () => {
     const { data } = await supabase
@@ -787,7 +795,9 @@ const Kitchen = () => {
       .order("created_at", { ascending: false })
       .limit(300);
     if (!error && data) {
-      const fetched = data as Order[];
+      // Held group orders stay hidden; released groups merge into one card.
+      const { orders: fetched, ids: groupIds } = mergeGroupOrders(data as any[]) as { orders: Order[]; ids: Map<string, string[]> };
+      groupIdsRef.current = groupIds;
 
       // Detect newly-arrived orders since last fetch and toast for them
       const prevSeen = seenOrdersRef.current;
@@ -1216,7 +1226,8 @@ const Kitchen = () => {
     .filter((g) => g.items.length > 0);
 
   const completeAllReady = async () => {
-    const paidReadyIds = orders.filter((o) => o.status === "ready" && o.queue_number != null).map((o) => o.id);
+    const paidReadyCards = orders.filter((o) => o.status === "ready" && o.queue_number != null).map((o) => o.id);
+    const paidReadyIds = paidReadyCards.flatMap(idsOf);
     const unpaidReadyCount = orders.filter((o) => o.status === "ready" && o.queue_number == null).length;
     if (paidReadyIds.length === 0) {
       toast.info(unpaidReadyCount > 0 ? "יש הזמנות מוכנות שלא שולמו - סמן תשלום קודם" : "אין הזמנות מוכנות ששולמו");
@@ -1224,7 +1235,7 @@ const Kitchen = () => {
     }
     const prevOrders = orders;
     setOrders((curr) =>
-      curr.map((o) => (paidReadyIds.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
+      curr.map((o) => (paidReadyCards.includes(o.id) ? { ...o, status: "completed" as Order["status"] } : o)),
     );
     const { error } = await supabase
       .from("orders")
@@ -1235,7 +1246,7 @@ const Kitchen = () => {
       setOrders(prevOrders);
       return;
     }
-    toast.success(`${paidReadyIds.length} הזמנות ששולמו הושלמו${unpaidReadyCount > 0 ? ` (${unpaidReadyCount} נותרו ללא תשלום)` : ""}`);
+    toast.success(`${paidReadyCards.length} הזמנות ששולמו הושלמו${unpaidReadyCount > 0 ? ` (${unpaidReadyCount} נותרו ללא תשלום)` : ""}`);
   };
 
   // Mark an order as paid → it gets the next position in today's queue and
@@ -1244,6 +1255,8 @@ const Kitchen = () => {
     if (paidPendingIds.has(order.id) || order.queue_number != null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
+    // The rest of a group card's orders get their queue position too.
+    if (!error) for (const other of idsOf(order.id).slice(1)) await supabase.rpc("mark_order_paid", { p_order_id: other });
     setPaidPendingIds((s) => {
       const n = new Set(s);
       n.delete(order.id);
@@ -1313,6 +1326,7 @@ const Kitchen = () => {
     if (paidPendingIds.has(order.id) || order.queue_number == null) return;
     setPaidPendingIds((s) => new Set(s).add(order.id));
     const { data, error } = await supabase.rpc("unmark_order_paid", { p_order_id: order.id });
+    if (!error) for (const other of idsOf(order.id).slice(1)) await supabase.rpc("unmark_order_paid", { p_order_id: other });
     setPaidPendingIds((s) => {
       const n = new Set(s);
       n.delete(order.id);
@@ -1375,7 +1389,7 @@ const Kitchen = () => {
     const { data, error } = await supabase
       .from("orders")
       .update(updateData)
-      .eq("id", orderId)
+      .in("id", idsOf(orderId))
       .select();
 
     setPendingStatusIds((s) => {
@@ -1694,7 +1708,7 @@ const Kitchen = () => {
     const { error } = await supabase
       .from("orders")
       .update({ estimated_ready_at: newEta.toISOString() })
-      .eq("id", order.id);
+      .in("id", idsOf(order.id));
     if (error) {
       toast.error("שגיאה בעדכון זמן הכנה");
       return;
@@ -2912,7 +2926,10 @@ const Kitchen = () => {
         <div className="p-4">
           {viewMode === "active" && <DeliveryRequestsPanel />}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayOrders.length === 0 && (
+          {viewMode === "active" && stuckGroups.map((g) => (
+            <StuckGroupCard key={`stuck-${g.id}`} group={g} onAcknowledge={() => void acknowledgeStuckGroup(g.id)} />
+          ))}
+          {displayOrders.length === 0 && !(viewMode === "active" && stuckGroups.length > 0) && (
             <div className="col-span-full text-center py-20 text-muted-foreground">
               <p className="text-4xl mb-4">{viewMode === "active" ? "🎉" : viewMode === "ready" ? "✅" : "📋"}</p>
               <p className="text-lg">{viewMode === "active" ? "אין הזמנות פעילות" : viewMode === "ready" ? "אין הזמנות מוכנות" : "אין היסטוריה עדיין"}</p>

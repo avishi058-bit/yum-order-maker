@@ -68,6 +68,8 @@ import { useBusinessHours } from "@/hooks/useBusinessHours";
 import { uiPositions } from "@/config/uiConfig";
 import { useFlyToCart } from "@/contexts/FlyToCartContext";
 import { toast } from "sonner";
+import { getActiveGroup, setActiveGroup, type ActiveGroup } from "@/lib/groupSession";
+import { useTrackGroupPresence } from "@/hooks/useGroupPresence";
 
 import { useTrackCustomerActivity } from "@/hooks/useCustomerActivity";
 import { dishNameMode } from "@/lib/dishOwners";
@@ -124,7 +126,14 @@ const Index = () => {
   const [familyDealOpen, setFamilyDealOpen] = useState(false);
   const [drinkItem, setDrinkItem] = useState<MenuItem | null>(null);
   const [arayesItem, setArayesItem] = useState<MenuItem | null>(null);
-  const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : null);
+  // Ordering into a group order (src/pages/GroupOrder.tsx): the group decides dine-in or takeaway.
+  const [activeGroup, setActiveGroupState] = useState<ActiveGroup | null>(() => (isStation ? null : getActiveGroup()));
+  useEffect(() => {
+    const sync = () => setActiveGroupState(isStation ? null : getActiveGroup());
+    window.addEventListener("group-changed", sync);
+    return () => window.removeEventListener("group-changed", sync);
+  }, [isStation]);
+  const [dineIn, setDineIn] = useState<boolean | null>(isStation ? true : activeGroup ? activeGroup.dineIn : null);
   const [deliveryFlowOpen, setDeliveryFlowOpen] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryApprovedData | null>(null);
   const [sauceSelectorOpen, setSauceSelectorOpen] = useState(false);
@@ -254,6 +263,8 @@ const Index = () => {
       sauceSelectorOpen ||
       !!previewItem);
   useTrackCustomerActivity(isBuildingOrder);
+  // Group page shows "X בונה הזמנה..." / "X בתשלום..." to everyone in the group.
+  useTrackGroupPresence(activeGroup?.code ?? null, activeGroup?.name ?? "", checkoutOpen ? "paying" : "building");
 
   const openItemFlow = useCallback((item: MenuItem) => {
     if (item.id === "friends-deal") {
@@ -549,6 +560,16 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Persistent order tracking top bar */}
       {!isStation && <OrderTopBar />}
+
+      {activeGroup && (
+        <div className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-primary px-4 py-2 text-sm font-bold text-primary-foreground" dir="rtl">
+          <span className="min-w-0 truncate">👥 בקבוצה של {activeGroup.organizer} · מזמין/ה בתור {activeGroup.name}</span>
+          <span className="flex shrink-0 gap-3">
+            <a href={`/group/${activeGroup.code}`} className="rounded-full bg-primary-foreground/20 px-3 py-0.5">לקבוצה</a>
+            <button type="button" className="opacity-80" onClick={() => { setActiveGroup(null); setDineIn(null); }}>יציאה</button>
+          </span>
+        </div>
+      )}
 
       {/* Business hours status bar - sticky, public-facing only */}
       {!isStation && <BusinessStatusBar />}

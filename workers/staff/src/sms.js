@@ -33,6 +33,13 @@ export const reopenText = (name) => {
   const hi = name ? `${name}, ` : "";
   return `${hi}מעדכנים שפתחנו את הבקתה. עכשיו אפשר להיכנס ולהזמין 🙂\nhttps://habikta-burger.com\nהמבורגר הבקתה`;
 };
+// Group order stuck: someone paid 15 minutes ago and the organizer has not sent it.
+// The token goes after "#" so it never reaches any server log.
+const SITE = "https://habikta-burger.com";
+export const groupStuckText = (name, code, token) => {
+  const hi = name ? `${name}, ` : "";
+  return `${hi}ההזמנה הקבוצתית שלך עוד לא נשלחה למטבח. היא תישלח רק אחרי שתאשר אותה.\nלניהול ההזמנה: ${SITE}/group/${code}#m=${token}\nהמבורגר הבקתה`;
+};
 export const otpText = (code) =>
   `קוד האימות שלך בהמבורגר הבקתה: ${code}\nאין למסור את הקוד לאף אחד\n\n@habikta-burger.com #${code}`;
 
@@ -71,6 +78,19 @@ export const handleReopenSms = async (req, env, checkKey) => {
   const phone = normalizePhone(body?.phone);
   if (!isMobile(phone)) return new Response("bad", { status: 400 });
   const out = await sendSms(env, phone, reopenText(firstName(body?.name)));
+  return Response.json({ ok: out.ok, status: out.status });
+};
+
+// /sms/group-stuck: the database (group_stuck_tick) sends the organizer a
+// manage link once. Same VAPID check, so only the database can use it.
+export const handleGroupStuck = async (req, env, checkKey) => {
+  const body = await req.json().catch(() => ({}));
+  try { await checkKey(env, body?.vapid_private); } catch { return new Response("forbidden", { status: 403 }); }
+  const phone = normalizePhone(body?.phone);
+  const code = String(body?.code ?? "");
+  const token = String(body?.token ?? "");
+  if (!isMobile(phone) || !/^[A-F0-9]{6}$/.test(code) || !/^[a-f0-9]{36}$/.test(token)) return new Response("bad", { status: 400 });
+  const out = await sendSms(env, phone, groupStuckText(firstName(body?.name), code, token));
   return Response.json({ ok: out.ok, status: out.status });
 };
 
