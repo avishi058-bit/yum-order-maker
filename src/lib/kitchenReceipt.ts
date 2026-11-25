@@ -185,6 +185,16 @@ const isPattyTopping = (t: string): boolean => /קציצ/.test(String(t || ""));
 const kitchenToppingName = (s: string): string =>
   String(s || "").replace(/\+?\s*זוג קציצות סמאש(?:\s*\(2[02]0\))?/g, "קציצת סמאש");
 
+/** The order-level sauces line ("רטבים"): pickled jalapeño here is a side
+ *  sauce, so the ticket says "בצד" - the kitchen must not mix it up with
+ *  jalapeño inside the dish (a topping on the burger). */
+export const sideSauceLabels = (labels: string[] | null | undefined): string[] =>
+  (labels || []).map((l) => {
+    const s = String(l || "");
+    if (!/חלפי?ניו|חלפניו/.test(s) || /בצד/.test(s)) return s;
+    return s.replace(/^([^×]*?)(\s*×\s*\d+)?$/, (_m, name: string, qty?: string) => `${name.trim()} - בצד${qty ?? ""}`);
+  });
+
 const formatToppingsHtml = (toppings: string[]): string => {
   const tops = printableToppings(toppings);
   if (tops.length === 0) return "";
@@ -861,7 +871,7 @@ export async function buildReceiptHtml(order: ReceiptOrder): Promise<string> {
           html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
         }
       }
-      html += formatToppingsHtml(it.toppings);
+      html += formatToppingsHtml(it.item_name === "רטבים" ? sideSauceLabels(it.toppings) : it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
         if (it.meal_side) mealText += ` - ${it.meal_side}`;
@@ -1343,7 +1353,7 @@ function buildOrderBlockHtml(order: RoundOrder, index: number, interactive = fal
           html += `<div class="sub" style="font-weight:800;">- ללא שינויים</div>`;
         }
       }
-      html += formatToppingsHtml(it.toppings);
+      html += formatToppingsHtml(it.item_name === "רטבים" ? sideSauceLabels(it.toppings) : it.toppings);
       if (it.with_meal) {
         let mealText = "ארוחה";
         if (it.meal_side) mealText += ` - ${it.meal_side}`;

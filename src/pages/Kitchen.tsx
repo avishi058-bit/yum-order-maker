@@ -1983,10 +1983,13 @@ const Kitchen = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden" dir="rtl">
       {/* Phone push ("עדכן אותי") is toggled only from the "התראות וצלצולים" menu; no banner */}
-      {/* Audio activation prompt */}
+      {/* Audio activation prompt. Floating (fixed), not in the page flow: it
+          disappears on the first touch anywhere, and as a strip at the top it
+          made the whole screen jump up under the finger. */}
       {!audioActivated && soundEnabled && (
         <div
-          className="bg-primary text-primary-foreground text-center py-3 px-6 font-bold text-sm cursor-pointer animate-pulse"
+          role="button"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-full shadow-2xl bg-primary text-primary-foreground text-center py-3 px-6 font-bold text-sm cursor-pointer animate-pulse whitespace-nowrap"
           onClick={() => {
             const ctx = getAudioCtx();
             if (ctx) {

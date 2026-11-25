@@ -19,6 +19,7 @@ import {
   formatDonenessRows,
   extractOwnerName,
   sortByQueue,
+  sideSauceLabels,
   type ReceiptOrder,
   type ReceiptOrderItem,
   type RoundOrder,
@@ -592,7 +593,7 @@ export function buildKitchenBonOps(order: ReceiptOrder): FastOp[] {
   const sauceItem = order.order_items.find((it) => it.item_name === "רטבים");
   if (sauceItem && sauceItem.toppings && sauceItem.toppings.length > 0) {
     ops.push(sep());
-    for (const t of sauceItem.toppings) {
+    for (const t of sideSauceLabels(sauceItem.toppings)) {
       ops.push(asLine(toppingLine(t), { align: "R", bold: true, size: 32 }));
       ops.push(feed(LINE_GAP));
     }
