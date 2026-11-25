@@ -31,7 +31,7 @@ export const readyText = (kind, name) => {
 // "עדכנו אותי כשנפתח": one SMS when the site opens (reopen_sms_send_all).
 export const reopenText = (name) => {
   const hi = name ? `${name}, ` : "";
-  return `${hi}מעדכנים שפתחנו! אתה יכול להיכנס עכשיו ולהזמין 🙂\nhttps://habikta-burger.com\nהמבורגר הבקתה`;
+  return `${hi}מעדכנים שפתחנו את הבקתה. עכשיו אפשר להיכנס ולהזמין 🙂\nhttps://habikta-burger.com\nהמבורגר הבקתה`;
 };
 export const otpText = (code) =>
   `קוד האימות שלך בהמבורגר הבקתה: ${code}\nאין למסור את הקוד לאף אחד\n\n@habikta-burger.com #${code}`;
