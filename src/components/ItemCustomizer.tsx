@@ -197,6 +197,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
   const toppingsRef = useRef<HTMLDivElement>(null);
   // Optional "side dishes" the user can add alongside a burger (arayes 3/4).
   const [sideItemCounts, setSideItemCounts] = useState<Record<string, number>>({});
+  /** Which list the "extras" step shows: "להוסיף רק צ׳יפס" or "להוסיף רק שתייה". */
+  const [extrasMode, setExtrasMode] = useState<"fries" | "drinks">("fries");
   const customToppings = useCustomToppings();
   const toppings = [...staticToppings, ...customToppings];
 
@@ -1588,12 +1590,12 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                     className={`flex-1 overflow-y-auto ${isKiosk ? "px-8 py-8" : "px-5 py-6"}`}
                     onScroll={markScroll}
                   >
-                    <h3 className={`font-black text-center leading-tight ${isKiosk ? "text-[44px] mb-3" : "text-[26px] mb-2"}`}>רוצה להוסיף בנפרד<br />צ׳יפס או שתייה?</h3>
-                    <p className={`text-center text-gray-500 ${isKiosk ? "text-[22px] mb-6" : "text-base mb-4"}`}>לא כחלק מארוחה עסקית · אפשר גם לדלג</p>
+                    <h3 className={`font-black text-center ${isKiosk ? "text-[30px] mb-8" : "text-lg mb-4"}`}>
+                      {extrasMode === "fries" ? "בחר צ׳יפס:" : "בחר שתייה:"}
+                    </h3>
 
-                    {extraSideItems.length > 0 && (
+                    {extrasMode === "fries" && extraSideItems.length > 0 && (
                       <>
-                        <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🍟 צ׳יפס ותוספות</h4>
                         <div className="mb-6">
                           {extraSideItems.map((m) => (
                             <StepperRow key={m.id} rowKey={m.id} name={m.name} price={m.price} image={extraSideImage[m.id]} />
@@ -1602,9 +1604,8 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                       </>
                     )}
 
-                    {extraDrinkRows.length > 0 && (
+                    {extrasMode === "drinks" && extraDrinkRows.length > 0 && (
                       <>
-                        <h4 className={`font-black text-right ${isKiosk ? "text-[26px] mb-2" : "text-base mb-1"}`}>🥤 שתייה</h4>
                         <div>
                           {extraDrinkRows.map((d) => (
                             <StepperRow key={d.key} rowKey={d.key} name={d.name} price={d.price} image={d.image} />
@@ -1629,12 +1630,21 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           </button>
                         </div>
                       )}
-                      <button
-                        onClick={() => handleFinish(false)}
-                        className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
-                      >
-                        {extrasTotal > 0 ? `הוספה להזמנה · ₪${totalPrice + extrasTotal}` : "דלג"}
-                      </button>
+                      {extrasTotal > 0 ? (
+                        <button
+                          onClick={() => handleFinish(false)}
+                          className={`w-full bg-primary text-primary-foreground font-black rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-lg"}`}
+                        >
+                          {`הוספה להזמנה · ₪${totalPrice + extrasTotal}`}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setStep("meal-upgrade")}
+                          className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${isKiosk ? "py-5 text-[22px]" : "py-4 text-base"}`}
+                        >
+                          חזרה
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -1855,7 +1865,7 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                 animate={{ opacity: 0.6 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18 }}
-                onClick={() => setStep("extras")}
+                onClick={() => setStep("customize")}
                 className="fixed inset-0 bg-black z-50"
                 style={{ willChange: "opacity" }}
               />
@@ -1888,10 +1898,24 @@ const ItemCustomizer = ({ item, onClose, onConfirm, isAvailable, dineIn, initial
                           isKiosk ? "py-7 text-[32px]" : "py-4 text-lg"
                         }`}
                       >
-                        שדרגו לי! 🍟🥤
+                        שדרגו לי! 🍟🥤 (צ׳יפס + שתייה)
                       </button>
+                      {/* Second level: noticeable, but less than the meal button. */}
+                      <div className={`flex ${isKiosk ? "gap-4" : "gap-3"}`}>
+                        {([["fries", "להוסיף רק צ׳יפס"], ["drinks", "להוסיף רק שתייה"]] as const).map(([mode, label]) => (
+                          <button
+                            key={mode}
+                            onClick={() => { setExtrasMode(mode); setStep("extras"); }}
+                            className={`flex-1 border-2 border-primary bg-primary/5 text-primary font-black rounded-xl active:scale-[0.98] transition-transform ${
+                              isKiosk ? "py-6 text-[24px]" : "py-3.5 text-base"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                       <button
-                        onClick={() => setStep("extras")}
+                        onClick={() => handleFinish(false)}
                         className={`w-full bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-[0.98] transition-transform ${
                           isKiosk ? "py-6 text-[26px]" : "py-4 text-base"
                         }`}
