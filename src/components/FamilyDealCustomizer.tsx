@@ -1,13 +1,20 @@
+// דיל משפחתי: 5 classic burgers, drinks optional (full price, any number).
+// Each burger is chosen on the same screen as a single burger, each drink on
+// the same list as a meal drink, inside the same sheet (components/deals).
 import { useEffect, useState } from "react";
-import { pattyText } from "@/lib/pattyGrams";
 import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { drinkToAvailabilityId, toppings as allToppings, donenessOptions, DEFAULT_DONENESS } from "@/data/menu";
+import { Minus, Plus } from "lucide-react";
+import { drinkToAvailabilityId, DEFAULT_DONENESS } from "@/data/menu";
+import DealSheet from "@/components/deals/DealSheet";
+import DealBurgerPicker from "@/components/deals/DealBurgerPicker";
+import DealDrinkPicker from "@/components/deals/DealDrinkPicker";
+import { useTapGuard } from "@/hooks/useTapGuard";
+import { useDealNamePrompt } from "@/hooks/useDealNamePrompt";
+import DealNamePopup from "@/components/deals/DealNamePopup";
 import { DealBurgerConfig, DealDrinkChoice } from "@/components/CartDrawer";
 import { useAlcoholConsent } from "@/hooks/useAlcoholConsent";
 import AlcoholConsentModal from "@/components/AlcoholConsentModal";
-import BurgerIngredientChecklist, {
+import {
   IngredientState,
   defaultRegularIngredientState,
   ingredientStateToRemovals,
@@ -20,19 +27,13 @@ interface FamilyDealCustomizerProps {
   isAvailable?: (id: string) => boolean;
 }
 
-type Step = `burger-${number}` | `toppings-${number}` | "drinks-ask" | "drink-count" | `drink-${number}`;
-
+// Toppings are on the burger's own screen now (like a single burger).
 const burgerStepLabels: Record<string, string> = {
-  "burger-1": "מנה ראשונה מתוך חמש",
-  "burger-2": "מנה שנייה מתוך חמש",
-  "burger-3": "מנה שלישית מתוך חמש",
-  "burger-4": "מנה רביעית מתוך חמש",
-  "burger-5": "מנה חמישית מתוך חמש",
-  "toppings-1": "תוספות למנה הראשונה",
-  "toppings-2": "תוספות למנה השנייה",
-  "toppings-3": "תוספות למנה השלישית",
-  "toppings-4": "תוספות למנה הרביעית",
-  "toppings-5": "תוספות למנה החמישית",
+  "burger-1": "המבורגר ראשון מתוך חמישה",
+  "burger-2": "המבורגר שני מתוך חמישה",
+  "burger-3": "המבורגר שלישי מתוך חמישה",
+  "burger-4": "המבורגר רביעי מתוך חמישה",
+  "burger-5": "המבורגר חמישי מתוך חמישה",
   "drinks-ask": "רוצים להוסיף שתייה?",
   "drink-count": "כמה שתיות?",
 };
@@ -56,11 +57,10 @@ const familyDrinkOptions = [
   { id: "fam-guinness", name: "גינס", price: 23, category: "beer" as const },
 ];
 
-const softDrinks = familyDrinkOptions.filter((d) => d.category === "soft");
-const beerDrinks = familyDrinkOptions.filter((d) => d.category === "beer");
 
 const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyDealCustomizerProps) => {
   const alcoholConsent = useAlcoholConsent();
+  const namePrompt = useDealNamePrompt();
   const location = useLocation();
   const isKiosk = location.pathname === "/kiosk";
 
@@ -86,15 +86,9 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   const [selectedDrinks, setSelectedDrinks] = useState<string[]>([]);
 
   const burgerSteps = ["burger-1", "burger-2", "burger-3", "burger-4", "burger-5"];
-  const toppingsSteps = ["toppings-1", "toppings-2", "toppings-3", "toppings-4", "toppings-5"];
-  const mainSteps = burgerSteps.flatMap((b, i) => [b, toppingsSteps[i]]);
+  const mainSteps = burgerSteps;
   const isBurgerStep = burgerSteps.includes(step);
-  const isToppingsStep = toppingsSteps.includes(step);
-  const currentBurgerIndex = isBurgerStep
-    ? burgerSteps.indexOf(step)
-    : isToppingsStep
-    ? toppingsSteps.indexOf(step)
-    : -1;
+  const currentBurgerIndex = isBurgerStep ? burgerSteps.indexOf(step) : -1;
   const isDrinkStep = step.startsWith("drink-") && step !== "drink-count";
   const currentDrinkIndex = isDrinkStep ? parseInt(step.split("-")[1]) - 1 : 0;
 
@@ -124,6 +118,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   };
 
   const resetState = () => {
+    namePrompt.reset();
     setStep("burger-1");
     setBurgerNames(Array.from({ length: 5 }, () => ""));
     setBurgerIngredients(Array.from({ length: 5 }, () => defaultRegularIngredientState()));
@@ -159,7 +154,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
   const toggleBurgerTopping = (tId: string) => {
     const idx = currentBurgerIndex;
-    if (idx < 0 || !isToppingsStep) return;
+    if (idx < 0 || !isBurgerStep) return;
     setBurgerToppings((prev) => {
       const updated = prev.map((arr) => [...arr]);
       updated[idx] = updated[idx].includes(tId)
@@ -185,7 +180,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
 
 
   const handleNext = () => {
-    if (isBurgerStep || isToppingsStep) {
+    if (isBurgerStep) {
       const idx = mainSteps.indexOf(step);
       if (idx < mainSteps.length - 1) {
         setStep(mainSteps[idx + 1]);
@@ -236,13 +231,7 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
   const progressSteps = getProgressSteps();
   const currentProgressIndex = progressSteps.indexOf(step);
   
-  const currentToppings = isToppingsStep && currentBurgerIndex >= 0 ? burgerToppings[currentBurgerIndex] : [];
-  const currentToppingsTotal = currentToppings.reduce((s, tId) => {
-    const t = allToppings.find((x) => x.id === tId);
-    return s + (t?.price || 0);
-  }, 0);
-
-  
+  const { markScroll, guard } = useTapGuard();
 
   if (!open) return null;
 
@@ -255,349 +244,107 @@ const FamilyDealCustomizer = ({ open, onClose, onConfirm, isAvailable }: FamilyD
     (step === "drinks-ask" && wantsDrinks === false) ||
     (isDrinkStep && currentDrinkIndex === drinkCount - 1);
 
+  const bigChoice = (on: boolean) =>
+    `flex-1 rounded-2xl border-2 font-black transition-colors ${isKiosk ? "py-6 text-[26px]" : "py-4 text-lg"} ${
+      on ? "border-primary bg-primary text-primary-foreground" : "border-gray-200 bg-white text-black"
+    }`;
+
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={handleClose}
-              className="fixed inset-0 bg-black z-50"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-white text-black rounded-t-3xl max-h-[85vh] flex flex-col"
-              dir="rtl"
-            >
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1.5 rounded-full bg-muted" />
-              </div>
-
-              <div className="flex items-center justify-between px-5 pb-4 border-b border-border">
-                <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                  <X size={18} />
-                </button>
-                <div className="flex-1 text-center">
-                  <h2 className="text-lg font-bold">דיל משפחתי</h2>
-                  <p className="text-sm text-muted-foreground">{getStepLabel()}</p>
-                </div>
-                <div className="w-9" />
-              </div>
-
-              <div className="px-5 pt-3 pb-1">
-                <div className="flex gap-1">
-                  {progressSteps.map((s, i) => (
-                    <div
-                      key={s}
-                      className={`h-1.5 flex-1 rounded-full transition-colors ${
-                        currentProgressIndex >= i ? "bg-primary" : "bg-muted"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <AnimatePresence mode="wait">
-                {isBurgerStep && (
-                  <motion.div
-                    key={step}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    className="flex-1 overflow-y-auto"
-                  >
-                    <div className="px-5 py-4">
-                      <h3 className="text-lg font-bold text-right mb-1">{pattyText("קלאסי (220 גרם)")}</h3>
-                      <p className="text-sm text-muted-foreground text-right mb-4">בצל, עגבנייה, חסה, חמוצים ואיולי הבית</p>
-                      <div className="mb-4">
-                        <input
-                          type="text"
-                          placeholder="שם (לא חובה)"
-                          value={burgerNames[currentBurgerIndex] || ""}
-                          onChange={(e) => {
-                            const idx = currentBurgerIndex;
-                            const value = e.target.value;
-                            setBurgerNames((prev) => {
-                              const updated = [...prev];
-                              updated[idx] = value;
-                              return updated;
-                            });
-                          }}
-                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                      {(!isAvailable || isAvailable("doneness-category")) && currentBurgerIndex >= 0 && (
-                        <div className="mb-4">
-                          <h3 className={`font-bold text-right mb-2 ${isKiosk ? "text-xl" : "text-base"}`}>מידת עשייה</h3>
-                          <div className="flex gap-2">
-                            {donenessOptions
-                              .filter((d) => !isAvailable || isAvailable(d.id))
-                              .map((d) => {
-                                const active = burgerDoneness[currentBurgerIndex] === d.id;
-                                return (
-                                  <button
-                                    key={d.id}
-                                    aria-pressed={active}
-                                    onClick={() =>
-                                      setBurgerDoneness((prev) => {
-                                        const updated = [...prev];
-                                        updated[currentBurgerIndex] = d.id;
-                                        return updated;
-                                      })
-                                    }
-                                    className={`flex-1 py-2.5 rounded-xl border-2 font-bold text-sm transition-colors ${
-                                      active
-                                        ? "border-primary bg-primary text-primary-foreground"
-                                        : "border-border bg-background"
-                                    }`}
-                                  >
-                                    {d.label}{d.recommended ? " ⭐" : ""}
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      )}
-                      {currentBurgerIndex >= 0 && (
-                        <BurgerIngredientChecklist
-                          state={burgerIngredients[currentBurgerIndex]}
-                          onToggle={toggleIngredient}
-                          isAvailable={isAvailable}
-                          isKiosk={isKiosk}
-                          title={`מה במנה ה${["ראשונה", "שנייה", "שלישית", "רביעית", "חמישית"][currentBurgerIndex]} שלך?`}
-                        />
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {isToppingsStep && currentBurgerIndex >= 0 && (
-                  <motion.div
-                    key={step}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    className="flex-1 overflow-y-auto"
-                  >
-                    <div className="px-5 py-4">
-                      <h3 className="text-lg font-bold text-right mb-1">
-                        תוספות למנה ה{["ראשונה", "שנייה", "שלישית", "רביעית", "חמישית"][currentBurgerIndex]}
-                      </h3>
-                      <p className="text-sm text-muted-foreground text-right mb-4">
-                        אופציונלי - בתשלום נוסף על מחיר הדיל
-                      </p>
-                      <div className="space-y-0">
-                        {allToppings.map((t) => {
-                          const active = currentToppings.includes(t.id);
-                          const unavailable = isAvailable ? !isAvailable(t.id) : false;
-                          return (
-                            <button
-                              key={t.id}
-                              disabled={unavailable}
-                              aria-pressed={active}
-                              onClick={() => !unavailable && toggleBurgerTopping(t.id)}
-                              className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
-                                    unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                  }`}
-                                >
-                                  {active && !unavailable && (
-                                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-primary-foreground text-xs font-bold">✓</motion.span>
-                                  )}
-                                </div>
-                                {unavailable ? (
-                                  <span className="text-xs text-destructive">(אזל)</span>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">+₪{t.price}</span>
-                                )}
-                              </div>
-                              <span className={`font-medium text-sm text-right ${unavailable ? "line-through text-muted-foreground" : ""}`}>{t.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {currentToppingsTotal > 0 && (
-                        <p className="text-sm font-bold text-primary text-left mt-3">
-                          תוספות: +₪{currentToppingsTotal}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-
-
-                {step === "drinks-ask" && (
-                  <motion.div
-                    key="drinks-ask"
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    className="flex-1 overflow-y-auto"
-                  >
-                    <div className="px-5 py-8 text-center space-y-6">
-                      <p className="text-lg font-bold">רוצים להוסיף שתייה?</p>
-                      <p className="text-sm text-muted-foreground">השתייה בתשלום מלא (לא כלולה בדיל)</p>
-                      <div className="flex gap-4 justify-center">
-                        <button
-                          onClick={() => setWantsDrinks(true)}
-                          className={`px-8 py-3 rounded-xl font-bold text-base transition-colors ${
-                            wantsDrinks === true
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          כן 🥤
-                        </button>
-                        <button
-                          onClick={() => setWantsDrinks(false)}
-                          className={`px-8 py-3 rounded-xl font-bold text-base transition-colors ${
-                            wantsDrinks === false
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          לא
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {step === "drink-count" && (
-                  <motion.div
-                    key="drink-count"
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    className="flex-1 overflow-y-auto"
-                  >
-                    <div className="px-5 py-8 text-center space-y-6">
-                      <p className="text-lg font-bold">כמה שתיות?</p>
-                      <div className="flex items-center justify-center gap-6">
-                        <button
-                          onClick={() => setDrinkCount((c) => Math.max(1, c - 1))}
-                          className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl font-bold"
-                        >
-                          -
-                        </button>
-                        <span className="text-3xl font-bold text-primary">{drinkCount}</span>
-                        <button
-                          onClick={() => setDrinkCount((c) => Math.min(10, c + 1))}
-                          className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {isDrinkStep && (
-                  <motion.div
-                    key={step}
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    className="flex-1 overflow-y-auto"
-                  >
-                    <div className="px-5 py-4">
-                      <h3 className="text-base font-bold text-right mb-3">בחר שתייה:</h3>
-                      <div className="space-y-0">
-                        {softDrinks.map((drink) => {
-                          const active = selectedDrinks[currentDrinkIndex] === drink.id;
-                          const unavailable = isDrinkUnavailable(drink.id);
-                          return (
-                            <button
-                              key={drink.id}
-                              disabled={unavailable}
-                              aria-pressed={active}
-                              onClick={() => !unavailable && handleDrinkSelect(currentDrinkIndex, drink.id)}
-                              className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                  }`}
-                                >
-                                  {active && !unavailable && (
-                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 rounded-full bg-primary-foreground" />
-                                  )}
-                                </div>
-                                {unavailable && <span className="text-xs text-destructive">(אזל)</span>}
-                                {!unavailable && <span className="text-xs text-muted-foreground">₪{drink.price}</span>}
-                              </div>
-                              <span className={`font-medium text-sm ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <h4 className="text-sm font-bold text-right mt-3 mb-2 text-muted-foreground">בירות:</h4>
-                      <div className="space-y-0">
-                        {beerDrinks.map((drink) => {
-                          const active = selectedDrinks[currentDrinkIndex] === drink.id;
-                          const unavailable = isDrinkUnavailable(drink.id);
-                          return (
-                            <button
-                              key={drink.id}
-                              disabled={unavailable}
-                              aria-pressed={active}
-                              onClick={() => !unavailable && handleDrinkSelect(currentDrinkIndex, drink.id)}
-                              className={`w-full flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 ${unavailable ? "opacity-50 cursor-not-allowed" : ""}`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                    unavailable ? "border-muted-foreground/20" : active ? "border-primary bg-primary" : "border-muted-foreground/40"
-                                  }`}
-                                >
-                                  {active && !unavailable && (
-                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 rounded-full bg-primary-foreground" />
-                                  )}
-                                </div>
-                                {unavailable && <span className="text-xs text-destructive">(אזל)</span>}
-                                {!unavailable && <span className="text-xs text-muted-foreground">₪{drink.price}</span>}
-                              </div>
-                              <span className={`font-medium text-sm ${unavailable ? "line-through text-muted-foreground" : ""}`}>{drink.name}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="px-5 py-4 border-t border-gray-200 bg-white safe-bottom">
-                {isDrinkStep && selectedDrinks[currentDrinkIndex] === "" && (
-                  <p className="text-sm text-destructive text-center mb-2">יש לבחור שתייה</p>
-                )}
-                <motion.button
-                  whileTap={isNextDisabled ? {} : { scale: 0.97 }}
-                  onClick={handleNext}
-                  className={`w-full font-bold py-3.5 rounded-xl text-base shadow-lg ${
-                    isNextDisabled
-                      ? "bg-muted text-muted-foreground shadow-none cursor-not-allowed"
-                      : "bg-primary text-primary-foreground shadow-primary/20"
-                  }`}
-                >
-                  {isLastStep ? "הוספה להזמנה 🍔" : isToppingsStep && currentToppings.length === 0 ? "דלג" : "המשך"}
-                </motion.button>
-              </div>
-            </motion.div>
-          </>
+      <DealSheet
+        open={open}
+        isKiosk={isKiosk}
+        title="דיל משפחתי"
+        stepLabel={getStepLabel()}
+        progress={{ current: Math.max(0, currentProgressIndex), total: progressSteps.length }}
+        stepKey={step}
+        onClose={handleClose}
+        onScroll={markScroll}
+        footer={{
+          label: isLastStep ? "הוספה להזמנה 🍔" : "המשך",
+          onClick: isBurgerStep
+            ? () => namePrompt.ask(!!burgerNames[currentBurgerIndex]?.trim(), handleNext)
+            : handleNext,
+          disabled: isNextDisabled,
+          note: isDrinkStep && selectedDrinks[currentDrinkIndex] === "" ? "יש לבחור שתייה" : undefined,
+        }}
+      >
+        {isBurgerStep && currentBurgerIndex >= 0 && (
+          <DealBurgerPicker
+            isKiosk={isKiosk}
+            guard={guard}
+            isAvailable={isAvailable}
+            name={burgerNames[currentBurgerIndex] || ""}
+            onName={(v) => setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? v : n)))}
+            doneness={burgerDoneness[currentBurgerIndex]}
+            onDoneness={(id) => setBurgerDoneness((prev) => prev.map((d, i) => (i === currentBurgerIndex ? id : d)))}
+            ingredientState={burgerIngredients[currentBurgerIndex]}
+            onToggleIngredient={toggleIngredient}
+            selectedToppings={burgerToppings[currentBurgerIndex]}
+            onToggleTopping={toggleBurgerTopping}
+            nameMode={namePrompt.mode}
+          />
         )}
-      </AnimatePresence>
+
+        {step === "drinks-ask" && (
+          <div className={`text-center ${isKiosk ? "px-8 py-10" : "px-5 py-8"}`}>
+            <h3 className={`font-black ${isKiosk ? "text-[34px]" : "text-2xl"}`}>רוצים להוסיף שתייה?</h3>
+            <p className={`text-gray-500 mt-1 ${isKiosk ? "text-[20px] mb-8" : "text-base mb-6"}`}>השתייה בתשלום מלא (לא כלולה בדיל)</p>
+            <div className={`flex ${isKiosk ? "gap-4" : "gap-3"}`}>
+              <button onClick={guard(() => setWantsDrinks(true))} aria-pressed={wantsDrinks === true} className={bigChoice(wantsDrinks === true)}>כן 🥤</button>
+              <button onClick={guard(() => setWantsDrinks(false))} aria-pressed={wantsDrinks === false} className={bigChoice(wantsDrinks === false)}>לא</button>
+            </div>
+          </div>
+        )}
+
+        {step === "drink-count" && (
+          <div className={`text-center ${isKiosk ? "px-8 py-10" : "px-5 py-8"}`}>
+            <h3 className={`font-black ${isKiosk ? "text-[34px] mb-8" : "text-2xl mb-6"}`}>כמה שתיות?</h3>
+            <div className="flex items-center justify-center gap-6">
+              <button
+                onClick={() => setDrinkCount((c) => Math.max(1, c - 1))}
+                aria-label="פחות"
+                className={`rounded-full bg-gray-100 flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-16 h-16" : "w-12 h-12"}`}
+              >
+                <Minus size={isKiosk ? 28 : 22} />
+              </button>
+              <span className={`font-black text-primary w-12 ${isKiosk ? "text-[48px]" : "text-4xl"}`}>{drinkCount}</span>
+              <button
+                onClick={() => setDrinkCount((c) => Math.min(10, c + 1))}
+                aria-label="עוד"
+                className={`rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-95 transition ${isKiosk ? "w-16 h-16" : "w-12 h-12"}`}
+              >
+                <Plus size={isKiosk ? 28 : 22} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isDrinkStep && (
+          <DealDrinkPicker
+            isKiosk={isKiosk}
+            guard={guard}
+            title="בחר שתייה:"
+            options={familyDrinkOptions}
+            selected={selectedDrinks[currentDrinkIndex]}
+            onSelect={(id) => handleDrinkSelect(currentDrinkIndex, id)}
+            isUnavailable={isDrinkUnavailable}
+            priceMode="full"
+          />
+        )}
+      </DealSheet>
+
+      <DealNamePopup
+        open={namePrompt.open}
+        isKiosk={isKiosk}
+        value={currentBurgerIndex >= 0 ? burgerNames[currentBurgerIndex] || "" : ""}
+        onChange={(v) => setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? v : n)))}
+        onDone={() => namePrompt.finish(!burgerNames[currentBurgerIndex]?.trim())}
+        onSkip={() => {
+          setBurgerNames((prev) => prev.map((n, i) => (i === currentBurgerIndex ? "" : n)));
+          namePrompt.finish(true);
+        }}
+      />
 
       <AlcoholConsentModal
         open={alcoholConsent.consentOpen}
