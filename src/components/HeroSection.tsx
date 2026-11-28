@@ -1,4 +1,4 @@
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
@@ -60,11 +60,13 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
   const heroRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion() ?? false;
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const photoY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
-  const photoScale = useTransform(scrollYProgress, [0, 1], [1.08, 1]);
+  // A light spring smooths the raw scroll steps (wheel ticks, touch momentum) so the photo glides instead of jumping.
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35, restDelta: 0.0005 });
+  const photoY = useTransform(smoothProgress, [0, 1], ["0%", "18%"]);
+  const photoScale = useTransform(smoothProgress, [0, 1], [1.08, 1]);
 
   return (
-    <section ref={heroRef} className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+    <section ref={heroRef} className="relative min-h-[80svh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
       <button
         type="button"
