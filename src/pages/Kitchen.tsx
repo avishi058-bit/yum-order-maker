@@ -3,7 +3,9 @@ import KitchenStaffClock from "@/components/kitchen/KitchenStaffClock";
 import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BlockNameButton } from "@/components/kitchen/BlockNameButton";
-import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, ReceiptText, Smartphone } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, XCircle, Printer, Bell, BellOff, History, Package, Store, Globe, Monitor, Banknote, CreditCard, BarChart3, Music, Wifi, WifiOff, Settings, AlertTriangle, Plus, Minus, Eye, X, ClipboardList, ListChecks, Bluetooth, BluetoothConnected, QrCode, Refrigerator, ReceiptText, Smartphone, Menu as MenuIcon, MoreHorizontal } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 import QRCode from "qrcode";
 // DashboardView is lazy-loaded - pulls in recharts, admin-only, keep out of main bundle
@@ -194,12 +196,12 @@ const burgerToMeal: Record<string, string> = {
 
 const PREP_TIMES = [5, 10, 15, 20, 25, 30, 45, 60];
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  new: { label: "חדשה", color: "bg-red-500", icon: <Bell size={18} /> },
-  preparing: { label: "בהכנה", color: "bg-yellow-500", icon: <ChefHat size={18} /> },
-  ready: { label: "מוכנה", color: "bg-green-500", icon: <CheckCircle size={18} /> },
-  completed: { label: "הושלמה", color: "bg-gray-500", icon: <CheckCircle size={18} /> },
-  cancelled: { label: "בוטלה", color: "bg-gray-400", icon: <XCircle size={18} /> },
+const statusConfig: Record<string, { label: string; color: string; dot: string; icon: React.ReactNode }> = {
+  new: { label: "חדשה", color: "bg-red-500", dot: "bg-primary", icon: <Bell size={18} /> },
+  preparing: { label: "בהכנה", color: "bg-yellow-500", dot: "bg-amber-400", icon: <ChefHat size={18} /> },
+  ready: { label: "מוכנה", color: "bg-green-500", dot: "bg-green-500", icon: <CheckCircle size={18} /> },
+  completed: { label: "הושלמה", color: "bg-gray-500", dot: "bg-muted-foreground", icon: <CheckCircle size={18} /> },
+  cancelled: { label: "בוטלה", color: "bg-gray-400", dot: "bg-muted-foreground/60", icon: <XCircle size={18} /> },
 };
 
 const nextStatus: Record<string, string> = {
@@ -362,6 +364,37 @@ function persistPrintedOrder(id: string, printed: boolean) {
 }
 
 
+/** ☰ menu section with a small heading. */
+const KitchenMenuGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div>
+    <div className="px-2 pb-1.5 text-[11px] font-bold text-muted-foreground">{title}</div>
+    <div className="rounded-xl bg-muted/40 p-1 space-y-0.5">{children}</div>
+  </div>
+);
+
+/** ☰ menu row: icon, label, optional status chip (green ok / amber warn / red bad). */
+const KitchenMenuItem = ({ icon, label, onClick, disabled, active, status, tone }: {
+  icon: React.ReactNode; label: string; onClick: () => void; disabled?: boolean; active?: boolean;
+  status?: string; tone?: "ok" | "warn" | "bad";
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className={`w-full h-11 px-3 rounded-lg flex items-center gap-3 text-sm font-semibold text-right transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+      active ? "bg-primary/15 text-primary" : "text-foreground hover:bg-muted"
+    }`}
+  >
+    <span className="text-muted-foreground shrink-0">{icon}</span>
+    <span className="flex-1">{label}</span>
+    {status && (
+      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+        tone === "ok" ? "bg-green-500/15 text-green-400" : tone === "bad" ? "bg-red-500/15 text-red-400" : "bg-amber-500/15 text-amber-400"
+      }`}>{status}</span>
+    )}
+  </button>
+);
+
 const Kitchen = () => {
   useWakeLock(true);
   const activeCustomers = useActiveCustomerCount();
@@ -435,6 +468,7 @@ const Kitchen = () => {
   // Realtime / fallback state
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showEventsPanel, setShowEventsPanel] = useState(false);
   const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
   
@@ -1994,6 +2028,8 @@ const Kitchen = () => {
     return `${Math.floor(diff / 3600)} שעות`;
   };
 
+  const readyPaidCount = orders.filter((o) => o.status === "ready" && o.queue_number != null).length;
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden" dir="rtl">
       {/* Phone push ("עדכן אותי") is toggled only from the "התראות וצלצולים" menu; no banner */}
@@ -2015,160 +2051,174 @@ const Kitchen = () => {
           🔊 לחץ כאן כדי להפעיל צלצולים להזמנות חדשות
         </div>
       )}
-      {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-3 flex flex-col gap-3 sticky top-0 z-10 overflow-x-hidden max-w-full">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h1 className="text-2xl font-black text-foreground">🍔 מטבח הבקתה</h1>
-          {/* Busy mode: one tap to switch. Red while customers see the busy note, green when calm.
+      {/* Header - one calm row. Everything not needed mid-service lives in the ☰ menu. */}
+      <div className="bg-card/95 backdrop-blur border-b border-border px-4 py-2.5 sticky top-0 z-10 overflow-x-hidden max-w-full">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-xl font-black text-foreground">מטבח הבקתה</h1>
+          {/* Busy mode: one tap to switch. Red only while customers see the busy note.
               It also switches on by itself from 10 burgers in prep and off again at 7. */}
           <button
             type="button"
             onClick={() => toggleHighLoad(!restaurantStatus.high_load)}
             aria-pressed={restaurantStatus.high_load}
-            className={`px-4 py-2 rounded-full font-black text-base flex items-center gap-2 border-2 transition-colors ${
+            className={`h-9 px-3.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${
               restaurantStatus.high_load
-                ? "bg-red-600 text-white border-red-700"
-                : "bg-green-600 text-white border-green-700"
+                ? "bg-red-600 text-white"
+                : "bg-muted text-foreground hover:bg-secondary"
             }`}
             title="לחיצה מחליפה בין עמוס לרגוע"
           >
-            {restaurantStatus.high_load ? "🔥 עמוס" : "🟢 רגוע"}
+            <span className={`h-2 w-2 rounded-full ${restaurantStatus.high_load ? "bg-white animate-pulse" : "bg-green-500"}`} />
+            {restaurantStatus.high_load ? "עמוס" : "רגוע"}
           </button>
-          {activeCustomers > 0 && (
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-sm font-bold animate-pulse"
-              title="לקוחות שכרגע בונים הזמנה באתר"
-            >
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-              </span>
-              <span>
-                {activeCustomers === 1
-                  ? "לקוח בונה הזמנה כרגע"
-                  : `${activeCustomers} לקוחות בונים הזמנה כרגע`}
-              </span>
-            </div>
+
+          {/* Order views - segmented */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-muted">
+            {([
+              { mode: "active" as ViewMode, label: "פעילות", count: activeOrders.length },
+              { mode: "ready" as ViewMode, label: "מוכנות", count: readyOrders.length },
+              { mode: "history" as ViewMode, label: "היסטוריה", count: null },
+            ]).map((t) => (
+              <button
+                key={t.mode}
+                onClick={() => setViewMode(t.mode)}
+                className={`h-8 px-3.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-1.5 ${
+                  viewMode === t.mode ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+                {t.count != null && t.count > 0 && (
+                  <span className={`min-w-5 h-5 px-1.5 rounded-full text-[11px] font-black flex items-center justify-center ${
+                    viewMode === t.mode ? "bg-primary text-primary-foreground" : "bg-background/60 text-foreground"
+                  }`}>{t.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          {(viewMode === "availability" || viewMode === "dashboard") && (
+            <span className="h-8 px-3 rounded-lg bg-primary/15 text-primary text-sm font-bold flex items-center gap-1.5">
+              {viewMode === "availability" ? <Package size={14} /> : <BarChart3 size={14} />}
+              {viewMode === "availability" ? "מלאי" : "דשבורד"}
+            </span>
           )}
-          <div className="flex gap-2 flex-wrap">
+
+          {activeCustomers > 0 && (
+            <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground" title="לקוחות שכרגע בונים הזמנה באתר">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              {activeCustomers === 1 ? "לקוח בונה הזמנה" : `${activeCustomers} לקוחות בונים הזמנה`}
+            </span>
+          )}
+
+          <div className="flex items-center gap-2 mr-auto">
+            {viewMode === "ready" && readyPaidCount > 0 && (
+              <button
+                onClick={completeAllReady}
+                className="h-9 px-3.5 rounded-lg bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-colors flex items-center gap-1.5"
+                title="העבר את כל ההזמנות המוכנות ששולמו לסטטוס הושלמה"
+              >
+                <CheckCircle size={15} />
+                השלם הכל ({readyPaidCount})
+              </button>
+            )}
+
+            <KitchenStaffClock busy={orders.some((o) => o.status === "new" || o.status === "preparing")} customers={activeCustomers} />
+
+            {/* Printer: quiet when connected, red only when it needs connecting */}
+            {!btConnected && (
+              <button
+                onClick={handleQuickConnect}
+                className="h-9 px-3 rounded-lg text-xs font-bold bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors flex items-center gap-1.5"
+                title="חיבור מדפסת בלוטות׳"
+              >
+                <Bluetooth size={15} />
+                חבר מדפסת
+              </button>
+            )}
+
+            {/* Chef round summary - the one print used mid-service */}
             <button
-              onClick={() => setViewMode("active")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                viewMode === "active"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              }`}
+              onClick={printChefBon}
+              disabled={activeRoundOrders.length === 0}
+              className="h-9 px-3 rounded-lg text-sm font-bold transition-colors flex items-center gap-1.5 bg-muted text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+              title="הדפס סיכום סבב לטבח"
             >
-              <Clock size={14} className="inline ml-1" />
-              פעילות ({activeOrders.length})
+              <Printer size={16} />
+              סבב לטבח
+              {activeRoundOrders.length > 0 && <span className="text-xs text-muted-foreground">({activeRoundOrders.length})</span>}
             </button>
+
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${realtimeConnected ? "bg-green-500" : "bg-yellow-500 animate-pulse"}`}
+              title={realtimeConnected ? "Realtime פעיל" : "Realtime מנותק - משתמש ב-polling"}
+              aria-label={realtimeConnected ? "מחובר" : "מנותק - בדיקה כל 10 שניות"}
+            />
+
             <button
-              onClick={() => setViewMode("ready")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                viewMode === "ready"
-                  ? "bg-green-600 text-white"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              }`}
+              onClick={() => setMenuOpen(true)}
+              className="h-9 w-9 rounded-lg bg-muted text-foreground hover:bg-secondary transition-colors flex items-center justify-center"
+              aria-label="תפריט"
+              title="תפריט"
             >
-              ✅ מוכנות ({readyOrders.length})
-            </button>
-            <button
-              onClick={() => setViewMode("history")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                viewMode === "history"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              <History size={14} className="inline ml-1" />
-              היסטוריה
-            </button>
-            <button
-              onClick={() => setViewMode("availability")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                viewMode === "availability"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              <Package size={14} className="inline ml-1" />
-              מלאי
-            </button>
-            <button
-              onClick={() => setViewMode("dashboard")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                viewMode === "dashboard"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-secondary"
-              }`}
-            >
-              <BarChart3 size={14} className="inline ml-1" />
-              דשבורד
-            </button>
-            <button
-              onClick={completeAllReady}
-              disabled={!orders.some((o) => o.status === "ready" && o.queue_number != null)}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                orders.some((o) => o.status === "ready" && o.queue_number != null)
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-              }`}
-              title="העבר את כל ההזמנות המוכנות ששולמו לסטטוס הושלמה"
-            >
-              <CheckCircle size={14} className="inline ml-1" />
-              השלם הכל ({orders.filter((o) => o.status === "ready" && o.queue_number != null).length})
+              <MenuIcon size={18} />
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Realtime status indicator */}
-          <div
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${
-              realtimeConnected ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-            }`}
-            title={realtimeConnected ? "Realtime פעיל" : "Realtime מנותק - משתמש ב-polling"}
-          >
-            {realtimeConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
-            <span>{realtimeConnected ? "Live" : "Polling"}</span>
+      </div>
+
+      {/* ☰ Side menu - everything that isn't needed mid-service */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="left" dir="rtl" className="w-[320px] sm:max-w-sm overflow-y-auto p-0">
+          <SheetHeader className="px-5 pt-5 pb-3 border-b border-border text-right">
+            <SheetTitle className="text-right">תפריט מטבח</SheetTitle>
+            <SheetDescription className="text-right">
+              {new Date().toLocaleDateString("he-IL")} · {realtimeConnected ? "מחובר (Live)" : "מנותק - בדיקה כל 10 שניות"}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="p-3 space-y-4">
+            <KitchenMenuGroup title="תצוגות">
+              <KitchenMenuItem icon={<Package size={17} />} label="מלאי" active={viewMode === "availability"} onClick={() => { setViewMode("availability"); setMenuOpen(false); }} />
+              <KitchenMenuItem icon={<BarChart3 size={17} />} label="דשבורד" active={viewMode === "dashboard"} onClick={() => { setViewMode("dashboard"); setMenuOpen(false); }} />
+              <KitchenMenuItem icon={<span className="text-base leading-none">🎉</span>} label="אירועים - הכנות מטבח" active={showEventsPanel} onClick={() => { setShowEventsPanel((v) => !v); setMenuOpen(false); }} />
+            </KitchenMenuGroup>
+
+            <KitchenMenuGroup title={`הזמנות פעילות (${activeRoundOrders.length})`}>
+              <KitchenMenuItem icon={<ClipboardList size={17} />} label="צפייה בבון הזמנות פעילות" disabled={activeRoundOrders.length === 0} onClick={() => { setShowRoundSummary(true); setMenuOpen(false); }} />
+              <KitchenMenuItem icon={<Printer size={17} />} label="הדפס בון הזמנות פעילות" disabled={activeRoundOrders.length === 0} onClick={() => { printRoundBon(); setMenuOpen(false); }} />
+              <KitchenMenuItem icon={<ListChecks size={17} />} label="צפייה בסיכום סבב לטבח" disabled={activeRoundOrders.length === 0} onClick={() => { setShowRoundChefSummary(true); setMenuOpen(false); }} />
+              <KitchenMenuItem icon={<Refrigerator size={17} />} label="הדפס בון מילוי מקרר" onClick={() => { printFridgeRefillBon(); setMenuOpen(false); }} />
+            </KitchenMenuGroup>
+
+            <KitchenMenuGroup title="שליטה">
+              <KitchenMenuItem
+                icon={<Globe size={17} />}
+                label="זמינות הזמנות ותשלום"
+                status={restaurantStatus.website_open || restaurantStatus.station_open ? "פתוח" : "סגור"}
+                tone={restaurantStatus.website_open || restaurantStatus.station_open ? "ok" : "bad"}
+                onClick={() => { setMenuOpen(false); setShowAvailMenu(true); setShowNotifMenu(false); setShowPrintMenu(false); }}
+              />
+              <KitchenMenuItem
+                icon={<Bell size={17} />}
+                label="התראות וצלצולים"
+                status={pushEnabled && soundEnabled ? "פעיל" : "חלקי"}
+                tone={pushEnabled && soundEnabled ? "ok" : "warn"}
+                onClick={() => { setMenuOpen(false); setShowNotifMenu(true); setShowPrintMenu(false); }}
+              />
+              <KitchenMenuItem
+                icon={btConnected ? <BluetoothConnected size={17} /> : <Bluetooth size={17} />}
+                label={btConnected ? "מדפסת מחוברת" : "חבר מדפסת"}
+                status={btConnected ? "מחוברת" : "מנותקת"}
+                tone={btConnected ? "ok" : "bad"}
+                onClick={() => { handleQuickConnect(); setMenuOpen(false); }}
+              />
+              <KitchenMenuItem icon={<Settings size={17} />} label="הגדרות (הסלמה, הדפסה, תוספות)" active={showSettings} onClick={() => { setShowSettings((v) => !v); setMenuOpen(false); }} />
+            </KitchenMenuGroup>
           </div>
-
-          {/* Settings */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`p-2 rounded-lg transition-colors ${
-              showSettings ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-secondary"
-            }`}
-            title="הגדרות הסלמה"
-          >
-            <Settings size={20} />
-          </button>
-
-          {/* 🎉 Events */}
-          <button
-            onClick={() => setShowEventsPanel((v) => !v)}
-            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-              showEventsPanel ? "bg-pink-500/40 text-pink-100" : "bg-pink-500/20 text-pink-300 hover:bg-pink-500/30"
-            }`}
-            title="הזמנות אירועים - הכנות מטבח"
-          >
-            <span>🎉</span>
-            <span>אירועים</span>
-          </button>
-
-          {/* 🔔 Notifications group */}
-          <div className="relative">
-            <button
-              onClick={() => { setShowNotifMenu(!showNotifMenu); setShowPrintMenu(false); }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-                pushEnabled && soundEnabled
-                  ? "bg-green-500/20 text-green-300"
-                  : "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-              }`}
-              title="התראות וצלצולים"
-            >
-              <Bell size={16} />
-              <span>התראות</span>
-            </button>
+        </SheetContent>
+      </Sheet>
+      {/* Menus opened from the ☰ menu (portals, same content as before) */}
             {showNotifMenu && createPortal(<>
               <div role="button" tabIndex={0} aria-label="סגור תפריט התראות" onClick={() => setShowNotifMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowNotifMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
@@ -2219,22 +2269,6 @@ const Kitchen = () => {
                 </button>
               </div>
             </>, document.body)}
-          </div>
-
-          {/* 🟢 Availability group */}
-          <div className="relative">
-            <button
-              onClick={() => { setShowAvailMenu(!showAvailMenu); setShowNotifMenu(false); setShowPrintMenu(false); }}
-              className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-                restaurantStatus.website_open || restaurantStatus.station_open
-                  ? "bg-green-500/20 text-green-300"
-                  : "bg-destructive/20 text-destructive hover:bg-destructive/30"
-              }`}
-              title="זמינות הזמנות ותשלום"
-            >
-              <Globe size={16} />
-              <span>זמינות</span>
-            </button>
             {showAvailMenu && createPortal(<>
               <div role="button" tabIndex={0} aria-label="סגור תפריט זמינות" onClick={() => setShowAvailMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowAvailMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2">
@@ -2442,31 +2476,6 @@ const Kitchen = () => {
                 </button>
               </div>
             </>, document.body)}
-          </div>
-
-
-
-
-          <KitchenStaffClock busy={orders.some((o) => o.status === "new" || o.status === "preparing")} customers={activeCustomers} />
-
-          {/* ⚡ Quick connect to printer (Bluetooth) */}
-          <button
-            onClick={handleQuickConnect}
-            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
-              btConnected
-                ? "bg-emerald-500/20 text-emerald-300"
-                : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
-            }`}
-            title="חיבור מדפסת בלוטות׳"
-          >
-            {btConnected ? <BluetoothConnected size={16} /> : <Bluetooth size={16} />}
-            <span>{btConnected ? "מדפסת מחוברת" : "חבר מדפסת"}</span>
-          </button>
-
-          {/* 🖨️ Print & Diagnostics group */}
-          <div className="relative">
-            {/* Print settings live inside the ⚙️ settings panel - the old
-                toolbar button was removed as it cluttered the header. */}
             {showPrintMenu && createPortal(<>
               <div role="button" tabIndex={0} aria-label="סגור תפריט הדפסה" onClick={() => setShowPrintMenu(false)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); setShowPrintMenu(false); } }} className="fixed inset-0 bg-black/50 z-40" />
               <div className="fixed top-16 inset-x-2 mx-auto max-w-sm bg-card border border-border rounded-xl shadow-2xl z-50 p-3 space-y-2 max-h-[80vh] overflow-y-auto">
@@ -2601,74 +2610,6 @@ const Kitchen = () => {
                 </button>
               </div>
             </>, document.body)}
-          </div>
-
-          {/* Round bon (per-order detail) - preview + print */}
-          <button
-            onClick={() => setShowRoundSummary(true)}
-            disabled={activeRoundOrders.length === 0}
-            className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-              activeRoundOrders.length === 0
-                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-                : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
-            }`}
-            title={`הצג בון הזמנות פעילות (${activeRoundOrders.length})`}
-          >
-            <ClipboardList size={20} />
-            <span className="text-xs font-bold">{activeRoundOrders.length}</span>
-          </button>
-          <button
-            onClick={printRoundBon}
-            disabled={activeRoundOrders.length === 0}
-            className={`p-2 rounded-lg transition-colors ${
-              activeRoundOrders.length === 0
-                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-                : "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30"
-            }`}
-            title="הדפס בון הזמנות פעילות"
-          >
-            <Printer size={20} />
-          </button>
-          {/* Round CHEF summary */}
-          <button
-            onClick={() => setShowRoundChefSummary(true)}
-            disabled={activeRoundOrders.length === 0}
-            className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-              activeRoundOrders.length === 0
-                ? "bg-muted/40 text-muted-foreground/50 cursor-not-allowed"
-                : "bg-orange-500/20 text-orange-300 hover:bg-orange-500/30"
-            }`}
-            title={`הצג סיכום סבב לטבח (${activeRoundOrders.length})`}
-          >
-            <ListChecks size={20} />
-          </button>
-          <button
-            onClick={printChefBon}
-            disabled={activeRoundOrders.length === 0}
-            className={`p-3 rounded-xl transition-all duration-150 flex items-center gap-1.5 ${
-              activeRoundOrders.length === 0
-                ? "bg-green/20 text-green-foreground/40 cursor-not-allowed"
-                : "bg-green text-green-foreground shadow-[0_0_20px_hsl(var(--green-glow)/0.6)] hover:shadow-[0_0_30px_hsl(var(--green-glow)/0.85)] hover:scale-105 active:scale-95 active:brightness-110"
-            }`}
-            title="הדפס סיכום סבב לטבח"
-          >
-            <Printer size={28} />
-          </button>
-
-          <div className="text-sm text-muted-foreground ml-auto">
-            {new Date().toLocaleDateString("he-IL")}
-          </div>
-
-          <button
-            onClick={printFridgeRefillBon}
-            className="p-2 rounded-lg transition-colors bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 flex items-center gap-1"
-            title="הדפס בון מילוי מקרר"
-          >
-            <Refrigerator size={20} />
-            <Printer size={14} />
-          </button>
-        </div>
-      </div>
 
 
       {/* RawBT debug panel removed */}
@@ -2945,113 +2886,100 @@ const Kitchen = () => {
             const awaitingPayment = viewMode === "active" && order.queue_number == null;
 
             // Card visual escalation
+            // Color only where it means something: orange = new, red = waiting too long,
+            // amber = accepted but not paid yet. Everything else stays neutral.
             const cardClass = awaitingPayment
               ? isNewUnaccepted
                 ? escLevel === 2
-                  ? "border-red-600 border-2 shadow-2xl shadow-red-600/50 animate-pulse bg-red-950/20"
+                  ? "border-red-600 border-2 shadow-xl shadow-red-600/40 animate-pulse"
                   : escLevel === 1
-                  ? "border-red-500 border-2 shadow-lg shadow-red-500/40 bg-red-950/10"
-                  : "border-red-500 border-2 shadow-lg shadow-red-500/20 animate-pulse bg-red-950/10"
-                : "border-amber-500 border-2 shadow-lg shadow-amber-500/30 bg-amber-950/10"
-              : "border-green-600/60 border-2";
+                  ? "border-red-500 border-2 shadow-lg shadow-red-500/25"
+                  : "border-primary border-2 shadow-lg shadow-primary/20"
+                : "border-amber-500/70 border-2"
+              : order.status === "ready"
+              ? "border-green-600/50 border"
+              : "border-border border";
 
             return (
               <React.Fragment key={order.id}>
 
               <div
-                className={`bg-card border rounded-xl overflow-hidden ${cardClass}`}
+                className={`bg-card rounded-2xl overflow-hidden flex flex-col ${cardClass}`}
               >
-                {/* Order header */}
-                <div className={`${config.color} px-4 py-3 flex items-center justify-between text-white`}>
-                  <div className="flex items-center gap-2">
-                    {config.icon}
-                    {order.queue_number != null ? (
-                      <span className="bg-white text-black font-bold text-xs px-1.5 py-0.5 rounded">
-                        {order.queue_number}
+                {/* Order header - big number, quiet status, extra actions in ⋯ */}
+                <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-col items-center leading-none">
+                      <span className="text-[10px] font-bold text-muted-foreground">בון</span>
+                      <span className="text-3xl font-black text-foreground tabular-nums">
+                        {order.bon_queue_number ?? order.queue_number ?? "-"}
                       </span>
-                    ) : null}
-                    {order.bon_queue_number != null && (
-                      <span className="font-bold">בון {order.bon_queue_number}</span>
-                    )}
-                    {order.queue_number != null ? (
-                      <span className="text-[10px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">
-                        {isCreditConfirmed(order) ? "שולם באשראי✅" : "שולם ✓"}
-                      </span>
-                    ) : null}
-                    <span className="text-sm opacity-80">{config.label}</span>
-                    {order.customer_on_way_at && (
-                      <span className="text-[10px] font-black bg-blue-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                        🚗 הלקוח בדרך
-                      </span>
-                    )}
-
-                    {order.status === "new" && escLevel === 0 && (
-                      <span className="text-[10px] font-black bg-white text-red-600 px-1.5 py-0.5 rounded-full animate-pulse">
-                        חדש
-                      </span>
-                    )}
-                    {order.status === "new" && escLevel === 1 && (
-                      <span className="text-[10px] font-black bg-yellow-300 text-red-700 px-1.5 py-0.5 rounded-full animate-pulse">
-                        ⏳ ממתין!
-                      </span>
-                    )}
-                    {order.status === "new" && escLevel === 2 && (
-                      <span className="text-[10px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse">
-                        🚨 דחוף!
-                      </span>
-                    )}
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`h-2 w-2 rounded-full ${config.dot}`} />
+                        <span className="text-sm font-bold text-foreground">{config.label}</span>
+                        {order.status === "new" && escLevel === 0 && (
+                          <span className="text-[10px] font-black bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">חדש</span>
+                        )}
+                        {order.status === "new" && escLevel === 1 && (
+                          <span className="text-[10px] font-black bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded-full animate-pulse">⏳ ממתין!</span>
+                        )}
+                        {order.status === "new" && escLevel === 2 && (
+                          <span className="text-[10px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded-full animate-pulse">🚨 דחוף!</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-0.5"><Clock size={11} />{timeSince(order.created_at)}</span>
+                        {order.queue_number != null && (
+                          <span className="font-bold text-green-400">· {isCreditConfirmed(order) ? "שולם באשראי ✓" : "שולם ✓"}</span>
+                        )}
+                        {order.queue_number != null && order.bon_queue_number != null && order.bon_queue_number !== order.queue_number && (
+                          <span>· תור {order.queue_number}</span>
+                        )}
+                        {order.customer_on_way_at && (
+                          <span className="font-bold text-blue-400">· 🚗 הלקוח בדרך</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPreviewOrder(order)}
-                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                      title="צפייה בבון"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      onClick={() => reprintOrder(order)}
-                      className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                      title="הדפס שוב"
-                    >
-                      <Printer size={16} />
-                    </button>
-                    <button
-                      onClick={() => printChefBonFor([order as unknown as RoundOrder])}
-                      className="p-1.5 rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-white transition-colors"
-                      title="הדפס כמויות לטבח (הזמנה זו)"
-                    >
-                      <ChefHat size={16} />
-                    </button>
-                    {isCreditConfirmed(order) && (
+                  <DropdownMenu dir="rtl">
+                    <DropdownMenuTrigger asChild>
                       <button
-                        onClick={() => printInvoiceBon(order)}
-                        disabled={invoiceBusyId === order.id}
-                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-50"
-                        title="הדפס חשבונית מס קבלה ללקוח"
+                        className="h-9 w-9 shrink-0 rounded-lg bg-muted text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors flex items-center justify-center"
+                        aria-label="עוד פעולות"
+                        title="עוד פעולות"
                       >
-                        <ReceiptText size={16} />
+                        <MoreHorizontal size={18} />
                       </button>
-                    )}
-                    {order.order_source !== "kiosk" && order.order_source !== "station" && (
-                      <button
-                        onClick={() => printCustomerQr(order)}
-                        className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-                        title="הדפס QR טלפון לקוח"
-                      >
-                        <QrCode size={16} />
-                      </button>
-                    )}
-                    <span className="text-xs opacity-80">
-                      <Clock size={12} className="inline ml-0.5" />
-                      {timeSince(order.created_at)}
-                    </span>
-                  </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="min-w-[220px]">
+                      <DropdownMenuItem onSelect={() => setPreviewOrder(order)} className="gap-2 py-2.5">
+                        <Eye size={16} /> צפייה בבון
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => reprintOrder(order)} className="gap-2 py-2.5">
+                        <Printer size={16} /> הדפס שוב
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => printChefBonFor([order as unknown as RoundOrder])} className="gap-2 py-2.5">
+                        <ChefHat size={16} /> הדפס כמויות לטבח (הזמנה זו)
+                      </DropdownMenuItem>
+                      {isCreditConfirmed(order) && (
+                        <DropdownMenuItem onSelect={() => printInvoiceBon(order)} disabled={invoiceBusyId === order.id} className="gap-2 py-2.5">
+                          <ReceiptText size={16} /> הדפס חשבונית מס קבלה
+                        </DropdownMenuItem>
+                      )}
+                      {order.order_source !== "kiosk" && order.order_source !== "station" && (
+                        <DropdownMenuItem onSelect={() => printCustomerQr(order)} className="gap-2 py-2.5">
+                          <QrCode size={16} /> הדפס QR טלפון לקוח
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Customer info */}
-                <div className="px-4 py-3 border-b border-border bg-secondary/30">
-                  <p className="font-bold text-foreground flex items-center gap-1 flex-wrap">
+                <div className="px-4 pb-3 border-b border-border/60">
+                  <p className="text-base font-bold text-foreground flex items-center gap-1 flex-wrap">
                     {order.customer_name}
                     <BlockNameButton name={order.customer_name} />
                   </p>
@@ -3095,7 +3023,7 @@ const Kitchen = () => {
                 </div>
 
                 {/* Items */}
-                <div className="px-4 py-3 space-y-2 max-h-60 overflow-y-auto">
+                <div className="px-4 py-3 space-y-2.5 max-h-72 overflow-y-auto flex-1">
                   {order.order_items.map((item) => {
                     // Same logic as the printed bon (kitchenReceipt buildReceiptHtml):
                     // strip __FAVORITE__, __OWNER__:<name>, doneness-* out of the
@@ -3105,19 +3033,19 @@ const Kitchen = () => {
                     const isFavorite = item.removals?.some(r => r === "__FAVORITE__");
                     const toppingsToPrint = printableToppings(item.toppings);
                     return (
-                      <div key={item.id} className="text-sm border-b border-border/50 pb-2 last:border-b-0">
+                      <div key={item.id} className="text-sm border-b border-border/40 pb-2.5 last:border-b-0">
                         {isFavorite && (
-                          <p className="text-xs font-extrabold text-green-400 mb-0.5">⭐ הקבוע</p>
+                          <p className="text-xs font-bold text-muted-foreground mb-0.5">⭐ הקבוע</p>
                         )}
                         {ownerName && (
                           <p className="text-xs font-bold text-foreground">👤 {ownerName}</p>
                         )}
-                        <div className="flex justify-between font-medium">
-                          <span>{item.item_name} x{item.quantity}</span>
-                          <span className="text-primary">₪{item.price * item.quantity}</span>
+                        <div className="flex justify-between items-baseline gap-2">
+                          <span className="text-base font-bold text-foreground">{item.quantity > 1 && <span className="text-primary">{item.quantity}× </span>}{item.item_name}</span>
+                          <span className="text-xs text-muted-foreground">₪{item.price * item.quantity}</span>
                         </div>
                         {doneness && (
-                          <p className="text-xs font-extrabold text-orange-400">🔥 {doneness}</p>
+                          <p className="text-xs font-bold text-amber-400">🔥 {doneness}</p>
                         )}
                         {(() => {
                           const { label: shortcutLbl, rest } = applyVeggieShortcut(cleanedRemovals, item.item_name);
@@ -3125,10 +3053,10 @@ const Kitchen = () => {
                           return (
                             <>
                               {shortcutLbl && (
-                                <p className="text-xs font-extrabold text-red-400">{shortcutLbl}</p>
+                                <p className="text-xs font-bold text-amber-400">{shortcutLbl}</p>
                               )}
                               {rest.length > 0 && (
-                                <p className="text-xs font-bold text-red-400">- שינויים: {rest.join(", ")}</p>
+                                <p className="text-xs font-bold text-amber-400">- שינויים: {rest.join(", ")}</p>
                               )}
                               {noChanges && (
                                 <p className="text-xs font-bold text-muted-foreground">- ללא שינויים</p>
@@ -3137,7 +3065,7 @@ const Kitchen = () => {
                           );
                         })()}
                         {toppingsToPrint.length > 0 && (
-                          <p className="text-xs font-extrabold text-green-400">+ {toppingsToPrint.join(", ")}</p>
+                          <p className="text-xs font-bold text-amber-400">+ {toppingsToPrint.join(", ")}</p>
                         )}
                         {item.with_meal && (
                           <p className="text-xs text-muted-foreground">
@@ -3156,15 +3084,15 @@ const Kitchen = () => {
                                   const noChanges = !bShort && bRest.length === 0;
                                   return (
                                     <>
-                                      {bDoneness && <p className="font-extrabold text-orange-400">🔥 {bDoneness}</p>}
-                                      {bShort && <p className="font-extrabold text-red-400">{bShort}</p>}
-                                      {bRest.length > 0 && <p className="font-bold text-red-400">- שינויים: {bRest.join(", ")}</p>}
+                                      {bDoneness && <p className="font-bold text-amber-400">🔥 {bDoneness}</p>}
+                                      {bShort && <p className="font-bold text-amber-400">{bShort}</p>}
+                                      {bRest.length > 0 && <p className="font-bold text-amber-400">- שינויים: {bRest.join(", ")}</p>}
                                       {noChanges && <p className="font-bold text-muted-foreground">- ללא שינויים</p>}
                                     </>
                                   );
                                 })()}
                                 {Array.isArray(b.toppings) && b.toppings.length > 0 && (
-                                  <p className="font-extrabold text-green-400">+ {b.toppings.join(", ")}</p>
+                                  <p className="font-bold text-amber-400">+ {b.toppings.join(", ")}</p>
                                 )}
                               </div>
                             ))}
@@ -3204,9 +3132,9 @@ const Kitchen = () => {
                 )}
 
                 {/* Footer */}
-                <div className="px-4 py-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-bold text-lg text-primary">₪{order.total}</span>
-                  <div className="flex flex-wrap justify-end gap-2">
+                <div className="px-4 py-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold text-base text-muted-foreground">₪{order.total}</span>
+                  <div className="flex flex-wrap justify-end gap-2 flex-1">
                     {(() => { const isPending = pendingStatusIds.has(order.id); return (<>
                     {["new", "preparing", "ready"].includes(order.status) && (
                       <button
@@ -3215,7 +3143,7 @@ const Kitchen = () => {
                           updateStatus(order.id, "cancelled");
                         }}
                         disabled={isPending}
-                        className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-60 disabled:cursor-wait"
+                        className="px-3 py-3 rounded-lg text-muted-foreground text-sm hover:bg-destructive/15 hover:text-destructive transition-colors disabled:opacity-60 disabled:cursor-wait"
                       >
                         ביטול
                       </button>
@@ -3287,7 +3215,7 @@ const Kitchen = () => {
                           <button
                             onClick={() => updateStatus(order.id, "preparing")}
                             disabled={isPending}
-                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
+                            className="flex-1 min-w-[150px] px-6 py-3 rounded-xl bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-wait"
                           >
                             {isPending ? "מעדכן..." : "קבל הזמנה ✅"}
                           </button>
@@ -3295,7 +3223,7 @@ const Kitchen = () => {
                           <button
                             onClick={() => setShowTimePicker(order.id)}
                             disabled={isPending}
-                            className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-wait"
+                            className="flex-1 min-w-[150px] px-6 py-3 rounded-xl bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-wait"
                           >
                             התחל הכנה 👨‍🍳
                           </button>
@@ -3310,7 +3238,7 @@ const Kitchen = () => {
                             updateStatus(order.id, next);
                           }}
                           disabled={isPending || (next === "completed" && order.queue_number == null)}
-                          className="px-6 py-3 rounded-lg bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex-1 min-w-[150px] px-6 py-3 rounded-xl bg-primary text-primary-foreground font-black text-lg hover:opacity-90 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                           title={next === "completed" && order.queue_number == null ? "יש לסמן שולם קודם" : undefined}
                         >
                           {isPending ? "מעדכן..." : (next === "ready" ? "מוכנה ✅" : (order.queue_number != null ? "הושלמה ✅" : "הושלמה 🔒"))}
@@ -3323,7 +3251,7 @@ const Kitchen = () => {
 
                 {/* ETA control + tracking link (preparing only) */}
                 {order.status === "preparing" && (
-                  <div className="px-4 py-3 border-t border-border bg-secondary/30 space-y-2">
+                  <div className="px-4 py-3 border-t border-border/60 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-sm font-bold text-foreground flex items-center gap-2">
                         <Clock size={14} className="text-primary" />
