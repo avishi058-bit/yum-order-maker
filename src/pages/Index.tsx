@@ -689,6 +689,7 @@ const Index = () => {
         </Reveal>
       )}
       {isClosed ? (
+<Reveal distance={20}>
         <ClosedOrderCard
           isManualClosure={isManualClosure}
           minutesUntilOpen={businessStatus.minutesUntilOpen}
@@ -698,6 +699,7 @@ const Index = () => {
           onBuildOrder={buildOrderAhead}
           onNotifyMe={isStation ? undefined : () => setReopenModalOpen(true)}
         />
+        </Reveal>
       ) : dineIn !== null ? (
         <Reveal distance={20}>
           <MenuSection onAddItem={handleAddItem} dineIn={dineIn} onDineInChange={setDineIn} isAvailable={isAvailable} isKiosk={isStation} />
@@ -971,6 +973,7 @@ const Index = () => {
       {!isStation && <Reveal><PressSection /></Reveal>}
 
       {!isStation && (
+        <Reveal distance={16}>
         <footer className="py-8 text-center border-t border-border space-y-3">
           <p className="text-foreground font-bold">הַבִּקְתָּה - המבורגר של מושבניקים 🐄</p>
           <p className="text-muted-foreground text-sm">
@@ -1006,6 +1009,7 @@ const Index = () => {
           </div>
 
         </footer>
+        </Reveal>
       )}
 
       <Suspense fallback={null}>

@@ -1,11 +1,12 @@
-import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import { heroAnimations } from "@/config/uiConfig";
 import heroBurger from "@/assets/hero-burger.webp";
 import logo from "@/assets/logo.webp";
 import kosherCertificate from "@/assets/kosher-certificate.webp";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Phone } from "lucide-react";
+import { Phone, Users, Bus } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SoldierFundHowItWorks from "@/components/SoldierFundHowItWorks";
 
@@ -26,6 +27,21 @@ interface HeroSectionProps {
   onSoldierDonateOnly?: (amount: number, termsAt: string) => void;
 }
 
+/** Tile link under the hero buttons (groups page, group order), two side by side. */
+const HeroTileLink = ({ to, icon, title, note }: { to: string; icon: ReactNode; title: string; note: string }) => (
+  <Link
+    to={to}
+    dir="rtl"
+    className="group flex flex-col items-center gap-2 rounded-[1.5rem] border-2 border-primary/50 bg-gradient-to-b from-primary/20 via-primary/10 to-transparent px-2 py-4 text-center shadow-[0_8px_24px_hsl(32_95%_52%/0.18)] backdrop-blur-sm transition-all hover:border-primary hover:from-primary/30 active:scale-[0.98]"
+  >
+    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform group-hover:scale-105">
+      {icon}
+    </span>
+    <span className="text-base font-black leading-tight text-foreground">{title}</span>
+    <span className="text-xs leading-snug text-muted-foreground">{note}</span>
+  </Link>
+);
+
 const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, showGroupsLink = false, showDelivery, dineIn, soldierFundEnabled = true, onSoldierContinueOrder, onSoldierDonateOnly }: HeroSectionProps) => {
   const [showKosher, setShowKosher] = useState(false);
   const [dance, setDance] = useState(false);
@@ -41,16 +57,23 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
     const t = window.setTimeout(() => setDance(true), 5000);
     return () => window.clearTimeout(t);
   }, [dineIn]);
+  const heroRef = useRef<HTMLElement>(null);
+  const reduceMotion = useReducedMotion() ?? false;
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const photoY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const photoScale = useTransform(scrollYProgress, [0, 1], [1.08, 1]);
+
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+    <section ref={heroRef} className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Kosher badge */}
       <button
         type="button"
         onClick={() => setShowKosher(true)}
-        className="absolute top-4 right-4 z-20 bg-card/80 backdrop-blur-sm border border-primary/50 rounded-xl px-3 py-2 shadow-lg hover:bg-card transition-colors"
+        aria-label="כשר - רבנות שדות נגב. לצפייה בתעודת הכשרות"
+        className="absolute top-4 right-4 z-20 flex flex-col items-center rounded-2xl bg-primary px-3 py-1.5 leading-none text-primary-foreground shadow-[0_4px_14px_hsl(32_95%_52%/0.4)] transition-[filter,transform] hover:brightness-110 active:scale-[0.97]"
       >
-        <span className="text-xs font-bold text-foreground">כשר </span>
-        <span className="text-[9px] text-muted-foreground">(לצפייה)</span>
+        <span className="text-sm font-black">כשר</span>
+        <span className="mt-0.5 text-[10px] font-bold opacity-80">לצפייה בתעודה</span>
       </button>
 
 
@@ -74,19 +97,21 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
       </Dialog>
 
       <div className="absolute inset-0">
-        <img
+        {/* Gentle parallax: the photo drifts down and eases out of its zoom as the page scrolls. */}
+        <motion.img
           src={heroBurger}
           alt="המבורגר הבקתה"
           width={1920}
           height={1080}
-          className="w-full h-full object-cover"
+          style={reduceMotion ? undefined : { y: photoY, scale: photoScale }}
+          className="w-full h-full object-cover will-change-transform"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
       </div>
       <div className="relative z-10 text-center px-4">
         <motion.div
           {...heroAnimations.logo}
-          className="w-36 h-36 mx-auto mb-6"
+          className="w-56 h-56 md:w-64 md:h-64 mx-auto mb-8"
         >
           <img
             src={logo}
@@ -94,24 +119,8 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
             className="w-full h-full object-contain drop-shadow-2xl"
           />
         </motion.div>
-        <motion.h1
-          {...heroAnimations.title}
-          className="text-5xl md:text-7xl font-black mb-2 tracking-tight"
-        >
-          הַבִּקְתָּה
-        </motion.h1>
-        <motion.p
-          {...heroAnimations.subtitle}
-          className="text-xl md:text-2xl text-primary font-bold mb-2"
-        >
-          המבורגר של מושבניקים
-        </motion.p>
-        <motion.p
-          {...heroAnimations.description}
-          className="text-lg text-muted-foreground mb-8 max-w-md mx-auto"
-        >
-          כשר בהשגחת הרבנות המקומית-שדות נגב
-        </motion.p>
+        {/* The logo already shows the name and tagline; the heading stays for screen readers and search engines. */}
+        <h1 className="sr-only">המבורגר הבקתה - המבורגר של מושבניקים, כשר בהשגחת רבנות שדות נגב</h1>
 
         {onDineInChoice ? (
           <motion.div
@@ -199,20 +208,20 @@ const HeroSection = ({ onDineInChoice, onDeliveryChoice, onBuildOrderAhead, show
         )}
 
         {showGroupsLink && (
-          <Link
-            to="/groups"
-            className="mt-4 inline-block text-base font-bold text-primary underline underline-offset-4 hover:brightness-110"
-          >
-            מגיעים בקבוצה? לחצו כאן
-          </Link>
-        )}
-        {showGroupsLink && (
-          <Link
-            to="/group"
-            className="mt-2 block text-sm font-bold text-muted-foreground underline underline-offset-4 hover:text-foreground"
-          >
-            מזמינים עם חברים וכל אחד משלם על עצמו? הזמנה קבוצתית
-          </Link>
+          <div dir="rtl" className="mt-4 w-full max-w-md mx-auto grid grid-cols-2 gap-3">
+            <HeroTileLink
+              to="/groups"
+              icon={<Bus size={24} aria-hidden />}
+              title="קבוצות וסיורים"
+              note="שולחן שוק בעוטף"
+            />
+            <HeroTileLink
+              to="/group"
+              icon={<Users size={24} aria-hidden />}
+              title="הזמנה עם חברים"
+              note="כל אחד משלם על עצמו"
+            />
+          </div>
         )}
 
         {/* "הזמן חייל/ת" - prominent entry buttons (hidden when switched off in the kitchen) */}

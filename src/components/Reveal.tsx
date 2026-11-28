@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
  * Apple-like scroll reveal: the block starts slightly lowered and transparent,
- * then rises and fades in smoothly when it enters the viewport.
+ * then rises and fades in smoothly when it scrolls into view.
  * Respects prefers-reduced-motion (renders instantly, no animation).
  */
 interface RevealProps {
@@ -25,25 +25,29 @@ const Reveal = ({ children, delay = 0, distance = 28, className }: RevealProps) 
       setVisible(true);
       return;
     }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisible(true);
-            observer.disconnect();
-          }
-        }
-      },
-      // threshold 0: tall blocks (the whole menu) can never reach a ratio on small screens.
-      { threshold: 0, rootMargin: "0px 0px -8% 0px" }
-    );
-    observer.observe(el);
-    // Safety net: never leave content hidden (e.g. programmatic scroll jumps).
-    const fallback = window.setTimeout(() => setVisible(true), 1500);
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(fallback);
+    // Shown once its top passes 92% of the screen height. Checking the position
+    // (not only an IntersectionObserver) also catches jumps that skip past the
+    // block, so content is never left hidden above the screen.
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
+        setVisible(true);
+        stop();
+      }
     };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(check);
+    };
+    const stop = () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    check();
+    return stop;
   }, []);
 
   return (

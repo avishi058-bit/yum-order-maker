@@ -3,6 +3,7 @@ import { ShoppingBag, Star, Plus } from "lucide-react";
 import { menuItems, MenuItem, drinkSubOptions } from "@/data/menu";
 import { menuImages } from "@/data/menuImages";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import Reveal from "@/components/Reveal";
 
 const categories = [
   { key: "burger" as const, label: "🍔 ההמבורגרים שלנו" },
@@ -467,7 +468,13 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
             data-category={cat.key}
             className="mb-10 scroll-mt-28"
           >
-            <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${(isKiosk ? 28 : 24) * fontScale}px` }}>{cat.label}</h3>
+            {isKiosk ? (
+              <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${28 * fontScale}px` }}>{cat.label}</h3>
+            ) : (
+              <Reveal distance={12}>
+                <h3 className={`font-bold mb-4 text-primary text-right`} style={{ fontSize: `${24 * fontScale}px` }}>{cat.label}</h3>
+              </Reveal>
+            )}
             {isKiosk ? (
               /* Kiosk: equal 2-column grid of square photo tiles (chosen direction) */
               <div className="grid grid-cols-2 gap-3">
@@ -485,16 +492,17 @@ const MenuSection = ({ onAddItem, dineIn, onDineInChange, isAvailable, isKiosk =
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {items.map((item) => (
-                  <MenuCard
-                    key={`${cat.key}-${item.id}`}
-                    item={item}
-                    onAdd={onAddItem}
-                    browseOnly={browseOnly}
-                    fontScale={fontScale}
-                    nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
-                    descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
-                  />
+                {items.map((item, i) => (
+                  <Reveal key={`${cat.key}-${item.id}`} distance={16} delay={Math.min(i, 3) * 60}>
+                    <MenuCard
+                      item={item}
+                      onAdd={onAddItem}
+                      browseOnly={browseOnly}
+                      fontScale={fontScale}
+                      nameOverride={settings.menu_item_overrides[item.id]?.name || undefined}
+                      descOverride={settings.menu_item_overrides[item.id]?.description || undefined}
+                    />
+                  </Reveal>
                 ))}
               </div>
             )}
